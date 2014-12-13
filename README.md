@@ -1,4 +1,4 @@
-# Identifi Node Wrapper
+# Identifi Lib
 
 
 Check [example.js](example.js) for examples
