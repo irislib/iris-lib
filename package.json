@@ -1,8 +1,20 @@
 {
   "name": "identifi-lib",
-  "version": "0.0.1",
-  "description": "",
+  "version": "0.0.2",
+  "description": "Identifi API wrapper",
+  "keywords": [
+    "identifi",
+    "identi.fi"
+  ],
   "main": "index.js",
+  "homepage": "https://github.com/identifi/identifi-lib",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/identifi/identifi-lib.git"
+  },
+  "bugs": {
+    "url": "http://github.com/identifi/identifi-lib/issues"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
