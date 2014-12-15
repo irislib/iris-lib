@@ -2,22 +2,25 @@ var request = require('request');
 var Q = require("q");
 var querystring = require("querystring")
 
-var build_url = function(user, method, id_type, options) {
-  if(!user || !id_type) {
+var host = "http://identi.fi/api/";
+
+var add_url_params = function(url, options) {
+  var params = querystring.stringify(options);
+  if(params)
+     url += "?" + params;
+
+  return url;
+};
+
+var build_id_url = function(id_type, id_value, method, options) {
+  if(!id_value || (!id_type && method != 'search')) {
     return false;
   }
 
-  // Maybe this should be on every call?
-  if(id_type === "url" || id_type === "email" || id_type === "account") {
-    user = encodeURIComponent(user);
-  }
+  id_value = encodeURIComponent(id_value);
 
-  var url = "http://identi.fi/api/id/" + id_type + "/" + user + "/" + method;
-
-  var params = querystring.stringify(options);
-  if(params) {
-     url += "?" + params;
-  }
+  var url = host + "id/" + id_type + "/" + id_value + "/" + method;
+  url = add_url_params(url, options);
 
   return url;
 };
@@ -65,31 +68,37 @@ var identifi = {
       'google_oauth2'
     ]
   },
-  get_connections: function(user, id_type, options) {
-    var url = build_url(user, "connections", id_type, options);
+  get_connections: function(id_type, id_value, options) {
+    var url = build_id_url(id_type, id_value, "connections", options);
     return make_request(url);
   },
-  get_overview: function(user, id_type, options) {
-    var url = build_url(user, "overview", id_type, options);
+  get_overview: function(id_type, id_value, options) {
+    var url = build_id_url(id_type, id_value, "overview", options);
     return make_request(url);
   },
-  get_sent: function(user, id_type, options) {
-    var url = build_url(user, "sent", id_type, options);
+  get_sent: function(id_type, id_value, options) {
+    var url = build_id_url(id_type, id_value, "sent", options);
     return make_request(url);
   },
-  get_received: function(user, id_type, options) {
-    var url = build_url(user, "received", id_type, options);
+  get_received: function(id_type, id_value, options) {
+    var url = build_id_url(id_type, id_value, "received", options);
     return make_request(url);
   },
-  get_trustpaths: function(user, id_type, options) {
-    var url = build_url(user, "trustpaths", id_type, options);
+  get_trustpaths: function(id_type, id_value, options) {
+    var url = build_id_url(id_type, id_value, "trustpaths", options);
     return make_request(url);
   },
-  get_name: function(user, id_type, options) {
-    var url = build_url(user, "getname", id_type, options);
+  get_name: function(id_type, id_value, options) {
+    var url = build_id_url(id_type, id_value, "getname", options);
+    return make_request(url);
+  },
+  search: function(query, options) {
+    var url = host + 'id/' + query;
+    url = add_url_params(url, options);
     return make_request(url);
   }
 };
 
 
 module.exports = identifi;
+

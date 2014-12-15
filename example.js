@@ -7,7 +7,7 @@ var email = "sirius@bitcointalk.org";
 console.log("Fetching data for", url)
 
 identifi
-  .get_connections(url, "url")
+  .get_connections("url", url)
   .then(function(connections) {
     console.log("Total connections", connections.length);
   }, function(error) {
@@ -15,7 +15,7 @@ identifi
   });
 
 identifi
-  .get_overview(url, "url")
+  .get_overview("url", url)
   .then(function(overview) {
     console.log("Overview", overview);
   }, function(error) {
@@ -24,7 +24,7 @@ identifi
 
 
 identifi
-  .get_sent(url, "url")
+  .get_sent("url", url)
   .then(function(sent) {
     console.log("Total sent", sent.length);
   }, function(error) {
@@ -33,7 +33,7 @@ identifi
 
 
 identifi
-  .get_received(url, "url")
+  .get_received("url", url)
   .then(function(received) {
     console.log("Total received", received.length);
   }, function(error) {
@@ -41,7 +41,7 @@ identifi
   });
 
 identifi
-  .get_name(url, "url")
+  .get_name("url", url)
   .then(function(user) {
     console.log("Name of the user from url", user.name);
   }, function(error) {
@@ -49,7 +49,7 @@ identifi
   });
 
 identifi
-  .get_name(email, "email")
+  .get_name("email", email)
   .then(function(user) {
     console.log("Name of the user from email", user.name);
   }, function(error) {
@@ -64,10 +64,18 @@ var trustpaths_options = {
 };
 
 identifi
-  .get_trustpaths(url, "url", trustpaths_options)
+  .get_trustpaths("url", url, trustpaths_options)
   .then(function(trustpaths) {
     console.log("Trustpaths", trustpaths);
   }, function(error) {
     console.log("Error in trustpaths", error);
+  });
+
+identifi
+  .search("sirius")
+  .then(function(results) {
+    console.log("Search", results);
+  }, function(error) {
+    console.log("Error in search", error);
   });
 
