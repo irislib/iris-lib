@@ -1,6 +1,6 @@
 {
   "name": "identifi-lib",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Identifi API wrapper",
   "keywords": [
     "identifi",
@@ -30,6 +30,7 @@
     "grunt-contrib-nodeunit": "^0.4.1",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-mocha-cli": "^1.11.0",
+    "grunt-release": "^0.9.0",
     "jshint-stylish": "^1.0.0",
     "load-grunt-tasks": "^1.0.0",
     "time-grunt": "^1.0.0"
