@@ -1,6 +1,4 @@
-#  [![Build Status](https://secure.travis-ci.org/identifi/identifi-lib.png?branch=master)](http://travis-ci.org/identifi/identifi-lib)
-
-# Identifi Lib
+# Identifi Lib [![Build Status](https://secure.travis-ci.org/identifi/identifi-lib.png?branch=master)](http://travis-ci.org/identifi/identifi-lib)
 
 
 Check [example.js](https://github.com/identifi/identifi-lib/blob/master/example.js) for examples
