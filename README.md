@@ -1,8 +1,6 @@
 # Identifi Lib [![Build Status](https://secure.travis-ci.org/identifi/identifi-lib.png?branch=master)](http://travis-ci.org/identifi/identifi-lib)
 
-
 Check [example.js](https://github.com/identifi/identifi-lib/blob/master/example.js) for examples
-
 
 Github repo: [https://github.com/identifi/identifi-lib](https://github.com/identifi/identifi-lib)
 
@@ -19,26 +17,23 @@ Get supported id types
 
 `identifi.valid_id_types()`
 
+Get id connections
 
-Get user/url connections
+`identifi.get_connections(id_type, id_value, options)`
 
-`identifi.get_connections(user, id_type, options)`
+Get id overview
 
+`identifi.get_overview(id_type, id_value, options)`
 
-Get user/url overview
+`identifi.get_sent(id_type, id_value, options)`
 
-`identifi.get_overview(user, id_type, options)`
+`identifi.get_received(id_type, id_value, options)`
 
+`identifi.get_trustpaths(id_type, id_value, options)`
 
-`identifi.get_sent(user, id_type, options)`
+Get id name
 
+`identifi.get_name(id_type, id_value, options)`
 
-`identifi.get_received(user, id_type, options)`
-
-
-`identifi.get_trustpaths(user, id_type, options)`
-
-
-Get user/url name
-
-`identifi.get_name(user, id_type, options)`
+Search for ids
+`identifi.search(query, options)`
