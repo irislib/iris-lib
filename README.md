@@ -1,7 +1,5 @@
 #  [![Build Status](https://secure.travis-ci.org/identifi/identifi-lib.png?branch=master)](http://travis-ci.org/identifi/identifi-lib)
 
-> JS wrapper for the Identifi API
-
 # Identifi Lib
 
 
