@@ -1,19 +1,20 @@
 var request = require('request');
 var Q = require("q");
-var querystring = require("querystring")
+var querystring = require("querystring");
 
 var host = "http://identi.fi/api/";
 
 var add_url_params = function(url, options) {
   var params = querystring.stringify(options);
-  if(params)
+  if (params) {
      url += "?" + params;
+  }
 
   return url;
 };
 
 var build_id_url = function(id_type, id_value, method, options) {
-  if(!id_value || (!id_type && method != 'search')) {
+  if (!id_value || (!id_type && method !== 'search')) {
     return false;
   }
 
@@ -28,12 +29,12 @@ var build_id_url = function(id_type, id_value, method, options) {
 var make_request = function(url) {
   var deferred = Q.defer();
 
-  if(!url) {
+  if (!url) {
     deferred.reject({error: "Url can't be made with given data"});
   }
 
   request(url, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
+    if (!error && response.statusCode === 200) {
       if(!body) {
         deferred.reject({error: "API returned empty result"});
       } else {
@@ -66,7 +67,7 @@ var identifi = {
       'phone',
       'tel',
       'google_oauth2'
-    ]
+    ];
   },
   get_connections: function(id_type, id_value, options) {
     var url = build_id_url(id_type, id_value, "connections", options);
