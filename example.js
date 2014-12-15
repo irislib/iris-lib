@@ -79,6 +79,8 @@ var run = function() {
     }, function(error) {
       console.log("Error in search", error);
     });
+
+  console.log("identifi-lib version:", identifi.VERSION);
 };
 
 module.exports = run;
