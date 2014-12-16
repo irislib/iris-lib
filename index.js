@@ -54,7 +54,7 @@ var make_request = function(url) {
 
 
 var identifi = {
-  VERSION: '0.0.3',
+  VERSION: '0.0.4',
   valid_id_types: function() {
     return [
       'url',

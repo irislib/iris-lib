@@ -20,24 +20,14 @@ module.exports = function (grunt) {
         },
         mochacli: {
             options: {
-                reporter: 'nyan',
+                reporter: 'spec',
                 bail: true
             },
             all: ['test/*.js']
         },
         watch: {
-            gruntfile: {
-                files: '<%= jshint.gruntfile.src %>',
-                tasks: ['jshint:gruntfile']
-            },
-            lib: {
-                files: '<%= jshint.lib.src %>',
-                tasks: ['jshint:lib', 'mochacli']
-            },
-            test: {
-                files: '<%= jshint.test.src %>',
-                tasks: ['jshint:test', 'mochacli']
-            }
+            files: ['*.js', 'test/**/*.js'],
+            tasks: ['jshint', 'mochacli']
         },
         release: {
             options: {}
