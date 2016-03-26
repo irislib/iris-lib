@@ -71,8 +71,8 @@ var identifi = {
       tel: isValidPhonenumber,
       keyID: null,
   },
-  get_info: function() {
-    return make_request(this.host + "info");
+  get_status: function() {
+    return make_request(this.host + "status");
   },
   get_peers: function() {
     return make_request(this.host + "peers");
