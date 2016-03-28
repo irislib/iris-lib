@@ -1,5 +1,5 @@
-var client = require('./client')
-var message = require('./message')
+var client = require('./client');
+var message = require('./message');
 
 function isValidPhonenumber(value) {
     return (/^\d{7,}$/).test(value.replace(/[\s()+\-\.]|ext/gi, ''));

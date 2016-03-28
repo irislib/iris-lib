@@ -13,9 +13,9 @@ var client = {
   request: function(options) {
     options.json = true;
     options.uri = this.apiRoot;
-    if (options.apiMethod) options.uri += '/' + options.apiMethod;
-    if (options.apiId) options.uri += '/' + encodeId(options.apiId);
-    if (options.apiAction) options.uri += '/' + options.apiAction;
+    if (options.apiMethod)  { options.uri += '/' + options.apiMethod; }
+    if (options.apiId)      { options.uri += '/' + encodeId(options.apiId); }
+    if (options.apiAction)  { options.uri += '/' + options.apiAction; }
     options.uri += '/';
     return rp(options);
   },

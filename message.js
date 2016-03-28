@@ -32,7 +32,16 @@ var validate = function(msg) {
 
   if (!d.type) { throw Error(errorMsg + "Missing type definition"); }
   if (!d.author) { throw Error(errorMsg + "Missing author"); }
+  if (!d.author.length) { throw Error(errorMsg + "Author empty"); }
+  var i;
+  for (i = 0; i < d.author.length; i++) {
+    if (d.author[i].length !== 2) { throw Error(errorMsg + "Invalid author: " + d.author[i].toString() ); }
+  }
   if (!d.recipient) { throw Error(errorMsg + "Missing recipient"); }
+  if (!d.recipient.length) { throw Error(errorMsg + "Author empty"); }
+  for (i = 0; i < d.recipient.length; i++) {
+    if (d.recipient[i].length !== 2) { throw Error(errorMsg + "Invalid recipient: " + d.recipient[i].toString() ); }
+  }
   if (!d.timestamp) { throw Error(errorMsg + "Missing timestamp"); }
 
   if (!moment(d.timestamp)) { throw Error(errorMsg + "Invalid timestamp"); }
@@ -52,61 +61,29 @@ var validate = function(msg) {
   return true;
 };
 
-var createConfirmOrRefuteConnection = function(confirm, authorIds, recipientIds, comment, isPublic, skipValidation) {
+function create(signedData, skipValidation) {
   var msg = {
-    signedData: {
-      author: authorIds,
-      recipient: recipientIds,
-      type: confirm ? "confirm_connection" : "refute_connection",
-      comment: comment,
-      timestamp: moment.utc()
-    },
-    isPublic: isPublic || false
+    signedData: signedData
   };
+
+  msg.signedData.timestamp = msg.signedData.timestamp || moment.utc().toISOString();
 
   if (!skipValidation) {
     validate(msg);
   }
 
   return msg;
-};
+}
 
 module.exports = {
-  createRating: function(authorIds, recipientIds, rating, comment, isPublic, skipValidation) {
-    var msg = {
-      signedData: {
-        author: authorIds,
-        recipient: recipientIds,
-        type: "rating",
-        rating: rating,
-        maxRating: 10,
-        minRating: -10,
-        comment: comment,
-        timestamp: moment.utc()
-      },
-      isPublic: isPublic || false
-    };
+  create: create,
 
-    if (!skipValidation) {
-      validate(msg);
-    }
+  createRating: function(signedData, skipValidation) {
+    var msg = this.create(signedData, true);
 
-    return msg;
-  },
-
-  createConfirmConnection: function(authorIds, recipientIds, comment, isPublic, skipValidation) {
-    return createConfirmOrRefuteConnection(true, authorIds, recipientIds, comment, isPublic, skipValidation);
-  },
-
-  createRefuteConnection: function(authorIds, recipientIds, comment, isPublic, skipValidation) {
-    return createConfirmOrRefuteConnection(false, authorIds, recipientIds, comment, isPublic, skipValidation);
-  },
-
-  fromData: function(data, isPublic, skipValidation) {
-    var msg = {
-      signedData: data,
-      isPublic: isPublic || false,
-    };
+    msg.signedData.type = 'rating';
+    msg.signedData.maxRating = msg.signedData.maxRating || 10;
+    msg.signedData.minRating = msg.signedData.minRating || -10;
 
     if (!skipValidation) {
       validate(msg);
@@ -142,7 +119,7 @@ module.exports = {
 
   verify: function(msg, pubKey) {
     this.decode(msg);
-    return jws.verify(msg.jws, msg.jwsHeader.alg, pubKey); 
+    return jws.verify(msg.jws, msg.jwsHeader.alg, pubKey);
   },
 
   deserialize: function(jws) {
