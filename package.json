@@ -24,7 +24,8 @@
     "jws": "^3.1.3",
     "moment": "^2.12.0",
     "q": "^1.1.2",
-    "request": "^2.49.0"
+    "request": "^2.49.0",
+    "request-promise": "^2.0.1"
   },
   "devDependencies": {
     "chai": "*",
