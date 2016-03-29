@@ -11,8 +11,8 @@ function encodeId(id) {
 var client = {
   apiRoot: 'http://localhost:8080/api',
   request: function(options) {
-    options.json = true;
-    options.uri = this.apiRoot;
+    options.json = options.json !== undefined ? options.json : true;
+    options.uri = options.uri !== undefined ? options.uri : this.apiRoot;
     if (options.apiMethod)  { options.uri += '/' + options.apiMethod; }
     if (options.apiId)      { options.uri += '/' + encodeId(options.apiId); }
     if (options.apiAction)  { options.uri += '/' + options.apiAction; }

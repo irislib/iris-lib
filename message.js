@@ -8,7 +8,7 @@ var algorithm = 'ecdsa-with-SHA1';
 var encoding = 'base64';
 
 var getHash = function(msg) {
-  return crypto.createHash('sha256').update(JSON.stringify(msg.signedData)).digest();
+  return crypto.createHash('sha256').update(JSON.stringify(msg.signedData)).digest('hex');
 };
 
 var derToPem = function(der) {
@@ -114,7 +114,7 @@ module.exports = {
       msg.hash = getHash(msg).toString(encoding);
     }
     validate(msg);
-    return msg.jwsData;
+    return msg;
   },
 
   verify: function(msg, pubKey) {
