@@ -1,22 +1,14 @@
 var rp = require('request-promise');
 
-function encodeId(id) {
-  if (id.type || id.value) {
-    return encodeURIComponent(id.type || '') + '/' + encodeURIComponent(id.value || '');
-  }
-
-  return encodeURIComponent(id);
-}
-
 var client = {
-  apiRoot: 'http://localhost:8080/api',
+  apiRoot: 'http://localhost:4944/api',
   request: function(options) {
     options.json = options.json !== undefined ? options.json : true;
     options.uri = options.uri !== undefined ? options.uri : this.apiRoot;
     if (options.apiMethod)  { options.uri += '/' + options.apiMethod; }
-    if (options.apiId)      { options.uri += '/' + encodeId(options.apiId); }
+    if (options.apiIdType)  { options.uri += '/' + encodeURIComponent(options.apiIdType); }
+    if (options.apiId)      { options.uri += '/' + encodeURIComponent(options.apiId); }
     if (options.apiAction)  { options.uri += '/' + options.apiAction; }
-    options.uri += '/';
     return rp(options);
   },
 };
