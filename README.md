@@ -31,9 +31,9 @@ Get id connections
 
 `identifi.get_connections(id_type, id_value, options)`
 
-Get id overview
+Get id stats
 
-`identifi.get_overview(id_type, id_value, options)`
+`identifi.get_stats(id_type, id_value, options)`
 
 `identifi.get_sent(id_type, id_value, options)`
 

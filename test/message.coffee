@@ -8,8 +8,8 @@ chaiAsPromised = require('chai-as-promised')
 chai.should()
 chai.use chaiAsPromised
 describe 'Message', ->
+  msg = undefined
   describe 'createRating method', ->
-    msg = undefined
     before ->
       msg = Message.createRating
         author: [['email', 'alice@example.com']]
@@ -53,3 +53,8 @@ describe 'Message', ->
         Message.deserialize jws
 
       f.should.throw Error
+  describe 'Decode method', ->
+    it 'should successfully decode signedData from jws', ->
+      newMessage = { jws: msg.jws }
+      Message.decode(newMessage)
+      newMessage.signedData.should.not.be.empty
