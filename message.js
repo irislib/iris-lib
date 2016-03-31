@@ -55,7 +55,7 @@ var validate = function(msg) {
   }
 
   if (d.type === "confirm_connection" || d.type === "refute_connection") {
-
+    if (d.recipient.length < 2) { throw Error(errorMsg + "At least 2 recipient identifiers are needed for a connection / disconnection"); }
   }
 
   return true;
