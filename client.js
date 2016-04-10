@@ -11,6 +11,9 @@ var client = {
     if (options.apiAction)  { options.uri += '/' + options.apiAction; }
     return rp(options);
   },
+  getSocket: function() {
+    return require('socket.io-client')(this.apiRoot);
+  }
 };
 
 module.exports = client;
