@@ -11,9 +11,6 @@
     "reputation"
   ],
   "main": "index.js",
-  "files": [
-    "."
-  ],
   "homepage": "https://github.com/identifi/identifi-lib",
   "repository": {
     "type": "git",
