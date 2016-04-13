@@ -1,5 +1,6 @@
 var client = require('./client');
 var message = require('./message');
+var keyutil = require('./keyutil');
 
 var UNIQUE_ID_VALIDATORS = {
     email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
@@ -30,7 +31,8 @@ var identifi = {
   UNIQUE_ID_VALIDATORS: UNIQUE_ID_VALIDATORS,
   guessTypeOf: guessTypeOf,
   client: client,
-  message: message
+  message: message,
+  keyutil: keyutil
 };
 
 module.exports = identifi;

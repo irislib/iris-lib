@@ -11,20 +11,6 @@ var getHash = function(msg) {
   return crypto.createHash('sha256').update(JSON.stringify(msg.signedData)).digest('base64');
 };
 
-var derToPem = function(der) {
-  var pem = '-----BEGIN PUBLIC KEY-----';
-
-  var size = der.length;
-
-  for (var i = 0; i < size; i = i + 64) {
-      var end = i + 64 < size ? i + 64 : size;
-      pem = pem + '\n' + der.substring(i, end);
-  }
-
-  pem = pem + '\n-----END PUBLIC KEY-----';
-  return pem;
-};
-
 var validate = function(msg) {
   var errorMsg = "Invalid Identifi message: ";
   if (!msg.signedData) { throw Error(errorMsg + "Missing signedData"); }
@@ -94,13 +80,13 @@ module.exports = {
 
   validate: validate,
 
-  sign: function(msg, privKey, keyID) {
+  sign: function(msg, privKeyPEM, pubKeyHex) {
     validate(msg);
-    msg.jwsHeader = { alg: 'ES256', kid: keyID };
+    msg.jwsHeader = { alg: 'ES256', pubKey: pubKeyHex };
     msg.jws = jws.sign({
       header: msg.jwsHeader,
       payload: msg.signedData,
-      privateKey: privKey
+      privateKey: privKeyPEM
     });
     msg.hash = getHash(msg).toString(encoding);
     return msg.jws;
@@ -117,9 +103,11 @@ module.exports = {
     return msg;
   },
 
-  verify: function(msg, pubKey) {
+  verify: function(msg) {
     this.decode(msg);
-    return jws.verify(msg.jws, msg.jwsHeader.alg, pubKey);
+    // Should we just use jsrsasign for jws stuff?
+    var pubKeyPEM = require('./key').getPubkeyPEMfromHex(msg.jwsHeader.pubKey);
+    return jws.verify(msg.jws, msg.jwsHeader.alg, pubKeyPEM);
   },
 
   deserialize: function(jws) {
