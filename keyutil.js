@@ -18,15 +18,20 @@ module.exports = {
   getDefault: function(datadir) {
     var k,
       fs = require('fs'),
-      keyFile = datadir + '/private.key';
-    if (fs.existsSync(keyFile)) {
-      var pem = fs.readFileSync(keyFile, 'utf8');
-      k = rs.KEYUTIL.getKey(pem);
-      k.prvKeyObj.pem = pem;
+      privKeyFile = datadir + '/private.key',
+      pubKeyFile = datadir + '/public.key';
+    if (fs.existsSync(privKeyFile) && fs.existsSync(pubKeyFile)) {
+      var prvPEM = fs.readFileSync(privKeyFile, 'utf8');
+      var pubPEM = fs.readFileSync(pubKeyFile, 'utf8');
+      // Pubkey could be deducted from the privkey
+      k = { prvKeyObj: rs.KEYUTIL.getKey(prvPEM), pubKeyObj: rs.KEYUTIL.getKey(pubPEM) };
+      k.prvKeyObj.pem = prvPEM;
+      k.pubKeyObj.pem = pubPEM;
     } else {
       k = this.generate();
-      fs.writeFileSync(keyFile, k.prvKeyObj.pem, 'utf8');
-      fs.chmodSync(keyFile, 400); // u+r og-rwx
+      fs.writeFileSync(privKeyFile, k.prvKeyObj.pem, 'utf8');
+      fs.writeFileSync(pubKeyFile, k.pubKeyObj.pem, 'utf8');
+      fs.chmodSync(privKeyFile, 400);
     }
     return k;
   }

@@ -82,7 +82,7 @@ module.exports = {
 
   sign: function(msg, privKeyPEM, pubKeyHex) {
     validate(msg);
-    msg.jwsHeader = { alg: 'ES256', pubKey: pubKeyHex };
+    msg.jwsHeader = { alg: 'ES256', kid: pubKeyHex };
     msg.jws = jws.sign({
       header: msg.jwsHeader,
       payload: msg.signedData,
@@ -106,7 +106,7 @@ module.exports = {
   verify: function(msg) {
     this.decode(msg);
     // Should we just use jsrsasign for jws stuff?
-    var pubKeyPEM = require('./key').getPubkeyPEMfromHex(msg.jwsHeader.pubKey);
+    var pubKeyPEM = require('./key').getPubkeyPEMfromHex(msg.jwsHeader.kid);
     return jws.verify(msg.jws, msg.jwsHeader.alg, pubKeyPEM);
   },
 
