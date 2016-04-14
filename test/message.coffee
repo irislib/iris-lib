@@ -44,6 +44,12 @@ describe 'Message', ->
       msg.should.have.property 'hash'
     it 'should be accepted by verify()', ->
       Message.verify msg
+    it 'should verify should not accept an invalid signature', ->
+      anotherKey = keyutil.generate()
+      Message.sign msg, key.private.pem, anotherKey.public.hex
+      f = ->
+        Message.verify msg
+      f.should.throw Error
   describe 'Deserialize method', ->
     it 'should not accept invalid data', ->
       jws = 'asdf'

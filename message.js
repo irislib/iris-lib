@@ -108,7 +108,10 @@ module.exports = {
   verify: function(msg) {
     this.decode(msg);
     var pubKeyPEM = keyutil.getPubkeyPEMfromHex(msg.jwsHeader.kid);
-    return jws.verify(msg.jws, msg.jwsHeader.alg, pubKeyPEM);
+    if (!jws.verify(msg.jws, msg.jwsHeader.alg, pubKeyPEM)) {
+      throw new Error('Invalid signature');
+    }
+    return true;
   },
 
   deserialize: function(jws) {
