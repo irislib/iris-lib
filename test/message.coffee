@@ -38,7 +38,7 @@ describe 'Message', ->
         comment: 'Good guy'
       key = keyutil.generate()
     it 'should be created with sign()', ->
-      Message.sign msg, key.prvKeyObj.pem, key.pubKeyObj.pubKeyHex
+      Message.sign msg, key.private.pem, key.public.hex
       msg.should.have.property 'jws'
       msg.should.have.property 'jwsHeader'
       msg.should.have.property 'hash'

@@ -1,41 +1,35 @@
 'use strict';
-var rs = require('jsrsasign');
+var execSync = require('child_process').execSync;
 
 module.exports = {
   generate: function() {
-    var k = rs.KEYUTIL.generateKeypair("EC", "secp256k1");
-    var prvPEM = rs.KEYUTIL.getPEM(k.prvKeyObj, "PKCS8PRV");
-    var pubPEM = rs.KEYUTIL.getPEM(k.pubKeyObj);
-    k.prvKeyObj.pem = prvPEM;
-    k.pubKeyObj.pem = pubPEM;
+    var k = { public: {}, private: {} };
+    k.private.pem = execSync('openssl ecparam -genkey -noout -name secp256k1').toString();
+    k.public.pem = execSync('openssl ec -pubout', { input: k.private.pem }).toString();
+    k.public.hex = this.getPubHexFromPrivPEM(k.private.pem);
     return k;
   },
 
-  getPubkeyFromHex: function(hex) {
-    var ecKey = { xy: hex, curve: 'secp256k1' };
-    var pubKey = rs.KEYUTIL.getKey(ecKey, null, "pkcs8pub");
-    pubKey.pem = rs.KEYUTIL.getPEM(pubKey);
-    return pubKey;
+  getPubkeyPEMfromHex: function(hex) {
+    return execSync('openssl ec -pubin -pubout -inform DER', { input: new Buffer(hex, 'hex') }).toString();
+  },
+
+  getPubHexFromPrivPEM: function(privPEM) {
+    var hex = execSync('openssl ec -pubout -outform DER', { input: privPEM }).toString('hex');
+    return hex;
   },
 
   getDefault: function(datadir) {
-    var k,
-      fs = require('fs'),
-      privKeyFile = datadir + '/private.key',
-      pubKeyFile = datadir + '/public.key';
-    if (fs.existsSync(privKeyFile) && fs.existsSync(pubKeyFile)) {
-      var prvPEM = fs.readFileSync(privKeyFile, 'utf8');
-      var pubPEM = fs.readFileSync(pubKeyFile, 'utf8');
-      // Pubkey could be deducted from the privkey
-      k = { prvKeyObj: rs.KEYUTIL.getKey(prvPEM), pubKeyObj: rs.KEYUTIL.getKey(pubPEM) };
-      k.prvKeyObj.pem = prvPEM;
-      k.pubKeyObj.pem = pubPEM;
-    } else {
-      k = this.generate();
-      fs.writeFileSync(privKeyFile, k.prvKeyObj.pem, 'utf8');
-      fs.writeFileSync(pubKeyFile, k.pubKeyObj.pem, 'utf8');
+    var fs = require('fs'),
+      privKeyFile = datadir + '/private.key';
+    if (!fs.existsSync(privKeyFile)) {
+      execSync('openssl ecparam -genkey -noout -name secp256k1 -out ' + privKeyFile);
       fs.chmodSync(privKeyFile, 400);
     }
+    var k = { public: {}, private: {} };
+    k.private.pem = fs.readFileSync(privKeyFile, 'utf8');
+    k.public.hex = this.getPubHexFromPrivPEM(k.private.pem);
+    k.public.pem = execSync('openssl ec -in ' + privKeyFile + ' -pubout').toString();
     return k;
   }
 };
