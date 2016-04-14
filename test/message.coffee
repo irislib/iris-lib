@@ -43,7 +43,7 @@ describe 'Message', ->
       msg.should.have.property 'jwsHeader'
       msg.should.have.property 'hash'
     it 'should be accepted by verify()', ->
-      Message.verify msg, pubKey
+      Message.verify msg
   describe 'Deserialize method', ->
     it 'should not accept invalid data', ->
       jws = 'asdf'

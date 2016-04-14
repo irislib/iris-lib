@@ -10,6 +10,7 @@
     "rating",
     "reputation"
   ],
+  "license": "MIT",
   "main": "index.js",
   "homepage": "https://github.com/identifi/identifi-lib",
   "repository": {

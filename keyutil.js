@@ -3,7 +3,7 @@ var rs = require('jsrsasign');
 
 module.exports = {
   generate: function() {
-    var k = rs.KEYUTIL.generateKeypair("EC", "secp256r1");
+    var k = rs.KEYUTIL.generateKeypair("EC", "secp256k1");
     var prvPEM = rs.KEYUTIL.getPEM(k.prvKeyObj, "PKCS8PRV");
     var pubPEM = rs.KEYUTIL.getPEM(k.pubKeyObj);
     k.prvKeyObj.pem = prvPEM;
@@ -11,8 +11,11 @@ module.exports = {
     return k;
   },
 
-  getPubkeyPEMfromHex: function(hex) {
-    return rs.KEYUTIL.getPEM(rs.KEYUTIL.getKey(hex).pubKeyObj);
+  getPubkeyFromHex: function(hex) {
+    var ecKey = { xy: hex, curve: 'secp256k1' };
+    var pubKey = rs.KEYUTIL.getKey(ecKey, null, "pkcs8pub");
+    pubKey.pem = rs.KEYUTIL.getPEM(pubKey);
+    return pubKey;
   },
 
   getDefault: function(datadir) {

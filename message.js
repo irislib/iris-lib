@@ -3,6 +3,7 @@
 var crypto = require('crypto');
 var jws = require('jws');
 var moment = require('moment');
+var rs = require('jsrsasign');
 
 var algorithm = 'ecdsa-with-SHA1';
 var encoding = 'base64';
@@ -83,11 +84,7 @@ module.exports = {
   sign: function(msg, privKeyPEM, pubKeyHex) {
     validate(msg);
     msg.jwsHeader = { alg: 'ES256', kid: pubKeyHex };
-    msg.jws = jws.sign({
-      header: msg.jwsHeader,
-      payload: msg.signedData,
-      privateKey: privKeyPEM
-    });
+    msg.jws = rs.jws.JWS.sign(null, msg.jwsHeader, msg.signedData, privKeyPEM);
     msg.hash = getHash(msg).toString(encoding);
     return msg.jws;
   },
@@ -106,8 +103,8 @@ module.exports = {
   verify: function(msg) {
     this.decode(msg);
     // Should we just use jsrsasign for jws stuff?
-    var pubKeyPEM = require('./key').getPubkeyPEMfromHex(msg.jwsHeader.kid);
-    return jws.verify(msg.jws, msg.jwsHeader.alg, pubKeyPEM);
+    var pubKey = require('./keyutil').getPubkeyFromHex(msg.jwsHeader.kid);
+    return rs.jws.JWS.verify(msg.jws, pubKey);
   },
 
   deserialize: function(jws) {
