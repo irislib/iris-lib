@@ -3,7 +3,6 @@
 var crypto = require('crypto');
 var jws = require('jws');
 var moment = require('moment');
-var rs = require('jsrsasign');
 
 var algorithm = 'ecdsa-with-SHA1';
 var encoding = 'base64';
@@ -108,7 +107,6 @@ module.exports = {
 
   verify: function(msg) {
     this.decode(msg);
-    // Should we just use jsrsasign for jws stuff?
     var pubKeyPEM = keyutil.getPubkeyPEMfromHex(msg.jwsHeader.kid);
     return jws.verify(msg.jws, msg.jwsHeader.alg, pubKeyPEM);
   },
