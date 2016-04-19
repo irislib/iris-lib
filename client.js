@@ -18,7 +18,7 @@ var client = {
         'X-Accept-Incoming-Connections': true
       };
     }
-    return require('socket.io-client')(opts.url, opts.options.extras);
+    return require('socket.io-client')(opts.url, opts.options);
   }
 };
 
