@@ -123,5 +123,9 @@ module.exports = {
   isPositive: function(msg) {
     var d = msg.signedData;
     return d.rating > (d.maxRating + d.minRating) / 2;
+  },
+
+  getSignerKeyHash: function(msg) {
+    return keyutil.getHash(msg.jwsHeader.kid);
   }
 };

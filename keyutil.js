@@ -8,19 +8,16 @@ var stdio = ['pipe', 'pipe', 'ignore']; // Ignore stderr
 
 module.exports = {
   generate: function() {
-    myKey = { public: {}, private: {} };
-    myKey.private.pem = execSync('openssl ecparam -genkey -noout -name secp256k1', { stdio: stdio }).toString();
-    myKey.public.pem = execSync('openssl ec -pubout', { input: myKey.private.pem, stdio: stdio }).toString();
-    myKey.public.hex = this.getPubHexFromPrivPEM(myKey.private.pem);
-    myKey.id = this.getId(new Buffer(myKey.public.hex, 'hex'));
-    return myKey;
+    var key = { public: {}, private: {} };
+    key.private.pem = execSync('openssl ecparam -genkey -noout -name secp256k1', { stdio: stdio }).toString();
+    key.public.pem = execSync('openssl ec -pubout', { input: key.private.pem, stdio: stdio }).toString();
+    key.public.hex = this.getPubHexFromPrivPEM(key.private.pem);
+    key.hash = this.getHash(key.public.hex);
+    return key;
   },
 
-  getId: function(publicKeyBuffer) {
-    if (!(publicKeyBuffer instanceof Buffer)) {
-      throw new Error('getId param must be a buffer');
-    }
-    return crypto.createHash('sha256').update(publicKeyBuffer).digest('base64');
+  getHash: function(publicKey) {
+    return crypto.createHash('sha256').update(publicKey).digest('base64');
   },
 
   getPubkeyPEMfromHex: function(hex) {
@@ -46,7 +43,7 @@ module.exports = {
     myKey.private.pem = fs.readFileSync(privKeyFile, 'utf8');
     myKey.public.hex = this.getPubHexFromPrivPEM(myKey.private.pem);
     myKey.public.pem = execSync('openssl ec -in ' + privKeyFile + ' -pubout', { stdio: stdio }).toString();
-    myKey.id = this.getId(new Buffer(myKey.public.hex, 'hex'));
+    myKey.hash = this.getHash(myKey.public.hex);
     return myKey;
   }
 };
