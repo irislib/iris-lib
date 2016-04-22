@@ -9,11 +9,15 @@ var encoding = 'base64';
 
 var keyutil = require('./keyutil');
 
-var getHash = function(msg) {
+function getHash(msg) {
   return crypto.createHash('sha256').update(JSON.stringify(msg.signedData)).digest('base64');
-};
+}
 
-var validate = function(msg) {
+function getSignerKeyHash(msg) {
+  return keyutil.getHash(msg.jwsHeader.kid);
+}
+
+function validate(msg) {
   var errorMsg = "Invalid Identifi message: ";
   if (!msg.signedData) { throw Error(errorMsg + "Missing signedData"); }
   var d = msg.signedData;
@@ -22,8 +26,17 @@ var validate = function(msg) {
   if (!d.author) { throw Error(errorMsg + "Missing author"); }
   if (!d.author.length) { throw Error(errorMsg + "Author empty"); }
   var i;
+  var authorKeyID;
+  if (msg.jwsHeader) {
+    msg.signerKeyHash = getSignerKeyHash(msg);
+  }
   for (i = 0; i < d.author.length; i++) {
     if (d.author[i].length !== 2) { throw Error(errorMsg + "Invalid author: " + d.author[i].toString() ); }
+    if (d.author[i][0] === 'keyID') {
+      if (authorKeyID) { throw Error(errorMsg + "Author may have only one keyID"); }
+      else { authorKeyID = d.author[i][1]; }
+      if (msg.signerKeyHash && authorKeyID !== msg.signerKeyHash) { throw Error(errorMsg + "If message has a keyID author, it must be signed by the same key"); }
+    }
   }
   if (!d.recipient) { throw Error(errorMsg + "Missing recipient"); }
   if (!d.recipient.length) { throw Error(errorMsg + "Author empty"); }
@@ -47,7 +60,7 @@ var validate = function(msg) {
   }
 
   return true;
-};
+}
 
 function create(signedData, skipValidation) {
   var msg = {
@@ -125,7 +138,5 @@ module.exports = {
     return d.rating > (d.maxRating + d.minRating) / 2;
   },
 
-  getSignerKeyHash: function(msg) {
-    return keyutil.getHash(msg.jwsHeader.kid);
-  }
+  getSignerKeyHash: getSignerKeyHash
 };
