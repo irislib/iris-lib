@@ -1,7 +1,6 @@
 ###global describe, it, after, before ###
 
 'use strict'
-crypto = require('crypto')
 Message = require('../message.js')
 keyutil = require('../keyutil.js')
 chai = require('chai')
@@ -19,6 +18,7 @@ describe 'Message', ->
         recipient: [['email', 'bob@example.com']]
         rating: 5
         comment: 'Good guy'
+        context: 'identifi'
     it 'should create a message', ->
       msg.should.have.deep.property 'signedData.timestamp'
   describe 'Validate method', ->
@@ -34,6 +34,7 @@ describe 'Message', ->
         recipient: [['email', 'bob@example.com']]
         rating: 5
         comment: 'Good guy'
+        context: 'identifi'
     it 'should be created with sign()', ->
       Message.sign msg, key.private.pem, key.public.hex
       msg.should.have.property 'jws'
@@ -52,6 +53,7 @@ describe 'Message', ->
         recipient: [['email', 'bob@example.com']]
         rating: 5
         comment: 'Good guy'
+        context: 'identifi'
       Message.sign msg, key.private.pem, key.public.hex
       Message.validate msg
     it 'should fail if keyID author and signing key are different', ->
@@ -60,6 +62,7 @@ describe 'Message', ->
         recipient: [['email', 'bob@example.com']]
         rating: 5
         comment: 'Good guy'
+        context: 'identifi'
       Message.sign msg, anotherKey.private.pem, anotherKey.public.hex
       f = ->
         Message.validate msg
@@ -79,6 +82,7 @@ describe 'Message', ->
         recipient: [['email', 'bob@example.com']]
         rating: 5
         comment: 'Good guy'
+        context: 'identifi'
       Message.sign msg, key.private.pem, key.public.hex
       newMessage = { jws: msg.jws }
       Message.decode(newMessage)

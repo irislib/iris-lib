@@ -53,6 +53,7 @@ function validate(msg) {
     if (isNaN(d.minRating)) { throw Error(errorMsg + "Invalid minRating"); }
     if (d.rating > d.maxRating) { throw Error(errorMsg + "Rating is above maxRating"); }
     if (d.rating < d.minRating) { throw Error(errorMsg + "Rating is below minRating"); }
+    if (typeof d.context !== 'string' || !d.context.length) { throw Error(errorMsg + "Rating messages must have a context field"); }
   }
 
   if (d.type === "confirm_connection" || d.type === "refute_connection") {
