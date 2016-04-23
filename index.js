@@ -1,6 +1,7 @@
 var client = require('./client');
 var message = require('./message');
 var keyutil = require('./keyutil');
+var pkg = require('./package.json');
 
 var UNIQUE_ID_VALIDATORS = {
     email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
@@ -27,7 +28,7 @@ function guessTypeOf(value) {
 }
 
 var identifi = {
-  VERSION: '0.0.5',
+  VERSION: pkg.version,
   UNIQUE_ID_VALIDATORS: UNIQUE_ID_VALIDATORS,
   guessTypeOf: guessTypeOf,
   client: client,
