@@ -1,4 +1,5 @@
 var rp = require('request-promise');
+var jws = require('jws');
 
 var client = {
   apiRoot: 'http://127.0.0.1:4944/api',
@@ -19,6 +20,15 @@ var client = {
       };
     }
     return require('socket.io-client')(opts.url, opts.options);
+  },
+  getJwt: function(signingKeyPem, payload) {
+    var exp = Math.floor(Date.now() / 1000) + 60;
+    payload = Object.assign({ sub: 'admin', exp: exp }, payload);
+    return jws.sign({
+      header: { typ: 'JWT', alg: 'ES256' },
+      payload: payload,
+      privateKey: signingKeyPem
+    });
   }
 };
 
