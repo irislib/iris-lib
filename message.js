@@ -9,12 +9,21 @@ var encoding = 'base64';
 
 var keyutil = require('./keyutil');
 
+var JWS_MAX_LENGTH = 10000;
+
 function getHash(msg) {
   return crypto.createHash('sha256').update(JSON.stringify(msg.signedData)).digest('base64');
 }
 
 function getSignerKeyHash(msg) {
   return keyutil.getHash(msg.jwsHeader.kid);
+}
+
+function validateJws(msg) {
+  var errorMsg = "Invalid Identifi message: ";
+  if (typeof msg.jws !== 'string') { throw Error(errorMsg + "Message JWS must be a string"); }
+  if (msg.jws.length > JWS_MAX_LENGTH) { throw Error(errorMsg + "Message JWS max length is " + JWS_MAX_LENGTH); }
+  return true;
 }
 
 function validate(msg) {
@@ -80,6 +89,8 @@ function create(signedData, skipValidation) {
 module.exports = {
   create: create,
 
+  JWS_MAX_LENGTH: JWS_MAX_LENGTH,
+
   createRating: function(signedData, skipValidation) {
     var msg = this.create(signedData, true);
 
@@ -96,14 +107,19 @@ module.exports = {
 
   validate: validate,
 
-  sign: function(msg, privKeyPEM, hex) {
-    validate(msg);
+  sign: function(msg, privKeyPEM, hex, skipValidation) {
+    if (!skipValidation) {
+      validate(msg);
+    }
     msg.jwsHeader = { alg: 'ES256', kid: hex };
     msg.jws = jws.sign({
       header: msg.jwsHeader,
       payload: msg.signedData,
       privateKey: privKeyPEM
     });
+    if (!skipValidation) {
+      validateJws(msg);
+    }
     msg.hash = getHash(msg).toString(encoding);
     return msg.jws;
   },
@@ -115,6 +131,7 @@ module.exports = {
       msg.jwsHeader = d.header;
       msg.hash = getHash(msg).toString(encoding);
     }
+    validateJws(msg);
     validate(msg);
     return msg;
   },

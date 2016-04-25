@@ -67,6 +67,17 @@ describe 'Message', ->
       f = ->
         Message.validate msg
       f.should.throw Error
+    it 'should fail if the JWS is too big', ->
+      comment = new Buffer(Message.JWS_MAX_LENGTH + 100).fill('a').toString()
+      msg = Message.createRating
+        author: [['keyID', key.hash]]
+        recipient: [['email', 'bob@example.com']]
+        rating: 5
+        comment: comment
+        context: 'identifi'
+      f = ->
+        Message.sign msg, anotherKey.private.pem, anotherKey.public.hex
+      f.should.throw Error
   describe 'Deserialize method', ->
     it 'should not accept invalid data', ->
       jws = 'asdf'
@@ -87,3 +98,15 @@ describe 'Message', ->
       newMessage = { jws: msg.jws }
       Message.decode(newMessage)
       newMessage.signedData.should.not.be.empty
+    it 'should fail if the JWS is too big', ->
+      comment = new Buffer(Message.JWS_MAX_LENGTH + 100).fill('a').toString()
+      msg = Message.createRating
+        author: [['keyID', key.hash]]
+        recipient: [['email', 'bob@example.com']]
+        rating: 5
+        comment: comment
+        context: 'identifi'
+      Message.sign msg, anotherKey.private.pem, anotherKey.public.hex, true
+      f = ->
+        Message.decode(newMessage)
+      f.should.throw Error
