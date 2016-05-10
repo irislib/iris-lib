@@ -65,7 +65,7 @@ function validate(msg) {
     if (typeof d.context !== 'string' || !d.context.length) { throw Error(errorMsg + "Rating messages must have a context field"); }
   }
 
-  if (d.type === "verify_identity" || d.type === "refute_identity") {
+  if (d.type === "verify_identity" || d.type === "unverify_identity") {
     if (d.recipient.length < 2) { throw Error(errorMsg + "At least 2 recipient attributes are needed for a connection / disconnection"); }
   }
 
