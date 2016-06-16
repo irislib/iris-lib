@@ -23,7 +23,7 @@ var client = {
   },
   getJwt: function(signingKeyPem, payload) {
     var exp = Math.floor(Date.now() / 1000) + 60;
-    payload = Object.assign({ sub: 'admin', exp: exp }, payload);
+    payload = Object.assign({ exp: exp }, payload);
     return jws.sign({
       header: { typ: 'JWT', alg: 'ES256' },
       payload: payload,
