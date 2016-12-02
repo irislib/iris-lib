@@ -32,23 +32,23 @@
     "jws": "^3.1.3",
     "moment": "^2.12.0",
     "request": "^2.49.0",
-    "request-promise": "^2.0.1",
+    "request-promise": "^4.1.1",
     "socket.io-client": "^1.4.5"
   },
   "devDependencies": {
     "chai": "*",
     "chai-as-promised": "*",
     "coffee-script": "^1.10.0",
-    "grunt": "^0.4.1",
+    "grunt": "^1.0.1",
     "grunt-cli": "^1.1.0",
     "grunt-contrib-jshint": "^1.0.0",
     "grunt-contrib-nodeunit": "^1.0.0",
     "grunt-contrib-watch": "^1.0.0",
-    "grunt-mocha-test": "^0.12.7",
-    "grunt-release": "^0.13.0",
+    "grunt-mocha-test": "^0.13.2",
+    "grunt-release": "^0.14.0",
     "jshint-stylish": "^2.1.0",
     "load-grunt-tasks": "^3.4.1",
-    "mocha": "^2.4.5",
+    "mocha": "^3.2.0",
     "time-grunt": "^1.0.0"
   }
 }
