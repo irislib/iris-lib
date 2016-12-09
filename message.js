@@ -12,7 +12,7 @@ var keyutil = require('./keyutil');
 var JWS_MAX_LENGTH = 10000;
 
 function getHash(msg) {
-  return crypto.createHash('sha256').update(JSON.stringify(msg.signedData)).digest('base64');
+  return crypto.createHash('sha256').update(JSON.stringify(msg.jws)).digest('base64');
 }
 
 function getSignerKeyHash(msg) {
@@ -141,6 +141,13 @@ module.exports = {
     var pubKeyPEM = keyutil.getPubkeyPEMfromHex(msg.jwsHeader.kid);
     if (!jws.verify(msg.jws, msg.jwsHeader.alg, pubKeyPEM)) {
       throw new Error('Invalid signature');
+    }
+    if (msg.hash) {
+      if (msg.hash !== getHash(msg)) {
+        throw new Error('Invalid message hash');
+      }
+    } else {
+      msg.hash = getHash(msg);
     }
     return true;
   },
