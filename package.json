@@ -50,15 +50,17 @@
     "eslint-config-devine": "^1.6.1",
     "eslint-plugin-babel": "^4.0.0",
     "flow-bin": "^0.37.0",
-    "jest": "^18.1.0",
-    "rimraf": "^2.5.4",
-    "release-it": "^2.5.1",
     "husky": "^0.12.0",
+    "jest": "^18.1.0",
+    "release-it": "^2.5.1",
+    "rimraf": "^2.5.4",
     "rollup": "^0.39.2",
     "rollup-plugin-babel": "^2.6.1",
-    "rollup-plugin-node-resolve": "^2.0.0",
     "rollup-plugin-bundle-size": "^1.0.1",
     "rollup-plugin-commonjs": "^7.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.1.0",
+    "rollup-plugin-node-resolve": "^2.0.0",
     "rollup-plugin-uglify": "^1.0.1"
   }
 }

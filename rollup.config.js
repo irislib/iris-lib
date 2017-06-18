@@ -3,11 +3,15 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 import bundleSize from 'rollup-plugin-bundle-size';
 import commonjs from 'rollup-plugin-commonjs';
+import builtins from 'rollup-plugin-node-builtins';
+import globals from 'rollup-plugin-node-globals';
 
 const name = `identifiLib`;
 
 const plugins = [
   babel(),
+  globals(),
+  builtins(),
   nodeResolve({
     module: true,
     jsnext: true
