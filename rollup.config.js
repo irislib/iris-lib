@@ -4,14 +4,12 @@ import uglify from 'rollup-plugin-uglify';
 import bundleSize from 'rollup-plugin-bundle-size';
 import commonjs from 'rollup-plugin-commonjs';
 import builtins from 'rollup-plugin-node-builtins';
-import globals from 'rollup-plugin-node-globals';
 
 const name = `identifiLib`;
 
 const plugins = [
   babel(),
-  globals(),
-  builtins(),
+  builtins({crypto: true}),
   nodeResolve({
     module: true,
     jsnext: true

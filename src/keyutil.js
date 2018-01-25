@@ -6,7 +6,7 @@ let myKey;
 
 const stdio = [`pipe`, `pipe`, `ignore`]; // Ignore stderr
 
-module.exports = {
+export default {
   generate: function() {
     const key = {public: {}, private: {}};
     key.private.pem = execSync(`openssl ecparam -genkey -noout -name secp256k1`, {stdio: stdio}).toString();

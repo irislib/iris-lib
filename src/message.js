@@ -82,7 +82,7 @@ function create(signedData, skipValidation) {
   return msg;
 }
 
-module.exports = {
+export default {
   create: create,
 
   JWS_MAX_LENGTH: JWS_MAX_LENGTH,

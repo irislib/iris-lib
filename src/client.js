@@ -32,4 +32,4 @@ const client = {
   }
 };
 
-module.exports = client;
+export default client;
