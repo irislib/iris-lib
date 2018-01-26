@@ -64,6 +64,9 @@
     "rollup-plugin-uglify": "^3.0.0"
   },
   "dependencies": {
-    "merkle-btree": "^1.0.18"
+    "jws": "^3.1.4",
+    "merkle-btree": "^1.0.18",
+    "moment": "^2.20.1",
+    "request-promise": "^4.2.2"
   }
 }
