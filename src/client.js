@@ -1,9 +1,9 @@
 const rp = require(`request-promise`);
 const jws = require(`jws`);
 
-const client = {
+export default {
   apiRoot: `http://127.0.0.1:4944/api`,
-  request: function(options) {
+  request: async function(options) {
     options.json = options.json !== undefined ? options.json : true;
     options.uri = options.uri !== undefined ? options.uri : this.apiRoot;
     if (options.apiMethod)  { options.uri += `/${options.apiMethod}`; }
@@ -11,15 +11,6 @@ const client = {
     if (options.apiId)      { options.uri += `/${encodeURIComponent(options.apiId)}`; }
     if (options.apiAction)  { options.uri += `/${options.apiAction}`; }
     return rp(options);
-  },
-  getSocket: function(opts) {
-    opts = Object.assign({url: this.apiRoot, options: {}}, opts);
-    if (opts.isPeer) {
-      opts.options.extraHeaders = {
-        'X-Accept-Incoming-Connections': true
-      };
-    }
-    return require(`socket.io-client`)(opts.url, opts.options);
   },
   getJwt: function(signingKeyPem, payload) {
     const exp = Math.floor(Date.now() / 1000) + 60;
@@ -31,5 +22,3 @@ const client = {
     });
   }
 };
-
-export default client;

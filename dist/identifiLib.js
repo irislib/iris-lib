@@ -4,42 +4,33 @@
 	(global.identifiLib = factory());
 }(this, (function () { 'use strict';
 
-var rp = require('request-promise');
-var jws = require('jws');
+var rp = require("request-promise");
+var jws = require("jws");
 
-var client = {
-  apiRoot: 'http://127.0.0.1:4944/api',
-  request: function request(options) {
+var APIClient = {
+  apiRoot: "http://127.0.0.1:4944/api",
+  request: async function request(options) {
     options.json = options.json !== undefined ? options.json : true;
     options.uri = options.uri !== undefined ? options.uri : this.apiRoot;
     if (options.apiMethod) {
-      options.uri += '/' + options.apiMethod;
+      options.uri += "/" + options.apiMethod;
     }
     if (options.apiIdType) {
-      options.uri += '/' + encodeURIComponent(options.apiIdType);
+      options.uri += "/" + encodeURIComponent(options.apiIdType);
     }
     if (options.apiId) {
-      options.uri += '/' + encodeURIComponent(options.apiId);
+      options.uri += "/" + encodeURIComponent(options.apiId);
     }
     if (options.apiAction) {
-      options.uri += '/' + options.apiAction;
+      options.uri += "/" + options.apiAction;
     }
     return rp(options);
-  },
-  getSocket: function getSocket(opts) {
-    opts = Object.assign({ url: this.apiRoot, options: {} }, opts);
-    if (opts.isPeer) {
-      opts.options.extraHeaders = {
-        'X-Accept-Incoming-Connections': true
-      };
-    }
-    return require('socket.io-client')(opts.url, opts.options);
   },
   getJwt: function getJwt(signingKeyPem, payload) {
     var exp = Math.floor(Date.now() / 1000) + 60;
     payload = Object.assign({ exp: exp }, payload);
     return jws.sign({
-      header: { typ: 'JWT', alg: 'ES256' },
+      header: { typ: "JWT", alg: "ES256" },
       payload: payload,
       privateKey: signingKeyPem
     });
@@ -15947,7 +15938,6 @@ var cryptoBrowserify_39 = cryptoBrowserify.constants;
 
 /*jshint unused: false */
 var jws$1 = require('jws');
-var moment = require('moment');
 var keyutil = require('./keyutil');
 
 var encoding = 'base64';
@@ -16022,7 +16012,7 @@ function validate(msg) {
     throw Error(errorMsg + ' Missing timestamp');
   }
 
-  if (!moment(d.timestamp)) {
+  if (!Date.parse(d.timestamp)) {
     throw Error(errorMsg + ' Invalid timestamp');
   }
 
@@ -16061,7 +16051,7 @@ function create(signedData, skipValidation) {
     signedData: signedData
   };
 
-  msg.signedData.timestamp = msg.signedData.timestamp || moment.utc().toISOString();
+  msg.signedData.timestamp = msg.signedData.timestamp || new Date().toISOString();
 
   if (!skipValidation) {
     validate(msg);
@@ -16980,7 +16970,7 @@ var index = {
   VERSION: pkg.version,
   UNIQUE_ID_VALIDATORS: util$2.UNIQUE_ID_VALIDATORS,
   guessTypeOf: util$2.guessTypeOf,
-  APIClient: client,
+  APIClient: APIClient,
   Message: Message,
   keyutil: keyutil$1,
   IdentifiIndex: IdentifiIndex

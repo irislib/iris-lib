@@ -2,7 +2,6 @@
 `use strict`;
 import {createHash} from 'crypto';
 const jws = require(`jws`);
-const moment = require(`moment`);
 const keyutil = require(`./keyutil`);
 
 const encoding = `base64`;
@@ -50,7 +49,7 @@ function validate(msg) {
   }
   if (!d.timestamp) {throw Error(`${errorMsg} Missing timestamp`);}
 
-  if (!moment(d.timestamp)) {throw Error(`${errorMsg} Invalid timestamp`);}
+  if (!Date.parse(d.timestamp)) {throw Error(`${errorMsg} Invalid timestamp`);}
 
   if (d.type === `rating`) {
     if (isNaN(d.rating)) {throw Error(`${errorMsg} Invalid rating`);}
@@ -73,7 +72,7 @@ function create(signedData, skipValidation) {
     signedData: signedData
   };
 
-  msg.signedData.timestamp = msg.signedData.timestamp || moment.utc().toISOString();
+  msg.signedData.timestamp = msg.signedData.timestamp || (new Date()).toISOString();
 
   if (!skipValidation) {
     validate(msg);
