@@ -16198,9 +16198,693 @@ var keyutil$1 = {
   }
 };
 
-/*eslint no-useless-escape: "off", camelcase: "off" */
+var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var pkg = require('../package.json');
+var _typeof$8 = typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol" ? function (obj) {
+  return typeof obj === "undefined" ? "undefined" : _typeof2(obj);
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj === "undefined" ? "undefined" : _typeof2(obj);
+};
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+function lt(a, b) {
+  return a < b;
+}
+
+function lte(a, b) {
+  return a <= b;
+}
+
+function gt(a, b) {
+  return a > b;
+}
+
+function gte(a, b) {
+  return a >= b;
+}
+
+function any() {
+  return true;
+}
+
+function beginsWith(str, begin) {
+  return str.substring(0, begin.length) === begin;
+}
+
+var KeyElement = function KeyElement(key, value, targetHash) {
+  _classCallCheck(this, KeyElement);
+
+  this.key = key;
+  this.value = value;
+  this.targetHash = targetHash;
+};
+
+var TreeNode = function () {
+  function TreeNode(leftChildHash) {
+    var keys = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+    var hash = arguments[2];
+
+    _classCallCheck(this, TreeNode);
+
+    this.hash = hash;
+    this.leftChildHash = leftChildHash;
+    this.keys = keys;
+    var zero = new KeyElement("", null, leftChildHash);
+    if (!this.keys.length || this.keys[0].key.length) {
+      this.keys.unshift(zero);
+    }
+  }
+
+  TreeNode.prototype.get = function get(key, storage) {
+    var nextKey = this.keys[0];
+    for (var _iterator = this.keys, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      var _ref;
+
+      if (_isArray) {
+        if (_i >= _iterator.length) break;
+        _ref = _iterator[_i++];
+      } else {
+        _i = _iterator.next();
+        if (_i.done) break;
+        _ref = _i.value;
+      }
+
+      var k = _ref;
+
+      if (key < k.key) {
+        break;
+      }
+      nextKey = k;
+    }
+    if (nextKey.targetHash) {
+      return storage.get(nextKey.targetHash).then(function (serialized) {
+        return TreeNode.deserialize(serialized, nextKey.targetHash).get(key, storage);
+      });
+    }
+    if (nextKey.key === key) {
+      return Promise.resolve(nextKey.value);
+    }
+    return Promise.resolve(null); // not found
+  };
+
+  TreeNode.prototype.searchText = function searchText(query) {
+    var limit = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 100;
+    var cursor = arguments[2];
+    var reverse = arguments[3];
+    var storage = arguments[4];
+
+    var lowerBound = cursor || query;
+    var upperBound = undefined;
+    var includeLowerBound = !cursor;
+    var includeUpperBound = true;
+    if (reverse) {
+      lowerBound = query;
+      upperBound = cursor || undefined;
+      includeLowerBound = true;
+      includeUpperBound = !cursor;
+    }
+    return this.searchRange(lowerBound, upperBound, query, limit, includeLowerBound, includeUpperBound, reverse, storage);
+  };
+
+  TreeNode.prototype.searchRange = function searchRange(lowerBound, upperBound, queryText, limit) {
+    var includeLowerBound = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
+    var includeUpperBound = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : true;
+    var reverse = arguments[6];
+    var storage = arguments[7];
+
+    var matches = [];
+    var _this = this;
+
+    var lowerBoundCheck = void 0,
+        upperBoundCheck = void 0;
+    if (lowerBound) {
+      lowerBoundCheck = includeLowerBound ? gte : gt;
+    } else {
+      lowerBoundCheck = any;
+    }
+    if (upperBound) {
+      upperBoundCheck = includeUpperBound ? lte : lt;
+    } else {
+      upperBoundCheck = any;
+    }
+
+    function iterate(i) {
+      if (i < 0 || i >= _this.keys.length) {
+        return Promise.resolve(matches);
+      }
+      if (limit && matches.length >= limit) {
+        matches = matches.slice(0, limit + 1);
+        return Promise.resolve(matches);
+      }
+
+      var next = reverse ? i - 1 : i + 1;
+      var k = _this.keys[i];
+      if (next >= 0 && next < _this.keys.length) {
+        if (!reverse && lowerBound >= _this.keys[next].key) {
+          // search only nodes whose keys are in the query range
+          return iterate(next);
+        }
+        if (reverse && upperBound < _this.keys[next].key) {
+          // search only nodes whose keys are in the query range
+          return iterate(next);
+        }
+      }
+      // return if search range upper / lower bound was passed
+      if (reverse && i + 1 < _this.keys.length && !lowerBoundCheck(_this.keys[i + 1].key, lowerBound)) {
+        return Promise.resolve(matches);
+      }
+      if (!reverse && !upperBoundCheck(k.key, upperBound)) {
+        return Promise.resolve(matches);
+      }
+      if (k.targetHash) {
+        // branch node
+        return storage.get(k.targetHash).then(function (serialized) {
+          var newLimit = limit ? limit - matches.length : undefined;
+          return TreeNode.deserialize(serialized, k.targetHash).searchRange(lowerBound, upperBound, queryText, newLimit, includeLowerBound, includeUpperBound, reverse, storage);
+        }).then(function (m) {
+          if (m) {
+            if (matches.length && !m.length) {
+              return Promise.resolve(matches); // matches were previously found but now we're out of range
+            }
+            if (queryText && !m.length) {
+              // text search yielded no results where they could have been
+              return Promise.resolve(matches);
+            }
+            Array.prototype.push.apply(matches, m);
+          }
+          return iterate(next);
+        });
+      }
+      // leaf node
+      if (k.key.length && k.value) {
+        if (queryText && matches.length && !beginsWith(k.key, queryText)) {
+          return Promise.resolve(matches); // matches were previously found but now we're out of range
+        }
+        if (lowerBoundCheck(k.key, lowerBound) && upperBoundCheck(k.key, upperBound)) {
+          // leaf node with matching key
+          if (!queryText || beginsWith(k.key, queryText)) {
+            matches.push({ key: k.key, value: k.value });
+          }
+        }
+      }
+      return iterate(next);
+    }
+
+    return iterate(reverse ? this.keys.length - 1 : 0);
+  };
+
+  TreeNode.prototype._getLeafInsertIndex = function _getLeafInsertIndex(key) {
+    var _getNextSmallestIndex2 = this._getNextSmallestIndex(key),
+        index = _getNextSmallestIndex2.index,
+        exists = _getNextSmallestIndex2.exists;
+
+    var leafInsertIndex = index + 1;
+    if (key > this.keys[this.keys.length - 1].key) {
+      leafInsertIndex = this.keys.length;
+    }
+    return { leafInsertIndex: leafInsertIndex, exists: exists };
+  };
+
+  TreeNode.prototype._getNextSmallestIndex = function _getNextSmallestIndex(key) {
+    var index = 0,
+        exists = void 0;
+    for (var i = 1; i < this.keys.length; i++) {
+      if (key === this.keys[i].key) {
+        exists = true;
+        break;
+      }
+      if (key < this.keys[i].key) {
+        break;
+      }
+      index = i;
+    }
+    return { index: index, exists: exists };
+  };
+
+  TreeNode.prototype._splitNode = function _splitNode(storage) {
+    var medianIndex = Math.floor(this.keys.length / 2);
+    var median = this.keys[medianIndex];
+    var leftChild = new TreeNode(null, this.keys.slice(0, medianIndex));
+    var putLeftChild = storage.put(leftChild.serialize());
+
+    var rightSet = this.keys.slice(medianIndex, this.keys.length);
+    if (this.keys[0].targetHash) {
+      // branch node
+      rightSet.shift();
+    }
+    var rightChild = new TreeNode(this.keys[medianIndex].targetHash, rightSet);
+    var putRightChild = storage.put(rightChild.serialize());
+
+    var remove = storage.remove(this.hash);
+    return Promise.all([putLeftChild, putRightChild, remove]).then(function (_ref2) {
+      var leftChildHash = _ref2[0],
+          rightChildHash = _ref2[1];
+
+      var rightChildElement = new KeyElement(median.key, null, rightChildHash);
+      return new TreeNode(leftChildHash, [rightChildElement]);
+    });
+  };
+
+  TreeNode.prototype._saveToLeafNode = function _saveToLeafNode(key, value, storage, maxChildren) {
+    var _this2 = this;
+
+    var keyElement = new KeyElement(key, value, null);
+
+    var _getLeafInsertIndex2 = this._getLeafInsertIndex(key),
+        leafInsertIndex = _getLeafInsertIndex2.leafInsertIndex,
+        exists = _getLeafInsertIndex2.exists;
+
+    if (exists) {
+      this.keys[leafInsertIndex] = keyElement;
+      return storage.remove(this.hash).then(function () {
+        return storage.put(_this2.serialize());
+      }).then(function (hash) {
+        return new TreeNode(_this2.leftChildHash, _this2.keys, hash);
+      });
+    }
+
+    this.keys.splice(leafInsertIndex, 0, keyElement);
+    if (this.keys.length < maxChildren) {
+      return storage.remove(this.hash).then(function () {
+        return storage.put(_this2.serialize());
+      }).then(function (hash) {
+        return new TreeNode(_this2.leftChildHash, _this2.keys, hash);
+      });
+    }
+    return this._splitNode(storage);
+  };
+
+  TreeNode.prototype._saveToBranchNode = function _saveToBranchNode(key, value, storage, maxChildren) {
+    var _this3 = this;
+
+    var _getNextSmallestIndex3 = this._getNextSmallestIndex(key),
+        index = _getNextSmallestIndex3.index;
+
+    var nextSmallest = this.keys[index];
+    return storage.get(nextSmallest.targetHash).then(function (serialized) {
+      return TreeNode.deserialize(serialized, nextSmallest.targetHash).put(key, value, storage, maxChildren);
+    }).then(function (modifiedChild) {
+      if (!modifiedChild.hash) {
+        // we split a child and need to add the median to our keys
+        _this3.keys[index] = new KeyElement(nextSmallest.key, null, modifiedChild.keys[0].targetHash);
+        _this3.keys.splice(index + 1, 0, modifiedChild.keys[modifiedChild.keys.length - 1]);
+
+        if (_this3.keys.length < maxChildren) {
+          storage.remove(_this3.hash);
+          return storage.put(_this3.serialize()).then(function (hash) {
+            return new TreeNode(_this3.leftChildHash, _this3.keys, hash);
+          });
+        }
+        return _this3._splitNode(storage);
+      }
+      // The child element was not split
+      _this3.keys[index] = new KeyElement(_this3.keys[index].key, null, modifiedChild.hash);
+      storage.remove(_this3.hash);
+      return storage.put(_this3.serialize()).then(function (hash) {
+        return new TreeNode(_this3.leftChildHash, _this3.keys, hash);
+      });
+    });
+  };
+
+  TreeNode.prototype.put = function put(key, value, storage, maxChildren) {
+    if (!this.keys[0].targetHash) {
+      return this._saveToLeafNode(key, value, storage, maxChildren);
+    }
+    return this._saveToBranchNode(key, value, storage, maxChildren);
+  };
+
+  TreeNode.prototype.delete = function _delete(key, storage) {
+    var _this4 = this;
+
+    var nextKey = this.keys[0];
+    var i = void 0;
+    for (i = 0; i < this.keys.length; i++) {
+      if (key < this.keys[i].key) {
+        i = Math.max(i - 1, 0);
+        break;
+      }
+      nextKey = this.keys[i];
+    }
+    var q = Promise.resolve();
+    if (nextKey.targetHash) {
+      q = q.then(function () {
+        return storage.get(nextKey.targetHash).then(function (serialized) {
+          return TreeNode.deserialize(serialized, nextKey.targetHash).delete(key, storage);
+        }).then(function (newNode) {
+          var oldHash = nextKey.targetHash;
+          nextKey.targetHash = newNode.hash;
+          return storage.remove(oldHash);
+        });
+      });
+    } else if (nextKey.key === key) {
+      this.keys.splice(i, 1);
+    }
+    return q.then(function () {
+      return storage.put(_this4.serialize());
+    }).then(function (hash) {
+      return new TreeNode(_this4.leftChildHash, _this4.keys, hash);
+    });
+  };
+
+  TreeNode.prototype.size = function size(storage) {
+    return this.keys.reduce(function (promise, key) {
+      return promise.then(function (size) {
+        if (key.targetHash) {
+          return storage.get(key.targetHash).then(function (serialized) {
+            return TreeNode.deserialize(serialized).size(storage);
+          }).then(function (childSize) {
+            return childSize + size;
+          });
+        }
+        return size;
+      });
+    }, Promise.resolve(this.keys.length));
+  };
+
+  TreeNode.prototype.smallestKey = function smallestKey() {
+    if (this.keys.length) {
+      return this.keys[0];
+    }
+    return null;
+  };
+
+  TreeNode.prototype.smallestNonZeroKey = function smallestNonZeroKey() {
+    if (this.keys.length > 1) {
+      return this.keys[1];
+    }
+    return null;
+  };
+
+  TreeNode.prototype.rebalance = function rebalance() {};
+
+  TreeNode.prototype.print = function print(storage) {
+    var lvl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+    var str = "node: " + this.hash + "\n";
+    var indentation = "";
+    for (var i = 0; i <= lvl; i++) {
+      indentation += "- ";
+    }
+    this.keys.forEach(function (key) {
+      str += indentation;
+      str += "key: " + key.key;
+      if (key.targetHash) {
+        str += " link: " + key.targetHash;
+      }
+      if (key.value) {
+        str += "\n" + indentation + "   value: " + JSON.stringify(key.value);
+      }
+      str += "\n";
+    });
+    this.keys.forEach(function (key) {
+      if (key.targetHash) {
+        storage.get(key.targetHash).then(function (serialized) {
+          var child = TreeNode.deserialize(serialized, key.targetHash);
+          str += "\n";
+          str += indentation;
+          str += child.print(storage, lvl + 1);
+        });
+      }
+    });
+    return str;
+  };
+
+  TreeNode.prototype.serialize = function serialize() {
+    return JSON.stringify({ leftChildHash: this.leftChildHash, keys: this.keys });
+  };
+
+  TreeNode.deserialize = function deserialize(data, hash) {
+    data = JSON.parse(data);
+    return new TreeNode(data.leftChildHash, data.keys, hash);
+  };
+
+  /*
+    Create a tree from a [{key,value,targetHash}, ...] list sorted in ascending order by k.
+    targetHash must be null for leaf nodes.
+  */
+
+  TreeNode.fromSortedList = function fromSortedList(list, maxChildren, storage) {
+    function addNextParentNode(parentNodeList) {
+      if (list.length) {
+        var _ret = function () {
+          var keys = list.splice(0, maxChildren);
+          return {
+            v: storage.put(new TreeNode(keys[0].targetHash, keys).serialize()).then(function (res) {
+              parentNodeList.push({ key: keys[1].key, targetHash: res, value: null });
+              return addNextParentNode(parentNodeList);
+            })
+          };
+        }();
+
+        if ((typeof _ret === "undefined" ? "undefined" : _typeof$8(_ret)) === "object") return _ret.v;
+      }
+      if (parentNodeList.length && parentNodeList[0].targetHash) {
+        parentNodeList[0].key = "";
+      }
+      return TreeNode.fromSortedList(parentNodeList, maxChildren, storage);
+    }
+
+    if (list.length > maxChildren) {
+      return addNextParentNode([]);
+    }
+
+    var targetHash = list.length ? list[0].targetHash : null;
+    var node = new TreeNode(targetHash, list);
+    return storage.put(node.serialize()).then(function (hash) {
+      node.hash = hash;
+      return node;
+    });
+  };
+
+  return TreeNode;
+}();
+
+function _classCallCheck$1(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+var MerkleBTree = function () {
+  function MerkleBTree(storage) {
+    var maxChildren = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 10;
+    var rootNode = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new TreeNode();
+
+    _classCallCheck$1(this, MerkleBTree);
+
+    this.rootNode = rootNode;
+    this.storage = storage;
+    this.maxChildren = Math.max(maxChildren, 2);
+  }
+
+  MerkleBTree.prototype.get = function get(key) {
+    return this.rootNode.get(key, this.storage);
+  };
+
+  MerkleBTree.prototype.searchText = function searchText(query, limit, cursor) {
+    var reverse = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+
+    return this.rootNode.searchText(query, limit, cursor, reverse, this.storage);
+  };
+
+  MerkleBTree.prototype.searchRange = function searchRange(lowerBound, upperBound, limit) {
+    var includeLowerBound = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
+    var includeUpperBound = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
+    var reverse = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
+
+    return this.rootNode.searchRange(lowerBound, upperBound, false, limit, includeLowerBound, includeUpperBound, reverse, this.storage);
+  };
+
+  MerkleBTree.prototype.put = function put(key, value) {
+    var _this = this;
+
+    return this.rootNode.put(key, value, this.storage, this.maxChildren).then(function (newRoot) {
+      _this.rootNode = newRoot;
+      return _this.rootNode.hash;
+    });
+  };
+
+  MerkleBTree.prototype.delete = function _delete(key) {
+    var _this2 = this;
+
+    return this.rootNode.delete(key, this.storage, this.maxChildren).then(function (newRoot) {
+      _this2.rootNode = newRoot;
+      return _this2.rootNode.hash;
+    });
+  };
+
+  MerkleBTree.prototype.print = function print() {
+    return this.rootNode.print(this.storage);
+  };
+
+  /* Return number of keys stored in tree */
+
+  MerkleBTree.prototype.size = function size() {
+    return this.rootNode.size(this.storage);
+  };
+
+  MerkleBTree.getByHash = function getByHash(hash, storage, maxChildren) {
+    return storage.get(hash).then(function (data) {
+      var rootNode = TreeNode.deserialize(data);
+      return new MerkleBTree(storage, maxChildren, rootNode);
+    });
+  };
+
+  MerkleBTree.fromSortedList = function fromSortedList(list, maxChildren, storage) {
+    return TreeNode.fromSortedList(list, maxChildren, storage).then(function (rootNode) {
+      return new MerkleBTree(storage, maxChildren, rootNode);
+    });
+  };
+
+  return MerkleBTree;
+}();
+
+function _classCallCheck$2(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+var IPFSStorage = function () {
+  function IPFSStorage(ipfs) {
+    _classCallCheck$2(this, IPFSStorage);
+
+    this.ipfs = ipfs;
+  }
+
+  IPFSStorage.prototype.put = function put(value) {
+    return this.ipfs.files.add(new Buffer(value, "utf8")).then(function (res) {
+      return res[0].hash;
+    });
+  };
+
+  IPFSStorage.prototype.get = function get(key) {
+    return this.ipfs.files.cat(key).then(function (stream) {
+      return new Promise(function (resolve, reject) {
+        var res = "";
+
+        stream.on("data", function (chunk) {
+          res += chunk.toString();
+        });
+
+        stream.on("error", function (err) {
+          reject(err);
+        });
+
+        stream.on("end", function () {
+          resolve(res);
+        });
+      });
+    });
+  };
+
+  IPFSStorage.prototype.remove = function remove(key) {
+    return Promise.resolve(key);
+  };
+
+  IPFSStorage.prototype.clear = function clear() {
+    return Promise.resolve();
+  };
+
+  return IPFSStorage;
+}();
+
+function _classCallCheck$3(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+function browserGet(url) {
+  return new Promise(function (resolve, reject) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function () {
+      if (xmlHttp.readyState === 4) {
+        if (xmlHttp.status >= 200 && xmlHttp.status < 300) resolve(xmlHttp.responseText);else reject(xmlHttp.responseText);
+      }
+    };
+    xmlHttp.open("GET", url, true); // true for asynchronous
+    xmlHttp.send(null);
+  });
+}
+
+// thanks https://www.tomas-dvorak.cz/posts/nodejs-request-without-dependencies/
+function nodeGet(url) {
+  // return new pending promise
+  return new Promise(function (resolve, reject) {
+    // select http or https module, depending on reqested url
+    var lib = url.startsWith("https") ? require("https") : require("http");
+    var request = lib.get(url, function (response) {
+      // handle http errors
+      if (response.statusCode < 200 || response.statusCode > 299) {
+        reject(new Error("Failed to load page, status code: " + response.statusCode));
+      }
+      // temporary data holder
+      var body = [];
+      // on every content chunk, push it to the data array
+      response.on("data", function (chunk) {
+        return body.push(chunk);
+      });
+      // we are done, resolve promise with those joined chunks
+      response.on("end", function () {
+        return resolve(body.join(""));
+      });
+    });
+    // handle connection errors of the request
+    request.on("error", function (err) {
+      return reject(err);
+    });
+  });
+}
+
+function getContent(url) {
+  if (typeof require !== "undefined" && require.resolve("http") && require.resolve("https")) {
+    return nodeGet(url);
+  } else {
+    return browserGet(url);
+  }
+}
+
+var IPFSGatewayStorage = function () {
+  function IPFSGatewayStorage() {
+    var apiRoot = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
+
+    _classCallCheck$3(this, IPFSGatewayStorage);
+
+    this.apiRoot = apiRoot;
+  }
+
+  IPFSGatewayStorage.prototype.get = function get(key) {
+    if (!key.match(/^\/ip(fs|ns)\//)) {
+      key = "/ipfs/" + key;
+    }
+    return getContent(this.apiRoot + key);
+  };
+
+  IPFSGatewayStorage.prototype.remove = function remove() {
+    return Promise.resolve();
+  };
+
+  IPFSGatewayStorage.prototype.put = function put() {
+    return Promise.resolve();
+  };
+
+  return IPFSGatewayStorage;
+}();
+
+var btree = {
+  MerkleBTree: MerkleBTree,
+  TreeNode: TreeNode,
+  IPFSStorage: IPFSStorage,
+  IPFSGatewayStorage: IPFSGatewayStorage
+};
+
+/*eslint no-useless-escape: "off", camelcase: "off" */
 
 var UNIQUE_ID_VALIDATORS = {
   email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
@@ -16226,13 +16910,80 @@ function guessTypeOf(value) {
   }
 }
 
+var util$2 = {
+  UNIQUE_ID_VALIDATORS: UNIQUE_ID_VALIDATORS,
+  guessTypeOf: guessTypeOf
+};
+
+function _classCallCheck$4(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var DEFAULT_INDEX_ROOT = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
+var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io'];
+var IPFS_INDEX_WIDTH = 200;
+
+var IdentifiIndex = function () {
+  function IdentifiIndex() {
+    _classCallCheck$4(this, IdentifiIndex);
+  }
+
+  IdentifiIndex.prototype.init = async function init() {
+    var indexRoot = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : DEFAULT_INDEX_ROOT;
+    var ipfs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DEFAULT_IPFS_PROXIES;
+
+    if (typeof ipfs === 'string') {
+      this.storage = new btree.IPFSGatewayStorage(ipfs);
+    } else if (Array.isArray(ipfs)) {
+      this.storage = new btree.IPFSGatewayStorage(ipfs[0]);
+    } else if (typeof ipfs === 'object') {
+      this.storage = new btree.IPFSStorage(ipfs);
+    } else {
+      throw 'ipfs param must be a gateway url, array of urls or a js-ipfs object';
+    }
+    this.index = await btree.MerkleBTree.getByHash(indexRoot + '/identities_by_searchkey', this.storage, IPFS_INDEX_WIDTH);
+    return true;
+  };
+
+  /*
+  Get an identity referenced by an identifier.
+  If type is undefined, tries to guess it.
+  */
+
+
+  IdentifiIndex.prototype.get = async function get(value, type) {
+    if (typeof value === 'undefined') {
+      throw 'Value is undefined';
+    }
+    if (typeof type === 'undefined') {
+      type = util$2.guessTypeOf(value);
+    }
+
+    var profileUri = await this.index.get(encodeURIComponent(value) + ':' + encodeURIComponent(type));
+    if (profileUri) {
+      return this.storage.get(profileUri);
+    }
+  };
+
+  IdentifiIndex.prototype.search = async function search(value, type) {
+    var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
+    // TODO: param 'exact'
+    return this.index.searchText(encodeURIComponent(value), limit);
+  };
+
+  return IdentifiIndex;
+}();
+
+/*eslint no-useless-escape: "off", camelcase: "off" */
+
+var pkg = require('../package.json');
+
 var index = {
   VERSION: pkg.version,
-  UNIQUE_ID_VALIDATORS: UNIQUE_ID_VALIDATORS,
-  guessTypeOf: guessTypeOf,
+  UNIQUE_ID_VALIDATORS: util$2.UNIQUE_ID_VALIDATORS,
+  guessTypeOf: util$2.guessTypeOf,
   APIClient: client,
   Message: Message,
-  keyutil: keyutil$1
+  keyutil: keyutil$1,
+  IdentifiIndex: IdentifiIndex
 };
 
 return index;
