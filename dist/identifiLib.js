@@ -16911,6 +16911,36 @@ var DEFAULT_INDEX_ROOT = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
 var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io'];
 var IPFS_INDEX_WIDTH = 200;
 
+var IdentityProfile = function () {
+  function IdentityProfile(data) {
+    _classCallCheck$4(this, IdentityProfile);
+
+    this.data = data;
+  }
+
+  IdentityProfile.prototype.verified = function verified(attribute) {
+    var v = void 0;
+    var best = 0;
+    this.data.attrs.forEach(function (a) {
+      if (a.name === attribute && a.pos * 2 > a.neg * 3 && a.pos - a.neg > best) {
+        v = a.val;
+        best = a.pos - a.neg;
+      }
+    });
+    return v;
+  };
+
+  IdentityProfile.prototype.profileCard = function profileCard() {
+    return;
+  };
+
+  IdentityProfile.prototype.avatar = function avatar() {
+    return;
+  };
+
+  return IdentityProfile;
+}();
+
 var IdentifiIndex = function () {
   function IdentifiIndex() {
     _classCallCheck$4(this, IdentifiIndex);
@@ -16949,7 +16979,8 @@ var IdentifiIndex = function () {
 
     var profileUri = await this.index.get(encodeURIComponent(value) + ':' + encodeURIComponent(type));
     if (profileUri) {
-      return this.storage.get(profileUri);
+      var p = await this.storage.get(profileUri);
+      return new IdentityProfile(JSON.parse(p));
     }
   };
 

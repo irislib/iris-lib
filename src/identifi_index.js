@@ -5,6 +5,32 @@ const DEFAULT_INDEX_ROOT = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs
 const DEFAULT_IPFS_PROXIES = [`https://identi.fi`, `https://ipfs.io`];
 const IPFS_INDEX_WIDTH = 200;
 
+class IdentityProfile {
+  constructor(data) {
+    this.data = data;
+  }
+
+  verified(attribute) {
+    let v;
+    let best = 0;
+    this.data.attrs.forEach(a => {
+      if (a.name === attribute && a.pos * 2 > a.neg * 3 && a.pos - a.neg > best) {
+        v = a.val;
+        best = a.pos - a.neg;
+      }
+    });
+    return v;
+  }
+
+  profileCard() {
+    return;
+  }
+
+  avatar() {
+    return;
+  }
+}
+
 class IdentifiIndex {
   async init(indexRoot = DEFAULT_INDEX_ROOT, ipfs = DEFAULT_IPFS_PROXIES) {
     if (typeof ipfs === `string`) {
@@ -34,7 +60,8 @@ class IdentifiIndex {
 
     const profileUri = await this.index.get(`${encodeURIComponent(value)}:${encodeURIComponent(type)}`);
     if (profileUri) {
-      return this.storage.get(profileUri);
+      const p = await this.storage.get(profileUri);
+      return new IdentityProfile(JSON.parse(p));
     }
   }
 
