@@ -1,37 +1,13 @@
 import btree from 'merkle-btree';
 import util from './util';
+import Message from './message';
+import Identity from './identity';
 
 const DEFAULT_INDEX_ROOT = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
 const DEFAULT_IPFS_PROXIES = [`https://identi.fi`, `https://ipfs.io`];
 const IPFS_INDEX_WIDTH = 200;
 
-class IdentityProfile {
-  constructor(data) {
-    this.data = data;
-  }
-
-  verified(attribute) {
-    let v;
-    let best = 0;
-    this.data.attrs.forEach(a => {
-      if (a.name === attribute && a.pos * 2 > a.neg * 3 && a.pos - a.neg > best) {
-        v = a.val;
-        best = a.pos - a.neg;
-      }
-    });
-    return v;
-  }
-
-  profileCard() {
-    return;
-  }
-
-  avatar() {
-    return;
-  }
-}
-
-class IdentifiIndex {
+class Index {
   async init(indexRoot = DEFAULT_INDEX_ROOT, ipfs = DEFAULT_IPFS_PROXIES) {
     if (typeof ipfs === `string`) {
       this.storage = new btree.IPFSGatewayStorage(ipfs);
@@ -61,8 +37,13 @@ class IdentifiIndex {
     const profileUri = await this.index.get(`${encodeURIComponent(value)}:${encodeURIComponent(type)}`);
     if (profileUri) {
       const p = await this.storage.get(profileUri);
-      return new IdentityProfile(JSON.parse(p));
+      return new Identity(JSON.parse(p));
     }
+  }
+
+  /* Save msg to index and broadcast to pubsub */
+  async put(msg: Message) {
+    return msg;
   }
 
   async search(value, type, limit = 5) { // TODO: param 'exact'
@@ -70,4 +51,4 @@ class IdentifiIndex {
   }
 }
 
-export default IdentifiIndex;
+export default Index;

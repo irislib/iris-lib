@@ -2,161 +2,134 @@
 `use strict`;
 import {createHash} from 'crypto';
 const jws = require(`jws`);
-const keyutil = require(`./keyutil`);
+const util = require(`./util`);
 
 const encoding = `base64`;
 const JWS_MAX_LENGTH = 10000;
 const errorMsg = `Invalid Identifi message:`;
 
-function getHash(msg) {
-  return createHash(`sha256`).update(JSON.stringify(msg.jws)).digest(`base64`);
-}
+class ValidationError extends Error {}
 
-function getSignerKeyHash(msg) {
-  return keyutil.getHash(msg.jwsHeader.kid);
-}
-
-function validateJws(msg) {
-  if (typeof msg.jws !== `string`) {throw Error(`${errorMsg} Message JWS must be a string`);}
-  if (msg.jws.length > JWS_MAX_LENGTH) {throw Error(`${errorMsg} Message JWS max length is ${JWS_MAX_LENGTH}`);}
-  return true;
-}
-
-function validate(msg) {
-  if (!msg.signedData) {throw Error(`${errorMsg} Missing signedData`);}
-  const d = msg.signedData;
-
-  if (!d.type) {throw Error(`${errorMsg} Missing type definition`);}
-  if (!d.author) {throw Error(`${errorMsg} Missing author`);}
-  if (!d.author.length) {throw Error(`${errorMsg} Author empty`);}
-  let i;
-  let authorKeyID;
-  if (msg.jwsHeader) {
-    msg.signerKeyHash = getSignerKeyHash(msg);
+class Message {
+  constructor(signedData) {
+    this.signedData = signedData;
+    this.validate();
   }
-  for (i = 0;i < d.author.length;i ++) {
-    if (d.author[i].length !== 2) {throw Error(`${errorMsg} Invalid author: ${d.author[i].toString()}`);}
-    if (d.author[i][0] === `keyID`) {
-      if (authorKeyID) {throw Error(`${errorMsg} Author may have only one keyID`);}
-      else {authorKeyID = d.author[i][1];}
-      if (msg.signerKeyHash && authorKeyID !== msg.signerKeyHash) {throw Error(`${errorMsg} If message has a keyID author, it must be signed by the same key`);}
+
+  getSignerKeyHash() {
+    return util.getHash(this.jwsHeader.kid);
+  }
+
+  validate() {
+    if (!this.signedData) {throw new ValidationError(`${errorMsg} Missing signedData`);}
+    if (typeof this.signedData !== `object`) {throw new ValidationError(`${errorMsg} signedData must be an object`);}
+    const d = this.signedData;
+
+    if (!d.type) {throw new ValidationError(`${errorMsg} Missing type definition`);}
+    if (!d.author) {throw new ValidationError(`${errorMsg} Missing author`);}
+    if (!d.author.length) {throw new ValidationError(`${errorMsg} Author empty`);}
+    let i;
+    let authorKeyID;
+    if (this.jwsHeader) {
+      this.signerKeyHash = this.getSignerKeyHash();
     }
-  }
-  if (!d.recipient) {throw Error(`${errorMsg} Missing recipient`);}
-  if (!d.recipient.length) {throw Error(`${errorMsg} Author empty`);}
-  for (i = 0;i < d.recipient.length;i ++) {
-    if (d.recipient[i].length !== 2) {throw Error(`${errorMsg} Invalid recipient: ${d.recipient[i].toString()}`);}
-  }
-  if (!d.timestamp) {throw Error(`${errorMsg} Missing timestamp`);}
+    for (i = 0;i < d.author.length;i ++) {
+      if (d.author[i].length !== 2) {throw new ValidationError(`${errorMsg} Invalid author: ${d.author[i].toString()}`);}
+      if (d.author[i][0] === `keyID`) {
+        if (authorKeyID) {throw new ValidationError(`${errorMsg} Author may have only one keyID`);}
+        else {authorKeyID = d.author[i][1];}
+        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {throw new ValidationError(`${errorMsg} If message has a keyID author, it must be signed by the same key`);}
+      }
+    }
+    if (!d.recipient) {throw new ValidationError(`${errorMsg} Missing recipient`);}
+    if (!d.recipient.length) {throw new ValidationError(`${errorMsg} Author empty`);}
+    for (i = 0;i < d.recipient.length;i ++) {
+      if (d.recipient[i].length !== 2) {throw new ValidationError(`${errorMsg} Invalid recipient: ${d.recipient[i].toString()}`);}
+    }
+    if (!d.timestamp) {throw new ValidationError(`${errorMsg} Missing timestamp`);}
 
-  if (!Date.parse(d.timestamp)) {throw Error(`${errorMsg} Invalid timestamp`);}
+    if (!Date.parse(d.timestamp)) {throw new ValidationError(`${errorMsg} Invalid timestamp`);}
 
-  if (d.type === `rating`) {
-    if (isNaN(d.rating)) {throw Error(`${errorMsg} Invalid rating`);}
-    if (isNaN(d.maxRating)) {throw Error(`${errorMsg} Invalid maxRating`);}
-    if (isNaN(d.minRating)) {throw Error(`${errorMsg} Invalid minRating`);}
-    if (d.rating > d.maxRating) {throw Error(`${errorMsg} Rating is above maxRating`);}
-    if (d.rating < d.minRating) {throw Error(`${errorMsg} Rating is below minRating`);}
-    if (typeof d.context !== `string` || !d.context.length) {throw Error(`${errorMsg} Rating messages must have a context field`);}
-  }
-
-  if (d.type === `verify_identity` || d.type === `unverify_identity`) {
-    if (d.recipient.length < 2) {throw Error(`${errorMsg} At least 2 recipient attributes are needed for a connection / disconnection`);}
-  }
-
-  return true;
-}
-
-function create(signedData, skipValidation) {
-  const msg = {
-    signedData: signedData
-  };
-
-  msg.signedData.timestamp = msg.signedData.timestamp || (new Date()).toISOString();
-
-  if (!skipValidation) {
-    validate(msg);
-  }
-
-  return msg;
-}
-
-export default {
-  create: create,
-
-  JWS_MAX_LENGTH: JWS_MAX_LENGTH,
-
-  createRating: function(signedData, skipValidation) {
-    const msg = this.create(signedData, true);
-
-    msg.signedData.type = `rating`;
-    msg.signedData.maxRating = msg.signedData.maxRating || 10;
-    msg.signedData.minRating = msg.signedData.minRating || - 10;
-
-    if (!skipValidation) {
-      validate(msg);
+    if (d.type === `rating`) {
+      if (isNaN(d.rating)) {throw new ValidationError(`${errorMsg} Invalid rating`);}
+      if (isNaN(d.maxRating)) {throw new ValidationError(`${errorMsg} Invalid maxRating`);}
+      if (isNaN(d.minRating)) {throw new ValidationError(`${errorMsg} Invalid minRating`);}
+      if (d.rating > d.maxRating) {throw new ValidationError(`${errorMsg} Rating is above maxRating`);}
+      if (d.rating < d.minRating) {throw new ValidationError(`${errorMsg} Rating is below minRating`);}
+      if (typeof d.context !== `string` || !d.context.length) {throw new ValidationError(`${errorMsg} Rating messages must have a context field`);}
     }
 
-    return msg;
-  },
-
-  validate: validate,
-
-  sign: function(msg, privKeyPEM, hex, skipValidation) {
-    if (!skipValidation) {
-      validate(msg);
+    if (d.type === `verify_identity` || d.type === `unverify_identity`) {
+      if (d.recipient.length < 2) {throw new ValidationError(`${errorMsg} At least 2 recipient attributes are needed for a connection / disconnection`);}
     }
-    msg.jwsHeader = {alg: `ES256`, kid: hex};
-    msg.jws = jws.sign({
-      header: msg.jwsHeader,
-      payload: msg.signedData,
+
+    return true;
+  }
+
+  isPositive() {
+    return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
+  }
+
+  sign(privKeyPEM, pubKeyHex, skipValidation) {
+    this.jwsHeader = {alg: `ES256`, kid: pubKeyHex};
+    this.jws = jws.sign({
+      header: this.jwsHeader,
+      payload: this.signedData,
       privateKey: privKeyPEM
     });
     if (!skipValidation) {
-      validateJws(msg);
+      Message.validateJws(this.jws);
     }
-    msg.hash = getHash(msg).toString(encoding);
-    return msg.jws;
-  },
+    this.hash = Message.getHash(this.jws).toString(encoding);
+    return this;
+  }
 
-  decode: function(msg) {
-    if (!msg.signedData) {
-      const d = jws.decode(msg.jws);
-      msg.signedData = JSON.parse(d.payload);
-      msg.jwsHeader = d.header;
-      msg.hash = getHash(msg).toString(encoding);
-    }
-    validateJws(msg);
-    validate(msg);
+  static create(signedData) {
+    signedData.timestamp = signedData.timestamp || (new Date()).toISOString();
+    signedData.context = signedData.context || `identifi`;
+    return new Message(signedData);
+  }
+
+  static createRating(signedData) {
+    signedData.type = `rating`;
+    signedData.maxRating = signedData.maxRating || 10;
+    signedData.minRating = signedData.minRating || - 10;
+    return this.create(signedData);
+  }
+
+  static fromJws(jwsString) {
+    Message.validateJws(jwsString);
+    const d = jws.decode(jwsString);
+    const msg = new Message(JSON.parse(d.payload));
+    msg.hash = Message.getHash(jwsString);
+    msg.jwsHeader = d.header;
     return msg;
-  },
+  }
 
-  verify: function(msg) {
-    this.decode(msg);
-    const pubKeyPEM = keyutil.getPubkeyPEMfromHex(msg.jwsHeader.kid);
-    if (!jws.verify(msg.jws, msg.jwsHeader.alg, pubKeyPEM)) {
-      throw new Error(`${errorMsg} Invalid signature`);
+  static getHash(jwsString) {
+    return createHash(`sha256`).update(jwsString).digest(`base64`);
+  }
+
+  verify() {
+    const pubKeyPEM = util.getPubkeyPEMfromHex(this.jwsHeader.kid);
+    if (!jws.verify(this.jws, this.jwsHeader.alg, pubKeyPEM)) {
+      throw new new ValidationError(`${errorMsg} Invalid signature`);
     }
-    if (msg.hash) {
-      if (msg.hash !== getHash(msg)) {
-        throw new Error(`${errorMsg} Invalid message hash`);
+    if (this.hash) {
+      if (this.hash !== Message.getHash(this.jws)) {
+        throw new new ValidationError(`${errorMsg} Invalid message hash`);
       }
     } else {
-      msg.hash = getHash(msg);
+      this.hash = Message.getHash(this.jws);
     }
     return true;
-  },
+  }
 
-  deserialize: function(jws) {
-    const msg = {jws: jws};
-    this.decode(msg);
-    return msg;
-  },
+  static validateJws(jwsString) {
+    if (typeof jwsString !== `string`) {throw new ValidationError(`${errorMsg} Message JWS must be a string`);}
+    if (jwsString.length > JWS_MAX_LENGTH) {throw new ValidationError(`${errorMsg} Message JWS max length is ${JWS_MAX_LENGTH}`);}
+    return true;
+  }
+}
 
-  isPositive: function(msg) {
-    const d = msg.signedData;
-    return d.rating > (d.maxRating + d.minRating) / 2;
-  },
-
-  getSignerKeyHash: getSignerKeyHash
-};
+export default Message;

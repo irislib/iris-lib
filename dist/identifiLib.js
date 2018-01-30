@@ -15936,209 +15936,235 @@ var cryptoBrowserify_37 = cryptoBrowserify.randomFillSync;
 var cryptoBrowserify_38 = cryptoBrowserify.createCredentials;
 var cryptoBrowserify_39 = cryptoBrowserify.constants;
 
-/*jshint unused: false */
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 var jws$1 = require('jws');
-var keyutil = require('./keyutil');
+var util$2 = require('./util');
 
 var encoding = 'base64';
 var JWS_MAX_LENGTH = 10000;
 var errorMsg = 'Invalid Identifi message:';
 
-function getHash(msg) {
-  return cryptoBrowserify_5('sha256').update(JSON.stringify(msg.jws)).digest('base64');
-}
+var ValidationError = function (_Error) {
+  _inherits(ValidationError, _Error);
 
-function getSignerKeyHash(msg) {
-  return keyutil.getHash(msg.jwsHeader.kid);
-}
+  function ValidationError() {
+    _classCallCheck(this, ValidationError);
 
-function validateJws(msg) {
-  if (typeof msg.jws !== 'string') {
-    throw Error(errorMsg + ' Message JWS must be a string');
-  }
-  if (msg.jws.length > JWS_MAX_LENGTH) {
-    throw Error(errorMsg + ' Message JWS max length is ' + JWS_MAX_LENGTH);
-  }
-  return true;
-}
-
-function validate(msg) {
-  if (!msg.signedData) {
-    throw Error(errorMsg + ' Missing signedData');
-  }
-  var d = msg.signedData;
-
-  if (!d.type) {
-    throw Error(errorMsg + ' Missing type definition');
-  }
-  if (!d.author) {
-    throw Error(errorMsg + ' Missing author');
-  }
-  if (!d.author.length) {
-    throw Error(errorMsg + ' Author empty');
-  }
-  var i = void 0;
-  var authorKeyID = void 0;
-  if (msg.jwsHeader) {
-    msg.signerKeyHash = getSignerKeyHash(msg);
-  }
-  for (i = 0; i < d.author.length; i++) {
-    if (d.author[i].length !== 2) {
-      throw Error(errorMsg + ' Invalid author: ' + d.author[i].toString());
-    }
-    if (d.author[i][0] === 'keyID') {
-      if (authorKeyID) {
-        throw Error(errorMsg + ' Author may have only one keyID');
-      } else {
-        authorKeyID = d.author[i][1];
-      }
-      if (msg.signerKeyHash && authorKeyID !== msg.signerKeyHash) {
-        throw Error(errorMsg + ' If message has a keyID author, it must be signed by the same key');
-      }
-    }
-  }
-  if (!d.recipient) {
-    throw Error(errorMsg + ' Missing recipient');
-  }
-  if (!d.recipient.length) {
-    throw Error(errorMsg + ' Author empty');
-  }
-  for (i = 0; i < d.recipient.length; i++) {
-    if (d.recipient[i].length !== 2) {
-      throw Error(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
-    }
-  }
-  if (!d.timestamp) {
-    throw Error(errorMsg + ' Missing timestamp');
+    return _possibleConstructorReturn(this, _Error.apply(this, arguments));
   }
 
-  if (!Date.parse(d.timestamp)) {
-    throw Error(errorMsg + ' Invalid timestamp');
+  return ValidationError;
+}(Error);
+
+var Message = function () {
+  function Message(signedData) {
+    _classCallCheck(this, Message);
+
+    this.signedData = signedData;
+    this.validate();
   }
 
-  if (d.type === 'rating') {
-    if (isNaN(d.rating)) {
-      throw Error(errorMsg + ' Invalid rating');
-    }
-    if (isNaN(d.maxRating)) {
-      throw Error(errorMsg + ' Invalid maxRating');
-    }
-    if (isNaN(d.minRating)) {
-      throw Error(errorMsg + ' Invalid minRating');
-    }
-    if (d.rating > d.maxRating) {
-      throw Error(errorMsg + ' Rating is above maxRating');
-    }
-    if (d.rating < d.minRating) {
-      throw Error(errorMsg + ' Rating is below minRating');
-    }
-    if (typeof d.context !== 'string' || !d.context.length) {
-      throw Error(errorMsg + ' Rating messages must have a context field');
-    }
-  }
-
-  if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
-    if (d.recipient.length < 2) {
-      throw Error(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
-    }
-  }
-
-  return true;
-}
-
-function create(signedData, skipValidation) {
-  var msg = {
-    signedData: signedData
+  Message.prototype.getSignerKeyHash = function getSignerKeyHash() {
+    return util$2.getHash(this.jwsHeader.kid);
   };
 
-  msg.signedData.timestamp = msg.signedData.timestamp || new Date().toISOString();
+  Message.prototype.validate = function validate() {
+    if (!this.signedData) {
+      throw new ValidationError(errorMsg + ' Missing signedData');
+    }
+    if (typeof this.signedData !== 'object') {
+      throw new ValidationError(errorMsg + ' signedData must be an object');
+    }
+    var d = this.signedData;
 
-  if (!skipValidation) {
-    validate(msg);
-  }
-
-  return msg;
-}
-
-var Message = {
-  create: create,
-
-  JWS_MAX_LENGTH: JWS_MAX_LENGTH,
-
-  createRating: function createRating(signedData, skipValidation) {
-    var msg = this.create(signedData, true);
-
-    msg.signedData.type = 'rating';
-    msg.signedData.maxRating = msg.signedData.maxRating || 10;
-    msg.signedData.minRating = msg.signedData.minRating || -10;
-
-    if (!skipValidation) {
-      validate(msg);
+    if (!d.type) {
+      throw new ValidationError(errorMsg + ' Missing type definition');
+    }
+    if (!d.author) {
+      throw new ValidationError(errorMsg + ' Missing author');
+    }
+    if (!d.author.length) {
+      throw new ValidationError(errorMsg + ' Author empty');
+    }
+    var i = void 0;
+    var authorKeyID = void 0;
+    if (this.jwsHeader) {
+      this.signerKeyHash = this.getSignerKeyHash();
+    }
+    for (i = 0; i < d.author.length; i++) {
+      if (d.author[i].length !== 2) {
+        throw new ValidationError(errorMsg + ' Invalid author: ' + d.author[i].toString());
+      }
+      if (d.author[i][0] === 'keyID') {
+        if (authorKeyID) {
+          throw new ValidationError(errorMsg + ' Author may have only one keyID');
+        } else {
+          authorKeyID = d.author[i][1];
+        }
+        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {
+          throw new ValidationError(errorMsg + ' If message has a keyID author, it must be signed by the same key');
+        }
+      }
+    }
+    if (!d.recipient) {
+      throw new ValidationError(errorMsg + ' Missing recipient');
+    }
+    if (!d.recipient.length) {
+      throw new ValidationError(errorMsg + ' Author empty');
+    }
+    for (i = 0; i < d.recipient.length; i++) {
+      if (d.recipient[i].length !== 2) {
+        throw new ValidationError(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
+      }
+    }
+    if (!d.timestamp) {
+      throw new ValidationError(errorMsg + ' Missing timestamp');
     }
 
-    return msg;
-  },
-
-  validate: validate,
-
-  sign: function sign(msg, privKeyPEM, hex, skipValidation) {
-    if (!skipValidation) {
-      validate(msg);
+    if (!Date.parse(d.timestamp)) {
+      throw new ValidationError(errorMsg + ' Invalid timestamp');
     }
-    msg.jwsHeader = { alg: 'ES256', kid: hex };
-    msg.jws = jws$1.sign({
-      header: msg.jwsHeader,
-      payload: msg.signedData,
+
+    if (d.type === 'rating') {
+      if (isNaN(d.rating)) {
+        throw new ValidationError(errorMsg + ' Invalid rating');
+      }
+      if (isNaN(d.maxRating)) {
+        throw new ValidationError(errorMsg + ' Invalid maxRating');
+      }
+      if (isNaN(d.minRating)) {
+        throw new ValidationError(errorMsg + ' Invalid minRating');
+      }
+      if (d.rating > d.maxRating) {
+        throw new ValidationError(errorMsg + ' Rating is above maxRating');
+      }
+      if (d.rating < d.minRating) {
+        throw new ValidationError(errorMsg + ' Rating is below minRating');
+      }
+      if (typeof d.context !== 'string' || !d.context.length) {
+        throw new ValidationError(errorMsg + ' Rating messages must have a context field');
+      }
+    }
+
+    if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
+      if (d.recipient.length < 2) {
+        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
+      }
+    }
+
+    return true;
+  };
+
+  Message.prototype.isPositive = function isPositive() {
+    return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
+  };
+
+  Message.prototype.sign = function sign(privKeyPEM, pubKeyHex, skipValidation) {
+    this.jwsHeader = { alg: 'ES256', kid: pubKeyHex };
+    this.jws = jws$1.sign({
+      header: this.jwsHeader,
+      payload: this.signedData,
       privateKey: privKeyPEM
     });
     if (!skipValidation) {
-      validateJws(msg);
+      Message.validateJws(this.jws);
     }
-    msg.hash = getHash(msg).toString(encoding);
-    return msg.jws;
-  },
+    this.hash = Message.getHash(this.jws).toString(encoding);
+    return this;
+  };
 
-  decode: function decode(msg) {
-    if (!msg.signedData) {
-      var d = jws$1.decode(msg.jws);
-      msg.signedData = JSON.parse(d.payload);
-      msg.jwsHeader = d.header;
-      msg.hash = getHash(msg).toString(encoding);
-    }
-    validateJws(msg);
-    validate(msg);
+  Message.create = function create(signedData) {
+    signedData.timestamp = signedData.timestamp || new Date().toISOString();
+    signedData.context = signedData.context || 'identifi';
+    return new Message(signedData);
+  };
+
+  Message.createRating = function createRating(signedData) {
+    signedData.type = 'rating';
+    signedData.maxRating = signedData.maxRating || 10;
+    signedData.minRating = signedData.minRating || -10;
+    return this.create(signedData);
+  };
+
+  Message.fromJws = function fromJws(jwsString) {
+    Message.validateJws(jwsString);
+    var d = jws$1.decode(jwsString);
+    var msg = new Message(JSON.parse(d.payload));
+    msg.hash = Message.getHash(jwsString);
+    msg.jwsHeader = d.header;
     return msg;
-  },
+  };
 
-  verify: function verify(msg) {
-    this.decode(msg);
-    var pubKeyPEM = keyutil.getPubkeyPEMfromHex(msg.jwsHeader.kid);
-    if (!jws$1.verify(msg.jws, msg.jwsHeader.alg, pubKeyPEM)) {
-      throw new Error(errorMsg + ' Invalid signature');
+  Message.getHash = function getHash(jwsString) {
+    return cryptoBrowserify_5('sha256').update(jwsString).digest('base64');
+  };
+
+  Message.prototype.verify = function verify() {
+    var pubKeyPEM = util$2.getPubkeyPEMfromHex(this.jwsHeader.kid);
+    if (!jws$1.verify(this.jws, this.jwsHeader.alg, pubKeyPEM)) {
+      throw new new ValidationError(errorMsg + ' Invalid signature')();
     }
-    if (msg.hash) {
-      if (msg.hash !== getHash(msg)) {
-        throw new Error(errorMsg + ' Invalid message hash');
+    if (this.hash) {
+      if (this.hash !== Message.getHash(this.jws)) {
+        throw new new ValidationError(errorMsg + ' Invalid message hash')();
       }
     } else {
-      msg.hash = getHash(msg);
+      this.hash = Message.getHash(this.jws);
     }
     return true;
-  },
+  };
 
-  deserialize: function deserialize(jws) {
-    var msg = { jws: jws };
-    this.decode(msg);
-    return msg;
-  },
+  Message.validateJws = function validateJws(jwsString) {
+    if (typeof jwsString !== 'string') {
+      throw new ValidationError(errorMsg + ' Message JWS must be a string');
+    }
+    if (jwsString.length > JWS_MAX_LENGTH) {
+      throw new ValidationError(errorMsg + ' Message JWS max length is ' + JWS_MAX_LENGTH);
+    }
+    return true;
+  };
 
-  isPositive: function isPositive(msg) {
-    var d = msg.signedData;
-    return d.rating > (d.maxRating + d.minRating) / 2;
-  },
+  return Message;
+}();
 
-  getSignerKeyHash: getSignerKeyHash
-};
+function _classCallCheck$1(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Identity = function () {
+  function Identity(data) {
+    _classCallCheck$1(this, Identity);
+
+    this.data = data;
+  }
+
+  Identity.prototype.verified = function verified(attribute) {
+    var v = void 0;
+    var best = 0;
+    this.data.attrs.forEach(function (a) {
+      if (a.name === attribute && a.pos * 2 > a.neg * 3 && a.pos - a.neg > best) {
+        v = a.val;
+        best = a.pos - a.neg;
+      }
+    });
+    return v;
+  };
+
+  Identity.prototype.profileCard = function profileCard() {
+    return;
+  };
+
+  Identity.prototype.avatar = function avatar() {
+    return;
+  };
+
+  return Identity;
+}();
+
+/*eslint no-useless-escape: "off", camelcase: "off" */
 
 var execSync = require("child_process").execSync;
 var crypto$2 = require("crypto");
@@ -16147,7 +16173,31 @@ var myKey = void 0;
 
 var stdio = ["pipe", "pipe", "ignore"]; // Ignore stderr
 
-var keyutil$1 = {
+var util$3 = {
+  UNIQUE_ID_VALIDATORS: {
+    email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
+    bitcoin: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
+    bitcoin_address: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
+    ip: /^(([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)\.){3}([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)$/,
+    ipv6: /^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$/,
+    gpg_fingerprint: null,
+    gpg_keyid: null,
+    google_oauth2: null,
+    tel: /^\d{7,}$/,
+    phone: /^\d{7,}$/,
+    keyID: null,
+    url: /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi,
+    account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i
+  },
+
+  guessTypeOf: function guessTypeOf(value) {
+    for (var key in this.UNIQUE_ID_VALIDATORS) {
+      if (value.match(this.UNIQUE_ID_VALIDATORS[key])) {
+        return key;
+      }
+    }
+  },
+
   generate: function generate() {
     var key = { public: {}, private: {} };
     key.private.pem = execSync("openssl ecparam -genkey -noout -name secp256k1", { stdio: stdio }).toString();
@@ -16196,7 +16246,7 @@ var _typeof$8 = typeof Symbol === "function" && _typeof2(Symbol.iterator) === "s
   return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj === "undefined" ? "undefined" : _typeof2(obj);
 };
 
-function _classCallCheck(instance, Constructor) {
+function _classCallCheck$2(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
   }
@@ -16227,7 +16277,7 @@ function beginsWith(str, begin) {
 }
 
 var KeyElement = function KeyElement(key, value, targetHash) {
-  _classCallCheck(this, KeyElement);
+  _classCallCheck$2(this, KeyElement);
 
   this.key = key;
   this.value = value;
@@ -16239,7 +16289,7 @@ var TreeNode = function () {
     var keys = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
     var hash = arguments[2];
 
-    _classCallCheck(this, TreeNode);
+    _classCallCheck$2(this, TreeNode);
 
     this.hash = hash;
     this.leftChildHash = leftChildHash;
@@ -16654,7 +16704,7 @@ var TreeNode = function () {
   return TreeNode;
 }();
 
-function _classCallCheck$1(instance, Constructor) {
+function _classCallCheck$3(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
   }
@@ -16665,7 +16715,7 @@ var MerkleBTree = function () {
     var maxChildren = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 10;
     var rootNode = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new TreeNode();
 
-    _classCallCheck$1(this, MerkleBTree);
+    _classCallCheck$3(this, MerkleBTree);
 
     this.rootNode = rootNode;
     this.storage = storage;
@@ -16734,7 +16784,7 @@ var MerkleBTree = function () {
   return MerkleBTree;
 }();
 
-function _classCallCheck$2(instance, Constructor) {
+function _classCallCheck$4(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
   }
@@ -16742,7 +16792,7 @@ function _classCallCheck$2(instance, Constructor) {
 
 var IPFSStorage = function () {
   function IPFSStorage(ipfs) {
-    _classCallCheck$2(this, IPFSStorage);
+    _classCallCheck$4(this, IPFSStorage);
 
     this.ipfs = ipfs;
   }
@@ -16784,7 +16834,7 @@ var IPFSStorage = function () {
   return IPFSStorage;
 }();
 
-function _classCallCheck$3(instance, Constructor) {
+function _classCallCheck$5(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
   }
@@ -16844,7 +16894,7 @@ var IPFSGatewayStorage = function () {
   function IPFSGatewayStorage() {
     var apiRoot = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
 
-    _classCallCheck$3(this, IPFSGatewayStorage);
+    _classCallCheck$5(this, IPFSGatewayStorage);
 
     this.apiRoot = apiRoot;
   }
@@ -16874,79 +16924,18 @@ var btree = {
   IPFSGatewayStorage: IPFSGatewayStorage
 };
 
-/*eslint no-useless-escape: "off", camelcase: "off" */
-
-var UNIQUE_ID_VALIDATORS = {
-  email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
-  bitcoin: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
-  bitcoin_address: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
-  ip: /^(([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)\.){3}([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)$/,
-  ipv6: /^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$/,
-  gpg_fingerprint: null,
-  gpg_keyid: null,
-  google_oauth2: null,
-  tel: /^\d{7,}$/,
-  phone: /^\d{7,}$/,
-  keyID: null,
-  url: /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi,
-  account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i
-};
-
-function guessTypeOf(value) {
-  for (var key in UNIQUE_ID_VALIDATORS) {
-    if (value.match(UNIQUE_ID_VALIDATORS[key])) {
-      return key;
-    }
-  }
-}
-
-var util$2 = {
-  UNIQUE_ID_VALIDATORS: UNIQUE_ID_VALIDATORS,
-  guessTypeOf: guessTypeOf
-};
-
-function _classCallCheck$4(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _classCallCheck$6(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var DEFAULT_INDEX_ROOT = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
 var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io'];
 var IPFS_INDEX_WIDTH = 200;
 
-var IdentityProfile = function () {
-  function IdentityProfile(data) {
-    _classCallCheck$4(this, IdentityProfile);
-
-    this.data = data;
+var Index = function () {
+  function Index() {
+    _classCallCheck$6(this, Index);
   }
 
-  IdentityProfile.prototype.verified = function verified(attribute) {
-    var v = void 0;
-    var best = 0;
-    this.data.attrs.forEach(function (a) {
-      if (a.name === attribute && a.pos * 2 > a.neg * 3 && a.pos - a.neg > best) {
-        v = a.val;
-        best = a.pos - a.neg;
-      }
-    });
-    return v;
-  };
-
-  IdentityProfile.prototype.profileCard = function profileCard() {
-    return;
-  };
-
-  IdentityProfile.prototype.avatar = function avatar() {
-    return;
-  };
-
-  return IdentityProfile;
-}();
-
-var IdentifiIndex = function () {
-  function IdentifiIndex() {
-    _classCallCheck$4(this, IdentifiIndex);
-  }
-
-  IdentifiIndex.prototype.init = async function init() {
+  Index.prototype.init = async function init() {
     var indexRoot = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : DEFAULT_INDEX_ROOT;
     var ipfs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DEFAULT_IPFS_PROXIES;
 
@@ -16969,28 +16958,35 @@ var IdentifiIndex = function () {
   */
 
 
-  IdentifiIndex.prototype.get = async function get(value, type) {
+  Index.prototype.get = async function get(value, type) {
     if (typeof value === 'undefined') {
       throw 'Value is undefined';
     }
     if (typeof type === 'undefined') {
-      type = util$2.guessTypeOf(value);
+      type = util$3.guessTypeOf(value);
     }
 
     var profileUri = await this.index.get(encodeURIComponent(value) + ':' + encodeURIComponent(type));
     if (profileUri) {
       var p = await this.storage.get(profileUri);
-      return new IdentityProfile(JSON.parse(p));
+      return new Identity(JSON.parse(p));
     }
   };
 
-  IdentifiIndex.prototype.search = async function search(value, type) {
+  /* Save msg to index and broadcast to pubsub */
+
+
+  Index.prototype.put = async function put(msg) {
+    return msg;
+  };
+
+  Index.prototype.search = async function search(value, type) {
     var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
     // TODO: param 'exact'
     return this.index.searchText(encodeURIComponent(value), limit);
   };
 
-  return IdentifiIndex;
+  return Index;
 }();
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
@@ -16999,12 +16995,11 @@ var pkg = require('../package.json');
 
 var index = {
   VERSION: pkg.version,
-  UNIQUE_ID_VALIDATORS: util$2.UNIQUE_ID_VALIDATORS,
-  guessTypeOf: util$2.guessTypeOf,
   APIClient: APIClient,
   Message: Message,
-  keyutil: keyutil$1,
-  IdentifiIndex: IdentifiIndex
+  Identity: Identity,
+  Index: Index,
+  util: util$3
 };
 
 return index;
