@@ -1,7 +1,7 @@
 /*global describe, it, after, before */
 const crypto = require('crypto');
-const Message = require('../src/message.js');
-const util = require('../src/util.js');
+const Message = require('../cjs/message.js');
+const util = require('../cjs/util.js');
 
 describe('Message', function() {
   let msg;

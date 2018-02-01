@@ -12,9 +12,17 @@
 ### Usage
 
 ```js
-import identifiLib from 'identifi-lib';
+const identifi = require('identifi-lib');
 
+const index = new identifi.Index();
+index.init().then(async () => {
+  const profile = await index.get('martti@moni.com');
+  const name = await profile.verified('name');
+  console.log(`Verified name for martti@moni.com: ${name}`);
+});
 ```
+
+See [`example`](example/script.js) for more.
 
 ### Installation
 

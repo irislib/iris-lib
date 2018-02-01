@@ -4,12 +4,12 @@ import Message from './message';
 import Identity from './identity';
 import rp from 'request-promise';
 
-const DEFAULT_INDEX_ROOT = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
+const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
 const DEFAULT_IPFS_PROXIES = [`https://identi.fi`, `https://ipfs.io`];
 const IPFS_INDEX_WIDTH = 200;
 
 class Index {
-  async init(indexRoot = DEFAULT_INDEX_ROOT, ipfs = DEFAULT_IPFS_PROXIES) {
+  async init(indexRoot = DEFAULT_INDEX, ipfs = DEFAULT_IPFS_PROXIES) {
     if (typeof ipfs === `string`) {
       this.storage = new btree.IPFSGatewayStorage(ipfs);
     } else if (Array.isArray(ipfs)) {
@@ -52,6 +52,7 @@ class Index {
       r.hash = await this.ipfs.files.add(buffer);
       r.indexUri = await this.messagesByTimestamp.put(`key`, msg.jws);
       await this.ipfs.pubsub.publish(`identifi`, buffer);
+      // TODO: update ipns entry to point to new index root
     } else {
       r.hash = await rp({
         method: `POST`,

@@ -1,4 +1,4 @@
-const identifi = require('../src/index.js');
+const identifi = require('../cjs/index.js');
 
 let i, p;
 test('instantiate Index', async () => {
@@ -14,4 +14,9 @@ test('get a verified attribute', async () => {
   const r = await p.verified('name');
   expect(typeof r).toBe('string');
   expect(r.length).toBeGreaterThan(0);
+});
+test('search identities', async () => {
+  const r = await i.search('ma');
+  expect(typeof r).toBe('object');
+  expect(r.length).toBeGreaterThan(1);
 });
