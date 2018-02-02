@@ -69,6 +69,6 @@
   "dependencies": {
     "jws": "^3.1.4",
     "merkle-btree": "^1.0.18",
-    "request-promise": "^4.2.2"
+    "request": "^4.2.2"
   }
 }

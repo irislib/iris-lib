@@ -1,4 +1,4 @@
-const rp = require(`request-promise`);
+const request = require(`request`);
 const jws = require(`jws`);
 
 export default {
@@ -10,7 +10,7 @@ export default {
     if (options.apiIdType)  { options.uri += `/${encodeURIComponent(options.apiIdType)}`; }
     if (options.apiId)      { options.uri += `/${encodeURIComponent(options.apiId)}`; }
     if (options.apiAction)  { options.uri += `/${options.apiAction}`; }
-    return rp(options);
+    return request(options);
   },
   getJwt: function(signingKeyPem, payload) {
     const exp = Math.floor(Date.now() / 1000) + 60;

@@ -2,7 +2,7 @@ import btree from 'merkle-btree';
 import util from './util';
 import Message from './message';
 import Identity from './identity';
-import rp from 'request-promise';
+import request from 'request';
 
 const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
 const DEFAULT_IPFS_PROXIES = [`https://identi.fi`, `https://ipfs.io`];
@@ -54,7 +54,7 @@ class Index {
       await this.ipfs.pubsub.publish(`identifi`, buffer);
       // TODO: update ipns entry to point to new index root
     } else {
-      r.hash = await rp({
+      r.hash = await request({
         method: `POST`,
         json: true,
         body: msg.jws,
