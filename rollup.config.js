@@ -10,7 +10,10 @@ const name = `identifiLib`;
 
 const plugins = [
   json(),
-  babel(),
+  babel({
+    exclude: 'node_modules/**',
+    plugins: ['external-helpers']
+  }),
   builtins({crypto: true}),
   nodeResolve({
     module: true,
