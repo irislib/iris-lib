@@ -18,7 +18,8 @@ const plugins = [
   builtins({crypto: true}),
   nodeResolve({
     module: true,
-    jsnext: true
+    jsnext: true,
+    browser: true,
   }),
   commonjs({
     include: `node_modules/**`

@@ -70,6 +70,6 @@
   "dependencies": {
     "jws": "^3.1.4",
     "merkle-btree": "^1.0.18",
-    "request": "^2.83.0"
+    "node-fetch": "^2.0.0"
   }
 }

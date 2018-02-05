@@ -2,7 +2,7 @@ import btree from 'merkle-btree';
 import util from './util';
 import Message from './message';
 import Identity from './identity';
-import request from 'request';
+import fetch from 'node-fetch';
 
 const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
 const DEFAULT_IPFS_PROXIES = [
@@ -20,19 +20,8 @@ class Index {
     } else if (Array.isArray(ipfs)) {
       let url;
       for (let i = 0;i < ipfs.length;i ++) {
-        const success = await new Promise(resolve => {
-          request.get(ipfs[i] + DEFAULT_INDEX, {timeout: 20000})
-            .on(`response`, res => {
-              if (res.statusCode && res.statusCode === 200) {
-                resolve(true);
-              } else {
-                resolve(false);
-              }
-            }).on(`error`, () => {
-              resolve(false);
-            });
-        });
-        if (success) {
+        const res = await fetch(ipfs[i]).catch(() => { return {}; });
+        if (res.ok && res.status === 200) {
           url = ipfs[i];
           break;
         }
@@ -82,11 +71,10 @@ class Index {
       await this.ipfs.pubsub.publish(`identifi`, buffer);
       // TODO: update ipns entry to point to new index root
     } else {
-      r.hash = await request({
+      r.hash = await fetch(`https://identi.fi/api/messages`, {
         method: `POST`,
-        json: true,
+        headers: {'Content-Type': `application/json`},
         body: msg.jws,
-        uri: `https://identi.fi/api/messages`,
       });
     }
     return r;
