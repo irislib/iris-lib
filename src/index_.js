@@ -5,7 +5,12 @@ import Identity from './identity';
 import request from 'request';
 
 const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
-const DEFAULT_IPFS_PROXIES = [`https://identi.fi`, `https://ipfs.io`];
+const DEFAULT_IPFS_PROXIES = [
+  `https://identi.fi`,
+  `https://ipfs.io`,
+  `https://ipfs.infura.io`,
+  `https://www.eternum.io`
+];
 const IPFS_INDEX_WIDTH = 200;
 
 class Index {

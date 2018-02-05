@@ -3,6 +3,8 @@ const crypto = require('crypto');
 const Message = require('../cjs/message.js');
 const util = require('../cjs/util.js');
 
+jest.setTimeout(30000);
+
 describe('Message', function() {
   let msg;
   msg = void 0;

@@ -63433,7 +63433,7 @@ var btree = {
 };
 
 var DEFAULT_INDEX = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
-var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io'];
+var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io', 'https://ipfs.infura.io', 'https://www.eternum.io'];
 var IPFS_INDEX_WIDTH = 200;
 
 var Index = function () {

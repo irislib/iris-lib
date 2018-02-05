@@ -1,6 +1,9 @@
 const identifi = require('../cjs/index.js');
 
 let i, p;
+
+jest.setTimeout(30000);
+
 test('instantiate Index', async () => {
   i = new identifi.Index();
   expect(i).toBeInstanceOf(identifi.Index);
