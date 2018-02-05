@@ -21,7 +21,7 @@
     "prepush": "npm run lint:test",
     "release": "release-it",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
-    "lint": "npm run lint:eslint && npm run lint:flow",
+    "lint": "npm run lint:eslint",
     "lint:eslint": "eslint src/*.js",
     "lint:flow": "flow --color always",
     "test": "clear && jest",
@@ -49,17 +49,17 @@
     "babel-preset-es2015": "^6.24.1",
     "coveralls": "^3.0.0",
     "cross-env": "^5.1.3",
-    "eslint": "^4.16.0",
+    "eslint": "^4.17.0",
     "eslint-config-devine": "^1.7.1",
     "eslint-plugin-babel": "^4.1.2",
     "flow-bin": "^0.64.0",
     "husky": "^0.14.3",
     "jest": "^22.1.4",
-    "release-it": "^6.1.1",
+    "release-it": "^6.2.0",
     "rimraf": "^2.6.2",
-    "rollup": "^0.55.0",
+    "rollup": "^0.55.3",
     "rollup-plugin-babel": "^3.0.3",
-    "rollup-plugin-commonjs": "^8.2.6",
+    "rollup-plugin-commonjs": "^8.3.0",
     "rollup-plugin-filesize": "^1.5.0",
     "rollup-plugin-json": "^2.3.0",
     "rollup-plugin-node-builtins": "^2.1.2",
@@ -69,6 +69,6 @@
   "dependencies": {
     "jws": "^3.1.4",
     "merkle-btree": "^1.0.18",
-    "request": "^4.2.2"
+    "request": "^2.83.0"
   }
 }

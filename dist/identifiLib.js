@@ -2528,22 +2528,23 @@ var browserifySign = {
 	Verify: Verify
 };
 
-var _args = [["elliptic@6.4.0","/home/leet/src/identifi-lib"]];
-var _development = true;
-var _from = "elliptic@6.4.0";
+var _from = "elliptic@^6.0.0";
 var _id = "elliptic@6.4.0";
 var _inBundle = false;
 var _integrity = "sha1-ysmvh2LIWDYYcAPI3+GT5eLq5d8=";
 var _location = "/elliptic";
 var _phantomChildren = {};
-var _requested = {"type":"version","registry":true,"raw":"elliptic@6.4.0","name":"elliptic","escapedName":"elliptic","rawSpec":"6.4.0","saveSpec":null,"fetchSpec":"6.4.0"};
+var _requested = {"type":"range","registry":true,"raw":"elliptic@^6.0.0","name":"elliptic","escapedName":"elliptic","rawSpec":"^6.0.0","saveSpec":null,"fetchSpec":"^6.0.0"};
 var _requiredBy = ["/browserify-sign","/create-ecdh"];
 var _resolved = "https://registry.npmjs.org/elliptic/-/elliptic-6.4.0.tgz";
-var _spec = "6.4.0";
-var _where = "/home/leet/src/identifi-lib";
+var _shasum = "cac9af8762c85836187003c8dfe193e5e2eae5df";
+var _spec = "elliptic@^6.0.0";
+var _where = "/Users/martti/workspace/identifi-lib2/node_modules/browserify-sign";
 var author = {"name":"Fedor Indutny","email":"fedor@indutny.com"};
 var bugs = {"url":"https://github.com/indutny/elliptic/issues"};
+var bundleDependencies = false;
 var dependencies = {"bn.js":"^4.4.0","brorand":"^1.0.1","hash.js":"^1.0.0","hmac-drbg":"^1.0.0","inherits":"^2.0.1","minimalistic-assert":"^1.0.0","minimalistic-crypto-utils":"^1.0.0"};
+var deprecated = false;
 var description = "EC cryptography";
 var devDependencies = {"brfs":"^1.4.3","coveralls":"^2.11.3","grunt":"^0.4.5","grunt-browserify":"^5.0.0","grunt-cli":"^1.2.0","grunt-contrib-connect":"^1.0.0","grunt-contrib-copy":"^1.0.0","grunt-contrib-uglify":"^1.0.1","grunt-mocha-istanbul":"^3.0.1","grunt-saucelabs":"^8.6.2","istanbul":"^0.4.2","jscs":"^2.9.0","jshint":"^2.6.0","mocha":"^2.1.0"};
 var files = ["lib"];
@@ -2556,8 +2557,6 @@ var repository = {"type":"git","url":"git+ssh://git@github.com/indutny/elliptic.
 var scripts = {"jscs":"jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js","jshint":"jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js","lint":"npm run jscs && npm run jshint","test":"npm run lint && npm run unit","unit":"istanbul test _mocha --reporter=spec test/index.js","version":"grunt dist && git add dist/"};
 var version = "6.4.0";
 var _package = {
-	_args: _args,
-	_development: _development,
 	_from: _from,
 	_id: _id,
 	_inBundle: _inBundle,
@@ -2567,11 +2566,14 @@ var _package = {
 	_requested: _requested,
 	_requiredBy: _requiredBy,
 	_resolved: _resolved,
+	_shasum: _shasum,
 	_spec: _spec,
 	_where: _where,
 	author: author,
 	bugs: bugs,
+	bundleDependencies: bundleDependencies,
 	dependencies: dependencies,
+	deprecated: deprecated,
 	description: description,
 	devDependencies: devDependencies,
 	files: files,
@@ -2586,8 +2588,6 @@ var _package = {
 };
 
 var _package$1 = Object.freeze({
-	_args: _args,
-	_development: _development,
 	_from: _from,
 	_id: _id,
 	_inBundle: _inBundle,
@@ -2597,11 +2597,14 @@ var _package$1 = Object.freeze({
 	_requested: _requested,
 	_requiredBy: _requiredBy,
 	_resolved: _resolved,
+	_shasum: _shasum,
 	_spec: _spec,
 	_where: _where,
 	author: author,
 	bugs: bugs,
+	bundleDependencies: bundleDependencies,
 	dependencies: dependencies,
+	deprecated: deprecated,
 	description: description,
 	devDependencies: devDependencies,
 	files: files,
@@ -18903,7 +18906,7 @@ var btree = {
   MerkleBTree: MerkleBTree,
   TreeNode: TreeNode,
   IPFSStorage: IPFSStorage,
-  IPFSGatewayStorage: IPFSGatewayStorage
+  IPFSGatewayStorage: IPFSGatewayStorage,
 };
 
 var hasOwn = Object.prototype.hasOwnProperty;
@@ -20787,22 +20790,24 @@ var memstore = {
 	MemoryCookieStore: MemoryCookieStore_1
 };
 
-var _args$1 = [["tough-cookie@2.3.3","/home/leet/src/identifi-lib"]];
-var _from$1 = "tough-cookie@2.3.3";
+var _from$1 = "tough-cookie@~2.3.3";
 var _id$1 = "tough-cookie@2.3.3";
 var _inBundle$1 = false;
 var _integrity$1 = "sha1-C2GKVWW23qkL80JdBNVe3EdadWE=";
 var _location$1 = "/tough-cookie";
 var _phantomChildren$1 = {};
-var _requested$1 = {"type":"version","registry":true,"raw":"tough-cookie@2.3.3","name":"tough-cookie","escapedName":"tough-cookie","rawSpec":"2.3.3","saveSpec":null,"fetchSpec":"2.3.3"};
-var _requiredBy$1 = ["/jsdom","/request","/request-promise","/request-promise-native"];
+var _requested$1 = {"type":"range","registry":true,"raw":"tough-cookie@~2.3.3","name":"tough-cookie","escapedName":"tough-cookie","rawSpec":"~2.3.3","saveSpec":null,"fetchSpec":"~2.3.3"};
+var _requiredBy$1 = ["/jsdom","/request","/request-promise-native"];
 var _resolved$1 = "https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.3.3.tgz";
-var _spec$1 = "2.3.3";
-var _where$1 = "/home/leet/src/identifi-lib";
+var _shasum$1 = "0b618a5565b6dea90bf3425d04d55edc475a7561";
+var _spec$1 = "tough-cookie@~2.3.3";
+var _where$1 = "/Users/martti/workspace/identifi-lib2/node_modules/request";
 var author$1 = {"name":"Jeremy Stashewsky","email":"jstashewsky@salesforce.com"};
 var bugs$1 = {"url":"https://github.com/salesforce/tough-cookie/issues"};
+var bundleDependencies$1 = false;
 var contributors = [{"name":"Alexander Savin"},{"name":"Ian Livingstone"},{"name":"Ivan Nikulin"},{"name":"Lalit Kapoor"},{"name":"Sam Thompson"},{"name":"Sebastian Mayr"}];
 var dependencies$1 = {"punycode":"^1.4.1"};
+var deprecated$1 = false;
 var description$1 = "RFC6265 Cookies and Cookie Jar for node.js";
 var devDependencies$1 = {"async":"^1.4.2","string.prototype.repeat":"^0.2.0","vows":"^0.8.1"};
 var engines = {"node":">=0.8"};
@@ -20816,7 +20821,6 @@ var repository$1 = {"type":"git","url":"git://github.com/salesforce/tough-cookie
 var scripts$1 = {"suffixup":"curl -o public_suffix_list.dat https://publicsuffix.org/list/public_suffix_list.dat && ./generate-pubsuffix.js","test":"vows test/*_test.js"};
 var version$3 = "2.3.3";
 var _package$2 = {
-	_args: _args$1,
 	_from: _from$1,
 	_id: _id$1,
 	_inBundle: _inBundle$1,
@@ -20826,12 +20830,15 @@ var _package$2 = {
 	_requested: _requested$1,
 	_requiredBy: _requiredBy$1,
 	_resolved: _resolved$1,
+	_shasum: _shasum$1,
 	_spec: _spec$1,
 	_where: _where$1,
 	author: author$1,
 	bugs: bugs$1,
+	bundleDependencies: bundleDependencies$1,
 	contributors: contributors,
 	dependencies: dependencies$1,
+	deprecated: deprecated$1,
 	description: description$1,
 	devDependencies: devDependencies$1,
 	engines: engines,
@@ -20847,7 +20854,6 @@ var _package$2 = {
 };
 
 var _package$3 = Object.freeze({
-	_args: _args$1,
 	_from: _from$1,
 	_id: _id$1,
 	_inBundle: _inBundle$1,
@@ -20857,12 +20863,15 @@ var _package$3 = Object.freeze({
 	_requested: _requested$1,
 	_requiredBy: _requiredBy$1,
 	_resolved: _resolved$1,
+	_shasum: _shasum$1,
 	_spec: _spec$1,
 	_where: _where$1,
 	author: author$1,
 	bugs: bugs$1,
+	bundleDependencies: bundleDependencies$1,
 	contributors: contributors,
 	dependencies: dependencies$1,
+	deprecated: deprecated$1,
 	description: description$1,
 	devDependencies: devDependencies$1,
 	engines: engines,
@@ -32201,24 +32210,25 @@ var lib_2$4 = lib$8.randomDigits;
 var lib_3$4 = lib$8.randomBits;
 var lib_4$4 = lib$8.fixedTimeComparison;
 
-var _args$2 = [["hawk@6.0.2","/home/leet/src/identifi-lib"]];
-var _development$1 = true;
-var _from$2 = "hawk@6.0.2";
+var _from$2 = "hawk@~6.0.2";
 var _id$2 = "hawk@6.0.2";
 var _inBundle$2 = false;
 var _integrity$2 = "sha512-miowhl2+U7Qle4vdLqDdPt9m09K6yZhkLDTWGoUiUzrQCn+mHHSmfJgAyGaLRZbPmTqfFFjRV1QWCW0VWUJBbQ==";
 var _location$2 = "/hawk";
 var _phantomChildren$2 = {};
-var _requested$2 = {"type":"version","registry":true,"raw":"hawk@6.0.2","name":"hawk","escapedName":"hawk","rawSpec":"6.0.2","saveSpec":null,"fetchSpec":"6.0.2"};
+var _requested$2 = {"type":"range","registry":true,"raw":"hawk@~6.0.2","name":"hawk","escapedName":"hawk","rawSpec":"~6.0.2","saveSpec":null,"fetchSpec":"~6.0.2"};
 var _requiredBy$2 = ["/request"];
 var _resolved$2 = "https://registry.npmjs.org/hawk/-/hawk-6.0.2.tgz";
-var _spec$2 = "6.0.2";
-var _where$2 = "/home/leet/src/identifi-lib";
+var _shasum$2 = "af4d914eb065f9b5ce4d9d11c1cb2126eecc3038";
+var _spec$2 = "hawk@~6.0.2";
+var _where$2 = "/Users/martti/workspace/identifi-lib2/node_modules/request";
 var author$2 = {"name":"Eran Hammer","email":"eran@hammer.io","url":"http://hueniverse.com"};
 var babel = {"presets":["es2015"]};
 var browser$7 = "dist/browser.js";
 var bugs$2 = {"url":"https://github.com/hueniverse/hawk/issues"};
+var bundleDependencies$2 = false;
 var dependencies$2 = {"boom":"4.x.x","cryptiles":"3.x.x","hoek":"4.x.x","sntp":"2.x.x"};
+var deprecated$2 = false;
 var description$2 = "HTTP Hawk Authentication Scheme";
 var devDependencies$2 = {"babel-cli":"^6.1.2","babel-preset-es2015":"^6.1.2","code":"4.x.x","lab":"14.x.x"};
 var engines$1 = {"node":">=4.5.0"};
@@ -32231,8 +32241,6 @@ var repository$2 = {"type":"git","url":"git://github.com/hueniverse/hawk.git"};
 var scripts$2 = {"build-client":"mkdir -p dist; babel lib/browser.js --out-file dist/browser.js","prepublish":"npm run-script build-client","test":"lab -a code -t 100 -L","test-cov-html":"lab -a code -r html -o coverage.html"};
 var version$5 = "6.0.2";
 var _package$4 = {
-	_args: _args$2,
-	_development: _development$1,
 	_from: _from$2,
 	_id: _id$2,
 	_inBundle: _inBundle$2,
@@ -32242,13 +32250,16 @@ var _package$4 = {
 	_requested: _requested$2,
 	_requiredBy: _requiredBy$2,
 	_resolved: _resolved$2,
+	_shasum: _shasum$2,
 	_spec: _spec$2,
 	_where: _where$2,
 	author: author$2,
 	babel: babel,
 	browser: browser$7,
 	bugs: bugs$2,
+	bundleDependencies: bundleDependencies$2,
 	dependencies: dependencies$2,
+	deprecated: deprecated$2,
 	description: description$2,
 	devDependencies: devDependencies$2,
 	engines: engines$1,
@@ -32263,8 +32274,6 @@ var _package$4 = {
 };
 
 var _package$5 = Object.freeze({
-	_args: _args$2,
-	_development: _development$1,
 	_from: _from$2,
 	_id: _id$2,
 	_inBundle: _inBundle$2,
@@ -32274,13 +32283,16 @@ var _package$5 = Object.freeze({
 	_requested: _requested$2,
 	_requiredBy: _requiredBy$2,
 	_resolved: _resolved$2,
+	_shasum: _shasum$2,
 	_spec: _spec$2,
 	_where: _where$2,
 	author: author$2,
 	babel: babel,
 	browser: browser$7,
 	bugs: bugs$2,
+	bundleDependencies: bundleDependencies$2,
 	dependencies: dependencies$2,
+	deprecated: deprecated$2,
 	description: description$2,
 	devDependencies: devDependencies$2,
 	engines: engines$1,
@@ -52798,14 +52810,14 @@ exports.isBuffer = function isBuffer(obj) {
 };
 });
 
-var utils_1$5 = utils$20.arrayToObject;
-var utils_2$1 = utils$20.merge;
-var utils_3$1 = utils$20.assign;
-var utils_4$1 = utils$20.decode;
-var utils_5$1 = utils$20.encode;
-var utils_6$1 = utils$20.compact;
-var utils_7$1 = utils$20.isRegExp;
-var utils_8$1 = utils$20.isBuffer;
+var utils_1$7 = utils$20.arrayToObject;
+var utils_2$3 = utils$20.merge;
+var utils_3$3 = utils$20.assign;
+var utils_4$3 = utils$20.decode;
+var utils_5$3 = utils$20.encode;
+var utils_6$3 = utils$20.compact;
+var utils_7$3 = utils$20.isRegExp;
+var utils_8$3 = utils$20.isBuffer;
 
 var replace = String.prototype.replace;
 var percentTwenties = /%20/g;
@@ -55135,7 +55147,7 @@ var JSON_POINTER$1 = /^(?:\/(?:[^~/]|~0|~1)*)*$|^#(?:\/(?:[a-z0-9_\-.!$&'()*+,;:
 var RELATIVE_JSON_POINTER$1 = /^(?:0|[1-9][0-9]*)(?:#|(?:\/(?:[^~/]|~0|~1)*)*)$/;
 
 
-var formats_1 = formats$6;
+var formats_1$1 = formats$6;
 
 function formats$6(mode) {
   mode = mode == 'full' ? 'full' : 'fast';
@@ -58434,7 +58446,7 @@ function Ajv(opts) {
   this._schemas = {};
   this._refs = {};
   this._fragments = {};
-  this._formats = formats_1(opts.format);
+  this._formats = formats_1$1(opts.format);
   var schemaUriFormat = this._schemaUriFormat = this._formats['uri-reference'];
   this._schemaUriFormatFunc = function (str) { return schemaUriFormat.test(str); };
 
@@ -62704,61 +62716,142 @@ var Index = function () {
 
   Index.prototype.init = function () {
     var _ref = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+      var _this = this;
+
       var indexRoot = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : DEFAULT_INDEX;
       var ipfs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DEFAULT_IPFS_PROXIES;
-      return regeneratorRuntime.wrap(function _callee$(_context) {
+
+      var url, _loop, i, _ret;
+
+      return regeneratorRuntime.wrap(function _callee$(_context2) {
         while (1) {
-          switch (_context.prev = _context.next) {
+          switch (_context2.prev = _context2.next) {
             case 0:
               if (!(typeof ipfs === 'string')) {
-                _context.next = 4;
+                _context2.next = 4;
                 break;
               }
 
               this.storage = new btree.IPFSGatewayStorage(ipfs);
-              _context.next = 14;
+              _context2.next = 29;
               break;
 
             case 4:
               if (!Array.isArray(ipfs)) {
-                _context.next = 8;
+                _context2.next = 23;
                 break;
               }
 
-              this.storage = new btree.IPFSGatewayStorage(ipfs[0]);
-              _context.next = 14;
-              break;
+              url = void 0;
+              _loop = /*#__PURE__*/regeneratorRuntime.mark(function _loop(i) {
+                var success;
+                return regeneratorRuntime.wrap(function _loop$(_context) {
+                  while (1) {
+                    switch (_context.prev = _context.next) {
+                      case 0:
+                        _context.next = 2;
+                        return new Promise(function (resolve) {
+                          request_1.get(ipfs[i] + DEFAULT_INDEX, { timeout: 20000 }).on('response', function (res) {
+                            if (res.statusCode && res.statusCode === 200) {
+                              resolve(true);
+                            } else {
+                              resolve(false);
+                            }
+                          }).on('error', function () {
+                            resolve(false);
+                          });
+                        });
+
+                      case 2:
+                        success = _context.sent;
+
+                        if (!success) {
+                          _context.next = 6;
+                          break;
+                        }
+
+                        url = ipfs[i];
+                        return _context.abrupt('return', 'break');
+
+                      case 6:
+                      case 'end':
+                        return _context.stop();
+                    }
+                  }
+                }, _loop, _this);
+              });
+              i = 0;
 
             case 8:
+              if (!(i < ipfs.length)) {
+                _context2.next = 16;
+                break;
+              }
+
+              return _context2.delegateYield(_loop(i), 't0', 10);
+
+            case 10:
+              _ret = _context2.t0;
+
+              if (!(_ret === 'break')) {
+                _context2.next = 13;
+                break;
+              }
+
+              return _context2.abrupt('break', 16);
+
+            case 13:
+              i++;
+              _context2.next = 8;
+              break;
+
+            case 16:
+              if (!url) {
+                _context2.next = 20;
+                break;
+              }
+
+              this.storage = new btree.IPFSGatewayStorage(url);
+              _context2.next = 21;
+              break;
+
+            case 20:
+              throw 'Could not load index via given ipfs gateways';
+
+            case 21:
+              _context2.next = 29;
+              break;
+
+            case 23:
               if (!((typeof ipfs === 'undefined' ? 'undefined' : _typeof(ipfs)) === 'object')) {
-                _context.next = 13;
+                _context2.next = 28;
                 break;
               }
 
               this.storage = new btree.IPFSStorage(ipfs);
               this.ipfs = ipfs;
-              _context.next = 14;
+              _context2.next = 29;
               break;
 
-            case 13:
+            case 28:
               throw 'ipfs param must be a gateway url, array of urls or a js-ipfs object';
 
-            case 14:
-              _context.next = 16;
+            case 29:
+              _context2.next = 31;
               return btree.MerkleBTree.getByHash(indexRoot + '/identities_by_searchkey', this.storage, IPFS_INDEX_WIDTH);
 
-            case 16:
-              this.identitiesBySearchKey = _context.sent;
-              _context.next = 19;
+            case 31:
+              this.identitiesBySearchKey = _context2.sent;
+              _context2.next = 34;
               return btree.MerkleBTree.getByHash(indexRoot + '/messages_by_timestamp', this.storage, IPFS_INDEX_WIDTH);
 
-            case 19:
-              this.messagesByTimestamp = _context.sent;
-              return _context.abrupt('return', true);
+            case 34:
+              this.messagesByTimestamp = _context2.sent;
+              return _context2.abrupt('return', true);
 
-            case 21:
+            case 36:
             case 'end':
-              return _context.stop();
+              return _context2.stop();
           }
         }
       }, _callee, this);
@@ -62780,12 +62873,12 @@ var Index = function () {
   Index.prototype.get = function () {
     var _ref2 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(value, type) {
       var profileUri, p;
-      return regeneratorRuntime.wrap(function _callee2$(_context2) {
+      return regeneratorRuntime.wrap(function _callee2$(_context3) {
         while (1) {
-          switch (_context2.prev = _context2.next) {
+          switch (_context3.prev = _context3.next) {
             case 0:
               if (!(typeof value === 'undefined')) {
-                _context2.next = 2;
+                _context3.next = 2;
                 break;
               }
 
@@ -62796,27 +62889,27 @@ var Index = function () {
                 type = util$4.guessTypeOf(value);
               }
 
-              _context2.next = 5;
+              _context3.next = 5;
               return this.identitiesBySearchKey.get(encodeURIComponent(value) + ':' + encodeURIComponent(type));
 
             case 5:
-              profileUri = _context2.sent;
+              profileUri = _context3.sent;
 
               if (!profileUri) {
-                _context2.next = 11;
+                _context3.next = 11;
                 break;
               }
 
-              _context2.next = 9;
+              _context3.next = 9;
               return this.storage.get(profileUri);
 
             case 9:
-              p = _context2.sent;
-              return _context2.abrupt('return', new Identity(JSON.parse(p)));
+              p = _context3.sent;
+              return _context3.abrupt('return', new Identity(JSON.parse(p)));
 
             case 11:
             case 'end':
-              return _context2.stop();
+              return _context3.stop();
           }
         }
       }, _callee2, this);
@@ -62835,37 +62928,37 @@ var Index = function () {
   Index.prototype.put = function () {
     var _ref3 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(msg) {
       var r, buffer;
-      return regeneratorRuntime.wrap(function _callee3$(_context3) {
+      return regeneratorRuntime.wrap(function _callee3$(_context4) {
         while (1) {
-          switch (_context3.prev = _context3.next) {
+          switch (_context4.prev = _context4.next) {
             case 0:
               r = {};
 
               if (!this.ipfs) {
-                _context3.next = 13;
+                _context4.next = 13;
                 break;
               }
 
               buffer = new this.ipfs.types.Buffer(msg.jws);
-              _context3.next = 5;
+              _context4.next = 5;
               return this.ipfs.files.add(buffer);
 
             case 5:
-              r.hash = _context3.sent;
-              _context3.next = 8;
+              r.hash = _context4.sent;
+              _context4.next = 8;
               return this.messagesByTimestamp.put('key', msg.jws);
 
             case 8:
-              r.indexUri = _context3.sent;
-              _context3.next = 11;
+              r.indexUri = _context4.sent;
+              _context4.next = 11;
               return this.ipfs.pubsub.publish('identifi', buffer);
 
             case 11:
-              _context3.next = 16;
+              _context4.next = 16;
               break;
 
             case 13:
-              _context3.next = 15;
+              _context4.next = 15;
               return request_1({
                 method: 'POST',
                 json: true,
@@ -62874,14 +62967,14 @@ var Index = function () {
               });
 
             case 15:
-              r.hash = _context3.sent;
+              r.hash = _context4.sent;
 
             case 16:
-              return _context3.abrupt('return', r);
+              return _context4.abrupt('return', r);
 
             case 17:
             case 'end':
-              return _context3.stop();
+              return _context4.stop();
           }
         }
       }, _callee3, this);
@@ -62897,15 +62990,15 @@ var Index = function () {
   Index.prototype.search = function () {
     var _ref4 = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(value, type) {
       var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
-      return regeneratorRuntime.wrap(function _callee4$(_context4) {
+      return regeneratorRuntime.wrap(function _callee4$(_context5) {
         while (1) {
-          switch (_context4.prev = _context4.next) {
+          switch (_context5.prev = _context5.next) {
             case 0:
-              return _context4.abrupt('return', this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit));
+              return _context5.abrupt('return', this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit));
 
             case 1:
             case 'end':
-              return _context4.stop();
+              return _context5.stop();
           }
         }
       }, _callee4, this);

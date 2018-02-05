@@ -13,7 +13,30 @@ class Index {
     if (typeof ipfs === `string`) {
       this.storage = new btree.IPFSGatewayStorage(ipfs);
     } else if (Array.isArray(ipfs)) {
-      this.storage = new btree.IPFSGatewayStorage(ipfs[0]);
+      let url;
+      for (let i = 0;i < ipfs.length;i ++) {
+        const success = await new Promise(resolve => {
+          request.get(ipfs[i] + DEFAULT_INDEX, {timeout: 20000})
+            .on(`response`, res => {
+              if (res.statusCode && res.statusCode === 200) {
+                resolve(true);
+              } else {
+                resolve(false);
+              }
+            }).on(`error`, () => {
+              resolve(false);
+            });
+        });
+        if (success) {
+          url = ipfs[i];
+          break;
+        }
+      }
+      if (url) {
+        this.storage = new btree.IPFSGatewayStorage(url);
+      } else {
+        throw `Could not load index via given ipfs gateways`;
+      }
     } else if (typeof ipfs === `object`) {
       this.storage = new btree.IPFSStorage(ipfs);
       this.ipfs = ipfs;

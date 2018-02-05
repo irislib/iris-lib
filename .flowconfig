@@ -1,6 +1,6 @@
 [ignore]
 .*/__tests__/.*
-.*/node_modules/findup/.*
+.*/node_modules/.*
 
 [libs]
 ./node_modules/fbjs/flow/lib
