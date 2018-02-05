@@ -1,8 +1,8 @@
 /*jshint unused: false */
 `use strict`;
 import {createHash} from 'crypto';
-const jws = require(`jws`);
-const util = require(`./util`);
+import jws from 'jws';
+import util from './util';
 
 const encoding = `base64`;
 const JWS_MAX_LENGTH = 10000;

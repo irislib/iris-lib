@@ -1,5 +1,5 @@
-const request = require(`request`);
-const jws = require(`jws`);
+import request from 'request';
+import jws from 'jws';
 
 export default {
   apiRoot: `http://127.0.0.1:4944/api`,
