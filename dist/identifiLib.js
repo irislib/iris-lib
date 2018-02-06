@@ -5476,7 +5476,7 @@ var stream = Object.freeze({
 	Stream: Stream$1
 });
 
-var Stream$2 = ( stream && Stream$1 ) || stream;
+var stream$1 = ( stream && Stream$1 ) || stream;
 
 var util$2 = ( util$1 && util ) || util$1;
 
@@ -5518,7 +5518,7 @@ function DataStream(data) {
 
   throw new TypeError('Unexpected data type ('+ typeof data + ')');
 }
-util$2.inherits(DataStream, Stream$2);
+util$2.inherits(DataStream, stream$1);
 
 DataStream.prototype.write = function write(data) {
   this.buffer = Buffer$1.concat([this.buffer, Buffer$1.from(data)]);
@@ -5575,6 +5575,615 @@ bufferEq.restore = function() {
   Buffer$2.prototype.equal = origBufEqual;
   SlowBuffer$1.prototype.equal = origSlowBufEqual;
 };
+
+var empty = {};
+
+
+var empty$1 = Object.freeze({
+	default: empty
+});
+
+function getParamSize(keySize) {
+	var result = ((keySize / 8) | 0) + (keySize % 8 === 0 ? 0 : 1);
+	return result;
+}
+
+var paramBytesForAlg = {
+	ES256: getParamSize(256),
+	ES384: getParamSize(384),
+	ES512: getParamSize(521)
+};
+
+function getParamBytesForAlg(alg) {
+	var paramBytes = paramBytesForAlg[alg];
+	if (paramBytes) {
+		return paramBytes;
+	}
+
+	throw new Error('Unknown algorithm "' + alg + '"');
+}
+
+var paramBytesForAlg_1 = getParamBytesForAlg;
+
+var base64Url = base64url$1.fromBase64;
+var Buffer$3 = safeBuffer.Buffer;
+
+
+
+var MAX_OCTET = 0x80;
+var CLASS_UNIVERSAL = 0;
+var PRIMITIVE_BIT = 0x20;
+var TAG_SEQ = 0x10;
+var TAG_INT = 0x02;
+var ENCODED_TAG_SEQ = (TAG_SEQ | PRIMITIVE_BIT) | (CLASS_UNIVERSAL << 6);
+var ENCODED_TAG_INT = TAG_INT | (CLASS_UNIVERSAL << 6);
+
+function signatureAsBuffer(signature) {
+	if (Buffer$3.isBuffer(signature)) {
+		return signature;
+	} else if ('string' === typeof signature) {
+		return Buffer$3.from(signature, 'base64');
+	}
+
+	throw new TypeError('ECDSA signature must be a Base64 string or a Buffer');
+}
+
+function derToJose(signature, alg) {
+	signature = signatureAsBuffer(signature);
+	var paramBytes = paramBytesForAlg_1(alg);
+
+	// the DER encoded param should at most be the param size, plus a padding
+	// zero, since due to being a signed integer
+	var maxEncodedParamLength = paramBytes + 1;
+
+	var inputLength = signature.length;
+
+	var offset = 0;
+	if (signature[offset++] !== ENCODED_TAG_SEQ) {
+		throw new Error('Could not find expected "seq"');
+	}
+
+	var seqLength = signature[offset++];
+	if (seqLength === (MAX_OCTET | 1)) {
+		seqLength = signature[offset++];
+	}
+
+	if (inputLength - offset < seqLength) {
+		throw new Error('"seq" specified length of "' + seqLength + '", only "' + (inputLength - offset) + '" remaining');
+	}
+
+	if (signature[offset++] !== ENCODED_TAG_INT) {
+		throw new Error('Could not find expected "int" for "r"');
+	}
+
+	var rLength = signature[offset++];
+
+	if (inputLength - offset - 2 < rLength) {
+		throw new Error('"r" specified length of "' + rLength + '", only "' + (inputLength - offset - 2) + '" available');
+	}
+
+	if (maxEncodedParamLength < rLength) {
+		throw new Error('"r" specified length of "' + rLength + '", max of "' + maxEncodedParamLength + '" is acceptable');
+	}
+
+	var rOffset = offset;
+	offset += rLength;
+
+	if (signature[offset++] !== ENCODED_TAG_INT) {
+		throw new Error('Could not find expected "int" for "s"');
+	}
+
+	var sLength = signature[offset++];
+
+	if (inputLength - offset !== sLength) {
+		throw new Error('"s" specified length of "' + sLength + '", expected "' + (inputLength - offset) + '"');
+	}
+
+	if (maxEncodedParamLength < sLength) {
+		throw new Error('"s" specified length of "' + sLength + '", max of "' + maxEncodedParamLength + '" is acceptable');
+	}
+
+	var sOffset = offset;
+	offset += sLength;
+
+	if (offset !== inputLength) {
+		throw new Error('Expected to consume entire buffer, but "' + (inputLength - offset) + '" bytes remain');
+	}
+
+	var rPadding = paramBytes - rLength,
+		sPadding = paramBytes - sLength;
+
+	var dst = Buffer$3.allocUnsafe(rPadding + rLength + sPadding + sLength);
+
+	for (offset = 0; offset < rPadding; ++offset) {
+		dst[offset] = 0;
+	}
+	signature.copy(dst, offset, rOffset + Math.max(-rPadding, 0), rOffset + rLength);
+
+	offset = paramBytes;
+
+	for (var o = offset; offset < o + sPadding; ++offset) {
+		dst[offset] = 0;
+	}
+	signature.copy(dst, offset, sOffset + Math.max(-sPadding, 0), sOffset + sLength);
+
+	dst = dst.toString('base64');
+	dst = base64Url(dst);
+
+	return dst;
+}
+
+function countPadding(buf, start, stop) {
+	var padding = 0;
+	while (start + padding < stop && buf[start + padding] === 0) {
+		++padding;
+	}
+
+	var needsSign = buf[start + padding] >= MAX_OCTET;
+	if (needsSign) {
+		--padding;
+	}
+
+	return padding;
+}
+
+function joseToDer(signature, alg) {
+	signature = signatureAsBuffer(signature);
+	var paramBytes = paramBytesForAlg_1(alg);
+
+	var signatureBytes = signature.length;
+	if (signatureBytes !== paramBytes * 2) {
+		throw new TypeError('"' + alg + '" signatures must be "' + paramBytes * 2 + '" bytes, saw "' + signatureBytes + '"');
+	}
+
+	var rPadding = countPadding(signature, 0, paramBytes);
+	var sPadding = countPadding(signature, paramBytes, signature.length);
+	var rLength = paramBytes - rPadding;
+	var sLength = paramBytes - sPadding;
+
+	var rsBytes = 1 + 1 + rLength + 1 + 1 + sLength;
+
+	var shortLength = rsBytes < MAX_OCTET;
+
+	var dst = Buffer$3.allocUnsafe((shortLength ? 2 : 3) + rsBytes);
+
+	var offset = 0;
+	dst[offset++] = ENCODED_TAG_SEQ;
+	if (shortLength) {
+		// Bit 8 has value "0"
+		// bits 7-1 give the length.
+		dst[offset++] = rsBytes;
+	} else {
+		// Bit 8 of first octet has value "1"
+		// bits 7-1 give the number of additional length octets.
+		dst[offset++] = MAX_OCTET	| 1;
+		// length, base 256
+		dst[offset++] = rsBytes & 0xff;
+	}
+	dst[offset++] = ENCODED_TAG_INT;
+	dst[offset++] = rLength;
+	if (rPadding < 0) {
+		dst[offset++] = 0;
+		offset += signature.copy(dst, offset, 0, paramBytes);
+	} else {
+		offset += signature.copy(dst, offset, rPadding, paramBytes);
+	}
+	dst[offset++] = ENCODED_TAG_INT;
+	dst[offset++] = sLength;
+	if (sPadding < 0) {
+		dst[offset++] = 0;
+		signature.copy(dst, offset, paramBytes);
+	} else {
+		signature.copy(dst, offset, paramBytes + sPadding);
+	}
+
+	return dst;
+}
+
+var ecdsaSigFormatter = {
+	derToJose: derToJose,
+	joseToDer: joseToDer
+};
+
+var require$$0$3 = ( empty$1 && empty ) || empty$1;
+
+var Buffer$4 = safeBuffer.Buffer;
+
+
+
+
+var MSG_INVALID_ALGORITHM = '"%s" is not a valid algorithm.\n  Supported algorithms are:\n  "HS256", "HS384", "HS512", "RS256", "RS384", "RS512" and "none".';
+var MSG_INVALID_SECRET = 'secret must be a string or buffer';
+var MSG_INVALID_VERIFIER_KEY = 'key must be a string or a buffer';
+var MSG_INVALID_SIGNER_KEY = 'key must be a string, a buffer or an object';
+
+function typeError(template) {
+  var args = [].slice.call(arguments, 1);
+  var errMsg = util$2.format.bind(util$2, template).apply(null, args);
+  return new TypeError(errMsg);
+}
+
+function bufferOrString(obj) {
+  return Buffer$4.isBuffer(obj) || typeof obj === 'string';
+}
+
+function normalizeInput(thing) {
+  if (!bufferOrString(thing))
+    thing = JSON.stringify(thing);
+  return thing;
+}
+
+function createHmacSigner(bits) {
+  return function sign(thing, secret) {
+    if (!bufferOrString(secret))
+      throw typeError(MSG_INVALID_SECRET);
+    thing = normalizeInput(thing);
+    var hmac = require$$0$3.createHmac('sha' + bits, secret);
+    var sig = (hmac.update(thing), hmac.digest('base64'));
+    return base64url$1.fromBase64(sig);
+  }
+}
+
+function createHmacVerifier(bits) {
+  return function verify(thing, signature, secret) {
+    var computedSig = createHmacSigner(bits)(thing, secret);
+    return bufferEqualConstantTime(Buffer$4.from(signature), Buffer$4.from(computedSig));
+  }
+}
+
+function createKeySigner(bits) {
+ return function sign(thing, privateKey) {
+    if (!bufferOrString(privateKey) && !(typeof privateKey === 'object'))
+      throw typeError(MSG_INVALID_SIGNER_KEY);
+    thing = normalizeInput(thing);
+    // Even though we are specifying "RSA" here, this works with ECDSA
+    // keys as well.
+    var signer = require$$0$3.createSign('RSA-SHA' + bits);
+    var sig = (signer.update(thing), signer.sign(privateKey, 'base64'));
+    return base64url$1.fromBase64(sig);
+  }
+}
+
+function createKeyVerifier(bits) {
+  return function verify(thing, signature, publicKey) {
+    if (!bufferOrString(publicKey))
+      throw typeError(MSG_INVALID_VERIFIER_KEY);
+    thing = normalizeInput(thing);
+    signature = base64url$1.toBase64(signature);
+    var verifier = require$$0$3.createVerify('RSA-SHA' + bits);
+    verifier.update(thing);
+    return verifier.verify(publicKey, signature, 'base64');
+  }
+}
+
+function createECDSASigner(bits) {
+  var inner = createKeySigner(bits);
+  return function sign() {
+    var signature = inner.apply(null, arguments);
+    signature = ecdsaSigFormatter.derToJose(signature, 'ES' + bits);
+    return signature;
+  };
+}
+
+function createECDSAVerifer(bits) {
+  var inner = createKeyVerifier(bits);
+  return function verify(thing, signature, publicKey) {
+    signature = ecdsaSigFormatter.joseToDer(signature, 'ES' + bits).toString('base64');
+    var result = inner(thing, signature, publicKey);
+    return result;
+  };
+}
+
+function createNoneSigner() {
+  return function sign() {
+    return '';
+  }
+}
+
+function createNoneVerifier() {
+  return function verify(thing, signature) {
+    return signature === '';
+  }
+}
+
+var jwa = function jwa(algorithm) {
+  var signerFactories = {
+    hs: createHmacSigner,
+    rs: createKeySigner,
+    es: createECDSASigner,
+    none: createNoneSigner,
+  };
+  var verifierFactories = {
+    hs: createHmacVerifier,
+    rs: createKeyVerifier,
+    es: createECDSAVerifer,
+    none: createNoneVerifier,
+  };
+  var match = algorithm.match(/^(RS|ES|HS)(256|384|512)$|^(none)$/i);
+  if (!match)
+    throw typeError(MSG_INVALID_ALGORITHM, algorithm);
+  var algo = (match[1] || match[3]).toLowerCase();
+  var bits = match[2];
+
+  return {
+    sign: signerFactories[algo](bits),
+    verify: verifierFactories[algo](bits),
+  }
+};
+
+/*global module*/
+var Buffer$5 = require$$0.Buffer;
+
+var tostring = function toString(obj) {
+  if (typeof obj === 'string')
+    return obj;
+  if (typeof obj === 'number' || Buffer$5.isBuffer(obj))
+    return obj.toString();
+  return JSON.stringify(obj);
+};
+
+/*global module*/
+
+
+
+
+
+
+
+function jwsSecuredInput(header, payload, encoding) {
+  encoding = encoding || 'utf8';
+  var encodedHeader = base64url$1(tostring(header), 'binary');
+  var encodedPayload = base64url$1(tostring(payload), encoding);
+  return util$2.format('%s.%s', encodedHeader, encodedPayload);
+}
+
+function jwsSign(opts) {
+  var header = opts.header;
+  var payload = opts.payload;
+  var secretOrKey = opts.secret || opts.privateKey;
+  var encoding = opts.encoding;
+  var algo = jwa(header.alg);
+  var securedInput = jwsSecuredInput(header, payload, encoding);
+  var signature = algo.sign(securedInput, secretOrKey);
+  return util$2.format('%s.%s', securedInput, signature);
+}
+
+function SignStream(opts) {
+  var secret = opts.secret||opts.privateKey||opts.key;
+  var secretStream = new dataStream(secret);
+  this.readable = true;
+  this.header = opts.header;
+  this.encoding = opts.encoding;
+  this.secret = this.privateKey = this.key = secretStream;
+  this.payload = new dataStream(opts.payload);
+  this.secret.once('close', function () {
+    if (!this.payload.writable && this.readable)
+      this.sign();
+  }.bind(this));
+
+  this.payload.once('close', function () {
+    if (!this.secret.writable && this.readable)
+      this.sign();
+  }.bind(this));
+}
+util$2.inherits(SignStream, stream$1);
+
+SignStream.prototype.sign = function sign() {
+  try {
+    var signature = jwsSign({
+      header: this.header,
+      payload: this.payload.buffer,
+      secret: this.secret.buffer,
+      encoding: this.encoding
+    });
+    this.emit('done', signature);
+    this.emit('data', signature);
+    this.emit('end');
+    this.readable = false;
+    return signature;
+  } catch (e) {
+    this.readable = false;
+    this.emit('error', e);
+    this.emit('close');
+  }
+};
+
+SignStream.sign = jwsSign;
+
+var signStream = SignStream;
+
+/*global module*/
+
+
+
+
+
+
+var JWS_REGEX = /^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/;
+
+function isObject$1(thing) {
+  return Object.prototype.toString.call(thing) === '[object Object]';
+}
+
+function safeJsonParse(thing) {
+  if (isObject$1(thing))
+    return thing;
+  try { return JSON.parse(thing); }
+  catch (e) { return undefined; }
+}
+
+function headerFromJWS(jwsSig) {
+  var encodedHeader = jwsSig.split('.', 1)[0];
+  return safeJsonParse(base64url$1.decode(encodedHeader, 'binary'));
+}
+
+function securedInputFromJWS(jwsSig) {
+  return jwsSig.split('.', 2).join('.');
+}
+
+function signatureFromJWS(jwsSig) {
+  return jwsSig.split('.')[2];
+}
+
+function payloadFromJWS(jwsSig, encoding) {
+  encoding = encoding || 'utf8';
+  var payload = jwsSig.split('.')[1];
+  return base64url$1.decode(payload, encoding);
+}
+
+function isValidJws(string) {
+  return JWS_REGEX.test(string) && !!headerFromJWS(string);
+}
+
+function jwsVerify(jwsSig, algorithm, secretOrKey) {
+  if (!algorithm) {
+    var err = new Error("Missing algorithm parameter for jws.verify");
+    err.code = "MISSING_ALGORITHM";
+    throw err;
+  }
+  jwsSig = tostring(jwsSig);
+  var signature = signatureFromJWS(jwsSig);
+  var securedInput = securedInputFromJWS(jwsSig);
+  var algo = jwa(algorithm);
+  return algo.verify(securedInput, signature, secretOrKey);
+}
+
+function jwsDecode(jwsSig, opts) {
+  opts = opts || {};
+  jwsSig = tostring(jwsSig);
+
+  if (!isValidJws(jwsSig))
+    return null;
+
+  var header = headerFromJWS(jwsSig);
+
+  if (!header)
+    return null;
+
+  var payload = payloadFromJWS(jwsSig);
+  if (header.typ === 'JWT' || opts.json)
+    payload = JSON.parse(payload, opts.encoding);
+
+  return {
+    header: header,
+    payload: payload,
+    signature: signatureFromJWS(jwsSig)
+  };
+}
+
+function VerifyStream(opts) {
+  opts = opts || {};
+  var secretOrKey = opts.secret||opts.publicKey||opts.key;
+  var secretStream = new dataStream(secretOrKey);
+  this.readable = true;
+  this.algorithm = opts.algorithm;
+  this.encoding = opts.encoding;
+  this.secret = this.publicKey = this.key = secretStream;
+  this.signature = new dataStream(opts.signature);
+  this.secret.once('close', function () {
+    if (!this.signature.writable && this.readable)
+      this.verify();
+  }.bind(this));
+
+  this.signature.once('close', function () {
+    if (!this.secret.writable && this.readable)
+      this.verify();
+  }.bind(this));
+}
+util$2.inherits(VerifyStream, stream$1);
+VerifyStream.prototype.verify = function verify() {
+  try {
+    var valid = jwsVerify(this.signature.buffer, this.algorithm, this.key.buffer);
+    var obj = jwsDecode(this.signature.buffer, this.encoding);
+    this.emit('done', valid, obj);
+    this.emit('data', valid);
+    this.emit('end');
+    this.readable = false;
+    return valid;
+  } catch (e) {
+    this.readable = false;
+    this.emit('error', e);
+    this.emit('close');
+  }
+};
+
+VerifyStream.decode = jwsDecode;
+VerifyStream.isValid = isValidJws;
+VerifyStream.verify = jwsVerify;
+
+var verifyStream = VerifyStream;
+
+/*global exports*/
+
+
+
+var ALGORITHMS = [
+  'HS256', 'HS384', 'HS512',
+  'RS256', 'RS384', 'RS512',
+  'ES256', 'ES384', 'ES512'
+];
+
+var ALGORITHMS_1 = ALGORITHMS;
+var sign = signStream.sign;
+var verify = verifyStream.verify;
+var decode = verifyStream.decode;
+var isValid = verifyStream.isValid;
+var createSign = function createSign(opts) {
+  return new signStream(opts);
+};
+var createVerify = function createVerify(opts) {
+  return new verifyStream(opts);
+};
+
+var jws = {
+	ALGORITHMS: ALGORITHMS_1,
+	sign: sign,
+	verify: verify,
+	decode: decode,
+	isValid: isValid,
+	createSign: createSign,
+	createVerify: createVerify
+};
+
+var APIClient = {
+  apiRoot: 'http://127.0.0.1:4944/api',
+  request: function request(options) {
+    options.headers = options.headers !== undefined ? options.json : { 'Content-Type': 'application/json' };
+    options.method = 'POST';
+    var uri = options.uri !== undefined ? options.uri : this.apiRoot;
+    if (options.apiMethod) {
+      options.uri += '/' + options.apiMethod;
+    }
+    if (options.apiIdType) {
+      options.uri += '/' + encodeURIComponent(options.apiIdType);
+    }
+    if (options.apiId) {
+      options.uri += '/' + encodeURIComponent(options.apiId);
+    }
+    if (options.apiAction) {
+      options.uri += '/' + options.apiAction;
+    }
+    return browser(uri, options);
+  },
+  getJwt: function getJwt(signingKeyPem, payload) {
+    var exp = Math.floor(Date.now() / 1000) + 60;
+    payload = Object.assign({ exp: exp }, payload);
+    return jws.sign({
+      header: { typ: 'JWT', alg: 'ES256' },
+      payload: payload,
+      privateKey: signingKeyPem
+    });
+  }
+};
+
+var detectNode = createCommonjsModule(function (module) {
+module.exports = false;
+
+// Only Node.JS has a process variable that is of [[Class]] process
+try {
+ module.exports = Object.prototype.toString.call(commonjsGlobal.process) === '[object process]'; 
+} catch(e) {}
+});
 
 var browser$2 = createCommonjsModule(function (module) {
 function oldBrowser () {
@@ -5822,7 +6431,7 @@ var md5 = function md5 (buf) {
   return makeHash(buf, core_md5)
 };
 
-var Transform$2 = Stream$2.Transform;
+var Transform$2 = stream$1.Transform;
 
 
 function HashBase (blockSize) {
@@ -6193,11 +6802,11 @@ function fn5 (a, b, c, d, e, m, k, s) {
 
 var ripemd160 = RIPEMD160;
 
-var Buffer$3 = safeBuffer.Buffer;
+var Buffer$6 = safeBuffer.Buffer;
 
 // prototype class for hash functions
 function Hash (blockSize, finalSize) {
-  this._block = Buffer$3.alloc(blockSize);
+  this._block = Buffer$6.alloc(blockSize);
   this._finalSize = finalSize;
   this._blockSize = blockSize;
   this._len = 0;
@@ -6206,7 +6815,7 @@ function Hash (blockSize, finalSize) {
 Hash.prototype.update = function (data, enc) {
   if (typeof data === 'string') {
     enc = enc || 'utf8';
-    data = Buffer$3.from(data, enc);
+    data = Buffer$6.from(data, enc);
   }
 
   var block = this._block;
@@ -6285,7 +6894,7 @@ var hash = Hash;
 
 
 
-var Buffer$4 = safeBuffer.Buffer;
+var Buffer$7 = safeBuffer.Buffer;
 
 var K = [
   0x5a827999, 0x6ed9eba1, 0x8f1bbcdc | 0, 0xca62c1d6 | 0
@@ -6357,7 +6966,7 @@ Sha.prototype._update = function (M) {
 };
 
 Sha.prototype._hash = function () {
-  var H = Buffer$4.allocUnsafe(20);
+  var H = Buffer$7.allocUnsafe(20);
 
   H.writeInt32BE(this._a | 0, 0);
   H.writeInt32BE(this._b | 0, 4);
@@ -6381,7 +6990,7 @@ var sha = Sha;
 
 
 
-var Buffer$5 = safeBuffer.Buffer;
+var Buffer$8 = safeBuffer.Buffer;
 
 var K$1 = [
   0x5a827999, 0x6ed9eba1, 0x8f1bbcdc | 0, 0xca62c1d6 | 0
@@ -6457,7 +7066,7 @@ Sha1.prototype._update = function (M) {
 };
 
 Sha1.prototype._hash = function () {
-  var H = Buffer$5.allocUnsafe(20);
+  var H = Buffer$8.allocUnsafe(20);
 
   H.writeInt32BE(this._a | 0, 0);
   H.writeInt32BE(this._b | 0, 4);
@@ -6480,7 +7089,7 @@ var sha1 = Sha1;
 
 
 
-var Buffer$6 = safeBuffer.Buffer;
+var Buffer$9 = safeBuffer.Buffer;
 
 var K$2 = [
   0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -6590,7 +7199,7 @@ Sha256.prototype._update = function (M) {
 };
 
 Sha256.prototype._hash = function () {
-  var H = Buffer$6.allocUnsafe(32);
+  var H = Buffer$9.allocUnsafe(32);
 
   H.writeInt32BE(this._a, 0);
   H.writeInt32BE(this._b, 4);
@@ -6617,7 +7226,7 @@ var sha256 = Sha256;
 
 
 
-var Buffer$7 = safeBuffer.Buffer;
+var Buffer$10 = safeBuffer.Buffer;
 
 var W$3 = new Array(64);
 
@@ -6645,7 +7254,7 @@ Sha224.prototype.init = function () {
 };
 
 Sha224.prototype._hash = function () {
-  var H = Buffer$7.allocUnsafe(28);
+  var H = Buffer$10.allocUnsafe(28);
 
   H.writeInt32BE(this._a, 0);
   H.writeInt32BE(this._b, 4);
@@ -6660,7 +7269,7 @@ Sha224.prototype._hash = function () {
 
 var sha224 = Sha224;
 
-var Buffer$8 = safeBuffer.Buffer;
+var Buffer$11 = safeBuffer.Buffer;
 
 var K$3 = [
   0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
@@ -6898,7 +7507,7 @@ Sha512.prototype._update = function (M) {
 };
 
 Sha512.prototype._hash = function () {
-  var H = Buffer$8.allocUnsafe(64);
+  var H = Buffer$11.allocUnsafe(64);
 
   function writeInt64BE (h, l, offset) {
     H.writeInt32BE(h, offset);
@@ -6919,7 +7528,7 @@ Sha512.prototype._hash = function () {
 
 var sha512 = Sha512;
 
-var Buffer$9 = safeBuffer.Buffer;
+var Buffer$12 = safeBuffer.Buffer;
 
 var W$5 = new Array(160);
 
@@ -6955,7 +7564,7 @@ Sha384.prototype.init = function () {
 };
 
 Sha384.prototype._hash = function () {
-  var H = Buffer$9.allocUnsafe(48);
+  var H = Buffer$12.allocUnsafe(48);
 
   function writeInt64BE (h, l, offset) {
     H.writeInt32BE(h, offset);
@@ -6992,8 +7601,8 @@ exports.sha384 = sha384;
 exports.sha512 = sha512;
 });
 
-var Buffer$10 = safeBuffer.Buffer;
-var Transform$3 = Stream$2.Transform;
+var Buffer$13 = safeBuffer.Buffer;
+var Transform$3 = stream$1.Transform;
 var StringDecoder$1 = stringDecoder.StringDecoder;
 
 
@@ -7016,7 +7625,7 @@ inherits_browser(CipherBase, Transform$3);
 
 CipherBase.prototype.update = function (data, inputEnc, outputEnc) {
   if (typeof data === 'string') {
-    data = Buffer$10.from(data, inputEnc);
+    data = Buffer$13.from(data, inputEnc);
   }
 
   var outData = this._update(data);
@@ -7067,7 +7676,7 @@ CipherBase.prototype._flush = function (done) {
   done(err);
 };
 CipherBase.prototype._finalOrDigest = function (outputEnc) {
-  var outData = this.__final() || Buffer$10.alloc(0);
+  var outData = this.__final() || Buffer$13.alloc(0);
   if (outputEnc) {
     outData = this._toString(outData, outputEnc, true);
   }
@@ -7137,17 +7746,17 @@ var browser$4 = function createHash (alg) {
   return new Hash$2(sha_js(alg))
 };
 
-var Buffer$11 = safeBuffer.Buffer;
+var Buffer$14 = safeBuffer.Buffer;
 
 
 
-var ZEROS = Buffer$11.alloc(128);
+var ZEROS = Buffer$14.alloc(128);
 var blocksize = 64;
 
 function Hmac (alg, key) {
   cipherBase.call(this, 'digest');
   if (typeof key === 'string') {
-    key = Buffer$11.from(key);
+    key = Buffer$14.from(key);
   }
 
   this._alg = alg;
@@ -7156,11 +7765,11 @@ function Hmac (alg, key) {
   if (key.length > blocksize) {
     key = alg(key);
   } else if (key.length < blocksize) {
-    key = Buffer$11.concat([key, ZEROS], blocksize);
+    key = Buffer$14.concat([key, ZEROS], blocksize);
   }
 
-  var ipad = this._ipad = Buffer$11.allocUnsafe(blocksize);
-  var opad = this._opad = Buffer$11.allocUnsafe(blocksize);
+  var ipad = this._ipad = Buffer$14.allocUnsafe(blocksize);
+  var opad = this._opad = Buffer$14.allocUnsafe(blocksize);
 
   for (var i = 0; i < blocksize; i++) {
     ipad[i] = key[i] ^ 0x36;
@@ -7177,23 +7786,23 @@ Hmac.prototype._update = function (data) {
 };
 
 Hmac.prototype._final = function () {
-  var h = this._alg(Buffer$11.concat(this._hash));
-  return this._alg(Buffer$11.concat([this._opad, h]))
+  var h = this._alg(Buffer$14.concat(this._hash));
+  return this._alg(Buffer$14.concat([this._opad, h]))
 };
 var legacy = Hmac;
 
-var Buffer$12 = safeBuffer.Buffer;
+var Buffer$15 = safeBuffer.Buffer;
 
 
 
 
 
-var ZEROS$1 = Buffer$12.alloc(128);
+var ZEROS$1 = Buffer$15.alloc(128);
 
 function Hmac$1 (alg, key) {
   cipherBase.call(this, 'digest');
   if (typeof key === 'string') {
-    key = Buffer$12.from(key);
+    key = Buffer$15.from(key);
   }
 
   var blocksize = (alg === 'sha512' || alg === 'sha384') ? 128 : 64;
@@ -7204,11 +7813,11 @@ function Hmac$1 (alg, key) {
     var hash = alg === 'rmd160' ? new ripemd160() : sha_js(alg);
     key = hash.update(key).digest();
   } else if (key.length < blocksize) {
-    key = Buffer$12.concat([key, ZEROS$1], blocksize);
+    key = Buffer$15.concat([key, ZEROS$1], blocksize);
   }
 
-  var ipad = this._ipad = Buffer$12.allocUnsafe(blocksize);
-  var opad = this._opad = Buffer$12.allocUnsafe(blocksize);
+  var ipad = this._ipad = Buffer$15.allocUnsafe(blocksize);
+  var opad = this._opad = Buffer$15.allocUnsafe(blocksize);
 
   for (var i = 0; i < blocksize; i++) {
     ipad[i] = key[i] ^ 0x36;
@@ -7350,17 +7959,17 @@ var sizes = {
 
 
 
-var Buffer$13 = safeBuffer.Buffer;
+var Buffer$16 = safeBuffer.Buffer;
 
 function pbkdf2 (password, salt, iterations, keylen, digest) {
-  if (!Buffer$13.isBuffer(password)) password = Buffer$13.from(password, defaultEncoding_1);
-  if (!Buffer$13.isBuffer(salt)) salt = Buffer$13.from(salt, defaultEncoding_1);
+  if (!Buffer$16.isBuffer(password)) password = Buffer$16.from(password, defaultEncoding_1);
+  if (!Buffer$16.isBuffer(salt)) salt = Buffer$16.from(salt, defaultEncoding_1);
 
   precondition(iterations, keylen);
   digest = digest || 'sha1';
 
-  var DK = Buffer$13.allocUnsafe(keylen);
-  var block1 = Buffer$13.allocUnsafe(salt.length + 4);
+  var DK = Buffer$16.allocUnsafe(keylen);
+  var block1 = Buffer$16.allocUnsafe(salt.length + 4);
   salt.copy(block1, 0, 0, salt.length);
 
   var destPos = 0;
@@ -7387,7 +7996,7 @@ function pbkdf2 (password, salt, iterations, keylen, digest) {
 
 var sync = pbkdf2;
 
-var Buffer$14 = safeBuffer.Buffer;
+var Buffer$17 = safeBuffer.Buffer;
 
 var ZERO_BUF;
 var subtle = commonjsGlobal.crypto && commonjsGlobal.crypto.subtle;
@@ -7413,7 +8022,7 @@ function checkNative (algo) {
   if (checks[algo] !== undefined) {
     return checks[algo]
   }
-  ZERO_BUF = ZERO_BUF || Buffer$14.alloc(8);
+  ZERO_BUF = ZERO_BUF || Buffer$17.alloc(8);
   var prom = browserPbkdf2(ZERO_BUF, ZERO_BUF, 10, 128, algo)
     .then(function () {
       return true
@@ -7436,7 +8045,7 @@ function browserPbkdf2 (password, salt, iterations, length, algo) {
       }
     }, key, length << 3)
   }).then(function (res) {
-    return Buffer$14.from(res)
+    return Buffer$17.from(res)
   })
 }
 function resolvePromise (promise, callback) {
@@ -7451,8 +8060,8 @@ function resolvePromise (promise, callback) {
   });
 }
 var async = function (password, salt, iterations, keylen, digest, callback) {
-  if (!Buffer$14.isBuffer(password)) password = Buffer$14.from(password, defaultEncoding_1);
-  if (!Buffer$14.isBuffer(salt)) salt = Buffer$14.from(salt, defaultEncoding_1);
+  if (!Buffer$17.isBuffer(password)) password = Buffer$17.from(password, defaultEncoding_1);
+  if (!Buffer$17.isBuffer(salt)) salt = Buffer$17.from(salt, defaultEncoding_1);
 
   precondition(iterations, keylen);
   if (typeof digest === 'function') {
@@ -7485,24 +8094,24 @@ var async = function (password, salt, iterations, keylen, digest, callback) {
 
 var pbkdf2$1 = createCommonjsModule(function (module, exports) {
 /* istanbul ignore next */
-if (cryptoBrowserify && (!cryptoBrowserify.pbkdf2Sync || cryptoBrowserify.pbkdf2Sync.toString().indexOf('keylen, digest') === -1)) {
+if (require$$0$3 && (!require$$0$3.pbkdf2Sync || require$$0$3.pbkdf2Sync.toString().indexOf('keylen, digest') === -1)) {
   exports.pbkdf2 = async;
   exports.pbkdf2Sync = sync;
 } else {
-  exports.pbkdf2Sync = cryptoBrowserify.pbkdf2Sync;
-  exports.pbkdf2 = cryptoBrowserify.pbkdf2;
+  exports.pbkdf2Sync = require$$0$3.pbkdf2Sync;
+  exports.pbkdf2 = require$$0$3.pbkdf2;
 }
 });
 
 var pbkdf2_1 = pbkdf2$1.pbkdf2;
 var pbkdf2_2 = pbkdf2$1.pbkdf2Sync;
 
-var Buffer$15 = safeBuffer.Buffer;
-var Transform$4 = Stream$2.Transform;
+var Buffer$18 = safeBuffer.Buffer;
+var Transform$4 = stream$1.Transform;
 
 
 function throwIfNotStringOrBuffer (val, prefix) {
-  if (!Buffer$15.isBuffer(val) && typeof val !== 'string') {
+  if (!Buffer$18.isBuffer(val) && typeof val !== 'string') {
     throw new TypeError(prefix + ' must be a string or a buffer')
   }
 }
@@ -7510,7 +8119,7 @@ function throwIfNotStringOrBuffer (val, prefix) {
 function HashBase$2 (blockSize) {
   Transform$4.call(this);
 
-  this._block = Buffer$15.allocUnsafe(blockSize);
+  this._block = Buffer$18.allocUnsafe(blockSize);
   this._blockSize = blockSize;
   this._blockOffset = 0;
   this._length = [0, 0, 0, 0];
@@ -7545,7 +8154,7 @@ HashBase$2.prototype._flush = function (callback) {
 HashBase$2.prototype.update = function (data, encoding) {
   throwIfNotStringOrBuffer(data, 'Data');
   if (this._finalized) throw new Error('Digest already called')
-  if (!Buffer$15.isBuffer(data)) data = Buffer$15.from(data, encoding);
+  if (!Buffer$18.isBuffer(data)) data = Buffer$18.from(data, encoding);
 
   // consume data
   var block = this._block;
@@ -7734,21 +8343,21 @@ function fnI (a, b, c, d, m, k, s) {
 
 var md5_js = MD5;
 
-var Buffer$16 = safeBuffer.Buffer;
+var Buffer$19 = safeBuffer.Buffer;
 
 
 /* eslint-disable camelcase */
 function EVP_BytesToKey (password, salt, keyBits, ivLen) {
-  if (!Buffer$16.isBuffer(password)) password = Buffer$16.from(password, 'binary');
+  if (!Buffer$19.isBuffer(password)) password = Buffer$19.from(password, 'binary');
   if (salt) {
-    if (!Buffer$16.isBuffer(salt)) salt = Buffer$16.from(salt, 'binary');
+    if (!Buffer$19.isBuffer(salt)) salt = Buffer$19.from(salt, 'binary');
     if (salt.length !== 8) throw new RangeError('salt should be Buffer with 8 byte length')
   }
 
   var keyLen = keyBits / 8;
-  var key = Buffer$16.alloc(keyLen);
-  var iv = Buffer$16.alloc(ivLen || 0);
-  var tmp = Buffer$16.alloc(0);
+  var key = Buffer$19.alloc(keyLen);
+  var iv = Buffer$19.alloc(ivLen || 0);
+  var tmp = Buffer$19.alloc(0);
 
   while (keyLen > 0 || ivLen > 0) {
     var hash = new md5_js();
@@ -7825,33 +8434,33 @@ var cbc = {
 	decrypt: decrypt$1
 };
 
-var Buffer$17 = safeBuffer.Buffer;
+var Buffer$20 = safeBuffer.Buffer;
 
 
 function encryptStart (self, data, decrypt) {
   var len = data.length;
   var out = bufferXor(data, self._cache);
   self._cache = self._cache.slice(len);
-  self._prev = Buffer$17.concat([self._prev, decrypt ? data : out]);
+  self._prev = Buffer$20.concat([self._prev, decrypt ? data : out]);
   return out
 }
 
 var encrypt$2 = function (self, data, decrypt) {
-  var out = Buffer$17.allocUnsafe(0);
+  var out = Buffer$20.allocUnsafe(0);
   var len;
 
   while (data.length) {
     if (self._cache.length === 0) {
       self._cache = self._cipher.encryptBlock(self._prev);
-      self._prev = Buffer$17.allocUnsafe(0);
+      self._prev = Buffer$20.allocUnsafe(0);
     }
 
     if (self._cache.length <= data.length) {
       len = self._cache.length;
-      out = Buffer$17.concat([out, encryptStart(self, data.slice(0, len), decrypt)]);
+      out = Buffer$20.concat([out, encryptStart(self, data.slice(0, len), decrypt)]);
       data = data.slice(len);
     } else {
-      out = Buffer$17.concat([out, encryptStart(self, data, decrypt)]);
+      out = Buffer$20.concat([out, encryptStart(self, data, decrypt)]);
       break
     }
   }
@@ -7863,15 +8472,15 @@ var cfb = {
 	encrypt: encrypt$2
 };
 
-var Buffer$18 = safeBuffer.Buffer;
+var Buffer$21 = safeBuffer.Buffer;
 
 function encryptByte (self, byteParam, decrypt) {
   var pad = self._cipher.encryptBlock(self._prev);
   var out = pad[0] ^ byteParam;
 
-  self._prev = Buffer$18.concat([
+  self._prev = Buffer$21.concat([
     self._prev.slice(1),
-    Buffer$18.from([decrypt ? byteParam : out])
+    Buffer$21.from([decrypt ? byteParam : out])
   ]);
 
   return out
@@ -7879,7 +8488,7 @@ function encryptByte (self, byteParam, decrypt) {
 
 var encrypt$3 = function (self, chunk, decrypt) {
   var len = chunk.length;
-  var out = Buffer$18.allocUnsafe(len);
+  var out = Buffer$21.allocUnsafe(len);
   var i = -1;
 
   while (++i < len) {
@@ -7893,7 +8502,7 @@ var cfb8 = {
 	encrypt: encrypt$3
 };
 
-var Buffer$19 = safeBuffer.Buffer;
+var Buffer$22 = safeBuffer.Buffer;
 
 function encryptByte$1 (self, byteParam, decrypt) {
   var pad;
@@ -7914,8 +8523,8 @@ function encryptByte$1 (self, byteParam, decrypt) {
 function shiftIn (buffer, value) {
   var len = buffer.length;
   var i = -1;
-  var out = Buffer$19.allocUnsafe(buffer.length);
-  buffer = Buffer$19.concat([buffer, Buffer$19.from([value])]);
+  var out = Buffer$22.allocUnsafe(buffer.length);
+  buffer = Buffer$22.concat([buffer, Buffer$22.from([value])]);
 
   while (++i < len) {
     out[i] = buffer[i] << 1 | buffer[i + 1] >> (7);
@@ -7926,7 +8535,7 @@ function shiftIn (buffer, value) {
 
 var encrypt$4 = function (self, chunk, decrypt) {
   var len = chunk.length;
-  var out = Buffer$19.allocUnsafe(len);
+  var out = Buffer$22.allocUnsafe(len);
   var i = -1;
 
   while (++i < len) {
@@ -7975,7 +8584,7 @@ function incr32 (iv) {
 }
 var incr32_1 = incr32;
 
-var Buffer$20 = safeBuffer.Buffer;
+var Buffer$23 = safeBuffer.Buffer;
 
 
 function getBlock$1 (self) {
@@ -7988,9 +8597,9 @@ var blockSize = 16;
 var encrypt$6 = function (self, chunk) {
   var chunkNum = Math.ceil(chunk.length / blockSize);
   var start = self._cache.length;
-  self._cache = Buffer$20.concat([
+  self._cache = Buffer$23.concat([
     self._cache,
-    Buffer$20.allocUnsafe(chunkNum * blockSize)
+    Buffer$23.allocUnsafe(chunkNum * blockSize)
   ]);
   for (var i = 0; i < chunkNum; i++) {
     var out = getBlock$1(self);
@@ -8075,10 +8684,10 @@ var modes_1 = modes;
 // which is in turn based on the one from crypto-js
 // https://code.google.com/p/crypto-js/
 
-var Buffer$21 = safeBuffer.Buffer;
+var Buffer$24 = safeBuffer.Buffer;
 
 function asUInt32Array (buf) {
-  if (!Buffer$21.isBuffer(buf)) buf = Buffer$21.from(buf);
+  if (!Buffer$24.isBuffer(buf)) buf = Buffer$24.from(buf);
 
   var len = (buf.length / 4) | 0;
   var out = new Array(len);
@@ -8266,7 +8875,7 @@ AES.prototype.encryptBlockRaw = function (M) {
 
 AES.prototype.encryptBlock = function (M) {
   var out = this.encryptBlockRaw(M);
-  var buf = Buffer$21.allocUnsafe(16);
+  var buf = Buffer$24.allocUnsafe(16);
   buf.writeUInt32BE(out[0], 0);
   buf.writeUInt32BE(out[1], 4);
   buf.writeUInt32BE(out[2], 8);
@@ -8283,7 +8892,7 @@ AES.prototype.decryptBlock = function (M) {
   M[3] = m1;
 
   var out = cryptBlock(M, this._invKeySchedule, G.INV_SUB_MIX, G.INV_SBOX, this._nRounds);
-  var buf = Buffer$21.allocUnsafe(16);
+  var buf = Buffer$24.allocUnsafe(16);
   buf.writeUInt32BE(out[0], 0);
   buf.writeUInt32BE(out[3], 4);
   buf.writeUInt32BE(out[2], 8);
@@ -8303,8 +8912,8 @@ var aes = {
 	AES: AES_1
 };
 
-var Buffer$22 = safeBuffer.Buffer;
-var ZEROES = Buffer$22.alloc(16, 0);
+var Buffer$25 = safeBuffer.Buffer;
+var ZEROES = Buffer$25.alloc(16, 0);
 
 function toArray$1 (buf) {
   return [
@@ -8316,7 +8925,7 @@ function toArray$1 (buf) {
 }
 
 function fromArray (out) {
-  var buf = Buffer$22.allocUnsafe(16);
+  var buf = Buffer$25.allocUnsafe(16);
   buf.writeUInt32BE(out[0] >>> 0, 0);
   buf.writeUInt32BE(out[1] >>> 0, 4);
   buf.writeUInt32BE(out[2] >>> 0, 8);
@@ -8326,8 +8935,8 @@ function fromArray (out) {
 
 function GHASH (key) {
   this.h = key;
-  this.state = Buffer$22.alloc(16, 0);
-  this.cache = Buffer$22.allocUnsafe(0);
+  this.state = Buffer$25.alloc(16, 0);
+  this.cache = Buffer$25.allocUnsafe(0);
 }
 
 // from http://bitwiseshiftleft.github.io/sjcl/doc/symbols/src/core_gcm.js.html
@@ -8373,7 +8982,7 @@ GHASH.prototype._multiply = function () {
 };
 
 GHASH.prototype.update = function (buf) {
-  this.cache = Buffer$22.concat([this.cache, buf]);
+  this.cache = Buffer$25.concat([this.cache, buf]);
   var chunk;
   while (this.cache.length >= 16) {
     chunk = this.cache.slice(0, 16);
@@ -8384,7 +8993,7 @@ GHASH.prototype.update = function (buf) {
 
 GHASH.prototype.final = function (abl, bl) {
   if (this.cache.length) {
-    this.ghash(Buffer$22.concat([this.cache, ZEROES], 16));
+    this.ghash(Buffer$25.concat([this.cache, ZEROES], 16));
   }
 
   this.ghash(fromArray([0, abl, 0, bl]));
@@ -8393,7 +9002,7 @@ GHASH.prototype.final = function (abl, bl) {
 
 var ghash = GHASH;
 
-var Buffer$23 = safeBuffer.Buffer;
+var Buffer$26 = safeBuffer.Buffer;
 
 
 
@@ -8414,8 +9023,8 @@ function xorTest (a, b) {
 
 function calcIv (self, iv, ck) {
   if (iv.length === 12) {
-    self._finID = Buffer$23.concat([iv, Buffer$23.from([0, 0, 0, 1])]);
-    return Buffer$23.concat([iv, Buffer$23.from([0, 0, 0, 2])])
+    self._finID = Buffer$26.concat([iv, Buffer$26.from([0, 0, 0, 1])]);
+    return Buffer$26.concat([iv, Buffer$26.from([0, 0, 0, 2])])
   }
   var ghash$$1 = new ghash(ck);
   var len = iv.length;
@@ -8423,31 +9032,31 @@ function calcIv (self, iv, ck) {
   ghash$$1.update(iv);
   if (toPad) {
     toPad = 16 - toPad;
-    ghash$$1.update(Buffer$23.alloc(toPad, 0));
+    ghash$$1.update(Buffer$26.alloc(toPad, 0));
   }
-  ghash$$1.update(Buffer$23.alloc(8, 0));
+  ghash$$1.update(Buffer$26.alloc(8, 0));
   var ivBits = len * 8;
-  var tail = Buffer$23.alloc(8);
+  var tail = Buffer$26.alloc(8);
   tail.writeUIntBE(ivBits, 0, 8);
   ghash$$1.update(tail);
   self._finID = ghash$$1.state;
-  var out = Buffer$23.from(self._finID);
+  var out = Buffer$26.from(self._finID);
   incr32_1(out);
   return out
 }
 function StreamCipher (mode, key, iv, decrypt) {
   cipherBase.call(this);
 
-  var h = Buffer$23.alloc(4, 0);
+  var h = Buffer$26.alloc(4, 0);
 
   this._cipher = new aes.AES(key);
   var ck = this._cipher.encryptBlock(h);
   this._ghash = new ghash(ck);
   iv = calcIv(this, iv, ck);
 
-  this._prev = Buffer$23.from(iv);
-  this._cache = Buffer$23.allocUnsafe(0);
-  this._secCache = Buffer$23.allocUnsafe(0);
+  this._prev = Buffer$26.from(iv);
+  this._cache = Buffer$26.allocUnsafe(0);
+  this._secCache = Buffer$26.allocUnsafe(0);
   this._decrypt = decrypt;
   this._alen = 0;
   this._len = 0;
@@ -8463,7 +9072,7 @@ StreamCipher.prototype._update = function (chunk) {
   if (!this._called && this._alen) {
     var rump = 16 - (this._alen % 16);
     if (rump < 16) {
-      rump = Buffer$23.alloc(rump, 0);
+      rump = Buffer$26.alloc(rump, 0);
       this._ghash.update(rump);
     }
   }
@@ -8490,7 +9099,7 @@ StreamCipher.prototype._final = function () {
 };
 
 StreamCipher.prototype.getAuthTag = function getAuthTag () {
-  if (this._decrypt || !Buffer$23.isBuffer(this._authTag)) throw new Error('Attempting to get auth tag in unsupported state')
+  if (this._decrypt || !Buffer$26.isBuffer(this._authTag)) throw new Error('Attempting to get auth tag in unsupported state')
 
   return this._authTag
 };
@@ -8510,7 +9119,7 @@ StreamCipher.prototype.setAAD = function setAAD (buf) {
 
 var authCipher = StreamCipher;
 
-var Buffer$24 = safeBuffer.Buffer;
+var Buffer$27 = safeBuffer.Buffer;
 
 
 
@@ -8518,9 +9127,9 @@ function StreamCipher$1 (mode, key, iv, decrypt) {
   cipherBase.call(this);
 
   this._cipher = new aes.AES(key);
-  this._prev = Buffer$24.from(iv);
-  this._cache = Buffer$24.allocUnsafe(0);
-  this._secCache = Buffer$24.allocUnsafe(0);
+  this._prev = Buffer$27.from(iv);
+  this._cache = Buffer$27.allocUnsafe(0);
+  this._secCache = Buffer$27.allocUnsafe(0);
   this._decrypt = decrypt;
   this._mode = mode;
 }
@@ -8537,7 +9146,7 @@ StreamCipher$1.prototype._final = function () {
 
 var streamCipher = StreamCipher$1;
 
-var Buffer$25 = safeBuffer.Buffer;
+var Buffer$28 = safeBuffer.Buffer;
 
 
 
@@ -8549,7 +9158,7 @@ function Cipher (mode, key, iv) {
 
   this._cache = new Splitter();
   this._cipher = new aes.AES(key);
-  this._prev = Buffer$25.from(iv);
+  this._prev = Buffer$28.from(iv);
   this._mode = mode;
   this._autopadding = true;
 }
@@ -8567,10 +9176,10 @@ Cipher.prototype._update = function (data) {
     out.push(thing);
   }
 
-  return Buffer$25.concat(out)
+  return Buffer$28.concat(out)
 };
 
-var PADDING = Buffer$25.alloc(16, 0x10);
+var PADDING = Buffer$28.alloc(16, 0x10);
 
 Cipher.prototype._final = function () {
   var chunk = this._cache.flush();
@@ -8592,11 +9201,11 @@ Cipher.prototype.setAutoPadding = function (setTo) {
 };
 
 function Splitter () {
-  this.cache = Buffer$25.allocUnsafe(0);
+  this.cache = Buffer$28.allocUnsafe(0);
 }
 
 Splitter.prototype.add = function (data) {
-  this.cache = Buffer$25.concat([this.cache, data]);
+  this.cache = Buffer$28.concat([this.cache, data]);
 };
 
 Splitter.prototype.get = function () {
@@ -8610,24 +9219,24 @@ Splitter.prototype.get = function () {
 
 Splitter.prototype.flush = function () {
   var len = 16 - this.cache.length;
-  var padBuff = Buffer$25.allocUnsafe(len);
+  var padBuff = Buffer$28.allocUnsafe(len);
 
   var i = -1;
   while (++i < len) {
     padBuff.writeUInt8(len, i);
   }
 
-  return Buffer$25.concat([this.cache, padBuff])
+  return Buffer$28.concat([this.cache, padBuff])
 };
 
 function createCipheriv (suite, password, iv) {
   var config = modes_1[suite.toLowerCase()];
   if (!config) throw new TypeError('invalid suite type')
 
-  if (typeof password === 'string') password = Buffer$25.from(password);
+  if (typeof password === 'string') password = Buffer$28.from(password);
   if (password.length !== config.key / 8) throw new TypeError('invalid key length ' + password.length)
 
-  if (typeof iv === 'string') iv = Buffer$25.from(iv);
+  if (typeof iv === 'string') iv = Buffer$28.from(iv);
   if (config.mode !== 'GCM' && iv.length !== config.iv) throw new TypeError('invalid iv length ' + iv.length)
 
   if (config.type === 'stream') {
@@ -8655,7 +9264,7 @@ var encrypter = {
 	createCipher: createCipher_1
 };
 
-var Buffer$26 = safeBuffer.Buffer;
+var Buffer$29 = safeBuffer.Buffer;
 
 
 
@@ -8669,7 +9278,7 @@ function Decipher (mode, key, iv) {
   this._cache = new Splitter$1();
   this._last = void 0;
   this._cipher = new aes.AES(key);
-  this._prev = Buffer$26.from(iv);
+  this._prev = Buffer$29.from(iv);
   this._mode = mode;
   this._autopadding = true;
 }
@@ -8685,7 +9294,7 @@ Decipher.prototype._update = function (data) {
     thing = this._mode.decrypt(this, chunk);
     out.push(thing);
   }
-  return Buffer$26.concat(out)
+  return Buffer$29.concat(out)
 };
 
 Decipher.prototype._final = function () {
@@ -8703,11 +9312,11 @@ Decipher.prototype.setAutoPadding = function (setTo) {
 };
 
 function Splitter$1 () {
-  this.cache = Buffer$26.allocUnsafe(0);
+  this.cache = Buffer$29.allocUnsafe(0);
 }
 
 Splitter$1.prototype.add = function (data) {
-  this.cache = Buffer$26.concat([this.cache, data]);
+  this.cache = Buffer$29.concat([this.cache, data]);
 };
 
 Splitter$1.prototype.get = function (autoPadding) {
@@ -8750,10 +9359,10 @@ function createDecipheriv (suite, password, iv) {
   var config = modes_1[suite.toLowerCase()];
   if (!config) throw new TypeError('invalid suite type')
 
-  if (typeof iv === 'string') iv = Buffer$26.from(iv);
+  if (typeof iv === 'string') iv = Buffer$29.from(iv);
   if (config.mode !== 'GCM' && iv.length !== config.iv) throw new TypeError('invalid iv length ' + iv.length)
 
-  if (typeof password === 'string') password = Buffer$26.from(password);
+  if (typeof password === 'string') password = Buffer$29.from(password);
   if (password.length !== config.key / 8) throw new TypeError('invalid key length ' + password.length)
 
   if (config.type === 'stream') {
@@ -13124,7 +13733,7 @@ if (typeof self === 'object') {
 } else {
   // Node.js or Web worker with no crypto support
   try {
-    var crypto = cryptoBrowserify;
+    var crypto = require$$0$3;
     if (typeof crypto.randomBytes !== 'function')
       throw new Error('Not supported');
 
@@ -19287,11 +19896,11 @@ var reporter = {
 };
 
 var Reporter$1 = base_1.Reporter;
-var Buffer$27 = require$$0.Buffer;
+var Buffer$30 = require$$0.Buffer;
 
 function DecoderBuffer(base, options) {
   Reporter$1.call(this, options);
-  if (!Buffer$27.isBuffer(base)) {
+  if (!Buffer$30.isBuffer(base)) {
     this.error('Input not Buffer');
     return;
   }
@@ -19365,8 +19974,8 @@ function EncoderBuffer(value, reporter) {
     this.length = 1;
   } else if (typeof value === 'string') {
     this.value = value;
-    this.length = Buffer$27.byteLength(value);
-  } else if (Buffer$27.isBuffer(value)) {
+    this.length = Buffer$30.byteLength(value);
+  } else if (Buffer$30.isBuffer(value)) {
     this.value = value;
     this.length = value.length;
   } else {
@@ -19377,7 +19986,7 @@ var EncoderBuffer_1 = EncoderBuffer;
 
 EncoderBuffer.prototype.join = function join(out, offset) {
   if (!out)
-    out = new Buffer$27(this.length);
+    out = new Buffer$30(this.length);
   if (!offset)
     offset = 0;
 
@@ -19394,7 +20003,7 @@ EncoderBuffer.prototype.join = function join(out, offset) {
       out[offset] = this.value;
     else if (typeof this.value === 'string')
       out.write(this.value, offset);
-    else if (Buffer$27.isBuffer(this.value))
+    else if (Buffer$30.isBuffer(this.value))
       this.value.copy(out, offset);
     offset += this.length;
   }
@@ -20443,7 +21052,7 @@ function derDecodeLen(buf, primitive, fail) {
   return len;
 }
 
-var Buffer$28 = require$$0.Buffer;
+var Buffer$31 = require$$0.Buffer;
 
 
 
@@ -20488,7 +21097,7 @@ PEMDecoder.prototype.decode = function decode(data, options) {
   // Remove excessive symbols
   base64.replace(/[^a-z0-9\+\/=]+/gi, '');
 
-  var input = new Buffer$28(base64, 'base64');
+  var input = new Buffer$31(base64, 'base64');
   return der_1$1.prototype.decode.call(this, input, options);
 };
 
@@ -20499,7 +21108,7 @@ decoders.der = der_1$1;
 decoders.pem = pem;
 });
 
-var Buffer$29 = require$$0.Buffer;
+var Buffer$32 = require$$0.Buffer;
 
 
 var base$3 = asn1_1.base;
@@ -20537,7 +21146,7 @@ DERNode$1.prototype._encodeComposite = function encodeComposite(tag,
 
   // Short form
   if (content.length < 0x80) {
-    var header = new Buffer$29(2);
+    var header = new Buffer$32(2);
     header[0] = encodedTag;
     header[1] = content.length;
     return this._createEncoderBuffer([ header, content ]);
@@ -20549,7 +21158,7 @@ DERNode$1.prototype._encodeComposite = function encodeComposite(tag,
   for (var i = content.length; i >= 0x100; i >>= 8)
     lenOctets++;
 
-  var header = new Buffer$29(1 + 1 + lenOctets);
+  var header = new Buffer$32(1 + 1 + lenOctets);
   header[0] = encodedTag;
   header[1] = 0x80 | lenOctets;
 
@@ -20563,7 +21172,7 @@ DERNode$1.prototype._encodeStr = function encodeStr(str, tag) {
   if (tag === 'bitstr') {
     return this._createEncoderBuffer([ str.unused | 0, str.data ]);
   } else if (tag === 'bmpstr') {
-    var buf = new Buffer$29(str.length * 2);
+    var buf = new Buffer$32(str.length * 2);
     for (var i = 0; i < str.length; i++) {
       buf.writeUInt16BE(str.charCodeAt(i), i * 2);
     }
@@ -20628,7 +21237,7 @@ DERNode$1.prototype._encodeObjid = function encodeObjid(id, values, relative) {
       size++;
   }
 
-  var objid = new Buffer$29(size);
+  var objid = new Buffer$32(size);
   var offset = objid.length - 1;
   for (var i = id.length - 1; i >= 0; i--) {
     var ident = id[i];
@@ -20694,20 +21303,20 @@ DERNode$1.prototype._encodeInt = function encodeInt(num, values) {
   }
 
   // Bignum, assume big endian
-  if (typeof num !== 'number' && !Buffer$29.isBuffer(num)) {
+  if (typeof num !== 'number' && !Buffer$32.isBuffer(num)) {
     var numArray = num.toArray();
     if (!num.sign && numArray[0] & 0x80) {
       numArray.unshift(0);
     }
-    num = new Buffer$29(numArray);
+    num = new Buffer$32(numArray);
   }
 
-  if (Buffer$29.isBuffer(num)) {
+  if (Buffer$32.isBuffer(num)) {
     var size = num.length;
     if (num.length === 0)
       size++;
 
-    var out = new Buffer$29(size);
+    var out = new Buffer$32(size);
     num.copy(out);
     if (num.length === 0)
       out[0] = 0;
@@ -20733,7 +21342,7 @@ DERNode$1.prototype._encodeInt = function encodeInt(num, values) {
     out.unshift(0);
   }
 
-  return this._createEncoderBuffer(new Buffer$29(out));
+  return this._createEncoderBuffer(new Buffer$32(out));
 };
 
 DERNode$1.prototype._encodeBool = function encodeBool(value) {
@@ -21220,7 +21829,7 @@ var EC$1 = elliptic_1.ec;
 
 
 
-function sign (hash, key, hashType, signType, tag) {
+function sign$1 (hash, key, hashType, signType, tag) {
   var priv = parseAsn1(key);
   if (priv.curve) {
     // rsa keys can be interpreted as ecdsa ones in openssl
@@ -21354,7 +21963,7 @@ function makeR (g, k, p, q) {
   return g.toRed(bn.mont(p)).redPow(k).fromRed().mod(q)
 }
 
-var sign_1 = sign;
+var sign_1 = sign$1;
 var getKey_1 = getKey;
 var makeKey_1 = makeKey;
 
@@ -21367,7 +21976,7 @@ var EC$2 = elliptic_1.ec;
 
 
 
-function verify (sig, hash, key, signType, tag) {
+function verify$1 (sig, hash, key, signType, tag) {
   var pub = parseAsn1(key);
   if (pub.type === 'ec') {
     // rsa keys can be interpreted as ecdsa ones in openssl
@@ -21443,7 +22052,7 @@ function checkValue (b, q) {
   if (b.cmp(q) >= q) throw new Error('invalid sig')
 }
 
-var verify_1 = verify;
+var verify_1 = verify$1;
 
 Object.keys(algorithms$2).forEach(function (key) {
   algorithms$2[key].id = new Buffer(algorithms$2[key].id, 'hex');
@@ -21451,7 +22060,7 @@ Object.keys(algorithms$2).forEach(function (key) {
 });
 
 function Sign (algorithm) {
-  Stream$2.Writable.call(this);
+  stream$1.Writable.call(this);
 
   var data = algorithms$2[algorithm];
   if (!data) throw new Error('Unknown message digest')
@@ -21461,7 +22070,7 @@ function Sign (algorithm) {
   this._tag = data.id;
   this._signType = data.sign;
 }
-inherits_browser(Sign, Stream$2.Writable);
+inherits_browser(Sign, stream$1.Writable);
 
 Sign.prototype._write = function _write (data, _, done) {
   this._hash.update(data);
@@ -21484,7 +22093,7 @@ Sign.prototype.sign = function signMethod (key, enc) {
 };
 
 function Verify (algorithm) {
-  Stream$2.Writable.call(this);
+  stream$1.Writable.call(this);
 
   var data = algorithms$2[algorithm];
   if (!data) throw new Error('Unknown message digest')
@@ -21493,7 +22102,7 @@ function Verify (algorithm) {
   this._tag = data.id;
   this._signType = data.sign;
 }
-inherits_browser(Verify, Stream$2.Writable);
+inherits_browser(Verify, stream$1.Writable);
 
 Verify.prototype._write = function _write (data, _, done) {
   this._hash.update(data);
@@ -21515,19 +22124,19 @@ Verify.prototype.verify = function verifyMethod (key, sig, enc) {
   return verify_1(sig, hash, key, this._signType, this._tag)
 };
 
-function createSign (algorithm) {
+function createSign$1 (algorithm) {
   return new Sign(algorithm)
 }
 
-function createVerify (algorithm) {
+function createVerify$1 (algorithm) {
   return new Verify(algorithm)
 }
 
 var browser$15 = {
-  Sign: createSign,
-  Verify: createVerify,
-  createSign: createSign,
-  createVerify: createVerify
+  Sign: createSign$1,
+  Verify: createVerify$1,
+  createSign: createSign$1,
+  createVerify: createVerify$1
 };
 
 var browser$17 = function createECDH(curve) {
@@ -22135,564 +22744,84 @@ var cryptoBrowserify_37 = cryptoBrowserify.randomFillSync;
 var cryptoBrowserify_38 = cryptoBrowserify.createCredentials;
 var cryptoBrowserify_39 = cryptoBrowserify.constants;
 
-function getParamSize(keySize) {
-	var result = ((keySize / 8) | 0) + (keySize % 8 === 0 ? 0 : 1);
-	return result;
+var src = createCommonjsModule(function (module) {
+if (detectNode) {
+  module.exports = require$$0$3;
+} else {
+  module.exports = cryptoBrowserify;
 }
+});
 
-var paramBytesForAlg = {
-	ES256: getParamSize(256),
-	ES384: getParamSize(384),
-	ES512: getParamSize(521)
-};
+/*eslint no-useless-escape: "off", camelcase: "off" */
 
-function getParamBytesForAlg(alg) {
-	var paramBytes = paramBytesForAlg[alg];
-	if (paramBytes) {
-		return paramBytes;
-	}
+var execSync = require('child_process').execSync;
+var myKey = void 0;
 
-	throw new Error('Unknown algorithm "' + alg + '"');
-}
+var stdio = ['pipe', 'pipe', 'ignore']; // Ignore stderr
 
-var paramBytesForAlg_1 = getParamBytesForAlg;
+var util$3 = {
+  UNIQUE_ID_VALIDATORS: {
+    email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
+    bitcoin: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
+    bitcoin_address: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
+    ip: /^(([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)\.){3}([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)$/,
+    ipv6: /^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$/,
+    gpg_fingerprint: null,
+    gpg_keyid: null,
+    google_oauth2: null,
+    tel: /^\d{7,}$/,
+    phone: /^\d{7,}$/,
+    keyID: null,
+    url: /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi,
+    account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i
+  },
 
-var base64Url = base64url$1.fromBase64;
-var Buffer$30 = safeBuffer.Buffer;
+  guessTypeOf: function guessTypeOf(value) {
+    for (var key in this.UNIQUE_ID_VALIDATORS) {
+      if (value.match(this.UNIQUE_ID_VALIDATORS[key])) {
+        return key;
+      }
+    }
+  },
 
+  generate: function generate() {
+    var key = { public: {}, private: {} };
+    key.private.pem = execSync('openssl ecparam -genkey -noout -name secp256k1', { stdio: stdio }).toString();
+    key.public.pem = execSync('openssl ec -pubout', { input: key.private.pem, stdio: stdio }).toString();
+    key.public.hex = this.getPubHexFromPrivPEM(key.private.pem);
+    key.hash = this.getHash(key.public.hex);
+    return key;
+  },
 
+  getHash: function getHash(publicKey) {
+    return src.createHash('sha256').update(publicKey).digest('base64');
+  },
 
-var MAX_OCTET = 0x80;
-var CLASS_UNIVERSAL = 0;
-var PRIMITIVE_BIT = 0x20;
-var TAG_SEQ = 0x10;
-var TAG_INT = 0x02;
-var ENCODED_TAG_SEQ = (TAG_SEQ | PRIMITIVE_BIT) | (CLASS_UNIVERSAL << 6);
-var ENCODED_TAG_INT = TAG_INT | (CLASS_UNIVERSAL << 6);
+  getPubkeyPEMfromHex: function getPubkeyPEMfromHex(hex) {
+    return execSync('openssl ec -pubin -pubout -inform DER', { input: new Buffer(hex, 'hex'), stdio: stdio }).toString();
+  },
 
-function signatureAsBuffer(signature) {
-	if (Buffer$30.isBuffer(signature)) {
-		return signature;
-	} else if ('string' === typeof signature) {
-		return Buffer$30.from(signature, 'base64');
-	}
+  getPubHexFromPrivPEM: function getPubHexFromPrivPEM(privPEM) {
+    return execSync('openssl ec -pubout -outform DER', { input: privPEM, stdio: stdio }).toString('hex');
+  },
 
-	throw new TypeError('ECDSA signature must be a Base64 string or a Buffer');
-}
-
-function derToJose(signature, alg) {
-	signature = signatureAsBuffer(signature);
-	var paramBytes = paramBytesForAlg_1(alg);
-
-	// the DER encoded param should at most be the param size, plus a padding
-	// zero, since due to being a signed integer
-	var maxEncodedParamLength = paramBytes + 1;
-
-	var inputLength = signature.length;
-
-	var offset = 0;
-	if (signature[offset++] !== ENCODED_TAG_SEQ) {
-		throw new Error('Could not find expected "seq"');
-	}
-
-	var seqLength = signature[offset++];
-	if (seqLength === (MAX_OCTET | 1)) {
-		seqLength = signature[offset++];
-	}
-
-	if (inputLength - offset < seqLength) {
-		throw new Error('"seq" specified length of "' + seqLength + '", only "' + (inputLength - offset) + '" remaining');
-	}
-
-	if (signature[offset++] !== ENCODED_TAG_INT) {
-		throw new Error('Could not find expected "int" for "r"');
-	}
-
-	var rLength = signature[offset++];
-
-	if (inputLength - offset - 2 < rLength) {
-		throw new Error('"r" specified length of "' + rLength + '", only "' + (inputLength - offset - 2) + '" available');
-	}
-
-	if (maxEncodedParamLength < rLength) {
-		throw new Error('"r" specified length of "' + rLength + '", max of "' + maxEncodedParamLength + '" is acceptable');
-	}
-
-	var rOffset = offset;
-	offset += rLength;
-
-	if (signature[offset++] !== ENCODED_TAG_INT) {
-		throw new Error('Could not find expected "int" for "s"');
-	}
-
-	var sLength = signature[offset++];
-
-	if (inputLength - offset !== sLength) {
-		throw new Error('"s" specified length of "' + sLength + '", expected "' + (inputLength - offset) + '"');
-	}
-
-	if (maxEncodedParamLength < sLength) {
-		throw new Error('"s" specified length of "' + sLength + '", max of "' + maxEncodedParamLength + '" is acceptable');
-	}
-
-	var sOffset = offset;
-	offset += sLength;
-
-	if (offset !== inputLength) {
-		throw new Error('Expected to consume entire buffer, but "' + (inputLength - offset) + '" bytes remain');
-	}
-
-	var rPadding = paramBytes - rLength,
-		sPadding = paramBytes - sLength;
-
-	var dst = Buffer$30.allocUnsafe(rPadding + rLength + sPadding + sLength);
-
-	for (offset = 0; offset < rPadding; ++offset) {
-		dst[offset] = 0;
-	}
-	signature.copy(dst, offset, rOffset + Math.max(-rPadding, 0), rOffset + rLength);
-
-	offset = paramBytes;
-
-	for (var o = offset; offset < o + sPadding; ++offset) {
-		dst[offset] = 0;
-	}
-	signature.copy(dst, offset, sOffset + Math.max(-sPadding, 0), sOffset + sLength);
-
-	dst = dst.toString('base64');
-	dst = base64Url(dst);
-
-	return dst;
-}
-
-function countPadding(buf, start, stop) {
-	var padding = 0;
-	while (start + padding < stop && buf[start + padding] === 0) {
-		++padding;
-	}
-
-	var needsSign = buf[start + padding] >= MAX_OCTET;
-	if (needsSign) {
-		--padding;
-	}
-
-	return padding;
-}
-
-function joseToDer(signature, alg) {
-	signature = signatureAsBuffer(signature);
-	var paramBytes = paramBytesForAlg_1(alg);
-
-	var signatureBytes = signature.length;
-	if (signatureBytes !== paramBytes * 2) {
-		throw new TypeError('"' + alg + '" signatures must be "' + paramBytes * 2 + '" bytes, saw "' + signatureBytes + '"');
-	}
-
-	var rPadding = countPadding(signature, 0, paramBytes);
-	var sPadding = countPadding(signature, paramBytes, signature.length);
-	var rLength = paramBytes - rPadding;
-	var sLength = paramBytes - sPadding;
-
-	var rsBytes = 1 + 1 + rLength + 1 + 1 + sLength;
-
-	var shortLength = rsBytes < MAX_OCTET;
-
-	var dst = Buffer$30.allocUnsafe((shortLength ? 2 : 3) + rsBytes);
-
-	var offset = 0;
-	dst[offset++] = ENCODED_TAG_SEQ;
-	if (shortLength) {
-		// Bit 8 has value "0"
-		// bits 7-1 give the length.
-		dst[offset++] = rsBytes;
-	} else {
-		// Bit 8 of first octet has value "1"
-		// bits 7-1 give the number of additional length octets.
-		dst[offset++] = MAX_OCTET	| 1;
-		// length, base 256
-		dst[offset++] = rsBytes & 0xff;
-	}
-	dst[offset++] = ENCODED_TAG_INT;
-	dst[offset++] = rLength;
-	if (rPadding < 0) {
-		dst[offset++] = 0;
-		offset += signature.copy(dst, offset, 0, paramBytes);
-	} else {
-		offset += signature.copy(dst, offset, rPadding, paramBytes);
-	}
-	dst[offset++] = ENCODED_TAG_INT;
-	dst[offset++] = sLength;
-	if (sPadding < 0) {
-		dst[offset++] = 0;
-		signature.copy(dst, offset, paramBytes);
-	} else {
-		signature.copy(dst, offset, paramBytes + sPadding);
-	}
-
-	return dst;
-}
-
-var ecdsaSigFormatter = {
-	derToJose: derToJose,
-	joseToDer: joseToDer
-};
-
-var Buffer$31 = safeBuffer.Buffer;
-
-
-
-
-var MSG_INVALID_ALGORITHM = '"%s" is not a valid algorithm.\n  Supported algorithms are:\n  "HS256", "HS384", "HS512", "RS256", "RS384", "RS512" and "none".';
-var MSG_INVALID_SECRET = 'secret must be a string or buffer';
-var MSG_INVALID_VERIFIER_KEY = 'key must be a string or a buffer';
-var MSG_INVALID_SIGNER_KEY = 'key must be a string, a buffer or an object';
-
-function typeError(template) {
-  var args = [].slice.call(arguments, 1);
-  var errMsg = util$2.format.bind(util$2, template).apply(null, args);
-  return new TypeError(errMsg);
-}
-
-function bufferOrString(obj) {
-  return Buffer$31.isBuffer(obj) || typeof obj === 'string';
-}
-
-function normalizeInput(thing) {
-  if (!bufferOrString(thing))
-    thing = JSON.stringify(thing);
-  return thing;
-}
-
-function createHmacSigner(bits) {
-  return function sign(thing, secret) {
-    if (!bufferOrString(secret))
-      throw typeError(MSG_INVALID_SECRET);
-    thing = normalizeInput(thing);
-    var hmac = cryptoBrowserify.createHmac('sha' + bits, secret);
-    var sig = (hmac.update(thing), hmac.digest('base64'));
-    return base64url$1.fromBase64(sig);
+  getDefault: function getDefault(datadir) {
+    if (myKey) {
+      return myKey;
+    }
+    var fs = require('fs');
+    var privKeyFile = datadir + '/private.key';
+    if (!fs.existsSync(privKeyFile)) {
+      execSync('openssl ecparam -genkey -noout -name secp256k1 -out ' + privKeyFile, { stdio: stdio });
+      fs.chmodSync(privKeyFile, 400);
+    }
+    myKey = { public: {}, private: {} };
+    myKey.private.pem = fs.readFileSync(privKeyFile, 'utf8');
+    myKey.public.hex = this.getPubHexFromPrivPEM(myKey.private.pem);
+    myKey.public.pem = execSync('openssl ec -in ' + privKeyFile + ' -pubout', { stdio: stdio }).toString();
+    myKey.hash = this.getHash(myKey.public.hex);
+    return myKey;
   }
-}
-
-function createHmacVerifier(bits) {
-  return function verify(thing, signature, secret) {
-    var computedSig = createHmacSigner(bits)(thing, secret);
-    return bufferEqualConstantTime(Buffer$31.from(signature), Buffer$31.from(computedSig));
-  }
-}
-
-function createKeySigner(bits) {
- return function sign(thing, privateKey) {
-    if (!bufferOrString(privateKey) && !(typeof privateKey === 'object'))
-      throw typeError(MSG_INVALID_SIGNER_KEY);
-    thing = normalizeInput(thing);
-    // Even though we are specifying "RSA" here, this works with ECDSA
-    // keys as well.
-    var signer = cryptoBrowserify.createSign('RSA-SHA' + bits);
-    var sig = (signer.update(thing), signer.sign(privateKey, 'base64'));
-    return base64url$1.fromBase64(sig);
-  }
-}
-
-function createKeyVerifier(bits) {
-  return function verify(thing, signature, publicKey) {
-    if (!bufferOrString(publicKey))
-      throw typeError(MSG_INVALID_VERIFIER_KEY);
-    thing = normalizeInput(thing);
-    signature = base64url$1.toBase64(signature);
-    var verifier = cryptoBrowserify.createVerify('RSA-SHA' + bits);
-    verifier.update(thing);
-    return verifier.verify(publicKey, signature, 'base64');
-  }
-}
-
-function createECDSASigner(bits) {
-  var inner = createKeySigner(bits);
-  return function sign() {
-    var signature = inner.apply(null, arguments);
-    signature = ecdsaSigFormatter.derToJose(signature, 'ES' + bits);
-    return signature;
-  };
-}
-
-function createECDSAVerifer(bits) {
-  var inner = createKeyVerifier(bits);
-  return function verify(thing, signature, publicKey) {
-    signature = ecdsaSigFormatter.joseToDer(signature, 'ES' + bits).toString('base64');
-    var result = inner(thing, signature, publicKey);
-    return result;
-  };
-}
-
-function createNoneSigner() {
-  return function sign() {
-    return '';
-  }
-}
-
-function createNoneVerifier() {
-  return function verify(thing, signature) {
-    return signature === '';
-  }
-}
-
-var jwa = function jwa(algorithm) {
-  var signerFactories = {
-    hs: createHmacSigner,
-    rs: createKeySigner,
-    es: createECDSASigner,
-    none: createNoneSigner,
-  };
-  var verifierFactories = {
-    hs: createHmacVerifier,
-    rs: createKeyVerifier,
-    es: createECDSAVerifer,
-    none: createNoneVerifier,
-  };
-  var match = algorithm.match(/^(RS|ES|HS)(256|384|512)$|^(none)$/i);
-  if (!match)
-    throw typeError(MSG_INVALID_ALGORITHM, algorithm);
-  var algo = (match[1] || match[3]).toLowerCase();
-  var bits = match[2];
-
-  return {
-    sign: signerFactories[algo](bits),
-    verify: verifierFactories[algo](bits),
-  }
-};
-
-/*global module*/
-var Buffer$32 = require$$0.Buffer;
-
-var tostring = function toString(obj) {
-  if (typeof obj === 'string')
-    return obj;
-  if (typeof obj === 'number' || Buffer$32.isBuffer(obj))
-    return obj.toString();
-  return JSON.stringify(obj);
-};
-
-/*global module*/
-
-
-
-
-
-
-
-function jwsSecuredInput(header, payload, encoding) {
-  encoding = encoding || 'utf8';
-  var encodedHeader = base64url$1(tostring(header), 'binary');
-  var encodedPayload = base64url$1(tostring(payload), encoding);
-  return util$2.format('%s.%s', encodedHeader, encodedPayload);
-}
-
-function jwsSign(opts) {
-  var header = opts.header;
-  var payload = opts.payload;
-  var secretOrKey = opts.secret || opts.privateKey;
-  var encoding = opts.encoding;
-  var algo = jwa(header.alg);
-  var securedInput = jwsSecuredInput(header, payload, encoding);
-  var signature = algo.sign(securedInput, secretOrKey);
-  return util$2.format('%s.%s', securedInput, signature);
-}
-
-function SignStream(opts) {
-  var secret = opts.secret||opts.privateKey||opts.key;
-  var secretStream = new dataStream(secret);
-  this.readable = true;
-  this.header = opts.header;
-  this.encoding = opts.encoding;
-  this.secret = this.privateKey = this.key = secretStream;
-  this.payload = new dataStream(opts.payload);
-  this.secret.once('close', function () {
-    if (!this.payload.writable && this.readable)
-      this.sign();
-  }.bind(this));
-
-  this.payload.once('close', function () {
-    if (!this.secret.writable && this.readable)
-      this.sign();
-  }.bind(this));
-}
-util$2.inherits(SignStream, Stream$2);
-
-SignStream.prototype.sign = function sign() {
-  try {
-    var signature = jwsSign({
-      header: this.header,
-      payload: this.payload.buffer,
-      secret: this.secret.buffer,
-      encoding: this.encoding
-    });
-    this.emit('done', signature);
-    this.emit('data', signature);
-    this.emit('end');
-    this.readable = false;
-    return signature;
-  } catch (e) {
-    this.readable = false;
-    this.emit('error', e);
-    this.emit('close');
-  }
-};
-
-SignStream.sign = jwsSign;
-
-var signStream = SignStream;
-
-/*global module*/
-
-
-
-
-
-
-var JWS_REGEX = /^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/;
-
-function isObject$1(thing) {
-  return Object.prototype.toString.call(thing) === '[object Object]';
-}
-
-function safeJsonParse(thing) {
-  if (isObject$1(thing))
-    return thing;
-  try { return JSON.parse(thing); }
-  catch (e) { return undefined; }
-}
-
-function headerFromJWS(jwsSig) {
-  var encodedHeader = jwsSig.split('.', 1)[0];
-  return safeJsonParse(base64url$1.decode(encodedHeader, 'binary'));
-}
-
-function securedInputFromJWS(jwsSig) {
-  return jwsSig.split('.', 2).join('.');
-}
-
-function signatureFromJWS(jwsSig) {
-  return jwsSig.split('.')[2];
-}
-
-function payloadFromJWS(jwsSig, encoding) {
-  encoding = encoding || 'utf8';
-  var payload = jwsSig.split('.')[1];
-  return base64url$1.decode(payload, encoding);
-}
-
-function isValidJws(string) {
-  return JWS_REGEX.test(string) && !!headerFromJWS(string);
-}
-
-function jwsVerify(jwsSig, algorithm, secretOrKey) {
-  if (!algorithm) {
-    var err = new Error("Missing algorithm parameter for jws.verify");
-    err.code = "MISSING_ALGORITHM";
-    throw err;
-  }
-  jwsSig = tostring(jwsSig);
-  var signature = signatureFromJWS(jwsSig);
-  var securedInput = securedInputFromJWS(jwsSig);
-  var algo = jwa(algorithm);
-  return algo.verify(securedInput, signature, secretOrKey);
-}
-
-function jwsDecode(jwsSig, opts) {
-  opts = opts || {};
-  jwsSig = tostring(jwsSig);
-
-  if (!isValidJws(jwsSig))
-    return null;
-
-  var header = headerFromJWS(jwsSig);
-
-  if (!header)
-    return null;
-
-  var payload = payloadFromJWS(jwsSig);
-  if (header.typ === 'JWT' || opts.json)
-    payload = JSON.parse(payload, opts.encoding);
-
-  return {
-    header: header,
-    payload: payload,
-    signature: signatureFromJWS(jwsSig)
-  };
-}
-
-function VerifyStream(opts) {
-  opts = opts || {};
-  var secretOrKey = opts.secret||opts.publicKey||opts.key;
-  var secretStream = new dataStream(secretOrKey);
-  this.readable = true;
-  this.algorithm = opts.algorithm;
-  this.encoding = opts.encoding;
-  this.secret = this.publicKey = this.key = secretStream;
-  this.signature = new dataStream(opts.signature);
-  this.secret.once('close', function () {
-    if (!this.signature.writable && this.readable)
-      this.verify();
-  }.bind(this));
-
-  this.signature.once('close', function () {
-    if (!this.secret.writable && this.readable)
-      this.verify();
-  }.bind(this));
-}
-util$2.inherits(VerifyStream, Stream$2);
-VerifyStream.prototype.verify = function verify() {
-  try {
-    var valid = jwsVerify(this.signature.buffer, this.algorithm, this.key.buffer);
-    var obj = jwsDecode(this.signature.buffer, this.encoding);
-    this.emit('done', valid, obj);
-    this.emit('data', valid);
-    this.emit('end');
-    this.readable = false;
-    return valid;
-  } catch (e) {
-    this.readable = false;
-    this.emit('error', e);
-    this.emit('close');
-  }
-};
-
-VerifyStream.decode = jwsDecode;
-VerifyStream.isValid = isValidJws;
-VerifyStream.verify = jwsVerify;
-
-var verifyStream = VerifyStream;
-
-/*global exports*/
-
-
-
-var ALGORITHMS = [
-  'HS256', 'HS384', 'HS512',
-  'RS256', 'RS384', 'RS512',
-  'ES256', 'ES384', 'ES512'
-];
-
-var ALGORITHMS_1 = ALGORITHMS;
-var sign$3 = signStream.sign;
-var verify$2 = verifyStream.verify;
-var decode = verifyStream.decode;
-var isValid = verifyStream.isValid;
-var createSign$1 = function createSign(opts) {
-  return new signStream(opts);
-};
-var createVerify$1 = function createVerify(opts) {
-  return new verifyStream(opts);
-};
-
-var jws = {
-	ALGORITHMS: ALGORITHMS_1,
-	sign: sign$3,
-	verify: verify$2,
-	decode: decode,
-	isValid: isValid,
-	createSign: createSign$1,
-	createVerify: createVerify$1
 };
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
@@ -22786,132 +22915,6 @@ var possibleConstructorReturn = function (self, call) {
   }
 
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
-};
-
-var APIClient = {
-  apiRoot: 'http://127.0.0.1:4944/api',
-  request: function () {
-    var _ref = asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(options) {
-      var uri;
-      return regeneratorRuntime.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              options.headers = options.headers !== undefined ? options.json : { 'Content-Type': 'application/json' };
-              options.method = 'POST';
-              uri = options.uri !== undefined ? options.uri : this.apiRoot;
-
-              if (options.apiMethod) {
-                options.uri += '/' + options.apiMethod;
-              }
-              if (options.apiIdType) {
-                options.uri += '/' + encodeURIComponent(options.apiIdType);
-              }
-              if (options.apiId) {
-                options.uri += '/' + encodeURIComponent(options.apiId);
-              }
-              if (options.apiAction) {
-                options.uri += '/' + options.apiAction;
-              }
-              return _context.abrupt('return', browser(uri, options));
-
-            case 8:
-            case 'end':
-              return _context.stop();
-          }
-        }
-      }, _callee, this);
-    }));
-
-    function request(_x) {
-      return _ref.apply(this, arguments);
-    }
-
-    return request;
-  }(),
-  getJwt: function getJwt(signingKeyPem, payload) {
-    var exp = Math.floor(Date.now() / 1000) + 60;
-    payload = Object.assign({ exp: exp }, payload);
-    return jws.sign({
-      header: { typ: 'JWT', alg: 'ES256' },
-      payload: payload,
-      privateKey: signingKeyPem
-    });
-  }
-};
-
-/*eslint no-useless-escape: "off", camelcase: "off" */
-
-var execSync = require("child_process").execSync;
-var crypto$1 = require("crypto");
-
-var myKey = void 0;
-
-var stdio = ["pipe", "pipe", "ignore"]; // Ignore stderr
-
-var util$3 = {
-  UNIQUE_ID_VALIDATORS: {
-    email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
-    bitcoin: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
-    bitcoin_address: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
-    ip: /^(([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)\.){3}([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)$/,
-    ipv6: /^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$/,
-    gpg_fingerprint: null,
-    gpg_keyid: null,
-    google_oauth2: null,
-    tel: /^\d{7,}$/,
-    phone: /^\d{7,}$/,
-    keyID: null,
-    url: /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi,
-    account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i
-  },
-
-  guessTypeOf: function guessTypeOf(value) {
-    for (var key in this.UNIQUE_ID_VALIDATORS) {
-      if (value.match(this.UNIQUE_ID_VALIDATORS[key])) {
-        return key;
-      }
-    }
-  },
-
-  generate: function generate() {
-    var key = { public: {}, private: {} };
-    key.private.pem = execSync("openssl ecparam -genkey -noout -name secp256k1", { stdio: stdio }).toString();
-    key.public.pem = execSync("openssl ec -pubout", { input: key.private.pem, stdio: stdio }).toString();
-    key.public.hex = this.getPubHexFromPrivPEM(key.private.pem);
-    key.hash = this.getHash(key.public.hex);
-    return key;
-  },
-
-  getHash: function getHash(publicKey) {
-    return crypto$1.createHash("sha256").update(publicKey).digest("base64");
-  },
-
-  getPubkeyPEMfromHex: function getPubkeyPEMfromHex(hex) {
-    return execSync("openssl ec -pubin -pubout -inform DER", { input: new Buffer(hex, "hex"), stdio: stdio }).toString();
-  },
-
-  getPubHexFromPrivPEM: function getPubHexFromPrivPEM(privPEM) {
-    return execSync("openssl ec -pubout -outform DER", { input: privPEM, stdio: stdio }).toString("hex");
-  },
-
-  getDefault: function getDefault(datadir) {
-    if (myKey) {
-      return myKey;
-    }
-    var fs = require("fs");
-    var privKeyFile = datadir + "/private.key";
-    if (!fs.existsSync(privKeyFile)) {
-      execSync("openssl ecparam -genkey -noout -name secp256k1 -out " + privKeyFile, { stdio: stdio });
-      fs.chmodSync(privKeyFile, 400);
-    }
-    myKey = { public: {}, private: {} };
-    myKey.private.pem = fs.readFileSync(privKeyFile, "utf8");
-    myKey.public.hex = this.getPubHexFromPrivPEM(myKey.private.pem);
-    myKey.public.pem = execSync("openssl ec -in " + privKeyFile + " -pubout", { stdio: stdio }).toString();
-    myKey.hash = this.getHash(myKey.public.hex);
-    return myKey;
-  }
 };
 
 /*jshint unused: false */
@@ -23033,7 +23036,7 @@ var Message = function () {
     return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
   };
 
-  Message.prototype.sign = function sign(privKeyPEM, pubKeyHex, skipValidation) {
+  Message.prototype.sign = function sign$$1(privKeyPEM, pubKeyHex, skipValidation) {
     this.jwsHeader = { alg: 'ES256', kid: pubKeyHex };
     this.jws = jws.sign({
       header: this.jwsHeader,
@@ -23070,10 +23073,10 @@ var Message = function () {
   };
 
   Message.getHash = function getHash(jwsString) {
-    return cryptoBrowserify_5('sha256').update(jwsString).digest('base64');
+    return src.createHash('sha256').update(jwsString).digest('base64');
   };
 
-  Message.prototype.verify = function verify() {
+  Message.prototype.verify = function verify$$1() {
     var pubKeyPEM = util$3.getPubkeyPEMfromHex(this.jwsHeader.kid);
     if (!jws.verify(this.jws, this.jwsHeader.alg, pubKeyPEM)) {
       throw new new ValidationError(errorMsg + ' Invalid signature')();

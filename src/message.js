@@ -1,6 +1,6 @@
 /*jshint unused: false */
 `use strict`;
-import {createHash} from 'crypto';
+import crypto from 'webcrypto';
 import jws from 'jws';
 import util from './util';
 
@@ -107,7 +107,7 @@ class Message {
   }
 
   static getHash(jwsString) {
-    return createHash(`sha256`).update(jwsString).digest(`base64`);
+    return crypto.createHash(`sha256`).update(jwsString).digest(`base64`);
   }
 
   verify() {

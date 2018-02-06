@@ -1,7 +1,7 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 const execSync = require(`child_process`).execSync;
-const crypto = require(`crypto`);
+import crypto from 'webcrypto';
 
 let myKey;
 

@@ -15,7 +15,7 @@ const plugins = [
     exclude: 'node_modules/**',
     plugins: ['external-helpers']
   }),
-  builtins({crypto: true}),
+  builtins(),
   nodeResolve({
     module: true,
     jsnext: true,
