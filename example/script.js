@@ -1,7 +1,6 @@
 const identifi = require('../cjs/');
 
-const index = new identifi.Index();
-index.init().then(async () => {
+identifi.Index.load().then(async (index) => {
   let r = await index.search('ma');
   console.log('Search results for "ma":');
   console.log(JSON.stringify(r, null, 2));

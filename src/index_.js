@@ -14,6 +14,12 @@ const DEFAULT_IPFS_PROXIES = [
 const IPFS_INDEX_WIDTH = 200;
 
 class Index {
+  static async load(indexRoot, ipfs) {
+    const i = new Index();
+    await i.init(indexRoot, ipfs);
+    return i;
+  }
+
   async init(indexRoot = DEFAULT_INDEX, ipfs = DEFAULT_IPFS_PROXIES) {
     if (typeof ipfs === `string`) {
       this.storage = new btree.IPFSGatewayStorage(ipfs);

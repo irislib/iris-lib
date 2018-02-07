@@ -14,8 +14,7 @@
 ```js
 const identifi = require('identifi-lib');
 
-const index = new identifi.Index();
-index.init().then(async () => {
+Index.load().then(async (index) => {
   const profile = await index.get('martti@moni.com');
   const name = await profile.verified('name');
   console.log(`Verified name for martti@moni.com: ${name}`);

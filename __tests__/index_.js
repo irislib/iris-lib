@@ -5,11 +5,10 @@ let i, p;
 jest.setTimeout(30000);
 
 test('instantiate Index', async () => {
-  i = new identifi.Index();
+  i = await identifi.Index.load();
   expect(i).toBeInstanceOf(identifi.Index);
 });
 test('initialize index and get identity', async () => {
-  await i.init();
   p = await i.get('martti@moni.com');
   expect(p).toBeInstanceOf(identifi.Identity);
 });
