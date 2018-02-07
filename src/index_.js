@@ -26,7 +26,7 @@ class Index {
     } else if (Array.isArray(ipfs)) {
       let url;
       for (let i = 0;i < ipfs.length;i ++) {
-        const res = await fetch(ipfs[i]).catch(() => { return {}; });
+        const res = await fetch(`${ipfs[i]}${DEFAULT_INDEX}`).catch(() => { return {}; });
         if (res.ok && res.status === 200) {
           url = ipfs[i];
           break;

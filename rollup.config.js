@@ -13,7 +13,8 @@ const plugins = [
   json(),
   babel({
     exclude: 'node_modules/**',
-    plugins: ['external-helpers']
+    plugins: ['external-helpers', 'transform-runtime'],
+    runtimeHelpers: true
   }),
   builtins(),
   nodeResolve({

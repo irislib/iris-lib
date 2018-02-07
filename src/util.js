@@ -1,11 +1,8 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
-const execSync = require(`child_process`).execSync;
-import crypto from 'webcrypto';
+import {MessageDigest, KEYUTIL} from 'jsrsasign';
 
 let myKey;
-
-const stdio = [`pipe`, `pipe`, `ignore`]; // Ignore stderr
 
 export default {
   UNIQUE_ID_VALIDATORS: {
@@ -34,23 +31,26 @@ export default {
 
   generate: function() {
     const key = {public: {}, private: {}};
-    key.private.pem = execSync(`openssl ecparam -genkey -noout -name secp256k1`, {stdio: stdio}).toString();
-    key.public.pem = execSync(`openssl ec -pubout`, {input: key.private.pem, stdio: stdio}).toString();
-    key.public.hex = this.getPubHexFromPrivPEM(key.private.pem);
+    const kp = KEYUTIL.generateKeypair(`EC`, `secp256r1`);
+    key.private.pem = KEYUTIL.getPEM(kp.prvKeyObj, `PKCS8PRV`);
+    key.public.pem = KEYUTIL.getPEM(kp.pubKeyObj);
+    key.public.hex = kp.pubKeyObj.pubKeyHex;
     key.hash = this.getHash(key.public.hex);
     return key;
   },
 
   getHash: function(publicKey) {
-    return crypto.createHash(`sha256`).update(publicKey).digest(`base64`);
+    const hex = new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(publicKey);
+    return new Buffer(hex, `hex`).toString(`base64`);
   },
 
   getPubkeyPEMfromHex: function(hex) {
-    return execSync(`openssl ec -pubin -pubout -inform DER`, {input: new Buffer(hex, `hex`), stdio: stdio}).toString();
+    return KEYUTIL.getKey(hex, null, `pkcs8pub`);
   },
 
   getPubHexFromPrivPEM: function(privPEM) {
-    return execSync(`openssl ec -pubout -outform DER`, {input: privPEM, stdio: stdio}).toString(`hex`);
+    const key = KEYUTIL.getKey(privPEM);
+    return KEYUTIL.getPEM(key);
   },
 
   getDefault: function(datadir) {
@@ -60,13 +60,13 @@ export default {
     const fs = require(`fs`);
     const privKeyFile = `${datadir}/private.key`;
     if (!fs.existsSync(privKeyFile)) {
-      execSync(`openssl ecparam -genkey -noout -name secp256k1 -out ${privKeyFile}`, {stdio: stdio});
+      // execSync(`openssl ecparam -genkey -noout -name secp256k1 -out ${privKeyFile}`, {stdio: stdio});
       fs.chmodSync(privKeyFile, 400);
     }
     myKey = {public: {}, private: {}};
     myKey.private.pem = fs.readFileSync(privKeyFile, `utf8`);
     myKey.public.hex = this.getPubHexFromPrivPEM(myKey.private.pem);
-    myKey.public.pem = execSync(`openssl ec -in ${privKeyFile} -pubout`, {stdio: stdio}).toString();
+    // myKey.public.pem = execSync(`openssl ec -in ${privKeyFile} -pubout`, {stdio: stdio}).toString();
     myKey.hash = this.getHash(myKey.public.hex);
     return myKey;
   }

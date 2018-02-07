@@ -1,7 +1,6 @@
 /*jshint unused: false */
 `use strict`;
-import crypto from 'webcrypto';
-import jws from 'jws';
+import {MessageDigest, jws, KEYUTIL} from 'jsrsasign';
 import util from './util';
 
 const encoding = `base64`;
@@ -72,11 +71,8 @@ class Message {
 
   sign(privKeyPEM, pubKeyHex, skipValidation) {
     this.jwsHeader = {alg: `ES256`, kid: pubKeyHex};
-    this.jws = jws.sign({
-      header: this.jwsHeader,
-      payload: this.signedData,
-      privateKey: privKeyPEM
-    });
+    const key = KEYUTIL.getKey(privKeyPEM);
+    this.jws = jws.JWS.sign(this.jwsHeader.alg, JSON.stringify(this.jwsHeader), JSON.stringify(this.signedData), key);
     if (!skipValidation) {
       Message.validateJws(this.jws);
     }
@@ -99,15 +95,15 @@ class Message {
 
   static fromJws(jwsString) {
     Message.validateJws(jwsString);
-    const d = jws.decode(jwsString);
-    const msg = new Message(JSON.parse(d.payload));
+    const d = jws.JWS.parse(jwsString);
+    const msg = new Message(d.payloadObj);
     msg.hash = Message.getHash(jwsString);
-    msg.jwsHeader = d.header;
+    msg.jwsHeader = d.headerObj;
     return msg;
   }
 
   static getHash(jwsString) {
-    return crypto.createHash(`sha256`).update(jwsString).digest(`base64`);
+    return new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(jwsString);
   }
 
   verify() {

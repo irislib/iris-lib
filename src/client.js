@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import jws from 'jws';
+import {jws} from 'jsrsasign';
 
 export default {
   apiRoot: `http://127.0.0.1:4944/api`,
@@ -15,6 +15,7 @@ export default {
   },
   getJwt: function(signingKeyPem, payload) {
     const exp = Math.floor(Date.now() / 1000) + 60;
+
     payload = Object.assign({exp: exp}, payload);
     return jws.sign({
       header: {typ: `JWT`, alg: `ES256`},

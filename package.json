@@ -53,9 +53,9 @@
     "eslint": "^4.17.0",
     "eslint-config-devine": "^1.7.1",
     "eslint-plugin-babel": "^4.1.2",
-    "flow-bin": "^0.64.0",
+    "flow-bin": "^0.65.0",
     "husky": "^0.14.3",
-    "jest": "^22.1.4",
+    "jest": "^22.2.1",
     "release-it": "^6.2.0",
     "rimraf": "^2.6.2",
     "rollup": "^0.55.3",
@@ -69,9 +69,8 @@
     "rollup-plugin-uglify": "^3.0.0"
   },
   "dependencies": {
-    "jws": "^3.1.4",
-    "merkle-btree": "^1.0.18",
-    "node-fetch": "^2.0.0",
-    "webcrypto": "^0.1.1"
+    "jsrsasign": "^8.0.5",
+    "merkle-btree": "^1.0.19",
+    "node-fetch": "^2.0.0"
   }
 }

@@ -5,10 +5,10 @@ import Message from './message';
 import Identity from './identity';
 import util from './util';
 import Index from './index_';
-const pkg = require(`../package.json`);
+import {version} from '../package.json';
 
 export default {
-  VERSION: pkg.version,
+  VERSION: version,
   APIClient,
   Message,
   Identity,
