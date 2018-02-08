@@ -3,6 +3,10 @@
 import {MessageDigest, KEYUTIL} from 'jsrsasign';
 
 let myKey;
+let isNode = false;
+try {
+  isNode = Object.prototype.toString.call(global.process) === `[object process]`;
+} catch (e) { null; }
 
 export default {
   UNIQUE_ID_VALIDATORS: {
@@ -21,6 +25,8 @@ export default {
     account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
   },
 
+  isNode,
+
   guessTypeOf: function(value) {
     for (const key in this.UNIQUE_ID_VALIDATORS) {
       if (value.match(this.UNIQUE_ID_VALIDATORS[key])) {
@@ -29,9 +35,10 @@ export default {
     }
   },
 
-  generate: function() {
+  generateKey: function() {
     const key = {public: {}, private: {}};
     const kp = KEYUTIL.generateKeypair(`EC`, `secp256r1`);
+    console.log(kp);
     key.private.pem = KEYUTIL.getPEM(kp.prvKeyObj, `PKCS8PRV`);
     key.public.pem = KEYUTIL.getPEM(kp.pubKeyObj);
     key.public.hex = kp.pubKeyObj.pubKeyHex;
@@ -57,17 +64,25 @@ export default {
     if (myKey) {
       return myKey;
     }
-    const fs = require(`fs`);
-    const privKeyFile = `${datadir}/private.key`;
-    if (!fs.existsSync(privKeyFile)) {
-      // execSync(`openssl ecparam -genkey -noout -name secp256k1 -out ${privKeyFile}`, {stdio: stdio});
-      fs.chmodSync(privKeyFile, 400);
+    if (isNode) {
+      const fs = require(`fs`);
+      const privKeyFile = `${datadir}/private.key`;
+      if (!fs.existsSync(privKeyFile)) {
+        // execSync(`openssl ecparam -genkey -noout -name secp256k1 -out ${privKeyFile}`, {stdio: stdio});
+        fs.chmodSync(privKeyFile, 400);
+      }
+      myKey = {public: {}, private: {}};
+      myKey.private.pem = fs.readFileSync(privKeyFile, `utf8`);
+      myKey.public.hex = this.getPubHexFromPrivPEM(myKey.private.pem);
+      // myKey.public.pem = execSync(`openssl ec -in ${privKeyFile} -pubout`, {stdio: stdio}).toString();
+      myKey.hash = this.getHash(myKey.public.hex);
+    } else {
+      myKey = window.localStorage.getItem(`identifi.myKey`);
+      if (!myKey) {
+        myKey = this.generateKey();
+        window.localStorage.setItem(`identifi.myKey`, myKey);
+      }
     }
-    myKey = {public: {}, private: {}};
-    myKey.private.pem = fs.readFileSync(privKeyFile, `utf8`);
-    myKey.public.hex = this.getPubHexFromPrivPEM(myKey.private.pem);
-    // myKey.public.pem = execSync(`openssl ec -in ${privKeyFile} -pubout`, {stdio: stdio}).toString();
-    myKey.hash = this.getHash(myKey.public.hex);
     return myKey;
   }
 };

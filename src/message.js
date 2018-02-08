@@ -16,7 +16,7 @@ class Message {
   }
 
   getSignerKeyHash() {
-    return util.getHash(this.jwsHeader.kid);
+    return util.getHash(this.jwsHeader.key);
   }
 
   validate() {
@@ -70,7 +70,7 @@ class Message {
   }
 
   sign(privKeyPEM, pubKeyHex, skipValidation) {
-    this.jwsHeader = {alg: `ES256`, kid: pubKeyHex};
+    this.jwsHeader = {alg: `ES256`, key: pubKeyHex};
     const key = KEYUTIL.getKey(privKeyPEM);
     this.jws = jws.JWS.sign(this.jwsHeader.alg, JSON.stringify(this.jwsHeader), JSON.stringify(this.signedData), key);
     if (!skipValidation) {
@@ -84,6 +84,10 @@ class Message {
     signedData.timestamp = signedData.timestamp || (new Date()).toISOString();
     signedData.context = signedData.context || `identifi`;
     return new Message(signedData);
+  }
+
+  static createVerification() {
+    return null;
   }
 
   static createRating(signedData) {
@@ -103,11 +107,12 @@ class Message {
   }
 
   static getHash(jwsString) {
-    return new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(jwsString);
+    const hex = new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(jwsString);
+    return new Buffer(hex, `hex`).toString(`base64`);
   }
 
   verify() {
-    const pubKeyPEM = util.getPubkeyPEMfromHex(this.jwsHeader.kid);
+    const pubKeyPEM = util.getPubkeyPEMfromHex(this.jwsHeader.key);
     if (!jws.verify(this.jws, this.jwsHeader.alg, pubKeyPEM)) {
       throw new new ValidationError(`${errorMsg} Invalid signature`);
     }
