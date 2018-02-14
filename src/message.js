@@ -1,6 +1,6 @@
 /*jshint unused: false */
 `use strict`;
-import {MessageDigest, jws, KEYUTIL} from 'jsrsasign';
+import {MessageDigest, jws, KEYUTIL, asn1} from 'jsrsasign';
 import util from './util';
 
 const encoding = `base64`;
@@ -69,9 +69,8 @@ class Message {
     return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
   }
 
-  sign(privKeyPEM, pubKeyHex, skipValidation) {
-    this.jwsHeader = {alg: `ES256`, key: pubKeyHex};
-    const key = KEYUTIL.getKey(privKeyPEM);
+  sign(key, skipValidation) {
+    this.jwsHeader = {alg: `ES256`, key: key.pubKeyASN1};
     this.jws = jws.JWS.sign(this.jwsHeader.alg, JSON.stringify(this.jwsHeader), JSON.stringify(this.signedData), key);
     if (!skipValidation) {
       Message.validateJws(this.jws);
@@ -87,7 +86,10 @@ class Message {
   }
 
   static createVerification() {
-    return null;
+    signedData.type = `rating`;
+    signedData.maxRating = signedData.maxRating || 10;
+    signedData.minRating = signedData.minRating || - 10;
+    return this.create(signedData);
   }
 
   static createRating(signedData) {
@@ -112,13 +114,14 @@ class Message {
   }
 
   verify() {
-    const pubKeyPEM = util.getPubkeyPEMfromHex(this.jwsHeader.key);
-    if (!jws.verify(this.jws, this.jwsHeader.alg, pubKeyPEM)) {
-      throw new new ValidationError(`${errorMsg} Invalid signature`);
+    const pem = asn1.ASN1Util.getPEMStringFromHex(this.jwsHeader.key, "PUBLIC KEY");
+    const pubKey = KEYUTIL.getKey(pem);
+    if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
+      throw new ValidationError(`${errorMsg} Invalid signature`);
     }
     if (this.hash) {
       if (this.hash !== Message.getHash(this.jws)) {
-        throw new new ValidationError(`${errorMsg} Invalid message hash`);
+        throw new ValidationError(`${errorMsg} Invalid message hash`);
       }
     } else {
       this.hash = Message.getHash(this.jws);

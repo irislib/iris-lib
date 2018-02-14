@@ -1,6 +1,6 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
-import {MessageDigest, KEYUTIL} from 'jsrsasign';
+import {MessageDigest, KEYUTIL, pemtohex} from 'jsrsasign';
 
 let myKey;
 let isNode = false;
@@ -36,28 +36,14 @@ export default {
   },
 
   generateKey: function() {
-    const key = {public: {}, private: {}};
-    const kp = KEYUTIL.generateKeypair(`EC`, `secp256r1`);
-    console.log(kp);
-    key.private.pem = KEYUTIL.getPEM(kp.prvKeyObj, `PKCS8PRV`);
-    key.public.pem = KEYUTIL.getPEM(kp.pubKeyObj);
-    key.public.hex = kp.pubKeyObj.pubKeyHex;
-    key.hash = this.getHash(key.public.hex);
-    return key;
+    const key = KEYUTIL.generateKeypair(`EC`, `secp256r1`);
+    key.prvKeyObj.pubKeyASN1 = pemtohex(KEYUTIL.getPEM(key.pubKeyObj));
+    return key.prvKeyObj;
   },
 
-  getHash: function(publicKey) {
-    const hex = new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(publicKey);
+  getHash: function(str) {
+    const hex = new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(str);
     return new Buffer(hex, `hex`).toString(`base64`);
-  },
-
-  getPubkeyPEMfromHex: function(hex) {
-    return KEYUTIL.getKey(hex, null, `pkcs8pub`);
-  },
-
-  getPubHexFromPrivPEM: function(privPEM) {
-    const key = KEYUTIL.getKey(privPEM);
-    return KEYUTIL.getPEM(key);
   },
 
   getDefault: function(datadir) {
@@ -71,11 +57,9 @@ export default {
         // execSync(`openssl ecparam -genkey -noout -name secp256k1 -out ${privKeyFile}`, {stdio: stdio});
         fs.chmodSync(privKeyFile, 400);
       }
-      myKey = {public: {}, private: {}};
-      myKey.private.pem = fs.readFileSync(privKeyFile, `utf8`);
-      myKey.public.hex = this.getPubHexFromPrivPEM(myKey.private.pem);
+      const privPEM = fs.readFileSync(privKeyFile, `utf8`);
+      myKey = KEYUTIL.getKey(privPEM);
       // myKey.public.pem = execSync(`openssl ec -in ${privKeyFile} -pubout`, {stdio: stdio}).toString();
-      myKey.hash = this.getHash(myKey.public.hex);
     } else {
       myKey = window.localStorage.getItem(`identifi.myKey`);
       if (!myKey) {

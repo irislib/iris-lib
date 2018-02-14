@@ -39,13 +39,16 @@ describe('Message', function() {
         rating: 5,
         comment: 'Good guy'
       });
-      key = util.generate();
+      key = util.generateKey();
     });
     test('should be signed with sign()', function() {
-      msg.sign(key.private.pem, key.public.hex);
+      msg.sign(key);
       expect(msg).toHaveProperty('jws');
       expect(msg).toHaveProperty('jwsHeader');
       expect(msg).toHaveProperty('hash');
+    });
+    test('should be verified with verify()', function() {
+      expect(msg.verify()).toBe(true);
     });
   });
   return describe('fromJws method', function() {
