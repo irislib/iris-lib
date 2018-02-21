@@ -58,7 +58,7 @@ export default {
         myKey = KEYUTIL.getKey(privPEM);
       } else {
         myKey = this.generateKey();
-        fs.writeFile(privKeyFile, KEYUTIL.getPEM(myKey, `PKCS1PRV`));
+        fs.writeFile(privKeyFile, KEYUTIL.getPEM(myKey, `PKCS8PRV`));
         fs.chmodSync(privKeyFile, 400);
       }
     } else {
