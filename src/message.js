@@ -85,7 +85,7 @@ class Message {
     return new Message(signedData);
   }
 
-  static createVerification() {
+  static createVerification(signedData) {
     signedData.type = `rating`;
     signedData.maxRating = signedData.maxRating || 10;
     signedData.minRating = signedData.minRating || - 10;
@@ -114,7 +114,7 @@ class Message {
   }
 
   verify() {
-    const pem = asn1.ASN1Util.getPEMStringFromHex(this.jwsHeader.key, "PUBLIC KEY");
+    const pem = asn1.ASN1Util.getPEMStringFromHex(this.jwsHeader.key, `PUBLIC KEY`);
     const pubKey = KEYUTIL.getKey(pem);
     if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
       throw new ValidationError(`${errorMsg} Invalid signature`);

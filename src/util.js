@@ -53,13 +53,14 @@ export default {
     if (isNode) {
       const fs = require(`fs`);
       const privKeyFile = `${datadir}/private.key`;
-      if (!fs.existsSync(privKeyFile)) {
-        // execSync(`openssl ecparam -genkey -noout -name secp256k1 -out ${privKeyFile}`, {stdio: stdio});
+      if (fs.existsSync(privKeyFile)) {
+        const privPEM = fs.readFileSync(privKeyFile, `utf8`);
+        myKey = KEYUTIL.getKey(privPEM);
+      } else {
+        myKey = this.generateKey();
+        fs.writeFile(privKeyFile, KEYUTIL.getPEM(myKey, `PKCS1PRV`));
         fs.chmodSync(privKeyFile, 400);
       }
-      const privPEM = fs.readFileSync(privKeyFile, `utf8`);
-      myKey = KEYUTIL.getKey(privPEM);
-      // myKey.public.pem = execSync(`openssl ec -in ${privKeyFile} -pubout`, {stdio: stdio}).toString();
     } else {
       myKey = window.localStorage.getItem(`identifi.myKey`);
       if (!myKey) {

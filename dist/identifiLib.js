@@ -2630,6 +2630,7 @@ var MessageDigest = KJUR.crypto.MessageDigest;
 var Mac = KJUR.crypto.Mac;
 var Cipher = KJUR.crypto.Cipher;
 var KEYUTIL_1 = KEYUTIL;
+var pemtohex_1 = pemtohex;
 var crypto_1 = KJUR.crypto;
 var asn1 = KJUR.asn1;
 var jws = KJUR.jws;
@@ -3472,6 +3473,12 @@ var _inherits = unwrapExports(inherits);
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 var myKey = void 0;
+var isNode = false;
+try {
+  isNode = Object.prototype.toString.call(global$2.process) === '[object process]';
+} catch (e) {
+  
+}
 
 var util = {
   UNIQUE_ID_VALIDATORS: {
@@ -3490,6 +3497,8 @@ var util = {
     account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i
   },
 
+  isNode: isNode,
+
   guessTypeOf: function guessTypeOf(value) {
     for (var key in this.UNIQUE_ID_VALIDATORS) {
       if (value.match(this.UNIQUE_ID_VALIDATORS[key])) {
@@ -3498,45 +3507,39 @@ var util = {
     }
   },
 
-  generate: function generate() {
-    var key = { public: {}, private: {} };
-    var kp = KEYUTIL_1.generateKeypair('EC', 'secp256r1');
-    key.private.pem = KEYUTIL_1.getPEM(kp.prvKeyObj, 'PKCS8PRV');
-    key.public.pem = KEYUTIL_1.getPEM(kp.pubKeyObj);
-    key.public.hex = kp.pubKeyObj.pubKeyHex;
-    key.hash = this.getHash(key.public.hex);
-    return key;
+  generateKey: function generateKey() {
+    var key = KEYUTIL_1.generateKeypair('EC', 'secp256r1');
+    key.prvKeyObj.pubKeyASN1 = pemtohex_1(KEYUTIL_1.getPEM(key.pubKeyObj));
+    return key.prvKeyObj;
   },
 
-  getHash: function getHash(publicKey) {
-    var hex = new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(publicKey);
+  getHash: function getHash(str) {
+    var hex = new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(str);
     return new Buffer(hex, 'hex').toString('base64');
-  },
-
-  getPubkeyPEMfromHex: function getPubkeyPEMfromHex(hex) {
-    return KEYUTIL_1.getKey(hex, null, 'pkcs8pub');
-  },
-
-  getPubHexFromPrivPEM: function getPubHexFromPrivPEM(privPEM) {
-    var key = KEYUTIL_1.getKey(privPEM);
-    return KEYUTIL_1.getPEM(key);
   },
 
   getDefault: function getDefault(datadir) {
     if (myKey) {
       return myKey;
     }
-    var fs = require('fs');
-    var privKeyFile = datadir + '/private.key';
-    if (!fs.existsSync(privKeyFile)) {
-      // execSync(`openssl ecparam -genkey -noout -name secp256k1 -out ${privKeyFile}`, {stdio: stdio});
-      fs.chmodSync(privKeyFile, 400);
+    if (isNode) {
+      var fs = require('fs');
+      var privKeyFile = datadir + '/private.key';
+      if (fs.existsSync(privKeyFile)) {
+        var privPEM = fs.readFileSync(privKeyFile, 'utf8');
+        myKey = KEYUTIL_1.getKey(privPEM);
+      } else {
+        myKey = this.generateKey();
+        fs.writeFile(privKeyFile, KEYUTIL_1.getPEM(myKey, 'PKCS1PRV'));
+        fs.chmodSync(privKeyFile, 400);
+      }
+    } else {
+      myKey = window.localStorage.getItem('identifi.myKey');
+      if (!myKey) {
+        myKey = this.generateKey();
+        window.localStorage.setItem('identifi.myKey', myKey);
+      }
     }
-    myKey = { public: {}, private: {} };
-    myKey.private.pem = fs.readFileSync(privKeyFile, 'utf8');
-    myKey.public.hex = this.getPubHexFromPrivPEM(myKey.private.pem);
-    // myKey.public.pem = execSync(`openssl ec -in ${privKeyFile} -pubout`, {stdio: stdio}).toString();
-    myKey.hash = this.getHash(myKey.public.hex);
     return myKey;
   }
 };
@@ -3566,7 +3569,7 @@ var Message = function () {
   }
 
   Message.prototype.getSignerKeyHash = function getSignerKeyHash() {
-    return util.getHash(this.jwsHeader.kid);
+    return util.getHash(this.jwsHeader.key);
   };
 
   Message.prototype.validate = function validate() {
@@ -3660,9 +3663,8 @@ var Message = function () {
     return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
   };
 
-  Message.prototype.sign = function sign(privKeyPEM, pubKeyHex, skipValidation) {
-    this.jwsHeader = { alg: 'ES256', kid: pubKeyHex };
-    var key = KEYUTIL_1.getKey(privKeyPEM);
+  Message.prototype.sign = function sign(key, skipValidation) {
+    this.jwsHeader = { alg: 'ES256', key: key.pubKeyASN1 };
     this.jws = jws.JWS.sign(this.jwsHeader.alg, _JSON$stringify(this.jwsHeader), _JSON$stringify(this.signedData), key);
     if (!skipValidation) {
       Message.validateJws(this.jws);
@@ -3675,6 +3677,13 @@ var Message = function () {
     signedData.timestamp = signedData.timestamp || new Date().toISOString();
     signedData.context = signedData.context || 'identifi';
     return new Message(signedData);
+  };
+
+  Message.createVerification = function createVerification(signedData) {
+    signedData.type = 'rating';
+    signedData.maxRating = signedData.maxRating || 10;
+    signedData.minRating = signedData.minRating || -10;
+    return this.create(signedData);
   };
 
   Message.createRating = function createRating(signedData) {
@@ -3694,17 +3703,19 @@ var Message = function () {
   };
 
   Message.getHash = function getHash(jwsString) {
-    return new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(jwsString);
+    var hex = new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(jwsString);
+    return new Buffer(hex, 'hex').toString('base64');
   };
 
   Message.prototype.verify = function verify() {
-    var pubKeyPEM = util.getPubkeyPEMfromHex(this.jwsHeader.kid);
-    if (!jws.verify(this.jws, this.jwsHeader.alg, pubKeyPEM)) {
-      throw new new ValidationError(errorMsg + ' Invalid signature')();
+    var pem = asn1.ASN1Util.getPEMStringFromHex(this.jwsHeader.key, 'PUBLIC KEY');
+    var pubKey = KEYUTIL_1.getKey(pem);
+    if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
+      throw new ValidationError(errorMsg + ' Invalid signature');
     }
     if (this.hash) {
       if (this.hash !== Message.getHash(this.jws)) {
-        throw new new ValidationError(errorMsg + ' Invalid message hash')();
+        throw new ValidationError(errorMsg + ' Invalid message hash');
       }
     } else {
       this.hash = Message.getHash(this.jws);
@@ -4716,14 +4727,14 @@ var macrotask = _task.set;
 var Observer = _global.MutationObserver || _global.WebKitMutationObserver;
 var process$1 = _global.process;
 var Promise$1 = _global.Promise;
-var isNode = _cof(process$1) == 'process';
+var isNode$1 = _cof(process$1) == 'process';
 
 var _microtask = function () {
   var head, last, notify;
 
   var flush = function () {
     var parent, fn;
-    if (isNode && (parent = process$1.domain)) parent.exit();
+    if (isNode$1 && (parent = process$1.domain)) parent.exit();
     while (head) {
       fn = head.fn;
       head = head.next;
@@ -4739,7 +4750,7 @@ var _microtask = function () {
   };
 
   // Node.js
-  if (isNode) {
+  if (isNode$1) {
     notify = function () {
       process$1.nextTick(flush);
     };
@@ -4868,7 +4879,7 @@ var PROMISE = 'Promise';
 var TypeError$1 = _global.TypeError;
 var process$2 = _global.process;
 var $Promise = _global[PROMISE];
-var isNode$1 = _classof(process$2) == 'process';
+var isNode$2 = _classof(process$2) == 'process';
 var empty = function () { /* empty */ };
 var Internal;
 var newGenericPromiseCapability;
@@ -4884,7 +4895,7 @@ var USE_NATIVE$1 = !!function () {
       exec(empty, empty);
     };
     // unhandled rejections tracking support, NodeJS Promise without it fails @@species test
-    return (isNode$1 || typeof PromiseRejectionEvent == 'function') && promise.then(empty) instanceof FakePromise;
+    return (isNode$2 || typeof PromiseRejectionEvent == 'function') && promise.then(empty) instanceof FakePromise;
   } catch (e) { /* empty */ }
 }();
 
@@ -4942,7 +4953,7 @@ var onUnhandled = function (promise) {
     var result, handler, console;
     if (unhandled) {
       result = _perform(function () {
-        if (isNode$1) {
+        if (isNode$2) {
           process$2.emit('unhandledRejection', value, promise);
         } else if (handler = _global.onunhandledrejection) {
           handler({ promise: promise, reason: value });
@@ -4951,7 +4962,7 @@ var onUnhandled = function (promise) {
         }
       });
       // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
-      promise._h = isNode$1 || isUnhandled(promise) ? 2 : 1;
+      promise._h = isNode$2 || isUnhandled(promise) ? 2 : 1;
     } promise._a = undefined;
     if (unhandled && result.e) throw result.v;
   });
@@ -4962,7 +4973,7 @@ var isUnhandled = function (promise) {
 var onHandleUnhandled = function (promise) {
   task.call(_global, function () {
     var handler;
-    if (isNode$1) {
+    if (isNode$2) {
       process$2.emit('rejectionHandled', promise);
     } else if (handler = _global.onrejectionhandled) {
       handler({ promise: promise, reason: promise._v });
@@ -5035,7 +5046,7 @@ if (!USE_NATIVE$1) {
       var reaction = newPromiseCapability$1(_speciesConstructor(this, $Promise));
       reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
       reaction.fail = typeof onRejected == 'function' && onRejected;
-      reaction.domain = isNode$1 ? process$2.domain : undefined;
+      reaction.domain = isNode$2 ? process$2.domain : undefined;
       this._c.push(reaction);
       if (this._a) this._a.push(reaction);
       if (this._s) notify(this, false);
