@@ -5,6 +5,7 @@ import Identity from './identity';
 import fetch from 'node-fetch';
 
 const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
+// const DEFAULT_STATIC_FALLBACK_INDEX = `/ipfs/QmbmY22p7ZptQj69fNis83qcgvp49aHxuizJZxaMVofALh`;
 const DEFAULT_IPFS_PROXIES = [
   `https://identi.fi`,
   `https://ipfs.io`,
@@ -26,7 +27,7 @@ class Index {
     } else if (Array.isArray(ipfs)) {
       let url;
       for (let i = 0;i < ipfs.length;i ++) {
-        const res = await fetch(`${ipfs[i]}${DEFAULT_INDEX}`).catch(() => { return {}; });
+        const res = await fetch(`${ipfs[i]}${indexRoot}`).catch(() => { return {}; });
         if (res.ok && res.status === 200) {
           url = ipfs[i];
           break;
