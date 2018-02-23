@@ -68,21 +68,34 @@ class Index {
     }
   }
 
-  /* Save msg to index and broadcast to pubsub */
-  async put(msg: Message) {
+  /* Save message to ipfs and announce it on ipfs pubsub */
+  async publishMessage(msg: Message) {
+    const buffer = new this.ipfs.types.Buffer(msg.jws);
+    const hash = await this.ipfs.files.add(buffer);
+    await this.ipfs.pubsub.publish(`identifi`, hash);
+    return hash;
+  }
+
+  /* Add message to index */
+  async addMessage(msg: Message, publish = true) {
     const r = {};
     if (this.ipfs) {
-      const buffer = new this.ipfs.types.Buffer(msg.jws);
-      r.hash = await this.ipfs.files.add(buffer);
+      if (publish) {
+        r.hash = await this.publishMessage(msg);
+      }
       r.indexUri = await this.messagesByTimestamp.put(`key`, msg.jws);
-      await this.ipfs.pubsub.publish(`identifi`, buffer);
       // TODO: update ipns entry to point to new index root
     } else {
-      r.hash = await fetch(`https://identi.fi/api/messages`, {
+      const body = { jws: msg.jws, hash: msg.getHash() };
+      const res = await fetch(`https://identi.fi/api/messages`, {
         method: `POST`,
         headers: {'Content-Type': `application/json`},
-        body: msg.jws,
+        body: body,
       });
+      console.log(res);
+      if (res.status && res.status == 200 || res.status == 201) {
+        r.hash = 'success';
+      }
     }
     return r;
   }

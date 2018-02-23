@@ -75,7 +75,7 @@ class Message {
     if (!skipValidation) {
       Message.validateJws(this.jws);
     }
-    this.hash = Message.getHash(this.jws).toString(encoding);
+    this.getHash();
     return this;
   }
 
@@ -86,9 +86,7 @@ class Message {
   }
 
   static createVerification(signedData) {
-    signedData.type = `rating`;
-    signedData.maxRating = signedData.maxRating || 10;
-    signedData.minRating = signedData.minRating || - 10;
+    signedData.type = `verification`;
     return this.create(signedData);
   }
 
@@ -108,6 +106,13 @@ class Message {
     return msg;
   }
 
+  getHash() {
+    if (this.jws && !this.hash) {
+      this.hash = Message.getHash(this.jws);
+    }
+    return this.hash;
+  }
+
   static getHash(jwsString) {
     const hex = new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(jwsString);
     return new Buffer(hex, `hex`).toString(`base64`);
@@ -124,7 +129,7 @@ class Message {
         throw new ValidationError(`${errorMsg} Invalid message hash`);
       }
     } else {
-      this.hash = Message.getHash(this.jws);
+      this.getHash();
     }
     return true;
   }

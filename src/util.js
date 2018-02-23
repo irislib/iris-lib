@@ -46,7 +46,7 @@ export default {
     return new Buffer(hex, `hex`).toString(`base64`);
   },
 
-  getDefault: function(datadir) {
+  getDefaultKey: function(datadir) {
     if (myKey) {
       return myKey;
     }
