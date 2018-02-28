@@ -69,35 +69,38 @@ class Index {
   }
 
   /* Save message to ipfs and announce it on ipfs pubsub */
-  async publishMessage(msg: Message) {
-    const buffer = new this.ipfs.types.Buffer(msg.jws);
-    const hash = await this.ipfs.files.add(buffer);
-    await this.ipfs.pubsub.publish(`identifi`, hash);
-    return hash;
-  }
-
-  /* Add message to index */
-  async addMessage(msg: Message, publish = true) {
+  async publishMessage(msg: Message, addToIndex = true) {
     const r = {};
     if (this.ipfs) {
-      if (publish) {
-        r.hash = await this.publishMessage(msg);
+      const buffer = new this.ipfs.types.Buffer(msg.jws);
+      const hash = await this.ipfs.files.add(buffer);
+      r.hash = hash;
+      await this.ipfs.pubsub.publish(`identifi`, hash);
+      if (addToIndex) {
+        r.indexUri = await this.addMessage(msg);
       }
-      r.indexUri = await this.messagesByTimestamp.put(`key`, msg.jws);
-      // TODO: update ipns entry to point to new index root
-    } else {
-      const body = { jws: msg.jws, hash: msg.getHash() };
+    } else { // No IPFS, post to identi.fi
+      console.log(`msg`, msg);
+      const body = JSON.stringify({ jws: msg.jws, hash: msg.getHash() });
       const res = await fetch(`https://identi.fi/api/messages`, {
         method: `POST`,
         headers: {'Content-Type': `application/json`},
-        body: body,
+        body,
       });
       console.log(res);
-      if (res.status && res.status == 200 || res.status == 201) {
-        r.hash = 'success';
+      if (res.status && res.status == 201) {
+        r.hash = JSON.parse(res.body).ipfs_hash;
       }
     }
     return r;
+  }
+
+  /* Add message to index */
+  async addMessage(msg: Message) {
+    if (this.ipfs) {
+      return this.messagesByTimestamp.put(`key`, msg.jws);
+      // TODO: update ipns entry to point to new index root
+    }
   }
 
   async search(value, type, limit = 5) { // TODO: param 'exact'

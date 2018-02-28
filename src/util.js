@@ -1,6 +1,6 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
-import {MessageDigest, KEYUTIL, pemtohex} from 'jsrsasign';
+import {MessageDigest, KEYUTIL, pemtohex, crypto} from 'jsrsasign';
 
 let myKey;
 let isNode = false;
@@ -35,9 +35,13 @@ export default {
     }
   },
 
+  getPubKeyASN1: function(pubKeyObj) {
+    return pemtohex(KEYUTIL.getPEM(pubKeyObj));
+  },
+
   generateKey: function() {
     const key = KEYUTIL.generateKeypair(`EC`, `secp256r1`);
-    key.prvKeyObj.pubKeyASN1 = pemtohex(KEYUTIL.getPEM(key.pubKeyObj));
+    key.prvKeyObj.pubKeyASN1 = this.getPubKeyASN1(key.pubKeyObj);
     return key.prvKeyObj;
   },
 
@@ -56,6 +60,8 @@ export default {
       if (fs.existsSync(privKeyFile)) {
         const privPEM = fs.readFileSync(privKeyFile, `utf8`);
         myKey = KEYUTIL.getKey(privPEM);
+        const pubKeyObj = new crypto.ECDSA({'curve': 'secp256k1', 'pub': myKey.pubKeyHex});
+        myKey.pubKeyASN1 = this.getPubKeyASN1(pubKeyObj);
       } else {
         myKey = this.generateKey();
         fs.writeFile(privKeyFile, KEYUTIL.getPEM(myKey, `PKCS8PRV`));

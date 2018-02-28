@@ -22,15 +22,15 @@ test('search identities', async () => {
   expect(typeof r).toBe('object');
   expect(r.length).toBeGreaterThan(1);
 });
-test('save message', async () => {
+test('publish message', async () => {
   const m = identifi.Message.createVerification({
     author: [['name', 'Alice'], ['email', 'alice@example.com']],
     recipient: [['name', 'Bob Marley'], ['email', 'bob@example.com']]
   });
   const key = identifi.util.getDefaultKey('.');
   m.sign(key);
-  const r = await i.addMessage(m);
+  const r = await i.publishMessage(m);
   expect(typeof r).toBe('object');
   console.log(r);
-  expect(r.hash).toBeDefined(1);
+  expect(r.hash).toBeDefined();
 });
