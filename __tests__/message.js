@@ -51,10 +51,16 @@ describe('Message', function() {
       expect(msg.verify()).toBe(true);
     });
   });
-  return describe('fromJws method', function() {
+  describe('fromJws method', function() {
     test('should successfully create a message from jws', function() {
       const newMessage = Message.fromJws(msg.jws);
       expect(newMessage).toHaveProperty('signedData');
+    });
+    test('should successfully create a message from jws', function() {
+      const newMessage = Message.fromJws('eyJhbGciOiJFUzI1NiIsImtleSI6IjMwNTYzMDEwMDYwNzJhODY0OGNlM2QwMjAxMDYwNTJiODEwNDAwMGEwMzQyMDAwNGI5ZjEzZmMxZDE3YzUzNzBkOTZkZDMyZTkzYmJkMDQ3MjJiOTk4ZmMwNWEyNzMzYTUxMWQ5NmY5NDQ5ZjQyN2IxYTBkYmM4NDJiOGQzMTE3M2RlOGY4ZjM0MmVmMWU4NjNlYWVkYWYwYWE0NDI1N2UzNDRkODJhZmY5YTM5OGE5In0.eyJhdXRob3IiOltbIm5hbWUiLCJBbGljZSJdLFsiZW1haWwiLCJhbGljZUBleGFtcGxlLmNvbSJdXSwicmVjaXBpZW50IjpbWyJuYW1lIiwiQm9iIE1hcmxleSJdLFsiZW1haWwiLCJib2JAZXhhbXBsZS5jb20iXV0sInR5cGUiOiJ2ZXJpZmljYXRpb24iLCJ0aW1lc3RhbXAiOiIyMDE4LTA0LTE5VDA1OjM2OjUxLjQ1MFoiLCJjb250ZXh0IjoiaWRlbnRpZmkifQ.v8EhAU3NjddPXwGbuQvKrbuwFWTBeab3Js40JVWEg723fiYUNcm2cv1wk8X9QidBX4ucY4M9vlYexQibLYm36A');
+      expect(newMessage).toHaveProperty('signedData');
+      console.log('newMessage', newMessage);
+      expect(newMessage.verify()).toBe(true);
     });
   });
 });

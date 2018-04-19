@@ -60,7 +60,7 @@ export default {
       if (fs.existsSync(privKeyFile)) {
         const privPEM = fs.readFileSync(privKeyFile, `utf8`);
         myKey = KEYUTIL.getKey(privPEM);
-        const pubKeyObj = new crypto.ECDSA({'curve': 'secp256k1', 'pub': myKey.pubKeyHex});
+        const pubKeyObj = new crypto.ECDSA({curve: `secp256k1`, pub: myKey.pubKeyHex});
         myKey.pubKeyASN1 = this.getPubKeyASN1(pubKeyObj);
       } else {
         myKey = this.generateKey();

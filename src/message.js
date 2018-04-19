@@ -3,7 +3,6 @@
 import {MessageDigest, jws, KEYUTIL, asn1} from 'jsrsasign';
 import util from './util';
 
-const encoding = `base64`;
 const JWS_MAX_LENGTH = 10000;
 const errorMsg = `Invalid Identifi message:`;
 
@@ -103,6 +102,7 @@ class Message {
     const msg = new Message(d.payloadObj);
     msg.hash = Message.getHash(jwsString);
     msg.jwsHeader = d.headerObj;
+    msg.jws = jwsString;
     return msg;
   }
 
