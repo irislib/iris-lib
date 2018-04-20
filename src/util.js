@@ -1,6 +1,6 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
-import {MessageDigest, KEYUTIL, pemtohex, crypto} from 'jsrsasign';
+import {MessageDigest, KEYUTIL, pemtohex} from 'jsrsasign';
 
 let myKey;
 let isNode = false;
@@ -39,8 +39,26 @@ export default {
     return pemtohex(KEYUTIL.getPEM(pubKeyObj));
   },
 
+  generateKeyPair: function() {
+    return KEYUTIL.generateKeypair(`EC`, `secp256r1`);
+  },
+
+  keypairToJWK: function(kp) {
+    return {
+      prv: KEYUTIL.getJWKFromKey(kp.prvKeyObj),
+      pub: KEYUTIL.getJWKFromKey(kp.pubKeyObj)
+    };
+  },
+
+  jwkPairToPrvKey: function(jwkp) {
+    const prv = KEYUTIL.getKey(jwkp.prv);
+    const pub = KEYUTIL.getKey(jwkp.pub);
+    prv.pubKeyASN1 = this.getPubKeyASN1(pub);
+    return prv;
+  },
+
   generateKey: function() {
-    const key = KEYUTIL.generateKeypair(`EC`, `secp256r1`);
+    const key = this.generateKeyPair();
     key.prvKeyObj.pubKeyASN1 = this.getPubKeyASN1(key.pubKeyObj);
     return key.prvKeyObj;
   },
@@ -58,13 +76,15 @@ export default {
       const fs = require(`fs`);
       const privKeyFile = `${datadir}/private.key`;
       if (fs.existsSync(privKeyFile)) {
-        const privPEM = fs.readFileSync(privKeyFile, `utf8`);
-        myKey = KEYUTIL.getKey(privPEM);
-        const pubKeyObj = new crypto.ECDSA({curve: `secp256k1`, pub: myKey.pubKeyHex});
-        myKey.pubKeyASN1 = this.getPubKeyASN1(pubKeyObj);
+        const f = fs.readFileSync(privKeyFile, `utf8`);
+        const jwkp = JSON.parse(f);
+        myKey = this.jwkPairToPrvKey(jwkp);
       } else {
-        myKey = this.generateKey();
-        fs.writeFile(privKeyFile, KEYUTIL.getPEM(myKey, `PKCS8PRV`));
+        const kp = this.generateKeyPair();
+        myKey = kp.prvKeyObj;
+        myKey.pubKeyASN1 = this.getPubKeyASN1(kp.pubKeyObj);
+        const k = this.keypairToJWK(kp);
+        fs.writeFile(privKeyFile, JSON.stringify(k));
         fs.chmodSync(privKeyFile, 400);
       }
     } else {
