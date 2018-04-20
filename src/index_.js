@@ -80,16 +80,15 @@ class Index {
         r.indexUri = await this.addMessage(msg);
       }
     } else { // No IPFS, post to identi.fi
-      console.log(`msg`, msg);
       const body = JSON.stringify({jws: msg.jws, hash: msg.getHash()});
       const res = await fetch(`https://identi.fi/api/messages`, {
         method: `POST`,
         headers: {'Content-Type': `application/json`},
         body,
       });
-      console.log(res);
       if (res.status && res.status === 201) {
-        r.hash = JSON.parse(res.body).ipfs_hash;
+        const t = JSON.parse(await res.text());
+        r.hash = t.ipfs_hash;
       }
     }
     return r;

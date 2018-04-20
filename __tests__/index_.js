@@ -27,10 +27,10 @@ test('publish message', async () => {
     author: [['name', 'Alice'], ['email', 'alice@example.com']],
     recipient: [['name', 'Bob Marley'], ['email', 'bob@example.com']]
   });
-  const key = identifi.util.getDefaultKey('.');
+  const key = identifi.util.generateKey();
   m.sign(key);
+  m.verify(m);
   const r = await i.publishMessage(m);
   expect(typeof r).toBe('object');
-  console.log(r);
   expect(r.hash).toBeDefined();
 });

@@ -15,7 +15,7 @@ class Message {
   }
 
   getSignerKeyHash() {
-    return util.getHash(this.jwsHeader.key);
+    return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
   }
 
   validate() {
@@ -119,7 +119,8 @@ class Message {
   }
 
   verify() {
-    const pem = asn1.ASN1Util.getPEMStringFromHex(this.jwsHeader.key, `PUBLIC KEY`);
+    const keyHex = this.jwsHeader.key || this.jwsHeader.kid;
+    const pem = asn1.ASN1Util.getPEMStringFromHex(keyHex, `PUBLIC KEY`);
     const pubKey = KEYUTIL.getKey(pem);
     if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
       throw new ValidationError(`${errorMsg} Invalid signature`);
