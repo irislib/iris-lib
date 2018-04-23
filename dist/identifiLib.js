@@ -13287,7 +13287,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.0";
+var version$2 = "0.0.22";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
