@@ -1,14 +1,19 @@
 const identifi = require('../cjs/index.js');
+const fs = require(`fs`);
 
 jest.setTimeout(30000);
 
+beforeAll(() => {
+  if (fs.existsSync('./private.key')) {
+    const f = fs.unlinkSync('./private.key');
+  }
+});
 test('Generate key', async () => {
   const i = await identifi.util.generateKey('.');
   expect(i).toBeDefined();
 });
 test('Get default key', async () => {
   const i = await identifi.util.getDefaultKey('.');
-  console.log('priv', i);
   expect(i).toBeDefined();
   const j = await identifi.util.getDefaultKey('.');
   expect(i).toEqual(j);
@@ -20,4 +25,9 @@ test('Get default key', async () => {
   });
   msg.sign(i);
   expect(msg.verify()).toBe(true);
+});
+afterAll(() => {
+  if (fs.existsSync('./private.key')) {
+    const f = fs.unlinkSync('./private.key');
+  }
 });

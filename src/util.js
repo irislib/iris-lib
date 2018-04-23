@@ -35,8 +35,12 @@ export default {
     }
   },
 
-  getPubKeyASN1: function(pubKeyObj) {
-    return pemtohex(KEYUTIL.getPEM(pubKeyObj));
+  getPubKeyASN1: function(keyObj) {
+    if (keyObj.curveName === `P-256`) { // bug in jsrsasign
+      keyObj.curveName = `secp256r1`;
+    }
+    const pem = KEYUTIL.getPEM(keyObj);
+    return pemtohex(pem);
   },
 
   generateKeyPair: function() {
@@ -52,8 +56,7 @@ export default {
 
   jwkPairToPrvKey: function(jwkp) {
     const prv = KEYUTIL.getKey(jwkp.prv);
-    const pub = KEYUTIL.getKey(jwkp.pub);
-    prv.pubKeyASN1 = this.getPubKeyASN1(pub);
+    prv.pubKeyASN1 = this.getPubKeyASN1(prv);
     return prv;
   },
 
