@@ -3507,9 +3507,35 @@ var util = {
     }
   },
 
+  getPubKeyASN1: function getPubKeyASN1(keyObj) {
+    if (keyObj.curveName === 'P-256') {
+      // bug in jsrsasign
+      keyObj.curveName = 'secp256r1';
+    }
+    var pem = KEYUTIL_1.getPEM(keyObj);
+    return pemtohex_1(pem);
+  },
+
+  generateKeyPair: function generateKeyPair() {
+    return KEYUTIL_1.generateKeypair('EC', 'secp256r1');
+  },
+
+  keypairToJWK: function keypairToJWK(kp) {
+    return {
+      prv: KEYUTIL_1.getJWKFromKey(kp.prvKeyObj),
+      pub: KEYUTIL_1.getJWKFromKey(kp.pubKeyObj)
+    };
+  },
+
+  jwkPairToPrvKey: function jwkPairToPrvKey(jwkp) {
+    var prv = KEYUTIL_1.getKey(jwkp.prv);
+    prv.pubKeyASN1 = this.getPubKeyASN1(prv);
+    return prv;
+  },
+
   generateKey: function generateKey() {
-    var key = KEYUTIL_1.generateKeypair('EC', 'secp256r1');
-    key.prvKeyObj.pubKeyASN1 = pemtohex_1(KEYUTIL_1.getPEM(key.pubKeyObj));
+    var key = this.generateKeyPair();
+    key.prvKeyObj.pubKeyASN1 = this.getPubKeyASN1(key.pubKeyObj);
     return key.prvKeyObj;
   },
 
@@ -3518,7 +3544,7 @@ var util = {
     return new Buffer(hex, 'hex').toString('base64');
   },
 
-  getDefault: function getDefault(datadir) {
+  getDefaultKey: function getDefaultKey(datadir) {
     if (myKey) {
       return myKey;
     }
@@ -3526,11 +3552,15 @@ var util = {
       var fs = require('fs');
       var privKeyFile = datadir + '/private.key';
       if (fs.existsSync(privKeyFile)) {
-        var privPEM = fs.readFileSync(privKeyFile, 'utf8');
-        myKey = KEYUTIL_1.getKey(privPEM);
+        var f = fs.readFileSync(privKeyFile, 'utf8');
+        var jwkp = JSON.parse(f);
+        myKey = this.jwkPairToPrvKey(jwkp);
       } else {
-        myKey = this.generateKey();
-        fs.writeFile(privKeyFile, KEYUTIL_1.getPEM(myKey, 'PKCS1PRV'));
+        var kp = this.generateKeyPair();
+        myKey = kp.prvKeyObj;
+        myKey.pubKeyASN1 = this.getPubKeyASN1(kp.pubKeyObj);
+        var k = this.keypairToJWK(kp);
+        fs.writeFile(privKeyFile, _JSON$stringify(k));
         fs.chmodSync(privKeyFile, 400);
       }
     } else {
@@ -3544,7 +3574,6 @@ var util = {
   }
 };
 
-var encoding = 'base64';
 var JWS_MAX_LENGTH = 10000;
 var errorMsg = 'Invalid Identifi message:';
 
@@ -3569,7 +3598,7 @@ var Message = function () {
   }
 
   Message.prototype.getSignerKeyHash = function getSignerKeyHash() {
-    return util.getHash(this.jwsHeader.key);
+    return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
   };
 
   Message.prototype.validate = function validate() {
@@ -3669,7 +3698,7 @@ var Message = function () {
     if (!skipValidation) {
       Message.validateJws(this.jws);
     }
-    this.hash = Message.getHash(this.jws).toString(encoding);
+    this.getHash();
     return this;
   };
 
@@ -3680,9 +3709,7 @@ var Message = function () {
   };
 
   Message.createVerification = function createVerification(signedData) {
-    signedData.type = 'rating';
-    signedData.maxRating = signedData.maxRating || 10;
-    signedData.minRating = signedData.minRating || -10;
+    signedData.type = 'verification';
     return this.create(signedData);
   };
 
@@ -3699,7 +3726,15 @@ var Message = function () {
     var msg = new Message(d.payloadObj);
     msg.hash = Message.getHash(jwsString);
     msg.jwsHeader = d.headerObj;
+    msg.jws = jwsString;
     return msg;
+  };
+
+  Message.prototype.getHash = function getHash() {
+    if (this.jws && !this.hash) {
+      this.hash = Message.getHash(this.jws);
+    }
+    return this.hash;
   };
 
   Message.getHash = function getHash(jwsString) {
@@ -3708,7 +3743,8 @@ var Message = function () {
   };
 
   Message.prototype.verify = function verify() {
-    var pem = asn1.ASN1Util.getPEMStringFromHex(this.jwsHeader.key, 'PUBLIC KEY');
+    var keyHex = this.jwsHeader.key || this.jwsHeader.kid;
+    var pem = asn1.ASN1Util.getPEMStringFromHex(keyHex, 'PUBLIC KEY');
     var pubKey = KEYUTIL_1.getKey(pem);
     if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
       throw new ValidationError(errorMsg + ' Invalid signature');
@@ -3718,7 +3754,7 @@ var Message = function () {
         throw new ValidationError(errorMsg + ' Invalid message hash');
       }
     } else {
-      this.hash = Message.getHash(this.jws);
+      this.getHash();
     }
     return true;
   };
@@ -12893,6 +12929,7 @@ return index;
 });
 
 var DEFAULT_INDEX = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
+// const DEFAULT_STATIC_FALLBACK_INDEX = `/ipfs/QmbmY22p7ZptQj69fNis83qcgvp49aHxuizJZxaMVofALh`;
 var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io', 'https://ipfs.infura.io', 'https://www.eternum.io'];
 var IPFS_INDEX_WIDTH = 200;
 
@@ -12964,7 +13001,7 @@ var Index = function () {
               }
 
               _context2.next = 10;
-              return browser('' + ipfs[i] + DEFAULT_INDEX).catch(function () {
+              return browser('' + ipfs[i] + indexRoot).catch(function () {
                 return {};
               });
 
@@ -13101,12 +13138,13 @@ var Index = function () {
     return get;
   }();
 
-  /* Save msg to index and broadcast to pubsub */
+  /* Save message to ipfs and announce it on ipfs pubsub */
 
 
-  Index.prototype.put = function () {
+  Index.prototype.publishMessage = function () {
     var _ref4 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(msg) {
-      var r, buffer;
+      var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      var r, buffer, hash, body, res, t;
       return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
@@ -13114,7 +13152,7 @@ var Index = function () {
               r = {};
 
               if (!this.ipfs) {
-                _context4.next = 13;
+                _context4.next = 15;
                 break;
               }
 
@@ -13123,34 +13161,60 @@ var Index = function () {
               return this.ipfs.files.add(buffer);
 
             case 5:
-              r.hash = _context4.sent;
-              _context4.next = 8;
-              return this.messagesByTimestamp.put('key', msg.jws);
+              hash = _context4.sent;
 
-            case 8:
+              r.hash = hash;
+              _context4.next = 9;
+              return this.ipfs.pubsub.publish('identifi', hash);
+
+            case 9:
+              if (!addToIndex) {
+                _context4.next = 13;
+                break;
+              }
+
+              _context4.next = 12;
+              return this.addMessage(msg);
+
+            case 12:
               r.indexUri = _context4.sent;
-              _context4.next = 11;
-              return this.ipfs.pubsub.publish('identifi', buffer);
-
-            case 11:
-              _context4.next = 16;
-              break;
 
             case 13:
-              _context4.next = 15;
+              _context4.next = 26;
+              break;
+
+            case 15:
+              // No IPFS, post to identi.fi
+              body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
+              _context4.next = 18;
               return browser('https://identi.fi/api/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: msg.jws
+                body: body
               });
 
-            case 15:
-              r.hash = _context4.sent;
+            case 18:
+              res = _context4.sent;
 
-            case 16:
+              if (!(res.status && res.status === 201)) {
+                _context4.next = 26;
+                break;
+              }
+
+              _context4.t0 = JSON;
+              _context4.next = 23;
+              return res.text();
+
+            case 23:
+              _context4.t1 = _context4.sent;
+              t = _context4.t0.parse.call(_context4.t0, _context4.t1);
+
+              r.hash = t.ipfs_hash;
+
+            case 26:
               return _context4.abrupt('return', r);
 
-            case 17:
+            case 27:
             case 'end':
               return _context4.stop();
           }
@@ -13158,23 +13222,30 @@ var Index = function () {
       }, _callee4, this);
     }));
 
-    function put(_x7) {
+    function publishMessage(_x8) {
       return _ref4.apply(this, arguments);
     }
 
-    return put;
+    return publishMessage;
   }();
 
-  Index.prototype.search = function () {
-    var _ref5 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5(value, type) {
-      var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
+  /* Add message to index */
+
+
+  Index.prototype.addMessage = function () {
+    var _ref5 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5(msg) {
       return regenerator.wrap(function _callee5$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              return _context5.abrupt('return', this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit));
+              if (!this.ipfs) {
+                _context5.next = 2;
+                break;
+              }
 
-            case 1:
+              return _context5.abrupt('return', this.messagesByTimestamp.put('key', msg.jws));
+
+            case 2:
             case 'end':
               return _context5.stop();
           }
@@ -13182,8 +13253,32 @@ var Index = function () {
       }, _callee5, this);
     }));
 
-    function search(_x9, _x10) {
+    function addMessage(_x9) {
       return _ref5.apply(this, arguments);
+    }
+
+    return addMessage;
+  }();
+
+  Index.prototype.search = function () {
+    var _ref6 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(value, type) {
+      var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
+      return regenerator.wrap(function _callee6$(_context6) {
+        while (1) {
+          switch (_context6.prev = _context6.next) {
+            case 0:
+              return _context6.abrupt('return', this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit));
+
+            case 1:
+            case 'end':
+              return _context6.stop();
+          }
+        }
+      }, _callee6, this);
+    }));
+
+    function search(_x11, _x12) {
+      return _ref6.apply(this, arguments);
     }
 
     return search;
