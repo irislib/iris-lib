@@ -1,3 +1,10 @@
 language: node_js
 node_js:
-  - '6'
+  - "8"
+script:
+  - npm run build
+cache:
+  yarn: true
+  directories:
+    - node_modules
+after_success: 'npm run coveralls'
