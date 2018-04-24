@@ -109,7 +109,8 @@ class Index {
       for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {
         if (r[i].value) {
           try {
-            identitiesByHash[r[i].value] = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
+            const d = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
+            identitiesByHash[r[i].value] = new Identity(d);
           } catch (e) {
             console.error(e);
           }
