@@ -1,28 +1,50 @@
 <html>
 <head>
   <title>identifi-lib</title>
+  <script type="text/javascript" src="../dist/identifiLib.js"></script>
 </head>
 <body>
-  <script src="../dist/identifiLib.js" type="text/javascript"></script>
   <script type="text/javascript">
-    function write(text = '') {
-      document.getElementById('text').textContent += text +'\n';
-    };
+    let index;
 
-    window.identifiLib.Index.load().then(async (index) => {
-      let r = await index.search('ma');
-      write('Search results for "ma":');
-      write(JSON.stringify(r, null, 2));
-      write();
-      write('Identity profile for martti@moni.com:');
-      r = await index.get('martti@moni.com');
-      write(JSON.stringify(r, null, 2));
-      write();
-      write('The most verified name for martti@moni.com:');
-      write(JSON.stringify(r.verified('name'), null, 2));
+    async function search() {
+      const query = document.getElementById('query').value;
+      let r = await index.search(query);
+      let text = `Search results for "${query}":\n`;
+      text += JSON.stringify(r, null, 2);
+      document.getElementById('searchResults').textContent = text;
+    }
+
+    async function getProfile() {
+      const profileQuery = document.getElementById('profileQuery').value;
+      r = await index.get(profileQuery);
+      let text = `Identity profile for ${profileQuery}:\n`;
+      if (r) {
+        text += JSON.stringify(r, null, 2);
+        text += '\n';
+        text += 'The most verified name for martti@moni.com:';
+        text += JSON.stringify(r.verified('name'), null, 2);
+      } else {
+        text += 'Profile not found'
+      }
+      document.getElementById('profileResults').textContent = text;
+    }
+
+    window.identifiLib.Index.load().then(async (index_) => {
+      index = index_;
+      document.getElementById('searchResults').textContent = 'Searching...';
+      document.getElementById('profileResults').textContent = 'Searching...';
+      await search(index);
+      await getProfile(index);
+      document.getElementById('query').addEventListener('change', search);
+      document.getElementById('profileQuery').addEventListener('change', getProfile);
     });
   </script>
 
-  <pre id="text"></pre>
+  <input type="text" value="ma" id="query" onkeyup="search()"></input>
+  <pre id="searchResults"></pre>
+
+  <input type="text" value="martti@moni.com" id="profileQuery" onkeyup="getProfile()"></input>
+  <pre id="profileResults"></pre>
 </body>
 </html>

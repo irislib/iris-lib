@@ -3802,6 +3802,68 @@ var Identity = function () {
   return Identity;
 }();
 
+var isEnum$1 = _objectPie.f;
+var _objectToArray = function (isEntries) {
+  return function (it) {
+    var O = _toIobject(it);
+    var keys = _objectKeys(O);
+    var length = keys.length;
+    var i = 0;
+    var result = [];
+    var key;
+    while (length > i) if (isEnum$1.call(O, key = keys[i++])) {
+      result.push(isEntries ? [key, O[key]] : O[key]);
+    } return result;
+  };
+};
+
+// https://github.com/tc39/proposal-object-values-entries
+
+var $values = _objectToArray(false);
+
+_export(_export.S, 'Object', {
+  values: function values(it) {
+    return $values(it);
+  }
+});
+
+var values = _core.Object.values;
+
+var values$2 = createCommonjsModule(function (module) {
+module.exports = { "default": values, __esModule: true };
+});
+
+var _Object$values = unwrapExports(values$2);
+
+// most Object methods by ES6 should accept primitives
+
+
+
+var _objectSap = function (KEY, exec) {
+  var fn = (_core.Object || {})[KEY] || Object[KEY];
+  var exp = {};
+  exp[KEY] = exec(fn);
+  _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
+};
+
+// 19.1.2.14 Object.keys(O)
+
+
+
+_objectSap('keys', function () {
+  return function keys(it) {
+    return _objectKeys(_toObject(it));
+  };
+});
+
+var keys = _core.Object.keys;
+
+var keys$2 = createCommonjsModule(function (module) {
+module.exports = { "default": keys, __esModule: true };
+});
+
+var _Object$keys = unwrapExports(keys$2);
+
 var runtime = createCommonjsModule(function (module) {
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
@@ -8199,9 +8261,9 @@ function CorkedRequest(state) {
 
 inherits$2(Duplex$1, Readable$1);
 
-var keys = Object.keys(Writable$1.prototype);
-for (var v = 0; v < keys.length; v++) {
-  var method = keys[v];
+var keys$3 = Object.keys(Writable$1.prototype);
+for (var v = 0; v < keys$3.length; v++) {
+  var method = keys$3[v];
   if (!Duplex$1.prototype[method]) Duplex$1.prototype[method] = Writable$1.prototype[method];
 }
 function Duplex$1(options) {
@@ -13263,18 +13325,78 @@ var Index = function () {
   Index.prototype.search = function () {
     var _ref6 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(value, type) {
       var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
+      var identitiesByHash, r, i;
       return regenerator.wrap(function _callee6$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              return _context6.abrupt('return', this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit));
+              // TODO: param 'exact'
+              identitiesByHash = {};
+              _context6.next = 3;
+              return this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit);
 
-            case 1:
+            case 3:
+              r = _context6.sent;
+
+            case 4:
+              if (!(r && r.length && _Object$keys(identitiesByHash).length < limit)) {
+                _context6.next = 27;
+                break;
+              }
+
+              i = 0;
+
+            case 6:
+              if (!(i < r.length && _Object$keys(identitiesByHash).length < limit)) {
+                _context6.next = 22;
+                break;
+              }
+
+              if (!r[i].value) {
+                _context6.next = 19;
+                break;
+              }
+
+              _context6.prev = 8;
+              _context6.t0 = JSON;
+              _context6.next = 12;
+              return this.storage.get('/ipfs/' + r[i].value);
+
+            case 12:
+              _context6.t1 = _context6.sent;
+              identitiesByHash[r[i].value] = _context6.t0.parse.call(_context6.t0, _context6.t1);
+              _context6.next = 19;
+              break;
+
+            case 16:
+              _context6.prev = 16;
+              _context6.t2 = _context6['catch'](8);
+
+              console.error(_context6.t2);
+
+            case 19:
+              i++;
+              _context6.next = 6;
+              break;
+
+            case 22:
+              _context6.next = 24;
+              return this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, r[r.length - 1].key);
+
+            case 24:
+              r = _context6.sent;
+              _context6.next = 4;
+              break;
+
+            case 27:
+              return _context6.abrupt('return', _Object$values(identitiesByHash));
+
+            case 28:
             case 'end':
               return _context6.stop();
           }
         }
-      }, _callee6, this);
+      }, _callee6, this, [[8, 16]]);
     }));
 
     function search(_x11, _x12) {

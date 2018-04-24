@@ -103,7 +103,21 @@ class Index {
   }
 
   async search(value, type, limit = 5) { // TODO: param 'exact'
-    return this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit);
+    const identitiesByHash = {};
+    let r = await this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit);
+    while (r && r.length && Object.keys(identitiesByHash).length < limit) {
+      for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {
+        if (r[i].value) {
+          try {
+            identitiesByHash[r[i].value] = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+      r = await this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, r[r.length - 1].key);
+    }
+    return Object.values(identitiesByHash);
   }
 }
 
