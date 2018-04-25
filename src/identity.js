@@ -1,4 +1,5 @@
 import {MessageDigest} from 'jsrsasign';
+import btree from 'merkle-btree';
 
 class Identity {
   constructor(data) {
@@ -11,6 +12,9 @@ class Identity {
       this.receivedNeutral = c.neut;
       this.trustDistance = c.dist;
     }
+    this.receivedNegative |= 0;
+    this.receivedPositive |= 0;
+    this.receivedNeutral |= 0;
     this.data.attrs.forEach(a => {
       switch (a.name) {
       case `email`:
@@ -108,18 +112,23 @@ class Identity {
 
   getGravatar() { // TODO: gravatar should be replaced soon with random art or ipfs profile photo
     if (!this.gravatar) {
-      const str = this.profile.email || this.data.attrs[0][1];
+      let str = ``;
+      try {
+        str = this.profile.email || `${this.data.attrs[0].name}:${this.data.attrs[0].val}`;
+      } catch (e) {
+        console.error(e);
+      }
       this.gravatar = new MessageDigest({alg: `md5`, prov: `cryptojs`}).digestString(str);
     }
     return this.gravatar;
   }
 
-  getSentMsgsIndex() {
-
+  getSentMsgsIndex(storage, ipfsIndexWidth) {
+    return btree.MerkleBTree.getByHash(this.data.sent, storage, ipfsIndexWidth);
   }
 
-  getReceivedMsgsIndex() {
-
+  getReceivedMsgsIndex(storage, ipfsIndexWidth) {
+    return btree.MerkleBTree.getByHash(this.data.received, storage, ipfsIndexWidth);
   }
 
   verified(attribute) {
@@ -169,40 +178,124 @@ class Identity {
     return template;
   }
 
-  avatar(width) {
-    const avatar = document.createElement(`div`);
-    avatar.className = `identifi.avatar`;
+  static _injectCss() {
+    const elementId = `identifiStyle`;
+    if (document.getElementById(elementId)) {
+      return;
+    }
+    const sheet = document.createElement(`style`);
+    sheet.id = elementId;
+    sheet.innerHTML = `
+      .identifi-identicon * {
+        box-sizing: border-box;
+      }
+
+      .identifi-identicon {
+        vertical-align: middle;
+        margin: auto;
+        border-radius: 50%;
+        text-align: center;
+        display: inline-block;
+        position: relative;
+        margin: auto;
+        max-width: 100%;
+      }
+
+      .identifi-identicon .pie {
+        border-radius: 50%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        box-shadow: 0px 0px 0px 0px #82FF84;
+        padding-bottom: 100%;
+        max-width: 100%;
+        -webkit-transition: all 0.2s ease-in-out;
+        -moz-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+      }
+
+      .identifi-identicon img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        max-width: 100%;
+        border-radius: 50%;
+        border-color: transparent;
+        border-style: solid;
+      }`;
+    document.body.appendChild(sheet);
+  }
+
+  identicon(width, border = 4) {
+    Identity._injectCss(); // some other way that is not called on each identicon generation?
+    const identicon = document.createElement(`div`);
+    identicon.className = `identifi-identicon`;
+    identicon.style.width = `${width}px`;
+    identicon.style.height = `${width}px`;
+
+    // Define colors etc
+    let bgColor = `rgba(0,0,0,0.2)`;
+    let bgImage = `none`;
+    let transform = ``;
+    let boxShadow = `0px 0px 0px 0px #82FF84`;
+    if (this.receivedPositive > this.receivedNegative * 20) {
+      boxShadow = `0px 0px ${this.border * this.receivedPositive / 50}px 0px #82FF84`;
+    } else if (this.receivedPositive < this.receivedNegative * 3) {
+      boxShadow = `0px 0px ${this.border * this.receivedNegative / 10}px 0px #BF0400`;
+    }
+    if (this.receivedPositive + this.receivedNegative > 0) {
+      if (this.receivedPositive > this.receivedNegative) {
+        transform = `rotate(${((- this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2)}deg)`;
+        bgColor = `#A94442`;
+        bgImage = `linear-gradient(${this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360}deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)`;
+      } else {
+        transform = `rotate(${((- this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2) + 180}deg)`;
+        bgColor = `#3C763D`;
+        bgImage = `linear-gradient(${this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360}deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)`;
+      }
+    }
+
     const pie = document.createElement(`div`);
+    pie.className = `pie`;
+    pie.style.backgroundColor = bgColor;
+    pie.style.backgroundImage = bgImage;
+    pie.style.width = `${width}px`;
+    pie.style.boxShadow = boxShadow;
+    pie.style.opacity = (this.receivedPositive + this.receivedNegative) / 10 * 0.5 + 0.35;
+    pie.style.transform = transform;
+
     const img = document.createElement(`img`);
     img.src = `https://www.gravatar.com/avatar/${this.getGravatar()}?d=retro&amp;s=${width * 2}`;
     img.alt = ``;
     img.width = width;
-    avatar.appendChild(pie);
-    avatar.appendChild(img);
+    img.style.borderWidth = `${border}px`;
+
+    identicon.appendChild(pie);
+    identicon.appendChild(img);
 
     /*
     function update(element) {
       let bgColor, bgImage, boxShadow, transform;
-      this.negativeScore |= 0;
-      this.positiveScore |= 0;
+      this.receivedNegative |= 0;
+      this.receivedPositive |= 0;
       boxShadow = `0px 0px 0px 0px #82FF84`;
-      if (this.positiveScore > this.negativeScore * 20) {
-        boxShadow = `0px 0px ${this.border * this.positiveScore / 50}px 0px #82FF84`;
-      } else if (this.positiveScore < this.negativeScore * 3) {
-        boxShadow = `0px 0px ${this.border * this.negativeScore / 10}px 0px #BF0400`;
+      if (this.receivedPositive > this.receivedNegative * 20) {
+        boxShadow = `0px 0px ${this.border * this.receivedPositive / 50}px 0px #82FF84`;
+      } else if (this.receivedPositive < this.receivedNegative * 3) {
+        boxShadow = `0px 0px ${this.border * this.receivedNegative / 10}px 0px #BF0400`;
       }
       bgColor = `rgba(0,0,0,0.2)`;
       bgImage = `none`;
       transform = ``;
-      if (this.positiveScore + this.negativeScore > 0) {
-        if (this.positiveScore > this.negativeScore) {
-          transform = `rotate(${((- this.positiveScore / (this.positiveScore + this.negativeScore) * 360 - 180) / 2)}deg)`;
+      if (this.receivedPositive + this.receivedNegative > 0) {
+        if (this.receivedPositive > this.receivedNegative) {
+          transform = `rotate(${((- this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2)}deg)`;
           bgColor = `#A94442`;
-          bgImage = `linear-gradient(${this.positiveScore / (this.positiveScore + this.negativeScore) * 360}deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)`;
+          bgImage = `linear-gradient(${this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360}deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)`;
         } else {
-          transform = `rotate(${((- this.negativeScore / (this.positiveScore + this.negativeScore) * 360 - 180) / 2) + 180}deg)`;
+          transform = `rotate(${((- this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2) + 180}deg)`;
           bgColor = `#3C763D`;
-          bgImage = `linear-gradient(${this.negativeScore / (this.positiveScore + this.negativeScore) * 360}deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)`;
+          bgImage = `linear-gradient(${this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360}deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)`;
         }
       }
       element.children().css({
@@ -214,7 +307,7 @@ class Identity {
         'background-image': bgImage,
         width: `${this.width}px`,
         'box-shadow': boxShadow,
-        opacity: (this.positiveScore + this.negativeScore) / 10 * 0.5 + 0.35,
+        opacity: (this.receivedPositive + this.receivedNegative) / 10 * 0.5 + 0.35,
         transform: transform
       });
       return element.find(`img`).css({
@@ -228,11 +321,11 @@ class Identity {
         </div>
         <img alt=""
           width="{width}"
-          src="https://www.gravatar.com/avatar/{id.gravatar}?d=retro&amp;s={width*2}" />
+          src="https://www.gravatar.com/identicon/{id.gravatar}?d=retro&amp;s={width*2}" />
       </div>
     ```;
-    update(avatar); */
-    return avatar;
+    update(identicon); */
+    return identicon;
   }
 }
 

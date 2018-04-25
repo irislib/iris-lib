@@ -11,8 +11,10 @@
       const query = document.getElementById('query').value;
       let r = await index.search(query);
       let text = `Search results for "${query}":\n`;
-      text += JSON.stringify(r, null, 2);
       document.getElementById('searchResults').textContent = text;
+      r.forEach(i => {
+        document.getElementById('searchResults').appendChild(i.identicon(100));
+      });
     }
 
     async function getProfile() {
@@ -24,7 +26,7 @@
         text += '\n';
         text += 'The most verified name for martti@moni.com:';
         text += JSON.stringify(i.verified('name'), null, 2);
-        document.getElementById('avatar').appendChild(i.avatar(100));
+        document.getElementById('identicon').appendChild(i.identicon(100));
       } else {
         text += 'Profile not found'
       }
@@ -42,11 +44,12 @@
     });
   </script>
 
+  <p id="identicon"></p>
+
   <input type="text" value="ma" id="query" onkeyup="search()"></input>
   <pre id="searchResults"></pre>
 
   <input type="text" value="martti@moni.com" id="profileQuery" onkeyup="getProfile()"></input>
-  <p id="avatar"></p>
   <pre id="profileResults"></pre>
 
 </body>
