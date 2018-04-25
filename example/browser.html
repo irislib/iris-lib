@@ -27,7 +27,7 @@
       let text = `Search results for "${query}":\n`;
       document.getElementById('searchResults').textContent = text;
       r.forEach(i => {
-        document.getElementById('searchResults').appendChild(i.identicon(60));
+        document.getElementById('searchResults').appendChild(i.profileCard());
       });
     }
 

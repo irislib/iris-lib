@@ -144,6 +144,9 @@ class Identity {
   }
 
   profileCard() {
+    const card = document.createElement(`div`);
+    card.appendChild(this.identicon(60));
+    /*
     const template = ```
     <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
       <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
@@ -174,8 +177,15 @@ class Identity {
         </small>
       </td>
     </tr>
-    ```;
-    return template;
+    ```;*/
+    return card;
+  }
+
+  static _ordinal(n) {
+    var s, v;
+    s = ['th', 'st', 'nd', 'rd'];
+    v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
 
   static _injectCss() {
@@ -204,7 +214,7 @@ class Identity {
       .identifi-distance {
         z-index: 2;
         position: absolute;
-        right:10%;
+        left:0%;
         top:2px;
         width: 100%;
         text-align: right;
@@ -270,7 +280,7 @@ class Identity {
     }
 
     const distance = document.createElement(`span`);
-    distance.textContent = Number.isNaN(parseInt(this.trustDistance)) ? `–` : this.trustDistance;
+    distance.textContent = Number.isNaN(parseInt(this.trustDistance)) ? `–` : Identity._ordinal(this.trustDistance);
     distance.className = `identifi-distance`;
     distance.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
 

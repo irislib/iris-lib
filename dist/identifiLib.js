@@ -3790,17 +3790,6 @@ module.exports = { "default": isNan, __esModule: true };
 
 var _Number$isNaN = unwrapExports(isNan$2);
 
-var taggedTemplateLiteralLoose = createCommonjsModule(function (module, exports) {
-exports.__esModule = true;
-
-exports.default = function (strings, raw) {
-  strings.raw = raw;
-  return strings;
-};
-});
-
-var _taggedTemplateLiteralLoose = unwrapExports(taggedTemplateLiteralLoose);
-
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
 
@@ -11483,9 +11472,6 @@ return index;
 })));
 });
 
-var _templateObject = _taggedTemplateLiteralLoose([''], ['']);
-var _templateObject2 = _taggedTemplateLiteralLoose(['\n    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">\n      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>\n      <td>\n        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>\n        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>\n        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>\n        <small ng-if="!result.name" class="list-group-item-text">\n          <span ng-bind-html="result[0][0]|highlight:query.term"></span>\n        </small><br>\n        <small>\n          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>\n          <span ng-if="result.email" class="mar-right10">\n            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.facebook" class="mar-right10">\n            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.twitter" class="mar-right10">\n            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.googlePlus" class="mar-right10">\n            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.bitcoin" class="mar-right10">\n            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>\n          </span>\n        </small>\n      </td>\n    </tr>\n    '], ['\n    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">\n      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>\n      <td>\n        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>\n        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>\n        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>\n        <small ng-if="!result.name" class="list-group-item-text">\n          <span ng-bind-html="result[0][0]|highlight:query.term"></span>\n        </small><br>\n        <small>\n          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>\n          <span ng-if="result.email" class="mar-right10">\n            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.facebook" class="mar-right10">\n            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.twitter" class="mar-right10">\n            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.googlePlus" class="mar-right10">\n            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.bitcoin" class="mar-right10">\n            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>\n          </span>\n        </small>\n      </td>\n    </tr>\n    ']);
-
 var Identity = function () {
   function Identity(data) {
     var _this = this;
@@ -11634,8 +11620,48 @@ var Identity = function () {
   };
 
   Identity.prototype.profileCard = function profileCard() {
-    var template = ''(_templateObject2)(_templateObject);
-    return template;
+    var card = document.createElement('div');
+    card.appendChild(this.identicon(60));
+    /*
+    const template = ```
+    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
+      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
+      <td>
+        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>
+        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>
+        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>
+        <small ng-if="!result.name" class="list-group-item-text">
+          <span ng-bind-html="result[0][0]|highlight:query.term"></span>
+        </small><br>
+        <small>
+          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>
+          <span ng-if="result.email" class="mar-right10">
+            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>
+          </span>
+          <span ng-if="result.facebook" class="mar-right10">
+            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>
+          </span>
+          <span ng-if="result.twitter" class="mar-right10">
+            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>
+          </span>
+          <span ng-if="result.googlePlus" class="mar-right10">
+            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>
+          </span>
+          <span ng-if="result.bitcoin" class="mar-right10">
+            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>
+          </span>
+        </small>
+      </td>
+    </tr>
+    ```;*/
+    return card;
+  };
+
+  Identity._ordinal = function _ordinal(n) {
+    var s, v;
+    s = ['th', 'st', 'nd', 'rd'];
+    v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
   };
 
   Identity._injectCss = function _injectCss() {
@@ -11645,7 +11671,7 @@ var Identity = function () {
     }
     var sheet = document.createElement('style');
     sheet.id = elementId;
-    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        right:10%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
+    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
     document.body.appendChild(sheet);
   };
 
@@ -11681,7 +11707,7 @@ var Identity = function () {
     }
 
     var distance = document.createElement('span');
-    distance.textContent = _Number$isNaN(parseInt(this.trustDistance)) ? '\u2013' : this.trustDistance;
+    distance.textContent = _Number$isNaN(parseInt(this.trustDistance)) ? '\u2013' : Identity._ordinal(this.trustDistance);
     distance.className = 'identifi-distance';
     distance.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
 
@@ -13637,7 +13663,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.25";
+var version$2 = "0.0.26";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
