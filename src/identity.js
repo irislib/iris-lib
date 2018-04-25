@@ -32,7 +32,7 @@ class Identity {
       case `bitcoin`:
         a.iconStyle = `fa fa-bitcoin`;
         a.btnStyle = `btn-primary`;
-        a.link = `https://blockchain.profile/address/${a.val}`;
+        a.link = `https://blockchain.info/address/${a.val}`;
         a.quickContact = true;
         break;
       case `gpg_fingerprint`:
@@ -153,6 +153,7 @@ class Identity {
 
     const identicon = this.identicon(60);
     identicon.style.order = 1;
+    identicon.style.flexShrink = 0;
     identicon.style.marginRight = `15px`;
 
     const details = document.createElement(`div`);
@@ -281,6 +282,7 @@ class Identity {
         border: 1px solid #ddd;
         display: flex;
         flex-direction: row;
+        overflow: hidden;
       }
 
       .identifi-card a {
