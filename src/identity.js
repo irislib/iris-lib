@@ -145,7 +145,19 @@ class Identity {
 
   profileCard() {
     const card = document.createElement(`div`);
-    card.appendChild(this.identicon(60));
+    card.className = `identifi-card`;
+
+    const identicon = this.identicon(60);
+    identicon.style.float = `left`;
+    identicon.style.marginRight = `15px`;
+
+    const details = document.createElement(`div`);
+    details.style.width = `340px`;
+    details.style.padding = `5px`;
+    details.innerHTML = `<b>${this.profile.name || this.profile.nickname}</b>`;
+
+    card.appendChild(identicon);
+    card.appendChild(details);
     /*
     const template = ```
     <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
@@ -182,9 +194,8 @@ class Identity {
   }
 
   static _ordinal(n) {
-    var s, v;
-    s = ['th', 'st', 'nd', 'rd'];
-    v = n % 100;
+    const s = [`th`, `st`, `nd`, `rd`];
+    const v = n % 100;
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
 
@@ -236,6 +247,14 @@ class Identity {
         -webkit-transition: all 0.2s ease-in-out;
         -moz-transition: all 0.2s ease-in-out;
         transition: all 0.2s ease-in-out;
+      }
+
+      .identifi-card {
+        height: 60px;
+        width: 300px;
+        padding: 10px;
+        background-color: #e8e8e8;
+        border: 1px solid #ddd;
       }
 
       .identifi-identicon img {
