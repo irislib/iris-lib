@@ -21,7 +21,7 @@ Index.load().then(async (index) => {
 });
 ```
 
-See [`plnkr.co example`](http://plnkr.co/edit/mVOyr2?p=preview) for more.
+See [`plnkr.co example`](http://plnkr.co/edit/jA6oPo?p=preview) for more.
 
 ### Installation
 
