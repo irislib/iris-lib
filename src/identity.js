@@ -1,4 +1,5 @@
 import {MessageDigest} from 'jsrsasign';
+import util from './util';
 import btree from 'merkle-btree';
 
 class Identity {
@@ -16,6 +17,9 @@ class Identity {
     this.receivedPositive |= 0;
     this.receivedNeutral |= 0;
     this.data.attrs.forEach(a => {
+      if (!this.linkTo && util.isUniqueType(a.name)) {
+        this.linkTo = a;
+      }
       switch (a.name) {
       case `email`:
         a.iconStyle = `glyphicon glyphicon-envelope`;
@@ -148,13 +152,22 @@ class Identity {
     card.className = `identifi-card`;
 
     const identicon = this.identicon(60);
-    identicon.style.float = `left`;
+    identicon.style.order = 1;
     identicon.style.marginRight = `15px`;
 
     const details = document.createElement(`div`);
-    details.style.width = `340px`;
     details.style.padding = `5px`;
-    details.innerHTML = `<b>${this.profile.name || this.profile.nickname}</b>`;
+    details.style.order = 2;
+    details.style.flexGrow = 1;
+    const link = `https://identi.fi/#/identities/${this.linkTo.name}/${this.linkTo.val}`;
+    details.innerHTML = `<a href="${link}">${this.profile.name || this.profile.nickname || `${this.linkTo.name}:${this.linkTo.val}`}</a><br>`;
+    const links = document.createElement(`small`);
+    this.data.attrs.forEach(a => {
+      if (a.link) {
+        links.innerHTML += `${a.name}: <a href="${a.link}">${a.val}</a> `;
+      }
+    });
+    details.appendChild(links);
 
     card.appendChild(identicon);
     card.appendChild(details);
@@ -191,6 +204,18 @@ class Identity {
     </tr>
     ```;*/
     return card;
+  }
+
+  static searchWidget() {
+    const form = document.createElement(`form`);
+    form.style.width = `300px`;
+
+    form.innerHTML = ```
+    <input type="text" value="ma" id="identifiQuery" onkeyup="identifiSearch()">
+    <div id="identifiSearchResults"></div>
+    ```;
+
+    return form;
   }
 
   static _ordinal(n) {
@@ -250,11 +275,24 @@ class Identity {
       }
 
       .identifi-card {
-        height: 60px;
-        width: 300px;
         padding: 10px;
-        background-color: #e8e8e8;
+        background-color: #f7f7f7;
+        color: #777;
         border: 1px solid #ddd;
+        display: flex;
+        flex-direction: row;
+      }
+
+      .identifi-card a {
+        -webkit-transition: color 150ms;
+        transition: color 150ms;
+        text-decoration: none;
+        color: #337ab7;
+      }
+
+      .identifi-card a:hover, .identifi-card a:active {
+        text-decoration: underline;
+        color: #23527c;
       }
 
       .identifi-identicon img {
@@ -282,9 +320,9 @@ class Identity {
     let transform = ``;
     let boxShadow = `0px 0px 0px 0px #82FF84`;
     if (this.receivedPositive > this.receivedNegative * 20) {
-      boxShadow = `0px 0px ${this.border * this.receivedPositive / 50}px 0px #82FF84`;
+      boxShadow = `0px 0px ${border * this.receivedPositive / 50}px 0px #82FF84`;
     } else if (this.receivedPositive < this.receivedNegative * 3) {
-      boxShadow = `0px 0px ${this.border * this.receivedNegative / 10}px 0px #BF0400`;
+      boxShadow = `0px 0px ${border * this.receivedNegative / 10}px 0px #BF0400`;
     }
     if (this.receivedPositive + this.receivedNegative > 0) {
       if (this.receivedPositive > this.receivedNegative) {

@@ -3470,6 +3470,35 @@ exports.default = function (subClass, superClass) {
 
 var _inherits = unwrapExports(inherits);
 
+// most Object methods by ES6 should accept primitives
+
+
+
+var _objectSap = function (KEY, exec) {
+  var fn = (_core.Object || {})[KEY] || Object[KEY];
+  var exp = {};
+  exp[KEY] = exec(fn);
+  _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
+};
+
+// 19.1.2.14 Object.keys(O)
+
+
+
+_objectSap('keys', function () {
+  return function keys(it) {
+    return _objectKeys(_toObject(it));
+  };
+});
+
+var keys = _core.Object.keys;
+
+var keys$2 = createCommonjsModule(function (module) {
+module.exports = { "default": keys, __esModule: true };
+});
+
+var _Object$keys = unwrapExports(keys$2);
+
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 var myKey = void 0;
@@ -3498,6 +3527,10 @@ var util = {
   },
 
   isNode: isNode,
+
+  isUniqueType: function isUniqueType(type) {
+    return _Object$keys(this.UNIQUE_ID_VALIDATORS).indexOf(type) > -1;
+  },
 
   guessTypeOf: function guessTypeOf(value) {
     for (var key in this.UNIQUE_ID_VALIDATORS) {
@@ -3789,6 +3822,17 @@ module.exports = { "default": isNan, __esModule: true };
 });
 
 var _Number$isNaN = unwrapExports(isNan$2);
+
+var taggedTemplateLiteralLoose = createCommonjsModule(function (module, exports) {
+exports.__esModule = true;
+
+exports.default = function (strings, raw) {
+  strings.raw = raw;
+  return strings;
+};
+});
+
+var _taggedTemplateLiteralLoose = unwrapExports(taggedTemplateLiteralLoose);
 
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
@@ -6743,9 +6787,9 @@ function CorkedRequest(state) {
 
 inherits$2(Duplex$1, Readable$1);
 
-var keys = Object.keys(Writable$1.prototype);
-for (var v = 0; v < keys.length; v++) {
-  var method = keys[v];
+var keys$3 = Object.keys(Writable$1.prototype);
+for (var v = 0; v < keys$3.length; v++) {
+  var method = keys$3[v];
   if (!Duplex$1.prototype[method]) Duplex$1.prototype[method] = Writable$1.prototype[method];
 }
 function Duplex$1(options) {
@@ -11472,6 +11516,9 @@ return index;
 })));
 });
 
+var _templateObject = _taggedTemplateLiteralLoose([''], ['']);
+var _templateObject2 = _taggedTemplateLiteralLoose(['\n    <input type="text" value="ma" id="identifiQuery" onkeyup="identifiSearch()">\n    <div id="identifiSearchResults"></div>\n    '], ['\n    <input type="text" value="ma" id="identifiQuery" onkeyup="identifiSearch()">\n    <div id="identifiSearchResults"></div>\n    ']);
+
 var Identity = function () {
   function Identity(data) {
     var _this = this;
@@ -11491,6 +11538,9 @@ var Identity = function () {
     this.receivedPositive |= 0;
     this.receivedNeutral |= 0;
     this.data.attrs.forEach(function (a) {
+      if (!_this.linkTo && util.isUniqueType(a.name)) {
+        _this.linkTo = a;
+      }
       switch (a.name) {
         case 'email':
           a.iconStyle = 'glyphicon glyphicon-envelope';
@@ -11624,13 +11674,22 @@ var Identity = function () {
     card.className = 'identifi-card';
 
     var identicon = this.identicon(60);
-    identicon.style.float = 'left';
+    identicon.style.order = 1;
     identicon.style.marginRight = '15px';
 
     var details = document.createElement('div');
-    details.style.width = '340px';
     details.style.padding = '5px';
-    details.innerHTML = '<b>' + (this.profile.name || this.profile.nickname) + '</b>';
+    details.style.order = 2;
+    details.style.flexGrow = 1;
+    var link = 'https://identi.fi/#/identities/' + this.linkTo.name + '/' + this.linkTo.val;
+    details.innerHTML = '<a href="' + link + '">' + (this.profile.name || this.profile.nickname || this.linkTo.name + ':' + this.linkTo.val) + '</a><br>';
+    var links = document.createElement('small');
+    this.data.attrs.forEach(function (a) {
+      if (a.link) {
+        links.innerHTML += a.name + ': <a href="' + a.link + '">' + a.val + '</a> ';
+      }
+    });
+    details.appendChild(links);
 
     card.appendChild(identicon);
     card.appendChild(details);
@@ -11669,6 +11728,15 @@ var Identity = function () {
     return card;
   };
 
+  Identity.searchWidget = function searchWidget() {
+    var form = document.createElement('form');
+    form.style.width = '300px';
+
+    form.innerHTML = ''(_templateObject2)(_templateObject);
+
+    return form;
+  };
+
   Identity._ordinal = function _ordinal(n) {
     var s = ['th', 'st', 'nd', 'rd'];
     var v = n % 100;
@@ -11682,7 +11750,7 @@ var Identity = function () {
     }
     var sheet = document.createElement('style');
     sheet.id = elementId;
-    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-card {\n        height: 60px;\n        width: 300px;\n        padding: 10px;\n        background-color: #e8e8e8;\n        border: 1px solid #ddd;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
+    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n      }\n\n      .identifi-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .identifi-card a:hover, .identifi-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
     document.body.appendChild(sheet);
   };
 
@@ -11701,9 +11769,9 @@ var Identity = function () {
     var transform = '';
     var boxShadow = '0px 0px 0px 0px #82FF84';
     if (this.receivedPositive > this.receivedNegative * 20) {
-      boxShadow = '0px 0px ' + this.border * this.receivedPositive / 50 + 'px 0px #82FF84';
+      boxShadow = '0px 0px ' + border * this.receivedPositive / 50 + 'px 0px #82FF84';
     } else if (this.receivedPositive < this.receivedNegative * 3) {
-      boxShadow = '0px 0px ' + this.border * this.receivedNegative / 10 + 'px 0px #BF0400';
+      boxShadow = '0px 0px ' + border * this.receivedNegative / 10 + 'px 0px #BF0400';
     }
     if (this.receivedPositive + this.receivedNegative > 0) {
       if (this.receivedPositive > this.receivedNegative) {
@@ -11779,35 +11847,6 @@ module.exports = { "default": values, __esModule: true };
 });
 
 var _Object$values = unwrapExports(values$2);
-
-// most Object methods by ES6 should accept primitives
-
-
-
-var _objectSap = function (KEY, exec) {
-  var fn = (_core.Object || {})[KEY] || Object[KEY];
-  var exp = {};
-  exp[KEY] = exec(fn);
-  _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
-};
-
-// 19.1.2.14 Object.keys(O)
-
-
-
-_objectSap('keys', function () {
-  return function keys(it) {
-    return _objectKeys(_toObject(it));
-  };
-});
-
-var keys$1 = _core.Object.keys;
-
-var keys$3 = createCommonjsModule(function (module) {
-module.exports = { "default": keys$1, __esModule: true };
-});
-
-var _Object$keys = unwrapExports(keys$3);
 
 var runtime = createCommonjsModule(function (module) {
 /**

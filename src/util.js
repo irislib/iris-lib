@@ -27,6 +27,10 @@ export default {
 
   isNode,
 
+  isUniqueType: function(type) {
+    return Object.keys(this.UNIQUE_ID_VALIDATORS).indexOf(type) > - 1;
+  },
+
   guessTypeOf: function(value) {
     for (const key in this.UNIQUE_ID_VALIDATORS) {
       if (value.match(this.UNIQUE_ID_VALIDATORS[key])) {
