@@ -17,13 +17,14 @@
 
     async function getProfile() {
       const profileQuery = document.getElementById('profileQuery').value;
-      r = await index.get(profileQuery);
+      i = await index.get(profileQuery);
       let text = `Identity profile for ${profileQuery}:\n`;
-      if (r) {
-        text += JSON.stringify(r, null, 2);
+      if (i) {
+        text += JSON.stringify(i, null, 2);
         text += '\n';
         text += 'The most verified name for martti@moni.com:';
-        text += JSON.stringify(r.verified('name'), null, 2);
+        text += JSON.stringify(i.verified('name'), null, 2);
+        document.getElementById('avatar').appendChild(i.avatar(100));
       } else {
         text += 'Profile not found'
       }
@@ -45,6 +46,8 @@
   <pre id="searchResults"></pre>
 
   <input type="text" value="martti@moni.com" id="profileQuery" onkeyup="getProfile()"></input>
+  <p id="avatar"></p>
   <pre id="profileResults"></pre>
+
 </body>
 </html>

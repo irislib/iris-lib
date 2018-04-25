@@ -1,7 +1,9 @@
+import {MessageDigest} from 'jsrsasign';
+
 class Identity {
   constructor(data) {
     this.data = data;
-    this.info = {};
+    this.profile = {};
     if (data.attrs.length) {
       const c = data.attrs[0];
       this.receivedPositive = c.pos;
@@ -16,13 +18,13 @@ class Identity {
         a.btnStyle = `btn-success`;
         a.link = `mailto:${a.val}`;
         a.quickContact = true;
-        this.info.email = this.info.email || a.val;
+        this.profile.email = this.profile.email || a.val;
         break;
       case `bitcoin_address`:
       case `bitcoin`:
         a.iconStyle = `fa fa-bitcoin`;
         a.btnStyle = `btn-primary`;
-        a.link = `https://blockchain.info/address/${a.val}`;
+        a.link = `https://blockchain.profile/address/${a.val}`;
         a.quickContact = true;
         break;
       case `gpg_fingerprint`:
@@ -35,11 +37,11 @@ class Identity {
         a.iconStyle = `fa fa-at`;
         break;
       case `nickname`:
-        this.info.nickname = this.info.nickname || a.val;
+        this.profile.nickname = this.profile.nickname || a.val;
         a.iconStyle = `glyphicon glyphicon-font`;
         break;
       case `name`:
-        this.info.name = this.info.name || a.val;
+        this.profile.name = this.profile.name || a.val;
         a.iconStyle = `glyphicon glyphicon-font`;
         break;
       case `tel`:
@@ -104,6 +106,14 @@ class Identity {
     });
   }
 
+  getGravatar() { // TODO: gravatar should be replaced soon with random art or ipfs profile photo
+    if (!this.gravatar) {
+      const str = this.profile.email || this.data.attrs[0][1];
+      this.gravatar = new MessageDigest({alg: `md5`, prov: `cryptojs`}).digestString(str);
+    }
+    return this.gravatar;
+  }
+
   getSentMsgsIndex() {
 
   }
@@ -126,7 +136,7 @@ class Identity {
 
   profileCard() {
     const template = ```
-    <tr ng-repeat="result in ids.list" id="result{{$index}}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
+    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
       <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
       <td>
         <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>
@@ -159,13 +169,18 @@ class Identity {
     return template;
   }
 
-  avatar() {
+  avatar(width) {
     const avatar = document.createElement(`div`);
     avatar.className = `identifi.avatar`;
     const pie = document.createElement(`div`);
     const img = document.createElement(`img`);
+    img.src = `https://www.gravatar.com/avatar/${this.getGravatar()}?d=retro&amp;s=${width * 2}`;
+    img.alt = ``;
+    img.width = width;
     avatar.appendChild(pie);
     avatar.appendChild(img);
+
+    /*
     function update(element) {
       let bgColor, bgImage, boxShadow, transform;
       this.negativeScore |= 0;
@@ -212,12 +227,12 @@ class Identity {
         <div class="pie">
         </div>
         <img alt=""
-          width="{{width}}"
-          src="https://www.gravatar.com/avatar/{{id.gravatar}}?d=retro&amp;s={{width*2}}" />
+          width="{width}"
+          src="https://www.gravatar.com/avatar/{id.gravatar}?d=retro&amp;s={width*2}" />
       </div>
     ```;
-    update(avatar);
-    return template;
+    update(avatar); */
+    return avatar;
   }
 }
 

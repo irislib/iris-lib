@@ -3784,8 +3784,7 @@ exports.default = function (strings, raw) {
 var _taggedTemplateLiteralLoose = unwrapExports(taggedTemplateLiteralLoose);
 
 var _templateObject = _taggedTemplateLiteralLoose([''], ['']);
-var _templateObject2 = _taggedTemplateLiteralLoose(['\n    <tr ng-repeat="result in ids.list" id="result{{$index}}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">\n      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>\n      <td>\n        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>\n        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>\n        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>\n        <small ng-if="!result.name" class="list-group-item-text">\n          <span ng-bind-html="result[0][0]|highlight:query.term"></span>\n        </small><br>\n        <small>\n          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>\n          <span ng-if="result.email" class="mar-right10">\n            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.facebook" class="mar-right10">\n            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.twitter" class="mar-right10">\n            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.googlePlus" class="mar-right10">\n            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.bitcoin" class="mar-right10">\n            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>\n          </span>\n        </small>\n      </td>\n    </tr>\n    '], ['\n    <tr ng-repeat="result in ids.list" id="result{{$index}}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">\n      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>\n      <td>\n        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>\n        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>\n        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>\n        <small ng-if="!result.name" class="list-group-item-text">\n          <span ng-bind-html="result[0][0]|highlight:query.term"></span>\n        </small><br>\n        <small>\n          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>\n          <span ng-if="result.email" class="mar-right10">\n            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.facebook" class="mar-right10">\n            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.twitter" class="mar-right10">\n            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.googlePlus" class="mar-right10">\n            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.bitcoin" class="mar-right10">\n            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>\n          </span>\n        </small>\n      </td>\n    </tr>\n    ']);
-var _templateObject3 = _taggedTemplateLiteralLoose(['\n      <div class="identicon">\n        <div class="pie">\n        </div>\n        <img alt=""\n          width="{{width}}"\n          src="https://www.gravatar.com/avatar/{{id.gravatar}}?d=retro&amp;s={{width*2}}" />\n      </div>\n    '], ['\n      <div class="identicon">\n        <div class="pie">\n        </div>\n        <img alt=""\n          width="{{width}}"\n          src="https://www.gravatar.com/avatar/{{id.gravatar}}?d=retro&amp;s={{width*2}}" />\n      </div>\n    ']);
+var _templateObject2 = _taggedTemplateLiteralLoose(['\n    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">\n      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>\n      <td>\n        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>\n        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>\n        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>\n        <small ng-if="!result.name" class="list-group-item-text">\n          <span ng-bind-html="result[0][0]|highlight:query.term"></span>\n        </small><br>\n        <small>\n          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>\n          <span ng-if="result.email" class="mar-right10">\n            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.facebook" class="mar-right10">\n            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.twitter" class="mar-right10">\n            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.googlePlus" class="mar-right10">\n            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.bitcoin" class="mar-right10">\n            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>\n          </span>\n        </small>\n      </td>\n    </tr>\n    '], ['\n    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">\n      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>\n      <td>\n        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>\n        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>\n        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>\n        <small ng-if="!result.name" class="list-group-item-text">\n          <span ng-bind-html="result[0][0]|highlight:query.term"></span>\n        </small><br>\n        <small>\n          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>\n          <span ng-if="result.email" class="mar-right10">\n            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.facebook" class="mar-right10">\n            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.twitter" class="mar-right10">\n            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.googlePlus" class="mar-right10">\n            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>\n          </span>\n          <span ng-if="result.bitcoin" class="mar-right10">\n            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>\n          </span>\n        </small>\n      </td>\n    </tr>\n    ']);
 
 var Identity = function () {
   function Identity(data) {
@@ -3794,7 +3793,7 @@ var Identity = function () {
     _classCallCheck(this, Identity);
 
     this.data = data;
-    this.info = {};
+    this.profile = {};
     if (data.attrs.length) {
       var c = data.attrs[0];
       this.receivedPositive = c.pos;
@@ -3809,13 +3808,13 @@ var Identity = function () {
           a.btnStyle = 'btn-success';
           a.link = 'mailto:' + a.val;
           a.quickContact = true;
-          _this.info.email = _this.info.email || a.val;
+          _this.profile.email = _this.profile.email || a.val;
           break;
         case 'bitcoin_address':
         case 'bitcoin':
           a.iconStyle = 'fa fa-bitcoin';
           a.btnStyle = 'btn-primary';
-          a.link = 'https://blockchain.info/address/' + a.val;
+          a.link = 'https://blockchain.profile/address/' + a.val;
           a.quickContact = true;
           break;
         case 'gpg_fingerprint':
@@ -3828,11 +3827,11 @@ var Identity = function () {
           a.iconStyle = 'fa fa-at';
           break;
         case 'nickname':
-          _this.info.nickname = _this.info.nickname || a.val;
+          _this.profile.nickname = _this.profile.nickname || a.val;
           a.iconStyle = 'glyphicon glyphicon-font';
           break;
         case 'name':
-          _this.info.name = _this.info.name || a.val;
+          _this.profile.name = _this.profile.name || a.val;
           a.iconStyle = 'glyphicon glyphicon-font';
           break;
         case 'tel':
@@ -3897,6 +3896,15 @@ var Identity = function () {
     });
   }
 
+  Identity.prototype.getGravatar = function getGravatar() {
+    // TODO: gravatar should be replaced soon with random art or ipfs profile photo
+    if (!this.gravatar) {
+      var str = this.profile.email || this.data.attrs[0][1];
+      this.gravatar = new MessageDigest({ alg: 'md5', prov: 'cryptojs' }).digestString(str);
+    }
+    return this.gravatar;
+  };
+
   Identity.prototype.getSentMsgsIndex = function getSentMsgsIndex() {};
 
   Identity.prototype.getReceivedMsgsIndex = function getReceivedMsgsIndex() {};
@@ -3918,60 +3926,69 @@ var Identity = function () {
     return template;
   };
 
-  Identity.prototype.avatar = function avatar() {
+  Identity.prototype.avatar = function avatar(width) {
     var avatar = document.createElement('div');
     avatar.className = 'identifi.avatar';
     var pie = document.createElement('div');
     var img = document.createElement('img');
+    img.src = 'https://www.gravatar.com/avatar/' + this.getGravatar() + '?d=retro&amp;s=' + width * 2;
+    img.alt = '';
+    img.width = width;
     avatar.appendChild(pie);
     avatar.appendChild(img);
+
+    /*
     function update(element) {
-      var bgColor = void 0,
-          bgImage = void 0,
-          boxShadow = void 0,
-          transform = void 0;
+      let bgColor, bgImage, boxShadow, transform;
       this.negativeScore |= 0;
       this.positiveScore |= 0;
-      boxShadow = '0px 0px 0px 0px #82FF84';
+      boxShadow = `0px 0px 0px 0px #82FF84`;
       if (this.positiveScore > this.negativeScore * 20) {
-        boxShadow = '0px 0px ' + this.border * this.positiveScore / 50 + 'px 0px #82FF84';
+        boxShadow = `0px 0px ${this.border * this.positiveScore / 50}px 0px #82FF84`;
       } else if (this.positiveScore < this.negativeScore * 3) {
-        boxShadow = '0px 0px ' + this.border * this.negativeScore / 10 + 'px 0px #BF0400';
+        boxShadow = `0px 0px ${this.border * this.negativeScore / 10}px 0px #BF0400`;
       }
-      bgColor = 'rgba(0,0,0,0.2)';
-      bgImage = 'none';
-      transform = '';
+      bgColor = `rgba(0,0,0,0.2)`;
+      bgImage = `none`;
+      transform = ``;
       if (this.positiveScore + this.negativeScore > 0) {
         if (this.positiveScore > this.negativeScore) {
-          transform = 'rotate(' + (-this.positiveScore / (this.positiveScore + this.negativeScore) * 360 - 180) / 2 + 'deg)';
-          bgColor = '#A94442';
-          bgImage = 'linear-gradient(' + this.positiveScore / (this.positiveScore + this.negativeScore) * 360 + 'deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)';
+          transform = `rotate(${((- this.positiveScore / (this.positiveScore + this.negativeScore) * 360 - 180) / 2)}deg)`;
+          bgColor = `#A94442`;
+          bgImage = `linear-gradient(${this.positiveScore / (this.positiveScore + this.negativeScore) * 360}deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)`;
         } else {
-          transform = 'rotate(' + ((-this.negativeScore / (this.positiveScore + this.negativeScore) * 360 - 180) / 2 + 180) + 'deg)';
-          bgColor = '#3C763D';
-          bgImage = 'linear-gradient(' + this.negativeScore / (this.positiveScore + this.negativeScore) * 360 + 'deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)';
+          transform = `rotate(${((- this.negativeScore / (this.positiveScore + this.negativeScore) * 360 - 180) / 2) + 180}deg)`;
+          bgColor = `#3C763D`;
+          bgImage = `linear-gradient(${this.negativeScore / (this.positiveScore + this.negativeScore) * 360}deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)`;
         }
       }
       element.children().css({
-        width: this.width + 'px',
-        height: this.width + 'px'
+        width: `${this.width}px`,
+        height: `${this.width}px`
       });
-      element.children().find('div').css({
+      element.children().find(`div`).css({
         'background-color': bgColor,
         'background-image': bgImage,
-        width: this.width + 'px',
+        width: `${this.width}px`,
         'box-shadow': boxShadow,
         opacity: (this.positiveScore + this.negativeScore) / 10 * 0.5 + 0.35,
         transform: transform
       });
-      return element.find('img').css({
-        'border-width': this.border + 'px'
+      return element.find(`img`).css({
+        'border-width': `${this.border}px`
       });
     }
-
-    var template = ''(_templateObject3)(_templateObject);
-    update(avatar);
-    return template;
+     const template = ```
+      <div class="identicon">
+        <div class="pie">
+        </div>
+        <img alt=""
+          width="{width}"
+          src="https://www.gravatar.com/avatar/{id.gravatar}?d=retro&amp;s={width*2}" />
+      </div>
+    ```;
+    update(avatar); */
+    return avatar;
   };
 
   return Identity;
