@@ -204,7 +204,7 @@ class Identity {
       .identifi-distance {
         z-index: 2;
         position: absolute;
-        left:0;
+        right:10%;
         top:2px;
         width: 100%;
         text-align: right;
@@ -231,7 +231,7 @@ class Identity {
       .identifi-identicon img {
         position: absolute;
         top: 0;
-        right: 10%;
+        left: 0;
         max-width: 100%;
         border-radius: 50%;
         border-color: transparent;
