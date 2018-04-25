@@ -201,7 +201,21 @@ class Identity {
         max-width: 100%;
       }
 
-      .identifi-identicon .pie {
+      .identifi-distance {
+        z-index: 2;
+        position: absolute;
+        left:0;
+        top:2px;
+        width: 100%;
+        text-align: right;
+        color: #fff;
+        text-shadow: 0 0 1px #000;
+        font-size: 75%;
+        line-height: 75%;
+        font-weight: bold;
+      }
+
+      .identifi-pie {
         border-radius: 50%;
         position: absolute;
         top: 0;
@@ -217,7 +231,7 @@ class Identity {
       .identifi-identicon img {
         position: absolute;
         top: 0;
-        left: 0;
+        right: 10%;
         max-width: 100%;
         border-radius: 50%;
         border-color: transparent;
@@ -255,8 +269,13 @@ class Identity {
       }
     }
 
+    const distance = document.createElement(`span`);
+    distance.textContent = Number.isNaN(parseInt(this.trustDistance)) ? `–` : this.trustDistance;
+    distance.className = `identifi-distance`;
+    distance.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
+
     const pie = document.createElement(`div`);
-    pie.className = `pie`;
+    pie.className = `identifi-pie`;
     pie.style.backgroundColor = bgColor;
     pie.style.backgroundImage = bgImage;
     pie.style.width = `${width}px`;
@@ -270,6 +289,7 @@ class Identity {
     img.width = width;
     img.style.borderWidth = `${border}px`;
 
+    identicon.appendChild(distance);
     identicon.appendChild(pie);
     identicon.appendChild(img);
 

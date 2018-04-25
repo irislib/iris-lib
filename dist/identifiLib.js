@@ -3772,6 +3772,24 @@ var Message = function () {
   return Message;
 }();
 
+// 20.1.2.4 Number.isNaN(number)
+
+
+_export(_export.S, 'Number', {
+  isNaN: function isNaN(number) {
+    // eslint-disable-next-line no-self-compare
+    return number != number;
+  }
+});
+
+var isNan = _core.Number.isNaN;
+
+var isNan$2 = createCommonjsModule(function (module) {
+module.exports = { "default": isNan, __esModule: true };
+});
+
+var _Number$isNaN = unwrapExports(isNan$2);
+
 var taggedTemplateLiteralLoose = createCommonjsModule(function (module, exports) {
 exports.__esModule = true;
 
@@ -11627,7 +11645,7 @@ var Identity = function () {
     }
     var sheet = document.createElement('style');
     sheet.id = elementId;
-    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-identicon .pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
+    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        right: 10%;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
     document.body.appendChild(sheet);
   };
 
@@ -11662,8 +11680,13 @@ var Identity = function () {
       }
     }
 
+    var distance = document.createElement('span');
+    distance.textContent = _Number$isNaN(parseInt(this.trustDistance)) ? '\u2013' : this.trustDistance;
+    distance.className = 'identifi-distance';
+    distance.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
+
     var pie = document.createElement('div');
-    pie.className = 'pie';
+    pie.className = 'identifi-pie';
     pie.style.backgroundColor = bgColor;
     pie.style.backgroundImage = bgImage;
     pie.style.width = width + 'px';
@@ -11677,6 +11700,7 @@ var Identity = function () {
     img.width = width;
     img.style.borderWidth = border + 'px';
 
+    identicon.appendChild(distance);
     identicon.appendChild(pie);
     identicon.appendChild(img);
 
