@@ -7,9 +7,23 @@
   <script type="text/javascript">
     let index;
 
+    const loadIdentifi = window.identifiLib.Index.load(); // <--- Load identifi index
+
+    loadIdentifi.then(async (index_) => {
+      index = index_;
+      document.getElementById('searchResults').textContent = 'Searching...';
+      document.getElementById('profileResults').textContent = 'Searching...';
+      await search(index);
+      await getProfile(index);
+      document.getElementById('query').addEventListener('change', search);
+      document.getElementById('profileQuery').addEventListener('change', getProfile);
+    });
+
     async function search() {
       const query = document.getElementById('query').value;
-      let r = await index.search(query);
+
+      let r = await index.search(query); // <--- Search identities from identifi
+
       let text = `Search results for "${query}":\n`;
       document.getElementById('searchResults').textContent = text;
       r.forEach(i => {
@@ -19,37 +33,33 @@
 
     async function getProfile() {
       const profileQuery = document.getElementById('profileQuery').value;
-      i = await index.get(profileQuery);
+
+      i = await index.get(profileQuery); // <--- Get an identity from identifi
+
       let text = `Identity profile for ${profileQuery}:\n`;
       if (i) {
+        const verifiedName = i.verified('name'); // <--- Get a verified name of an identity
+
         text += JSON.stringify(i, null, 2);
         text += '\n';
         text += 'The most verified name for martti@moni.com:';
-        text += JSON.stringify(i.verified('name'), null, 2);
-        document.getElementById('identicon').appendChild(i.identicon(100));
+        text += `${verifiedName}`;
+
+        const identicon = i.identicon(100); // <--- Generate an identity icon as a DOM element, width 100px
+
+        document.getElementById('identicon').appendChild(identicon);
       } else {
         text += 'Profile not found'
       }
       document.getElementById('profileResults').textContent = text;
     }
-
-    window.identifiLib.Index.load().then(async (index_) => {
-      index = index_;
-      document.getElementById('searchResults').textContent = 'Searching...';
-      document.getElementById('profileResults').textContent = 'Searching...';
-      await search(index);
-      await getProfile(index);
-      document.getElementById('query').addEventListener('change', search);
-      document.getElementById('profileQuery').addEventListener('change', getProfile);
-    });
   </script>
 
-  <p id="identicon"></p>
-
-  <input type="text" value="ma" id="query" onkeyup="search()"></input>
+  <input type="text" value="ma" id="query" onkeyup="search()">
   <pre id="searchResults"></pre>
 
-  <input type="text" value="martti@moni.com" id="profileQuery" onkeyup="getProfile()"></input>
+  <input type="text" value="martti@moni.com" id="profileQuery" onkeyup="getProfile()">
+  <p id="identicon"></p>
   <pre id="profileResults"></pre>
 
 </body>

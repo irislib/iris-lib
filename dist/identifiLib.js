@@ -11493,7 +11493,7 @@ var Identity = function () {
           a.btnStyle = 'btn-success';
           a.link = 'mailto:' + a.val;
           a.quickContact = true;
-          _this.profile.email = _this.profile.email || a.val;
+          _this.profile.email = _this.profile.email || a.val; // TODO: pick the most verified ones
           break;
         case 'bitcoin_address':
         case 'bitcoin':
@@ -11680,57 +11680,6 @@ var Identity = function () {
     identicon.appendChild(pie);
     identicon.appendChild(img);
 
-    /*
-    function update(element) {
-      let bgColor, bgImage, boxShadow, transform;
-      this.receivedNegative |= 0;
-      this.receivedPositive |= 0;
-      boxShadow = `0px 0px 0px 0px #82FF84`;
-      if (this.receivedPositive > this.receivedNegative * 20) {
-        boxShadow = `0px 0px ${this.border * this.receivedPositive / 50}px 0px #82FF84`;
-      } else if (this.receivedPositive < this.receivedNegative * 3) {
-        boxShadow = `0px 0px ${this.border * this.receivedNegative / 10}px 0px #BF0400`;
-      }
-      bgColor = `rgba(0,0,0,0.2)`;
-      bgImage = `none`;
-      transform = ``;
-      if (this.receivedPositive + this.receivedNegative > 0) {
-        if (this.receivedPositive > this.receivedNegative) {
-          transform = `rotate(${((- this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2)}deg)`;
-          bgColor = `#A94442`;
-          bgImage = `linear-gradient(${this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360}deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)`;
-        } else {
-          transform = `rotate(${((- this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2) + 180}deg)`;
-          bgColor = `#3C763D`;
-          bgImage = `linear-gradient(${this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360}deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)`;
-        }
-      }
-      element.children().css({
-        width: `${this.width}px`,
-        height: `${this.width}px`
-      });
-      element.children().find(`div`).css({
-        'background-color': bgColor,
-        'background-image': bgImage,
-        width: `${this.width}px`,
-        'box-shadow': boxShadow,
-        opacity: (this.receivedPositive + this.receivedNegative) / 10 * 0.5 + 0.35,
-        transform: transform
-      });
-      return element.find(`img`).css({
-        'border-width': `${this.border}px`
-      });
-    }
-     const template = ```
-      <div class="identicon">
-        <div class="pie">
-        </div>
-        <img alt=""
-          width="{width}"
-          src="https://www.gravatar.com/identicon/{id.gravatar}?d=retro&amp;s={width*2}" />
-      </div>
-    ```;
-    update(identicon); */
     return identicon;
   };
 
@@ -13664,7 +13613,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.23";
+var version$2 = "0.0.24";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
