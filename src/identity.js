@@ -162,6 +162,7 @@ class Identity {
     details.style.flexGrow = 1;
     const link = `https://identi.fi/#/identities/${this.linkTo.name}/${this.linkTo.val}`;
     details.innerHTML = `<a href="${link}">${this.profile.name || this.profile.nickname || `${this.linkTo.name}:${this.linkTo.val}`}</a><br>`;
+    details.innerHTML += `<small>Received: <span class="identifi-pos">+${this.receivedPositive || 0}</span> / <span class="identifi-neg">-${this.receivedNegative || 0}</span></small><br>`;
     const links = document.createElement(`small`);
     this.data.attrs.forEach(a => {
       if (a.link) {
@@ -295,6 +296,14 @@ class Identity {
       .identifi-card a:hover, .identifi-card a:active {
         text-decoration: underline;
         color: #23527c;
+      }
+
+      .identifi-pos {
+        color: #3c763d;
+      }
+
+      .identifi-neg {
+        color: #a94442;
       }
 
       .identifi-identicon img {
