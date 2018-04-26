@@ -208,18 +208,27 @@ class Identity {
     return card;
   }
 
-  static getSearchWidget(/*index*/) {
+  static appendSearchWidget(parentElement, index) {
     const form = document.createElement(`form`);
-    form.style.width = `300px`;
 
     const input = document.createElement(`input`);
     input.type = `text`;
     input.placeholder = `Search`;
-    input.addEventListener(`keyup`, () => { console.log(1); });
-    form.appendChild(input);
+    input.id = `identifiSearchInput`;
     form.innerHTML += `<div id="identifiSearchResults"></div>`;
 
-    return form;
+    const searchResults = document.createElement(`div`);
+
+    parentElement.appendChild(form);
+    form.appendChild(input);
+    form.appendChild(searchResults);
+    input.addEventListener(`keyup`, async () => {
+      const r = await index.search(input.value);
+      searchResults.innerHTML = ``;
+      r.forEach(i => {
+        searchResults.appendChild(i.profileCard());
+      });
+    });
   }
 
   static _ordinal(n) {
