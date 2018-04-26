@@ -33,22 +33,23 @@
 
     async function getProfile() {
       const profileQuery = document.getElementById('profileQuery').value;
+      const identiconParent = document.getElementById('identicon');
+      const verifiedAttributeEl = document.getElementById('verifiedAttribute');
 
       i = await index.get(profileQuery); // <--- Get an identity from identifi
 
       let text = `Identity profile for ${profileQuery}:\n`;
       if (i) {
-        const verifiedName = i.verified('name'); // <--- Get a verified name of an identity
-
         text += JSON.stringify(i, null, 2);
-        text += '\n';
-        text += 'The most verified name for martti@moni.com:';
-        text += `${verifiedName}`;
+        const verifiedName = i.verified('name'); // <--- Get a verified name of an identity
+        verifiedAttributeEl.textContent = verifiedName;
 
         const identicon = i.identicon(100); // <--- Generate an identity icon as a DOM element, width 100px
-
-        document.getElementById('identicon').appendChild(identicon);
+        identiconParent.innerHTML = '';
+        identiconParent.appendChild(identicon);
       } else {
+        identiconParent.innerHTML = '';
+        verifiedAttributeEl.innerHTML = '-';
         text += 'Profile not found'
       }
       document.getElementById('profileResults').textContent = text;
@@ -77,6 +78,17 @@
   <p>Identifi messages and indexes are stored on the distributed, censorship-resistant
   IPFS network</p>
 
+  <h2>Including the library</h2>
+  <p><i>
+  &lt;script type="text/javascript" src="https://unpkg.com/identifi-lib/dist/identifiLib.min.js">&lt;/script>
+  </p></i>
+  <p>The lib will be available as <i>window.identifiLib</i>.</p>
+
+  <h2>index = await Index.load(indexRootIpfsUri)</h2>
+  <p>Load an Index from a given index root IPFS/IPNS URI. If ipfsUri is undefined,
+  identi.fi index is loaded by default. As of April 2018, identi.fi index consists
+  mostly of data crawled from bitcoin-otc.com.</p>
+
   <h2>index.search(query, limit)</h2>
   <p>Search an identifi index for identitiesBySearchKey. A list of matching
   Identity objects is returned.</p>
@@ -90,10 +102,22 @@
 
   <h2>index.get(value [, type])</h2>
   <p>Search the identitiesBySearchKey index using value and type. If an exact
-  match is found, the resulting Identity object is returned.</p>
+  match is found, the resulting Identity object is returned. If type is not defined,
+  it will be guessed using a regex list.</p>
   <input type="text" value="martti@moni.com" id="profileQuery" onkeyup="getProfile()">
+  <textarea style="width:100%" rows=10 id="profileResults"></textarea>
+
+  <p>Generate identicon of width 100px:</p>
+  <pre>
+    identity.identicon(100)
+  </pre>
   <p id="identicon"></p>
-  <pre id="profileResults"></pre>
+
+  <p>Get the most verified attribute of type 'name':</p>
+  <pre>
+    identity.verified('name')
+  </pre>
+  <p>Result: <b id="verifiedAttribute"></b></p>
 
   <h2>So what about saving the world?</h2>
   <p>Identifi's web-of-trust approach to identity management could be more resilient,
@@ -108,7 +132,11 @@
   native social habitat - a tribe or a village society where everyone knows each other.
   That would incentivize people to treat each other well and apologize and compensate
   for misdeeds. It would be a cost-effective and non-violent alternative to the punitive,
-  expensive, slow and too often corrupt or unjust state monopolies of justice.</p>
+  expensive, slow and too often corrupt or unjust state monopolies of justice. See
+  <a href="https://medium.com/@mmalmi/learning-to-trust-strangers-167b652a654f">
+  Learning to Trust Strangers</a> and
+  <a href="https://medium.com/liberation-day/law-is-better-without-monopoly-778963880276">
+  Law Is Better Without Monopoly</a>.</p>
 
   <p>We must not let centrally managed systems like China's dystopian big brother
   "reputation" system define how we regard each other. Identifi's reputation scores always
@@ -130,8 +158,8 @@
   <p>The dataset you see as of April 2018 is crawled from bitcoin-otc.com.</p>
 
   <h2>What's next?</h2>
-  <p>If you like the idea, you can help by integrating and improving identifi-lib or writing crawlers.
-  <a href="https://github.com/identifi/identifi-lib">Github</a></p>
+  <p>If you like the idea, you can help by integrating and improving identifi-lib
+  <a href="https://github.com/identifi/identifi-lib">(Github)</a> or writing crawlers.</p>
 
   <p>Possible applications:</p>
   <ul>
@@ -145,6 +173,5 @@
     <li>Filter reviews on marketplace platforms (Airbnb, eBay, Uber, LocalBitcoins)</li>
     <li>Uncensorable platforms for dispute announcement and resolution</li>
   </ul>
-
 </body>
 </html>
