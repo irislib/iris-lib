@@ -208,14 +208,16 @@ class Identity {
     return card;
   }
 
-  static searchWidget() {
+  static getSearchWidget(/*index*/) {
     const form = document.createElement(`form`);
     form.style.width = `300px`;
 
-    form.innerHTML = ```
-    <input type="text" value="ma" id="identifiQuery" onkeyup="identifiSearch()">
-    <div id="identifiSearchResults"></div>
-    ```;
+    const input = document.createElement(`input`);
+    input.type = `text`;
+    input.placeholder = `Search`;
+    input.addEventListener(`keyup`, () => { console.log(1); });
+    form.appendChild(input);
+    form.innerHTML += `<div id="identifiSearchResults"></div>`;
 
     return form;
   }

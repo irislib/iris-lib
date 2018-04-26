@@ -3823,17 +3823,6 @@ module.exports = { "default": isNan, __esModule: true };
 
 var _Number$isNaN = unwrapExports(isNan$2);
 
-var taggedTemplateLiteralLoose = createCommonjsModule(function (module, exports) {
-exports.__esModule = true;
-
-exports.default = function (strings, raw) {
-  strings.raw = raw;
-  return strings;
-};
-});
-
-var _taggedTemplateLiteralLoose = unwrapExports(taggedTemplateLiteralLoose);
-
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
 
@@ -11516,9 +11505,6 @@ return index;
 })));
 });
 
-var _templateObject = _taggedTemplateLiteralLoose([''], ['']);
-var _templateObject2 = _taggedTemplateLiteralLoose(['\n    <input type="text" value="ma" id="identifiQuery" onkeyup="identifiSearch()">\n    <div id="identifiSearchResults"></div>\n    '], ['\n    <input type="text" value="ma" id="identifiQuery" onkeyup="identifiSearch()">\n    <div id="identifiSearchResults"></div>\n    ']);
-
 var Identity = function () {
   function Identity(data) {
     var _this = this;
@@ -11730,11 +11716,18 @@ var Identity = function () {
     return card;
   };
 
-  Identity.searchWidget = function searchWidget() {
+  Identity.getSearchWidget = function getSearchWidget() /*index*/{
     var form = document.createElement('form');
     form.style.width = '300px';
 
-    form.innerHTML = ''(_templateObject2)(_templateObject);
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Search';
+    input.addEventListener('keyup', function () {
+      console.log(1);
+    });
+    form.appendChild(input);
+    form.innerHTML += '<div id="identifiSearchResults"></div>';
 
     return form;
   };
@@ -13715,7 +13708,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.28";
+var version$2 = "0.0.29";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

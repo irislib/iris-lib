@@ -17,6 +17,9 @@
       await getProfile(index);
       document.getElementById('query').addEventListener('change', search);
       document.getElementById('profileQuery').addEventListener('change', getProfile);
+      const searchWidget = window.identifiLib.Identity.getSearchWidget();
+      console.log(searchWidget);
+      document.getElementById('searchWidget').appendChild(searchWidget);
     });
 
     async function search() {
@@ -55,12 +58,71 @@
     }
   </script>
 
-  <input type="text" value="ma" id="query" onkeyup="search()">
-  <pre id="searchResults"></pre>
+  <div id="searchWidget"></div>
 
-  <input type="text" value="martti@moni.com" id="profileQuery" onkeyup="getProfile()">
-  <p id="identicon"></p>
-  <pre id="profileResults"></pre>
+  <h1>Saving the world with identifi-lib</h1>
+
+    <p>The building blocks of Identifi data are digitally signed <b>Messages</b>
+    which are typically <i>verifications</i> or <i>ratings</i>.</p>
+
+    <p>Verifications are claims that certain <b>Attributes</b>
+    (name, email, bitcoin address etc.) belong to the same <b>Identity</b>.
+    Verifications by positively rated Identities are used to bundle together
+    attributes into Identity objects.</p>
+
+    <p>Identifi-lib can be used to read and write <b>Indexes</b> of Messages and
+    Identities. An Identifi index root typically contains four indexes:
+    <i>messagesByTimestamp</i>, <i>messagesByTrustDistance</i>,
+    <i>identitiesByTrustDistance</i> and <i>identitiesBySearchKey</i>.</p>
+
+    <p>Identifi messages and indexes are stored on the distributed, censorship-resistant
+    IPFS network</p>
+
+    <h2>index.search(query, limit)</h2>
+    <p>Search an identifi index for identitiesBySearchKey. A list of matching
+    Identity objects is returned.</p>
+    <input type="text" value="ma" id="query" onkeyup="search()">
+    <pre id="searchResults"></pre>
+
+    <h2>index.get(value [, type])</h2>
+    <p>Search the identitiesBySearchKey index using value and type. If an exact
+    match is found, the resulting Identity object is returned.</p>
+    <input type="text" value="martti@moni.com" id="profileQuery" onkeyup="getProfile()">
+    <p id="identicon"></p>
+    <pre id="profileResults"></pre>
+
+    <h2>So what about saving the world?</h2>
+    <p>Identifi's web-of-trust approach to identity management could be more resilient,
+    accessible and intuitive than the hierarchical approach of DNS. It could free our
+    digital identities from email providers, social media companies and phone carriers.
+    Identifi solves the problem of connecting human-readable names (and faces) to
+    cryptographic public keys without a single source of truth.
+    </p>
+
+    <p>Ubiquitously available identity and reputation data would bring us closer to our
+    native social habitat - a tribe or a village society where everyone knows each other.
+    That would incentivize people to treat each other well and apologize and compensate
+    for misdeeds. It would be a cost-effective and non-violent alternative to the punitive,
+    expensive, slow and too often corrupt or unjust state monopolies of justice.</p>
+
+    <p>We must not let centrally managed systems like China's dystopian big brother
+    "reputation" system define how we regard each other. Identifi's reputation scores always
+    depend on whose web-of-trust you are looking through (and you can easily maintain your own).</p>
+
+    <p>Identifi's web of trust can be used on other platforms to filter out spam,
+    fake users, propaganda or other untrusted content. That is helpful when building
+    decentralized social media applications, which need some way to limit write access.</p>
+
+    <p>Storing all data on the IPFS network makes it more difficult to be shut down
+    by lawsuits or oppressive governments.</p>
+
+    <h2>How to solve the chicken-and-egg problem?</h2>
+    <p><b>The signer and author of an Identifi message need not be the same person.</b>
+    A signature on an identifi message means just that the signer verifies its authenticity.</p>
+    <p>That allows us to write crawlers that import content into Identifi from other platforms.
+    That makes Identifi useful even with no initial users. In the beginning, people
+    can rely on 3rd parties to sign and import their messages into Identifi.</p>
+    <p>The dataset you see as of April 2018 is crawled from bitcoin-otc.com.</p>
 
 </body>
 </html>
