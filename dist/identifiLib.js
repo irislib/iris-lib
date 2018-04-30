@@ -3597,10 +3597,10 @@ var util = {
         fs.chmodSync(privKeyFile, 400);
       }
     } else {
-      myKey = window.localStorage.getItem('identifi.myKey');
+      myKey = JSON.parse(window.localStorage.getItem('identifi.myKey'));
       if (!myKey) {
         myKey = this.generateKey();
-        window.localStorage.setItem('identifi.myKey', myKey);
+        window.localStorage.setItem('identifi.myKey', _JSON$stringify(myKey));
       }
     }
     return myKey;
@@ -13734,7 +13734,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.29";
+var version$2 = "0.0.30";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

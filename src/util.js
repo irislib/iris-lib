@@ -95,10 +95,10 @@ export default {
         fs.chmodSync(privKeyFile, 400);
       }
     } else {
-      myKey = window.localStorage.getItem(`identifi.myKey`);
+      myKey = JSON.parse(window.localStorage.getItem(`identifi.myKey`));
       if (!myKey) {
         myKey = this.generateKey();
-        window.localStorage.setItem(`identifi.myKey`, myKey);
+        window.localStorage.setItem(`identifi.myKey`, JSON.stringify(myKey));
       }
     }
     return myKey;
