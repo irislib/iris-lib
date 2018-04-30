@@ -3597,10 +3597,15 @@ var util = {
         fs.chmodSync(privKeyFile, 400);
       }
     } else {
-      myKey = JSON.parse(window.localStorage.getItem('identifi.myKey'));
-      if (!myKey) {
-        myKey = this.generateKey();
-        window.localStorage.setItem('identifi.myKey', _JSON$stringify(myKey));
+      var _jwkp = window.localStorage.getItem('identifi.myKey');
+      if (_jwkp) {
+        myKey = this.jwkPairToPrvKey(JSON.parse(_jwkp));
+      } else {
+        var _kp = this.generateKeyPair();
+        myKey = _kp.prvKeyObj;
+        myKey.pubKeyASN1 = this.getPubKeyASN1(_kp.pubKeyObj);
+        var _k = this.keypairToJWK(_kp);
+        window.localStorage.setItem('identifi.myKey', _JSON$stringify(_k));
       }
     }
     return myKey;
@@ -13734,7 +13739,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.30";
+var version$2 = "0.0.31";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

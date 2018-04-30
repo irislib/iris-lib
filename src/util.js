@@ -95,10 +95,15 @@ export default {
         fs.chmodSync(privKeyFile, 400);
       }
     } else {
-      myKey = JSON.parse(window.localStorage.getItem(`identifi.myKey`));
-      if (!myKey) {
-        myKey = this.generateKey();
-        window.localStorage.setItem(`identifi.myKey`, JSON.stringify(myKey));
+      const jwkp = window.localStorage.getItem(`identifi.myKey`);
+      if (jwkp) {
+        myKey = this.jwkPairToPrvKey(JSON.parse(jwkp));
+      } else {
+        const kp = this.generateKeyPair();
+        myKey = kp.prvKeyObj;
+        myKey.pubKeyASN1 = this.getPubKeyASN1(kp.pubKeyObj);
+        const k = this.keypairToJWK(kp);
+        window.localStorage.setItem(`identifi.myKey`, JSON.stringify(k));
       }
     }
     return myKey;
