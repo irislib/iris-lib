@@ -64,4 +64,10 @@ function signMsg() {
 async function publishMsg() {
   const r = await index.publishMessage(window.message);
   document.getElementById('publishMsgResult').textContent = JSON.stringify(r);
+  if (r && r.hash) {
+    const link = `https://ipfs.io/ipfs/${r.hash}`;
+    const el = document.getElementById('publishMsgResultLink');
+    el.className = `alert alert-info`;
+    el.innerHTML = `Link to the newly published JWT serialized identifi message on IPFS: <a href="${link}">${link}</a>`;
+  }
 }

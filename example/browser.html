@@ -36,8 +36,12 @@
     IPFS network</p>
 
     <h2>Including the library</h2>
+    <h3>Browser</h3>
     <pre>&lt;script type="text/javascript" src="https://unpkg.com/identifi-lib/dist/identifiLib.min.js">&lt;/script></pre>
     <p>The lib will be available as <i>window.identifiLib</i>.</p>
+
+    <h3>Node.js</h3>
+    <pre>npm install identifi-lib</pre>
 
     <h2>index = await Index.load(indexRootIpfsUri)</h2>
     <p>Load an Index from a given index root IPFS/IPNS URI. If ipfsUri is undefined,
@@ -75,7 +79,7 @@
       {
         "author": [
           ["name", "Alice"],
-          ["keyID", "1234ABCD"]
+          ["email", "alice@example.com"]
         ],
         "recipient": [
           ["name", "Bob"],
@@ -91,8 +95,14 @@ key = util.getDefaultKey();</pre>
     <pre id="signMsgResult"></pre>
     <p><input type="button" value="index.publishMessage(msg);" id="publishMsg" class="btn btn-primary"></p>
     <pre id="publishMsgResult"></pre>
+    <p id="publishMsgResultLink"></p>
 
     <p>By default, maxRating is 10 and minRating is -10.</p>
+
+    <p>Messages are encoded and signed as <a href="https://jwt.io">JSON Web Tokens</a>.
+    The signing EC key is included in the message header along with signature algorithm.
+    In the future, we may link to the IPFS URI of the signing key instead, so that long RSA
+    keys can be used without replicating them in every message.</p>
 
     <p>Default key is read from localStorage/filesystem or a new one is generated.</p>
 
@@ -103,7 +113,7 @@ key = util.getDefaultKey();</pre>
 
     <pre>
       msg = Message.createVerification({
-        author: [['name', 'Alice'], ['keyID', '1234ABCD']],
+        author: [['name', 'Alice'], ['email', 'alice@example.com']],
         recipient: [
           ['name', 'Bob'],
           ['keyID', '4321DCBA'],
