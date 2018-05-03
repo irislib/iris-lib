@@ -36,9 +36,7 @@
     IPFS network</p>
 
     <h2>Including the library</h2>
-    <p><i>
-    &lt;script type="text/javascript" src="https://unpkg.com/identifi-lib/dist/identifiLib.min.js">&lt;/script>
-    </p></i>
+    <pre>&lt;script type="text/javascript" src="https://unpkg.com/identifi-lib/dist/identifiLib.min.js">&lt;/script></pre>
     <p>The lib will be available as <i>window.identifiLib</i>.</p>
 
     <h2>index = await Index.load(indexRootIpfsUri)</h2>
@@ -131,7 +129,7 @@ key = util.getDefaultKey();</pre>
     connects to <a href="https://github.com/ipfs/go-ipfs">go-ipfs</a> can maintain
     the index at a permanent address.</p>
 
-    <h2>So what about saving the world?</h2>
+    <h2>So, what about saving the world?</h2>
     <p>Identifi's web-of-trust approach to identity management could be more resilient,
     accessible and intuitive than the hierarchical approach of DNS. It could free our
     digital identities from domain names, email providers, social media companies and phone carriers.
@@ -160,6 +158,13 @@ key = util.getDefaultKey();</pre>
 
     <p>Storing all data on the IPFS network makes it more difficult to be shut down
     by lawsuits or oppressive governments.</p>
+
+    <h3>In the future</h3>
+    Self-driving cars, drones and other autonomous agents inhabiting the same physical space
+    will need to identify each other and be accountable for their behavior. Unidentifiable
+    agents, much like masked people or cars without license plates, will probably be seen
+    as a threat by others and can be stopped without recourse. To avoid centralization of power,
+    we should pursue a decentralized web of trust registry rather than a top-down system.
 
     <h2>How to solve the chicken-and-egg problem?</h2>
     <p><b>The signer and author of an Identifi message need not be the same person.</b>

@@ -55,14 +55,13 @@ async function getProfile() {
 function signMsg() {
   const d = document.getElementById('ratingMsg').value;
   const msgData = JSON.parse(d);
-  msg = window.identifiLib.Message.createRating(msgData); // <--- Create an Identifi message
+  window.message = window.identifiLib.Message.createRating(msgData); // <--- Create an Identifi message
   key = window.identifiLib.util.getDefaultKey(); // <--- Get or generate local key
-  console.log(key);
-  msg.sign(key); // <--- Sign message with the key
-  document.getElementById('signMsgResult').textContent = JSON.stringify(window.message);
+  window.message.sign(key); // <--- Sign message with the key
+  document.getElementById('signMsgResult').textContent = JSON.stringify(window.message, null, 2);
 }
 
 async function publishMsg() {
-  const r = await index.publishMsg(msg);
+  const r = await index.publishMessage(window.message);
   document.getElementById('publishMsgResult').textContent = JSON.stringify(r);
 }

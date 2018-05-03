@@ -51,15 +51,8 @@ export default {
     return KEYUTIL.generateKeypair(`EC`, `secp256r1`);
   },
 
-  keypairToJWK: function(kp) {
-    return {
-      prv: KEYUTIL.getJWKFromKey(kp.prvKeyObj),
-      pub: KEYUTIL.getJWKFromKey(kp.pubKeyObj)
-    };
-  },
-
-  jwkPairToPrvKey: function(jwkp) {
-    const prv = KEYUTIL.getKey(jwkp.prv);
+  jwkToPrvKey: function(jwk) {
+    const prv = KEYUTIL.getKey(jwk);
     prv.pubKeyASN1 = this.getPubKeyASN1(prv);
     return prv;
   },
@@ -75,6 +68,14 @@ export default {
     return new Buffer(hex, `hex`).toString(`base64`);
   },
 
+  _generateAndSerializeKey: function() {
+    const kp = this.generateKeyPair();
+    myKey = kp.prvKeyObj;
+    myKey.pubKeyASN1 = this.getPubKeyASN1(kp.pubKeyObj);
+    const k = KEYUTIL.getJWKFromKey(myKey);
+    return JSON.stringify(k);
+  },
+
   getDefaultKey: function(datadir) {
     if (myKey) {
       return myKey;
@@ -84,26 +85,18 @@ export default {
       const privKeyFile = `${datadir}/private.key`;
       if (fs.existsSync(privKeyFile)) {
         const f = fs.readFileSync(privKeyFile, `utf8`);
-        const jwkp = JSON.parse(f);
-        myKey = this.jwkPairToPrvKey(jwkp);
+        const jwk = JSON.parse(f);
+        myKey = this.jwkToPrvKey(jwk);
       } else {
-        const kp = this.generateKeyPair();
-        myKey = kp.prvKeyObj;
-        myKey.pubKeyASN1 = this.getPubKeyASN1(kp.pubKeyObj);
-        const k = this.keypairToJWK(kp);
-        fs.writeFile(privKeyFile, JSON.stringify(k));
+        fs.writeFile(privKeyFile, this._generateAndSerializeKey());
         fs.chmodSync(privKeyFile, 400);
       }
     } else {
-      const jwkp = window.localStorage.getItem(`identifi.myKey`);
-      if (jwkp) {
-        myKey = this.jwkPairToPrvKey(JSON.parse(jwkp));
+      const jwk = window.localStorage.getItem(`identifi.myKey`);
+      if (jwk) {
+        myKey = this.jwkToPrvKey(JSON.parse(jwk));
       } else {
-        const kp = this.generateKeyPair();
-        myKey = kp.prvKeyObj;
-        myKey.pubKeyASN1 = this.getPubKeyASN1(kp.pubKeyObj);
-        const k = this.keypairToJWK(kp);
-        window.localStorage.setItem(`identifi.myKey`, JSON.stringify(k));
+        window.localStorage.setItem(`identifi.myKey`, this._generateAndSerializeKey());
       }
     }
     return myKey;
