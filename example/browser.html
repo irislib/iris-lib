@@ -109,6 +109,10 @@ key = util.getDefaultKey();</pre>
     <p>If using js-ipfs, broadcast to IPFS pubsub 'identifi' channel and add to index.
     If using an ipfs proxy, post message to identi.fi which broadcasts it on the pubsub.</p>
 
+    <p>Identifi indexers listening to the pubsub channel update their message and identity
+indexes in respect to the new message, if its author and signer are within the indexer's
+web of trust.</p>
+
     <p>Verification message example:</p>
 
     <pre>
