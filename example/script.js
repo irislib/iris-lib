@@ -23,6 +23,7 @@ async function search() {
 
   let text = `Search results for "${query}":\n`;
   document.getElementById('searchResults').textContent = text;
+  r.sort((a, b) => {return a.trustDistance - b.trustDistance;});
   r.forEach(i => {
     document.getElementById('searchResults').appendChild(i.profileCard());
   });

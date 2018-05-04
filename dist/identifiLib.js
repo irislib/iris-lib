@@ -12972,6 +12972,9 @@ var Identity = function () {
       }
       if (!_Number$isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < _this.trustDistance) {
         _this.trustDistance = parseInt(a.dist);
+        if (util.isUniqueType(a.name)) {
+          _this.linkTo = a;
+        }
       }
       switch (a.name) {
         case 'email':
@@ -13180,11 +13183,14 @@ var Identity = function () {
               r = _context.sent;
 
               searchResults.innerHTML = '';
+              r.sort(function (a, b) {
+                return a.trustDistance - b.trustDistance;
+              });
               r.forEach(function (i) {
                 searchResults.appendChild(i.profileCard());
               });
 
-            case 5:
+            case 6:
             case 'end':
               return _context.stop();
           }
@@ -13725,7 +13731,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.33";
+var version$2 = "0.0.34";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

@@ -23,6 +23,9 @@ class Identity {
       }
       if (!Number.isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < this.trustDistance) {
         this.trustDistance = parseInt(a.dist);
+        if (util.isUniqueType(a.name)) {
+          this.linkTo = a;
+        }
       }
       switch (a.name) {
       case `email`:
@@ -218,6 +221,7 @@ class Identity {
     input.addEventListener(`keyup`, async () => {
       const r = await index.search(input.value);
       searchResults.innerHTML = ``;
+      r.sort((a, b) => {return a.trustDistance - b.trustDistance;});
       r.forEach(i => {
         searchResults.appendChild(i.profileCard());
       });
