@@ -3803,24 +3803,6 @@ var Message = function () {
   return Message;
 }();
 
-// 20.1.2.4 Number.isNaN(number)
-
-
-_export(_export.S, 'Number', {
-  isNaN: function isNaN(number) {
-    // eslint-disable-next-line no-self-compare
-    return number != number;
-  }
-});
-
-var isNan = _core.Number.isNaN;
-
-var isNan$2 = createCommonjsModule(function (module) {
-module.exports = { "default": isNan, __esModule: true };
-});
-
-var _Number$isNaN = unwrapExports(isNan$2);
-
 var runtime = createCommonjsModule(function (module) {
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
@@ -5264,6 +5246,24 @@ exports.default = function (fn) {
 });
 
 var _asyncToGenerator = unwrapExports(asyncToGenerator);
+
+// 20.1.2.4 Number.isNaN(number)
+
+
+_export(_export.S, 'Number', {
+  isNaN: function isNaN(number) {
+    // eslint-disable-next-line no-self-compare
+    return number != number;
+  }
+});
+
+var isNan = _core.Number.isNaN;
+
+var isNan$2 = createCommonjsModule(function (module) {
+module.exports = { "default": isNan, __esModule: true };
+});
+
+var _Number$isNaN = unwrapExports(isNan$2);
 
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
@@ -12961,14 +12961,17 @@ var Identity = function () {
       this.receivedPositive = c.pos;
       this.receivedNegative = c.neg;
       this.receivedNeutral = c.neut;
-      this.trustDistance = c.dist;
     }
     this.receivedNegative |= 0;
     this.receivedPositive |= 0;
     this.receivedNeutral |= 0;
+    this.trustDistance = 1000;
     this.data.attrs.forEach(function (a) {
       if (!_this.linkTo && util.isUniqueType(a.name)) {
         _this.linkTo = a;
+      }
+      if (!_Number$isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < _this.trustDistance) {
+        _this.trustDistance = parseInt(a.dist);
       }
       switch (a.name) {
         case 'email':
@@ -13008,18 +13011,6 @@ var Identity = function () {
           break;
         case 'keyID':
           a.iconStyle = 'fa fa-key';
-          break;
-        case 'coverPhoto':
-          if (a.val.match(/^\/ipfs\/[1-9A-Za-z]{40,60}$/)) {
-            _this.coverPhoto = _this.coverPhoto || {
-              'background-image': 'url(' + (_this.ipfsStorage && _this.ipfsStorage.apiRoot || '') + a.val + ')'
-            };
-          }
-          break;
-        case 'profilePhoto':
-          if (a.val.match(/^\/ipfs\/[1-9A-Za-z]{40,60}$/)) {
-            _this.profilePhoto = '' + (_this.profilePhoto || _this.ipfsStorage && _this.ipfsStorage.apiRoot || '') + a.val;
-          }
           break;
         case 'url':
           a.link = a.val;
@@ -13067,7 +13058,7 @@ var Identity = function () {
       }
     });
     _Object$keys(this.mostVerifiedAttributes).forEach(function (k) {
-      if (['name', 'nickname', 'email', 'url'].indexOf(k) > -1) {
+      if (['name', 'nickname', 'email', 'url', 'coverPhoto', 'profilePhoto'].indexOf(k) > -1) {
         _this.profile[k] = _this.mostVerifiedAttributes[k].attribute.val;
       }
     });
@@ -13251,7 +13242,7 @@ var Identity = function () {
     }
 
     var distance = document.createElement('span');
-    distance.textContent = _Number$isNaN(parseInt(this.trustDistance)) ? '\u2013' : Identity._ordinal(this.trustDistance);
+    distance.textContent = this.trustDistance < 1000 ? Identity._ordinal(this.trustDistance) : '\u2013';
     distance.className = 'identifi-distance';
     distance.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
 
@@ -13734,7 +13725,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.32";
+var version$2 = "0.0.33";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

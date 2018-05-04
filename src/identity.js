@@ -12,14 +12,17 @@ class Identity {
       this.receivedPositive = c.pos;
       this.receivedNegative = c.neg;
       this.receivedNeutral = c.neut;
-      this.trustDistance = c.dist;
     }
     this.receivedNegative |= 0;
     this.receivedPositive |= 0;
     this.receivedNeutral |= 0;
+    this.trustDistance = 1000;
     this.data.attrs.forEach(a => {
       if (!this.linkTo && util.isUniqueType(a.name)) {
         this.linkTo = a;
+      }
+      if (!Number.isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < this.trustDistance) {
+        this.trustDistance = parseInt(a.dist);
       }
       switch (a.name) {
       case `email`:
@@ -59,18 +62,6 @@ class Identity {
         break;
       case `keyID`:
         a.iconStyle = `fa fa-key`;
-        break;
-      case `coverPhoto`:
-        if (a.val.match(/^\/ipfs\/[1-9A-Za-z]{40,60}$/)) {
-          this.coverPhoto = this.coverPhoto || {
-            'background-image': `url(${(this.ipfsStorage && this.ipfsStorage.apiRoot || ``)}${a.val})`
-          };
-        }
-        break;
-      case `profilePhoto`:
-        if (a.val.match(/^\/ipfs\/[1-9A-Za-z]{40,60}$/)) {
-          this.profilePhoto = `${this.profilePhoto || (this.ipfsStorage && this.ipfsStorage.apiRoot || ``)}${a.val}`;
-        }
         break;
       case `url`:
         a.link = a.val;
@@ -118,7 +109,7 @@ class Identity {
       }
     });
     Object.keys(this.mostVerifiedAttributes).forEach(k => {
-      if ([`name`, `nickname`, `email`, `url`].indexOf(k) > - 1) {
+      if ([`name`, `nickname`, `email`, `url`, `coverPhoto`, `profilePhoto`].indexOf(k) > - 1) {
         this.profile[k] = this.mostVerifiedAttributes[k].attribute.val;
       }
     });
@@ -361,7 +352,7 @@ class Identity {
     }
 
     const distance = document.createElement(`span`);
-    distance.textContent = Number.isNaN(parseInt(this.trustDistance)) ? `–` : Identity._ordinal(this.trustDistance);
+    distance.textContent = this.trustDistance < 1000 ? Identity._ordinal(this.trustDistance) : `–`;
     distance.className = `identifi-distance`;
     distance.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
 
