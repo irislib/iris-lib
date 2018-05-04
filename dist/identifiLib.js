@@ -12955,6 +12955,7 @@ var Identity = function () {
 
     this.data = data;
     this.profile = {};
+    this.mostVerifiedAttributes = {};
     if (data.attrs.length) {
       var c = data.attrs[0];
       this.receivedPositive = c.pos;
@@ -12975,7 +12976,6 @@ var Identity = function () {
           a.btnStyle = 'btn-success';
           a.link = 'mailto:' + a.val;
           a.quickContact = true;
-          _this.profile.email = _this.profile.email || a.val; // TODO: pick the most verified ones
           break;
         case 'bitcoin_address':
         case 'bitcoin':
@@ -12994,11 +12994,9 @@ var Identity = function () {
           a.iconStyle = 'fa fa-at';
           break;
         case 'nickname':
-          _this.profile.nickname = _this.profile.nickname || a.val;
           a.iconStyle = 'glyphicon glyphicon-font';
           break;
         case 'name':
-          _this.profile.name = _this.profile.name || a.val;
           a.iconStyle = 'glyphicon glyphicon-font';
           break;
         case 'tel':
@@ -13060,6 +13058,18 @@ var Identity = function () {
             a.btnStyle = 'btn-default';
           }
       }
+      var keyExists = _Object$keys(_this.mostVerifiedAttributes).indexOf(a.name) > -1;
+      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > _this.mostVerifiedAttributes[a.name].verificationScore)) {
+        _this.mostVerifiedAttributes[a.name] = {
+          attribute: a,
+          verificationScore: a.conf - a.ref
+        };
+      }
+    });
+    _Object$keys(this.mostVerifiedAttributes).forEach(function (k) {
+      if (['name', 'nickname', 'email', 'url'].indexOf(k) > -1) {
+        _this.profile[k] = _this.mostVerifiedAttributes[k].attribute.val;
+      }
     });
   }
 
@@ -13086,15 +13096,7 @@ var Identity = function () {
   };
 
   Identity.prototype.verified = function verified(attribute) {
-    var v = void 0;
-    var best = 0;
-    this.data.attrs.forEach(function (a) {
-      if (a.name === attribute && a.conf * 2 > a.ref * 3 && a.conf - a.ref > best) {
-        v = a.val;
-        best = a.conf - a.ref;
-      }
-    });
-    return v;
+    return this.mostVerifiedAttributes.hasOwnProperty(attribute) ? this.mostVerifiedAttributes[attribute].attribute.val : undefined;
   };
 
   Identity.prototype.profileCard = function profileCard() {

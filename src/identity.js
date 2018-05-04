@@ -6,6 +6,7 @@ class Identity {
   constructor(data) {
     this.data = data;
     this.profile = {};
+    this.mostVerifiedAttributes = {};
     if (data.attrs.length) {
       const c = data.attrs[0];
       this.receivedPositive = c.pos;
@@ -26,7 +27,6 @@ class Identity {
         a.btnStyle = `btn-success`;
         a.link = `mailto:${a.val}`;
         a.quickContact = true;
-        this.profile.email = this.profile.email || a.val; // TODO: pick the most verified ones
         break;
       case `bitcoin_address`:
       case `bitcoin`:
@@ -45,11 +45,9 @@ class Identity {
         a.iconStyle = `fa fa-at`;
         break;
       case `nickname`:
-        this.profile.nickname = this.profile.nickname || a.val;
         a.iconStyle = `glyphicon glyphicon-font`;
         break;
       case `name`:
-        this.profile.name = this.profile.name || a.val;
         a.iconStyle = `glyphicon glyphicon-font`;
         break;
       case `tel`:
@@ -111,6 +109,18 @@ class Identity {
           a.btnStyle = `btn-default`;
         }
       }
+      const keyExists = Object.keys(this.mostVerifiedAttributes).indexOf(a.name) > - 1;
+      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > this.mostVerifiedAttributes[a.name].verificationScore)) {
+        this.mostVerifiedAttributes[a.name] = {
+          attribute: a,
+          verificationScore: a.conf - a.ref
+        };
+      }
+    });
+    Object.keys(this.mostVerifiedAttributes).forEach(k => {
+      if ([`name`, `nickname`, `email`, `url`].indexOf(k) > - 1) {
+        this.profile[k] = this.mostVerifiedAttributes[k].attribute.val;
+      }
     });
   }
 
@@ -136,15 +146,7 @@ class Identity {
   }
 
   verified(attribute) {
-    let v;
-    let best = 0;
-    this.data.attrs.forEach(a => {
-      if (a.name === attribute && a.conf * 2 > a.ref * 3 && a.conf - a.ref > best) {
-        v = a.val;
-        best = a.conf - a.ref;
-      }
-    });
-    return v;
+    return this.mostVerifiedAttributes.hasOwnProperty(attribute) ? this.mostVerifiedAttributes[attribute].attribute.val : undefined;
   }
 
   profileCard() {
