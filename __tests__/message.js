@@ -9,16 +9,36 @@ describe('Message', function() {
   let msg;
   msg = void 0;
   describe('createRating method', function() {
-    beforeAll(function() {
-      return msg = Message.createRating({
+    test('should create a rating message', function() {
+      msg = Message.createRating({
         author: [['email', 'alice@example.com']],
         recipient: [['email', 'bob@example.com']],
         rating: 5,
         comment: 'Good guy'
       });
-    });
-    test('should create a message', function() {
       expect(msg).toHaveProperty('signedData.timestamp');
+      expect(msg.signedData.type).toEqual('rating');
+    });
+    test('should use signing key as author if not defined', function() {
+      msg = Message.createRating({
+        recipient: [['email', 'bob@example.com']],
+        rating: 5,
+        comment: 'Good guy'
+      });
+      const defaultKey = util.getDefaultKey('.');
+      expect(msg).toHaveProperty('signedData.author');
+      expect(JSON.stringify(msg.signedData.author)).toEqual('[["keyID","' + defaultKey.keyID + '"]]');
+    });
+  });
+  describe('createVerification method', function() {
+    test('should create a verification message', function() {
+      msg = Message.createVerification({
+        author: [['email', 'alice@example.com']],
+        recipient: [['email', 'bob@example.com']],
+        comment: 'Good guy'
+      });
+      expect(msg).toHaveProperty('signedData.timestamp');
+      expect(msg.signedData.type).toEqual('verification');
     });
   });
   describe('Validation', function() {

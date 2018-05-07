@@ -3556,12 +3556,14 @@ var util = {
   jwkToPrvKey: function jwkToPrvKey(jwk) {
     var prv = KEYUTIL_1.getKey(jwk);
     prv.pubKeyASN1 = this.getPubKeyASN1(prv);
+    prv.keyID = this.getHash(prv.pubKeyASN1);
     return prv;
   },
 
   generateKey: function generateKey() {
     var key = this.generateKeyPair();
     key.prvKeyObj.pubKeyASN1 = this.getPubKeyASN1(key.pubKeyObj);
+    key.prvKeyObj.keyID = this.getHash(key.prvKeyObj.pubKeyASN1);
     return key.prvKeyObj;
   },
 
@@ -3574,11 +3576,14 @@ var util = {
     var kp = this.generateKeyPair();
     myKey = kp.prvKeyObj;
     myKey.pubKeyASN1 = this.getPubKeyASN1(kp.pubKeyObj);
+    myKey.keyID = this.getHash(myKey.pubKeyASN1);
     var k = KEYUTIL_1.getJWKFromKey(myKey);
     return _JSON$stringify(k);
   },
 
-  getDefaultKey: function getDefaultKey(datadir) {
+  getDefaultKey: function getDefaultKey() {
+    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
+
     if (myKey) {
       return myKey;
     }
@@ -3628,7 +3633,7 @@ var Message = function () {
     this.validate();
   }
 
-  Message.prototype.getSignerKeyHash = function getSignerKeyHash() {
+  Message.prototype.getSignerKeyID = function getSignerKeyID() {
     return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
   };
 
@@ -3653,7 +3658,7 @@ var Message = function () {
     var i = void 0;
     var authorKeyID = void 0;
     if (this.jwsHeader) {
-      this.signerKeyHash = this.getSignerKeyHash();
+      this.signerKeyHash = this.getSignerKeyID();
     }
     for (i = 0; i < d.author.length; i++) {
       if (d.author[i].length !== 2) {
@@ -3734,6 +3739,9 @@ var Message = function () {
   };
 
   Message.create = function create(signedData) {
+    if (!signedData.author) {
+      signedData.author = [['keyID', util.getDefaultKey().keyID]];
+    }
     signedData.timestamp = signedData.timestamp || new Date().toISOString();
     signedData.context = signedData.context || 'identifi';
     return new Message(signedData);

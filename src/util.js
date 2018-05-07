@@ -54,12 +54,14 @@ export default {
   jwkToPrvKey: function(jwk) {
     const prv = KEYUTIL.getKey(jwk);
     prv.pubKeyASN1 = this.getPubKeyASN1(prv);
+    prv.keyID = this.getHash(prv.pubKeyASN1);
     return prv;
   },
 
   generateKey: function() {
     const key = this.generateKeyPair();
     key.prvKeyObj.pubKeyASN1 = this.getPubKeyASN1(key.pubKeyObj);
+    key.prvKeyObj.keyID = this.getHash(key.prvKeyObj.pubKeyASN1);
     return key.prvKeyObj;
   },
 
@@ -72,11 +74,12 @@ export default {
     const kp = this.generateKeyPair();
     myKey = kp.prvKeyObj;
     myKey.pubKeyASN1 = this.getPubKeyASN1(kp.pubKeyObj);
+    myKey.keyID = this.getHash(myKey.pubKeyASN1);
     const k = KEYUTIL.getJWKFromKey(myKey);
     return JSON.stringify(k);
   },
 
-  getDefaultKey: function(datadir) {
+  getDefaultKey: function(datadir = `.`) {
     if (myKey) {
       return myKey;
     }

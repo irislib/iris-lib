@@ -14,7 +14,7 @@ class Message {
     this.validate();
   }
 
-  getSignerKeyHash() {
+  getSignerKeyID() {
     return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
   }
 
@@ -29,7 +29,7 @@ class Message {
     let i;
     let authorKeyID;
     if (this.jwsHeader) {
-      this.signerKeyHash = this.getSignerKeyHash();
+      this.signerKeyHash = this.getSignerKeyID();
     }
     for (i = 0;i < d.author.length;i ++) {
       if (d.author[i].length !== 2) {throw new ValidationError(`${errorMsg} Invalid author: ${d.author[i].toString()}`);}
@@ -79,6 +79,9 @@ class Message {
   }
 
   static create(signedData) {
+    if (!signedData.author) {
+      signedData.author = [[`keyID`, util.getDefaultKey().keyID]];
+    }
     signedData.timestamp = signedData.timestamp || (new Date()).toISOString();
     signedData.context = signedData.context || `identifi`;
     return new Message(signedData);

@@ -22,8 +22,8 @@
     Verifications from your web of trust are used to bundle together
     attributes into Identity objects.</p>
 
-    <p>Identifi-lib can be used to read and write <b>Indexes</b> of Messages and
-    Identities. An Identifi <i>index root</i> typically contains four indexes:
+    <p>Identifi-lib can be used to read and write <b>Indices</b> of Messages and
+    Identities. An Identifi <i>index root</i> typically contains four indices:
     <i>messagesByTimestamp</i>, <i>messagesByTrustDistance</i>,
     <i>identitiesByTrustDistance</i> and <i>identitiesBySearchKey</i>.</p>
 
@@ -32,7 +32,7 @@
       https://identi.fi/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs
     </a></p>
 
-    <p>Identifi messages and indexes are stored on the distributed, censorship-resistant
+    <p>Identifi messages and indices are stored on the distributed, censorship-resistant
     IPFS network</p>
 
     <h2>Including the library</h2>
@@ -110,8 +110,8 @@ key = util.getDefaultKey();</pre>
     If using an ipfs proxy, post message to identi.fi which broadcasts it on the pubsub.</p>
 
     <p>Identifi indexers listening to the pubsub channel update their message and identity
-indexes in respect to the new message, if its author and signer are within the indexer's
-web of trust.</p>
+    indices in respect to the new message, if its author and signer are within the indexer's
+    web of trust.</p>
 
     <p>Verification message example:</p>
 
@@ -129,19 +129,44 @@ web of trust.</p>
     </pre>
 
     <h2>Index.create()</h2>
-    <p>To be implemented.</p>
+    <p>To be implemented. Currently, Identifi indices can be only created with
+    <a href="https://github.com/identifi/identifi-daemon">identifi-daemon.</a></p>
 
-    <p>Indexes are <a href="https://github.com/mmalmi/merkle-btree">merkle-btrees</a>
+    <p>Indices are <a href="https://github.com/mmalmi/merkle-btree">merkle-btrees</a>
     that anyone can easily write messages to, essentially creating a fork of the original
     index. Since it's a btree, you only need to rewrite one branch, not the whole tree.</p>
 
     <p>As of April 2018, the JS-IPFS team <a href="https://github.com/ipfs/js-ipfs/issues/209#issuecomment-382593283">
     is working on</a> adding IPNS support, which is needed
-    for browser users of identifi to maintain permanent IPNS pointers to their indexes,
+    for browser users of identifi to maintain permanent IPNS pointers to their indices,
     whose IPFS hash changes on every write. Currently, only
     <a href="https://github.com/identifi/identifi-daemon">identifi-daemon</a> which
     connects to <a href="https://github.com/ipfs/go-ipfs">go-ipfs</a> can maintain
     the index at a permanent address.</p>
+
+    <h3>How to build an identifi index</h3>
+    <p>Start by writing positive ratings to the people or organizations that you trust
+    (trust distance 0). Iterate up to the wanted trust distance:</p>
+    <ol>
+      <li>Add messages to messagesByTrustDistance</li>
+      <li>Add recipient attributes to helper index trustDistancesByAttribute (if not already there)</li>
+      <li>For each attribute that is not already in identitiesByAttribute index</li>
+        <ol>
+          <li>Get verification messages that connect the attribute to other attributes</li>
+          <li>If the other attributes are already in identitiesByAttribute, add attribute to the existing identity</li>
+          <li>If not, add a new identity with the connected attributes to identitiesByAttribute</li>
+        </ol>
+      </li>
+      <li>Get messages authored by attributes whose trust distance is at the current level of trust distance iteration</li>
+    </ol>
+
+    <h3>messagesByTrustDistance</h3>
+    <p>This index is built first. First, you need to write some trust rating messages
+    (trust distance 0) to people or organizations that you trust (trust distance 1). Then you can
+    fetch rating messages written by the people they trust (trust distance 2) and so on.</p>
+
+    <h3>attributesByTrustDistance</h3>
+    <p>This is a helper index that is only needed locally to build identity indices.</p>
 
     <h2>So, what about saving the world?</h2>
     <p>Identifi's web-of-trust approach to identity management could be more resilient,
