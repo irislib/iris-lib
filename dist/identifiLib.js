@@ -13327,7 +13327,7 @@ module.exports = { "default": values, __esModule: true };
 var _Object$values = unwrapExports(values$2);
 
 var DEFAULT_INDEX = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
-var DEFAULT_STATIC_FALLBACK_INDEX = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
+var DEFAULT_STATIC_FALLBACK_INDEX = '/ipfs/QmPxLM631zJQ12tUDWs55LkGqqroFZKHeLjAZ2XwL9Miu3';
 var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io', 'https://ipfs.infura.io', 'https://www.eternum.io'];
 var IPFS_INDEX_WIDTH = 200;
 var DEFAULT_TIMEOUT = 10000;
@@ -13336,6 +13336,14 @@ var Index = function () {
   function Index() {
     _classCallCheck(this, Index);
   }
+
+  Index.create = function create() {
+    // TODO: make it work with js-ipfs && IPFSStorage
+    this.storage = new merkleBtree.RAMStorage();
+    this.identitiesBySearchKey = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+    this.messagesByTimestamp = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+    return true;
+  };
 
   Index.load = function () {
     var _ref = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee(indexRoot, ipfs) {

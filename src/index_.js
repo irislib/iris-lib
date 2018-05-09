@@ -5,7 +5,7 @@ import Identity from './identity';
 import fetch from 'node-fetch';
 
 const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
-const DEFAULT_STATIC_FALLBACK_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
+const DEFAULT_STATIC_FALLBACK_INDEX = `/ipfs/QmPxLM631zJQ12tUDWs55LkGqqroFZKHeLjAZ2XwL9Miu3`;
 const DEFAULT_IPFS_PROXIES = [
   `https://identi.fi`,
   `https://ipfs.io`,
@@ -16,6 +16,13 @@ const IPFS_INDEX_WIDTH = 200;
 const DEFAULT_TIMEOUT = 10000;
 
 class Index {
+  static create() { // TODO: make it work with js-ipfs && IPFSStorage
+    this.storage = new btree.RAMStorage();
+    this.identitiesBySearchKey = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+    this.messagesByTimestamp = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+    return true;
+  }
+
   static async load(indexRoot, ipfs) {
     const i = new Index();
     await i.init(indexRoot, ipfs);
