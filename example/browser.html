@@ -145,28 +145,22 @@ key = util.getDefaultKey();</pre>
     the index at a permanent address.</p>
 
     <h3>How to build an identifi index</h3>
-    <p>Start by writing positive ratings to the people or organizations that you trust
-    (trust distance 0). Iterate up to the wanted trust distance:</p>
+    <p>Start by writing positive rating messages to the people or organizations that you trust
+    (message author is you, trust distance 0). Iterate up to the wanted trust distance:</p>
     <ol>
-      <li>Add messages to messagesByTrustDistance</li>
-      <li>Add recipient attributes to helper index trustDistancesByAttribute (if not already there)</li>
+      <li>Add the messages to messagesByTrustDistance</li>
+      <li>Add the recipient attributes of the messages to helper index trustDistancesByAttribute (if not already there)</li>
+      <li>If recipient attribute type is identifiIndexURI, add to identifiIndexList</li>
       <li>For each attribute that is not already in identitiesByAttribute index</li>
         <ol>
-          <li>Get verification messages that connect the attribute to other attributes</li>
+          <li>Search indexes on identifiIndexList to get verification messages where the attribute is marked as recipient (messages that connect the attribute to other attributes)</li>
           <li>If the other attributes are already in identitiesByAttribute, add attribute to the existing identity</li>
           <li>If not, add a new identity with the connected attributes to identitiesByAttribute</li>
         </ol>
       </li>
-      <li>Get messages authored by attributes whose trust distance is at the current level of trust distance iteration</li>
+      <li>Add message to sentMessages index of the author and receivedMessages index of the recipient identity.</li>
+      <li>Search indexes on identifiIndexList to get messages authored by attributes whose trust distance is at the current level of trust distance iteration</li>
     </ol>
-
-    <h3>messagesByTrustDistance</h3>
-    <p>This index is built first. First, you need to write some trust rating messages
-    (trust distance 0) to people or organizations that you trust (trust distance 1). Then you can
-    fetch rating messages written by the people they trust (trust distance 2) and so on.</p>
-
-    <h3>attributesByTrustDistance</h3>
-    <p>This is a helper index that is only needed locally to build identity indices.</p>
 
     <h2>So, what about saving the world?</h2>
     <p>Identifi's web-of-trust approach to identity management could be more resilient,

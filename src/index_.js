@@ -5,7 +5,7 @@ import Identity from './identity';
 import fetch from 'node-fetch';
 
 const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
-// const DEFAULT_STATIC_FALLBACK_INDEX = `/ipfs/QmbmY22p7ZptQj69fNis83qcgvp49aHxuizJZxaMVofALh`;
+const DEFAULT_STATIC_FALLBACK_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
 const DEFAULT_IPFS_PROXIES = [
   `https://identi.fi`,
   `https://ipfs.io`,
@@ -13,6 +13,7 @@ const DEFAULT_IPFS_PROXIES = [
   `https://www.eternum.io`
 ];
 const IPFS_INDEX_WIDTH = 200;
+const DEFAULT_TIMEOUT = 10000;
 
 class Index {
   static async load(indexRoot, ipfs) {
@@ -21,14 +22,39 @@ class Index {
     return i;
   }
 
-  async init(indexRoot = DEFAULT_INDEX, ipfs = DEFAULT_IPFS_PROXIES) {
+  async init(indexRoot, ipfs = DEFAULT_IPFS_PROXIES, timeout = DEFAULT_TIMEOUT) {
+    let useDefaultIndex = false;
+    if (typeof indexRoot === `undefined`) {
+      useDefaultIndex = true;
+      indexRoot = DEFAULT_INDEX;
+    }
     if (typeof ipfs === `string`) {
       this.storage = new btree.IPFSGatewayStorage(ipfs);
     } else if (Array.isArray(ipfs)) {
       let url;
       for (let i = 0;i < ipfs.length;i ++) {
-        const res = await fetch(`${ipfs[i]}${indexRoot}`).catch(() => { return {}; });
-        if (res.ok && res.status === 200) {
+        let res;
+        let u = `${ipfs[i]}${indexRoot}`;
+        try {
+          res = await util.timeoutPromise(fetch(u, {timeout}).catch(() => {}), timeout);
+          if (!res) {console.log(`fetching ${u} timed out`);}
+        } catch (e) {
+          console.log(`fetching ${u} failed:`, e);
+        }
+        if (!(res && res.ok && res.status === 200) && useDefaultIndex) { // try static fallback
+          u = `${ipfs[i]}${DEFAULT_STATIC_FALLBACK_INDEX}`;
+          try {
+            res = await util.timeoutPromise(fetch(u, {timeout}).catch(() => {}), timeout);
+            if (res) {
+              indexRoot = DEFAULT_STATIC_FALLBACK_INDEX;
+            } else {
+              console.log(`fetching ${u} timed out`);
+            }
+          } catch (e) {
+            console.log(`fetching ${u} failed:`, e);
+          }
+        }
+        if (res && res.ok && res.status === 200) {
           url = ipfs[i];
           break;
         }

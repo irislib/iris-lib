@@ -3470,6 +3470,643 @@ exports.default = function (subClass, superClass) {
 
 var _inherits = unwrapExports(inherits);
 
+// getting tag from 19.1.3.6 Object.prototype.toString()
+
+var TAG$1 = _wks('toStringTag');
+// ES3 wrong here
+var ARG = _cof(function () { return arguments; }()) == 'Arguments';
+
+// fallback for IE11 Script Access Denied error
+var tryGet = function (it, key) {
+  try {
+    return it[key];
+  } catch (e) { /* empty */ }
+};
+
+var _classof = function (it) {
+  var O, T, B;
+  return it === undefined ? 'Undefined' : it === null ? 'Null'
+    // @@toStringTag case
+    : typeof (T = tryGet(O = Object(it), TAG$1)) == 'string' ? T
+    // builtinTag case
+    : ARG ? _cof(O)
+    // ES3 arguments fallback
+    : (B = _cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
+};
+
+var _anInstance = function (it, Constructor, name, forbiddenField) {
+  if (!(it instanceof Constructor) || (forbiddenField !== undefined && forbiddenField in it)) {
+    throw TypeError(name + ': incorrect invocation!');
+  } return it;
+};
+
+// call something on iterator step with safe closing on error
+
+var _iterCall = function (iterator, fn, value, entries) {
+  try {
+    return entries ? fn(_anObject(value)[0], value[1]) : fn(value);
+  // 7.4.6 IteratorClose(iterator, completion)
+  } catch (e) {
+    var ret = iterator['return'];
+    if (ret !== undefined) _anObject(ret.call(iterator));
+    throw e;
+  }
+};
+
+// check on default Array iterator
+
+var ITERATOR$1 = _wks('iterator');
+var ArrayProto = Array.prototype;
+
+var _isArrayIter = function (it) {
+  return it !== undefined && (_iterators.Array === it || ArrayProto[ITERATOR$1] === it);
+};
+
+var ITERATOR$2 = _wks('iterator');
+
+var core_getIteratorMethod = _core.getIteratorMethod = function (it) {
+  if (it != undefined) return it[ITERATOR$2]
+    || it['@@iterator']
+    || _iterators[_classof(it)];
+};
+
+var _forOf = createCommonjsModule(function (module) {
+var BREAK = {};
+var RETURN = {};
+var exports = module.exports = function (iterable, entries, fn, that, ITERATOR) {
+  var iterFn = ITERATOR ? function () { return iterable; } : core_getIteratorMethod(iterable);
+  var f = _ctx(fn, that, entries ? 2 : 1);
+  var index = 0;
+  var length, step, iterator, result;
+  if (typeof iterFn != 'function') throw TypeError(iterable + ' is not iterable!');
+  // fast case for arrays with default iterator
+  if (_isArrayIter(iterFn)) for (length = _toLength(iterable.length); length > index; index++) {
+    result = entries ? f(_anObject(step = iterable[index])[0], step[1]) : f(iterable[index]);
+    if (result === BREAK || result === RETURN) return result;
+  } else for (iterator = iterFn.call(iterable); !(step = iterator.next()).done;) {
+    result = _iterCall(iterator, f, step.value, entries);
+    if (result === BREAK || result === RETURN) return result;
+  }
+};
+exports.BREAK = BREAK;
+exports.RETURN = RETURN;
+});
+
+// 7.3.20 SpeciesConstructor(O, defaultConstructor)
+
+
+var SPECIES = _wks('species');
+var _speciesConstructor = function (O, D) {
+  var C = _anObject(O).constructor;
+  var S;
+  return C === undefined || (S = _anObject(C)[SPECIES]) == undefined ? D : _aFunction(S);
+};
+
+// fast apply, http://jsperf.lnkit.com/fast-apply/5
+var _invoke = function (fn, args, that) {
+  var un = that === undefined;
+  switch (args.length) {
+    case 0: return un ? fn()
+                      : fn.call(that);
+    case 1: return un ? fn(args[0])
+                      : fn.call(that, args[0]);
+    case 2: return un ? fn(args[0], args[1])
+                      : fn.call(that, args[0], args[1]);
+    case 3: return un ? fn(args[0], args[1], args[2])
+                      : fn.call(that, args[0], args[1], args[2]);
+    case 4: return un ? fn(args[0], args[1], args[2], args[3])
+                      : fn.call(that, args[0], args[1], args[2], args[3]);
+  } return fn.apply(that, args);
+};
+
+var process = _global.process;
+var setTask = _global.setImmediate;
+var clearTask = _global.clearImmediate;
+var MessageChannel = _global.MessageChannel;
+var Dispatch = _global.Dispatch;
+var counter = 0;
+var queue = {};
+var ONREADYSTATECHANGE = 'onreadystatechange';
+var defer;
+var channel;
+var port;
+var run = function () {
+  var id = +this;
+  // eslint-disable-next-line no-prototype-builtins
+  if (queue.hasOwnProperty(id)) {
+    var fn = queue[id];
+    delete queue[id];
+    fn();
+  }
+};
+var listener = function (event) {
+  run.call(event.data);
+};
+// Node.js 0.9+ & IE10+ has setImmediate, otherwise:
+if (!setTask || !clearTask) {
+  setTask = function setImmediate(fn) {
+    var args = [];
+    var i = 1;
+    while (arguments.length > i) args.push(arguments[i++]);
+    queue[++counter] = function () {
+      // eslint-disable-next-line no-new-func
+      _invoke(typeof fn == 'function' ? fn : Function(fn), args);
+    };
+    defer(counter);
+    return counter;
+  };
+  clearTask = function clearImmediate(id) {
+    delete queue[id];
+  };
+  // Node.js 0.8-
+  if (_cof(process) == 'process') {
+    defer = function (id) {
+      process.nextTick(_ctx(run, id, 1));
+    };
+  // Sphere (JS game engine) Dispatch API
+  } else if (Dispatch && Dispatch.now) {
+    defer = function (id) {
+      Dispatch.now(_ctx(run, id, 1));
+    };
+  // Browsers with MessageChannel, includes WebWorkers
+  } else if (MessageChannel) {
+    channel = new MessageChannel();
+    port = channel.port2;
+    channel.port1.onmessage = listener;
+    defer = _ctx(port.postMessage, port, 1);
+  // Browsers with postMessage, skip WebWorkers
+  // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
+  } else if (_global.addEventListener && typeof postMessage == 'function' && !_global.importScripts) {
+    defer = function (id) {
+      _global.postMessage(id + '', '*');
+    };
+    _global.addEventListener('message', listener, false);
+  // IE8-
+  } else if (ONREADYSTATECHANGE in _domCreate('script')) {
+    defer = function (id) {
+      _html.appendChild(_domCreate('script'))[ONREADYSTATECHANGE] = function () {
+        _html.removeChild(this);
+        run.call(id);
+      };
+    };
+  // Rest old browsers
+  } else {
+    defer = function (id) {
+      setTimeout(_ctx(run, id, 1), 0);
+    };
+  }
+}
+var _task = {
+  set: setTask,
+  clear: clearTask
+};
+
+var macrotask = _task.set;
+var Observer = _global.MutationObserver || _global.WebKitMutationObserver;
+var process$1 = _global.process;
+var Promise$1 = _global.Promise;
+var isNode = _cof(process$1) == 'process';
+
+var _microtask = function () {
+  var head, last, notify;
+
+  var flush = function () {
+    var parent, fn;
+    if (isNode && (parent = process$1.domain)) parent.exit();
+    while (head) {
+      fn = head.fn;
+      head = head.next;
+      try {
+        fn();
+      } catch (e) {
+        if (head) notify();
+        else last = undefined;
+        throw e;
+      }
+    } last = undefined;
+    if (parent) parent.enter();
+  };
+
+  // Node.js
+  if (isNode) {
+    notify = function () {
+      process$1.nextTick(flush);
+    };
+  // browsers with MutationObserver, except iOS Safari - https://github.com/zloirock/core-js/issues/339
+  } else if (Observer && !(_global.navigator && _global.navigator.standalone)) {
+    var toggle = true;
+    var node = document.createTextNode('');
+    new Observer(flush).observe(node, { characterData: true }); // eslint-disable-line no-new
+    notify = function () {
+      node.data = toggle = !toggle;
+    };
+  // environments with maybe non-completely correct, but existent Promise
+  } else if (Promise$1 && Promise$1.resolve) {
+    var promise = Promise$1.resolve();
+    notify = function () {
+      promise.then(flush);
+    };
+  // for other environments - macrotask based on:
+  // - setImmediate
+  // - MessageChannel
+  // - window.postMessag
+  // - onreadystatechange
+  // - setTimeout
+  } else {
+    notify = function () {
+      // strange IE + webpack dev server bug - use .call(global)
+      macrotask.call(_global, flush);
+    };
+  }
+
+  return function (fn) {
+    var task = { fn: fn, next: undefined };
+    if (last) last.next = task;
+    if (!head) {
+      head = task;
+      notify();
+    } last = task;
+  };
+};
+
+// 25.4.1.5 NewPromiseCapability(C)
+
+
+function PromiseCapability(C) {
+  var resolve, reject;
+  this.promise = new C(function ($$resolve, $$reject) {
+    if (resolve !== undefined || reject !== undefined) throw TypeError('Bad Promise constructor');
+    resolve = $$resolve;
+    reject = $$reject;
+  });
+  this.resolve = _aFunction(resolve);
+  this.reject = _aFunction(reject);
+}
+
+var f$7 = function (C) {
+  return new PromiseCapability(C);
+};
+
+var _newPromiseCapability = {
+	f: f$7
+};
+
+var _perform = function (exec) {
+  try {
+    return { e: false, v: exec() };
+  } catch (e) {
+    return { e: true, v: e };
+  }
+};
+
+var _promiseResolve = function (C, x) {
+  _anObject(C);
+  if (_isObject(x) && x.constructor === C) return x;
+  var promiseCapability = _newPromiseCapability.f(C);
+  var resolve = promiseCapability.resolve;
+  resolve(x);
+  return promiseCapability.promise;
+};
+
+var _redefineAll = function (target, src, safe) {
+  for (var key in src) {
+    if (safe && target[key]) target[key] = src[key];
+    else _hide(target, key, src[key]);
+  } return target;
+};
+
+var SPECIES$1 = _wks('species');
+
+var _setSpecies = function (KEY) {
+  var C = typeof _core[KEY] == 'function' ? _core[KEY] : _global[KEY];
+  if (_descriptors && C && !C[SPECIES$1]) _objectDp.f(C, SPECIES$1, {
+    configurable: true,
+    get: function () { return this; }
+  });
+};
+
+var ITERATOR$3 = _wks('iterator');
+var SAFE_CLOSING = false;
+
+try {
+  var riter = [7][ITERATOR$3]();
+  riter['return'] = function () { SAFE_CLOSING = true; };
+  // eslint-disable-next-line no-throw-literal
+  
+} catch (e) { /* empty */ }
+
+var _iterDetect = function (exec, skipClosing) {
+  if (!skipClosing && !SAFE_CLOSING) return false;
+  var safe = false;
+  try {
+    var arr = [7];
+    var iter = arr[ITERATOR$3]();
+    iter.next = function () { return { done: safe = true }; };
+    arr[ITERATOR$3] = function () { return iter; };
+    exec(arr);
+  } catch (e) { /* empty */ }
+  return safe;
+};
+
+var task = _task.set;
+var microtask = _microtask();
+
+
+
+var PROMISE = 'Promise';
+var TypeError$1 = _global.TypeError;
+var process$2 = _global.process;
+var $Promise = _global[PROMISE];
+var isNode$1 = _classof(process$2) == 'process';
+var empty = function () { /* empty */ };
+var Internal;
+var newGenericPromiseCapability;
+var OwnPromiseCapability;
+var Wrapper;
+var newPromiseCapability$1 = newGenericPromiseCapability = _newPromiseCapability.f;
+
+var USE_NATIVE$1 = !!function () {
+  try {
+    // correct subclassing with @@species support
+    var promise = $Promise.resolve(1);
+    var FakePromise = (promise.constructor = {})[_wks('species')] = function (exec) {
+      exec(empty, empty);
+    };
+    // unhandled rejections tracking support, NodeJS Promise without it fails @@species test
+    return (isNode$1 || typeof PromiseRejectionEvent == 'function') && promise.then(empty) instanceof FakePromise;
+  } catch (e) { /* empty */ }
+}();
+
+// helpers
+var isThenable = function (it) {
+  var then;
+  return _isObject(it) && typeof (then = it.then) == 'function' ? then : false;
+};
+var notify = function (promise, isReject) {
+  if (promise._n) return;
+  promise._n = true;
+  var chain = promise._c;
+  microtask(function () {
+    var value = promise._v;
+    var ok = promise._s == 1;
+    var i = 0;
+    var run = function (reaction) {
+      var handler = ok ? reaction.ok : reaction.fail;
+      var resolve = reaction.resolve;
+      var reject = reaction.reject;
+      var domain = reaction.domain;
+      var result, then;
+      try {
+        if (handler) {
+          if (!ok) {
+            if (promise._h == 2) onHandleUnhandled(promise);
+            promise._h = 1;
+          }
+          if (handler === true) result = value;
+          else {
+            if (domain) domain.enter();
+            result = handler(value);
+            if (domain) domain.exit();
+          }
+          if (result === reaction.promise) {
+            reject(TypeError$1('Promise-chain cycle'));
+          } else if (then = isThenable(result)) {
+            then.call(result, resolve, reject);
+          } else resolve(result);
+        } else reject(value);
+      } catch (e) {
+        reject(e);
+      }
+    };
+    while (chain.length > i) run(chain[i++]); // variable length - can't use forEach
+    promise._c = [];
+    promise._n = false;
+    if (isReject && !promise._h) onUnhandled(promise);
+  });
+};
+var onUnhandled = function (promise) {
+  task.call(_global, function () {
+    var value = promise._v;
+    var unhandled = isUnhandled(promise);
+    var result, handler, console;
+    if (unhandled) {
+      result = _perform(function () {
+        if (isNode$1) {
+          process$2.emit('unhandledRejection', value, promise);
+        } else if (handler = _global.onunhandledrejection) {
+          handler({ promise: promise, reason: value });
+        } else if ((console = _global.console) && console.error) {
+          console.error('Unhandled promise rejection', value);
+        }
+      });
+      // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
+      promise._h = isNode$1 || isUnhandled(promise) ? 2 : 1;
+    } promise._a = undefined;
+    if (unhandled && result.e) throw result.v;
+  });
+};
+var isUnhandled = function (promise) {
+  return promise._h !== 1 && (promise._a || promise._c).length === 0;
+};
+var onHandleUnhandled = function (promise) {
+  task.call(_global, function () {
+    var handler;
+    if (isNode$1) {
+      process$2.emit('rejectionHandled', promise);
+    } else if (handler = _global.onrejectionhandled) {
+      handler({ promise: promise, reason: promise._v });
+    }
+  });
+};
+var $reject = function (value) {
+  var promise = this;
+  if (promise._d) return;
+  promise._d = true;
+  promise = promise._w || promise; // unwrap
+  promise._v = value;
+  promise._s = 2;
+  if (!promise._a) promise._a = promise._c.slice();
+  notify(promise, true);
+};
+var $resolve = function (value) {
+  var promise = this;
+  var then;
+  if (promise._d) return;
+  promise._d = true;
+  promise = promise._w || promise; // unwrap
+  try {
+    if (promise === value) throw TypeError$1("Promise can't be resolved itself");
+    if (then = isThenable(value)) {
+      microtask(function () {
+        var wrapper = { _w: promise, _d: false }; // wrap
+        try {
+          then.call(value, _ctx($resolve, wrapper, 1), _ctx($reject, wrapper, 1));
+        } catch (e) {
+          $reject.call(wrapper, e);
+        }
+      });
+    } else {
+      promise._v = value;
+      promise._s = 1;
+      notify(promise, false);
+    }
+  } catch (e) {
+    $reject.call({ _w: promise, _d: false }, e); // wrap
+  }
+};
+
+// constructor polyfill
+if (!USE_NATIVE$1) {
+  // 25.4.3.1 Promise(executor)
+  $Promise = function Promise(executor) {
+    _anInstance(this, $Promise, PROMISE, '_h');
+    _aFunction(executor);
+    Internal.call(this);
+    try {
+      executor(_ctx($resolve, this, 1), _ctx($reject, this, 1));
+    } catch (err) {
+      $reject.call(this, err);
+    }
+  };
+  // eslint-disable-next-line no-unused-vars
+  Internal = function Promise(executor) {
+    this._c = [];             // <- awaiting reactions
+    this._a = undefined;      // <- checked in isUnhandled reactions
+    this._s = 0;              // <- state
+    this._d = false;          // <- done
+    this._v = undefined;      // <- value
+    this._h = 0;              // <- rejection state, 0 - default, 1 - handled, 2 - unhandled
+    this._n = false;          // <- notify
+  };
+  Internal.prototype = _redefineAll($Promise.prototype, {
+    // 25.4.5.3 Promise.prototype.then(onFulfilled, onRejected)
+    then: function then(onFulfilled, onRejected) {
+      var reaction = newPromiseCapability$1(_speciesConstructor(this, $Promise));
+      reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
+      reaction.fail = typeof onRejected == 'function' && onRejected;
+      reaction.domain = isNode$1 ? process$2.domain : undefined;
+      this._c.push(reaction);
+      if (this._a) this._a.push(reaction);
+      if (this._s) notify(this, false);
+      return reaction.promise;
+    },
+    // 25.4.5.1 Promise.prototype.catch(onRejected)
+    'catch': function (onRejected) {
+      return this.then(undefined, onRejected);
+    }
+  });
+  OwnPromiseCapability = function () {
+    var promise = new Internal();
+    this.promise = promise;
+    this.resolve = _ctx($resolve, promise, 1);
+    this.reject = _ctx($reject, promise, 1);
+  };
+  _newPromiseCapability.f = newPromiseCapability$1 = function (C) {
+    return C === $Promise || C === Wrapper
+      ? new OwnPromiseCapability(C)
+      : newGenericPromiseCapability(C);
+  };
+}
+
+_export(_export.G + _export.W + _export.F * !USE_NATIVE$1, { Promise: $Promise });
+_setToStringTag($Promise, PROMISE);
+_setSpecies(PROMISE);
+Wrapper = _core[PROMISE];
+
+// statics
+_export(_export.S + _export.F * !USE_NATIVE$1, PROMISE, {
+  // 25.4.4.5 Promise.reject(r)
+  reject: function reject(r) {
+    var capability = newPromiseCapability$1(this);
+    var $$reject = capability.reject;
+    $$reject(r);
+    return capability.promise;
+  }
+});
+_export(_export.S + _export.F * (_library || !USE_NATIVE$1), PROMISE, {
+  // 25.4.4.6 Promise.resolve(x)
+  resolve: function resolve(x) {
+    return _promiseResolve(_library && this === Wrapper ? $Promise : this, x);
+  }
+});
+_export(_export.S + _export.F * !(USE_NATIVE$1 && _iterDetect(function (iter) {
+  $Promise.all(iter)['catch'](empty);
+})), PROMISE, {
+  // 25.4.4.1 Promise.all(iterable)
+  all: function all(iterable) {
+    var C = this;
+    var capability = newPromiseCapability$1(C);
+    var resolve = capability.resolve;
+    var reject = capability.reject;
+    var result = _perform(function () {
+      var values = [];
+      var index = 0;
+      var remaining = 1;
+      _forOf(iterable, false, function (promise) {
+        var $index = index++;
+        var alreadyCalled = false;
+        values.push(undefined);
+        remaining++;
+        C.resolve(promise).then(function (value) {
+          if (alreadyCalled) return;
+          alreadyCalled = true;
+          values[$index] = value;
+          --remaining || resolve(values);
+        }, reject);
+      });
+      --remaining || resolve(values);
+    });
+    if (result.e) reject(result.v);
+    return capability.promise;
+  },
+  // 25.4.4.4 Promise.race(iterable)
+  race: function race(iterable) {
+    var C = this;
+    var capability = newPromiseCapability$1(C);
+    var reject = capability.reject;
+    var result = _perform(function () {
+      _forOf(iterable, false, function (promise) {
+        C.resolve(promise).then(capability.resolve, reject);
+      });
+    });
+    if (result.e) reject(result.v);
+    return capability.promise;
+  }
+});
+
+_export(_export.P + _export.R, 'Promise', { 'finally': function (onFinally) {
+  var C = _speciesConstructor(this, _core.Promise || _global.Promise);
+  var isFunction = typeof onFinally == 'function';
+  return this.then(
+    isFunction ? function (x) {
+      return _promiseResolve(C, onFinally()).then(function () { return x; });
+    } : onFinally,
+    isFunction ? function (e) {
+      return _promiseResolve(C, onFinally()).then(function () { throw e; });
+    } : onFinally
+  );
+} });
+
+// https://github.com/tc39/proposal-promise-try
+
+
+
+
+_export(_export.S, 'Promise', { 'try': function (callbackfn) {
+  var promiseCapability = _newPromiseCapability.f(this);
+  var result = _perform(callbackfn);
+  (result.e ? promiseCapability.reject : promiseCapability.resolve)(result.v);
+  return promiseCapability.promise;
+} });
+
+var promise = _core.Promise;
+
+var promise$2 = createCommonjsModule(function (module) {
+module.exports = { "default": promise, __esModule: true };
+});
+
+var _Promise = unwrapExports(promise$2);
+
 // most Object methods by ES6 should accept primitives
 
 
@@ -3502,9 +4139,9 @@ var _Object$keys = unwrapExports(keys$2);
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 var myKey = void 0;
-var isNode = false;
+var isNode$2 = false;
 try {
-  isNode = Object.prototype.toString.call(global$2.process) === '[object process]';
+  isNode$2 = Object.prototype.toString.call(global$2.process) === '[object process]';
 } catch (e) {
   
 }
@@ -3526,7 +4163,7 @@ var util = {
     account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i
   },
 
-  isNode: isNode,
+  isNode: isNode$2,
 
   isUniqueType: function isUniqueType(type) {
     return _Object$keys(this.UNIQUE_ID_VALIDATORS).indexOf(type) > -1;
@@ -3587,7 +4224,7 @@ var util = {
     if (myKey) {
       return myKey;
     }
-    if (isNode) {
+    if (isNode$2) {
       var fs = require('fs');
       var privKeyFile = datadir + '/private.key';
       if (fs.existsSync(privKeyFile)) {
@@ -3607,6 +4244,14 @@ var util = {
       }
     }
     return myKey;
+  },
+  timeoutPromise: function timeoutPromise(promise, timeout) {
+    return _Promise.race([promise, new _Promise(function (resolve) {
+      setTimeout(function () {
+        // console.log('promise timed out');
+        resolve();
+      }, timeout);
+    })]);
   }
 };
 
@@ -4576,643 +5221,6 @@ if (hadRuntime) {
 }
 
 var regenerator = runtimeModule;
-
-// getting tag from 19.1.3.6 Object.prototype.toString()
-
-var TAG$1 = _wks('toStringTag');
-// ES3 wrong here
-var ARG = _cof(function () { return arguments; }()) == 'Arguments';
-
-// fallback for IE11 Script Access Denied error
-var tryGet = function (it, key) {
-  try {
-    return it[key];
-  } catch (e) { /* empty */ }
-};
-
-var _classof = function (it) {
-  var O, T, B;
-  return it === undefined ? 'Undefined' : it === null ? 'Null'
-    // @@toStringTag case
-    : typeof (T = tryGet(O = Object(it), TAG$1)) == 'string' ? T
-    // builtinTag case
-    : ARG ? _cof(O)
-    // ES3 arguments fallback
-    : (B = _cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
-};
-
-var _anInstance = function (it, Constructor, name, forbiddenField) {
-  if (!(it instanceof Constructor) || (forbiddenField !== undefined && forbiddenField in it)) {
-    throw TypeError(name + ': incorrect invocation!');
-  } return it;
-};
-
-// call something on iterator step with safe closing on error
-
-var _iterCall = function (iterator, fn, value, entries) {
-  try {
-    return entries ? fn(_anObject(value)[0], value[1]) : fn(value);
-  // 7.4.6 IteratorClose(iterator, completion)
-  } catch (e) {
-    var ret = iterator['return'];
-    if (ret !== undefined) _anObject(ret.call(iterator));
-    throw e;
-  }
-};
-
-// check on default Array iterator
-
-var ITERATOR$1 = _wks('iterator');
-var ArrayProto = Array.prototype;
-
-var _isArrayIter = function (it) {
-  return it !== undefined && (_iterators.Array === it || ArrayProto[ITERATOR$1] === it);
-};
-
-var ITERATOR$2 = _wks('iterator');
-
-var core_getIteratorMethod = _core.getIteratorMethod = function (it) {
-  if (it != undefined) return it[ITERATOR$2]
-    || it['@@iterator']
-    || _iterators[_classof(it)];
-};
-
-var _forOf = createCommonjsModule(function (module) {
-var BREAK = {};
-var RETURN = {};
-var exports = module.exports = function (iterable, entries, fn, that, ITERATOR) {
-  var iterFn = ITERATOR ? function () { return iterable; } : core_getIteratorMethod(iterable);
-  var f = _ctx(fn, that, entries ? 2 : 1);
-  var index = 0;
-  var length, step, iterator, result;
-  if (typeof iterFn != 'function') throw TypeError(iterable + ' is not iterable!');
-  // fast case for arrays with default iterator
-  if (_isArrayIter(iterFn)) for (length = _toLength(iterable.length); length > index; index++) {
-    result = entries ? f(_anObject(step = iterable[index])[0], step[1]) : f(iterable[index]);
-    if (result === BREAK || result === RETURN) return result;
-  } else for (iterator = iterFn.call(iterable); !(step = iterator.next()).done;) {
-    result = _iterCall(iterator, f, step.value, entries);
-    if (result === BREAK || result === RETURN) return result;
-  }
-};
-exports.BREAK = BREAK;
-exports.RETURN = RETURN;
-});
-
-// 7.3.20 SpeciesConstructor(O, defaultConstructor)
-
-
-var SPECIES = _wks('species');
-var _speciesConstructor = function (O, D) {
-  var C = _anObject(O).constructor;
-  var S;
-  return C === undefined || (S = _anObject(C)[SPECIES]) == undefined ? D : _aFunction(S);
-};
-
-// fast apply, http://jsperf.lnkit.com/fast-apply/5
-var _invoke = function (fn, args, that) {
-  var un = that === undefined;
-  switch (args.length) {
-    case 0: return un ? fn()
-                      : fn.call(that);
-    case 1: return un ? fn(args[0])
-                      : fn.call(that, args[0]);
-    case 2: return un ? fn(args[0], args[1])
-                      : fn.call(that, args[0], args[1]);
-    case 3: return un ? fn(args[0], args[1], args[2])
-                      : fn.call(that, args[0], args[1], args[2]);
-    case 4: return un ? fn(args[0], args[1], args[2], args[3])
-                      : fn.call(that, args[0], args[1], args[2], args[3]);
-  } return fn.apply(that, args);
-};
-
-var process = _global.process;
-var setTask = _global.setImmediate;
-var clearTask = _global.clearImmediate;
-var MessageChannel = _global.MessageChannel;
-var Dispatch = _global.Dispatch;
-var counter = 0;
-var queue = {};
-var ONREADYSTATECHANGE = 'onreadystatechange';
-var defer;
-var channel;
-var port;
-var run = function () {
-  var id = +this;
-  // eslint-disable-next-line no-prototype-builtins
-  if (queue.hasOwnProperty(id)) {
-    var fn = queue[id];
-    delete queue[id];
-    fn();
-  }
-};
-var listener = function (event) {
-  run.call(event.data);
-};
-// Node.js 0.9+ & IE10+ has setImmediate, otherwise:
-if (!setTask || !clearTask) {
-  setTask = function setImmediate(fn) {
-    var args = [];
-    var i = 1;
-    while (arguments.length > i) args.push(arguments[i++]);
-    queue[++counter] = function () {
-      // eslint-disable-next-line no-new-func
-      _invoke(typeof fn == 'function' ? fn : Function(fn), args);
-    };
-    defer(counter);
-    return counter;
-  };
-  clearTask = function clearImmediate(id) {
-    delete queue[id];
-  };
-  // Node.js 0.8-
-  if (_cof(process) == 'process') {
-    defer = function (id) {
-      process.nextTick(_ctx(run, id, 1));
-    };
-  // Sphere (JS game engine) Dispatch API
-  } else if (Dispatch && Dispatch.now) {
-    defer = function (id) {
-      Dispatch.now(_ctx(run, id, 1));
-    };
-  // Browsers with MessageChannel, includes WebWorkers
-  } else if (MessageChannel) {
-    channel = new MessageChannel();
-    port = channel.port2;
-    channel.port1.onmessage = listener;
-    defer = _ctx(port.postMessage, port, 1);
-  // Browsers with postMessage, skip WebWorkers
-  // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
-  } else if (_global.addEventListener && typeof postMessage == 'function' && !_global.importScripts) {
-    defer = function (id) {
-      _global.postMessage(id + '', '*');
-    };
-    _global.addEventListener('message', listener, false);
-  // IE8-
-  } else if (ONREADYSTATECHANGE in _domCreate('script')) {
-    defer = function (id) {
-      _html.appendChild(_domCreate('script'))[ONREADYSTATECHANGE] = function () {
-        _html.removeChild(this);
-        run.call(id);
-      };
-    };
-  // Rest old browsers
-  } else {
-    defer = function (id) {
-      setTimeout(_ctx(run, id, 1), 0);
-    };
-  }
-}
-var _task = {
-  set: setTask,
-  clear: clearTask
-};
-
-var macrotask = _task.set;
-var Observer = _global.MutationObserver || _global.WebKitMutationObserver;
-var process$1 = _global.process;
-var Promise$1 = _global.Promise;
-var isNode$1 = _cof(process$1) == 'process';
-
-var _microtask = function () {
-  var head, last, notify;
-
-  var flush = function () {
-    var parent, fn;
-    if (isNode$1 && (parent = process$1.domain)) parent.exit();
-    while (head) {
-      fn = head.fn;
-      head = head.next;
-      try {
-        fn();
-      } catch (e) {
-        if (head) notify();
-        else last = undefined;
-        throw e;
-      }
-    } last = undefined;
-    if (parent) parent.enter();
-  };
-
-  // Node.js
-  if (isNode$1) {
-    notify = function () {
-      process$1.nextTick(flush);
-    };
-  // browsers with MutationObserver, except iOS Safari - https://github.com/zloirock/core-js/issues/339
-  } else if (Observer && !(_global.navigator && _global.navigator.standalone)) {
-    var toggle = true;
-    var node = document.createTextNode('');
-    new Observer(flush).observe(node, { characterData: true }); // eslint-disable-line no-new
-    notify = function () {
-      node.data = toggle = !toggle;
-    };
-  // environments with maybe non-completely correct, but existent Promise
-  } else if (Promise$1 && Promise$1.resolve) {
-    var promise = Promise$1.resolve();
-    notify = function () {
-      promise.then(flush);
-    };
-  // for other environments - macrotask based on:
-  // - setImmediate
-  // - MessageChannel
-  // - window.postMessag
-  // - onreadystatechange
-  // - setTimeout
-  } else {
-    notify = function () {
-      // strange IE + webpack dev server bug - use .call(global)
-      macrotask.call(_global, flush);
-    };
-  }
-
-  return function (fn) {
-    var task = { fn: fn, next: undefined };
-    if (last) last.next = task;
-    if (!head) {
-      head = task;
-      notify();
-    } last = task;
-  };
-};
-
-// 25.4.1.5 NewPromiseCapability(C)
-
-
-function PromiseCapability(C) {
-  var resolve, reject;
-  this.promise = new C(function ($$resolve, $$reject) {
-    if (resolve !== undefined || reject !== undefined) throw TypeError('Bad Promise constructor');
-    resolve = $$resolve;
-    reject = $$reject;
-  });
-  this.resolve = _aFunction(resolve);
-  this.reject = _aFunction(reject);
-}
-
-var f$7 = function (C) {
-  return new PromiseCapability(C);
-};
-
-var _newPromiseCapability = {
-	f: f$7
-};
-
-var _perform = function (exec) {
-  try {
-    return { e: false, v: exec() };
-  } catch (e) {
-    return { e: true, v: e };
-  }
-};
-
-var _promiseResolve = function (C, x) {
-  _anObject(C);
-  if (_isObject(x) && x.constructor === C) return x;
-  var promiseCapability = _newPromiseCapability.f(C);
-  var resolve = promiseCapability.resolve;
-  resolve(x);
-  return promiseCapability.promise;
-};
-
-var _redefineAll = function (target, src, safe) {
-  for (var key in src) {
-    if (safe && target[key]) target[key] = src[key];
-    else _hide(target, key, src[key]);
-  } return target;
-};
-
-var SPECIES$1 = _wks('species');
-
-var _setSpecies = function (KEY) {
-  var C = typeof _core[KEY] == 'function' ? _core[KEY] : _global[KEY];
-  if (_descriptors && C && !C[SPECIES$1]) _objectDp.f(C, SPECIES$1, {
-    configurable: true,
-    get: function () { return this; }
-  });
-};
-
-var ITERATOR$3 = _wks('iterator');
-var SAFE_CLOSING = false;
-
-try {
-  var riter = [7][ITERATOR$3]();
-  riter['return'] = function () { SAFE_CLOSING = true; };
-  // eslint-disable-next-line no-throw-literal
-  
-} catch (e) { /* empty */ }
-
-var _iterDetect = function (exec, skipClosing) {
-  if (!skipClosing && !SAFE_CLOSING) return false;
-  var safe = false;
-  try {
-    var arr = [7];
-    var iter = arr[ITERATOR$3]();
-    iter.next = function () { return { done: safe = true }; };
-    arr[ITERATOR$3] = function () { return iter; };
-    exec(arr);
-  } catch (e) { /* empty */ }
-  return safe;
-};
-
-var task = _task.set;
-var microtask = _microtask();
-
-
-
-var PROMISE = 'Promise';
-var TypeError$1 = _global.TypeError;
-var process$2 = _global.process;
-var $Promise = _global[PROMISE];
-var isNode$2 = _classof(process$2) == 'process';
-var empty = function () { /* empty */ };
-var Internal;
-var newGenericPromiseCapability;
-var OwnPromiseCapability;
-var Wrapper;
-var newPromiseCapability$1 = newGenericPromiseCapability = _newPromiseCapability.f;
-
-var USE_NATIVE$1 = !!function () {
-  try {
-    // correct subclassing with @@species support
-    var promise = $Promise.resolve(1);
-    var FakePromise = (promise.constructor = {})[_wks('species')] = function (exec) {
-      exec(empty, empty);
-    };
-    // unhandled rejections tracking support, NodeJS Promise without it fails @@species test
-    return (isNode$2 || typeof PromiseRejectionEvent == 'function') && promise.then(empty) instanceof FakePromise;
-  } catch (e) { /* empty */ }
-}();
-
-// helpers
-var isThenable = function (it) {
-  var then;
-  return _isObject(it) && typeof (then = it.then) == 'function' ? then : false;
-};
-var notify = function (promise, isReject) {
-  if (promise._n) return;
-  promise._n = true;
-  var chain = promise._c;
-  microtask(function () {
-    var value = promise._v;
-    var ok = promise._s == 1;
-    var i = 0;
-    var run = function (reaction) {
-      var handler = ok ? reaction.ok : reaction.fail;
-      var resolve = reaction.resolve;
-      var reject = reaction.reject;
-      var domain = reaction.domain;
-      var result, then;
-      try {
-        if (handler) {
-          if (!ok) {
-            if (promise._h == 2) onHandleUnhandled(promise);
-            promise._h = 1;
-          }
-          if (handler === true) result = value;
-          else {
-            if (domain) domain.enter();
-            result = handler(value);
-            if (domain) domain.exit();
-          }
-          if (result === reaction.promise) {
-            reject(TypeError$1('Promise-chain cycle'));
-          } else if (then = isThenable(result)) {
-            then.call(result, resolve, reject);
-          } else resolve(result);
-        } else reject(value);
-      } catch (e) {
-        reject(e);
-      }
-    };
-    while (chain.length > i) run(chain[i++]); // variable length - can't use forEach
-    promise._c = [];
-    promise._n = false;
-    if (isReject && !promise._h) onUnhandled(promise);
-  });
-};
-var onUnhandled = function (promise) {
-  task.call(_global, function () {
-    var value = promise._v;
-    var unhandled = isUnhandled(promise);
-    var result, handler, console;
-    if (unhandled) {
-      result = _perform(function () {
-        if (isNode$2) {
-          process$2.emit('unhandledRejection', value, promise);
-        } else if (handler = _global.onunhandledrejection) {
-          handler({ promise: promise, reason: value });
-        } else if ((console = _global.console) && console.error) {
-          console.error('Unhandled promise rejection', value);
-        }
-      });
-      // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
-      promise._h = isNode$2 || isUnhandled(promise) ? 2 : 1;
-    } promise._a = undefined;
-    if (unhandled && result.e) throw result.v;
-  });
-};
-var isUnhandled = function (promise) {
-  return promise._h !== 1 && (promise._a || promise._c).length === 0;
-};
-var onHandleUnhandled = function (promise) {
-  task.call(_global, function () {
-    var handler;
-    if (isNode$2) {
-      process$2.emit('rejectionHandled', promise);
-    } else if (handler = _global.onrejectionhandled) {
-      handler({ promise: promise, reason: promise._v });
-    }
-  });
-};
-var $reject = function (value) {
-  var promise = this;
-  if (promise._d) return;
-  promise._d = true;
-  promise = promise._w || promise; // unwrap
-  promise._v = value;
-  promise._s = 2;
-  if (!promise._a) promise._a = promise._c.slice();
-  notify(promise, true);
-};
-var $resolve = function (value) {
-  var promise = this;
-  var then;
-  if (promise._d) return;
-  promise._d = true;
-  promise = promise._w || promise; // unwrap
-  try {
-    if (promise === value) throw TypeError$1("Promise can't be resolved itself");
-    if (then = isThenable(value)) {
-      microtask(function () {
-        var wrapper = { _w: promise, _d: false }; // wrap
-        try {
-          then.call(value, _ctx($resolve, wrapper, 1), _ctx($reject, wrapper, 1));
-        } catch (e) {
-          $reject.call(wrapper, e);
-        }
-      });
-    } else {
-      promise._v = value;
-      promise._s = 1;
-      notify(promise, false);
-    }
-  } catch (e) {
-    $reject.call({ _w: promise, _d: false }, e); // wrap
-  }
-};
-
-// constructor polyfill
-if (!USE_NATIVE$1) {
-  // 25.4.3.1 Promise(executor)
-  $Promise = function Promise(executor) {
-    _anInstance(this, $Promise, PROMISE, '_h');
-    _aFunction(executor);
-    Internal.call(this);
-    try {
-      executor(_ctx($resolve, this, 1), _ctx($reject, this, 1));
-    } catch (err) {
-      $reject.call(this, err);
-    }
-  };
-  // eslint-disable-next-line no-unused-vars
-  Internal = function Promise(executor) {
-    this._c = [];             // <- awaiting reactions
-    this._a = undefined;      // <- checked in isUnhandled reactions
-    this._s = 0;              // <- state
-    this._d = false;          // <- done
-    this._v = undefined;      // <- value
-    this._h = 0;              // <- rejection state, 0 - default, 1 - handled, 2 - unhandled
-    this._n = false;          // <- notify
-  };
-  Internal.prototype = _redefineAll($Promise.prototype, {
-    // 25.4.5.3 Promise.prototype.then(onFulfilled, onRejected)
-    then: function then(onFulfilled, onRejected) {
-      var reaction = newPromiseCapability$1(_speciesConstructor(this, $Promise));
-      reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
-      reaction.fail = typeof onRejected == 'function' && onRejected;
-      reaction.domain = isNode$2 ? process$2.domain : undefined;
-      this._c.push(reaction);
-      if (this._a) this._a.push(reaction);
-      if (this._s) notify(this, false);
-      return reaction.promise;
-    },
-    // 25.4.5.1 Promise.prototype.catch(onRejected)
-    'catch': function (onRejected) {
-      return this.then(undefined, onRejected);
-    }
-  });
-  OwnPromiseCapability = function () {
-    var promise = new Internal();
-    this.promise = promise;
-    this.resolve = _ctx($resolve, promise, 1);
-    this.reject = _ctx($reject, promise, 1);
-  };
-  _newPromiseCapability.f = newPromiseCapability$1 = function (C) {
-    return C === $Promise || C === Wrapper
-      ? new OwnPromiseCapability(C)
-      : newGenericPromiseCapability(C);
-  };
-}
-
-_export(_export.G + _export.W + _export.F * !USE_NATIVE$1, { Promise: $Promise });
-_setToStringTag($Promise, PROMISE);
-_setSpecies(PROMISE);
-Wrapper = _core[PROMISE];
-
-// statics
-_export(_export.S + _export.F * !USE_NATIVE$1, PROMISE, {
-  // 25.4.4.5 Promise.reject(r)
-  reject: function reject(r) {
-    var capability = newPromiseCapability$1(this);
-    var $$reject = capability.reject;
-    $$reject(r);
-    return capability.promise;
-  }
-});
-_export(_export.S + _export.F * (_library || !USE_NATIVE$1), PROMISE, {
-  // 25.4.4.6 Promise.resolve(x)
-  resolve: function resolve(x) {
-    return _promiseResolve(_library && this === Wrapper ? $Promise : this, x);
-  }
-});
-_export(_export.S + _export.F * !(USE_NATIVE$1 && _iterDetect(function (iter) {
-  $Promise.all(iter)['catch'](empty);
-})), PROMISE, {
-  // 25.4.4.1 Promise.all(iterable)
-  all: function all(iterable) {
-    var C = this;
-    var capability = newPromiseCapability$1(C);
-    var resolve = capability.resolve;
-    var reject = capability.reject;
-    var result = _perform(function () {
-      var values = [];
-      var index = 0;
-      var remaining = 1;
-      _forOf(iterable, false, function (promise) {
-        var $index = index++;
-        var alreadyCalled = false;
-        values.push(undefined);
-        remaining++;
-        C.resolve(promise).then(function (value) {
-          if (alreadyCalled) return;
-          alreadyCalled = true;
-          values[$index] = value;
-          --remaining || resolve(values);
-        }, reject);
-      });
-      --remaining || resolve(values);
-    });
-    if (result.e) reject(result.v);
-    return capability.promise;
-  },
-  // 25.4.4.4 Promise.race(iterable)
-  race: function race(iterable) {
-    var C = this;
-    var capability = newPromiseCapability$1(C);
-    var reject = capability.reject;
-    var result = _perform(function () {
-      _forOf(iterable, false, function (promise) {
-        C.resolve(promise).then(capability.resolve, reject);
-      });
-    });
-    if (result.e) reject(result.v);
-    return capability.promise;
-  }
-});
-
-_export(_export.P + _export.R, 'Promise', { 'finally': function (onFinally) {
-  var C = _speciesConstructor(this, _core.Promise || _global.Promise);
-  var isFunction = typeof onFinally == 'function';
-  return this.then(
-    isFunction ? function (x) {
-      return _promiseResolve(C, onFinally()).then(function () { return x; });
-    } : onFinally,
-    isFunction ? function (e) {
-      return _promiseResolve(C, onFinally()).then(function () { throw e; });
-    } : onFinally
-  );
-} });
-
-// https://github.com/tc39/proposal-promise-try
-
-
-
-
-_export(_export.S, 'Promise', { 'try': function (callbackfn) {
-  var promiseCapability = _newPromiseCapability.f(this);
-  var result = _perform(callbackfn);
-  (result.e ? promiseCapability.reject : promiseCapability.resolve)(result.v);
-  return promiseCapability.promise;
-} });
-
-var promise = _core.Promise;
-
-var promise$2 = createCommonjsModule(function (module) {
-module.exports = { "default": promise, __esModule: true };
-});
-
-unwrapExports(promise$2);
 
 var asyncToGenerator = createCommonjsModule(function (module, exports) {
 exports.__esModule = true;
@@ -13319,9 +13327,10 @@ module.exports = { "default": values, __esModule: true };
 var _Object$values = unwrapExports(values$2);
 
 var DEFAULT_INDEX = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
-// const DEFAULT_STATIC_FALLBACK_INDEX = `/ipfs/QmbmY22p7ZptQj69fNis83qcgvp49aHxuizJZxaMVofALh`;
+var DEFAULT_STATIC_FALLBACK_INDEX = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
 var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io', 'https://ipfs.infura.io', 'https://www.eternum.io'];
 var IPFS_INDEX_WIDTH = 200;
+var DEFAULT_TIMEOUT = 10000;
 
 var Index = function () {
   function Index() {
@@ -13358,112 +13367,162 @@ var Index = function () {
   }();
 
   Index.prototype.init = function () {
-    var _ref2 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2() {
-      var indexRoot = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : DEFAULT_INDEX;
+    var _ref2 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2(indexRoot) {
       var ipfs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DEFAULT_IPFS_PROXIES;
-      var url, i, res;
+      var timeout = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : DEFAULT_TIMEOUT;
+      var useDefaultIndex, url, i, res, u;
       return regenerator.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
+              useDefaultIndex = false;
+
+              if (typeof indexRoot === 'undefined') {
+                useDefaultIndex = true;
+                indexRoot = DEFAULT_INDEX;
+              }
+
               if (!(typeof ipfs === 'string')) {
-                _context2.next = 4;
+                _context2.next = 6;
                 break;
               }
 
               this.storage = new merkleBtree.IPFSGatewayStorage(ipfs);
-              _context2.next = 30;
+              _context2.next = 53;
               break;
 
-            case 4:
+            case 6:
               if (!Array.isArray(ipfs)) {
-                _context2.next = 24;
+                _context2.next = 47;
                 break;
               }
 
               url = void 0;
               i = 0;
 
-            case 7:
+            case 9:
               if (!(i < ipfs.length)) {
-                _context2.next = 17;
+                _context2.next = 40;
                 break;
               }
 
-              _context2.next = 10;
-              return browser('' + ipfs[i] + indexRoot).catch(function () {
-                return {};
-              });
+              res = void 0;
+              u = '' + ipfs[i] + indexRoot;
+              _context2.prev = 12;
+              _context2.next = 15;
+              return util.timeoutPromise(browser(u, { timeout: timeout }).catch(function () {}), timeout);
 
-            case 10:
+            case 15:
               res = _context2.sent;
 
-              if (!(res.ok && res.status === 200)) {
-                _context2.next = 14;
+              if (!res) {
+                console.log('fetching ' + u + ' timed out');
+              }
+              _context2.next = 22;
+              break;
+
+            case 19:
+              _context2.prev = 19;
+              _context2.t0 = _context2['catch'](12);
+
+              console.log('fetching ' + u + ' failed:', _context2.t0);
+
+            case 22:
+              if (!(!(res && res.ok && res.status === 200) && useDefaultIndex)) {
+                _context2.next = 34;
+                break;
+              }
+
+              // try static fallback
+              u = '' + ipfs[i] + DEFAULT_STATIC_FALLBACK_INDEX;
+              _context2.prev = 24;
+              _context2.next = 27;
+              return util.timeoutPromise(browser(u, { timeout: timeout }).catch(function () {}), timeout);
+
+            case 27:
+              res = _context2.sent;
+
+              if (res) {
+                indexRoot = DEFAULT_STATIC_FALLBACK_INDEX;
+              } else {
+                console.log('fetching ' + u + ' timed out');
+              }
+              _context2.next = 34;
+              break;
+
+            case 31:
+              _context2.prev = 31;
+              _context2.t1 = _context2['catch'](24);
+
+              console.log('fetching ' + u + ' failed:', _context2.t1);
+
+            case 34:
+              if (!(res && res.ok && res.status === 200)) {
+                _context2.next = 37;
                 break;
               }
 
               url = ipfs[i];
-              return _context2.abrupt('break', 17);
+              return _context2.abrupt('break', 40);
 
-            case 14:
+            case 37:
               i++;
-              _context2.next = 7;
+              _context2.next = 9;
               break;
 
-            case 17:
+            case 40:
               if (!url) {
-                _context2.next = 21;
+                _context2.next = 44;
                 break;
               }
 
               this.storage = new merkleBtree.IPFSGatewayStorage(url);
-              _context2.next = 22;
+              _context2.next = 45;
               break;
 
-            case 21:
+            case 44:
               throw 'Could not load index via given ipfs gateways';
 
-            case 22:
-              _context2.next = 30;
+            case 45:
+              _context2.next = 53;
               break;
 
-            case 24:
+            case 47:
               if (!((typeof ipfs === 'undefined' ? 'undefined' : _typeof(ipfs)) === 'object')) {
-                _context2.next = 29;
+                _context2.next = 52;
                 break;
               }
 
               this.storage = new merkleBtree.IPFSStorage(ipfs);
               this.ipfs = ipfs;
-              _context2.next = 30;
+              _context2.next = 53;
               break;
 
-            case 29:
+            case 52:
               throw 'ipfs param must be a gateway url, array of urls or a js-ipfs object';
 
-            case 30:
-              _context2.next = 32;
+            case 53:
+              _context2.next = 55;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_searchkey', this.storage, IPFS_INDEX_WIDTH);
 
-            case 32:
+            case 55:
               this.identitiesBySearchKey = _context2.sent;
-              _context2.next = 35;
+              _context2.next = 58;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_timestamp', this.storage, IPFS_INDEX_WIDTH);
 
-            case 35:
+            case 58:
               this.messagesByTimestamp = _context2.sent;
               return _context2.abrupt('return', true);
 
-            case 37:
+            case 60:
             case 'end':
               return _context2.stop();
           }
         }
-      }, _callee2, this);
+      }, _callee2, this, [[12, 19], [24, 31]]);
     }));
 
-    function init() {
+    function init(_x5) {
       return _ref2.apply(this, arguments);
     }
 
@@ -13521,7 +13580,7 @@ var Index = function () {
       }, _callee3, this);
     }));
 
-    function get(_x5, _x6) {
+    function get(_x6, _x7) {
       return _ref3.apply(this, arguments);
     }
 
@@ -13612,7 +13671,7 @@ var Index = function () {
       }, _callee4, this);
     }));
 
-    function publishMessage(_x8) {
+    function publishMessage(_x9) {
       return _ref4.apply(this, arguments);
     }
 
@@ -13643,7 +13702,7 @@ var Index = function () {
       }, _callee5, this);
     }));
 
-    function addMessage(_x9) {
+    function addMessage(_x10) {
       return _ref5.apply(this, arguments);
     }
 
@@ -13729,7 +13788,7 @@ var Index = function () {
       }, _callee6, this, [[8, 17]]);
     }));
 
-    function search(_x11, _x12) {
+    function search(_x12, _x13) {
       return _ref6.apply(this, arguments);
     }
 
@@ -13739,7 +13798,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.34";
+var version$2 = "0.0.35";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

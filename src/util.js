@@ -103,5 +103,16 @@ export default {
       }
     }
     return myKey;
+  },
+  timeoutPromise(promise, timeout) {
+    return Promise.race([
+      promise,
+      new Promise((resolve => {
+        setTimeout(() => {
+          // console.log('promise timed out');
+          resolve();
+        }, timeout);
+      })),
+    ]);
   }
 };
