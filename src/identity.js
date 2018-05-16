@@ -370,7 +370,7 @@ class Identity {
     pie.style.transform = transform;
 
     const img = document.createElement(`img`);
-    img.src = `https://www.gravatar.com/avatar/${this.getGravatar()}?d=retro&amp;s=${width * 2}`;
+    img.src = `https://www.gravatar.com/avatar/${this.getGravatar()}?d=retro&s=${width * 2}`;
     img.alt = ``;
     img.width = width;
     img.style.borderWidth = `${border}px`;

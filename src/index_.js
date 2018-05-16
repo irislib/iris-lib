@@ -15,6 +15,7 @@ const DEFAULT_IPFS_PROXIES = [
 const IPFS_INDEX_WIDTH = 200;
 const DEFAULT_TIMEOUT = 10000;
 
+// TODO: make the whole thing use GUN for indexing and flush onto IPFS
 class Index {
   static create() { // TODO: make it work with js-ipfs && IPFSStorage
     this.storage = new btree.RAMStorage();
