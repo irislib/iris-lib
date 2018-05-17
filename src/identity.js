@@ -317,7 +317,7 @@ class Identity {
     document.body.appendChild(sheet);
   }
 
-  identicon(width, border = 4) {
+  identicon(width, border = 4, showDistance = true) {
     Identity._injectCss(); // some other way that is not called on each identicon generation?
     const identicon = document.createElement(`div`);
     identicon.className = `identifi-identicon`;
@@ -346,11 +346,6 @@ class Identity {
       }
     }
 
-    const distance = document.createElement(`span`);
-    distance.textContent = this.trustDistance < 1000 ? Identity._ordinal(this.trustDistance) : `–`;
-    distance.className = `identifi-distance`;
-    distance.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
-
     const pie = document.createElement(`div`);
     pie.className = `identifi-pie`;
     pie.style.backgroundColor = bgColor;
@@ -366,7 +361,14 @@ class Identity {
     img.width = width;
     img.style.borderWidth = `${border}px`;
 
-    identicon.appendChild(distance);
+    if (showDistance) {
+      const distance = document.createElement(`span`);
+      distance.textContent = this.trustDistance < 1000 ? Identity._ordinal(this.trustDistance) : `–`;
+      distance.className = `identifi-distance`;
+      distance.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
+      identicon.appendChild(distance);
+    }
+
     identicon.appendChild(pie);
     identicon.appendChild(img);
 

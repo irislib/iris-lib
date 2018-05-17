@@ -5080,6 +5080,589 @@ module.exports = { "default": isNan, __esModule: true };
 
 var _Number$isNaN = unwrapExports(isNan$2);
 
+var Identity = function () {
+  function Identity(data) {
+    var _this = this;
+
+    _classCallCheck(this, Identity);
+
+    this.data = data;
+    this.profile = {};
+    this.mostVerifiedAttributes = {};
+    if (data.attrs.length) {
+      var c = data.attrs[0];
+      this.receivedPositive = c.pos;
+      this.receivedNegative = c.neg;
+      this.receivedNeutral = c.neut;
+    }
+    this.receivedNegative |= 0;
+    this.receivedPositive |= 0;
+    this.receivedNeutral |= 0;
+    this.trustDistance = 1000;
+    this.data.attrs.forEach(function (a) {
+      if (!_this.linkTo && util.isUniqueType(a.name)) {
+        _this.linkTo = a;
+      }
+      if (!_Number$isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < _this.trustDistance) {
+        _this.trustDistance = parseInt(a.dist);
+        if (util.isUniqueType(a.name)) {
+          _this.linkTo = a;
+        }
+      }
+      switch (a.name) {
+        case 'email':
+          a.iconStyle = 'glyphicon glyphicon-envelope';
+          a.btnStyle = 'btn-success';
+          a.link = 'mailto:' + a.val;
+          a.quickContact = true;
+          break;
+        case 'bitcoin_address':
+        case 'bitcoin':
+          a.iconStyle = 'fa fa-bitcoin';
+          a.btnStyle = 'btn-primary';
+          a.link = 'https://blockchain.info/address/' + a.val;
+          a.quickContact = true;
+          break;
+        case 'gpg_fingerprint':
+        case 'gpg_keyid':
+          a.iconStyle = 'fa fa-key';
+          a.btnStyle = 'btn-default';
+          a.link = 'https://pgp.mit.edu/pks/lookup?op=get&search=0x' + a.val;
+          break;
+        case 'account':
+          a.iconStyle = 'fa fa-at';
+          break;
+        case 'nickname':
+          a.iconStyle = 'glyphicon glyphicon-font';
+          break;
+        case 'name':
+          a.iconStyle = 'glyphicon glyphicon-font';
+          break;
+        case 'tel':
+        case 'phone':
+          a.iconStyle = 'glyphicon glyphicon-earphone';
+          a.btnStyle = 'btn-success';
+          a.link = 'tel:' + a.val;
+          a.quickContact = true;
+          break;
+        case 'keyID':
+          a.iconStyle = 'fa fa-key';
+          break;
+        case 'url':
+          a.link = a.val;
+          if (a.val.indexOf('facebook.com/') > -1) {
+            a.iconStyle = 'fa fa-facebook';
+            a.btnStyle = 'btn-facebook';
+            a.link = a.val;
+            a.linkName = a.val.split('facebook.com/')[1];
+            a.quickContact = true;
+          } else if (a.val.indexOf('twitter.com/') > -1) {
+            a.iconStyle = 'fa fa-twitter';
+            a.btnStyle = 'btn-twitter';
+            a.link = a.val;
+            a.linkName = a.val.split('twitter.com/')[1];
+            a.quickContact = true;
+          } else if (a.val.indexOf('plus.google.com/') > -1) {
+            a.iconStyle = 'fa fa-google-plus';
+            a.btnStyle = 'btn-google-plus';
+            a.link = a.val;
+            a.linkName = a.val.split('plus.google.com/')[1];
+            a.quickContact = true;
+          } else if (a.val.indexOf('linkedin.com/') > -1) {
+            a.iconStyle = 'fa fa-linkedin';
+            a.btnStyle = 'btn-linkedin';
+            a.link = a.val;
+            a.linkName = a.val.split('linkedin.com/')[1];
+            a.quickContact = true;
+          } else if (a.val.indexOf('github.com/') > -1) {
+            a.iconStyle = 'fa fa-github';
+            a.btnStyle = 'btn-github';
+            a.link = a.val;
+            a.linkName = a.val.split('github.com/')[1];
+            a.quickContact = true;
+          } else {
+            a.iconStyle = 'glyphicon glyphicon-link';
+            a.btnStyle = 'btn-default';
+          }
+      }
+      var keyExists = _Object$keys(_this.mostVerifiedAttributes).indexOf(a.name) > -1;
+      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > _this.mostVerifiedAttributes[a.name].verificationScore)) {
+        _this.mostVerifiedAttributes[a.name] = {
+          attribute: a,
+          verificationScore: a.conf - a.ref
+        };
+      }
+    });
+    _Object$keys(this.mostVerifiedAttributes).forEach(function (k) {
+      if (['name', 'nickname', 'email', 'url', 'coverPhoto', 'profilePhoto'].indexOf(k) > -1) {
+        _this.profile[k] = _this.mostVerifiedAttributes[k].attribute.val;
+      }
+    });
+  }
+
+  Identity.prototype.getGravatar = function getGravatar() {
+    // TODO: gravatar should be replaced soon with random art or ipfs profile photo
+    if (!this.gravatar) {
+      var str = '';
+      try {
+        str = this.profile.email || this.data.attrs[0].name + ':' + this.data.attrs[0].val;
+      } catch (e) {
+        console.error(e);
+      }
+      this.gravatar = new MessageDigest({ alg: 'md5', prov: 'cryptojs' }).digestString(str);
+    }
+    return this.gravatar;
+  };
+
+  Identity.prototype.verified = function verified(attribute) {
+    return this.mostVerifiedAttributes.hasOwnProperty(attribute) ? this.mostVerifiedAttributes[attribute].attribute.val : undefined;
+  };
+
+  Identity.prototype.profileCard = function profileCard() {
+    var card = document.createElement('div');
+    card.className = 'identifi-card';
+
+    var identicon = this.identicon(60);
+    identicon.style.order = 1;
+    identicon.style.flexShrink = 0;
+    identicon.style.marginRight = '15px';
+
+    var details = document.createElement('div');
+    details.style.padding = '5px';
+    details.style.order = 2;
+    details.style.flexGrow = 1;
+    var link = 'https://identi.fi/#/identities/' + this.linkTo.name + '/' + this.linkTo.val;
+    details.innerHTML = '<a href="' + link + '">' + (this.profile.name || this.profile.nickname || this.linkTo.name + ':' + this.linkTo.val) + '</a><br>';
+    details.innerHTML += '<small>Received: <span class="identifi-pos">+' + (this.receivedPositive || 0) + '</span> / <span class="identifi-neg">-' + (this.receivedNegative || 0) + '</span></small><br>';
+    var links = document.createElement('small');
+    this.data.attrs.forEach(function (a) {
+      if (a.link) {
+        links.innerHTML += a.name + ': <a href="' + a.link + '">' + a.val + '</a> ';
+      }
+    });
+    details.appendChild(links);
+
+    card.appendChild(identicon);
+    card.appendChild(details);
+    /*
+    const template = ```
+    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
+      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
+      <td>
+        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>
+        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>
+        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>
+        <small ng-if="!result.name" class="list-group-item-text">
+          <span ng-bind-html="result[0][0]|highlight:query.term"></span>
+        </small><br>
+        <small>
+          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>
+          <span ng-if="result.email" class="mar-right10">
+            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>
+          </span>
+          <span ng-if="result.facebook" class="mar-right10">
+            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>
+          </span>
+          <span ng-if="result.twitter" class="mar-right10">
+            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>
+          </span>
+          <span ng-if="result.googlePlus" class="mar-right10">
+            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>
+          </span>
+          <span ng-if="result.bitcoin" class="mar-right10">
+            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>
+          </span>
+        </small>
+      </td>
+    </tr>
+    ```;*/
+    return card;
+  };
+
+  Identity.appendSearchWidget = function appendSearchWidget(parentElement, index) {
+    var _this2 = this;
+
+    var form = document.createElement('form');
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Search';
+    input.id = 'identifiSearchInput';
+    form.innerHTML += '<div id="identifiSearchResults"></div>';
+
+    var searchResults = document.createElement('div');
+
+    parentElement.appendChild(form);
+    form.appendChild(input);
+    form.appendChild(searchResults);
+    input.addEventListener('keyup', _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee() {
+      var r;
+      return regenerator.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _context.next = 2;
+              return index.search(input.value);
+
+            case 2:
+              r = _context.sent;
+
+              searchResults.innerHTML = '';
+              r.sort(function (a, b) {
+                return a.trustDistance - b.trustDistance;
+              });
+              r.forEach(function (i) {
+                searchResults.appendChild(i.profileCard());
+              });
+
+            case 6:
+            case 'end':
+              return _context.stop();
+          }
+        }
+      }, _callee, _this2);
+    })));
+  };
+
+  Identity._ordinal = function _ordinal(n) {
+    var s = ['th', 'st', 'nd', 'rd'];
+    var v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
+
+  Identity._injectCss = function _injectCss() {
+    var elementId = 'identifiStyle';
+    if (document.getElementById(elementId)) {
+      return;
+    }
+    var sheet = document.createElement('style');
+    sheet.id = elementId;
+    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .identifi-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .identifi-card a:hover, .identifi-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .identifi-pos {\n        color: #3c763d;\n      }\n\n      .identifi-neg {\n        color: #a94442;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
+    document.body.appendChild(sheet);
+  };
+
+  Identity.prototype.identicon = function identicon(width) {
+    var border = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
+    var showDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+
+    Identity._injectCss(); // some other way that is not called on each identicon generation?
+    var identicon = document.createElement('div');
+    identicon.className = 'identifi-identicon';
+    identicon.style.width = width + 'px';
+    identicon.style.height = width + 'px';
+
+    // Define colors etc
+    var bgColor = 'rgba(0,0,0,0.2)';
+    var bgImage = 'none';
+    var transform = '';
+    var boxShadow = '0px 0px 0px 0px #82FF84';
+    if (this.receivedPositive > this.receivedNegative * 20) {
+      boxShadow = '0px 0px ' + border * this.receivedPositive / 50 + 'px 0px #82FF84';
+    } else if (this.receivedPositive < this.receivedNegative * 3) {
+      boxShadow = '0px 0px ' + border * this.receivedNegative / 10 + 'px 0px #BF0400';
+    }
+    if (this.receivedPositive + this.receivedNegative > 0) {
+      if (this.receivedPositive > this.receivedNegative) {
+        transform = 'rotate(' + (-this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2 + 'deg)';
+        bgColor = '#A94442';
+        bgImage = 'linear-gradient(' + this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360 + 'deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)';
+      } else {
+        transform = 'rotate(' + ((-this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2 + 180) + 'deg)';
+        bgColor = '#3C763D';
+        bgImage = 'linear-gradient(' + this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360 + 'deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)';
+      }
+    }
+
+    var pie = document.createElement('div');
+    pie.className = 'identifi-pie';
+    pie.style.backgroundColor = bgColor;
+    pie.style.backgroundImage = bgImage;
+    pie.style.width = width + 'px';
+    pie.style.boxShadow = boxShadow;
+    pie.style.opacity = (this.receivedPositive + this.receivedNegative) / 10 * 0.5 + 0.35;
+    pie.style.transform = transform;
+
+    var img = document.createElement('img');
+    img.src = 'https://www.gravatar.com/avatar/' + this.getGravatar() + '?d=retro&s=' + width * 2;
+    img.alt = '';
+    img.width = width;
+    img.style.borderWidth = border + 'px';
+
+    if (showDistance) {
+      var distance = document.createElement('span');
+      distance.textContent = this.trustDistance < 1000 ? Identity._ordinal(this.trustDistance) : '\u2013';
+      distance.className = 'identifi-distance';
+      distance.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
+      identicon.appendChild(distance);
+    }
+
+    identicon.appendChild(pie);
+    identicon.appendChild(img);
+
+    return identicon;
+  };
+
+  return Identity;
+}();
+
+var JWS_MAX_LENGTH = 10000;
+var errorMsg = 'Invalid Identifi message:';
+
+var ValidationError = function (_Error) {
+  _inherits(ValidationError, _Error);
+
+  function ValidationError() {
+    _classCallCheck(this, ValidationError);
+
+    return _possibleConstructorReturn(this, _Error.apply(this, arguments));
+  }
+
+  return ValidationError;
+}(Error);
+
+var Message = function () {
+  function Message(signedData) {
+    _classCallCheck(this, Message);
+
+    this.signedData = signedData;
+    this.validate();
+  }
+
+  Message.prototype.getSignerKeyID = function getSignerKeyID() {
+    return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
+  };
+
+  Message.prototype.validate = function validate() {
+    if (!this.signedData) {
+      throw new ValidationError(errorMsg + ' Missing signedData');
+    }
+    if (typeof this.signedData !== 'object') {
+      throw new ValidationError(errorMsg + ' signedData must be an object');
+    }
+    var d = this.signedData;
+
+    if (!d.type) {
+      throw new ValidationError(errorMsg + ' Missing type definition');
+    }
+    if (!d.author) {
+      throw new ValidationError(errorMsg + ' Missing author');
+    }
+    if (!d.author.length) {
+      throw new ValidationError(errorMsg + ' Author empty');
+    }
+    var i = void 0;
+    var authorKeyID = void 0;
+    if (this.jwsHeader) {
+      this.signerKeyHash = this.getSignerKeyID();
+    }
+    for (i = 0; i < d.author.length; i++) {
+      if (d.author[i].length !== 2) {
+        throw new ValidationError(errorMsg + ' Invalid author: ' + d.author[i].toString());
+      }
+      if (d.author[i][0] === 'keyID') {
+        if (authorKeyID) {
+          throw new ValidationError(errorMsg + ' Author may have only one keyID');
+        } else {
+          authorKeyID = d.author[i][1];
+        }
+        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {
+          throw new ValidationError(errorMsg + ' If message has a keyID author, it must be signed by the same key');
+        }
+      }
+    }
+    if (!d.recipient) {
+      throw new ValidationError(errorMsg + ' Missing recipient');
+    }
+    if (!d.recipient.length) {
+      throw new ValidationError(errorMsg + ' Author empty');
+    }
+    for (i = 0; i < d.recipient.length; i++) {
+      if (d.recipient[i].length !== 2) {
+        throw new ValidationError(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
+      }
+    }
+    if (!d.timestamp) {
+      throw new ValidationError(errorMsg + ' Missing timestamp');
+    }
+
+    if (!Date.parse(d.timestamp)) {
+      throw new ValidationError(errorMsg + ' Invalid timestamp');
+    }
+
+    if (d.type === 'rating') {
+      if (isNaN(d.rating)) {
+        throw new ValidationError(errorMsg + ' Invalid rating');
+      }
+      if (isNaN(d.maxRating)) {
+        throw new ValidationError(errorMsg + ' Invalid maxRating');
+      }
+      if (isNaN(d.minRating)) {
+        throw new ValidationError(errorMsg + ' Invalid minRating');
+      }
+      if (d.rating > d.maxRating) {
+        throw new ValidationError(errorMsg + ' Rating is above maxRating');
+      }
+      if (d.rating < d.minRating) {
+        throw new ValidationError(errorMsg + ' Rating is below minRating');
+      }
+      if (typeof d.context !== 'string' || !d.context.length) {
+        throw new ValidationError(errorMsg + ' Rating messages must have a context field');
+      }
+    }
+
+    if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
+      if (d.recipient.length < 2) {
+        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
+      }
+    }
+
+    return true;
+  };
+
+  Message.prototype.isPositive = function isPositive() {
+    return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
+  };
+
+  Message.prototype.sign = function sign(key, skipValidation) {
+    this.jwsHeader = { alg: 'ES256', key: key.pubKeyASN1 };
+    this.jws = jws.JWS.sign(this.jwsHeader.alg, _JSON$stringify(this.jwsHeader), _JSON$stringify(this.signedData), key);
+    if (!skipValidation) {
+      Message.validateJws(this.jws);
+    }
+    this.getHash();
+    return this;
+  };
+
+  Message.create = function create(signedData) {
+    if (!signedData.author) {
+      signedData.author = [['keyID', util.getDefaultKey().keyID]];
+    }
+    signedData.timestamp = signedData.timestamp || new Date().toISOString();
+    signedData.context = signedData.context || 'identifi';
+    return new Message(signedData);
+  };
+
+  Message.createVerification = function createVerification(signedData) {
+    signedData.type = 'verification';
+    return this.create(signedData);
+  };
+
+  Message.createRating = function createRating(signedData) {
+    signedData.type = 'rating';
+    signedData.maxRating = signedData.maxRating || 10;
+    signedData.minRating = signedData.minRating || -10;
+    return this.create(signedData);
+  };
+
+  Message.fromJws = function fromJws(jwsString) {
+    Message.validateJws(jwsString);
+    var d = jws.JWS.parse(jwsString);
+    var msg = new Message(d.payloadObj);
+    msg.hash = Message.getHash(jwsString);
+    msg.jwsHeader = d.headerObj;
+    msg.jws = jwsString;
+    return msg;
+  };
+
+  Message.prototype.getAuthor = function getAuthor(index) {
+    if (index) {
+      // TODO: search from index
+    } else {
+      var id = new Identity({ attrs: this.signedData.author });
+      if (this.authorPos && this.authorNeg) {
+        Object.append({ receivedPositive: this.authorPos, receivedNegative: this.authorNeg }, id);
+      }
+      return id;
+    }
+  };
+
+  Message.prototype.getRecipient = function getRecipient(index) {
+    if (index) {
+      // TODO: search from index
+    } else {
+      var id = new Identity({ attrs: this.signedData.recipient });
+      if (this.recipientPos && this.recipientNeg) {
+        Object.append({ receivedPositive: this.recipientPos, receivedNegative: this.recipientNeg }, id);
+      }
+      return id;
+    }
+  };
+
+  Message.prototype.getHash = function getHash() {
+    if (this.jws && !this.hash) {
+      this.hash = Message.getHash(this.jws);
+    }
+    return this.hash;
+  };
+
+  Message.getHash = function getHash(jwsString) {
+    var hex = new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(jwsString);
+    return new Buffer(hex, 'hex').toString('base64');
+  };
+
+  Message.prototype.verify = function verify() {
+    var keyHex = this.jwsHeader.key || this.jwsHeader.kid;
+    var pem = asn1.ASN1Util.getPEMStringFromHex(keyHex, 'PUBLIC KEY');
+    var pubKey = KEYUTIL_1.getKey(pem);
+    if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
+      throw new ValidationError(errorMsg + ' Invalid signature');
+    }
+    if (this.hash) {
+      if (this.hash !== Message.getHash(this.jws)) {
+        throw new ValidationError(errorMsg + ' Invalid message hash');
+      }
+    } else {
+      this.getHash();
+    }
+    return true;
+  };
+
+  Message.validateJws = function validateJws(jwsString) {
+    if (typeof jwsString !== 'string') {
+      throw new ValidationError(errorMsg + ' Message JWS must be a string');
+    }
+    if (jwsString.length > JWS_MAX_LENGTH) {
+      throw new ValidationError(errorMsg + ' Message JWS max length is ' + JWS_MAX_LENGTH);
+    }
+    return true;
+  };
+
+  return Message;
+}();
+
+var isEnum$1 = _objectPie.f;
+var _objectToArray = function (isEntries) {
+  return function (it) {
+    var O = _toIobject(it);
+    var keys = _objectKeys(O);
+    var length = keys.length;
+    var i = 0;
+    var result = [];
+    var key;
+    while (length > i) if (isEnum$1.call(O, key = keys[i++])) {
+      result.push(isEntries ? [key, O[key]] : O[key]);
+    } return result;
+  };
+};
+
+// https://github.com/tc39/proposal-object-values-entries
+
+var $values = _objectToArray(false);
+
+_export(_export.S, 'Object', {
+  values: function values(it) {
+    return $values(it);
+  }
+});
+
+var values = _core.Object.values;
+
+var values$2 = createCommonjsModule(function (module) {
+module.exports = { "default": values, __esModule: true };
+});
+
+var _Object$values = unwrapExports(values$2);
+
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
 
@@ -12762,586 +13345,6 @@ return index;
 })));
 });
 
-var Identity = function () {
-  function Identity(data) {
-    var _this = this;
-
-    _classCallCheck(this, Identity);
-
-    this.data = data;
-    this.profile = {};
-    this.mostVerifiedAttributes = {};
-    if (data.attrs.length) {
-      var c = data.attrs[0];
-      this.receivedPositive = c.pos;
-      this.receivedNegative = c.neg;
-      this.receivedNeutral = c.neut;
-    }
-    this.receivedNegative |= 0;
-    this.receivedPositive |= 0;
-    this.receivedNeutral |= 0;
-    this.trustDistance = 1000;
-    this.data.attrs.forEach(function (a) {
-      if (!_this.linkTo && util.isUniqueType(a.name)) {
-        _this.linkTo = a;
-      }
-      if (!_Number$isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < _this.trustDistance) {
-        _this.trustDistance = parseInt(a.dist);
-        if (util.isUniqueType(a.name)) {
-          _this.linkTo = a;
-        }
-      }
-      switch (a.name) {
-        case 'email':
-          a.iconStyle = 'glyphicon glyphicon-envelope';
-          a.btnStyle = 'btn-success';
-          a.link = 'mailto:' + a.val;
-          a.quickContact = true;
-          break;
-        case 'bitcoin_address':
-        case 'bitcoin':
-          a.iconStyle = 'fa fa-bitcoin';
-          a.btnStyle = 'btn-primary';
-          a.link = 'https://blockchain.info/address/' + a.val;
-          a.quickContact = true;
-          break;
-        case 'gpg_fingerprint':
-        case 'gpg_keyid':
-          a.iconStyle = 'fa fa-key';
-          a.btnStyle = 'btn-default';
-          a.link = 'https://pgp.mit.edu/pks/lookup?op=get&search=0x' + a.val;
-          break;
-        case 'account':
-          a.iconStyle = 'fa fa-at';
-          break;
-        case 'nickname':
-          a.iconStyle = 'glyphicon glyphicon-font';
-          break;
-        case 'name':
-          a.iconStyle = 'glyphicon glyphicon-font';
-          break;
-        case 'tel':
-        case 'phone':
-          a.iconStyle = 'glyphicon glyphicon-earphone';
-          a.btnStyle = 'btn-success';
-          a.link = 'tel:' + a.val;
-          a.quickContact = true;
-          break;
-        case 'keyID':
-          a.iconStyle = 'fa fa-key';
-          break;
-        case 'url':
-          a.link = a.val;
-          if (a.val.indexOf('facebook.com/') > -1) {
-            a.iconStyle = 'fa fa-facebook';
-            a.btnStyle = 'btn-facebook';
-            a.link = a.val;
-            a.linkName = a.val.split('facebook.com/')[1];
-            a.quickContact = true;
-          } else if (a.val.indexOf('twitter.com/') > -1) {
-            a.iconStyle = 'fa fa-twitter';
-            a.btnStyle = 'btn-twitter';
-            a.link = a.val;
-            a.linkName = a.val.split('twitter.com/')[1];
-            a.quickContact = true;
-          } else if (a.val.indexOf('plus.google.com/') > -1) {
-            a.iconStyle = 'fa fa-google-plus';
-            a.btnStyle = 'btn-google-plus';
-            a.link = a.val;
-            a.linkName = a.val.split('plus.google.com/')[1];
-            a.quickContact = true;
-          } else if (a.val.indexOf('linkedin.com/') > -1) {
-            a.iconStyle = 'fa fa-linkedin';
-            a.btnStyle = 'btn-linkedin';
-            a.link = a.val;
-            a.linkName = a.val.split('linkedin.com/')[1];
-            a.quickContact = true;
-          } else if (a.val.indexOf('github.com/') > -1) {
-            a.iconStyle = 'fa fa-github';
-            a.btnStyle = 'btn-github';
-            a.link = a.val;
-            a.linkName = a.val.split('github.com/')[1];
-            a.quickContact = true;
-          } else {
-            a.iconStyle = 'glyphicon glyphicon-link';
-            a.btnStyle = 'btn-default';
-          }
-      }
-      var keyExists = _Object$keys(_this.mostVerifiedAttributes).indexOf(a.name) > -1;
-      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > _this.mostVerifiedAttributes[a.name].verificationScore)) {
-        _this.mostVerifiedAttributes[a.name] = {
-          attribute: a,
-          verificationScore: a.conf - a.ref
-        };
-      }
-    });
-    _Object$keys(this.mostVerifiedAttributes).forEach(function (k) {
-      if (['name', 'nickname', 'email', 'url', 'coverPhoto', 'profilePhoto'].indexOf(k) > -1) {
-        _this.profile[k] = _this.mostVerifiedAttributes[k].attribute.val;
-      }
-    });
-  }
-
-  Identity.prototype.getGravatar = function getGravatar() {
-    // TODO: gravatar should be replaced soon with random art or ipfs profile photo
-    if (!this.gravatar) {
-      var str = '';
-      try {
-        str = this.profile.email || this.data.attrs[0].name + ':' + this.data.attrs[0].val;
-      } catch (e) {
-        console.error(e);
-      }
-      this.gravatar = new MessageDigest({ alg: 'md5', prov: 'cryptojs' }).digestString(str);
-    }
-    return this.gravatar;
-  };
-
-  Identity.prototype.getSentMsgsIndex = function getSentMsgsIndex(storage, ipfsIndexWidth) {
-    return merkleBtree.MerkleBTree.getByHash(this.data.sent, storage, ipfsIndexWidth);
-  };
-
-  Identity.prototype.getReceivedMsgsIndex = function getReceivedMsgsIndex(storage, ipfsIndexWidth) {
-    return merkleBtree.MerkleBTree.getByHash(this.data.received, storage, ipfsIndexWidth);
-  };
-
-  Identity.prototype.verified = function verified(attribute) {
-    return this.mostVerifiedAttributes.hasOwnProperty(attribute) ? this.mostVerifiedAttributes[attribute].attribute.val : undefined;
-  };
-
-  Identity.prototype.profileCard = function profileCard() {
-    var card = document.createElement('div');
-    card.className = 'identifi-card';
-
-    var identicon = this.identicon(60);
-    identicon.style.order = 1;
-    identicon.style.flexShrink = 0;
-    identicon.style.marginRight = '15px';
-
-    var details = document.createElement('div');
-    details.style.padding = '5px';
-    details.style.order = 2;
-    details.style.flexGrow = 1;
-    var link = 'https://identi.fi/#/identities/' + this.linkTo.name + '/' + this.linkTo.val;
-    details.innerHTML = '<a href="' + link + '">' + (this.profile.name || this.profile.nickname || this.linkTo.name + ':' + this.linkTo.val) + '</a><br>';
-    details.innerHTML += '<small>Received: <span class="identifi-pos">+' + (this.receivedPositive || 0) + '</span> / <span class="identifi-neg">-' + (this.receivedNegative || 0) + '</span></small><br>';
-    var links = document.createElement('small');
-    this.data.attrs.forEach(function (a) {
-      if (a.link) {
-        links.innerHTML += a.name + ': <a href="' + a.link + '">' + a.val + '</a> ';
-      }
-    });
-    details.appendChild(links);
-
-    card.appendChild(identicon);
-    card.appendChild(details);
-    /*
-    const template = ```
-    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
-      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
-      <td>
-        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>
-        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>
-        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>
-        <small ng-if="!result.name" class="list-group-item-text">
-          <span ng-bind-html="result[0][0]|highlight:query.term"></span>
-        </small><br>
-        <small>
-          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>
-          <span ng-if="result.email" class="mar-right10">
-            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>
-          </span>
-          <span ng-if="result.facebook" class="mar-right10">
-            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>
-          </span>
-          <span ng-if="result.twitter" class="mar-right10">
-            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>
-          </span>
-          <span ng-if="result.googlePlus" class="mar-right10">
-            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>
-          </span>
-          <span ng-if="result.bitcoin" class="mar-right10">
-            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>
-          </span>
-        </small>
-      </td>
-    </tr>
-    ```;*/
-    return card;
-  };
-
-  Identity.appendSearchWidget = function appendSearchWidget(parentElement, index) {
-    var _this2 = this;
-
-    var form = document.createElement('form');
-
-    var input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Search';
-    input.id = 'identifiSearchInput';
-    form.innerHTML += '<div id="identifiSearchResults"></div>';
-
-    var searchResults = document.createElement('div');
-
-    parentElement.appendChild(form);
-    form.appendChild(input);
-    form.appendChild(searchResults);
-    input.addEventListener('keyup', _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee() {
-      var r;
-      return regenerator.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              _context.next = 2;
-              return index.search(input.value);
-
-            case 2:
-              r = _context.sent;
-
-              searchResults.innerHTML = '';
-              r.sort(function (a, b) {
-                return a.trustDistance - b.trustDistance;
-              });
-              r.forEach(function (i) {
-                searchResults.appendChild(i.profileCard());
-              });
-
-            case 6:
-            case 'end':
-              return _context.stop();
-          }
-        }
-      }, _callee, _this2);
-    })));
-  };
-
-  Identity._ordinal = function _ordinal(n) {
-    var s = ['th', 'st', 'nd', 'rd'];
-    var v = n % 100;
-    return n + (s[(v - 20) % 10] || s[v] || s[0]);
-  };
-
-  Identity._injectCss = function _injectCss() {
-    var elementId = 'identifiStyle';
-    if (document.getElementById(elementId)) {
-      return;
-    }
-    var sheet = document.createElement('style');
-    sheet.id = elementId;
-    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .identifi-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .identifi-card a:hover, .identifi-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .identifi-pos {\n        color: #3c763d;\n      }\n\n      .identifi-neg {\n        color: #a94442;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
-    document.body.appendChild(sheet);
-  };
-
-  Identity.prototype.identicon = function identicon(width) {
-    var border = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
-
-    Identity._injectCss(); // some other way that is not called on each identicon generation?
-    var identicon = document.createElement('div');
-    identicon.className = 'identifi-identicon';
-    identicon.style.width = width + 'px';
-    identicon.style.height = width + 'px';
-
-    // Define colors etc
-    var bgColor = 'rgba(0,0,0,0.2)';
-    var bgImage = 'none';
-    var transform = '';
-    var boxShadow = '0px 0px 0px 0px #82FF84';
-    if (this.receivedPositive > this.receivedNegative * 20) {
-      boxShadow = '0px 0px ' + border * this.receivedPositive / 50 + 'px 0px #82FF84';
-    } else if (this.receivedPositive < this.receivedNegative * 3) {
-      boxShadow = '0px 0px ' + border * this.receivedNegative / 10 + 'px 0px #BF0400';
-    }
-    if (this.receivedPositive + this.receivedNegative > 0) {
-      if (this.receivedPositive > this.receivedNegative) {
-        transform = 'rotate(' + (-this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2 + 'deg)';
-        bgColor = '#A94442';
-        bgImage = 'linear-gradient(' + this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360 + 'deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)';
-      } else {
-        transform = 'rotate(' + ((-this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2 + 180) + 'deg)';
-        bgColor = '#3C763D';
-        bgImage = 'linear-gradient(' + this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360 + 'deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)';
-      }
-    }
-
-    var distance = document.createElement('span');
-    distance.textContent = this.trustDistance < 1000 ? Identity._ordinal(this.trustDistance) : '\u2013';
-    distance.className = 'identifi-distance';
-    distance.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
-
-    var pie = document.createElement('div');
-    pie.className = 'identifi-pie';
-    pie.style.backgroundColor = bgColor;
-    pie.style.backgroundImage = bgImage;
-    pie.style.width = width + 'px';
-    pie.style.boxShadow = boxShadow;
-    pie.style.opacity = (this.receivedPositive + this.receivedNegative) / 10 * 0.5 + 0.35;
-    pie.style.transform = transform;
-
-    var img = document.createElement('img');
-    img.src = 'https://www.gravatar.com/avatar/' + this.getGravatar() + '?d=retro&s=' + width * 2;
-    img.alt = '';
-    img.width = width;
-    img.style.borderWidth = border + 'px';
-
-    identicon.appendChild(distance);
-    identicon.appendChild(pie);
-    identicon.appendChild(img);
-
-    return identicon;
-  };
-
-  return Identity;
-}();
-
-var JWS_MAX_LENGTH = 10000;
-var errorMsg = 'Invalid Identifi message:';
-
-var ValidationError = function (_Error) {
-  _inherits(ValidationError, _Error);
-
-  function ValidationError() {
-    _classCallCheck(this, ValidationError);
-
-    return _possibleConstructorReturn(this, _Error.apply(this, arguments));
-  }
-
-  return ValidationError;
-}(Error);
-
-var Message = function () {
-  function Message(signedData) {
-    _classCallCheck(this, Message);
-
-    this.signedData = signedData;
-    this.validate();
-  }
-
-  Message.prototype.getSignerKeyID = function getSignerKeyID() {
-    return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
-  };
-
-  Message.prototype.validate = function validate() {
-    if (!this.signedData) {
-      throw new ValidationError(errorMsg + ' Missing signedData');
-    }
-    if (typeof this.signedData !== 'object') {
-      throw new ValidationError(errorMsg + ' signedData must be an object');
-    }
-    var d = this.signedData;
-
-    if (!d.type) {
-      throw new ValidationError(errorMsg + ' Missing type definition');
-    }
-    if (!d.author) {
-      throw new ValidationError(errorMsg + ' Missing author');
-    }
-    if (!d.author.length) {
-      throw new ValidationError(errorMsg + ' Author empty');
-    }
-    var i = void 0;
-    var authorKeyID = void 0;
-    if (this.jwsHeader) {
-      this.signerKeyHash = this.getSignerKeyID();
-    }
-    for (i = 0; i < d.author.length; i++) {
-      if (d.author[i].length !== 2) {
-        throw new ValidationError(errorMsg + ' Invalid author: ' + d.author[i].toString());
-      }
-      if (d.author[i][0] === 'keyID') {
-        if (authorKeyID) {
-          throw new ValidationError(errorMsg + ' Author may have only one keyID');
-        } else {
-          authorKeyID = d.author[i][1];
-        }
-        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {
-          throw new ValidationError(errorMsg + ' If message has a keyID author, it must be signed by the same key');
-        }
-      }
-    }
-    if (!d.recipient) {
-      throw new ValidationError(errorMsg + ' Missing recipient');
-    }
-    if (!d.recipient.length) {
-      throw new ValidationError(errorMsg + ' Author empty');
-    }
-    for (i = 0; i < d.recipient.length; i++) {
-      if (d.recipient[i].length !== 2) {
-        throw new ValidationError(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
-      }
-    }
-    if (!d.timestamp) {
-      throw new ValidationError(errorMsg + ' Missing timestamp');
-    }
-
-    if (!Date.parse(d.timestamp)) {
-      throw new ValidationError(errorMsg + ' Invalid timestamp');
-    }
-
-    if (d.type === 'rating') {
-      if (isNaN(d.rating)) {
-        throw new ValidationError(errorMsg + ' Invalid rating');
-      }
-      if (isNaN(d.maxRating)) {
-        throw new ValidationError(errorMsg + ' Invalid maxRating');
-      }
-      if (isNaN(d.minRating)) {
-        throw new ValidationError(errorMsg + ' Invalid minRating');
-      }
-      if (d.rating > d.maxRating) {
-        throw new ValidationError(errorMsg + ' Rating is above maxRating');
-      }
-      if (d.rating < d.minRating) {
-        throw new ValidationError(errorMsg + ' Rating is below minRating');
-      }
-      if (typeof d.context !== 'string' || !d.context.length) {
-        throw new ValidationError(errorMsg + ' Rating messages must have a context field');
-      }
-    }
-
-    if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
-      if (d.recipient.length < 2) {
-        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
-      }
-    }
-
-    return true;
-  };
-
-  Message.prototype.isPositive = function isPositive() {
-    return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
-  };
-
-  Message.prototype.sign = function sign(key, skipValidation) {
-    this.jwsHeader = { alg: 'ES256', key: key.pubKeyASN1 };
-    this.jws = jws.JWS.sign(this.jwsHeader.alg, _JSON$stringify(this.jwsHeader), _JSON$stringify(this.signedData), key);
-    if (!skipValidation) {
-      Message.validateJws(this.jws);
-    }
-    this.getHash();
-    return this;
-  };
-
-  Message.create = function create(signedData) {
-    if (!signedData.author) {
-      signedData.author = [['keyID', util.getDefaultKey().keyID]];
-    }
-    signedData.timestamp = signedData.timestamp || new Date().toISOString();
-    signedData.context = signedData.context || 'identifi';
-    return new Message(signedData);
-  };
-
-  Message.createVerification = function createVerification(signedData) {
-    signedData.type = 'verification';
-    return this.create(signedData);
-  };
-
-  Message.createRating = function createRating(signedData) {
-    signedData.type = 'rating';
-    signedData.maxRating = signedData.maxRating || 10;
-    signedData.minRating = signedData.minRating || -10;
-    return this.create(signedData);
-  };
-
-  Message.fromJws = function fromJws(jwsString) {
-    Message.validateJws(jwsString);
-    var d = jws.JWS.parse(jwsString);
-    var msg = new Message(d.payloadObj);
-    msg.hash = Message.getHash(jwsString);
-    msg.jwsHeader = d.headerObj;
-    msg.jws = jwsString;
-    return msg;
-  };
-
-  Message.prototype.getAuthor = function getAuthor(index) {
-    if (index) {
-      // TODO: search from index
-    } else {
-      return new Identity({ attrs: this.signedData.author });
-    }
-  };
-
-  Message.prototype.getRecipient = function getRecipient(index) {
-    if (index) {
-      // TODO: search from index
-    } else {
-      return new Identity({ attrs: this.signedData.recipient });
-    }
-  };
-
-  Message.prototype.getHash = function getHash() {
-    if (this.jws && !this.hash) {
-      this.hash = Message.getHash(this.jws);
-    }
-    return this.hash;
-  };
-
-  Message.getHash = function getHash(jwsString) {
-    var hex = new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(jwsString);
-    return new Buffer(hex, 'hex').toString('base64');
-  };
-
-  Message.prototype.verify = function verify() {
-    var keyHex = this.jwsHeader.key || this.jwsHeader.kid;
-    var pem = asn1.ASN1Util.getPEMStringFromHex(keyHex, 'PUBLIC KEY');
-    var pubKey = KEYUTIL_1.getKey(pem);
-    if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
-      throw new ValidationError(errorMsg + ' Invalid signature');
-    }
-    if (this.hash) {
-      if (this.hash !== Message.getHash(this.jws)) {
-        throw new ValidationError(errorMsg + ' Invalid message hash');
-      }
-    } else {
-      this.getHash();
-    }
-    return true;
-  };
-
-  Message.validateJws = function validateJws(jwsString) {
-    if (typeof jwsString !== 'string') {
-      throw new ValidationError(errorMsg + ' Message JWS must be a string');
-    }
-    if (jwsString.length > JWS_MAX_LENGTH) {
-      throw new ValidationError(errorMsg + ' Message JWS max length is ' + JWS_MAX_LENGTH);
-    }
-    return true;
-  };
-
-  return Message;
-}();
-
-var isEnum$1 = _objectPie.f;
-var _objectToArray = function (isEntries) {
-  return function (it) {
-    var O = _toIobject(it);
-    var keys = _objectKeys(O);
-    var length = keys.length;
-    var i = 0;
-    var result = [];
-    var key;
-    while (length > i) if (isEnum$1.call(O, key = keys[i++])) {
-      result.push(isEntries ? [key, O[key]] : O[key]);
-    } return result;
-  };
-};
-
-// https://github.com/tc39/proposal-object-values-entries
-
-var $values = _objectToArray(false);
-
-_export(_export.S, 'Object', {
-  values: function values(it) {
-    return $values(it);
-  }
-});
-
-var values = _core.Object.values;
-
-var values$2 = createCommonjsModule(function (module) {
-module.exports = { "default": values, __esModule: true };
-});
-
-var _Object$values = unwrapExports(values$2);
-
 var DEFAULT_INDEX = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
 var DEFAULT_STATIC_FALLBACK_INDEX = '/ipfs/QmPxLM631zJQ12tUDWs55LkGqqroFZKHeLjAZ2XwL9Miu3';
 var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io', 'https://ipfs.infura.io', 'https://www.eternum.io'];
@@ -13628,10 +13631,12 @@ var Index = function () {
               msgs = [];
 
               rawMsgs.forEach(function (row) {
-                var msg = new Message(row.value.signedData);
-                msg.searchKey = row.key;
+                var msg = Message.fromJws(row.value.jws);
+                msg.cursor = row.key;
                 msg.authorPos = row.value.author_pos;
                 msg.authorNeg = row.value.author_neg;
+                msg.recipientPos = row.value.recipient_pos;
+                msg.recipientNeg = row.value.recipient_neg;
                 msgs.push(msg);
               });
               return _context4.abrupt('return', msgs);
@@ -13658,12 +13663,21 @@ var Index = function () {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              if (!identity.sentIndex) {
-                identity.sentIndex = merkleBtree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
+              if (identity.sentIndex) {
+                _context5.next = 4;
+                break;
               }
+
+              _context5.next = 3;
+              return merkleBtree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
+
+            case 3:
+              identity.sentIndex = _context5.sent;
+
+            case 4:
               return _context5.abrupt('return', this._getMsgs(identity.sentIndex, limit, cursor));
 
-            case 2:
+            case 5:
             case 'end':
               return _context5.stop();
           }
@@ -13685,12 +13699,21 @@ var Index = function () {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              if (!identity.receivedIndex) {
-                identity.receivedIndex = merkleBtree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
+              if (identity.receivedIndex) {
+                _context6.next = 4;
+                break;
               }
+
+              _context6.next = 3;
+              return merkleBtree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
+
+            case 3:
+              identity.receivedIndex = _context6.sent;
+
+            case 4:
               return _context6.abrupt('return', this._getMsgs(identity.receivedIndex, limit, cursor));
 
-            case 2:
+            case 5:
             case 'end':
               return _context6.stop();
           }
@@ -13916,7 +13939,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.37";
+var version$2 = "0.0.38";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
