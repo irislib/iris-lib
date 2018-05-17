@@ -4255,207 +4255,6 @@ var util = {
   }
 };
 
-var JWS_MAX_LENGTH = 10000;
-var errorMsg = 'Invalid Identifi message:';
-
-var ValidationError = function (_Error) {
-  _inherits(ValidationError, _Error);
-
-  function ValidationError() {
-    _classCallCheck(this, ValidationError);
-
-    return _possibleConstructorReturn(this, _Error.apply(this, arguments));
-  }
-
-  return ValidationError;
-}(Error);
-
-var Message = function () {
-  function Message(signedData) {
-    _classCallCheck(this, Message);
-
-    this.signedData = signedData;
-    this.validate();
-  }
-
-  Message.prototype.getSignerKeyID = function getSignerKeyID() {
-    return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
-  };
-
-  Message.prototype.validate = function validate() {
-    if (!this.signedData) {
-      throw new ValidationError(errorMsg + ' Missing signedData');
-    }
-    if (typeof this.signedData !== 'object') {
-      throw new ValidationError(errorMsg + ' signedData must be an object');
-    }
-    var d = this.signedData;
-
-    if (!d.type) {
-      throw new ValidationError(errorMsg + ' Missing type definition');
-    }
-    if (!d.author) {
-      throw new ValidationError(errorMsg + ' Missing author');
-    }
-    if (!d.author.length) {
-      throw new ValidationError(errorMsg + ' Author empty');
-    }
-    var i = void 0;
-    var authorKeyID = void 0;
-    if (this.jwsHeader) {
-      this.signerKeyHash = this.getSignerKeyID();
-    }
-    for (i = 0; i < d.author.length; i++) {
-      if (d.author[i].length !== 2) {
-        throw new ValidationError(errorMsg + ' Invalid author: ' + d.author[i].toString());
-      }
-      if (d.author[i][0] === 'keyID') {
-        if (authorKeyID) {
-          throw new ValidationError(errorMsg + ' Author may have only one keyID');
-        } else {
-          authorKeyID = d.author[i][1];
-        }
-        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {
-          throw new ValidationError(errorMsg + ' If message has a keyID author, it must be signed by the same key');
-        }
-      }
-    }
-    if (!d.recipient) {
-      throw new ValidationError(errorMsg + ' Missing recipient');
-    }
-    if (!d.recipient.length) {
-      throw new ValidationError(errorMsg + ' Author empty');
-    }
-    for (i = 0; i < d.recipient.length; i++) {
-      if (d.recipient[i].length !== 2) {
-        throw new ValidationError(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
-      }
-    }
-    if (!d.timestamp) {
-      throw new ValidationError(errorMsg + ' Missing timestamp');
-    }
-
-    if (!Date.parse(d.timestamp)) {
-      throw new ValidationError(errorMsg + ' Invalid timestamp');
-    }
-
-    if (d.type === 'rating') {
-      if (isNaN(d.rating)) {
-        throw new ValidationError(errorMsg + ' Invalid rating');
-      }
-      if (isNaN(d.maxRating)) {
-        throw new ValidationError(errorMsg + ' Invalid maxRating');
-      }
-      if (isNaN(d.minRating)) {
-        throw new ValidationError(errorMsg + ' Invalid minRating');
-      }
-      if (d.rating > d.maxRating) {
-        throw new ValidationError(errorMsg + ' Rating is above maxRating');
-      }
-      if (d.rating < d.minRating) {
-        throw new ValidationError(errorMsg + ' Rating is below minRating');
-      }
-      if (typeof d.context !== 'string' || !d.context.length) {
-        throw new ValidationError(errorMsg + ' Rating messages must have a context field');
-      }
-    }
-
-    if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
-      if (d.recipient.length < 2) {
-        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
-      }
-    }
-
-    return true;
-  };
-
-  Message.prototype.isPositive = function isPositive() {
-    return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
-  };
-
-  Message.prototype.sign = function sign(key, skipValidation) {
-    this.jwsHeader = { alg: 'ES256', key: key.pubKeyASN1 };
-    this.jws = jws.JWS.sign(this.jwsHeader.alg, _JSON$stringify(this.jwsHeader), _JSON$stringify(this.signedData), key);
-    if (!skipValidation) {
-      Message.validateJws(this.jws);
-    }
-    this.getHash();
-    return this;
-  };
-
-  Message.create = function create(signedData) {
-    if (!signedData.author) {
-      signedData.author = [['keyID', util.getDefaultKey().keyID]];
-    }
-    signedData.timestamp = signedData.timestamp || new Date().toISOString();
-    signedData.context = signedData.context || 'identifi';
-    return new Message(signedData);
-  };
-
-  Message.createVerification = function createVerification(signedData) {
-    signedData.type = 'verification';
-    return this.create(signedData);
-  };
-
-  Message.createRating = function createRating(signedData) {
-    signedData.type = 'rating';
-    signedData.maxRating = signedData.maxRating || 10;
-    signedData.minRating = signedData.minRating || -10;
-    return this.create(signedData);
-  };
-
-  Message.fromJws = function fromJws(jwsString) {
-    Message.validateJws(jwsString);
-    var d = jws.JWS.parse(jwsString);
-    var msg = new Message(d.payloadObj);
-    msg.hash = Message.getHash(jwsString);
-    msg.jwsHeader = d.headerObj;
-    msg.jws = jwsString;
-    return msg;
-  };
-
-  Message.prototype.getHash = function getHash() {
-    if (this.jws && !this.hash) {
-      this.hash = Message.getHash(this.jws);
-    }
-    return this.hash;
-  };
-
-  Message.getHash = function getHash(jwsString) {
-    var hex = new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(jwsString);
-    return new Buffer(hex, 'hex').toString('base64');
-  };
-
-  Message.prototype.verify = function verify() {
-    var keyHex = this.jwsHeader.key || this.jwsHeader.kid;
-    var pem = asn1.ASN1Util.getPEMStringFromHex(keyHex, 'PUBLIC KEY');
-    var pubKey = KEYUTIL_1.getKey(pem);
-    if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
-      throw new ValidationError(errorMsg + ' Invalid signature');
-    }
-    if (this.hash) {
-      if (this.hash !== Message.getHash(this.jws)) {
-        throw new ValidationError(errorMsg + ' Invalid message hash');
-      }
-    } else {
-      this.getHash();
-    }
-    return true;
-  };
-
-  Message.validateJws = function validateJws(jwsString) {
-    if (typeof jwsString !== 'string') {
-      throw new ValidationError(errorMsg + ' Message JWS must be a string');
-    }
-    if (jwsString.length > JWS_MAX_LENGTH) {
-      throw new ValidationError(errorMsg + ' Message JWS max length is ' + JWS_MAX_LENGTH);
-    }
-    return true;
-  };
-
-  return Message;
-}();
-
 var runtime = createCommonjsModule(function (module) {
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
@@ -13278,7 +13077,7 @@ var Identity = function () {
     pie.style.transform = transform;
 
     var img = document.createElement('img');
-    img.src = 'https://www.gravatar.com/avatar/' + this.getGravatar() + '?d=retro&amp;s=' + width * 2;
+    img.src = 'https://www.gravatar.com/avatar/' + this.getGravatar() + '?d=retro&s=' + width * 2;
     img.alt = '';
     img.width = width;
     img.style.borderWidth = border + 'px';
@@ -13291,6 +13090,223 @@ var Identity = function () {
   };
 
   return Identity;
+}();
+
+var JWS_MAX_LENGTH = 10000;
+var errorMsg = 'Invalid Identifi message:';
+
+var ValidationError = function (_Error) {
+  _inherits(ValidationError, _Error);
+
+  function ValidationError() {
+    _classCallCheck(this, ValidationError);
+
+    return _possibleConstructorReturn(this, _Error.apply(this, arguments));
+  }
+
+  return ValidationError;
+}(Error);
+
+var Message = function () {
+  function Message(signedData) {
+    _classCallCheck(this, Message);
+
+    this.signedData = signedData;
+    this.validate();
+  }
+
+  Message.prototype.getSignerKeyID = function getSignerKeyID() {
+    return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
+  };
+
+  Message.prototype.validate = function validate() {
+    if (!this.signedData) {
+      throw new ValidationError(errorMsg + ' Missing signedData');
+    }
+    if (typeof this.signedData !== 'object') {
+      throw new ValidationError(errorMsg + ' signedData must be an object');
+    }
+    var d = this.signedData;
+
+    if (!d.type) {
+      throw new ValidationError(errorMsg + ' Missing type definition');
+    }
+    if (!d.author) {
+      throw new ValidationError(errorMsg + ' Missing author');
+    }
+    if (!d.author.length) {
+      throw new ValidationError(errorMsg + ' Author empty');
+    }
+    var i = void 0;
+    var authorKeyID = void 0;
+    if (this.jwsHeader) {
+      this.signerKeyHash = this.getSignerKeyID();
+    }
+    for (i = 0; i < d.author.length; i++) {
+      if (d.author[i].length !== 2) {
+        throw new ValidationError(errorMsg + ' Invalid author: ' + d.author[i].toString());
+      }
+      if (d.author[i][0] === 'keyID') {
+        if (authorKeyID) {
+          throw new ValidationError(errorMsg + ' Author may have only one keyID');
+        } else {
+          authorKeyID = d.author[i][1];
+        }
+        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {
+          throw new ValidationError(errorMsg + ' If message has a keyID author, it must be signed by the same key');
+        }
+      }
+    }
+    if (!d.recipient) {
+      throw new ValidationError(errorMsg + ' Missing recipient');
+    }
+    if (!d.recipient.length) {
+      throw new ValidationError(errorMsg + ' Author empty');
+    }
+    for (i = 0; i < d.recipient.length; i++) {
+      if (d.recipient[i].length !== 2) {
+        throw new ValidationError(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
+      }
+    }
+    if (!d.timestamp) {
+      throw new ValidationError(errorMsg + ' Missing timestamp');
+    }
+
+    if (!Date.parse(d.timestamp)) {
+      throw new ValidationError(errorMsg + ' Invalid timestamp');
+    }
+
+    if (d.type === 'rating') {
+      if (isNaN(d.rating)) {
+        throw new ValidationError(errorMsg + ' Invalid rating');
+      }
+      if (isNaN(d.maxRating)) {
+        throw new ValidationError(errorMsg + ' Invalid maxRating');
+      }
+      if (isNaN(d.minRating)) {
+        throw new ValidationError(errorMsg + ' Invalid minRating');
+      }
+      if (d.rating > d.maxRating) {
+        throw new ValidationError(errorMsg + ' Rating is above maxRating');
+      }
+      if (d.rating < d.minRating) {
+        throw new ValidationError(errorMsg + ' Rating is below minRating');
+      }
+      if (typeof d.context !== 'string' || !d.context.length) {
+        throw new ValidationError(errorMsg + ' Rating messages must have a context field');
+      }
+    }
+
+    if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
+      if (d.recipient.length < 2) {
+        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
+      }
+    }
+
+    return true;
+  };
+
+  Message.prototype.isPositive = function isPositive() {
+    return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
+  };
+
+  Message.prototype.sign = function sign(key, skipValidation) {
+    this.jwsHeader = { alg: 'ES256', key: key.pubKeyASN1 };
+    this.jws = jws.JWS.sign(this.jwsHeader.alg, _JSON$stringify(this.jwsHeader), _JSON$stringify(this.signedData), key);
+    if (!skipValidation) {
+      Message.validateJws(this.jws);
+    }
+    this.getHash();
+    return this;
+  };
+
+  Message.create = function create(signedData) {
+    if (!signedData.author) {
+      signedData.author = [['keyID', util.getDefaultKey().keyID]];
+    }
+    signedData.timestamp = signedData.timestamp || new Date().toISOString();
+    signedData.context = signedData.context || 'identifi';
+    return new Message(signedData);
+  };
+
+  Message.createVerification = function createVerification(signedData) {
+    signedData.type = 'verification';
+    return this.create(signedData);
+  };
+
+  Message.createRating = function createRating(signedData) {
+    signedData.type = 'rating';
+    signedData.maxRating = signedData.maxRating || 10;
+    signedData.minRating = signedData.minRating || -10;
+    return this.create(signedData);
+  };
+
+  Message.fromJws = function fromJws(jwsString) {
+    Message.validateJws(jwsString);
+    var d = jws.JWS.parse(jwsString);
+    var msg = new Message(d.payloadObj);
+    msg.hash = Message.getHash(jwsString);
+    msg.jwsHeader = d.headerObj;
+    msg.jws = jwsString;
+    return msg;
+  };
+
+  Message.prototype.getAuthor = function getAuthor(index) {
+    if (index) {
+      // TODO: search from index
+    } else {
+      return new Identity({ attrs: this.signedData.author });
+    }
+  };
+
+  Message.prototype.getRecipient = function getRecipient(index) {
+    if (index) {
+      // TODO: search from index
+    } else {
+      return new Identity({ attrs: this.signedData.recipient });
+    }
+  };
+
+  Message.prototype.getHash = function getHash() {
+    if (this.jws && !this.hash) {
+      this.hash = Message.getHash(this.jws);
+    }
+    return this.hash;
+  };
+
+  Message.getHash = function getHash(jwsString) {
+    var hex = new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(jwsString);
+    return new Buffer(hex, 'hex').toString('base64');
+  };
+
+  Message.prototype.verify = function verify() {
+    var keyHex = this.jwsHeader.key || this.jwsHeader.kid;
+    var pem = asn1.ASN1Util.getPEMStringFromHex(keyHex, 'PUBLIC KEY');
+    var pubKey = KEYUTIL_1.getKey(pem);
+    if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
+      throw new ValidationError(errorMsg + ' Invalid signature');
+    }
+    if (this.hash) {
+      if (this.hash !== Message.getHash(this.jws)) {
+        throw new ValidationError(errorMsg + ' Invalid message hash');
+      }
+    } else {
+      this.getHash();
+    }
+    return true;
+  };
+
+  Message.validateJws = function validateJws(jwsString) {
+    if (typeof jwsString !== 'string') {
+      throw new ValidationError(errorMsg + ' Message JWS must be a string');
+    }
+    if (jwsString.length > JWS_MAX_LENGTH) {
+      throw new ValidationError(errorMsg + ' Message JWS max length is ' + JWS_MAX_LENGTH);
+    }
+    return true;
+  };
+
+  return Message;
 }();
 
 var isEnum$1 = _objectPie.f;
@@ -13331,6 +13347,8 @@ var DEFAULT_STATIC_FALLBACK_INDEX = '/ipfs/QmPxLM631zJQ12tUDWs55LkGqqroFZKHeLjAZ
 var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io', 'https://ipfs.infura.io', 'https://www.eternum.io'];
 var IPFS_INDEX_WIDTH = 200;
 var DEFAULT_TIMEOUT = 10000;
+
+// TODO: make the whole thing use GUN for indexing and flush onto IPFS
 
 var Index = function () {
   function Index() {
@@ -13595,83 +13613,30 @@ var Index = function () {
     return get;
   }();
 
-  /* Save message to ipfs and announce it on ipfs pubsub */
-
-
-  Index.prototype.publishMessage = function () {
-    var _ref4 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(msg) {
-      var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-      var r, buffer, hash, body, res, t;
+  Index.prototype._getMsgs = function () {
+    var _ref4 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(msgIndex, limit, cursor) {
+      var rawMsgs, msgs;
       return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              r = {};
+              _context4.next = 2;
+              return msgIndex.searchText('', limit, cursor, true);
 
-              if (!this.ipfs) {
-                _context4.next = 15;
-                break;
-              }
+            case 2:
+              rawMsgs = _context4.sent;
+              msgs = [];
 
-              buffer = new this.ipfs.types.Buffer(msg.jws);
-              _context4.next = 5;
-              return this.ipfs.files.add(buffer);
-
-            case 5:
-              hash = _context4.sent;
-
-              r.hash = hash;
-              _context4.next = 9;
-              return this.ipfs.pubsub.publish('identifi', hash);
-
-            case 9:
-              if (!addToIndex) {
-                _context4.next = 13;
-                break;
-              }
-
-              _context4.next = 12;
-              return this.addMessage(msg);
-
-            case 12:
-              r.indexUri = _context4.sent;
-
-            case 13:
-              _context4.next = 26;
-              break;
-
-            case 15:
-              // No IPFS, post to identi.fi
-              body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
-              _context4.next = 18;
-              return browser('https://identi.fi/api/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: body
+              rawMsgs.forEach(function (row) {
+                var msg = new Message(row.value.signedData);
+                msg.searchKey = row.key;
+                msg.authorPos = row.value.author_pos;
+                msg.authorNeg = row.value.author_neg;
+                msgs.push(msg);
               });
+              return _context4.abrupt('return', msgs);
 
-            case 18:
-              res = _context4.sent;
-
-              if (!(res.status && res.status === 201)) {
-                _context4.next = 26;
-                break;
-              }
-
-              _context4.t0 = JSON;
-              _context4.next = 23;
-              return res.text();
-
-            case 23:
-              _context4.t1 = _context4.sent;
-              t = _context4.t0.parse.call(_context4.t0, _context4.t1);
-
-              r.hash = t.ipfs_hash;
-
-            case 26:
-              return _context4.abrupt('return', r);
-
-            case 27:
+            case 6:
             case 'end':
               return _context4.stop();
           }
@@ -13679,28 +13644,24 @@ var Index = function () {
       }, _callee4, this);
     }));
 
-    function publishMessage(_x9) {
+    function _getMsgs(_x8, _x9, _x10) {
       return _ref4.apply(this, arguments);
     }
 
-    return publishMessage;
+    return _getMsgs;
   }();
 
-  /* Add message to index */
-
-
-  Index.prototype.addMessage = function () {
-    var _ref5 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5(msg) {
+  Index.prototype.getSentMsgs = function () {
+    var _ref5 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5(identity, limit) {
+      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
       return regenerator.wrap(function _callee5$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              if (!this.ipfs) {
-                _context5.next = 2;
-                break;
+              if (!identity.sentIndex) {
+                identity.sentIndex = merkleBtree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
               }
-
-              return _context5.abrupt('return', this.messagesByTimestamp.put('key', msg.jws));
+              return _context5.abrupt('return', this._getMsgs(identity.sentIndex, limit, cursor));
 
             case 2:
             case 'end':
@@ -13710,32 +13671,181 @@ var Index = function () {
       }, _callee5, this);
     }));
 
-    function addMessage(_x10) {
+    function getSentMsgs(_x12, _x13) {
       return _ref5.apply(this, arguments);
+    }
+
+    return getSentMsgs;
+  }();
+
+  Index.prototype.getReceivedMsgs = function () {
+    var _ref6 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(identity, limit) {
+      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+      return regenerator.wrap(function _callee6$(_context6) {
+        while (1) {
+          switch (_context6.prev = _context6.next) {
+            case 0:
+              if (!identity.receivedIndex) {
+                identity.receivedIndex = merkleBtree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
+              }
+              return _context6.abrupt('return', this._getMsgs(identity.receivedIndex, limit, cursor));
+
+            case 2:
+            case 'end':
+              return _context6.stop();
+          }
+        }
+      }, _callee6, this);
+    }));
+
+    function getReceivedMsgs(_x15, _x16) {
+      return _ref6.apply(this, arguments);
+    }
+
+    return getReceivedMsgs;
+  }();
+
+  /* Save message to ipfs and announce it on ipfs pubsub */
+
+
+  Index.prototype.publishMessage = function () {
+    var _ref7 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(msg) {
+      var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      var r, buffer, hash, body, res, t;
+      return regenerator.wrap(function _callee7$(_context7) {
+        while (1) {
+          switch (_context7.prev = _context7.next) {
+            case 0:
+              r = {};
+
+              if (!this.ipfs) {
+                _context7.next = 15;
+                break;
+              }
+
+              buffer = new this.ipfs.types.Buffer(msg.jws);
+              _context7.next = 5;
+              return this.ipfs.files.add(buffer);
+
+            case 5:
+              hash = _context7.sent;
+
+              r.hash = hash;
+              _context7.next = 9;
+              return this.ipfs.pubsub.publish('identifi', hash);
+
+            case 9:
+              if (!addToIndex) {
+                _context7.next = 13;
+                break;
+              }
+
+              _context7.next = 12;
+              return this.addMessage(msg);
+
+            case 12:
+              r.indexUri = _context7.sent;
+
+            case 13:
+              _context7.next = 26;
+              break;
+
+            case 15:
+              // No IPFS, post to identi.fi
+              body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
+              _context7.next = 18;
+              return browser('https://identi.fi/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: body
+              });
+
+            case 18:
+              res = _context7.sent;
+
+              if (!(res.status && res.status === 201)) {
+                _context7.next = 26;
+                break;
+              }
+
+              _context7.t0 = JSON;
+              _context7.next = 23;
+              return res.text();
+
+            case 23:
+              _context7.t1 = _context7.sent;
+              t = _context7.t0.parse.call(_context7.t0, _context7.t1);
+
+              r.hash = t.ipfs_hash;
+
+            case 26:
+              return _context7.abrupt('return', r);
+
+            case 27:
+            case 'end':
+              return _context7.stop();
+          }
+        }
+      }, _callee7, this);
+    }));
+
+    function publishMessage(_x18) {
+      return _ref7.apply(this, arguments);
+    }
+
+    return publishMessage;
+  }();
+
+  /* Add message to index */
+
+
+  Index.prototype.addMessage = function () {
+    var _ref8 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(msg) {
+      return regenerator.wrap(function _callee8$(_context8) {
+        while (1) {
+          switch (_context8.prev = _context8.next) {
+            case 0:
+              if (!this.ipfs) {
+                _context8.next = 2;
+                break;
+              }
+
+              return _context8.abrupt('return', this.messagesByTimestamp.put('key', msg.jws));
+
+            case 2:
+            case 'end':
+              return _context8.stop();
+          }
+        }
+      }, _callee8, this);
+    }));
+
+    function addMessage(_x19) {
+      return _ref8.apply(this, arguments);
     }
 
     return addMessage;
   }();
 
   Index.prototype.search = function () {
-    var _ref6 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(value, type) {
+    var _ref9 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(value, type) {
       var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
       var identitiesByHash, r, i, d;
-      return regenerator.wrap(function _callee6$(_context6) {
+      return regenerator.wrap(function _callee9$(_context9) {
         while (1) {
-          switch (_context6.prev = _context6.next) {
+          switch (_context9.prev = _context9.next) {
             case 0:
               // TODO: param 'exact'
               identitiesByHash = {};
-              _context6.next = 3;
+              _context9.next = 3;
               return this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit);
 
             case 3:
-              r = _context6.sent;
+              r = _context9.sent;
 
             case 4:
               if (!(r && r.length && _Object$keys(identitiesByHash).length < limit)) {
-                _context6.next = 28;
+                _context9.next = 28;
                 break;
               }
 
@@ -13743,61 +13853,61 @@ var Index = function () {
 
             case 6:
               if (!(i < r.length && _Object$keys(identitiesByHash).length < limit)) {
-                _context6.next = 23;
+                _context9.next = 23;
                 break;
               }
 
               if (!r[i].value) {
-                _context6.next = 20;
+                _context9.next = 20;
                 break;
               }
 
-              _context6.prev = 8;
-              _context6.t0 = JSON;
-              _context6.next = 12;
+              _context9.prev = 8;
+              _context9.t0 = JSON;
+              _context9.next = 12;
               return this.storage.get('/ipfs/' + r[i].value);
 
             case 12:
-              _context6.t1 = _context6.sent;
-              d = _context6.t0.parse.call(_context6.t0, _context6.t1);
+              _context9.t1 = _context9.sent;
+              d = _context9.t0.parse.call(_context9.t0, _context9.t1);
 
               identitiesByHash[r[i].value] = new Identity(d);
-              _context6.next = 20;
+              _context9.next = 20;
               break;
 
             case 17:
-              _context6.prev = 17;
-              _context6.t2 = _context6['catch'](8);
+              _context9.prev = 17;
+              _context9.t2 = _context9['catch'](8);
 
-              console.error(_context6.t2);
+              console.error(_context9.t2);
 
             case 20:
               i++;
-              _context6.next = 6;
+              _context9.next = 6;
               break;
 
             case 23:
-              _context6.next = 25;
+              _context9.next = 25;
               return this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, r[r.length - 1].key);
 
             case 25:
-              r = _context6.sent;
-              _context6.next = 4;
+              r = _context9.sent;
+              _context9.next = 4;
               break;
 
             case 28:
-              return _context6.abrupt('return', _Object$values(identitiesByHash));
+              return _context9.abrupt('return', _Object$values(identitiesByHash));
 
             case 29:
             case 'end':
-              return _context6.stop();
+              return _context9.stop();
           }
         }
-      }, _callee6, this, [[8, 17]]);
+      }, _callee9, this, [[8, 17]]);
     }));
 
-    function search(_x12, _x13) {
-      return _ref6.apply(this, arguments);
+    function search(_x21, _x22) {
+      return _ref9.apply(this, arguments);
     }
 
     return search;
@@ -13806,7 +13916,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.36";
+var version$2 = "0.0.37";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

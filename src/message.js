@@ -2,6 +2,7 @@
 `use strict`;
 import {MessageDigest, jws, KEYUTIL, asn1} from 'jsrsasign';
 import util from './util';
+import Identity from './identity';
 
 const JWS_MAX_LENGTH = 10000;
 const errorMsg = `Invalid Identifi message:`;
@@ -107,6 +108,30 @@ class Message {
     msg.jwsHeader = d.headerObj;
     msg.jws = jwsString;
     return msg;
+  }
+
+  getAuthor(index) {
+    if (index) {
+      // TODO: search from index
+    } else {
+      const id = new Identity({attrs: this.signedData.author});
+      if (this.authorPos && this.authorNeg) {
+        Object.append({receivedPositive: this.authorPos, receivedNegative: this.authorNeg}, id);
+      }
+      return id;
+    }
+  }
+
+  getRecipient(index) {
+    if (index) {
+      // TODO: search from index
+    } else {
+      const id = new Identity({attrs: this.signedData.recipient});
+      if (this.recipientPos && this.recipientNeg) {
+        Object.append({receivedPositive: this.recipientPos, receivedNegative: this.recipientNeg}, id);
+      }
+      return id;
+    }
   }
 
   getHash() {

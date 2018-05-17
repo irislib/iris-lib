@@ -1,6 +1,5 @@
 import {MessageDigest} from 'jsrsasign';
 import util from './util';
-import btree from 'merkle-btree';
 
 class Identity {
   constructor(data) {
@@ -129,14 +128,6 @@ class Identity {
       this.gravatar = new MessageDigest({alg: `md5`, prov: `cryptojs`}).digestString(str);
     }
     return this.gravatar;
-  }
-
-  getSentMsgsIndex(storage, ipfsIndexWidth) {
-    return btree.MerkleBTree.getByHash(this.data.sent, storage, ipfsIndexWidth);
-  }
-
-  getReceivedMsgsIndex(storage, ipfsIndexWidth) {
-    return btree.MerkleBTree.getByHash(this.data.received, storage, ipfsIndexWidth);
   }
 
   verified(attribute) {

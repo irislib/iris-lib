@@ -17,6 +17,18 @@ test('get a verified attribute', async () => {
   expect(typeof r).toBe('string');
   expect(r.length).toBeGreaterThan(0);
 });
+test('get messages sent by identity', async () => {
+  const r = await i.getSentMsgs(p);
+  expect(r).toBeInstanceOf(Array);
+  expect(r.length).toBeGreaterThan(0);
+  expect(r[0]).toBeInstanceOf(identifi.Message);
+});
+test('get messages received by identity', async () => {
+  const r = await i.getReceivedMsgs(p);
+  expect(r).toBeInstanceOf(Array);
+  expect(r.length).toBeGreaterThan(0);
+  expect(r[0]).toBeInstanceOf(identifi.Message);
+});
 test('search identities', async () => {
   const r = await i.search('ma');
   expect(typeof r).toBe('object');

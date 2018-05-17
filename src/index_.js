@@ -102,6 +102,35 @@ class Index {
     }
   }
 
+  async _getMsgs(msgIndex, limit, cursor) {
+    const rawMsgs = await msgIndex.searchText(``, limit, cursor, true);
+    const msgs = [];
+    rawMsgs.forEach(row => {
+      const msg = Message.fromJws(row.value.jws);
+      msg.cursor = row.key;
+      msg.authorPos = row.value.author_pos;
+      msg.authorNeg = row.value.author_neg;
+      msg.recipientPos = row.value.recipient_pos;
+      msg.recipientNeg = row.value.recipient_neg;
+      msgs.push(msg);
+    });
+    return msgs;
+  }
+
+  async getSentMsgs(identity, limit, cursor = ``) {
+    if (!identity.sentIndex) {
+      identity.sentIndex = await btree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
+    }
+    return this._getMsgs(identity.sentIndex, limit, cursor);
+  }
+
+  async getReceivedMsgs(identity, limit, cursor = ``) {
+    if (!identity.receivedIndex) {
+      identity.receivedIndex = await btree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
+    }
+    return this._getMsgs(identity.receivedIndex, limit, cursor);
+  }
+
   /* Save message to ipfs and announce it on ipfs pubsub */
   async publishMessage(msg: Message, addToIndex = true) {
     const r = {};
