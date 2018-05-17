@@ -5570,7 +5570,11 @@ var Message = function () {
     } else {
       var id = new Identity({ attrs: this.signedData.author });
       if (this.authorPos && this.authorNeg) {
-        _Object$assign({ receivedPositive: this.authorPos, receivedNegative: this.authorNeg }, id);
+        id.receivedPositive = this.authorPos;
+        id.receivedNegative = this.authorNeg;
+      }
+      if (this.authorTrustDistance) {
+        id.trustDistance = this.authorTrustDistance;
       }
       return id;
     }
@@ -5582,7 +5586,11 @@ var Message = function () {
     } else {
       var id = new Identity({ attrs: this.signedData.recipient });
       if (this.recipientPos && this.recipientNeg) {
-        _Object$assign({ receivedPositive: this.recipientPos, receivedNegative: this.recipientNeg }, id);
+        id.receivedPositive = this.recipientPos;
+        id.receivedNegative = this.recipientNeg;
+      }
+      if (this.recipientTrustDistance) {
+        id.trustDistance = this.recipientTrustDistance;
       }
       return id;
     }
@@ -13637,6 +13645,7 @@ var Index = function () {
                 msg.authorNeg = row.value.author_neg;
                 msg.recipientPos = row.value.recipient_pos;
                 msg.recipientNeg = row.value.recipient_neg;
+                msg.authorTrustDistance = row.value.distance;
                 msgs.push(msg);
               });
               return _context4.abrupt('return', msgs);
@@ -13939,7 +13948,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.39";
+var version$2 = "0.0.40";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

@@ -116,7 +116,11 @@ class Message {
     } else {
       const id = new Identity({attrs: this.signedData.author});
       if (this.authorPos && this.authorNeg) {
-        Object.assign({receivedPositive: this.authorPos, receivedNegative: this.authorNeg}, id);
+        id.receivedPositive = this.authorPos;
+        id.receivedNegative = this.authorNeg;
+      }
+      if (this.authorTrustDistance) {
+        id.trustDistance = this.authorTrustDistance;
       }
       return id;
     }
@@ -128,7 +132,11 @@ class Message {
     } else {
       const id = new Identity({attrs: this.signedData.recipient});
       if (this.recipientPos && this.recipientNeg) {
-        Object.assign({receivedPositive: this.recipientPos, receivedNegative: this.recipientNeg}, id);
+        id.receivedPositive = this.recipientPos;
+        id.receivedNegative = this.recipientNeg;
+      }
+      if (this.recipientTrustDistance) {
+        id.trustDistance = this.recipientTrustDistance;
       }
       return id;
     }
