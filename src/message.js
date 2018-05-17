@@ -116,7 +116,7 @@ class Message {
     } else {
       const id = new Identity({attrs: this.signedData.author});
       if (this.authorPos && this.authorNeg) {
-        Object.append({receivedPositive: this.authorPos, receivedNegative: this.authorNeg}, id);
+        Object.assign({receivedPositive: this.authorPos, receivedNegative: this.authorNeg}, id);
       }
       return id;
     }
@@ -128,7 +128,7 @@ class Message {
     } else {
       const id = new Identity({attrs: this.signedData.recipient});
       if (this.recipientPos && this.recipientNeg) {
-        Object.append({receivedPositive: this.recipientPos, receivedNegative: this.recipientNeg}, id);
+        Object.assign({receivedPositive: this.recipientPos, receivedNegative: this.recipientNeg}, id);
       }
       return id;
     }

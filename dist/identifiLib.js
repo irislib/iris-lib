@@ -5570,7 +5570,7 @@ var Message = function () {
     } else {
       var id = new Identity({ attrs: this.signedData.author });
       if (this.authorPos && this.authorNeg) {
-        Object.append({ receivedPositive: this.authorPos, receivedNegative: this.authorNeg }, id);
+        _Object$assign({ receivedPositive: this.authorPos, receivedNegative: this.authorNeg }, id);
       }
       return id;
     }
@@ -5582,7 +5582,7 @@ var Message = function () {
     } else {
       var id = new Identity({ attrs: this.signedData.recipient });
       if (this.recipientPos && this.recipientNeg) {
-        Object.append({ receivedPositive: this.recipientPos, receivedNegative: this.recipientNeg }, id);
+        _Object$assign({ receivedPositive: this.recipientPos, receivedNegative: this.recipientNeg }, id);
       }
       return id;
     }
@@ -13939,7 +13939,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.38";
+var version$2 = "0.0.39";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
