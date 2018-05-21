@@ -5576,6 +5576,9 @@ var Message = function () {
       if (this.authorTrustDistance) {
         id.trustDistance = this.authorTrustDistance;
       }
+      if (this.authorName) {
+        id.profile.name = this.authorName;
+      }
       return id;
     }
   };
@@ -5591,6 +5594,9 @@ var Message = function () {
       }
       if (this.recipientTrustDistance) {
         id.trustDistance = this.recipientTrustDistance;
+      }
+      if (this.recipientName) {
+        id.profile.name = this.recipientName;
       }
       return id;
     }
@@ -13646,6 +13652,8 @@ var Index = function () {
                 msg.recipientPos = row.value.recipient_pos;
                 msg.recipientNeg = row.value.recipient_neg;
                 msg.authorTrustDistance = row.value.distance;
+                msg.authorName = row.value.author_name;
+                msg.recipientName = row.value.recipient_name;
                 msgs.push(msg);
               });
               return _context4.abrupt('return', msgs);
@@ -13948,7 +13956,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.40";
+var version$2 = "0.0.41";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

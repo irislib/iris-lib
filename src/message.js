@@ -122,6 +122,9 @@ class Message {
       if (this.authorTrustDistance) {
         id.trustDistance = this.authorTrustDistance;
       }
+      if (this.authorName) {
+        id.profile.name = this.authorName;
+      }
       return id;
     }
   }
@@ -137,6 +140,9 @@ class Message {
       }
       if (this.recipientTrustDistance) {
         id.trustDistance = this.recipientTrustDistance;
+      }
+      if (this.recipientName) {
+        id.profile.name = this.recipientName;
       }
       return id;
     }

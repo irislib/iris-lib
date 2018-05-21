@@ -113,6 +113,8 @@ class Index {
       msg.recipientPos = row.value.recipient_pos;
       msg.recipientNeg = row.value.recipient_neg;
       msg.authorTrustDistance = row.value.distance;
+      msg.authorName = row.value.author_name;
+      msg.recipientName = row.value.recipient_name;
       msgs.push(msg);
     });
     return msgs;
