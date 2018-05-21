@@ -5205,7 +5205,7 @@ var Identity = function () {
     if (!this.gravatar) {
       var str = '';
       try {
-        str = this.profile.email || this.data.attrs[0].name + ':' + this.data.attrs[0].val;
+        str = this.profile.email || this.data.attrs[0][0] + ':' + this.data.attrs[0][1];
       } catch (e) {
         console.error(e);
       }
@@ -13956,7 +13956,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.41";
+var version$2 = "0.0.42";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
