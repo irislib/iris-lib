@@ -114,7 +114,11 @@ class Message {
     if (index) {
       // TODO: search from index
     } else {
-      const id = new Identity({attrs: this.signedData.author});
+      const attrs = [];
+      this.signedData.author.forEach(a => {
+        attrs.push({name: a[0], val: a[1]});
+      });
+      const id = new Identity({attrs});
       if (this.authorPos && this.authorNeg) {
         id.receivedPositive = this.authorPos;
         id.receivedNegative = this.authorNeg;
@@ -133,7 +137,11 @@ class Message {
     if (index) {
       // TODO: search from index
     } else {
-      const id = new Identity({attrs: this.signedData.recipient});
+      const attrs = [];
+      this.signedData.recipient.forEach(a => {
+        attrs.push({name: a[0], val: a[1]});
+      });
+      const id = new Identity({attrs});
       if (this.recipientPos && this.recipientNeg) {
         id.receivedPositive = this.recipientPos;
         id.receivedNegative = this.recipientNeg;

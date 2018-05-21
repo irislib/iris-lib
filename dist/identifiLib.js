@@ -5205,7 +5205,7 @@ var Identity = function () {
     if (!this.gravatar) {
       var str = '';
       try {
-        str = this.profile.email || this.data.attrs[0][0] + ':' + this.data.attrs[0][1];
+        str = this.profile.email || this.data.attrs[0].name + ':' + this.data.attrs[0].val;
       } catch (e) {
         console.error(e);
       }
@@ -5568,7 +5568,11 @@ var Message = function () {
     if (index) {
       // TODO: search from index
     } else {
-      var id = new Identity({ attrs: this.signedData.author });
+      var attrs = [];
+      this.signedData.author.forEach(function (a) {
+        attrs.push({ name: a[0], val: a[1] });
+      });
+      var id = new Identity({ attrs: attrs });
       if (this.authorPos && this.authorNeg) {
         id.receivedPositive = this.authorPos;
         id.receivedNegative = this.authorNeg;
@@ -5587,7 +5591,11 @@ var Message = function () {
     if (index) {
       // TODO: search from index
     } else {
-      var id = new Identity({ attrs: this.signedData.recipient });
+      var attrs = [];
+      this.signedData.recipient.forEach(function (a) {
+        attrs.push({ name: a[0], val: a[1] });
+      });
+      var id = new Identity({ attrs: attrs });
       if (this.recipientPos && this.recipientNeg) {
         id.receivedPositive = this.recipientPos;
         id.receivedNegative = this.recipientNeg;
@@ -13956,7 +13964,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.42";
+var version$2 = "0.0.43";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
