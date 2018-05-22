@@ -13878,7 +13878,7 @@ var Index = function () {
   Index.prototype.search = function () {
     var _ref9 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(value, type) {
       var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
-      var identitiesByHash, r, i, d;
+      var identitiesByHash, r, i, d, id;
       return regenerator.wrap(function _callee9$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
@@ -13893,7 +13893,7 @@ var Index = function () {
 
             case 4:
               if (!(r && r.length && _Object$keys(identitiesByHash).length < limit)) {
-                _context9.next = 28;
+                _context9.next = 30;
                 break;
               }
 
@@ -13901,12 +13901,12 @@ var Index = function () {
 
             case 6:
               if (!(i < r.length && _Object$keys(identitiesByHash).length < limit)) {
-                _context9.next = 23;
+                _context9.next = 25;
                 break;
               }
 
               if (!r[i].value) {
-                _context9.next = 20;
+                _context9.next = 22;
                 break;
               }
 
@@ -13918,40 +13918,42 @@ var Index = function () {
             case 12:
               _context9.t1 = _context9.sent;
               d = _context9.t0.parse.call(_context9.t0, _context9.t1);
+              id = new Identity(d);
 
-              identitiesByHash[r[i].value] = new Identity(d);
-              _context9.next = 20;
+              id.searchKey = r[i].key;
+              identitiesByHash[r[i].value] = id;
+              _context9.next = 22;
               break;
 
-            case 17:
-              _context9.prev = 17;
+            case 19:
+              _context9.prev = 19;
               _context9.t2 = _context9['catch'](8);
 
               console.error(_context9.t2);
 
-            case 20:
+            case 22:
               i++;
               _context9.next = 6;
               break;
 
-            case 23:
-              _context9.next = 25;
+            case 25:
+              _context9.next = 27;
               return this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, r[r.length - 1].key);
 
-            case 25:
+            case 27:
               r = _context9.sent;
               _context9.next = 4;
               break;
 
-            case 28:
+            case 30:
               return _context9.abrupt('return', _Object$values(identitiesByHash));
 
-            case 29:
+            case 31:
             case 'end':
               return _context9.stop();
           }
         }
-      }, _callee9, this, [[8, 17]]);
+      }, _callee9, this, [[8, 19]]);
     }));
 
     function search(_x21, _x22) {
@@ -13964,7 +13966,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.43";
+var version$2 = "0.0.44";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

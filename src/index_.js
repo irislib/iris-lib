@@ -176,7 +176,9 @@ class Index {
         if (r[i].value) {
           try {
             const d = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
-            identitiesByHash[r[i].value] = new Identity(d);
+            const id = new Identity(d);
+            id.searchKey = r[i].key;
+            identitiesByHash[r[i].value] = id;
           } catch (e) {
             console.error(e);
           }
