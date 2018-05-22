@@ -13878,6 +13878,7 @@ var Index = function () {
   Index.prototype.search = function () {
     var _ref9 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(value, type) {
       var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
+      var cursor = arguments[3];
       var identitiesByHash, r, i, d, id;
       return regenerator.wrap(function _callee9$(_context9) {
         while (1) {
@@ -13886,7 +13887,7 @@ var Index = function () {
               // TODO: param 'exact'
               identitiesByHash = {};
               _context9.next = 3;
-              return this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit);
+              return this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, cursor);
 
             case 3:
               r = _context9.sent;
@@ -13920,7 +13921,7 @@ var Index = function () {
               d = _context9.t0.parse.call(_context9.t0, _context9.t1);
               id = new Identity(d);
 
-              id.searchKey = r[i].key;
+              id.cursor = r[i].key;
               identitiesByHash[r[i].value] = id;
               _context9.next = 22;
               break;
@@ -13966,7 +13967,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.45";
+var version$2 = "0.0.46";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

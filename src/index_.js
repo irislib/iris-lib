@@ -168,16 +168,16 @@ class Index {
     }
   }
 
-  async search(value, type, limit = 5) { // TODO: param 'exact'
+  async search(value, type, limit = 5, cursor) { // TODO: param 'exact'
     const identitiesByHash = {};
-    let r = await this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit);
+    let r = await this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, cursor);
     while (r && r.length && Object.keys(identitiesByHash).length < limit) {
       for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {
         if (r[i].value) {
           try {
             const d = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
             const id = new Identity(d);
-            id.searchKey = r[i].key;
+            id.cursor = r[i].key;
             identitiesByHash[r[i].value] = id;
           } catch (e) {
             console.error(e);
