@@ -1,5 +1,6 @@
 import {MessageDigest} from 'jsrsasign';
 import util from './util';
+import Identicon from 'identicon.js';
 
 class Identity {
   constructor(data) {
@@ -115,19 +116,6 @@ class Identity {
         this.profile[k] = this.mostVerifiedAttributes[k].attribute.val;
       }
     });
-  }
-
-  getGravatar() { // TODO: gravatar should be replaced soon with random art or ipfs profile photo
-    if (!this.gravatar) {
-      let str = ``;
-      try {
-        str = this.profile.email || `${this.data.attrs[0].name}:${this.data.attrs[0].val}`;
-      } catch (e) {
-        console.error(e);
-      }
-      this.gravatar = new MessageDigest({alg: `md5`, prov: `cryptojs`}).digestString(str);
-    }
-    return this.gravatar;
   }
 
   verified(attribute) {
@@ -355,8 +343,11 @@ class Identity {
     pie.style.opacity = (this.receivedPositive + this.receivedNegative) / 10 * 0.5 + 0.35;
     pie.style.transform = transform;
 
+    const hash = new MessageDigest({alg: `md5`, prov: `cryptojs`}).digestString(JSON.stringify(this.linkTo));
+    const identiconImg = new Identicon(hash, {width, format: `svg`});
+
     const img = document.createElement(`img`);
-    img.src = `https://www.gravatar.com/avatar/${this.getGravatar()}?d=retro&s=${width * 2}`;
+    img.src = `data:image/svg+xml;base64,${identiconImg.toString()}`;
     img.alt = ``;
     img.width = width;
     img.style.borderWidth = `${border}px`;
