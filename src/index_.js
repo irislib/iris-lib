@@ -173,7 +173,7 @@ class Index {
     let r = await this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, cursor);
     while (r && r.length && Object.keys(identitiesByHash).length < limit) {
       for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {
-        if (r[i].value) {
+        if (r[i].value && !identitiesByHash.hasOwnProperty(r[i].value)) {
           try {
             const d = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
             const id = new Identity(d);
