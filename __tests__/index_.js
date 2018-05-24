@@ -34,6 +34,13 @@ test('search identities', async () => {
   expect(typeof r).toBe('object');
   expect(r.length).toBeGreaterThan(1);
 });
+/*
+test('search identities "a"', async () => {
+  const r = await i.search('a');
+  expect(typeof r).toBe('object');
+  expect(r.length).toBeGreaterThan(1);
+});
+*/
 test('publish message', async () => {
   const m = identifi.Message.createVerification({
     author: [['name', 'Alice'], ['email', 'alice@example.com']],

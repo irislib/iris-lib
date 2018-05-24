@@ -5952,14 +5952,14 @@ var Message = function () {
 
   Message.createVerification = function createVerification(signedData) {
     signedData.type = 'verification';
-    return this.create(signedData);
+    return Message.create(signedData);
   };
 
   Message.createRating = function createRating(signedData) {
     signedData.type = 'rating';
     signedData.maxRating = signedData.maxRating || 10;
     signedData.minRating = signedData.minRating || -10;
-    return this.create(signedData);
+    return Message.create(signedData);
   };
 
   Message.fromJws = function fromJws(jwsString) {
@@ -14375,7 +14375,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.48";
+var version$2 = "0.0.49";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

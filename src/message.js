@@ -90,14 +90,14 @@ class Message {
 
   static createVerification(signedData) {
     signedData.type = `verification`;
-    return this.create(signedData);
+    return Message.create(signedData);
   }
 
   static createRating(signedData) {
     signedData.type = `rating`;
     signedData.maxRating = signedData.maxRating || 10;
     signedData.minRating = signedData.minRating || - 10;
-    return this.create(signedData);
+    return Message.create(signedData);
   }
 
   static fromJws(jwsString) {
