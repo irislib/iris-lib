@@ -65,18 +65,18 @@ export default {
     return key.prvKeyObj;
   },
 
+  prvKeyToJwk: function(key) {
+    return KEYUTIL.getJWKFromKey(key);
+  },
+
   getHash: function(str) {
     const hex = new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(str);
     return new Buffer(hex, `hex`).toString(`base64`);
   },
 
   _generateAndSerializeKey: function() {
-    const kp = this.generateKeyPair();
-    myKey = kp.prvKeyObj;
-    myKey.pubKeyASN1 = this.getPubKeyASN1(kp.pubKeyObj);
-    myKey.keyID = this.getHash(myKey.pubKeyASN1);
-    const k = KEYUTIL.getJWKFromKey(myKey);
-    return JSON.stringify(k);
+    myKey = this.generateKey();
+    return JSON.stringify(this.prvKeyToJwk(myKey));
   },
 
   getDefaultKey: function(datadir = `.`) {

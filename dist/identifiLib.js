@@ -4204,18 +4204,18 @@ var util = {
     return key.prvKeyObj;
   },
 
+  prvKeyToJwk: function prvKeyToJwk(key) {
+    return KEYUTIL_1.getJWKFromKey(key);
+  },
+
   getHash: function getHash(str) {
     var hex = new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(str);
     return new Buffer(hex, 'hex').toString('base64');
   },
 
   _generateAndSerializeKey: function _generateAndSerializeKey() {
-    var kp = this.generateKeyPair();
-    myKey = kp.prvKeyObj;
-    myKey.pubKeyASN1 = this.getPubKeyASN1(kp.pubKeyObj);
-    myKey.keyID = this.getHash(myKey.pubKeyASN1);
-    var k = KEYUTIL_1.getJWKFromKey(myKey);
-    return _JSON$stringify(k);
+    myKey = this.generateKey();
+    return _JSON$stringify(this.prvKeyToJwk(myKey));
   },
 
   getDefaultKey: function getDefaultKey() {
@@ -14375,7 +14375,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.49";
+var version$2 = "0.0.50";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
