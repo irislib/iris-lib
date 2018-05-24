@@ -5941,25 +5941,29 @@ var Message = function () {
     return this;
   };
 
-  Message.create = function create(signedData) {
-    if (!signedData.author) {
-      signedData.author = [['keyID', util.getDefaultKey().keyID]];
+  Message.create = function create(signedData, signingKey) {
+    if (!signedData.author && signingKey) {
+      signedData.author = [['keyID', signingKey.keyID]];
     }
     signedData.timestamp = signedData.timestamp || new Date().toISOString();
     signedData.context = signedData.context || 'identifi';
-    return new Message(signedData);
+    var m = new Message(signedData);
+    if (signingKey) {
+      m.sign(signingKey);
+    }
+    return m;
   };
 
-  Message.createVerification = function createVerification(signedData) {
+  Message.createVerification = function createVerification(signedData, signingKey) {
     signedData.type = 'verification';
-    return Message.create(signedData);
+    return Message.create(signedData, signingKey);
   };
 
-  Message.createRating = function createRating(signedData) {
+  Message.createRating = function createRating(signedData, signingKey) {
     signedData.type = 'rating';
     signedData.maxRating = signedData.maxRating || 10;
     signedData.minRating = signedData.minRating || -10;
-    return Message.create(signedData);
+    return Message.create(signedData, signingKey);
   };
 
   Message.fromJws = function fromJws(jwsString) {
@@ -14375,7 +14379,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.50";
+var version$2 = "0.0.51";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

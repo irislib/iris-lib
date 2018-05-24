@@ -25,12 +25,12 @@ describe('Message', function() {
       expect(msg.getRecipient()).toBeInstanceOf(Identity);
     });
     test('should use signing key as author if not defined', function() {
+      const defaultKey = util.getDefaultKey('.');
       msg = Message.createRating({
         recipient: [['email', 'bob@example.com']],
         rating: 5,
         comment: 'Good guy'
-      });
-      const defaultKey = util.getDefaultKey('.');
+      }, defaultKey);
       expect(msg).toHaveProperty('signedData.author');
       expect(JSON.stringify(msg.signedData.author)).toEqual('[["keyID","' + defaultKey.keyID + '"]]');
     });

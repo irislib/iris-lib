@@ -79,25 +79,29 @@ class Message {
     return this;
   }
 
-  static create(signedData) {
-    if (!signedData.author) {
-      signedData.author = [[`keyID`, util.getDefaultKey().keyID]];
+  static create(signedData, signingKey) {
+    if (!signedData.author && signingKey) {
+      signedData.author = [[`keyID`, signingKey.keyID]];
     }
     signedData.timestamp = signedData.timestamp || (new Date()).toISOString();
     signedData.context = signedData.context || `identifi`;
-    return new Message(signedData);
+    const m = new Message(signedData);
+    if (signingKey) {
+      m.sign(signingKey);
+    }
+    return m;
   }
 
-  static createVerification(signedData) {
+  static createVerification(signedData, signingKey) {
     signedData.type = `verification`;
-    return Message.create(signedData);
+    return Message.create(signedData, signingKey);
   }
 
-  static createRating(signedData) {
+  static createRating(signedData, signingKey) {
     signedData.type = `rating`;
     signedData.maxRating = signedData.maxRating || 10;
     signedData.minRating = signedData.minRating || - 10;
-    return Message.create(signedData);
+    return Message.create(signedData, signingKey);
   }
 
   static fromJws(jwsString) {
