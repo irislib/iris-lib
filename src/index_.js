@@ -17,11 +17,23 @@ const DEFAULT_TIMEOUT = 10000;
 
 // TODO: make the whole thing use GUN for indexing and flush onto IPFS
 class Index {
-  static create() { // TODO: make it work with js-ipfs && IPFSStorage
-    this.storage = new btree.RAMStorage();
-    this.identitiesBySearchKey = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-    this.messagesByTimestamp = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-    return true;
+  constructor(ipfs) {
+    if (ipfs) {
+      this.ipfs = ipfs;
+      this.storage = new btree.IPFSStorage(ipfs);
+      this.identitiesBySearchKey = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      this.identitiesByTrustDistance = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      this.messagesByTimestamp = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      this.messagesByDistance = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+    }
+  }
+
+  static getMsgIndexKey(msg) {
+    let distance = parseInt(msg.distance);
+    distance = Number.isNaN(distance) ? 99 : distance;
+    distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
+    const key = `${distance}:${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000)}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
+    return key;
   }
 
   static async load(indexRoot, ipfs) {
@@ -78,8 +90,13 @@ class Index {
     } else {
       throw `ipfs param must be a gateway url, array of urls or a js-ipfs object`;
     }
+    console.log(1, indexRoot);
+    this.identitiesByTrustDistance = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_distance`, this.storage, IPFS_INDEX_WIDTH);
+    console.log(2);
     this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_searchkey`, this.storage, IPFS_INDEX_WIDTH);
+    console.log(3);
     this.messagesByTimestamp = await btree.MerkleBTree.getByHash(`${indexRoot}/messages_by_timestamp`, this.storage, IPFS_INDEX_WIDTH);
+    console.log(4);
     return true;
   }
 
@@ -160,31 +177,54 @@ class Index {
     return r;
   }
 
+  async _updateIdentityIndexesByMsg(msg) {
+    return msg; // TODO
+  }
+
   /* Add message to index */
-  async addMessage(msg: Message) {
+  async addMessage(msg: Message, updateIdentityIndexes = true) {
     if (this.ipfs) {
-      return this.messagesByTimestamp.put(`key`, msg.jws);
+      let indexKey = Index.getMsgIndexKey(msg);
+      console.log(indexKey);
+      // TODO: calculate msg trust distance
+      await this.messagesByDistance.put(indexKey, msg.jws);
+      indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
+      console.log(indexKey);
+      const h = await this.messagesByTimestamp.put(indexKey, msg.jws);
+      if (updateIdentityIndexes) {
+        this._updateIdentityIndexesByMsg(msg);
+      }
       // TODO: update ipns entry to point to new index root
+      return h;
     }
   }
 
-  async search(value, type, limit = 5, cursor) { // TODO: param 'exact'
+  async search(value, type, limit = 5, cursor, depth = 20) { // TODO: param 'exact'
     const identitiesByHash = {};
-    let r = await this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, cursor);
-    while (r && r.length && Object.keys(identitiesByHash).length < limit) {
-      for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {
-        if (r[i].value && !identitiesByHash.hasOwnProperty(r[i].value)) {
-          try {
-            const d = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
-            const id = new Identity(d);
-            id.cursor = r[i].key;
-            identitiesByHash[r[i].value] = id;
-          } catch (e) {
-            console.error(e);
+    const initialDepth = cursor ? Number.parseInt(cursor.substring(0, cursor.indexOf(`:`))) : 0;
+    for (let d = initialDepth;d <= depth;d ++) {
+      const useCursor = d === initialDepth;
+      const paddedDistance = (`00${d}`).substring(d.toString().length);
+      console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
+      let r = await this.identitiesBySearchKey.searchText(`${paddedDistance}:${encodeURIComponent(value)}`, limit, cursor : undefined);
+      console.log(`r`, r);
+      while (r && r.length && Object.keys(identitiesByHash).length < limit) {
+        for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {
+          if (r[i].value && !identitiesByHash.hasOwnProperty(r[i].value)) {
+            try {
+              const d = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
+              const id = new Identity(d);
+              id.cursor = r[i].key;
+              identitiesByHash[r[i].value] = id;
+            } catch (e) {
+              console.error(e);
+            }
           }
         }
+        console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, r[r.length - 1].key);
+        r = await this.identitiesBySearchKey.searchText(`${paddedDistance}:${encodeURIComponent(value)}`, limit, r[r.length - 1].key);
+        console.log(`r`, r);
       }
-      r = await this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, r[r.length - 1].key);
     }
     return Object.values(identitiesByHash);
   }

@@ -397,7 +397,7 @@ var browser_1 = browser.Headers;
 var browser_2 = browser.Request;
 var browser_3 = browser.Response;
 
-var global$2 = typeof global !== "undefined" ? global :
+var global$1 = typeof global !== "undefined" ? global :
             typeof self !== "undefined" ? self :
             typeof window !== "undefined" ? window : {}
 
@@ -637,8 +637,8 @@ var INSPECT_MAX_BYTES = 50;
  * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they
  * get the Object implementation, which is slower but behaves correctly.
  */
-Buffer.TYPED_ARRAY_SUPPORT = global$2.TYPED_ARRAY_SUPPORT !== undefined
-  ? global$2.TYPED_ARRAY_SUPPORT
+Buffer.TYPED_ARRAY_SUPPORT = global$1.TYPED_ARRAY_SUPPORT !== undefined
+  ? global$1.TYPED_ARRAY_SUPPORT
   : true;
 
 function kMaxLength () {
@@ -4141,7 +4141,7 @@ var _Object$keys = unwrapExports(keys$2);
 var myKey = void 0;
 var isNode$2 = false;
 try {
-  isNode$2 = Object.prototype.toString.call(global$2.process) === '[object process]';
+  isNode$2 = Object.prototype.toString.call(global$1.process) === '[object process]';
 } catch (e) {
   
 }
@@ -6097,6 +6097,57 @@ module.exports = { "default": values, __esModule: true };
 
 var _Object$values = unwrapExports(values$2);
 
+var _stringWs = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
+  '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
+
+var space = '[' + _stringWs + ']';
+var non = '\u200b\u0085';
+var ltrim = RegExp('^' + space + space + '*');
+var rtrim = RegExp(space + space + '*$');
+
+var exporter = function (KEY, exec, ALIAS) {
+  var exp = {};
+  var FORCE = _fails(function () {
+    return !!_stringWs[KEY]() || non[KEY]() != non;
+  });
+  var fn = exp[KEY] = FORCE ? exec(trim) : _stringWs[KEY];
+  if (ALIAS) exp[ALIAS] = fn;
+  _export(_export.P + _export.F * FORCE, 'String', exp);
+};
+
+// 1 -> String#trimLeft
+// 2 -> String#trimRight
+// 3 -> String#trim
+var trim = exporter.trim = function (string, TYPE) {
+  string = String(_defined(string));
+  if (TYPE & 1) string = string.replace(ltrim, '');
+  if (TYPE & 2) string = string.replace(rtrim, '');
+  return string;
+};
+
+var _stringTrim = exporter;
+
+var $parseInt = _global.parseInt;
+var $trim = _stringTrim.trim;
+
+var hex = /^[-+]?0[xX]/;
+
+var _parseInt = $parseInt(_stringWs + '08') !== 8 || $parseInt(_stringWs + '0x16') !== 22 ? function parseInt(str, radix) {
+  var string = $trim(String(str), 3);
+  return $parseInt(string, (radix >>> 0) || (hex.test(string) ? 16 : 10));
+} : $parseInt;
+
+// 20.1.2.13 Number.parseInt(string, radix)
+_export(_export.S + _export.F * (Number.parseInt != _parseInt), 'Number', { parseInt: _parseInt });
+
+var _parseInt$2 = parseInt;
+
+var _parseInt$4 = createCommonjsModule(function (module) {
+module.exports = { "default": _parseInt$2, __esModule: true };
+});
+
+var _Number$parseInt = unwrapExports(_parseInt$4);
+
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
 
@@ -6108,10 +6159,10 @@ function defaultClearTimeout () {
 }
 var cachedSetTimeout = defaultSetTimout;
 var cachedClearTimeout = defaultClearTimeout;
-if (typeof global$2.setTimeout === 'function') {
+if (typeof global$1.setTimeout === 'function') {
     cachedSetTimeout = setTimeout;
 }
-if (typeof global$2.clearTimeout === 'function') {
+if (typeof global$1.clearTimeout === 'function') {
     cachedClearTimeout = clearTimeout;
 }
 
@@ -6261,7 +6312,7 @@ function chdir (dir) {
 function umask() { return 0; }
 
 // from https://github.com/kumavis/browser-process-hrtime/blob/master/index.js
-var performance = global$2.performance || {};
+var performance = global$1.performance || {};
 var performanceNow =
   performance.now        ||
   performance.mozNow     ||
@@ -6320,7 +6371,7 @@ var process$3 = {
   uptime: uptime
 };
 
-var hasFetch = isFunction(global$2.fetch) && isFunction(global$2.ReadableStream);
+var hasFetch = isFunction(global$1.fetch) && isFunction(global$1.ReadableStream);
 
 var _blobConstructor;
 function blobConstructor() {
@@ -6328,7 +6379,7 @@ function blobConstructor() {
     return _blobConstructor;
   }
   try {
-    new global$2.Blob([new ArrayBuffer(1)]);
+    new global$1.Blob([new ArrayBuffer(1)]);
     _blobConstructor = true;
   } catch (e) {
     _blobConstructor = false;
@@ -6339,10 +6390,10 @@ var xhr;
 
 function checkTypeSupport(type) {
   if (!xhr) {
-    xhr = new global$2.XMLHttpRequest();
+    xhr = new global$1.XMLHttpRequest();
     // If location.host is empty, e.g. if this page/worker was loaded
     // from a Blob, then use example.com to avoid an error
-    xhr.open('GET', global$2.location.host ? '/' : 'https://example.com');
+    xhr.open('GET', global$1.location.host ? '/' : 'https://example.com');
   }
   try {
     xhr.responseType = type;
@@ -6355,8 +6406,8 @@ function checkTypeSupport(type) {
 
 // For some strange reason, Safari 7.0 reports typeof global.ArrayBuffer === 'object'.
 // Safari 7.1 appears to have fixed this bug.
-var haveArrayBuffer = typeof global$2.ArrayBuffer !== 'undefined';
-var haveSlice = haveArrayBuffer && isFunction(global$2.ArrayBuffer.prototype.slice);
+var haveArrayBuffer = typeof global$1.ArrayBuffer !== 'undefined';
+var haveSlice = haveArrayBuffer && isFunction(global$1.ArrayBuffer.prototype.slice);
 
 var arraybuffer = haveArrayBuffer && checkTypeSupport('arraybuffer');
   // These next two tests unavoidably show warnings in Chrome. Since fetch will always
@@ -6365,7 +6416,7 @@ var msstream = !hasFetch && haveSlice && checkTypeSupport('ms-stream');
 var mozchunkedarraybuffer = !hasFetch && haveArrayBuffer &&
   checkTypeSupport('moz-chunked-arraybuffer');
 var overrideMimeType = isFunction(xhr.overrideMimeType);
-var vbArray = isFunction(global$2.VBArray);
+var vbArray = isFunction(global$1.VBArray);
 
 function isFunction(value) {
   return typeof value === 'function'
@@ -6463,7 +6514,7 @@ function format(f) {
 // If --no-deprecation is set, then it is a no-op.
 function deprecate(fn, msg) {
   // Allow for deprecating things in the process of starting up.
-  if (isUndefined(global$2.process)) {
+  if (isUndefined(global$1.process)) {
     return function() {
       return deprecate(fn, msg).apply(this, arguments);
     };
@@ -9479,7 +9530,7 @@ IncomingMessage.prototype._onXHRProgress = function() {
       break
     try {
       // This fails in IE8
-      response = new global$2.VBArray(xhr.responseBody).toArray();
+      response = new global$1.VBArray(xhr.responseBody).toArray();
     } catch (e) {
       // pass
     }
@@ -9525,7 +9576,7 @@ IncomingMessage.prototype._onXHRProgress = function() {
     response = xhr.response;
     if (xhr.readyState !== rStates.LOADING)
       break
-    var reader = new global$2.MSStreamReader();
+    var reader = new global$1.MSStreamReader();
     reader.onprogress = function() {
       if (reader.result.byteLength > self._pos) {
         self.push(new Buffer(new Uint8Array(reader.result.slice(self._pos))));
@@ -9691,7 +9742,7 @@ ClientRequest$1.prototype._onFinish = function() {
   var body;
   if (opts.method === 'POST' || opts.method === 'PUT' || opts.method === 'PATCH') {
     if (blobConstructor()) {
-      body = new global$2.Blob(self._body.map(function(buffer) {
+      body = new global$1.Blob(self._body.map(function(buffer) {
         return toArrayBuffer(buffer)
       }), {
         type: (headersObj['content-type'] || {}).value || ''
@@ -9707,7 +9758,7 @@ ClientRequest$1.prototype._onFinish = function() {
       return [headersObj[name].name, headersObj[name].value]
     });
 
-    global$2.fetch(self._opts.url, {
+    global$1.fetch(self._opts.url, {
       method: self._opts.method,
       headers: headers,
       body: body,
@@ -9720,7 +9771,7 @@ ClientRequest$1.prototype._onFinish = function() {
       self.emit('error', reason);
     });
   } else {
-    var xhr = self._xhr = new global$2.XMLHttpRequest();
+    var xhr = self._xhr = new global$1.XMLHttpRequest();
     try {
       xhr.open(self._opts.method, self._opts.url, true);
     } catch (err) {
@@ -11040,7 +11091,7 @@ function request(opts, cb) {
   // Normally, the page is loaded from http or https, so not specifying a protocol
   // will result in a (valid) protocol-relative url. However, this won't work if
   // the protocol is something else, like 'file:'
-  var defaultProtocol = global$2.location.protocol.search(/^https?:$/) === -1 ? 'http:' : '';
+  var defaultProtocol = global$1.location.protocol.search(/^https?:$/) === -1 ? 'http:' : '';
 
   var protocol = opts.protocol || defaultProtocol;
   var host = opts.hostname || opts.host;
@@ -11178,7 +11229,7 @@ var http$1 = Object.freeze({
 	default: http
 });
 
-var require$$1$4 = ( http$1 && http ) || http$1;
+var require$$1$5 = ( http$1 && http ) || http$1;
 
 var merkleBtree = createCommonjsModule(function (module, exports) {
 (function (global, factory) {
@@ -13708,7 +13759,7 @@ function nodeGet(url) {
   // return new pending promise
   return new Promise(function (resolve, reject) {
     // select http or https module, depending on reqested url
-    var lib = url.startsWith("https") ? require$$1$4 : require$$1$4;
+    var lib = url.startsWith("https") ? require$$1$5 : require$$1$5;
     var request = lib.get(url, function (response) {
       // handle http errors
       if (response.statusCode < 200 || response.statusCode > 299) {
@@ -13788,16 +13839,25 @@ var DEFAULT_TIMEOUT = 10000;
 // TODO: make the whole thing use GUN for indexing and flush onto IPFS
 
 var Index = function () {
-  function Index() {
+  function Index(ipfs) {
     _classCallCheck(this, Index);
+
+    if (ipfs) {
+      this.ipfs = ipfs;
+      this.storage = new merkleBtree.IPFSStorage(ipfs);
+      this.identitiesBySearchKey = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      this.identitiesByTrustDistance = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      this.messagesByTimestamp = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      this.messagesByDistance = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+    }
   }
 
-  Index.create = function create() {
-    // TODO: make it work with js-ipfs && IPFSStorage
-    this.storage = new merkleBtree.RAMStorage();
-    this.identitiesBySearchKey = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-    this.messagesByTimestamp = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-    return true;
+  Index.getMsgIndexKey = function getMsgIndexKey(msg) {
+    var distance = parseInt(msg.distance);
+    distance = _Number$isNaN(distance) ? 99 : distance;
+    distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
+    var key = distance + ':' + Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000) + ':' + (msg.ipfs_hash || msg.hash).substr(0, 9);
+    return key;
   };
 
   Index.load = function () {
@@ -13965,19 +14025,31 @@ var Index = function () {
               throw 'ipfs param must be a gateway url, array of urls or a js-ipfs object';
 
             case 53:
-              _context2.next = 55;
+              console.log(1, indexRoot);
+              _context2.next = 56;
+              return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_distance', this.storage, IPFS_INDEX_WIDTH);
+
+            case 56:
+              this.identitiesByTrustDistance = _context2.sent;
+
+              console.log(2);
+              _context2.next = 60;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_searchkey', this.storage, IPFS_INDEX_WIDTH);
 
-            case 55:
+            case 60:
               this.identitiesBySearchKey = _context2.sent;
-              _context2.next = 58;
+
+              console.log(3);
+              _context2.next = 64;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_timestamp', this.storage, IPFS_INDEX_WIDTH);
 
-            case 58:
+            case 64:
               this.messagesByTimestamp = _context2.sent;
+
+              console.log(4);
               return _context2.abrupt('return', true);
 
-            case 60:
+            case 67:
             case 'end':
               return _context2.stop();
           }
@@ -14256,23 +14328,15 @@ var Index = function () {
     return publishMessage;
   }();
 
-  /* Add message to index */
-
-
-  Index.prototype.addMessage = function () {
+  Index.prototype._updateIdentityIndexesByMsg = function () {
     var _ref8 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(msg) {
       return regenerator.wrap(function _callee8$(_context8) {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
-              if (!this.ipfs) {
-                _context8.next = 2;
-                break;
-              }
+              return _context8.abrupt('return', msg);
 
-              return _context8.abrupt('return', this.messagesByTimestamp.put('key', msg.jws));
-
-            case 2:
+            case 1:
             case 'end':
               return _context8.stop();
           }
@@ -14280,97 +14344,176 @@ var Index = function () {
       }, _callee8, this);
     }));
 
-    function addMessage(_x19) {
+    function _updateIdentityIndexesByMsg(_x19) {
       return _ref8.apply(this, arguments);
+    }
+
+    return _updateIdentityIndexesByMsg;
+  }();
+
+  /* Add message to index */
+
+
+  Index.prototype.addMessage = function () {
+    var _ref9 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(msg) {
+      var updateIdentityIndexes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      var indexKey, h;
+      return regenerator.wrap(function _callee9$(_context9) {
+        while (1) {
+          switch (_context9.prev = _context9.next) {
+            case 0:
+              if (!this.ipfs) {
+                _context9.next = 12;
+                break;
+              }
+
+              indexKey = Index.getMsgIndexKey(msg);
+
+              console.log(indexKey);
+              // TODO: calculate msg trust distance
+              _context9.next = 5;
+              return this.messagesByDistance.put(indexKey, msg.jws);
+
+            case 5:
+              indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
+              console.log(indexKey);
+              _context9.next = 9;
+              return this.messagesByTimestamp.put(indexKey, msg.jws);
+
+            case 9:
+              h = _context9.sent;
+
+              if (updateIdentityIndexes) {
+                this._updateIdentityIndexesByMsg(msg);
+              }
+              // TODO: update ipns entry to point to new index root
+              return _context9.abrupt('return', h);
+
+            case 12:
+            case 'end':
+              return _context9.stop();
+          }
+        }
+      }, _callee9, this);
+    }));
+
+    function addMessage(_x21) {
+      return _ref9.apply(this, arguments);
     }
 
     return addMessage;
   }();
 
   Index.prototype.search = function () {
-    var _ref9 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(value, type) {
+    var _ref10 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(value, type) {
       var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
       var cursor = arguments[3];
-      var identitiesByHash, r, i, d, id;
-      return regenerator.wrap(function _callee9$(_context9) {
+      var depth = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 20;
+
+      var identitiesByHash, initialDepth, d, useCursor, paddedDistance, r, i, _d, id;
+
+      return regenerator.wrap(function _callee10$(_context10) {
         while (1) {
-          switch (_context9.prev = _context9.next) {
+          switch (_context10.prev = _context10.next) {
             case 0:
               // TODO: param 'exact'
               identitiesByHash = {};
-              _context9.next = 3;
-              return this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, cursor);
+              initialDepth = cursor ? _Number$parseInt(cursor.substring(0, cursor.indexOf(':'))) : 0;
+              d = initialDepth;
 
             case 3:
-              r = _context9.sent;
+              if (!(d <= depth)) {
+                _context10.next = 42;
+                break;
+              }
 
-            case 4:
+              useCursor = d === initialDepth;
+              paddedDistance = ('00' + d).substring(d.toString().length);
+
+              console.log(paddedDistance + ':' + encodeURIComponent(value), limit, useCursor ? cursor : undefined);
+              _context10.next = 9;
+              return this.identitiesBySearchKey.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, cursor);
+
+            case 9:
+              r = _context10.sent;
+
+              console.log('r', r);
+
+            case 11:
               if (!(r && r.length && _Object$keys(identitiesByHash).length < limit)) {
-                _context9.next = 30;
+                _context10.next = 39;
                 break;
               }
 
               i = 0;
 
-            case 6:
+            case 13:
               if (!(i < r.length && _Object$keys(identitiesByHash).length < limit)) {
-                _context9.next = 25;
+                _context10.next = 32;
                 break;
               }
 
               if (!(r[i].value && !identitiesByHash.hasOwnProperty(r[i].value))) {
-                _context9.next = 22;
+                _context10.next = 29;
                 break;
               }
 
-              _context9.prev = 8;
-              _context9.t0 = JSON;
-              _context9.next = 12;
+              _context10.prev = 15;
+              _context10.t0 = JSON;
+              _context10.next = 19;
               return this.storage.get('/ipfs/' + r[i].value);
 
-            case 12:
-              _context9.t1 = _context9.sent;
-              d = _context9.t0.parse.call(_context9.t0, _context9.t1);
-              id = new Identity(d);
+            case 19:
+              _context10.t1 = _context10.sent;
+              _d = _context10.t0.parse.call(_context10.t0, _context10.t1);
+              id = new Identity(_d);
 
               id.cursor = r[i].key;
               identitiesByHash[r[i].value] = id;
-              _context9.next = 22;
+              _context10.next = 29;
               break;
 
-            case 19:
-              _context9.prev = 19;
-              _context9.t2 = _context9['catch'](8);
+            case 26:
+              _context10.prev = 26;
+              _context10.t2 = _context10['catch'](15);
 
-              console.error(_context9.t2);
+              console.error(_context10.t2);
 
-            case 22:
+            case 29:
               i++;
-              _context9.next = 6;
+              _context10.next = 13;
               break;
 
-            case 25:
-              _context9.next = 27;
-              return this.identitiesBySearchKey.searchText(encodeURIComponent(value), limit, r[r.length - 1].key);
+            case 32:
+              console.log(paddedDistance + ':' + encodeURIComponent(value), limit, r[r.length - 1].key);
+              _context10.next = 35;
+              return this.identitiesBySearchKey.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, r[r.length - 1].key);
 
-            case 27:
-              r = _context9.sent;
-              _context9.next = 4;
+            case 35:
+              r = _context10.sent;
+
+              console.log('r', r);
+              _context10.next = 11;
               break;
 
-            case 30:
-              return _context9.abrupt('return', _Object$values(identitiesByHash));
+            case 39:
+              d++;
+              _context10.next = 3;
+              break;
 
-            case 31:
+            case 42:
+              return _context10.abrupt('return', _Object$values(identitiesByHash));
+
+            case 43:
             case 'end':
-              return _context9.stop();
+              return _context10.stop();
           }
         }
-      }, _callee9, this, [[8, 19]]);
+      }, _callee10, this, [[15, 26]]);
     }));
 
-    function search(_x21, _x22) {
-      return _ref9.apply(this, arguments);
+    function search(_x24, _x25) {
+      return _ref10.apply(this, arguments);
     }
 
     return search;
@@ -14379,7 +14522,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.51";
+var version$2 = "0.0.52";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
