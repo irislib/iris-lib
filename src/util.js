@@ -58,6 +58,10 @@ export default {
     return prv;
   },
 
+  attributeEquals(a, b) {
+    return (a[0] === b[0] && a[1] === b[1]);
+  },
+
   generateKey: function() {
     const key = this.generateKeyPair();
     key.prvKeyObj.pubKeyASN1 = this.getPubKeyASN1(key.pubKeyObj);

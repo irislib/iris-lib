@@ -17,7 +17,7 @@ const DEFAULT_TIMEOUT = 10000;
 
 // TODO: make the whole thing use GUN for indexing and flush onto IPFS
 class Index {
-  constructor(ipfs) {
+  constructor(ipfs, viewpoint) {
     if (ipfs) {
       this.ipfs = ipfs;
       this.storage = new btree.IPFSStorage(ipfs);
@@ -25,6 +25,11 @@ class Index {
       this.identitiesByTrustDistance = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       this.messagesByTimestamp = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       this.messagesByDistance = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      if (viewpoint) {
+        this.viewpoint = viewpoint;
+      } else {
+        this.viewpoint = ['keyID', util.getDefaultKey().keyID];
+      }
     }
   }
 
@@ -90,13 +95,9 @@ class Index {
     } else {
       throw `ipfs param must be a gateway url, array of urls or a js-ipfs object`;
     }
-    console.log(1, indexRoot);
     this.identitiesByTrustDistance = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_distance`, this.storage, IPFS_INDEX_WIDTH);
-    console.log(2);
     this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_searchkey`, this.storage, IPFS_INDEX_WIDTH);
-    console.log(3);
     this.messagesByTimestamp = await btree.MerkleBTree.getByHash(`${indexRoot}/messages_by_timestamp`, this.storage, IPFS_INDEX_WIDTH);
-    console.log(4);
     return true;
   }
 
@@ -135,6 +136,10 @@ class Index {
       msgs.push(msg);
     });
     return msgs;
+  }
+
+  async _addIdentityToIndexes(id: Identity) {
+
   }
 
   async getSentMsgs(identity, limit, cursor = ``) {
@@ -177,19 +182,55 @@ class Index {
     return r;
   }
 
+  async getAttributeTrustDistance(a) {
+    if (!util.isUniqueType(a[0])) {
+      return 99;
+    }
+    const id = await this.get(a[1], a[0]);
+    return id && id.trustDistance ? id.trustDistance : 99;
+  }
+
+  async getMsgTrustDistance(msg) {
+    let shortestDistance = 99;
+    for (let i = 0;i < msg.signedData.author.length;i ++) {
+      if (util.attributeEquals(msg.signedData.author[i], this.viewpoint)) {
+        return 0;
+      } else {
+        const d = await this.getAttributeTrustDistance(msg.signedData.author[i]);
+        if (d < shortestDistance) {
+          shortestDistance = d;
+        }
+      }
+    };
+    return shortestDistance;
+  }
+
   async _updateIdentityIndexesByMsg(msg) {
-    return msg; // TODO
+    const recipientIdentities = [];
+    for (let i = 0;i < msg.signedData.recipient.length;i++) {
+      const a = msg.signedData.recipient[i];
+      const id = await this.get(a[1], a[0]);
+      if (id) {
+        recipientIdentities.push(id);
+      }
+    }
+    console.log(recipientIdentities);
+    if (!recipientIdentities.length) {
+      const id = new Identity({attrs: msg.signedData.recipient});
+      if (msg.isPositive()) {
+        id.trustDistance = msg.distance + 1;
+      }
+      console.log(JSON.stringify(id));
+    }
   }
 
   /* Add message to index */
   async addMessage(msg: Message, updateIdentityIndexes = true) {
     if (this.ipfs) {
+      msg.distance = await this.getMsgTrustDistance(msg);
       let indexKey = Index.getMsgIndexKey(msg);
-      console.log(indexKey);
-      // TODO: calculate msg trust distance
       await this.messagesByDistance.put(indexKey, msg.jws);
       indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
-      console.log(indexKey);
       const h = await this.messagesByTimestamp.put(indexKey, msg.jws);
       if (updateIdentityIndexes) {
         this._updateIdentityIndexesByMsg(msg);

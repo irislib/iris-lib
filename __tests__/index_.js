@@ -7,7 +7,7 @@ let i, p, key, ipfsNode;
 jest.setTimeout(30000);
 
 beforeAll(async () => {
-  key = identifi.util.generateKey();
+  key = identifi.util.getDefaultKey();
   ipfsNode = new IPFS({repo: './ipfs_repo'});
   await new Promise((resolve, reject) => {
     ipfsNode.on('ready', () => {
