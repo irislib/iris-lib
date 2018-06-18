@@ -13,10 +13,10 @@ class Identity {
       this.receivedNegative = c.neg;
       this.receivedNeutral = c.neut;
     }
-    this.receivedNegative |= 0;
-    this.receivedPositive |= 0;
-    this.receivedNeutral |= 0;
-    this.trustDistance = 1000;
+    this.receivedNegative = this.data.receivedNegative || 0;
+    this.receivedPositive = this.data.receivedPositive || 0;
+    this.receivedNeutral = this.data.receivedNeutral || 0;
+    this.trustDistance = this.data.trustDistance || 1000;
     this.data.attrs.forEach(a => {
       if (!this.linkTo && util.isUniqueType(a.name)) {
         this.linkTo = a;

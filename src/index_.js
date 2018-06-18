@@ -31,6 +31,9 @@ class Index {
       } else {
         this.viewpoint = [`keyID`, util.getDefaultKey().keyID];
       }
+      const vp = new Identity({attrs: [this.viewpoint]});
+      self.trustDistance = 0;
+      this._addIdentityToIndexes(vp);
     }
   }
 
@@ -46,7 +49,7 @@ class Index {
     const indexKeys = [];
     const attrs = identity.data.attrs;
     for (let j = 0;j < attrs.length;j += 1) {
-      let distance = parseInt(attrs[j].dist);
+      let distance = identity.trustDistance || parseInt(attrs[j].dist);
       distance = Number.isNaN(distance) ? 99 : distance;
       distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
       const v = attrs[j].val || attrs[j][1];
@@ -136,6 +139,42 @@ class Index {
     return true;
   }
 
+  async save() {
+    try {
+      let indexRoot;
+      let res = await this.ipfs.files.add([
+        {path: `messages_by_distance`, content: Buffer.from(this.messagesByDistance.rootNode.serialize())},
+        {path: `messages_by_timestamp`, content: Buffer.from(this.messagesByTimestamp.rootNode.serialize())},
+        {path: `identities_by_searchkey`, content: Buffer.from(this.identitiesBySearchKey.rootNode.serialize())},
+        {path: `identities_by_distance`, content: Buffer.from(this.identitiesByTrustDistance.rootNode.serialize())},
+      ]);
+      const links = [];
+      for (let i = 0;i < res.length;i += 1) {
+        links.push({Name: res[i].path, Hash: res[i].hash, Size: res[i].size});
+      }
+      // TODO: remove dagPB dependency - has too many subdependencies
+      res = await new Promise(((resolve, reject) => {
+        dagPB.DAGNode.create(Buffer.from(`\u0008\u0001`), links, (err, dag) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(this.ipfs.object.put(dag));
+        });
+      }));
+      if (res._json.multihash) {
+        indexRoot = res._json.multihash;
+        if (this.ipfs.name) {
+          console.log(`publishing index`, indexRoot);
+          const r = await this.ipfs.name.publish(indexRoot, {});
+          console.log(`published index`, r);
+        }
+      }
+      return indexRoot;
+    } catch (e) {
+      console.log(`error publishing index`, e);
+    }
+  }
+
   /*
   Get an identity referenced by an identifier.
   If type is undefined, tries to guess it.
@@ -174,10 +213,21 @@ class Index {
   }
 
   async _addIdentityToIndexes(id: Identity) {
+    if (id.sentIndex && id.receivedIndex) {
+      if (id.sentIndex.rootNode.hash && id.receivedIndex.rootNode.hash) {
+        id.data.sent = id.sentIndex.rootNode.hash;
+        id.data.received = id.receivedIndex.rootNode.hash;
+      } else {
+        const s = await this.ipfs.files.add(new Buffer(id.sentIndex.rootNode.serialize(), `utf8`));
+        id.data.sent = s[0].hash;
+        const r = await this.ipfs.files.add(new Buffer(id.receivedIndex.rootNode.serialize(), `utf8`));
+        id.data.received = r[0].hash;
+      }
+      console.log(id.data.sent, id.data.received);
+    }
     const buffer = new this.ipfs.types.Buffer(JSON.stringify(id.data));
     const r = await this.ipfs.files.add(buffer);
     const hash = r.length ? r[0].hash : ``;
-    console.log(`hash`, hash);
     const indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
@@ -250,42 +300,6 @@ class Index {
     return shortestDistance;
   }
 
-  async save() {
-    try {
-      let indexRoot;
-      let res = await this.ipfs.files.add([
-        {path: `messages_by_distance`, content: Buffer.from(this.messagesByDistance.rootNode.serialize())},
-        {path: `messages_by_timestamp`, content: Buffer.from(this.messagesByTimestamp.rootNode.serialize())},
-        {path: `identities_by_searchkey`, content: Buffer.from(this.identitiesBySearchKey.rootNode.serialize())},
-        {path: `identities_by_distance`, content: Buffer.from(this.identitiesByTrustDistance.rootNode.serialize())},
-      ]);
-      const links = [];
-      for (let i = 0;i < res.length;i += 1) {
-        links.push({Name: res[i].path, Hash: res[i].hash, Size: res[i].size});
-      }
-      // TODO: remove dagPB dependency - has too many subdependencies
-      res = await new Promise(((resolve, reject) => {
-        dagPB.DAGNode.create(Buffer.from(`\u0008\u0001`), links, (err, dag) => {
-          if (err) {
-            reject(err);
-          }
-          resolve(this.ipfs.object.put(dag));
-        });
-      }));
-      if (res._json.multihash) {
-        indexRoot = res._json.multihash;
-        if (this.ipfs.name) {
-          console.log(`publishing index`, indexRoot);
-          const r = await this.ipfs.name.publish(indexRoot, {});
-          console.log(`published index`, r);
-        }
-      }
-      return indexRoot;
-    } catch (e) {
-      console.log(`error publishing index`, e);
-    }
-  }
-
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = [];
     const authorIdentities = [];
@@ -308,11 +322,25 @@ class Index {
       // TODO: update sent/rcvd msg indexes
     } else {
       const id = new Identity({attrs: msg.signedData.recipient});
+      id.sentIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      id.receivedIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       // TODO: take msg author trust into account
-      if (msg.isPositive() || msg.signedData.type === `verify_identity`) {
+      if (msg.isPositive()) {
         id.trustDistance = msg.distance + 1;
-        await this._addIdentityToIndexes(id);
       }
+      recipientIdentities.push(id);
+    }
+    let msgIndexKey = Index.getMsgIndexKey(msg);
+    msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
+    for (let i = 0;i < recipientIdentities.length;i ++) {
+      const id = recipientIdentities[i];
+      await id.receivedIndex.put(msgIndexKey, msg);
+      await this._addIdentityToIndexes(id);
+    }
+    for (let i = 0;i < authorIdentities.length;i ++) {
+      const id = authorIdentities[i];
+      await id.sentIndex.put(msgIndexKey, msg);
+      await this._addIdentityToIndexes(id);
     }
   }
 
@@ -324,7 +352,7 @@ class Index {
         return; // do not save messages from untrusted author
       }
       let indexKey = Index.getMsgIndexKey(msg);
-      await this.messagesByDistance.put(indexKey, msg.jws);
+      await this.messagesByDistance.put(indexKey, msg);
       indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
       const h = await this.messagesByTimestamp.put(indexKey, msg.jws);
       if (updateIdentityIndexes) {

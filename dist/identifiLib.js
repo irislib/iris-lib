@@ -22351,6 +22351,9 @@ var Index = function () {
       } else {
         this.viewpoint = ['keyID', util.getDefaultKey().keyID];
       }
+      var self = new Identity({ attrs: [this.viewpoint] });
+      self.trustDistance = 0;
+      this._addIdentityToIndexes(self);
     }
   }
 
