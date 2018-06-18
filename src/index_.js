@@ -3,6 +3,7 @@ import util from './util';
 import Message from './message';
 import Identity from './identity';
 import fetch from 'node-fetch';
+import dagPB from 'ipld-dag-pb';
 
 const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
 const DEFAULT_STATIC_FALLBACK_INDEX = `/ipfs/QmPxLM631zJQ12tUDWs55LkGqqroFZKHeLjAZ2XwL9Miu3`;
@@ -28,7 +29,7 @@ class Index {
       if (viewpoint) {
         this.viewpoint = viewpoint;
       } else {
-        this.viewpoint = ['keyID', util.getDefaultKey().keyID];
+        this.viewpoint = [`keyID`, util.getDefaultKey().keyID];
       }
     }
   }
@@ -39,6 +40,40 @@ class Index {
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
     const key = `${distance}:${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000)}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
     return key;
+  }
+
+  static getIdentityIndexKeys(identity, hash) {
+    const indexKeys = [];
+    const attrs = identity.data.attrs;
+    for (let j = 0;j < attrs.length;j += 1) {
+      let distance = parseInt(attrs[j].dist);
+      distance = Number.isNaN(distance) ? 99 : distance;
+      distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
+      const v = attrs[j].val || attrs[j][1];
+      const n = attrs[j].name || attrs[j][0];
+      const value = encodeURIComponent(v);
+      const lowerCaseValue = encodeURIComponent(v.toLowerCase());
+      const name = encodeURIComponent(n);
+      const key = `${distance}:${value}:${name}`;
+      const lowerCaseKey = `${distance}:${lowerCaseValue}:${name}`;
+      // TODO: add  + ':' + hash.substr(0, 9) to non-unique identifiers, to allow for duplicates
+      indexKeys.push(key);
+      if (key !== lowerCaseKey) {
+        indexKeys.push(lowerCaseKey);
+      }
+      if (v.indexOf(` `) > - 1) {
+        const words = v.toLowerCase().split(` `);
+        for (let l = 0;l < words.length;l += 1) {
+          const k = `${distance}:${encodeURIComponent(words[l])}:${name}:${hash.substr(0, 9)}`;
+          indexKeys.push(k);
+        }
+      }
+      if (key.match(/^http(s)?:\/\/.+\/[a-zA-Z0-9_]+$/)) {
+        const split = key.split(`/`);
+        indexKeys.push(split[split.length - 1]);
+      }
+    }
+    return indexKeys;
   }
 
   static async load(indexRoot, ipfs) {
@@ -139,7 +174,17 @@ class Index {
   }
 
   async _addIdentityToIndexes(id: Identity) {
-
+    const buffer = new this.ipfs.types.Buffer(JSON.stringify(id.data));
+    const r = await this.ipfs.files.add(buffer);
+    const hash = r.length ? r[0].hash : ``;
+    console.log(`hash`, hash);
+    const indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
+    for (let i = 0;i < indexKeys.length;i ++) {
+      const key = indexKeys[i];
+      await this.identitiesByTrustDistance.put(key, hash);
+      await this.identitiesBySearchKey.put(key.substr(key.indexOf(`:`) + 1), hash);
+    }
+    return {hash};
   }
 
   async getSentMsgs(identity, limit, cursor = ``) {
@@ -201,26 +246,73 @@ class Index {
           shortestDistance = d;
         }
       }
-    };
+    }
     return shortestDistance;
+  }
+
+  async save() {
+    try {
+      let indexRoot;
+      let res = await this.ipfs.files.add([
+        {path: `messages_by_distance`, content: Buffer.from(this.messagesByDistance.rootNode.serialize())},
+        {path: `messages_by_timestamp`, content: Buffer.from(this.messagesByTimestamp.rootNode.serialize())},
+        {path: `identities_by_searchkey`, content: Buffer.from(this.identitiesBySearchKey.rootNode.serialize())},
+        {path: `identities_by_distance`, content: Buffer.from(this.identitiesByTrustDistance.rootNode.serialize())},
+      ]);
+      const links = [];
+      for (let i = 0;i < res.length;i += 1) {
+        links.push({Name: res[i].path, Hash: res[i].hash, Size: res[i].size});
+      }
+      // TODO: remove dagPB dependency - has too many subdependencies
+      res = await new Promise(((resolve, reject) => {
+        dagPB.DAGNode.create(Buffer.from(`\u0008\u0001`), links, (err, dag) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(this.ipfs.object.put(dag));
+        });
+      }));
+      if (res._json.multihash) {
+        indexRoot = res._json.multihash;
+        if (this.ipfs.name) {
+          console.log(`publishing index`, indexRoot);
+          const r = await this.ipfs.name.publish(indexRoot, {});
+          console.log(`published index`, r);
+        }
+      }
+      return indexRoot;
+    } catch (e) {
+      console.log(`error publishing index`, e);
+    }
   }
 
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = [];
-    for (let i = 0;i < msg.signedData.recipient.length;i++) {
+    const authorIdentities = [];
+    for (let i = 0;i < msg.signedData.recipient.length;i ++) {
       const a = msg.signedData.recipient[i];
       const id = await this.get(a[1], a[0]);
       if (id) {
         recipientIdentities.push(id);
       }
     }
-    console.log(recipientIdentities);
-    if (!recipientIdentities.length) {
-      const id = new Identity({attrs: msg.signedData.recipient});
-      if (msg.isPositive()) {
-        id.trustDistance = msg.distance + 1;
+    for (let i = 0;i < msg.signedData.author.length;i ++) {
+      const a = msg.signedData.author[i];
+      const id = await this.get(a[1], a[0]);
+      if (id) {
+        authorIdentities.push(id);
       }
-      console.log(JSON.stringify(id));
+    }
+    if (recipientIdentities.length) {
+      // TODO: add new identifiers to existing identity and update identity stats
+      // TODO: update sent/rcvd msg indexes
+    } else {
+      const id = new Identity({attrs: msg.signedData.recipient});
+      // TODO: take msg author trust into account
+      if (msg.isPositive() || msg.signedData.type === `verify_identity`) {
+        id.trustDistance = msg.distance + 1;
+        await this._addIdentityToIndexes(id);
+      }
     }
   }
 
@@ -228,12 +320,15 @@ class Index {
   async addMessage(msg: Message, updateIdentityIndexes = true) {
     if (this.ipfs) {
       msg.distance = await this.getMsgTrustDistance(msg);
+      if (msg.distance === 99) {
+        return; // do not save messages from untrusted author
+      }
       let indexKey = Index.getMsgIndexKey(msg);
       await this.messagesByDistance.put(indexKey, msg.jws);
       indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
       const h = await this.messagesByTimestamp.put(indexKey, msg.jws);
       if (updateIdentityIndexes) {
-        this._updateIdentityIndexesByMsg(msg);
+        await this._updateIdentityIndexesByMsg(msg);
       }
       // TODO: update ipns entry to point to new index root
       return h;

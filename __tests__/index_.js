@@ -30,6 +30,17 @@ test('add trust rating', async () => {
   const r = await i.addMessage(msg);
   expect(typeof r).toEqual('string');
 });
+/*
+test('get added identity', async () => {
+  p = await i.get('bob@example.com');
+  expect(p).toBeInstanceOf(identifi.Identity);
+});
+*/
+test('save index', async () => {
+  const h = await i.save();
+  expect(typeof h).toEqual('string');
+  expect(h.length).toBeGreaterThan(0);
+});
 afterAll(async () => {
   await ipfsNode.stop();
 });
