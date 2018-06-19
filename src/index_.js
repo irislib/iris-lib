@@ -32,7 +32,10 @@ class Index {
         this.viewpoint = [`keyID`, util.getDefaultKey().keyID];
       }
       const vp = new Identity({attrs: [this.viewpoint]});
-      self.trustDistance = 0;
+      vp.sentIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      vp.receivedIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      vp.data.trustDistance = 0;
+      vp.trustDistance = 0;
       this._addIdentityToIndexes(vp);
     }
   }
@@ -172,6 +175,14 @@ class Index {
       return indexRoot;
     } catch (e) {
       console.log(`error publishing index`, e);
+    }
+  }
+
+  async getViewpoint() {
+    const r = await this.identitiesByTrustDistance.searchText('00', 1);
+    if (r.length) {
+      const p = await this.storage.get(r[0].value);
+      return new Identity(JSON.parse(p));
     }
   }
 
@@ -326,7 +337,7 @@ class Index {
       id.receivedIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       // TODO: take msg author trust into account
       if (msg.isPositive()) {
-        id.trustDistance = msg.distance + 1;
+        id.data.trustDistance = msg.distance + 1;
       }
       recipientIdentities.push(id);
     }
@@ -354,7 +365,7 @@ class Index {
       let indexKey = Index.getMsgIndexKey(msg);
       await this.messagesByDistance.put(indexKey, msg);
       indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
-      const h = await this.messagesByTimestamp.put(indexKey, msg.jws);
+      const h = await this.messagesByTimestamp.put(indexKey, msg);
       if (updateIdentityIndexes) {
         await this._updateIdentityIndexesByMsg(msg);
       }

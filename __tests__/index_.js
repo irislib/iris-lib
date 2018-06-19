@@ -45,17 +45,18 @@ describe('local index', async () => {
     expect(r.length).toEqual(0);
   });
   test('get messages sent by self', async () => {
-    const r = await i.getSentMsgs(p);
+    const viewpoint = await i.getViewpoint();
+    console.log(viewpoint);
+    const r = await i.getSentMsgs(i);
     expect(r.length).toEqual(0);
   });
-  test('get viewpoint identity', async () => {
+  test('get viewpoint identity by searching the default keyID', async () => {
     const defaultKey = identifi.util.getDefaultKey();
     p = await i.get(defaultKey.keyID, 'keyID');
     expect(p).toBeInstanceOf(identifi.Identity);
   });
   test('save index', async () => {
     h = await i.save();
-    console.log(i.identitiesByTrustDistance.rootNode.keys);
     expect(typeof h).toEqual('string');
     expect(h.length).toBeGreaterThan(0);
   });
