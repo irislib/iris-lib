@@ -66,7 +66,6 @@ describe('local index', async () => {
   });
 });
 
-/*
 describe('remote index via ipfs gateway', async () => {
   test('load default Index from default remote', async () => {
     i = await identifi.Index.load();
@@ -116,7 +115,6 @@ describe('remote index via ipfs gateway', async () => {
     expect(r.hash).toBeDefined();
   });
 });
-*/
 
 afterAll(async () => {
   await ipfsNode.stop();

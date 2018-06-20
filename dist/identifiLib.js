@@ -5528,7 +5528,7 @@ var Identity = function () {
 
     _classCallCheck(this, Identity);
 
-    this.data = data;
+    this.data = data; // data to (de)serialize
     this.profile = {};
     this.mostVerifiedAttributes = {};
     if (data.attrs.length) {
@@ -23562,7 +23562,7 @@ var Index = function () {
 
               console.log(paddedDistance + ':' + encodeURIComponent(value), limit, useCursor ? cursor : undefined);
               _context18.next = 9;
-              return this.identitiesBySearchKey.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, cursor);
+              return this.identitiesByTrustDistance.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, cursor);
 
             case 9:
               r = _context18.sent;
