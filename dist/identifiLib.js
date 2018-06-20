@@ -5533,20 +5533,20 @@ var Identity = function () {
     this.mostVerifiedAttributes = {};
     if (data.attrs.length) {
       var c = data.attrs[0];
-      this.receivedPositive = c.pos;
-      this.receivedNegative = c.neg;
-      this.receivedNeutral = c.neut;
+      this.data.receivedPositive = c.pos;
+      this.data.receivedNegative = c.neg;
+      this.data.receivedNeutral = c.neut;
     }
-    this.receivedNegative |= 0;
-    this.receivedPositive |= 0;
-    this.receivedNeutral |= 0;
-    this.trustDistance = 1000;
+    this.data.receivedNegative |= 0;
+    this.data.receivedPositive |= 0;
+    this.data.receivedNeutral |= 0;
+    this.data.trustDistance |= 1000;
     this.data.attrs.forEach(function (a) {
       if (!_this.linkTo && util.isUniqueType(a.name)) {
         _this.linkTo = a;
       }
-      if (!_Number$isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < _this.trustDistance) {
-        _this.trustDistance = parseInt(a.dist);
+      if (!_Number$isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < _this.data.trustDistance) {
+        _this.data.trustDistance = parseInt(a.dist);
         if (util.isUniqueType(a.name)) {
           _this.linkTo = a;
         }
@@ -5661,7 +5661,7 @@ var Identity = function () {
     details.style.flexGrow = 1;
     var link = 'https://identi.fi/#/identities/' + this.linkTo.name + '/' + this.linkTo.val;
     details.innerHTML = '<a href="' + link + '">' + (this.profile.name || this.profile.nickname || this.linkTo.name + ':' + this.linkTo.val) + '</a><br>';
-    details.innerHTML += '<small>Received: <span class="identifi-pos">+' + (this.receivedPositive || 0) + '</span> / <span class="identifi-neg">-' + (this.receivedNegative || 0) + '</span></small><br>';
+    details.innerHTML += '<small>Received: <span class="identifi-pos">+' + (this.data.receivedPositive || 0) + '</span> / <span class="identifi-neg">-' + (this.data.receivedNegative || 0) + '</span></small><br>';
     var links = document.createElement('small');
     this.data.attrs.forEach(function (a) {
       if (a.link) {
@@ -5784,20 +5784,20 @@ var Identity = function () {
     var bgImage = 'none';
     var transform = '';
     var boxShadow = '0px 0px 0px 0px #82FF84';
-    if (this.receivedPositive > this.receivedNegative * 20) {
-      boxShadow = '0px 0px ' + border * this.receivedPositive / 50 + 'px 0px #82FF84';
-    } else if (this.receivedPositive < this.receivedNegative * 3) {
-      boxShadow = '0px 0px ' + border * this.receivedNegative / 10 + 'px 0px #BF0400';
+    if (this.data.receivedPositive > this.data.receivedNegative * 20) {
+      boxShadow = '0px 0px ' + border * this.data.receivedPositive / 50 + 'px 0px #82FF84';
+    } else if (this.data.receivedPositive < this.data.receivedNegative * 3) {
+      boxShadow = '0px 0px ' + border * this.data.receivedNegative / 10 + 'px 0px #BF0400';
     }
-    if (this.receivedPositive + this.receivedNegative > 0) {
-      if (this.receivedPositive > this.receivedNegative) {
-        transform = 'rotate(' + (-this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2 + 'deg)';
+    if (this.data.receivedPositive + this.data.receivedNegative > 0) {
+      if (this.data.receivedPositive > this.data.receivedNegative) {
+        transform = 'rotate(' + (-this.data.receivedPositive / (this.data.receivedPositive + this.data.receivedNegative) * 360 - 180) / 2 + 'deg)';
         bgColor = '#A94442';
-        bgImage = 'linear-gradient(' + this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360 + 'deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)';
+        bgImage = 'linear-gradient(' + this.data.receivedPositive / (this.data.receivedPositive + this.data.receivedNegative) * 360 + 'deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)';
       } else {
-        transform = 'rotate(' + ((-this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2 + 180) + 'deg)';
+        transform = 'rotate(' + ((-this.data.receivedNegative / (this.data.receivedPositive + this.data.receivedNegative) * 360 - 180) / 2 + 180) + 'deg)';
         bgColor = '#3C763D';
-        bgImage = 'linear-gradient(' + this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360 + 'deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)';
+        bgImage = 'linear-gradient(' + this.data.receivedNegative / (this.data.receivedPositive + this.data.receivedNegative) * 360 + 'deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)';
       }
     }
 
@@ -5807,7 +5807,7 @@ var Identity = function () {
     pie.style.backgroundImage = bgImage;
     pie.style.width = width + 'px';
     pie.style.boxShadow = boxShadow;
-    pie.style.opacity = (this.receivedPositive + this.receivedNegative) / 10 * 0.5 + 0.35;
+    pie.style.opacity = (this.data.receivedPositive + this.data.receivedNegative) / 10 * 0.5 + 0.35;
     pie.style.transform = transform;
 
     var hash = new MessageDigest({ alg: 'md5', prov: 'cryptojs' }).digestString(_JSON$stringify(this.linkTo));
@@ -5821,7 +5821,7 @@ var Identity = function () {
 
     if (showDistance) {
       var distance = document.createElement('span');
-      distance.textContent = this.trustDistance < 1000 ? Identity._ordinal(this.trustDistance) : '\u2013';
+      distance.textContent = this.data.trustDistance < 1000 ? Identity._ordinal(this.data.trustDistance) : '\u2013';
       distance.className = 'identifi-distance';
       distance.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
       identicon$$1.appendChild(distance);
@@ -6013,7 +6013,7 @@ var Message = function () {
         id.receivedNegative = this.authorNeg;
       }
       if (this.authorTrustDistance) {
-        id.trustDistance = this.authorTrustDistance;
+        id.data.trustDistance = this.authorTrustDistance;
       }
       if (this.authorName) {
         id.profile.name = this.authorName;
@@ -6036,7 +6036,7 @@ var Message = function () {
         id.receivedNegative = this.recipientNeg;
       }
       if (this.recipientTrustDistance) {
-        id.trustDistance = this.recipientTrustDistance;
+        id.data.trustDistance = this.recipientTrustDistance;
       }
       if (this.recipientName) {
         id.profile.name = this.recipientName;
@@ -6170,6 +6170,13 @@ module.exports = { "default": _parseInt$2, __esModule: true };
 });
 
 var _Number$parseInt = unwrapExports(_parseInt$4);
+
+var empty$1 = {};
+
+
+var empty$2 = Object.freeze({
+	default: empty$1
+});
 
 // shim for using process in browser
 // based off https://github.com/defunctzombie/node-process/blob/master/browser.js
@@ -11259,14 +11266,14 @@ var http$1 = Object.freeze({
 	default: http
 });
 
-var require$$1$5 = ( http$1 && http ) || http$1;
+var crypto$1 = ( empty$2 && empty$1 ) || empty$2;
+
+var require$$2 = ( http$1 && http ) || http$1;
 
 var merkleBtree = createCommonjsModule(function (module, exports) {
 (function (global, factory) {
-  module.exports = factory();
-}(commonjsGlobal, (function () { var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-function _classCallCheck$1(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+  module.exports = factory(crypto$1);
+}(commonjsGlobal, (function (crypto) { function _classCallCheck$1(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function lt(a, b) {
   return a < b;
@@ -11688,17 +11695,11 @@ var TreeNode = function () {
   TreeNode.fromSortedList = function fromSortedList(list, maxChildren, storage) {
     function addNextParentNode(parentNodeList) {
       if (list.length) {
-        var _ret = function () {
-          var keys = list.splice(0, maxChildren);
-          return {
-            v: storage.put(new TreeNode(keys[0].targetHash, keys).serialize()).then(function (res) {
-              parentNodeList.push({ key: keys[1].key, targetHash: res, value: null });
-              return addNextParentNode(parentNodeList);
-            })
-          };
-        }();
-
-        if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
+        var keys = list.splice(0, maxChildren);
+        return storage.put(new TreeNode(keys[0].targetHash, keys).serialize()).then(function (res) {
+          parentNodeList.push({ key: keys[1].key, targetHash: res, value: null });
+          return addNextParentNode(parentNodeList);
+        });
       }
       if (parentNodeList.length && parentNodeList[0].targetHash) {
         parentNodeList[0].key = "";
@@ -13732,22 +13733,8 @@ var IPFSStorage = function () {
   };
 
   IPFSStorage.prototype.get = function get(key) {
-    return this.ipfs.files.cat(key).then(function (stream) {
-      return new Promise(function (resolve, reject) {
-        var res = "";
-
-        stream.on("data", function (chunk) {
-          res += chunk.toString();
-        });
-
-        stream.on("error", function (err) {
-          reject(err);
-        });
-
-        stream.on("end", function () {
-          resolve(res);
-        });
-      });
+    return this.ipfs.files.cat(key).then(function (file) {
+      return file.toString("utf8");
     });
   };
 
@@ -13763,6 +13750,56 @@ var IPFSStorage = function () {
 }();
 
 function _classCallCheck$3(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var RAMStorage = function () {
+  function RAMStorage() {
+    _classCallCheck$3(this, RAMStorage);
+
+    this.storage = {};
+  }
+
+  RAMStorage.prototype.put = function put(value) {
+    var _this = this;
+
+    return new Promise(function (resolve) {
+      var sha256 = crypto.createHash('sha256');
+      sha256.update(value);
+      var hash = sha256.digest('base64');
+      _this.storage[hash] = value;
+      resolve(hash);
+    });
+  };
+
+  RAMStorage.prototype.get = function get(key) {
+    var _this2 = this;
+
+    return new Promise(function (resolve) {
+      resolve(_this2.storage[key]);
+    });
+  };
+
+  RAMStorage.prototype.remove = function remove(key) {
+    var _this3 = this;
+
+    return new Promise(function (resolve) {
+      delete _this3.storage[key];
+      resolve();
+    });
+  };
+
+  RAMStorage.prototype.clear = function clear() {
+    var _this4 = this;
+
+    return new Promise(function (resolve) {
+      _this4.storage = {};
+      resolve();
+    });
+  };
+
+  return RAMStorage;
+}();
+
+function _classCallCheck$4(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var isNode = false;
 try {
@@ -13789,7 +13826,7 @@ function nodeGet(url) {
   // return new pending promise
   return new Promise(function (resolve, reject) {
     // select http or https module, depending on reqested url
-    var lib = url.startsWith("https") ? require$$1$5 : require$$1$5;
+    var lib = url.startsWith("https") ? require$$2 : require$$2;
     var request = lib.get(url, function (response) {
       // handle http errors
       if (response.statusCode < 200 || response.statusCode > 299) {
@@ -13825,7 +13862,7 @@ var IPFSGatewayStorage = function () {
   function IPFSGatewayStorage() {
     var apiRoot = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
 
-    _classCallCheck$3(this, IPFSGatewayStorage);
+    _classCallCheck$4(this, IPFSGatewayStorage);
 
     this.apiRoot = apiRoot;
   }
@@ -13851,6 +13888,7 @@ var IPFSGatewayStorage = function () {
 var index = {
   MerkleBTree: MerkleBTree,
   TreeNode: TreeNode,
+  RAMStorage: RAMStorage,
   IPFSStorage: IPFSStorage,
   IPFSGatewayStorage: IPFSGatewayStorage
 };
@@ -17310,15 +17348,6 @@ var utils_1 = utils.toCallback;
 var utils_2 = utils.toBuf;
 var utils_3 = utils.fromString;
 var utils_4 = utils.fromNumberTo32BitBuf;
-
-var empty$1 = {};
-
-
-var empty$2 = Object.freeze({
-	default: empty$1
-});
-
-var crypto$1 = ( empty$2 && empty$1 ) || empty$2;
 
 const toCallback = utils.toCallback;
 
@@ -22337,6 +22366,8 @@ var DEFAULT_TIMEOUT = 10000;
 
 var Index = function () {
   function Index(ipfs, viewpoint) {
+    var _this = this;
+
     _classCallCheck(this, Index);
 
     if (ipfs) {
@@ -22351,11 +22382,76 @@ var Index = function () {
       } else {
         this.viewpoint = ['keyID', util.getDefaultKey().keyID];
       }
-      var self = new Identity({ attrs: [this.viewpoint] });
-      self.trustDistance = 0;
-      this._addIdentityToIndexes(self);
+      var vp = new Identity({ attrs: [this.viewpoint] });
+      vp.data.trustDistance = 0;
+      this.ready = new _Promise(function () {
+        var _ref = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee(resolve, reject) {
+          return regenerator.wrap(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  _context.prev = 0;
+                  _context.next = 3;
+                  return _this._setSentRcvdIndexes(vp);
+
+                case 3:
+                  _context.next = 5;
+                  return _this._addIdentityToIndexes(vp);
+
+                case 5:
+                  resolve();
+                  _context.next = 11;
+                  break;
+
+                case 8:
+                  _context.prev = 8;
+                  _context.t0 = _context['catch'](0);
+
+                  reject(_context.t0);
+
+                case 11:
+                case 'end':
+                  return _context.stop();
+              }
+            }
+          }, _callee, _this, [[0, 8]]);
+        }));
+
+        return function (_x, _x2) {
+          return _ref.apply(this, arguments);
+        };
+      }());
     }
   }
+
+  Index.create = function () {
+    var _ref2 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2(ipfs, viewpoint) {
+      var i;
+      return regenerator.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              i = new Index(ipfs, viewpoint);
+              _context2.next = 3;
+              return i.ready;
+
+            case 3:
+              return _context2.abrupt('return', i);
+
+            case 4:
+            case 'end':
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this);
+    }));
+
+    function create(_x3, _x4) {
+      return _ref2.apply(this, arguments);
+    }
+
+    return create;
+  }();
 
   Index.getMsgIndexKey = function getMsgIndexKey(msg) {
     var distance = parseInt(msg.distance);
@@ -22369,7 +22465,7 @@ var Index = function () {
     var indexKeys = [];
     var attrs = identity.data.attrs;
     for (var j = 0; j < attrs.length; j += 1) {
-      var distance = parseInt(attrs[j].dist);
+      var distance = identity.data.hasOwnProperty('trustDistance') ? identity.data.trustDistance : parseInt(attrs[j].dist);
       distance = _Number$isNaN(distance) ? 99 : distance;
       distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
       var v = attrs[j].val || attrs[j][1];
@@ -22400,42 +22496,42 @@ var Index = function () {
   };
 
   Index.load = function () {
-    var _ref = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee(indexRoot, ipfs) {
+    var _ref3 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3(indexRoot, ipfs) {
       var i;
-      return regenerator.wrap(function _callee$(_context) {
+      return regenerator.wrap(function _callee3$(_context3) {
         while (1) {
-          switch (_context.prev = _context.next) {
+          switch (_context3.prev = _context3.next) {
             case 0:
               i = new Index();
-              _context.next = 3;
+              _context3.next = 3;
               return i.init(indexRoot, ipfs);
 
             case 3:
-              return _context.abrupt('return', i);
+              return _context3.abrupt('return', i);
 
             case 4:
             case 'end':
-              return _context.stop();
+              return _context3.stop();
           }
         }
-      }, _callee, this);
+      }, _callee3, this);
     }));
 
-    function load(_x, _x2) {
-      return _ref.apply(this, arguments);
+    function load(_x5, _x6) {
+      return _ref3.apply(this, arguments);
     }
 
     return load;
   }();
 
   Index.prototype.init = function () {
-    var _ref2 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2(indexRoot) {
+    var _ref4 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(indexRoot) {
       var ipfs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DEFAULT_IPFS_PROXIES;
       var timeout = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : DEFAULT_TIMEOUT;
       var useDefaultIndex, url, i, res, u;
-      return regenerator.wrap(function _callee2$(_context2) {
+      return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
-          switch (_context2.prev = _context2.next) {
+          switch (_context4.prev = _context4.next) {
             case 0:
               useDefaultIndex = false;
 
@@ -22445,17 +22541,17 @@ var Index = function () {
               }
 
               if (!(typeof ipfs === 'string')) {
-                _context2.next = 6;
+                _context4.next = 6;
                 break;
               }
 
               this.storage = new merkleBtree.IPFSGatewayStorage(ipfs);
-              _context2.next = 53;
+              _context4.next = 53;
               break;
 
             case 6:
               if (!Array.isArray(ipfs)) {
-                _context2.next = 47;
+                _context4.next = 47;
                 break;
               }
 
@@ -22464,136 +22560,325 @@ var Index = function () {
 
             case 9:
               if (!(i < ipfs.length)) {
-                _context2.next = 40;
+                _context4.next = 40;
                 break;
               }
 
               res = void 0;
               u = '' + ipfs[i] + indexRoot;
-              _context2.prev = 12;
-              _context2.next = 15;
+              _context4.prev = 12;
+              _context4.next = 15;
               return util.timeoutPromise(browser(u, { timeout: timeout }).catch(function () {}), timeout);
 
             case 15:
-              res = _context2.sent;
+              res = _context4.sent;
 
               if (!res) {
                 console.log('fetching ' + u + ' timed out');
               }
-              _context2.next = 22;
+              _context4.next = 22;
               break;
 
             case 19:
-              _context2.prev = 19;
-              _context2.t0 = _context2['catch'](12);
+              _context4.prev = 19;
+              _context4.t0 = _context4['catch'](12);
 
-              console.log('fetching ' + u + ' failed:', _context2.t0);
+              console.log('fetching ' + u + ' failed:', _context4.t0);
 
             case 22:
               if (!(!(res && res.ok && res.status === 200) && useDefaultIndex)) {
-                _context2.next = 34;
+                _context4.next = 34;
                 break;
               }
 
               // try static fallback
               u = '' + ipfs[i] + DEFAULT_STATIC_FALLBACK_INDEX;
-              _context2.prev = 24;
-              _context2.next = 27;
+              _context4.prev = 24;
+              _context4.next = 27;
               return util.timeoutPromise(browser(u, { timeout: timeout }).catch(function () {}), timeout);
 
             case 27:
-              res = _context2.sent;
+              res = _context4.sent;
 
               if (res) {
                 indexRoot = DEFAULT_STATIC_FALLBACK_INDEX;
               } else {
                 console.log('fetching ' + u + ' timed out');
               }
-              _context2.next = 34;
+              _context4.next = 34;
               break;
 
             case 31:
-              _context2.prev = 31;
-              _context2.t1 = _context2['catch'](24);
+              _context4.prev = 31;
+              _context4.t1 = _context4['catch'](24);
 
-              console.log('fetching ' + u + ' failed:', _context2.t1);
+              console.log('fetching ' + u + ' failed:', _context4.t1);
 
             case 34:
               if (!(res && res.ok && res.status === 200)) {
-                _context2.next = 37;
+                _context4.next = 37;
                 break;
               }
 
               url = ipfs[i];
-              return _context2.abrupt('break', 40);
+              return _context4.abrupt('break', 40);
 
             case 37:
               i++;
-              _context2.next = 9;
+              _context4.next = 9;
               break;
 
             case 40:
               if (!url) {
-                _context2.next = 44;
+                _context4.next = 44;
                 break;
               }
 
               this.storage = new merkleBtree.IPFSGatewayStorage(url);
-              _context2.next = 45;
+              _context4.next = 45;
               break;
 
             case 44:
               throw 'Could not load index via given ipfs gateways';
 
             case 45:
-              _context2.next = 53;
+              _context4.next = 53;
               break;
 
             case 47:
               if (!((typeof ipfs === 'undefined' ? 'undefined' : _typeof(ipfs)) === 'object')) {
-                _context2.next = 52;
+                _context4.next = 52;
                 break;
               }
 
               this.storage = new merkleBtree.IPFSStorage(ipfs);
               this.ipfs = ipfs;
-              _context2.next = 53;
+              _context4.next = 53;
               break;
 
             case 52:
               throw 'ipfs param must be a gateway url, array of urls or a js-ipfs object';
 
             case 53:
-              _context2.next = 55;
+              _context4.next = 55;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_distance', this.storage, IPFS_INDEX_WIDTH);
 
             case 55:
-              this.identitiesByTrustDistance = _context2.sent;
-              _context2.next = 58;
+              this.identitiesByTrustDistance = _context4.sent;
+              _context4.next = 58;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_searchkey', this.storage, IPFS_INDEX_WIDTH);
 
             case 58:
-              this.identitiesBySearchKey = _context2.sent;
-              _context2.next = 61;
+              this.identitiesBySearchKey = _context4.sent;
+              _context4.next = 61;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_timestamp', this.storage, IPFS_INDEX_WIDTH);
 
             case 61:
-              this.messagesByTimestamp = _context2.sent;
-              return _context2.abrupt('return', true);
+              this.messagesByTimestamp = _context4.sent;
+              return _context4.abrupt('return', true);
 
             case 63:
             case 'end':
-              return _context2.stop();
+              return _context4.stop();
           }
         }
-      }, _callee2, this, [[12, 19], [24, 31]]);
+      }, _callee4, this, [[12, 19], [24, 31]]);
     }));
 
-    function init(_x5) {
-      return _ref2.apply(this, arguments);
+    function init(_x9) {
+      return _ref4.apply(this, arguments);
     }
 
     return init;
+  }();
+
+  Index.prototype.save = function () {
+    var _ref5 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5() {
+      var _this2 = this;
+
+      var indexRoot, res, links, i, r;
+      return regenerator.wrap(function _callee5$(_context5) {
+        while (1) {
+          switch (_context5.prev = _context5.next) {
+            case 0:
+              _context5.prev = 0;
+              indexRoot = void 0;
+              _context5.next = 4;
+              return this.ipfs.files.add([{ path: 'messages_by_distance', content: Buffer.from(this.messagesByDistance.rootNode.serialize()) }, { path: 'messages_by_timestamp', content: Buffer.from(this.messagesByTimestamp.rootNode.serialize()) }, { path: 'identities_by_searchkey', content: Buffer.from(this.identitiesBySearchKey.rootNode.serialize()) }, { path: 'identities_by_distance', content: Buffer.from(this.identitiesByTrustDistance.rootNode.serialize()) }]);
+
+            case 4:
+              res = _context5.sent;
+              links = [];
+
+              for (i = 0; i < res.length; i += 1) {
+                links.push({ Name: res[i].path, Hash: res[i].hash, Size: res[i].size });
+              }
+              // TODO: remove dagPB dependency - has too many subdependencies
+              _context5.next = 9;
+              return new _Promise(function (resolve, reject) {
+                src$12.DAGNode.create(Buffer.from('\b\x01'), links, function (err, dag) {
+                  if (err) {
+                    reject(err);
+                  }
+                  resolve(_this2.ipfs.object.put(dag));
+                });
+              });
+
+            case 9:
+              res = _context5.sent;
+
+              if (!res._json.multihash) {
+                _context5.next = 18;
+                break;
+              }
+
+              indexRoot = res._json.multihash;
+
+              if (!this.ipfs.name) {
+                _context5.next = 18;
+                break;
+              }
+
+              console.log('publishing index', indexRoot);
+              _context5.next = 16;
+              return this.ipfs.name.publish(indexRoot, {});
+
+            case 16:
+              r = _context5.sent;
+
+              console.log('published index', r);
+
+            case 18:
+              return _context5.abrupt('return', indexRoot);
+
+            case 21:
+              _context5.prev = 21;
+              _context5.t0 = _context5['catch'](0);
+
+              console.log('error publishing index', _context5.t0);
+
+            case 24:
+            case 'end':
+              return _context5.stop();
+          }
+        }
+      }, _callee5, this, [[0, 21]]);
+    }));
+
+    function save() {
+      return _ref5.apply(this, arguments);
+    }
+
+    return save;
+  }();
+
+  Index.prototype._setSentRcvdIndexes = function () {
+    var _ref6 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(id) {
+      return regenerator.wrap(function _callee6$(_context6) {
+        while (1) {
+          switch (_context6.prev = _context6.next) {
+            case 0:
+              if (id.sentIndex) {
+                _context6.next = 8;
+                break;
+              }
+
+              if (!id.data.sent) {
+                _context6.next = 7;
+                break;
+              }
+
+              _context6.next = 4;
+              return merkleBtree.MerkleBTree.getByHash(id.data.sent, this.storage, IPFS_INDEX_WIDTH);
+
+            case 4:
+              id.sentIndex = _context6.sent;
+              _context6.next = 8;
+              break;
+
+            case 7:
+              id.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+
+            case 8:
+              if (id.receivedIndex) {
+                _context6.next = 16;
+                break;
+              }
+
+              if (!id.data.received) {
+                _context6.next = 15;
+                break;
+              }
+
+              _context6.next = 12;
+              return merkleBtree.MerkleBTree.getByHash(id.data.received, this.storage, IPFS_INDEX_WIDTH);
+
+            case 12:
+              id.receivedIndex = _context6.sent;
+              _context6.next = 16;
+              break;
+
+            case 15:
+              id.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+
+            case 16:
+            case 'end':
+              return _context6.stop();
+          }
+        }
+      }, _callee6, this);
+    }));
+
+    function _setSentRcvdIndexes(_x10) {
+      return _ref6.apply(this, arguments);
+    }
+
+    return _setSentRcvdIndexes;
+  }();
+
+  Index.prototype.getViewpoint = function () {
+    var _ref7 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7() {
+      var r, p, vp;
+      return regenerator.wrap(function _callee7$(_context7) {
+        while (1) {
+          switch (_context7.prev = _context7.next) {
+            case 0:
+              _context7.next = 2;
+              return this.identitiesByTrustDistance.searchText('00', 1);
+
+            case 2:
+              r = _context7.sent;
+
+              if (!r.length) {
+                _context7.next = 11;
+                break;
+              }
+
+              _context7.next = 6;
+              return this.storage.get(r[0].value);
+
+            case 6:
+              p = _context7.sent;
+              vp = new Identity(JSON.parse(p));
+              _context7.next = 10;
+              return this._setSentRcvdIndexes(vp);
+
+            case 10:
+              return _context7.abrupt('return', vp);
+
+            case 11:
+            case 'end':
+              return _context7.stop();
+          }
+        }
+      }, _callee7, this);
+    }));
+
+    function getViewpoint() {
+      return _ref7.apply(this, arguments);
+    }
+
+    return getViewpoint;
   }();
 
   /*
@@ -22603,14 +22888,14 @@ var Index = function () {
 
 
   Index.prototype.get = function () {
-    var _ref3 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3(value, type) {
-      var profileUri, p;
-      return regenerator.wrap(function _callee3$(_context3) {
+    var _ref8 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(value, type) {
+      var profileUri, p, id;
+      return regenerator.wrap(function _callee8$(_context8) {
         while (1) {
-          switch (_context3.prev = _context3.next) {
+          switch (_context8.prev = _context8.next) {
             case 0:
               if (!(typeof value === 'undefined')) {
-                _context3.next = 2;
+                _context8.next = 2;
                 break;
               }
 
@@ -22621,51 +22906,56 @@ var Index = function () {
                 type = util.guessTypeOf(value);
               }
 
-              _context3.next = 5;
+              _context8.next = 5;
               return this.identitiesBySearchKey.get(encodeURIComponent(value) + ':' + encodeURIComponent(type));
 
             case 5:
-              profileUri = _context3.sent;
+              profileUri = _context8.sent;
 
               if (!profileUri) {
-                _context3.next = 11;
+                _context8.next = 14;
                 break;
               }
 
-              _context3.next = 9;
+              _context8.next = 9;
               return this.storage.get(profileUri);
 
             case 9:
-              p = _context3.sent;
-              return _context3.abrupt('return', new Identity(JSON.parse(p)));
+              p = _context8.sent;
+              id = new Identity(JSON.parse(p));
+              _context8.next = 13;
+              return this._setSentRcvdIndexes(id);
 
-            case 11:
+            case 13:
+              return _context8.abrupt('return', id);
+
+            case 14:
             case 'end':
-              return _context3.stop();
+              return _context8.stop();
           }
         }
-      }, _callee3, this);
+      }, _callee8, this);
     }));
 
-    function get(_x6, _x7) {
-      return _ref3.apply(this, arguments);
+    function get(_x11, _x12) {
+      return _ref8.apply(this, arguments);
     }
 
     return get;
   }();
 
   Index.prototype._getMsgs = function () {
-    var _ref4 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(msgIndex, limit, cursor) {
+    var _ref9 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(msgIndex, limit, cursor) {
       var rawMsgs, msgs;
-      return regenerator.wrap(function _callee4$(_context4) {
+      return regenerator.wrap(function _callee9$(_context9) {
         while (1) {
-          switch (_context4.prev = _context4.next) {
+          switch (_context9.prev = _context9.next) {
             case 0:
-              _context4.next = 2;
+              _context9.next = 2;
               return msgIndex.searchText('', limit, cursor, true);
 
             case 2:
-              rawMsgs = _context4.sent;
+              rawMsgs = _context9.sent;
               msgs = [];
 
               rawMsgs.forEach(function (row) {
@@ -22680,263 +22970,7 @@ var Index = function () {
                 msg.recipientName = row.value.recipient_name;
                 msgs.push(msg);
               });
-              return _context4.abrupt('return', msgs);
-
-            case 6:
-            case 'end':
-              return _context4.stop();
-          }
-        }
-      }, _callee4, this);
-    }));
-
-    function _getMsgs(_x8, _x9, _x10) {
-      return _ref4.apply(this, arguments);
-    }
-
-    return _getMsgs;
-  }();
-
-  Index.prototype._addIdentityToIndexes = function () {
-    var _ref5 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5(id) {
-      var buffer, r, hash, indexKeys, i, key;
-      return regenerator.wrap(function _callee5$(_context5) {
-        while (1) {
-          switch (_context5.prev = _context5.next) {
-            case 0:
-              buffer = new this.ipfs.types.Buffer(_JSON$stringify(id.data));
-              _context5.next = 3;
-              return this.ipfs.files.add(buffer);
-
-            case 3:
-              r = _context5.sent;
-              hash = r.length ? r[0].hash : '';
-
-              console.log('hash', hash);
-              indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
-              i = 0;
-
-            case 8:
-              if (!(i < indexKeys.length)) {
-                _context5.next = 17;
-                break;
-              }
-
-              key = indexKeys[i];
-              _context5.next = 12;
-              return this.identitiesByTrustDistance.put(key, hash);
-
-            case 12:
-              _context5.next = 14;
-              return this.identitiesBySearchKey.put(key.substr(key.indexOf(':') + 1), hash);
-
-            case 14:
-              i++;
-              _context5.next = 8;
-              break;
-
-            case 17:
-              return _context5.abrupt('return', { hash: hash });
-
-            case 18:
-            case 'end':
-              return _context5.stop();
-          }
-        }
-      }, _callee5, this);
-    }));
-
-    function _addIdentityToIndexes(_x11) {
-      return _ref5.apply(this, arguments);
-    }
-
-    return _addIdentityToIndexes;
-  }();
-
-  Index.prototype.getSentMsgs = function () {
-    var _ref6 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(identity, limit) {
-      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-      return regenerator.wrap(function _callee6$(_context6) {
-        while (1) {
-          switch (_context6.prev = _context6.next) {
-            case 0:
-              if (identity.sentIndex) {
-                _context6.next = 4;
-                break;
-              }
-
-              _context6.next = 3;
-              return merkleBtree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
-
-            case 3:
-              identity.sentIndex = _context6.sent;
-
-            case 4:
-              return _context6.abrupt('return', this._getMsgs(identity.sentIndex, limit, cursor));
-
-            case 5:
-            case 'end':
-              return _context6.stop();
-          }
-        }
-      }, _callee6, this);
-    }));
-
-    function getSentMsgs(_x13, _x14) {
-      return _ref6.apply(this, arguments);
-    }
-
-    return getSentMsgs;
-  }();
-
-  Index.prototype.getReceivedMsgs = function () {
-    var _ref7 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7(identity, limit) {
-      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-      return regenerator.wrap(function _callee7$(_context7) {
-        while (1) {
-          switch (_context7.prev = _context7.next) {
-            case 0:
-              if (identity.receivedIndex) {
-                _context7.next = 4;
-                break;
-              }
-
-              _context7.next = 3;
-              return merkleBtree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
-
-            case 3:
-              identity.receivedIndex = _context7.sent;
-
-            case 4:
-              return _context7.abrupt('return', this._getMsgs(identity.receivedIndex, limit, cursor));
-
-            case 5:
-            case 'end':
-              return _context7.stop();
-          }
-        }
-      }, _callee7, this);
-    }));
-
-    function getReceivedMsgs(_x16, _x17) {
-      return _ref7.apply(this, arguments);
-    }
-
-    return getReceivedMsgs;
-  }();
-
-  /* Save message to ipfs and announce it on ipfs pubsub */
-
-
-  Index.prototype.publishMessage = function () {
-    var _ref8 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(msg) {
-      var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-      var r, buffer, hash, body, res, t;
-      return regenerator.wrap(function _callee8$(_context8) {
-        while (1) {
-          switch (_context8.prev = _context8.next) {
-            case 0:
-              r = {};
-
-              if (!this.ipfs) {
-                _context8.next = 15;
-                break;
-              }
-
-              buffer = new this.ipfs.types.Buffer(msg.jws);
-              _context8.next = 5;
-              return this.ipfs.files.add(buffer);
-
-            case 5:
-              hash = _context8.sent;
-
-              r.hash = hash;
-              _context8.next = 9;
-              return this.ipfs.pubsub.publish('identifi', hash);
-
-            case 9:
-              if (!addToIndex) {
-                _context8.next = 13;
-                break;
-              }
-
-              _context8.next = 12;
-              return this.addMessage(msg);
-
-            case 12:
-              r.indexUri = _context8.sent;
-
-            case 13:
-              _context8.next = 26;
-              break;
-
-            case 15:
-              // No IPFS, post to identi.fi
-              body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
-              _context8.next = 18;
-              return browser('https://identi.fi/api/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: body
-              });
-
-            case 18:
-              res = _context8.sent;
-
-              if (!(res.status && res.status === 201)) {
-                _context8.next = 26;
-                break;
-              }
-
-              _context8.t0 = JSON;
-              _context8.next = 23;
-              return res.text();
-
-            case 23:
-              _context8.t1 = _context8.sent;
-              t = _context8.t0.parse.call(_context8.t0, _context8.t1);
-
-              r.hash = t.ipfs_hash;
-
-            case 26:
-              return _context8.abrupt('return', r);
-
-            case 27:
-            case 'end':
-              return _context8.stop();
-          }
-        }
-      }, _callee8, this);
-    }));
-
-    function publishMessage(_x19) {
-      return _ref8.apply(this, arguments);
-    }
-
-    return publishMessage;
-  }();
-
-  Index.prototype.getAttributeTrustDistance = function () {
-    var _ref9 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(a) {
-      var id;
-      return regenerator.wrap(function _callee9$(_context9) {
-        while (1) {
-          switch (_context9.prev = _context9.next) {
-            case 0:
-              if (util.isUniqueType(a[0])) {
-                _context9.next = 2;
-                break;
-              }
-
-              return _context9.abrupt('return', 99);
-
-            case 2:
-              _context9.next = 4;
-              return this.get(a[1], a[0]);
-
-            case 4:
-              id = _context9.sent;
-              return _context9.abrupt('return', id && id.trustDistance ? id.trustDistance : 99);
+              return _context9.abrupt('return', msgs);
 
             case 6:
             case 'end':
@@ -22946,56 +22980,86 @@ var Index = function () {
       }, _callee9, this);
     }));
 
-    function getAttributeTrustDistance(_x20) {
+    function _getMsgs(_x13, _x14, _x15) {
       return _ref9.apply(this, arguments);
     }
 
-    return getAttributeTrustDistance;
+    return _getMsgs;
   }();
 
-  Index.prototype.getMsgTrustDistance = function () {
-    var _ref10 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(msg) {
-      var shortestDistance, i, d;
+  Index.prototype._addIdentityToIndexes = function () {
+    var _ref10 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(id) {
+      var s, _r, buffer, r, hash, indexKeys, i, key;
+
       return regenerator.wrap(function _callee10$(_context10) {
         while (1) {
           switch (_context10.prev = _context10.next) {
             case 0:
-              shortestDistance = 99;
-              i = 0;
-
-            case 2:
-              if (!(i < msg.signedData.author.length)) {
+              if (!(id.sentIndex && id.receivedIndex)) {
                 _context10.next = 14;
                 break;
               }
 
-              if (!util.attributeEquals(msg.signedData.author[i], this.viewpoint)) {
-                _context10.next = 7;
+              if (!(id.sentIndex.rootNode.hash && id.receivedIndex.rootNode.hash)) {
+                _context10.next = 6;
                 break;
               }
 
-              return _context10.abrupt('return', 0);
-
-            case 7:
-              _context10.next = 9;
-              return this.getAttributeTrustDistance(msg.signedData.author[i]);
-
-            case 9:
-              d = _context10.sent;
-
-              if (d < shortestDistance) {
-                shortestDistance = d;
-              }
-
-            case 11:
-              i++;
-              _context10.next = 2;
+              id.data.sent = id.sentIndex.rootNode.hash;
+              id.data.received = id.receivedIndex.rootNode.hash;
+              _context10.next = 14;
               break;
 
-            case 14:
-              return _context10.abrupt('return', shortestDistance);
+            case 6:
+              _context10.next = 8;
+              return this.ipfs.files.add(new Buffer(id.sentIndex.rootNode.serialize(), 'utf8'));
 
-            case 15:
+            case 8:
+              s = _context10.sent;
+
+              id.data.sent = s[0].hash;
+              _context10.next = 12;
+              return this.ipfs.files.add(new Buffer(id.receivedIndex.rootNode.serialize(), 'utf8'));
+
+            case 12:
+              _r = _context10.sent;
+
+              id.data.received = _r[0].hash;
+
+            case 14:
+              buffer = new this.ipfs.types.Buffer(_JSON$stringify(id.data));
+              _context10.next = 17;
+              return this.ipfs.files.add(buffer);
+
+            case 17:
+              r = _context10.sent;
+              hash = r.length ? r[0].hash : '';
+              indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
+              i = 0;
+
+            case 21:
+              if (!(i < indexKeys.length)) {
+                _context10.next = 30;
+                break;
+              }
+
+              key = indexKeys[i];
+              _context10.next = 25;
+              return this.identitiesByTrustDistance.put(key, hash);
+
+            case 25:
+              _context10.next = 27;
+              return this.identitiesBySearchKey.put(key.substr(key.indexOf(':') + 1), hash);
+
+            case 27:
+              i++;
+              _context10.next = 21;
+              break;
+
+            case 30:
+              return _context10.abrupt('return', { hash: hash });
+
+            case 31:
             case 'end':
               return _context10.stop();
           }
@@ -23003,175 +23067,71 @@ var Index = function () {
       }, _callee10, this);
     }));
 
-    function getMsgTrustDistance(_x21) {
+    function _addIdentityToIndexes(_x16) {
       return _ref10.apply(this, arguments);
     }
 
-    return getMsgTrustDistance;
+    return _addIdentityToIndexes;
   }();
 
-  Index.prototype.save = function () {
-    var _ref11 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11() {
-      var _this = this;
-
-      var indexRoot, res, links, i, r;
+  Index.prototype.getSentMsgs = function () {
+    var _ref11 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11(identity, limit) {
+      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
       return regenerator.wrap(function _callee11$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
-              _context11.prev = 0;
-              indexRoot = void 0;
-              _context11.next = 4;
-              return this.ipfs.files.add([{ path: 'messages_by_distance', content: Buffer.from(this.messagesByDistance.rootNode.serialize()) }, { path: 'messages_by_timestamp', content: Buffer.from(this.messagesByTimestamp.rootNode.serialize()) }, { path: 'identities_by_searchkey', content: Buffer.from(this.identitiesBySearchKey.rootNode.serialize()) }, { path: 'identities_by_distance', content: Buffer.from(this.identitiesByTrustDistance.rootNode.serialize()) }]);
+              if (identity.sentIndex) {
+                _context11.next = 4;
+                break;
+              }
+
+              _context11.next = 3;
+              return merkleBtree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
+
+            case 3:
+              identity.sentIndex = _context11.sent;
 
             case 4:
-              res = _context11.sent;
-              links = [];
+              return _context11.abrupt('return', this._getMsgs(identity.sentIndex, limit, cursor));
 
-              for (i = 0; i < res.length; i += 1) {
-                links.push({ Name: res[i].path, Hash: res[i].hash, Size: res[i].size });
-              }
-              // TODO: remove dagPB dependency - has too many subdependencies
-              _context11.next = 9;
-              return new _Promise(function (resolve, reject) {
-                src$12.DAGNode.create(Buffer.from('\b\x01'), links, function (err, dag) {
-                  if (err) {
-                    reject(err);
-                  }
-                  resolve(_this.ipfs.object.put(dag));
-                });
-              });
-
-            case 9:
-              res = _context11.sent;
-
-              if (!res._json.multihash) {
-                _context11.next = 18;
-                break;
-              }
-
-              indexRoot = res._json.multihash;
-
-              if (!this.ipfs.name) {
-                _context11.next = 18;
-                break;
-              }
-
-              console.log('publishing index', indexRoot);
-              _context11.next = 16;
-              return this.ipfs.name.publish(indexRoot, {});
-
-            case 16:
-              r = _context11.sent;
-
-              console.log('published index', r);
-
-            case 18:
-              return _context11.abrupt('return', indexRoot);
-
-            case 21:
-              _context11.prev = 21;
-              _context11.t0 = _context11['catch'](0);
-
-              console.log('error publishing index', _context11.t0);
-
-            case 24:
+            case 5:
             case 'end':
               return _context11.stop();
           }
         }
-      }, _callee11, this, [[0, 21]]);
+      }, _callee11, this);
     }));
 
-    function save() {
+    function getSentMsgs(_x18, _x19) {
       return _ref11.apply(this, arguments);
     }
 
-    return save;
+    return getSentMsgs;
   }();
 
-  Index.prototype._updateIdentityIndexesByMsg = function () {
-    var _ref12 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12(msg) {
-      var recipientIdentities, authorIdentities, i, a, id, _i, _a, _id, _id2;
-
+  Index.prototype.getReceivedMsgs = function () {
+    var _ref12 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12(identity, limit) {
+      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
       return regenerator.wrap(function _callee12$(_context12) {
         while (1) {
           switch (_context12.prev = _context12.next) {
             case 0:
-              recipientIdentities = [];
-              authorIdentities = [];
-              i = 0;
+              if (identity.receivedIndex) {
+                _context12.next = 4;
+                break;
+              }
+
+              _context12.next = 3;
+              return merkleBtree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
 
             case 3:
-              if (!(i < msg.signedData.recipient.length)) {
-                _context12.next = 12;
-                break;
-              }
+              identity.receivedIndex = _context12.sent;
 
-              a = msg.signedData.recipient[i];
-              _context12.next = 7;
-              return this.get(a[1], a[0]);
+            case 4:
+              return _context12.abrupt('return', this._getMsgs(identity.receivedIndex, limit, cursor));
 
-            case 7:
-              id = _context12.sent;
-
-              if (id) {
-                recipientIdentities.push(id);
-              }
-
-            case 9:
-              i++;
-              _context12.next = 3;
-              break;
-
-            case 12:
-              _i = 0;
-
-            case 13:
-              if (!(_i < msg.signedData.author.length)) {
-                _context12.next = 22;
-                break;
-              }
-
-              _a = msg.signedData.author[_i];
-              _context12.next = 17;
-              return this.get(_a[1], _a[0]);
-
-            case 17:
-              _id = _context12.sent;
-
-              if (_id) {
-                authorIdentities.push(_id);
-              }
-
-            case 19:
-              _i++;
-              _context12.next = 13;
-              break;
-
-            case 22:
-              if (!recipientIdentities.length) {
-                _context12.next = 25;
-                break;
-              }
-
-              _context12.next = 30;
-              break;
-
-            case 25:
-              _id2 = new Identity({ attrs: msg.signedData.recipient });
-              // TODO: take msg author trust into account
-
-              if (!(msg.isPositive() || msg.signedData.type === 'verify_identity')) {
-                _context12.next = 30;
-                break;
-              }
-
-              _id2.trustDistance = msg.distance + 1;
-              _context12.next = 30;
-              return this._addIdentityToIndexes(_id2);
-
-            case 30:
+            case 5:
             case 'end':
               return _context12.stop();
           }
@@ -23179,8 +23139,328 @@ var Index = function () {
       }, _callee12, this);
     }));
 
-    function _updateIdentityIndexesByMsg(_x22) {
+    function getReceivedMsgs(_x21, _x22) {
       return _ref12.apply(this, arguments);
+    }
+
+    return getReceivedMsgs;
+  }();
+
+  /* Save message to ipfs and announce it on ipfs pubsub */
+
+
+  Index.prototype.publishMessage = function () {
+    var _ref13 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13(msg) {
+      var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      var r, buffer, hash, body, res, t;
+      return regenerator.wrap(function _callee13$(_context13) {
+        while (1) {
+          switch (_context13.prev = _context13.next) {
+            case 0:
+              r = {};
+
+              if (!this.ipfs) {
+                _context13.next = 15;
+                break;
+              }
+
+              buffer = new this.ipfs.types.Buffer(msg.jws);
+              _context13.next = 5;
+              return this.ipfs.files.add(buffer);
+
+            case 5:
+              hash = _context13.sent;
+
+              r.hash = hash;
+              _context13.next = 9;
+              return this.ipfs.pubsub.publish('identifi', hash);
+
+            case 9:
+              if (!addToIndex) {
+                _context13.next = 13;
+                break;
+              }
+
+              _context13.next = 12;
+              return this.addMessage(msg);
+
+            case 12:
+              r.indexUri = _context13.sent;
+
+            case 13:
+              _context13.next = 26;
+              break;
+
+            case 15:
+              // No IPFS, post to identi.fi
+              body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
+              _context13.next = 18;
+              return browser('https://identi.fi/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: body
+              });
+
+            case 18:
+              res = _context13.sent;
+
+              if (!(res.status && res.status === 201)) {
+                _context13.next = 26;
+                break;
+              }
+
+              _context13.t0 = JSON;
+              _context13.next = 23;
+              return res.text();
+
+            case 23:
+              _context13.t1 = _context13.sent;
+              t = _context13.t0.parse.call(_context13.t0, _context13.t1);
+
+              r.hash = t.ipfs_hash;
+
+            case 26:
+              return _context13.abrupt('return', r);
+
+            case 27:
+            case 'end':
+              return _context13.stop();
+          }
+        }
+      }, _callee13, this);
+    }));
+
+    function publishMessage(_x24) {
+      return _ref13.apply(this, arguments);
+    }
+
+    return publishMessage;
+  }();
+
+  Index.prototype.getAttributeTrustDistance = function () {
+    var _ref14 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14(a) {
+      var id;
+      return regenerator.wrap(function _callee14$(_context14) {
+        while (1) {
+          switch (_context14.prev = _context14.next) {
+            case 0:
+              if (util.isUniqueType(a[0])) {
+                _context14.next = 2;
+                break;
+              }
+
+              return _context14.abrupt('return', 99);
+
+            case 2:
+              _context14.next = 4;
+              return this.get(a[1], a[0]);
+
+            case 4:
+              id = _context14.sent;
+              return _context14.abrupt('return', id && id.data.trustDistance ? id.data.trustDistance : 99);
+
+            case 6:
+            case 'end':
+              return _context14.stop();
+          }
+        }
+      }, _callee14, this);
+    }));
+
+    function getAttributeTrustDistance(_x25) {
+      return _ref14.apply(this, arguments);
+    }
+
+    return getAttributeTrustDistance;
+  }();
+
+  Index.prototype.getMsgTrustDistance = function () {
+    var _ref15 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee15(msg) {
+      var shortestDistance, i, d;
+      return regenerator.wrap(function _callee15$(_context15) {
+        while (1) {
+          switch (_context15.prev = _context15.next) {
+            case 0:
+              shortestDistance = 99;
+              i = 0;
+
+            case 2:
+              if (!(i < msg.signedData.author.length)) {
+                _context15.next = 14;
+                break;
+              }
+
+              if (!util.attributeEquals(msg.signedData.author[i], this.viewpoint)) {
+                _context15.next = 7;
+                break;
+              }
+
+              return _context15.abrupt('return', 0);
+
+            case 7:
+              _context15.next = 9;
+              return this.getAttributeTrustDistance(msg.signedData.author[i]);
+
+            case 9:
+              d = _context15.sent;
+
+              if (d < shortestDistance) {
+                shortestDistance = d;
+              }
+
+            case 11:
+              i++;
+              _context15.next = 2;
+              break;
+
+            case 14:
+              return _context15.abrupt('return', shortestDistance);
+
+            case 15:
+            case 'end':
+              return _context15.stop();
+          }
+        }
+      }, _callee15, this);
+    }));
+
+    function getMsgTrustDistance(_x26) {
+      return _ref15.apply(this, arguments);
+    }
+
+    return getMsgTrustDistance;
+  }();
+
+  Index.prototype._updateIdentityIndexesByMsg = function () {
+    var _ref16 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee16(msg) {
+      var recipientIdentities, authorIdentities, i, a, id, _i, _a, _id, _id2, msgIndexKey, _i2, _id3, _i3, _id4;
+
+      return regenerator.wrap(function _callee16$(_context16) {
+        while (1) {
+          switch (_context16.prev = _context16.next) {
+            case 0:
+              recipientIdentities = [];
+              authorIdentities = [];
+              i = 0;
+
+            case 3:
+              if (!(i < msg.signedData.recipient.length)) {
+                _context16.next = 12;
+                break;
+              }
+
+              a = msg.signedData.recipient[i];
+              _context16.next = 7;
+              return this.get(a[1], a[0]);
+
+            case 7:
+              id = _context16.sent;
+
+              if (id) {
+                recipientIdentities.push(id);
+              }
+
+            case 9:
+              i++;
+              _context16.next = 3;
+              break;
+
+            case 12:
+              _i = 0;
+
+            case 13:
+              if (!(_i < msg.signedData.author.length)) {
+                _context16.next = 22;
+                break;
+              }
+
+              _a = msg.signedData.author[_i];
+              _context16.next = 17;
+              return this.get(_a[1], _a[0]);
+
+            case 17:
+              _id = _context16.sent;
+
+              if (_id) {
+                authorIdentities.push(_id);
+              }
+
+            case 19:
+              _i++;
+              _context16.next = 13;
+              break;
+
+            case 22:
+              if (recipientIdentities.length) {
+                // TODO: add new identifiers to existing identity and update identity stats
+                // TODO: update sent/rcvd msg indexes
+              } else {
+                _id2 = new Identity({ attrs: msg.signedData.recipient });
+
+                _id2.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+                _id2.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+                // TODO: take msg author trust into account
+                if (msg.isPositive()) {
+                  _id2.data.trustDistance = msg.distance + 1;
+                }
+                recipientIdentities.push(_id2);
+              }
+              msgIndexKey = Index.getMsgIndexKey(msg);
+
+              msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(':') + 1);
+              _i2 = 0;
+
+            case 26:
+              if (!(_i2 < recipientIdentities.length)) {
+                _context16.next = 35;
+                break;
+              }
+
+              _id3 = recipientIdentities[_i2];
+              _context16.next = 30;
+              return _id3.receivedIndex.put(msgIndexKey, msg);
+
+            case 30:
+              _context16.next = 32;
+              return this._addIdentityToIndexes(_id3);
+
+            case 32:
+              _i2++;
+              _context16.next = 26;
+              break;
+
+            case 35:
+              _i3 = 0;
+
+            case 36:
+              if (!(_i3 < authorIdentities.length)) {
+                _context16.next = 45;
+                break;
+              }
+
+              _id4 = authorIdentities[_i3];
+              _context16.next = 40;
+              return _id4.sentIndex.put(msgIndexKey, msg);
+
+            case 40:
+              _context16.next = 42;
+              return this._addIdentityToIndexes(_id4);
+
+            case 42:
+              _i3++;
+              _context16.next = 36;
+              break;
+
+            case 45:
+            case 'end':
+              return _context16.stop();
+          }
+        }
+      }, _callee16, this);
+    }));
+
+    function _updateIdentityIndexesByMsg(_x27) {
+      return _ref16.apply(this, arguments);
     }
 
     return _updateIdentityIndexesByMsg;
@@ -23190,81 +23470,81 @@ var Index = function () {
 
 
   Index.prototype.addMessage = function () {
-    var _ref13 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13(msg) {
+    var _ref17 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee17(msg) {
       var updateIdentityIndexes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
       var indexKey, h;
-      return regenerator.wrap(function _callee13$(_context13) {
+      return regenerator.wrap(function _callee17$(_context17) {
         while (1) {
-          switch (_context13.prev = _context13.next) {
+          switch (_context17.prev = _context17.next) {
             case 0:
               if (!this.ipfs) {
-                _context13.next = 17;
+                _context17.next = 17;
                 break;
               }
 
-              _context13.next = 3;
+              _context17.next = 3;
               return this.getMsgTrustDistance(msg);
 
             case 3:
-              msg.distance = _context13.sent;
+              msg.distance = _context17.sent;
 
               if (!(msg.distance === 99)) {
-                _context13.next = 6;
+                _context17.next = 6;
                 break;
               }
 
-              return _context13.abrupt('return');
+              return _context17.abrupt('return');
 
             case 6:
               indexKey = Index.getMsgIndexKey(msg);
-              _context13.next = 9;
-              return this.messagesByDistance.put(indexKey, msg.jws);
+              _context17.next = 9;
+              return this.messagesByDistance.put(indexKey, msg);
 
             case 9:
               indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
-              _context13.next = 12;
-              return this.messagesByTimestamp.put(indexKey, msg.jws);
+              _context17.next = 12;
+              return this.messagesByTimestamp.put(indexKey, msg);
 
             case 12:
-              h = _context13.sent;
+              h = _context17.sent;
 
               if (!updateIdentityIndexes) {
-                _context13.next = 16;
+                _context17.next = 16;
                 break;
               }
 
-              _context13.next = 16;
+              _context17.next = 16;
               return this._updateIdentityIndexesByMsg(msg);
 
             case 16:
-              return _context13.abrupt('return', h);
+              return _context17.abrupt('return', h);
 
             case 17:
             case 'end':
-              return _context13.stop();
+              return _context17.stop();
           }
         }
-      }, _callee13, this);
+      }, _callee17, this);
     }));
 
-    function addMessage(_x24) {
-      return _ref13.apply(this, arguments);
+    function addMessage(_x29) {
+      return _ref17.apply(this, arguments);
     }
 
     return addMessage;
   }();
 
   Index.prototype.search = function () {
-    var _ref14 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14(value, type) {
+    var _ref18 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee18(value, type) {
       var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
       var cursor = arguments[3];
       var depth = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 20;
 
       var identitiesByHash, initialDepth, d, useCursor, paddedDistance, r, i, _d, id;
 
-      return regenerator.wrap(function _callee14$(_context14) {
+      return regenerator.wrap(function _callee18$(_context18) {
         while (1) {
-          switch (_context14.prev = _context14.next) {
+          switch (_context18.prev = _context18.next) {
             case 0:
               // TODO: param 'exact'
               identitiesByHash = {};
@@ -23273,7 +23553,7 @@ var Index = function () {
 
             case 3:
               if (!(d <= depth)) {
-                _context14.next = 42;
+                _context18.next = 42;
                 break;
               }
 
@@ -23281,17 +23561,17 @@ var Index = function () {
               paddedDistance = ('00' + d).substring(d.toString().length);
 
               console.log(paddedDistance + ':' + encodeURIComponent(value), limit, useCursor ? cursor : undefined);
-              _context14.next = 9;
+              _context18.next = 9;
               return this.identitiesBySearchKey.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, cursor);
 
             case 9:
-              r = _context14.sent;
+              r = _context18.sent;
 
               console.log('r', r);
 
             case 11:
               if (!(r && r.length && _Object$keys(identitiesByHash).length < limit)) {
-                _context14.next = 39;
+                _context18.next = 39;
                 break;
               }
 
@@ -23299,71 +23579,71 @@ var Index = function () {
 
             case 13:
               if (!(i < r.length && _Object$keys(identitiesByHash).length < limit)) {
-                _context14.next = 32;
+                _context18.next = 32;
                 break;
               }
 
               if (!(r[i].value && !identitiesByHash.hasOwnProperty(r[i].value))) {
-                _context14.next = 29;
+                _context18.next = 29;
                 break;
               }
 
-              _context14.prev = 15;
-              _context14.t0 = JSON;
-              _context14.next = 19;
+              _context18.prev = 15;
+              _context18.t0 = JSON;
+              _context18.next = 19;
               return this.storage.get('/ipfs/' + r[i].value);
 
             case 19:
-              _context14.t1 = _context14.sent;
-              _d = _context14.t0.parse.call(_context14.t0, _context14.t1);
+              _context18.t1 = _context18.sent;
+              _d = _context18.t0.parse.call(_context18.t0, _context18.t1);
               id = new Identity(_d);
 
               id.cursor = r[i].key;
               identitiesByHash[r[i].value] = id;
-              _context14.next = 29;
+              _context18.next = 29;
               break;
 
             case 26:
-              _context14.prev = 26;
-              _context14.t2 = _context14['catch'](15);
+              _context18.prev = 26;
+              _context18.t2 = _context18['catch'](15);
 
-              console.error(_context14.t2);
+              console.error(_context18.t2);
 
             case 29:
               i++;
-              _context14.next = 13;
+              _context18.next = 13;
               break;
 
             case 32:
               console.log(paddedDistance + ':' + encodeURIComponent(value), limit, r[r.length - 1].key);
-              _context14.next = 35;
+              _context18.next = 35;
               return this.identitiesBySearchKey.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, r[r.length - 1].key);
 
             case 35:
-              r = _context14.sent;
+              r = _context18.sent;
 
               console.log('r', r);
-              _context14.next = 11;
+              _context18.next = 11;
               break;
 
             case 39:
               d++;
-              _context14.next = 3;
+              _context18.next = 3;
               break;
 
             case 42:
-              return _context14.abrupt('return', _Object$values(identitiesByHash));
+              return _context18.abrupt('return', _Object$values(identitiesByHash));
 
             case 43:
             case 'end':
-              return _context14.stop();
+              return _context18.stop();
           }
         }
-      }, _callee14, this, [[15, 26]]);
+      }, _callee18, this, [[15, 26]]);
     }));
 
-    function search(_x27, _x28) {
-      return _ref14.apply(this, arguments);
+    function search(_x32, _x33) {
+      return _ref18.apply(this, arguments);
     }
 
     return search;

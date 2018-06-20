@@ -4,25 +4,25 @@ import Identicon from 'identicon.js';
 
 class Identity {
   constructor(data) {
-    this.data = data;
+    this.data = data; // data to (de)serialize
     this.profile = {};
     this.mostVerifiedAttributes = {};
     if (data.attrs.length) {
       const c = data.attrs[0];
-      this.receivedPositive = c.pos;
-      this.receivedNegative = c.neg;
-      this.receivedNeutral = c.neut;
+      this.data.receivedPositive = c.pos;
+      this.data.receivedNegative = c.neg;
+      this.data.receivedNeutral = c.neut;
     }
-    this.receivedNegative = this.data.receivedNegative || 0;
-    this.receivedPositive = this.data.receivedPositive || 0;
-    this.receivedNeutral = this.data.receivedNeutral || 0;
-    this.trustDistance = this.data.trustDistance || 1000;
+    this.data.receivedNegative |= 0;
+    this.data.receivedPositive |= 0;
+    this.data.receivedNeutral |= 0;
+    this.data.trustDistance |= 1000;
     this.data.attrs.forEach(a => {
       if (!this.linkTo && util.isUniqueType(a.name)) {
         this.linkTo = a;
       }
-      if (!Number.isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < this.trustDistance) {
-        this.trustDistance = parseInt(a.dist);
+      if (!Number.isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < this.data.trustDistance) {
+        this.data.trustDistance = parseInt(a.dist);
         if (util.isUniqueType(a.name)) {
           this.linkTo = a;
         }
@@ -137,7 +137,7 @@ class Identity {
     details.style.flexGrow = 1;
     const link = `https://identi.fi/#/identities/${this.linkTo.name}/${this.linkTo.val}`;
     details.innerHTML = `<a href="${link}">${this.profile.name || this.profile.nickname || `${this.linkTo.name}:${this.linkTo.val}`}</a><br>`;
-    details.innerHTML += `<small>Received: <span class="identifi-pos">+${this.receivedPositive || 0}</span> / <span class="identifi-neg">-${this.receivedNegative || 0}</span></small><br>`;
+    details.innerHTML += `<small>Received: <span class="identifi-pos">+${this.data.receivedPositive || 0}</span> / <span class="identifi-neg">-${this.data.receivedNegative || 0}</span></small><br>`;
     const links = document.createElement(`small`);
     this.data.attrs.forEach(a => {
       if (a.link) {
@@ -317,20 +317,20 @@ class Identity {
     let bgImage = `none`;
     let transform = ``;
     let boxShadow = `0px 0px 0px 0px #82FF84`;
-    if (this.receivedPositive > this.receivedNegative * 20) {
-      boxShadow = `0px 0px ${border * this.receivedPositive / 50}px 0px #82FF84`;
-    } else if (this.receivedPositive < this.receivedNegative * 3) {
-      boxShadow = `0px 0px ${border * this.receivedNegative / 10}px 0px #BF0400`;
+    if (this.data.receivedPositive > this.data.receivedNegative * 20) {
+      boxShadow = `0px 0px ${border * this.data.receivedPositive / 50}px 0px #82FF84`;
+    } else if (this.data.receivedPositive < this.data.receivedNegative * 3) {
+      boxShadow = `0px 0px ${border * this.data.receivedNegative / 10}px 0px #BF0400`;
     }
-    if (this.receivedPositive + this.receivedNegative > 0) {
-      if (this.receivedPositive > this.receivedNegative) {
-        transform = `rotate(${((- this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2)}deg)`;
+    if (this.data.receivedPositive + this.data.receivedNegative > 0) {
+      if (this.data.receivedPositive > this.data.receivedNegative) {
+        transform = `rotate(${((- this.data.receivedPositive / (this.data.receivedPositive + this.data.receivedNegative) * 360 - 180) / 2)}deg)`;
         bgColor = `#A94442`;
-        bgImage = `linear-gradient(${this.receivedPositive / (this.receivedPositive + this.receivedNegative) * 360}deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)`;
+        bgImage = `linear-gradient(${this.data.receivedPositive / (this.data.receivedPositive + this.data.receivedNegative) * 360}deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)`;
       } else {
-        transform = `rotate(${((- this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360 - 180) / 2) + 180}deg)`;
+        transform = `rotate(${((- this.data.receivedNegative / (this.data.receivedPositive + this.data.receivedNegative) * 360 - 180) / 2) + 180}deg)`;
         bgColor = `#3C763D`;
-        bgImage = `linear-gradient(${this.receivedNegative / (this.receivedPositive + this.receivedNegative) * 360}deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)`;
+        bgImage = `linear-gradient(${this.data.receivedNegative / (this.data.receivedPositive + this.data.receivedNegative) * 360}deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)`;
       }
     }
 
@@ -340,7 +340,7 @@ class Identity {
     pie.style.backgroundImage = bgImage;
     pie.style.width = `${width}px`;
     pie.style.boxShadow = boxShadow;
-    pie.style.opacity = (this.receivedPositive + this.receivedNegative) / 10 * 0.5 + 0.35;
+    pie.style.opacity = (this.data.receivedPositive + this.data.receivedNegative) / 10 * 0.5 + 0.35;
     pie.style.transform = transform;
 
     const hash = new MessageDigest({alg: `md5`, prov: `cryptojs`}).digestString(JSON.stringify(this.linkTo));
@@ -354,7 +354,7 @@ class Identity {
 
     if (showDistance) {
       const distance = document.createElement(`span`);
-      distance.textContent = this.trustDistance < 1000 ? Identity._ordinal(this.trustDistance) : `–`;
+      distance.textContent = this.data.trustDistance < 1000 ? Identity._ordinal(this.data.trustDistance) : `–`;
       distance.className = `identifi-distance`;
       distance.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
       identicon.appendChild(distance);

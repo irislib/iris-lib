@@ -73,7 +73,7 @@
     "identicon.js": "^2.3.2",
     "ipld-dag-pb": "^0.14.4",
     "jsrsasign": "^8.0.5",
-    "merkle-btree": "^1.0.19",
+    "merkle-btree": "^1.0.21",
     "node-fetch": "^2.0.0"
   }
 }

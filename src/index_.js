@@ -32,12 +32,23 @@ class Index {
         this.viewpoint = [`keyID`, util.getDefaultKey().keyID];
       }
       const vp = new Identity({attrs: [this.viewpoint]});
-      vp.sentIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-      vp.receivedIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       vp.data.trustDistance = 0;
-      vp.trustDistance = 0;
-      this._addIdentityToIndexes(vp);
+      this.ready = new Promise(async (resolve, reject) => {
+        try {
+          await this._setSentRcvdIndexes(vp);
+          await this._addIdentityToIndexes(vp);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
     }
+  }
+
+  static async create(ipfs, viewpoint) {
+    const i = new Index(ipfs, viewpoint);
+    await i.ready;
+    return i;
   }
 
   static getMsgIndexKey(msg) {
@@ -52,7 +63,7 @@ class Index {
     const indexKeys = [];
     const attrs = identity.data.attrs;
     for (let j = 0;j < attrs.length;j += 1) {
-      let distance = identity.trustDistance || parseInt(attrs[j].dist);
+      let distance = identity.data.hasOwnProperty(`trustDistance`) ? identity.data.trustDistance : parseInt(attrs[j].dist);
       distance = Number.isNaN(distance) ? 99 : distance;
       distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
       const v = attrs[j].val || attrs[j][1];
@@ -178,11 +189,30 @@ class Index {
     }
   }
 
+  async _setSentRcvdIndexes(id) {
+    if (!id.sentIndex) {
+      if (id.data.sent) {
+        id.sentIndex = await btree.MerkleBTree.getByHash(id.data.sent, this.storage, IPFS_INDEX_WIDTH);
+      } else {
+        id.sentIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      }
+    }
+    if (!id.receivedIndex) {
+      if (id.data.received) {
+        id.receivedIndex = await btree.MerkleBTree.getByHash(id.data.received, this.storage, IPFS_INDEX_WIDTH);
+      } else {
+        id.receivedIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+      }
+    }
+  }
+
   async getViewpoint() {
-    const r = await this.identitiesByTrustDistance.searchText('00', 1);
+    const r = await this.identitiesByTrustDistance.searchText(`00`, 1);
     if (r.length) {
       const p = await this.storage.get(r[0].value);
-      return new Identity(JSON.parse(p));
+      const vp = new Identity(JSON.parse(p));
+      await this._setSentRcvdIndexes(vp);
+      return vp;
     }
   }
 
@@ -201,7 +231,9 @@ class Index {
     const profileUri = await this.identitiesBySearchKey.get(`${encodeURIComponent(value)}:${encodeURIComponent(type)}`);
     if (profileUri) {
       const p = await this.storage.get(profileUri);
-      return new Identity(JSON.parse(p));
+      const id = new Identity(JSON.parse(p));
+      await this._setSentRcvdIndexes(id);
+      return id;
     }
   }
 
@@ -234,7 +266,6 @@ class Index {
         const r = await this.ipfs.files.add(new Buffer(id.receivedIndex.rootNode.serialize(), `utf8`));
         id.data.received = r[0].hash;
       }
-      console.log(id.data.sent, id.data.received);
     }
     const buffer = new this.ipfs.types.Buffer(JSON.stringify(id.data));
     const r = await this.ipfs.files.add(buffer);
@@ -293,7 +324,7 @@ class Index {
       return 99;
     }
     const id = await this.get(a[1], a[0]);
-    return id && id.trustDistance ? id.trustDistance : 99;
+    return id && id.data.trustDistance ? id.data.trustDistance : 99;
   }
 
   async getMsgTrustDistance(msg) {

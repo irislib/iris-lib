@@ -24,7 +24,7 @@ beforeAll(async () => {
 
 describe('local index', async () => {
   test('create new Index', async () => {
-    i = new identifi.Index(ipfsNode);
+    i = await identifi.Index.create(ipfsNode);
     expect(i).toBeInstanceOf(identifi.Index);
   });
   test('add trust rating to bob', async () => {
@@ -46,9 +46,9 @@ describe('local index', async () => {
   });
   test('get messages sent by self', async () => {
     const viewpoint = await i.getViewpoint();
-    console.log(viewpoint);
-    const r = await i.getSentMsgs(i);
-    expect(r.length).toEqual(0);
+    expect(viewpoint).toBeInstanceOf(identifi.Identity);
+    const r = await i.getSentMsgs(viewpoint);
+    expect(r.length).toEqual(1);
   });
   test('get viewpoint identity by searching the default keyID', async () => {
     const defaultKey = identifi.util.getDefaultKey();

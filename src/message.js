@@ -128,7 +128,7 @@ class Message {
         id.receivedNegative = this.authorNeg;
       }
       if (this.authorTrustDistance) {
-        id.trustDistance = this.authorTrustDistance;
+        id.data.trustDistance = this.authorTrustDistance;
       }
       if (this.authorName) {
         id.profile.name = this.authorName;
@@ -151,7 +151,7 @@ class Message {
         id.receivedNegative = this.recipientNeg;
       }
       if (this.recipientTrustDistance) {
-        id.trustDistance = this.recipientTrustDistance;
+        id.data.trustDistance = this.recipientTrustDistance;
       }
       if (this.recipientName) {
         id.profile.name = this.recipientName;
