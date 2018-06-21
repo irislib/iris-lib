@@ -123,11 +123,11 @@ class Message {
         attrs.push({name: a[0], val: a[1]});
       });
       const id = new Identity({attrs});
-      if (this.authorPos && this.authorNeg) {
+      if (this.hasOwnProperty(`authorPos`) && this.hasOwnProperty(`authorNeg`)) {
         id.data.receivedPositive = this.authorPos;
         id.data.receivedNegative = this.authorNeg;
       }
-      if (this.authorTrustDistance) {
+      if (this.hasOwnProperty(`authorTrustDistance`)) {
         id.data.trustDistance = this.authorTrustDistance;
       }
       if (this.authorName) {
@@ -146,11 +146,11 @@ class Message {
         attrs.push({name: a[0], val: a[1]});
       });
       const id = new Identity({attrs});
-      if (this.recipientPos && this.recipientNeg) {
+      if (this.hasOwnProperty(`recipientPos`) && this.hasOwnProperty(`recipientNeg`)) {
         id.data.receivedPositive = this.recipientPos;
         id.data.receivedNegative = this.recipientNeg;
       }
-      if (this.recipientTrustDistance) {
+      if (this.hasOwnProperty(`recipientTrustDistance`)) {
         id.data.trustDistance = this.recipientTrustDistance;
       }
       if (this.recipientName) {
