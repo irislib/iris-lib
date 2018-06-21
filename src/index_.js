@@ -2,6 +2,7 @@ import btree from 'merkle-btree';
 import util from './util';
 import Message from './message';
 import Identity from './identity';
+import Attribute from './attribute';
 import fetch from 'node-fetch';
 import dagPB from 'ipld-dag-pb';
 
@@ -29,10 +30,9 @@ class Index {
       if (viewpoint) {
         this.viewpoint = viewpoint;
       } else {
-        this.viewpoint = [`keyID`, util.getDefaultKey().keyID];
+        this.viewpoint = {name: `keyID`, val: util.getDefaultKey().keyID, conf: 1, ref: 0};
       }
-      const vp = new Identity({attrs: [this.viewpoint]});
-      vp.data.trustDistance = 0;
+      const vp = new Identity({attrs: [this.viewpoint], trustDistance: 0});
       this.ready = new Promise(async (resolve, reject) => {
         try {
           await this._setSentRcvdIndexes(vp);
@@ -225,7 +225,7 @@ class Index {
       throw `Value is undefined`;
     }
     if (typeof type === `undefined`) {
-      type = util.guessTypeOf(value);
+      type = Attribute.guessTypeOf(value);
     }
 
     const profileUri = await this.identitiesBySearchKey.get(`${encodeURIComponent(value)}:${encodeURIComponent(type)}`);
@@ -320,20 +320,22 @@ class Index {
   }
 
   async getAttributeTrustDistance(a) {
-    if (!util.isUniqueType(a[0])) {
+    console.log(a);
+    if (!Attribute.isUniqueType(a.name)) {
       return 99;
     }
-    const id = await this.get(a[1], a[0]);
-    return id && id.data.trustDistance ? id.data.trustDistance : 99;
+    const id = await this.get(a.val, a.name);
+    return id && id.data.hasOwnProperty(`trustDistance`) ? id.data.trustDistance : 99;
   }
 
   async getMsgTrustDistance(msg) {
     let shortestDistance = 99;
     for (let i = 0;i < msg.signedData.author.length;i ++) {
-      if (util.attributeEquals(msg.signedData.author[i], this.viewpoint)) {
+      const a = new Attribute(msg.signedData.author[i]);
+      if (util.attributeEquals(a, this.viewpoint)) {
         return 0;
       } else {
-        const d = await this.getAttributeTrustDistance(msg.signedData.author[i]);
+        const d = await this.getAttributeTrustDistance(a);
         if (d < shortestDistance) {
           shortestDistance = d;
         }
@@ -345,13 +347,6 @@ class Index {
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = [];
     const authorIdentities = [];
-    for (let i = 0;i < msg.signedData.recipient.length;i ++) {
-      const a = msg.signedData.recipient[i];
-      const id = await this.get(a[1], a[0]);
-      if (id) {
-        recipientIdentities.push(id);
-      }
-    }
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = await this.get(a[1], a[0]);
@@ -359,11 +354,23 @@ class Index {
         authorIdentities.push(id);
       }
     }
-    if (recipientIdentities.length) {
-      // TODO: add new identifiers to existing identity and update identity stats
-      // TODO: update sent/rcvd msg indexes
-    } else {
-      const id = new Identity({attrs: msg.signedData.recipient});
+    if (!authorIdentities.length) {
+      return; // unknown author, do nothing
+    }
+    for (let i = 0;i < msg.signedData.recipient.length;i ++) {
+      const a = msg.signedData.recipient[i];
+      const id = await this.get(a[1], a[0]);
+      if (id) {
+        recipientIdentities.push(id);
+      }
+    }
+    // TODO: add new identifiers to existing identity and update identity stats
+    if (!recipientIdentities.length) { // recipient is previously unknown
+      const attrs = [];
+      msg.signedData.recipient.forEach(a => {
+        attrs.push({name: a[0], val: a[1], conf: 1, ref: 0});
+      });
+      const id = new Identity({attrs});
       id.sentIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       id.receivedIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       // TODO: take msg author trust into account
@@ -374,8 +381,22 @@ class Index {
     }
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
-    for (let i = 0;i < recipientIdentities.length;i ++) {
+    for (let i = 0;i < recipientIdentities.length;i ++) { // add new identifiers to identity
       const id = recipientIdentities[i];
+      msg.signedData.recipient.forEach(a1 => {
+        let hasAttr = false;
+        for (let j = 0;j < id.data.attrs.length;j ++) {
+          if (util.attributeEquals(a1, id.data.attrs[j])) {
+            id.data.attrs[j].conf |= 0;
+            id.data.attrs[j].conf += 1;
+            hasAttr = true;
+            break;
+          }
+        }
+        if (!hasAttr) {
+          id.data.attrs.push({name: a1[0], val: a1[1], conf: 1, ref: 0});
+        }
+      });
       await id.receivedIndex.put(msgIndexKey, msg);
       await this._addIdentityToIndexes(id);
     }
@@ -412,7 +433,7 @@ class Index {
       const useCursor = d === initialDepth;
       const paddedDistance = (`00${d}`).substring(d.toString().length);
       //console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
-      let r = await this.identitiesByTrustDistance.searchText(`${paddedDistance}:${encodeURIComponent(value)}`, limit, cursor : undefined);
+      let r = await this.identitiesByTrustDistance.searchText(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
       //console.log(`r`, r);
       while (r && r.length && Object.keys(identitiesByHash).length < limit) {
         for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {

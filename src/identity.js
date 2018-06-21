@@ -1,6 +1,6 @@
 import {MessageDigest} from 'jsrsasign';
-import util from './util';
 import Identicon from 'identicon.js';
+import Attribute from './attribute';
 
 class Identity {
   constructor(data) {
@@ -16,14 +16,14 @@ class Identity {
     this.data.receivedNegative |= 0;
     this.data.receivedPositive |= 0;
     this.data.receivedNeutral |= 0;
-    this.data.trustDistance |= 1000;
+    this.data.trustDistance = this.data.hasOwnProperty(`trustDistance`) ? this.data.trustDistance : 1000;
     this.data.attrs.forEach(a => {
-      if (!this.linkTo && util.isUniqueType(a.name)) {
+      if (!this.linkTo && Attribute.isUniqueType(a.name)) {
         this.linkTo = a;
       }
       if (!Number.isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < this.data.trustDistance) {
         this.data.trustDistance = parseInt(a.dist);
-        if (util.isUniqueType(a.name)) {
+        if (Attribute.isUniqueType(a.name)) {
           this.linkTo = a;
         }
       }

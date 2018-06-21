@@ -3,6 +3,7 @@
 import APIClient from './client';
 import Message from './message';
 import Identity from './identity';
+import Attribute from './attribute';
 import util from './util';
 import Index from './index_';
 import {version} from '../package.json';
@@ -12,6 +13,7 @@ export default {
   APIClient,
   Message,
   Identity,
+  Attribute,
   Index,
   util,
 };
