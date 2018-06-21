@@ -411,9 +411,9 @@ class Index {
     for (let d = initialDepth;d <= depth;d ++) {
       const useCursor = d === initialDepth;
       const paddedDistance = (`00${d}`).substring(d.toString().length);
-      console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
+      //console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
       let r = await this.identitiesByTrustDistance.searchText(`${paddedDistance}:${encodeURIComponent(value)}`, limit, cursor : undefined);
-      console.log(`r`, r);
+      //console.log(`r`, r);
       while (r && r.length && Object.keys(identitiesByHash).length < limit) {
         for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {
           if (r[i].value && !identitiesByHash.hasOwnProperty(r[i].value)) {
@@ -427,9 +427,9 @@ class Index {
             }
           }
         }
-        console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, r[r.length - 1].key);
+        //console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, r[r.length - 1].key);
         r = await this.identitiesBySearchKey.searchText(`${paddedDistance}:${encodeURIComponent(value)}`, limit, r[r.length - 1].key);
-        console.log(`r`, r);
+        //console.log(`r`, r);
       }
     }
     return Object.values(identitiesByHash);

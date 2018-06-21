@@ -35,6 +35,7 @@ describe('local index', async () => {
   test('get added identity', async () => {
     p = await i.get('bob@example.com');
     expect(p).toBeInstanceOf(identifi.Identity);
+    expect(p.data.trustDistance).toBe(1);
   });
   test('get messages received by bob', async () => {
     const r = await i.getReceivedMsgs(p);
@@ -50,10 +51,20 @@ describe('local index', async () => {
     const r = await i.getSentMsgs(viewpoint);
     expect(r.length).toEqual(1);
   });
+  test('add name to self identity', async () => {
+    let viewpoint = await i.getViewpoint();
+    expect(viewpoint).toBeInstanceOf(identifi.Identity);
+    const msg = identifi.Message.createVerification({recipient: viewpoint.data.attrs.concat([['name', 'Alice']])}, key);
+    const r = await i.addMessage(msg);
+    viewpoint = await i.getViewpoint();
+    expect(viewpoint.data.attrs.length).toBe(2);
+    expect(viewpoint.mostVerifiedAttributes.name.attribute.val).toBe('Alice');
+  });
   test('get viewpoint identity by searching the default keyID', async () => {
     const defaultKey = identifi.util.getDefaultKey();
     p = await i.get(defaultKey.keyID, 'keyID');
     expect(p).toBeInstanceOf(identifi.Identity);
+    expect(p.data.trustDistance).toBe(0);
   });
   test('save index', async () => {
     h = await i.save();
