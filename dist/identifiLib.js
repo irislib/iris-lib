@@ -23652,7 +23652,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.55";
+var version$2 = "0.0.56";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 

@@ -130,14 +130,33 @@ key = util.getDefaultKey();</pre>
     </pre>
 
     <h2>Index.create()</h2>
-    <p>To be implemented. Currently, Identifi indices can be only created with
-    <a href="https://github.com/identifi/identifi-daemon">identifi-daemon.</a></p>
+    <p>Indexing with identifi-lib is work-in-progress. Indexing features are being moved to identifi-lib from
+    <a href="https://github.com/identifi/identifi-daemon">identifi-daemon</a>.</p>
 
-    <p>Indices are <a href="https://github.com/mmalmi/merkle-btree">merkle-btrees</a>
+    <p><a href="https://github.com/ipfs/js-ipfs">Js-ipfs</a> is needed in order to write your own index.</p>
+
+    <pre>
+      ipfs = new Ipfs();
+      index = await Index.create(ipfs);
+      myId = await index.getViewpoint();
+      msg = Message.createVerification({
+        recipient: myId.data.attrs,
+        comment: 'add name'
+      });
+      await index.addMessage(msg);
+      msg2 = Message.createRating({
+        recipient: [['email', 'bob@example.com']]
+      });
+      await index.addMessage(msg2);
+      identities = await index.search('');
+      uri = await index.save();
+    </pre>
+
+    <p>Indices use <a href="https://github.com/mmalmi/merkle-btree">merkle-btrees</a>
     that anyone can easily write messages to, essentially creating a fork of the original
     index. Since it's a btree, you only need to rewrite one branch, not the whole tree.</p>
 
-    <p>As of April 2018, the JS-IPFS team <a href="https://github.com/ipfs/js-ipfs/issues/209#issuecomment-382593283">
+    <p>As of June 2018, the JS-IPFS team <a href="https://github.com/ipfs/js-ipfs/issues/209#issuecomment-382593283">
     is working on</a> adding IPNS support, which is needed
     for browser users of identifi to maintain permanent IPNS pointers to their indices,
     whose IPFS hash changes on every write. Currently, only

@@ -72,3 +72,20 @@ async function publishMsg() {
     el.innerHTML = `Link to the newly published JWT serialized identifi message on IPFS: <a href="${link}">${link}</a>`;
   }
 }
+
+async function runIndexExample() {
+  ipfs = new Ipfs();
+  index = await Index.create(ipfs);
+  myId = await index.getViewpoint();
+  msg = Message.createVerification({
+    recipient: myId.data.attrs,
+    comment: 'add name'
+  });
+  await index.addMessage(msg);
+  msg2 = Message.createRating({
+    recipient: [['email', 'bob@example.com']]
+  });
+  await index.addMessage(msg2);
+  identities = await index.search('');
+  uri = await index.save();
+}
