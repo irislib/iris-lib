@@ -3,6 +3,7 @@
   <title>identifi-lib</title>
   <!--<script type="text/javascript" src="../dist/identifiLib.js"></script>-->
   <script type="text/javascript" src="../dist/identifiLib.min.js"></script>
+  <script src="https://unpkg.com/ipfs/dist/index.min.js"></script>
   <link rel="stylesheet" href="style.css">
   <script src="script.js"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -117,16 +118,16 @@ key = util.getDefaultKey();</pre>
     <p>Verification message example:</p>
 
     <pre>
-      msg = Message.createVerification({
-        author: [['name', 'Alice'], ['email', 'alice@example.com']],
-        recipient: [
-          ['name', 'Bob'],
-          ['keyID', '4321DCBA'],
-          ['email', 'bob@example.com'],
-          ['bitcoin_address', '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa']
-        ],
-        comment 'Verified in person'
-      });
+msg = Message.createVerification({
+  author: [['name', 'Alice'], ['email', 'alice@example.com']],
+  recipient: [
+    ['name', 'Bob'],
+    ['keyID', '4321DCBA'],
+    ['email', 'bob@example.com'],
+    ['bitcoin_address', '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa']
+  ],
+  comment 'Verified in person'
+});
     </pre>
 
     <h2>Index.create()</h2>
@@ -136,21 +137,35 @@ key = util.getDefaultKey();</pre>
     <p><a href="https://github.com/ipfs/js-ipfs">Js-ipfs</a> is needed in order to write your own index.</p>
 
     <pre>
-      ipfs = new Ipfs();
-      index = await Index.create(ipfs);
-      myId = await index.getViewpoint();
-      msg = Message.createVerification({
-        recipient: myId.data.attrs,
-        comment: 'add name'
-      });
-      await index.addMessage(msg);
-      msg2 = Message.createRating({
-        recipient: [['email', 'bob@example.com']]
-      });
-      await index.addMessage(msg2);
-      identities = await index.search('');
-      uri = await index.save();
+ipfs = new window.Ipfs();
+await new Promise((resolve, reject) => {
+  ipfs.on('ready', () => {
+    console.log('ipfs ready');
+    resolve();
+  });
+  ipfs.on('error', error => {
+    console.error(error.message);
+    reject();
+  });
+});
+index = await window.identifiLib.Index.create(ipfs);
+myId = await index.getViewpoint();
+myKey = window.identifiLib.util.getDefaultKey('.');
+msg = window.identifiLib.Message.createVerification({
+  recipient: myId.data.attrs.concat([['name', 'Alice Example']]),
+  comment: 'add name'
+}, myKey);
+await index.addMessage(msg);
+msg2 = window.identifiLib.Message.createRating({
+  recipient: [['email', 'bob@example.com']],
+  rating: 5
+}, myKey);
+await index.addMessage(msg2);
+identities = await index.search('');
+uri = await index.save();
     </pre>
+    <p><input type="button" value="Run" id="runIndexExample" class="btn btn-primary"></p>
+    <pre id="runIndexExampleResult"></pre>
 
     <p>Indices use <a href="https://github.com/mmalmi/merkle-btree">merkle-btrees</a>
     that anyone can easily write messages to, essentially creating a fork of the original

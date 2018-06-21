@@ -12,6 +12,7 @@ loadIdentifi.then(async (index_) => {
   document.getElementById('profileQuery').addEventListener('change', getProfile);
   document.getElementById('signMsg').addEventListener('click', signMsg);
   document.getElementById('publishMsg').addEventListener('click', publishMsg);
+  document.getElementById('runIndexExample').addEventListener('click', runIndexExample);
   const searchWidget = document.getElementById('searchWidget');
   window.identifiLib.Identity.appendSearchWidget(searchWidget, index);
 });
@@ -74,18 +75,37 @@ async function publishMsg() {
 }
 
 async function runIndexExample() {
-  ipfs = new Ipfs();
-  index = await Index.create(ipfs);
+  el = document.getElementById('runIndexExampleResult');
+  el.innerHTML = '';
+
+  ipfs = new window.Ipfs();
+  await new Promise((resolve, reject) => {
+    ipfs.on('ready', () => {
+      console.log('ipfs ready');
+      resolve();
+    });
+    ipfs.on('error', error => {
+      console.error(error.message);
+      reject();
+    });
+  });
+  index = await window.identifiLib.Index.create(ipfs);
   myId = await index.getViewpoint();
-  msg = Message.createVerification({
-    recipient: myId.data.attrs,
+  myKey = window.identifiLib.util.getDefaultKey('.');
+  console.log(myId.data.attrs);
+  msg = window.identifiLib.Message.createVerification({
+    recipient: myId.data.attrs.concat([['name', 'Alice Example']]),
     comment: 'add name'
-  });
+  }, myKey);
   await index.addMessage(msg);
-  msg2 = Message.createRating({
-    recipient: [['email', 'bob@example.com']]
-  });
+  msg2 = window.identifiLib.Message.createRating({
+    recipient: [['email', 'bob@example.com']],
+    rating: 5
+  }, myKey);
   await index.addMessage(msg2);
   identities = await index.search('');
+  el.innerHTML += 'Identities in index:\n'
+  el.innerHTML += JSON.stringify(identities, null, 2);
   uri = await index.save();
+  el.innerHTML += 'Saved index URI: ' + uri
 }
