@@ -6009,8 +6009,8 @@ var Message = function () {
       });
       var id = new Identity({ attrs: attrs });
       if (this.authorPos && this.authorNeg) {
-        id.receivedPositive = this.authorPos;
-        id.receivedNegative = this.authorNeg;
+        id.data.receivedPositive = this.authorPos;
+        id.data.receivedNegative = this.authorNeg;
       }
       if (this.authorTrustDistance) {
         id.data.trustDistance = this.authorTrustDistance;
@@ -6032,8 +6032,8 @@ var Message = function () {
       });
       var id = new Identity({ attrs: attrs });
       if (this.recipientPos && this.recipientNeg) {
-        id.receivedPositive = this.recipientPos;
-        id.receivedNegative = this.recipientNeg;
+        id.data.receivedPositive = this.recipientPos;
+        id.data.receivedNegative = this.recipientNeg;
       }
       if (this.recipientTrustDistance) {
         id.data.trustDistance = this.recipientTrustDistance;
@@ -23652,7 +23652,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.52";
+var version$2 = "0.0.54";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
