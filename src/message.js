@@ -124,8 +124,8 @@ class Message {
       });
       const id = new Identity({attrs});
       if (this.authorPos && this.authorNeg) {
-        id.receivedPositive = this.authorPos;
-        id.receivedNegative = this.authorNeg;
+        id.data.receivedPositive = this.authorPos;
+        id.data.receivedNegative = this.authorNeg;
       }
       if (this.authorTrustDistance) {
         id.data.trustDistance = this.authorTrustDistance;
@@ -147,8 +147,8 @@ class Message {
       });
       const id = new Identity({attrs});
       if (this.recipientPos && this.recipientNeg) {
-        id.receivedPositive = this.recipientPos;
-        id.receivedNegative = this.recipientNeg;
+        id.data.receivedPositive = this.recipientPos;
+        id.data.receivedNegative = this.recipientNeg;
       }
       if (this.recipientTrustDistance) {
         id.data.trustDistance = this.recipientTrustDistance;
