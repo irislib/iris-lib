@@ -27,7 +27,7 @@ class Index {
       this.messagesByTimestamp = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       this.messagesByDistance = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       if (viewpoint) {
-        this.viewpoint = viewpoint;
+        this.viewpoint = new Attribute(viewpoint);
       } else {
         this.viewpoint = {name: `keyID`, val: util.getDefaultKey().keyID, conf: 1, ref: 0};
       }
@@ -181,8 +181,8 @@ class Index {
       const rootHash = r[0].hash;
       if (this.ipfs.name) {
         console.log(`publishing index`, rootHash);
-        const r = await this.ipfs.name.publish(rootHash, {});
-        console.log(`published index`, r);
+        const n = await this.ipfs.name.publish(rootHash, {});
+        console.log(`published index`, n);
       }
       return rootHash;
     } catch (e) {
@@ -298,10 +298,9 @@ class Index {
   async publishMessage(msg: Message, addToIndex = true) {
     const r = {};
     if (this.ipfs) {
-      const buffer = new this.ipfs.types.Buffer(msg.jws);
-      const hash = await this.ipfs.files.add(buffer);
+      const hash = await this.ipfs.files.add(new Buffer(msg.jws, `utf8`));
       r.hash = hash;
-      await this.ipfs.pubsub.publish(`identifi`, hash);
+      await this.ipfs.pubsub.publish(`identifi`, new Buffer(hash, `utf8`));
       if (addToIndex) {
         r.indexUri = await this.addMessage(msg);
       }
@@ -422,7 +421,7 @@ class Index {
       if (updateIdentityIndexes) {
         await this._updateIdentityIndexesByMsg(msg);
       }
-      // TODO: update ipns entry to point to new index root
+      // save() ?
       return h;
     }
   }

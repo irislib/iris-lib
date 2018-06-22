@@ -13938,7 +13938,7 @@ var Index = function () {
       this.messagesByTimestamp = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       this.messagesByDistance = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       if (viewpoint) {
-        this.viewpoint = viewpoint;
+        this.viewpoint = new Attribute(viewpoint);
       } else {
         this.viewpoint = { name: 'keyID', val: util.getDefaultKey().keyID, conf: 1, ref: 0 };
       }
@@ -14292,8 +14292,7 @@ var Index = function () {
 
   Index.prototype.save = function () {
     var _ref5 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5() {
-      var r, root, i, rootHash, _r;
-
+      var r, root, i, rootHash, n;
       return regenerator.wrap(function _callee5$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
@@ -14326,9 +14325,9 @@ var Index = function () {
               return this.ipfs.name.publish(rootHash, {});
 
             case 14:
-              _r = _context5.sent;
+              n = _context5.sent;
 
-              console.log('published index', _r);
+              console.log('published index', n);
 
             case 16:
               return _context5.abrupt('return', rootHash);
@@ -14571,7 +14570,7 @@ var Index = function () {
 
   Index.prototype._addIdentityToIndexes = function () {
     var _ref10 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(id) {
-      var s, _r2, buffer, r, hash, indexKeys, i, key;
+      var s, _r, buffer, r, hash, indexKeys, i, key;
 
       return regenerator.wrap(function _callee10$(_context10) {
         while (1) {
@@ -14604,9 +14603,9 @@ var Index = function () {
               return this.ipfs.files.add(new Buffer(id.receivedIndex.rootNode.serialize(), 'utf8'));
 
             case 12:
-              _r2 = _context10.sent;
+              _r = _context10.sent;
 
-              id.data.received = _r2[0].hash;
+              id.data.received = _r[0].hash;
 
             case 14:
               buffer = new this.ipfs.types.Buffer(_JSON$stringify(id.data));
@@ -14734,7 +14733,7 @@ var Index = function () {
   Index.prototype.publishMessage = function () {
     var _ref13 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13(msg) {
       var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-      var r, buffer, hash, body, res, t;
+      var r, hash, body, res, t;
       return regenerator.wrap(function _callee13$(_context13) {
         while (1) {
           switch (_context13.prev = _context13.next) {
@@ -14742,69 +14741,68 @@ var Index = function () {
               r = {};
 
               if (!this.ipfs) {
-                _context13.next = 15;
+                _context13.next = 14;
                 break;
               }
 
-              buffer = new this.ipfs.types.Buffer(msg.jws);
-              _context13.next = 5;
-              return this.ipfs.files.add(buffer);
+              _context13.next = 4;
+              return this.ipfs.files.add(new Buffer(msg.jws, 'utf8'));
 
-            case 5:
+            case 4:
               hash = _context13.sent;
 
               r.hash = hash;
-              _context13.next = 9;
-              return this.ipfs.pubsub.publish('identifi', hash);
+              _context13.next = 8;
+              return this.ipfs.pubsub.publish('identifi', new Buffer(hash, 'utf8'));
 
-            case 9:
+            case 8:
               if (!addToIndex) {
-                _context13.next = 13;
+                _context13.next = 12;
                 break;
               }
 
-              _context13.next = 12;
+              _context13.next = 11;
               return this.addMessage(msg);
 
-            case 12:
+            case 11:
               r.indexUri = _context13.sent;
 
-            case 13:
-              _context13.next = 26;
+            case 12:
+              _context13.next = 25;
               break;
 
-            case 15:
+            case 14:
               // No IPFS, post to identi.fi
               body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
-              _context13.next = 18;
+              _context13.next = 17;
               return browser('https://identi.fi/api/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: body
               });
 
-            case 18:
+            case 17:
               res = _context13.sent;
 
               if (!(res.status && res.status === 201)) {
-                _context13.next = 26;
+                _context13.next = 25;
                 break;
               }
 
               _context13.t0 = JSON;
-              _context13.next = 23;
+              _context13.next = 22;
               return res.text();
 
-            case 23:
+            case 22:
               _context13.t1 = _context13.sent;
               t = _context13.t0.parse.call(_context13.t0, _context13.t1);
 
               r.hash = t.ipfs_hash;
 
-            case 26:
+            case 25:
               return _context13.abrupt('return', r);
 
-            case 27:
+            case 26:
             case 'end':
               return _context13.stop();
           }
@@ -15277,7 +15275,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.56";
+var version$2 = "0.0.57";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
