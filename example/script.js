@@ -90,7 +90,6 @@ async function runIndexExample() {
     });
   });
   index = await window.identifiLib.Index.create(ipfs);
-  myId = await index.getViewpoint();
   myKey = window.identifiLib.util.getDefaultKey('.');
   msg = window.identifiLib.Message.createVerification({
     recipient: [['keyID', myKey.keyID], ['name', 'Alice Example']],
