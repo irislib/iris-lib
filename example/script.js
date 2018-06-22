@@ -92,9 +92,8 @@ async function runIndexExample() {
   index = await window.identifiLib.Index.create(ipfs);
   myId = await index.getViewpoint();
   myKey = window.identifiLib.util.getDefaultKey('.');
-  console.log(myId.data.attrs);
   msg = window.identifiLib.Message.createVerification({
-    recipient: myId.data.attrs.concat([['name', 'Alice Example']]),
+    recipient: [['keyID', myKey.keyID], ['name', 'Alice Example']],
     comment: 'add name'
   }, myKey);
   await index.addMessage(msg);
@@ -107,5 +106,5 @@ async function runIndexExample() {
   el.innerHTML += 'Identities in index:\n'
   el.innerHTML += JSON.stringify(identities, null, 2);
   uri = await index.save();
-  el.innerHTML += 'Saved index URI: ' + uri
+  el.innerHTML += '\nSaved index URI: ' + uri
 }

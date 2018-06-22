@@ -4,7 +4,6 @@ import Message from './message';
 import Identity from './identity';
 import Attribute from './attribute';
 import fetch from 'node-fetch';
-import dagPB from 'ipld-dag-pb';
 
 const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
 const DEFAULT_STATIC_FALLBACK_INDEX = `/ipfs/QmPxLM631zJQ12tUDWs55LkGqqroFZKHeLjAZ2XwL9Miu3`;
@@ -147,43 +146,45 @@ class Index {
     } else {
       throw `ipfs param must be a gateway url, array of urls or a js-ipfs object`;
     }
-    this.identitiesByTrustDistance = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_distance`, this.storage, IPFS_INDEX_WIDTH);
-    this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_searchkey`, this.storage, IPFS_INDEX_WIDTH);
-    this.messagesByTimestamp = await btree.MerkleBTree.getByHash(`${indexRoot}/messages_by_timestamp`, this.storage, IPFS_INDEX_WIDTH);
+    const root = await this.storage.get(indexRoot);
+    let rootObj;
+    try {
+      rootObj = JSON.parse(root);
+    } catch (e) {
+      console.log(`Old format index root`);
+    }
+    if (rootObj) {
+      this.identitiesByTrustDistance = await btree.MerkleBTree.getByHash(rootObj.identitiesByTrustDistance, this.storage, IPFS_INDEX_WIDTH);
+      this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(rootObj.identitiesBySearchKey, this.storage, IPFS_INDEX_WIDTH);
+      this.messagesByTimestamp = await btree.MerkleBTree.getByHash(rootObj.messagesByTimestamp, this.storage, IPFS_INDEX_WIDTH);
+    } else {
+      this.identitiesByTrustDistance = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_distance`, this.storage, IPFS_INDEX_WIDTH);
+      this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_searchkey`, this.storage, IPFS_INDEX_WIDTH);
+      this.messagesByTimestamp = await btree.MerkleBTree.getByHash(`${indexRoot}/messages_by_timestamp`, this.storage, IPFS_INDEX_WIDTH);
+    }
     return true;
   }
 
   async save() {
     try {
-      let indexRoot;
-      let res = await this.ipfs.files.add([
-        {path: `messages_by_distance`, content: Buffer.from(this.messagesByDistance.rootNode.serialize())},
-        {path: `messages_by_timestamp`, content: Buffer.from(this.messagesByTimestamp.rootNode.serialize())},
-        {path: `identities_by_searchkey`, content: Buffer.from(this.identitiesBySearchKey.rootNode.serialize())},
-        {path: `identities_by_distance`, content: Buffer.from(this.identitiesByTrustDistance.rootNode.serialize())},
+      let r = await this.ipfs.files.add([
+        {path: `messagesByDistance`, content: new Buffer(this.messagesByDistance.rootNode.serialize(), `utf8`)},
+        {path: `messagesByTimestamp`, content: new Buffer(this.messagesByTimestamp.rootNode.serialize(), `utf8`)},
+        {path: `identitiesBySearchKey`, content: new Buffer(this.identitiesBySearchKey.rootNode.serialize(), `utf8`)},
+        {path: `identitiesByTrustDistance`, content: new Buffer(this.identitiesByTrustDistance.rootNode.serialize(), `utf8`)},
       ]);
-      const links = [];
-      for (let i = 0;i < res.length;i += 1) {
-        links.push({Name: res[i].path, Hash: res[i].hash, Size: res[i].size});
+      const root = {};
+      for (let i = 0;i < r.length;i += 1) {
+        root[r[i].path] = r[i].hash;
       }
-      // TODO: remove dagPB dependency - has too many subdependencies
-      res = await new Promise(((resolve, reject) => {
-        dagPB.DAGNode.create(Buffer.from(`\u0008\u0001`), links, (err, dag) => {
-          if (err) {
-            reject(err);
-          }
-          resolve(this.ipfs.object.put(dag));
-        });
-      }));
-      if (res._json.multihash) {
-        indexRoot = res._json.multihash;
-        if (this.ipfs.name) {
-          console.log(`publishing index`, indexRoot);
-          const r = await this.ipfs.name.publish(indexRoot, {});
-          console.log(`published index`, r);
-        }
+      r = await this.ipfs.files.add(new Buffer(JSON.stringify(root), `utf8`));
+      const rootHash = r[0].hash;
+      if (this.ipfs.name) {
+        console.log(`publishing index`, rootHash);
+        const r = await this.ipfs.name.publish(rootHash, {});
+        console.log(`published index`, r);
       }
-      return indexRoot;
+      return rootHash;
     } catch (e) {
       console.log(`error publishing index`, e);
     }
@@ -364,6 +365,7 @@ class Index {
       }
     }
     // TODO: update identity stats
+    // TODO: check message signer as well
     if (!recipientIdentities.length) { // recipient is previously unknown
       const attrs = [];
       msg.signedData.recipient.forEach(a => {

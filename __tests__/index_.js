@@ -2,7 +2,7 @@ const identifi = require('../cjs/index.js');
 const IPFS = require('ipfs');
 const fs = require('fs');
 
-let i, p, h, key, ipfsNode;
+let key, ipfsNode;
 
 jest.setTimeout(30000);
 
@@ -23,6 +23,7 @@ beforeAll(async () => {
 });
 
 describe('local index', async () => {
+  let i, p, h;
   test('create new Index', async () => {
     i = await identifi.Index.create(ipfsNode);
     expect(i).toBeInstanceOf(identifi.Index);
@@ -61,7 +62,6 @@ describe('local index', async () => {
     const msg = identifi.Message.createVerification({recipient}, key);
     const r = await i.addMessage(msg);
     viewpoint = await i.getViewpoint();
-    console.log(JSON.stringify(viewpoint.data, null, 2));
     expect(viewpoint.data.attrs.length).toBe(2);
     expect(viewpoint.mostVerifiedAttributes.name.attribute.val).toBe('Alice');
   });
@@ -82,8 +82,8 @@ describe('local index', async () => {
   });
 });
 
-/*
 describe('remote index via ipfs gateway', async () => {
+  let i, p;
   test('load default Index from default remote', async () => {
     i = await identifi.Index.load();
     expect(i).toBeInstanceOf(identifi.Index);
@@ -132,7 +132,6 @@ describe('remote index via ipfs gateway', async () => {
     expect(r.hash).toBeDefined();
   });
 });
-*/
 
 afterAll(async () => {
   await ipfsNode.stop();
