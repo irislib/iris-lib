@@ -320,7 +320,6 @@ class Index {
   }
 
   async getAttributeTrustDistance(a) {
-    console.log(a);
     if (!Attribute.isUniqueType(a.name)) {
       return 99;
     }
@@ -332,7 +331,7 @@ class Index {
     let shortestDistance = 99;
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = new Attribute(msg.signedData.author[i]);
-      if (util.attributeEquals(a, this.viewpoint)) {
+      if (Attribute.equals(a, this.viewpoint)) {
         return 0;
       } else {
         const d = await this.getAttributeTrustDistance(a);
@@ -364,7 +363,7 @@ class Index {
         recipientIdentities.push(id);
       }
     }
-    // TODO: add new identifiers to existing identity and update identity stats
+    // TODO: update identity stats
     if (!recipientIdentities.length) { // recipient is previously unknown
       const attrs = [];
       msg.signedData.recipient.forEach(a => {
@@ -386,7 +385,7 @@ class Index {
       msg.signedData.recipient.forEach(a1 => {
         let hasAttr = false;
         for (let j = 0;j < id.data.attrs.length;j ++) {
-          if (util.attributeEquals(a1, id.data.attrs[j])) {
+          if (Attribute.equals(a1, id.data.attrs[j])) {
             id.data.attrs[j].conf |= 0;
             id.data.attrs[j].conf += 1;
             hasAttr = true;

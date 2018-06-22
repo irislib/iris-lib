@@ -37,6 +37,8 @@ class Attribute {
       }
       this.name = data[0];
       this.val = data[1];
+    } else {
+      throw new Error(`Invalid attribute data`, data);
     }
   }
 
@@ -56,11 +58,15 @@ class Attribute {
     }
   }
 
+  static equals(a, b) {
+    return new Attribute(a).equals(new Attribute(b));
+  }
+
   toArray() {
     return [this.name, this.val];
   }
 
-  equals(a) {
+  equals(a: Attribute) {
     return this.name === a.name && this.val === a.val;
   }
 }

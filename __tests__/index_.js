@@ -58,11 +58,10 @@ describe('local index', async () => {
     viewpoint.data.attrs.forEach(a => {
       recipient.push([a.name, a.val]);
     });
-    console.log(recipient);
     const msg = identifi.Message.createVerification({recipient}, key);
     const r = await i.addMessage(msg);
     viewpoint = await i.getViewpoint();
-    console.log(viewpoint);
+    console.log(JSON.stringify(viewpoint.data, null, 2));
     expect(viewpoint.data.attrs.length).toBe(2);
     expect(viewpoint.mostVerifiedAttributes.name.attribute.val).toBe('Alice');
   });
