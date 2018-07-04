@@ -70,9 +70,12 @@ class Index {
       const value = encodeURIComponent(v);
       const lowerCaseValue = encodeURIComponent(v.toLowerCase());
       const name = encodeURIComponent(n);
-      const key = `${distance}:${value}:${name}`;
-      const lowerCaseKey = `${distance}:${lowerCaseValue}:${name}`;
-      // TODO: add  + ':' + hash.substr(0, 9) to non-unique identifiers, to allow for duplicates
+      let key = `${distance}:${value}:${name}`;
+      let lowerCaseKey = `${distance}:${lowerCaseValue}:${name}`;
+      if (!Attribute.isUniqueType(n)) { // allow for multiple index keys with same non-unique attribute
+        key = `${key}:${hash.substr(0, 9)}`;
+        lowerCaseKey = `${lowerCaseKey}:${hash.substr(0, 9)}`;
+      }
       indexKeys.push(key);
       if (key !== lowerCaseKey) {
         indexKeys.push(lowerCaseKey);
@@ -80,7 +83,10 @@ class Index {
       if (v.indexOf(` `) > - 1) {
         const words = v.toLowerCase().split(` `);
         for (let l = 0;l < words.length;l += 1) {
-          const k = `${distance}:${encodeURIComponent(words[l])}:${name}:${hash.substr(0, 9)}`;
+          let k = `${distance}:${encodeURIComponent(words[l])}:${name}`;
+          if (!Attribute.isUniqueType(n)) {
+            k = `${k}:${hash.substr(0, 9)}`;
+          }
           indexKeys.push(k);
         }
       }
@@ -233,6 +239,7 @@ class Index {
     if (profileUri) {
       const p = await this.storage.get(profileUri);
       const id = new Identity(JSON.parse(p));
+      id.ipfsHash = profileUri;
       await this._setSentRcvdIndexes(id);
       return id;
     }
@@ -256,6 +263,28 @@ class Index {
     return msgs;
   }
 
+  async _saveIdentityToIpfs(id: Identity) {
+    const buffer = new this.ipfs.types.Buffer(JSON.stringify(id.data));
+    const r = await this.ipfs.files.add(buffer);
+    const hash = r.length ? r[0].hash : ``;
+    id.ipfsHash = hash;
+    return hash;
+  }
+
+  async _removeIdentityFromIndexes(id: Identity) {
+    let hash = id.ipfsHash;
+    if (!hash) {
+      hash = await this._saveIdentityToIpfs(id);
+    }
+    const indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
+    for (let i = 0;i < indexKeys.length;i ++) {
+      const key = indexKeys[i];
+      console.log(`deleting key ${key}`);
+      await this.identitiesByTrustDistance.delete(key);
+      await this.identitiesBySearchKey.delete(key.substr(key.indexOf(`:`) + 1));
+    }
+  }
+
   async _addIdentityToIndexes(id: Identity) {
     if (id.sentIndex && id.receivedIndex) {
       if (id.sentIndex.rootNode.hash && id.receivedIndex.rootNode.hash) {
@@ -268,12 +297,11 @@ class Index {
         id.data.received = r[0].hash;
       }
     }
-    const buffer = new this.ipfs.types.Buffer(JSON.stringify(id.data));
-    const r = await this.ipfs.files.add(buffer);
-    const hash = r.length ? r[0].hash : ``;
+    const hash = await this._saveIdentityToIpfs(id);
     const indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
+      console.log(`adding key ${key}`);
       await this.identitiesByTrustDistance.put(key, hash);
       await this.identitiesBySearchKey.put(key.substr(key.indexOf(`:`) + 1), hash);
     }
@@ -292,31 +320,6 @@ class Index {
       identity.receivedIndex = await btree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
     }
     return this._getMsgs(identity.receivedIndex, limit, cursor);
-  }
-
-  /* Save message to ipfs and announce it on ipfs pubsub */
-  async publishMessage(msg: Message, addToIndex = true) {
-    const r = {};
-    if (this.ipfs) {
-      const hash = await this.ipfs.files.add(new Buffer(msg.jws, `utf8`));
-      r.hash = hash;
-      await this.ipfs.pubsub.publish(`identifi`, new Buffer(hash, `utf8`));
-      if (addToIndex) {
-        r.indexUri = await this.addMessage(msg);
-      }
-    } else { // No IPFS, post to identi.fi
-      const body = JSON.stringify({jws: msg.jws, hash: msg.getHash()});
-      const res = await fetch(`https://identi.fi/api/messages`, {
-        method: `POST`,
-        headers: {'Content-Type': `application/json`},
-        body,
-      });
-      if (res.status && res.status === 201) {
-        const t = JSON.parse(await res.text());
-        r.hash = t.ipfs_hash;
-      }
-    }
-    return r;
   }
 
   async getAttributeTrustDistance(a) {
@@ -344,28 +347,28 @@ class Index {
   }
 
   async _updateIdentityIndexesByMsg(msg) {
-    const recipientIdentities = [];
-    const authorIdentities = [];
+    const recipientIdentities = {};
+    const authorIdentities = {};
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = await this.get(a[1], a[0]);
       if (id) {
-        authorIdentities.push(id);
+        authorIdentities[id.ipfsHash] = id;
       }
     }
-    if (!authorIdentities.length) {
+    if (!Object.keys(authorIdentities).length) {
       return; // unknown author, do nothing
     }
     for (let i = 0;i < msg.signedData.recipient.length;i ++) {
       const a = msg.signedData.recipient[i];
       const id = await this.get(a[1], a[0]);
       if (id) {
-        recipientIdentities.push(id);
+        recipientIdentities[id.ipfsHash] = id;
       }
     }
     // TODO: update identity stats
     // TODO: check message signer as well
-    if (!recipientIdentities.length) { // recipient is previously unknown
+    if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
       const attrs = [];
       msg.signedData.recipient.forEach(a => {
         attrs.push({name: a[0], val: a[1], conf: 1, ref: 0});
@@ -377,32 +380,35 @@ class Index {
       if (msg.isPositive()) {
         id.data.trustDistance = msg.distance + 1;
       }
-      recipientIdentities.push(id);
+      await this._saveIdentityToIpfs(id);
+      recipientIdentities[id.ipfsHash] = id;
     }
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
-    for (let i = 0;i < recipientIdentities.length;i ++) { // add new identifiers to identity
-      const id = recipientIdentities[i];
-      msg.signedData.recipient.forEach(a1 => {
-        let hasAttr = false;
-        for (let j = 0;j < id.data.attrs.length;j ++) {
-          if (Attribute.equals(a1, id.data.attrs[j])) {
-            id.data.attrs[j].conf |= 0;
-            id.data.attrs[j].conf += 1;
-            hasAttr = true;
-            break;
+    const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
+    for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
+      const id = ids[i];
+      await this._removeIdentityFromIndexes(id);
+      if (recipientIdentities.hasOwnProperty(id.ipfsHash)) {
+        msg.signedData.recipient.forEach(a1 => {
+          let hasAttr = false;
+          for (let j = 0;j < id.data.attrs.length;j ++) {
+            if (Attribute.equals(a1, id.data.attrs[j])) {
+              id.data.attrs[j].conf |= 0;
+              id.data.attrs[j].conf += 1;
+              hasAttr = true;
+              break;
+            }
           }
-        }
-        if (!hasAttr) {
-          id.data.attrs.push({name: a1[0], val: a1[1], conf: 1, ref: 0});
-        }
-      });
-      await id.receivedIndex.put(msgIndexKey, msg);
-      await this._addIdentityToIndexes(id);
-    }
-    for (let i = 0;i < authorIdentities.length;i ++) {
-      const id = authorIdentities[i];
-      await id.sentIndex.put(msgIndexKey, msg);
+          if (!hasAttr) {
+            id.data.attrs.push({name: a1[0], val: a1[1], conf: 1, ref: 0});
+          }
+        });
+        await id.receivedIndex.put(msgIndexKey, msg);
+      }
+      if (authorIdentities.hasOwnProperty(id.ipfsHash)) {
+        await id.sentIndex.put(msgIndexKey, msg);
+      }
       await this._addIdentityToIndexes(id);
     }
   }
@@ -426,6 +432,31 @@ class Index {
     }
   }
 
+  /* Save message to ipfs and announce it on ipfs pubsub */
+  async publishMessage(msg: Message, addToIndex = true) {
+    const r = {};
+    if (this.ipfs) {
+      const hash = await this.ipfs.files.add(new Buffer(msg.jws, `utf8`));
+      r.hash = hash;
+      await this.ipfs.pubsub.publish(`identifi`, new Buffer(hash, `utf8`));
+      if (addToIndex) {
+        r.indexUri = await this.addMessage(msg);
+      }
+    } else { // No IPFS, post to identi.fi
+      const body = JSON.stringify({jws: msg.jws, hash: msg.getHash()});
+      const res = await fetch(`https://identi.fi/api/messages`, {
+        method: `POST`,
+        headers: {'Content-Type': `application/json`},
+        body,
+      });
+      if (res.status && res.status === 201) {
+        const t = JSON.parse(await res.text());
+        r.hash = t.ipfs_hash;
+      }
+    }
+    return r;
+  }
+
   async search(value, type, limit = 5, cursor, depth = 20) { // TODO: param 'exact'
     const identitiesByHash = {};
     const initialDepth = cursor ? Number.parseInt(cursor.substring(0, cursor.indexOf(`:`))) : 0;
@@ -441,6 +472,7 @@ class Index {
             try {
               const d = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
               const id = new Identity(d);
+              id.ipfsHash = r[i].value;
               id.cursor = r[i].key;
               identitiesByHash[r[i].value] = id;
             } catch (e) {

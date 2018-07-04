@@ -6112,39 +6112,6 @@ var Message = function () {
   return Message;
 }();
 
-var isEnum$1 = _objectPie.f;
-var _objectToArray = function (isEntries) {
-  return function (it) {
-    var O = _toIobject(it);
-    var keys = _objectKeys(O);
-    var length = keys.length;
-    var i = 0;
-    var result = [];
-    var key;
-    while (length > i) if (isEnum$1.call(O, key = keys[i++])) {
-      result.push(isEntries ? [key, O[key]] : O[key]);
-    } return result;
-  };
-};
-
-// https://github.com/tc39/proposal-object-values-entries
-
-var $values = _objectToArray(false);
-
-_export(_export.S, 'Object', {
-  values: function values(it) {
-    return $values(it);
-  }
-});
-
-var values = _core.Object.values;
-
-var values$2 = createCommonjsModule(function (module) {
-module.exports = { "default": values, __esModule: true };
-});
-
-var _Object$values = unwrapExports(values$2);
-
 var _stringWs = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
   '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
 
@@ -6195,6 +6162,39 @@ module.exports = { "default": _parseInt$2, __esModule: true };
 });
 
 var _Number$parseInt = unwrapExports(_parseInt$4);
+
+var isEnum$1 = _objectPie.f;
+var _objectToArray = function (isEntries) {
+  return function (it) {
+    var O = _toIobject(it);
+    var keys = _objectKeys(O);
+    var length = keys.length;
+    var i = 0;
+    var result = [];
+    var key;
+    while (length > i) if (isEnum$1.call(O, key = keys[i++])) {
+      result.push(isEntries ? [key, O[key]] : O[key]);
+    } return result;
+  };
+};
+
+// https://github.com/tc39/proposal-object-values-entries
+
+var $values = _objectToArray(false);
+
+_export(_export.S, 'Object', {
+  values: function values(it) {
+    return $values(it);
+  }
+});
+
+var values = _core.Object.values;
+
+var values$2 = createCommonjsModule(function (module) {
+module.exports = { "default": values, __esModule: true };
+});
+
+var _Object$values = unwrapExports(values$2);
 
 var empty$1 = {};
 
@@ -14034,7 +14034,11 @@ var Index = function () {
       var name = encodeURIComponent(n);
       var key = distance + ':' + value + ':' + name;
       var lowerCaseKey = distance + ':' + lowerCaseValue + ':' + name;
-      // TODO: add  + ':' + hash.substr(0, 9) to non-unique identifiers, to allow for duplicates
+      if (!Attribute.isUniqueType(n)) {
+        // allow for multiple index keys with same non-unique attribute
+        key = key + ':' + hash.substr(0, 9);
+        lowerCaseKey = lowerCaseKey + ':' + hash.substr(0, 9);
+      }
       indexKeys.push(key);
       if (key !== lowerCaseKey) {
         indexKeys.push(lowerCaseKey);
@@ -14042,7 +14046,10 @@ var Index = function () {
       if (v.indexOf(' ') > -1) {
         var words = v.toLowerCase().split(' ');
         for (var l = 0; l < words.length; l += 1) {
-          var k = distance + ':' + encodeURIComponent(words[l]) + ':' + name + ':' + hash.substr(0, 9);
+          var k = distance + ':' + encodeURIComponent(words[l]) + ':' + name;
+          if (!Attribute.isUniqueType(n)) {
+            k = k + ':' + hash.substr(0, 9);
+          }
           indexKeys.push(k);
         }
       }
@@ -14494,7 +14501,7 @@ var Index = function () {
               profileUri = _context8.sent;
 
               if (!profileUri) {
-                _context8.next = 14;
+                _context8.next = 15;
                 break;
               }
 
@@ -14504,13 +14511,15 @@ var Index = function () {
             case 9:
               p = _context8.sent;
               id = new Identity(JSON.parse(p));
-              _context8.next = 13;
+
+              id.ipfsHash = profileUri;
+              _context8.next = 14;
               return this._setSentRcvdIndexes(id);
 
-            case 13:
+            case 14:
               return _context8.abrupt('return', id);
 
-            case 14:
+            case 15:
             case 'end':
               return _context8.stop();
           }
@@ -14568,79 +14577,25 @@ var Index = function () {
     return _getMsgs;
   }();
 
-  Index.prototype._addIdentityToIndexes = function () {
+  Index.prototype._saveIdentityToIpfs = function () {
     var _ref10 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(id) {
-      var s, _r, buffer, r, hash, indexKeys, i, key;
-
+      var buffer, r, hash;
       return regenerator.wrap(function _callee10$(_context10) {
         while (1) {
           switch (_context10.prev = _context10.next) {
             case 0:
-              if (!(id.sentIndex && id.receivedIndex)) {
-                _context10.next = 14;
-                break;
-              }
-
-              if (!(id.sentIndex.rootNode.hash && id.receivedIndex.rootNode.hash)) {
-                _context10.next = 6;
-                break;
-              }
-
-              id.data.sent = id.sentIndex.rootNode.hash;
-              id.data.received = id.receivedIndex.rootNode.hash;
-              _context10.next = 14;
-              break;
-
-            case 6:
-              _context10.next = 8;
-              return this.ipfs.files.add(new Buffer(id.sentIndex.rootNode.serialize(), 'utf8'));
-
-            case 8:
-              s = _context10.sent;
-
-              id.data.sent = s[0].hash;
-              _context10.next = 12;
-              return this.ipfs.files.add(new Buffer(id.receivedIndex.rootNode.serialize(), 'utf8'));
-
-            case 12:
-              _r = _context10.sent;
-
-              id.data.received = _r[0].hash;
-
-            case 14:
               buffer = new this.ipfs.types.Buffer(_JSON$stringify(id.data));
-              _context10.next = 17;
+              _context10.next = 3;
               return this.ipfs.files.add(buffer);
 
-            case 17:
+            case 3:
               r = _context10.sent;
               hash = r.length ? r[0].hash : '';
-              indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
-              i = 0;
 
-            case 21:
-              if (!(i < indexKeys.length)) {
-                _context10.next = 30;
-                break;
-              }
+              id.ipfsHash = hash;
+              return _context10.abrupt('return', hash);
 
-              key = indexKeys[i];
-              _context10.next = 25;
-              return this.identitiesByTrustDistance.put(key, hash);
-
-            case 25:
-              _context10.next = 27;
-              return this.identitiesBySearchKey.put(key.substr(key.indexOf(':') + 1), hash);
-
-            case 27:
-              i++;
-              _context10.next = 21;
-              break;
-
-            case 30:
-              return _context10.abrupt('return', { hash: hash });
-
-            case 31:
+            case 7:
             case 'end':
               return _context10.stop();
           }
@@ -14648,35 +14603,59 @@ var Index = function () {
       }, _callee10, this);
     }));
 
-    function _addIdentityToIndexes(_x16) {
+    function _saveIdentityToIpfs(_x16) {
       return _ref10.apply(this, arguments);
     }
 
-    return _addIdentityToIndexes;
+    return _saveIdentityToIpfs;
   }();
 
-  Index.prototype.getSentMsgs = function () {
-    var _ref11 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11(identity, limit) {
-      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+  Index.prototype._removeIdentityFromIndexes = function () {
+    var _ref11 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11(id) {
+      var hash, indexKeys, i, key;
       return regenerator.wrap(function _callee11$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
-              if (identity.sentIndex) {
-                _context11.next = 4;
+              hash = id.ipfsHash;
+
+              if (hash) {
+                _context11.next = 5;
                 break;
               }
 
-              _context11.next = 3;
-              return merkleBtree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
-
-            case 3:
-              identity.sentIndex = _context11.sent;
+              _context11.next = 4;
+              return this._saveIdentityToIpfs(id);
 
             case 4:
-              return _context11.abrupt('return', this._getMsgs(identity.sentIndex, limit, cursor));
+              hash = _context11.sent;
 
             case 5:
+              indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
+              i = 0;
+
+            case 7:
+              if (!(i < indexKeys.length)) {
+                _context11.next = 17;
+                break;
+              }
+
+              key = indexKeys[i];
+
+              console.log('deleting key ' + key);
+              _context11.next = 12;
+              return this.identitiesByTrustDistance.delete(key);
+
+            case 12:
+              _context11.next = 14;
+              return this.identitiesBySearchKey.delete(key.substr(key.indexOf(':') + 1));
+
+            case 14:
+              i++;
+              _context11.next = 7;
+              break;
+
+            case 17:
             case 'end':
               return _context11.stop();
           }
@@ -14684,35 +14663,85 @@ var Index = function () {
       }, _callee11, this);
     }));
 
-    function getSentMsgs(_x18, _x19) {
+    function _removeIdentityFromIndexes(_x17) {
       return _ref11.apply(this, arguments);
     }
 
-    return getSentMsgs;
+    return _removeIdentityFromIndexes;
   }();
 
-  Index.prototype.getReceivedMsgs = function () {
-    var _ref12 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12(identity, limit) {
-      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+  Index.prototype._addIdentityToIndexes = function () {
+    var _ref12 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12(id) {
+      var s, r, hash, indexKeys, i, key;
       return regenerator.wrap(function _callee12$(_context12) {
         while (1) {
           switch (_context12.prev = _context12.next) {
             case 0:
-              if (identity.receivedIndex) {
-                _context12.next = 4;
+              if (!(id.sentIndex && id.receivedIndex)) {
+                _context12.next = 14;
                 break;
               }
 
-              _context12.next = 3;
-              return merkleBtree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
+              if (!(id.sentIndex.rootNode.hash && id.receivedIndex.rootNode.hash)) {
+                _context12.next = 6;
+                break;
+              }
 
-            case 3:
-              identity.receivedIndex = _context12.sent;
+              id.data.sent = id.sentIndex.rootNode.hash;
+              id.data.received = id.receivedIndex.rootNode.hash;
+              _context12.next = 14;
+              break;
 
-            case 4:
-              return _context12.abrupt('return', this._getMsgs(identity.receivedIndex, limit, cursor));
+            case 6:
+              _context12.next = 8;
+              return this.ipfs.files.add(new Buffer(id.sentIndex.rootNode.serialize(), 'utf8'));
 
-            case 5:
+            case 8:
+              s = _context12.sent;
+
+              id.data.sent = s[0].hash;
+              _context12.next = 12;
+              return this.ipfs.files.add(new Buffer(id.receivedIndex.rootNode.serialize(), 'utf8'));
+
+            case 12:
+              r = _context12.sent;
+
+              id.data.received = r[0].hash;
+
+            case 14:
+              _context12.next = 16;
+              return this._saveIdentityToIpfs(id);
+
+            case 16:
+              hash = _context12.sent;
+              indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
+              i = 0;
+
+            case 19:
+              if (!(i < indexKeys.length)) {
+                _context12.next = 29;
+                break;
+              }
+
+              key = indexKeys[i];
+
+              console.log('adding key ' + key);
+              _context12.next = 24;
+              return this.identitiesByTrustDistance.put(key, hash);
+
+            case 24:
+              _context12.next = 26;
+              return this.identitiesBySearchKey.put(key.substr(key.indexOf(':') + 1), hash);
+
+            case 26:
+              i++;
+              _context12.next = 19;
+              break;
+
+            case 29:
+              return _context12.abrupt('return', { hash: hash });
+
+            case 30:
             case 'end':
               return _context12.stop();
           }
@@ -14720,89 +14749,35 @@ var Index = function () {
       }, _callee12, this);
     }));
 
-    function getReceivedMsgs(_x21, _x22) {
+    function _addIdentityToIndexes(_x18) {
       return _ref12.apply(this, arguments);
     }
 
-    return getReceivedMsgs;
+    return _addIdentityToIndexes;
   }();
 
-  /* Save message to ipfs and announce it on ipfs pubsub */
-
-
-  Index.prototype.publishMessage = function () {
-    var _ref13 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13(msg) {
-      var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-      var r, hash, body, res, t;
+  Index.prototype.getSentMsgs = function () {
+    var _ref13 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13(identity, limit) {
+      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
       return regenerator.wrap(function _callee13$(_context13) {
         while (1) {
           switch (_context13.prev = _context13.next) {
             case 0:
-              r = {};
-
-              if (!this.ipfs) {
-                _context13.next = 14;
+              if (identity.sentIndex) {
+                _context13.next = 4;
                 break;
               }
 
-              _context13.next = 4;
-              return this.ipfs.files.add(new Buffer(msg.jws, 'utf8'));
+              _context13.next = 3;
+              return merkleBtree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
+
+            case 3:
+              identity.sentIndex = _context13.sent;
 
             case 4:
-              hash = _context13.sent;
+              return _context13.abrupt('return', this._getMsgs(identity.sentIndex, limit, cursor));
 
-              r.hash = hash;
-              _context13.next = 8;
-              return this.ipfs.pubsub.publish('identifi', new Buffer(hash, 'utf8'));
-
-            case 8:
-              if (!addToIndex) {
-                _context13.next = 12;
-                break;
-              }
-
-              _context13.next = 11;
-              return this.addMessage(msg);
-
-            case 11:
-              r.indexUri = _context13.sent;
-
-            case 12:
-              _context13.next = 25;
-              break;
-
-            case 14:
-              // No IPFS, post to identi.fi
-              body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
-              _context13.next = 17;
-              return browser('https://identi.fi/api/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: body
-              });
-
-            case 17:
-              res = _context13.sent;
-
-              if (!(res.status && res.status === 201)) {
-                _context13.next = 25;
-                break;
-              }
-
-              _context13.t0 = JSON;
-              _context13.next = 22;
-              return res.text();
-
-            case 22:
-              _context13.t1 = _context13.sent;
-              t = _context13.t0.parse.call(_context13.t0, _context13.t1);
-
-              r.hash = t.ipfs_hash;
-
-            case 25:
-              return _context13.abrupt('return', r);
-
-            case 26:
+            case 5:
             case 'end':
               return _context13.stop();
           }
@@ -14810,36 +14785,35 @@ var Index = function () {
       }, _callee13, this);
     }));
 
-    function publishMessage(_x24) {
+    function getSentMsgs(_x20, _x21) {
       return _ref13.apply(this, arguments);
     }
 
-    return publishMessage;
+    return getSentMsgs;
   }();
 
-  Index.prototype.getAttributeTrustDistance = function () {
-    var _ref14 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14(a) {
-      var id;
+  Index.prototype.getReceivedMsgs = function () {
+    var _ref14 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14(identity, limit) {
+      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
       return regenerator.wrap(function _callee14$(_context14) {
         while (1) {
           switch (_context14.prev = _context14.next) {
             case 0:
-              if (Attribute.isUniqueType(a.name)) {
-                _context14.next = 2;
+              if (identity.receivedIndex) {
+                _context14.next = 4;
                 break;
               }
 
-              return _context14.abrupt('return', 99);
+              _context14.next = 3;
+              return merkleBtree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
 
-            case 2:
-              _context14.next = 4;
-              return this.get(a.val, a.name);
+            case 3:
+              identity.receivedIndex = _context14.sent;
 
             case 4:
-              id = _context14.sent;
-              return _context14.abrupt('return', id && id.data.hasOwnProperty('trustDistance') ? id.data.trustDistance : 99);
+              return _context14.abrupt('return', this._getMsgs(identity.receivedIndex, limit, cursor));
 
-            case 6:
+            case 5:
             case 'end':
               return _context14.stop();
           }
@@ -14847,58 +14821,36 @@ var Index = function () {
       }, _callee14, this);
     }));
 
-    function getAttributeTrustDistance(_x25) {
+    function getReceivedMsgs(_x23, _x24) {
       return _ref14.apply(this, arguments);
     }
 
-    return getAttributeTrustDistance;
+    return getReceivedMsgs;
   }();
 
-  Index.prototype.getMsgTrustDistance = function () {
-    var _ref15 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee15(msg) {
-      var shortestDistance, i, a, d;
+  Index.prototype.getAttributeTrustDistance = function () {
+    var _ref15 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee15(a) {
+      var id;
       return regenerator.wrap(function _callee15$(_context15) {
         while (1) {
           switch (_context15.prev = _context15.next) {
             case 0:
-              shortestDistance = 99;
-              i = 0;
+              if (Attribute.isUniqueType(a.name)) {
+                _context15.next = 2;
+                break;
+              }
+
+              return _context15.abrupt('return', 99);
 
             case 2:
-              if (!(i < msg.signedData.author.length)) {
-                _context15.next = 15;
-                break;
-              }
+              _context15.next = 4;
+              return this.get(a.val, a.name);
 
-              a = new Attribute(msg.signedData.author[i]);
+            case 4:
+              id = _context15.sent;
+              return _context15.abrupt('return', id && id.data.hasOwnProperty('trustDistance') ? id.data.trustDistance : 99);
 
-              if (!Attribute.equals(a, this.viewpoint)) {
-                _context15.next = 8;
-                break;
-              }
-
-              return _context15.abrupt('return', 0);
-
-            case 8:
-              _context15.next = 10;
-              return this.getAttributeTrustDistance(a);
-
-            case 10:
-              d = _context15.sent;
-
-              if (d < shortestDistance) {
-                shortestDistance = d;
-              }
-
-            case 12:
-              i++;
-              _context15.next = 2;
-              break;
-
-            case 15:
-              return _context15.abrupt('return', shortestDistance);
-
-            case 16:
+            case 6:
             case 'end':
               return _context15.stop();
           }
@@ -14906,113 +14858,188 @@ var Index = function () {
       }, _callee15, this);
     }));
 
-    function getMsgTrustDistance(_x26) {
+    function getAttributeTrustDistance(_x25) {
       return _ref15.apply(this, arguments);
+    }
+
+    return getAttributeTrustDistance;
+  }();
+
+  Index.prototype.getMsgTrustDistance = function () {
+    var _ref16 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee16(msg) {
+      var shortestDistance, i, a, d;
+      return regenerator.wrap(function _callee16$(_context16) {
+        while (1) {
+          switch (_context16.prev = _context16.next) {
+            case 0:
+              shortestDistance = 99;
+              i = 0;
+
+            case 2:
+              if (!(i < msg.signedData.author.length)) {
+                _context16.next = 15;
+                break;
+              }
+
+              a = new Attribute(msg.signedData.author[i]);
+
+              if (!Attribute.equals(a, this.viewpoint)) {
+                _context16.next = 8;
+                break;
+              }
+
+              return _context16.abrupt('return', 0);
+
+            case 8:
+              _context16.next = 10;
+              return this.getAttributeTrustDistance(a);
+
+            case 10:
+              d = _context16.sent;
+
+              if (d < shortestDistance) {
+                shortestDistance = d;
+              }
+
+            case 12:
+              i++;
+              _context16.next = 2;
+              break;
+
+            case 15:
+              return _context16.abrupt('return', shortestDistance);
+
+            case 16:
+            case 'end':
+              return _context16.stop();
+          }
+        }
+      }, _callee16, this);
+    }));
+
+    function getMsgTrustDistance(_x26) {
+      return _ref16.apply(this, arguments);
     }
 
     return getMsgTrustDistance;
   }();
 
   Index.prototype._updateIdentityIndexesByMsg = function () {
-    var _ref16 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee16(msg) {
+    var _ref17 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee17(msg) {
       var _this2 = this;
 
-      var recipientIdentities, authorIdentities, i, a, id, _i, _a, _id, attrs, _id2, msgIndexKey, _loop, _i2, _i3, _id3;
+      var recipientIdentities, authorIdentities, i, a, id, _i, _a, _id, attrs, _id2, msgIndexKey, ids, _loop, _i2;
 
-      return regenerator.wrap(function _callee16$(_context17) {
+      return regenerator.wrap(function _callee17$(_context18) {
         while (1) {
-          switch (_context17.prev = _context17.next) {
+          switch (_context18.prev = _context18.next) {
             case 0:
-              recipientIdentities = [];
-              authorIdentities = [];
+              recipientIdentities = {};
+              authorIdentities = {};
               i = 0;
 
             case 3:
               if (!(i < msg.signedData.author.length)) {
-                _context17.next = 12;
+                _context18.next = 12;
                 break;
               }
 
               a = msg.signedData.author[i];
-              _context17.next = 7;
+              _context18.next = 7;
               return this.get(a[1], a[0]);
 
             case 7:
-              id = _context17.sent;
+              id = _context18.sent;
 
               if (id) {
-                authorIdentities.push(id);
+                authorIdentities[id.ipfsHash] = id;
               }
 
             case 9:
               i++;
-              _context17.next = 3;
+              _context18.next = 3;
               break;
 
             case 12:
-              if (authorIdentities.length) {
-                _context17.next = 14;
+              if (_Object$keys(authorIdentities).length) {
+                _context18.next = 14;
                 break;
               }
 
-              return _context17.abrupt('return');
+              return _context18.abrupt('return');
 
             case 14:
               _i = 0;
 
             case 15:
               if (!(_i < msg.signedData.recipient.length)) {
-                _context17.next = 24;
+                _context18.next = 24;
                 break;
               }
 
               _a = msg.signedData.recipient[_i];
-              _context17.next = 19;
+              _context18.next = 19;
               return this.get(_a[1], _a[0]);
 
             case 19:
-              _id = _context17.sent;
+              _id = _context18.sent;
 
               if (_id) {
-                recipientIdentities.push(_id);
+                recipientIdentities[_id.ipfsHash] = _id;
               }
 
             case 21:
               _i++;
-              _context17.next = 15;
+              _context18.next = 15;
               break;
 
             case 24:
-              // TODO: update identity stats
-              // TODO: check message signer as well
-              if (!recipientIdentities.length) {
-                // recipient is previously unknown
-                attrs = [];
-
-                msg.signedData.recipient.forEach(function (a) {
-                  attrs.push({ name: a[0], val: a[1], conf: 1, ref: 0 });
-                });
-                _id2 = new Identity({ attrs: attrs });
-
-                _id2.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-                _id2.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-                // TODO: take msg author trust into account
-                if (msg.isPositive()) {
-                  _id2.data.trustDistance = msg.distance + 1;
-                }
-                recipientIdentities.push(_id2);
+              if (_Object$keys(recipientIdentities).length) {
+                _context18.next = 34;
+                break;
               }
+
+              // recipient is previously unknown
+              attrs = [];
+
+              msg.signedData.recipient.forEach(function (a) {
+                attrs.push({ name: a[0], val: a[1], conf: 1, ref: 0 });
+              });
+              _id2 = new Identity({ attrs: attrs });
+
+              _id2.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+              _id2.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+              // TODO: take msg author trust into account
+              if (msg.isPositive()) {
+                _id2.data.trustDistance = msg.distance + 1;
+              }
+              _context18.next = 33;
+              return this._saveIdentityToIpfs(_id2);
+
+            case 33:
+              recipientIdentities[_id2.ipfsHash] = _id2;
+
+            case 34:
               msgIndexKey = Index.getMsgIndexKey(msg);
 
               msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(':') + 1);
+              ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
               _loop = /*#__PURE__*/regenerator.mark(function _loop(_i2) {
                 var id;
-                return regenerator.wrap(function _loop$(_context16) {
+                return regenerator.wrap(function _loop$(_context17) {
                   while (1) {
-                    switch (_context16.prev = _context16.next) {
+                    switch (_context17.prev = _context17.next) {
                       case 0:
                         // add new identifiers to identity
-                        id = recipientIdentities[_i2];
+                        id = ids[_i2];
+                        _context17.next = 3;
+                        return _this2._removeIdentityFromIndexes(id);
+
+                      case 3:
+                        if (!recipientIdentities.hasOwnProperty(id.ipfsHash)) {
+                          _context17.next = 7;
+                          break;
+                        }
 
                         msg.signedData.recipient.forEach(function (a1) {
                           var hasAttr = false;
@@ -15028,67 +15055,54 @@ var Index = function () {
                             id.data.attrs.push({ name: a1[0], val: a1[1], conf: 1, ref: 0 });
                           }
                         });
-                        _context16.next = 4;
+                        _context17.next = 7;
                         return id.receivedIndex.put(msgIndexKey, msg);
 
-                      case 4:
-                        _context16.next = 6;
+                      case 7:
+                        if (!authorIdentities.hasOwnProperty(id.ipfsHash)) {
+                          _context17.next = 10;
+                          break;
+                        }
+
+                        _context17.next = 10;
+                        return id.sentIndex.put(msgIndexKey, msg);
+
+                      case 10:
+                        _context17.next = 12;
                         return _this2._addIdentityToIndexes(id);
 
-                      case 6:
+                      case 12:
                       case 'end':
-                        return _context16.stop();
+                        return _context17.stop();
                     }
                   }
                 }, _loop, _this2);
               });
               _i2 = 0;
 
-            case 29:
-              if (!(_i2 < recipientIdentities.length)) {
-                _context17.next = 34;
-                break;
-              }
-
-              return _context17.delegateYield(_loop(_i2), 't0', 31);
-
-            case 31:
-              _i2++;
-              _context17.next = 29;
-              break;
-
-            case 34:
-              _i3 = 0;
-
-            case 35:
-              if (!(_i3 < authorIdentities.length)) {
-                _context17.next = 44;
-                break;
-              }
-
-              _id3 = authorIdentities[_i3];
-              _context17.next = 39;
-              return _id3.sentIndex.put(msgIndexKey, msg);
-
             case 39:
-              _context17.next = 41;
-              return this._addIdentityToIndexes(_id3);
+              if (!(_i2 < ids.length)) {
+                _context18.next = 44;
+                break;
+              }
+
+              return _context18.delegateYield(_loop(_i2), 't0', 41);
 
             case 41:
-              _i3++;
-              _context17.next = 35;
+              _i2++;
+              _context18.next = 39;
               break;
 
             case 44:
             case 'end':
-              return _context17.stop();
+              return _context18.stop();
           }
         }
-      }, _callee16, this);
+      }, _callee17, this);
     }));
 
     function _updateIdentityIndexesByMsg(_x27) {
-      return _ref16.apply(this, arguments);
+      return _ref17.apply(this, arguments);
     }
 
     return _updateIdentityIndexesByMsg;
@@ -15098,81 +15112,171 @@ var Index = function () {
 
 
   Index.prototype.addMessage = function () {
-    var _ref17 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee17(msg) {
+    var _ref18 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee18(msg) {
       var updateIdentityIndexes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
       var indexKey, h;
-      return regenerator.wrap(function _callee17$(_context18) {
+      return regenerator.wrap(function _callee18$(_context19) {
         while (1) {
-          switch (_context18.prev = _context18.next) {
+          switch (_context19.prev = _context19.next) {
             case 0:
               if (!this.ipfs) {
-                _context18.next = 17;
+                _context19.next = 17;
                 break;
               }
 
-              _context18.next = 3;
+              _context19.next = 3;
               return this.getMsgTrustDistance(msg);
 
             case 3:
-              msg.distance = _context18.sent;
+              msg.distance = _context19.sent;
 
               if (!(msg.distance === 99)) {
-                _context18.next = 6;
+                _context19.next = 6;
                 break;
               }
 
-              return _context18.abrupt('return');
+              return _context19.abrupt('return');
 
             case 6:
               indexKey = Index.getMsgIndexKey(msg);
-              _context18.next = 9;
+              _context19.next = 9;
               return this.messagesByDistance.put(indexKey, msg);
 
             case 9:
               indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
-              _context18.next = 12;
+              _context19.next = 12;
               return this.messagesByTimestamp.put(indexKey, msg);
 
             case 12:
-              h = _context18.sent;
+              h = _context19.sent;
 
               if (!updateIdentityIndexes) {
-                _context18.next = 16;
+                _context19.next = 16;
                 break;
               }
 
-              _context18.next = 16;
+              _context19.next = 16;
               return this._updateIdentityIndexesByMsg(msg);
 
             case 16:
-              return _context18.abrupt('return', h);
+              return _context19.abrupt('return', h);
 
             case 17:
             case 'end':
-              return _context18.stop();
+              return _context19.stop();
           }
         }
-      }, _callee17, this);
+      }, _callee18, this);
     }));
 
     function addMessage(_x29) {
-      return _ref17.apply(this, arguments);
+      return _ref18.apply(this, arguments);
     }
 
     return addMessage;
   }();
 
+  /* Save message to ipfs and announce it on ipfs pubsub */
+
+
+  Index.prototype.publishMessage = function () {
+    var _ref19 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(msg) {
+      var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      var r, hash, body, res, t;
+      return regenerator.wrap(function _callee19$(_context20) {
+        while (1) {
+          switch (_context20.prev = _context20.next) {
+            case 0:
+              r = {};
+
+              if (!this.ipfs) {
+                _context20.next = 14;
+                break;
+              }
+
+              _context20.next = 4;
+              return this.ipfs.files.add(new Buffer(msg.jws, 'utf8'));
+
+            case 4:
+              hash = _context20.sent;
+
+              r.hash = hash;
+              _context20.next = 8;
+              return this.ipfs.pubsub.publish('identifi', new Buffer(hash, 'utf8'));
+
+            case 8:
+              if (!addToIndex) {
+                _context20.next = 12;
+                break;
+              }
+
+              _context20.next = 11;
+              return this.addMessage(msg);
+
+            case 11:
+              r.indexUri = _context20.sent;
+
+            case 12:
+              _context20.next = 25;
+              break;
+
+            case 14:
+              // No IPFS, post to identi.fi
+              body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
+              _context20.next = 17;
+              return browser('https://identi.fi/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: body
+              });
+
+            case 17:
+              res = _context20.sent;
+
+              if (!(res.status && res.status === 201)) {
+                _context20.next = 25;
+                break;
+              }
+
+              _context20.t0 = JSON;
+              _context20.next = 22;
+              return res.text();
+
+            case 22:
+              _context20.t1 = _context20.sent;
+              t = _context20.t0.parse.call(_context20.t0, _context20.t1);
+
+              r.hash = t.ipfs_hash;
+
+            case 25:
+              return _context20.abrupt('return', r);
+
+            case 26:
+            case 'end':
+              return _context20.stop();
+          }
+        }
+      }, _callee19, this);
+    }));
+
+    function publishMessage(_x31) {
+      return _ref19.apply(this, arguments);
+    }
+
+    return publishMessage;
+  }();
+
   Index.prototype.search = function () {
-    var _ref18 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee18(value, type) {
+    var _ref20 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee20(value, type) {
       var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
       var cursor = arguments[3];
       var depth = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 20;
 
       var identitiesByHash, initialDepth, d, useCursor, paddedDistance, r, i, _d, id;
 
-      return regenerator.wrap(function _callee18$(_context19) {
+      return regenerator.wrap(function _callee20$(_context21) {
         while (1) {
-          switch (_context19.prev = _context19.next) {
+          switch (_context21.prev = _context21.next) {
             case 0:
               // TODO: param 'exact'
               identitiesByHash = {};
@@ -15181,7 +15285,7 @@ var Index = function () {
 
             case 3:
               if (!(d <= depth)) {
-                _context19.next = 38;
+                _context21.next = 39;
                 break;
               }
 
@@ -15189,15 +15293,15 @@ var Index = function () {
               paddedDistance = ('00' + d).substring(d.toString().length);
               //console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
 
-              _context19.next = 8;
+              _context21.next = 8;
               return this.identitiesByTrustDistance.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, useCursor ? cursor : undefined);
 
             case 8:
-              r = _context19.sent;
+              r = _context21.sent;
 
             case 9:
               if (!(r && r.length && _Object$keys(identitiesByHash).length < limit)) {
-                _context19.next = 35;
+                _context21.next = 36;
                 break;
               }
 
@@ -15205,68 +15309,69 @@ var Index = function () {
 
             case 11:
               if (!(i < r.length && _Object$keys(identitiesByHash).length < limit)) {
-                _context19.next = 30;
+                _context21.next = 31;
                 break;
               }
 
               if (!(r[i].value && !identitiesByHash.hasOwnProperty(r[i].value))) {
-                _context19.next = 27;
+                _context21.next = 28;
                 break;
               }
 
-              _context19.prev = 13;
-              _context19.t0 = JSON;
-              _context19.next = 17;
+              _context21.prev = 13;
+              _context21.t0 = JSON;
+              _context21.next = 17;
               return this.storage.get('/ipfs/' + r[i].value);
 
             case 17:
-              _context19.t1 = _context19.sent;
-              _d = _context19.t0.parse.call(_context19.t0, _context19.t1);
+              _context21.t1 = _context21.sent;
+              _d = _context21.t0.parse.call(_context21.t0, _context21.t1);
               id = new Identity(_d);
 
+              id.ipfsHash = r[i].value;
               id.cursor = r[i].key;
               identitiesByHash[r[i].value] = id;
-              _context19.next = 27;
+              _context21.next = 28;
               break;
 
-            case 24:
-              _context19.prev = 24;
-              _context19.t2 = _context19['catch'](13);
+            case 25:
+              _context21.prev = 25;
+              _context21.t2 = _context21['catch'](13);
 
-              console.error(_context19.t2);
+              console.error(_context21.t2);
 
-            case 27:
+            case 28:
               i++;
-              _context19.next = 11;
+              _context21.next = 11;
               break;
 
-            case 30:
-              _context19.next = 32;
+            case 31:
+              _context21.next = 33;
               return this.identitiesBySearchKey.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, r[r.length - 1].key);
 
-            case 32:
-              r = _context19.sent;
-              _context19.next = 9;
+            case 33:
+              r = _context21.sent;
+              _context21.next = 9;
               break;
 
-            case 35:
+            case 36:
               d++;
-              _context19.next = 3;
+              _context21.next = 3;
               break;
-
-            case 38:
-              return _context19.abrupt('return', _Object$values(identitiesByHash));
 
             case 39:
+              return _context21.abrupt('return', _Object$values(identitiesByHash));
+
+            case 40:
             case 'end':
-              return _context19.stop();
+              return _context21.stop();
           }
         }
-      }, _callee18, this, [[13, 24]]);
+      }, _callee20, this, [[13, 25]]);
     }));
 
-    function search(_x32, _x33) {
-      return _ref18.apply(this, arguments);
+    function search(_x34, _x35) {
+      return _ref20.apply(this, arguments);
     }
 
     return search;
@@ -15275,7 +15380,7 @@ var Index = function () {
   return Index;
 }();
 
-var version$2 = "0.0.57";
+var version$2 = "0.0.58";
 
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
