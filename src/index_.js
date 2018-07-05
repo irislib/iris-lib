@@ -410,7 +410,9 @@ class Index {
         });
         if (msg.signedData.type === `rating`) {
           if (msg.isPositive()) {
-            id.data.trustDistance = msg.distance + 1;
+            if (msg.distance + 1 < id.data.trustDistance) {
+              id.data.trustDistance = msg.distance + 1;
+            }
             id.data.receivedPositive ++;
           } else if (msg.isNegative()) {
             id.data.receivedNegative ++;

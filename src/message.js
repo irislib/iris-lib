@@ -66,7 +66,15 @@ class Message {
   }
 
   isPositive() {
-    return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
+    return this.signedData.type === `rating` && this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
+  }
+
+  isNegative() {
+    return this.signedData.type === `rating` && this.signedData.rating < (this.signedData.maxRating + this.signedData.minRating) / 2;
+  }
+
+  isNeutral() {
+    return this.signedData.type === `rating` && this.signedData.rating === (this.signedData.maxRating + this.signedData.minRating) / 2;
   }
 
   sign(key, skipValidation) {

@@ -5557,10 +5557,13 @@ var Identity = function () {
     this.profile = {};
     this.mostVerifiedAttributes = {};
     if (data.attrs.length) {
+      // old index format
       var c = data.attrs[0];
-      this.data.receivedPositive = c.pos;
-      this.data.receivedNegative = c.neg;
-      this.data.receivedNeutral = c.neut;
+      if (c.pos !== undefined && c.neg !== undefined && c.neut !== undefined) {
+        this.data.receivedPositive = c.pos;
+        this.data.receivedNegative = c.neg;
+        this.data.receivedNeutral = c.neut;
+      }
     }
     this.data.receivedNegative |= 0;
     this.data.receivedPositive |= 0;
@@ -5568,7 +5571,7 @@ var Identity = function () {
     this.data.sentNegative |= 0;
     this.data.sentPositive |= 0;
     this.data.sentNeutral |= 0;
-    this.data.trustDistance = this.data.hasOwnProperty('trustDistance') ? this.data.trustDistance : 1000;
+    this.data.trustDistance = this.data.hasOwnProperty('trustDistance') ? this.data.trustDistance : 99;
     this.data.attrs.forEach(function (a) {
       if (!_this.linkTo && Attribute.isUniqueType(a.name)) {
         _this.linkTo = a;
@@ -5663,6 +5666,9 @@ var Identity = function () {
         };
       }
     });
+    if (this.linkTo.name !== 'keyID' && this.mostVerifiedAttributes.keyID) {
+      this.linkTo = this.mostVerifiedAttributes.keyID.attribute;
+    }
     _Object$keys(this.mostVerifiedAttributes).forEach(function (k) {
       if (['name', 'nickname', 'email', 'url', 'coverPhoto', 'profilePhoto'].indexOf(k) > -1) {
         _this.profile[k] = _this.mostVerifiedAttributes[k].attribute.val;
@@ -5979,7 +5985,15 @@ var Message = function () {
   };
 
   Message.prototype.isPositive = function isPositive() {
-    return this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
+    return this.signedData.type === 'rating' && this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
+  };
+
+  Message.prototype.isNegative = function isNegative() {
+    return this.signedData.type === 'rating' && this.signedData.rating < (this.signedData.maxRating + this.signedData.minRating) / 2;
+  };
+
+  Message.prototype.isNeutral = function isNeutral() {
+    return this.signedData.type === 'rating' && this.signedData.rating === (this.signedData.maxRating + this.signedData.minRating) / 2;
   };
 
   Message.prototype.sign = function sign(key, skipValidation) {
@@ -15083,7 +15097,9 @@ var Index = function () {
                         });
                         if (msg.signedData.type === 'rating') {
                           if (msg.isPositive()) {
-                            id.data.trustDistance = msg.distance + 1;
+                            if (msg.distance + 1 < id.data.trustDistance) {
+                              id.data.trustDistance = msg.distance + 1;
+                            }
                             id.data.receivedPositive++;
                           } else if (msg.isNegative()) {
                             id.data.receivedNegative++;

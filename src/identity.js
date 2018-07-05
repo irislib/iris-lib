@@ -7,11 +7,13 @@ class Identity {
     this.data = data; // data to (de)serialize
     this.profile = {};
     this.mostVerifiedAttributes = {};
-    if (data.attrs.length) {
+    if (data.attrs.length) { // old index format
       const c = data.attrs[0];
-      this.data.receivedPositive = c.pos;
-      this.data.receivedNegative = c.neg;
-      this.data.receivedNeutral = c.neut;
+      if (c.pos !== undefined && c.neg !== undefined && c.neut !== undefined) {
+        this.data.receivedPositive = c.pos;
+        this.data.receivedNegative = c.neg;
+        this.data.receivedNeutral = c.neut;
+      }
     }
     this.data.receivedNegative |= 0;
     this.data.receivedPositive |= 0;
@@ -19,7 +21,7 @@ class Identity {
     this.data.sentNegative |= 0;
     this.data.sentPositive |= 0;
     this.data.sentNeutral |= 0;
-    this.data.trustDistance = this.data.hasOwnProperty(`trustDistance`) ? this.data.trustDistance : 1000;
+    this.data.trustDistance = this.data.hasOwnProperty(`trustDistance`) ? this.data.trustDistance : 99;
     this.data.attrs.forEach(a => {
       if (!this.linkTo && Attribute.isUniqueType(a.name)) {
         this.linkTo = a;
@@ -114,6 +116,9 @@ class Identity {
         };
       }
     });
+    if (this.linkTo.name !== `keyID` && this.mostVerifiedAttributes.keyID) {
+      this.linkTo = this.mostVerifiedAttributes.keyID.attribute;
+    }
     Object.keys(this.mostVerifiedAttributes).forEach(k => {
       if ([`name`, `nickname`, `email`, `url`, `coverPhoto`, `profilePhoto`].indexOf(k) > - 1) {
         this.profile[k] = this.mostVerifiedAttributes[k].attribute.val;
