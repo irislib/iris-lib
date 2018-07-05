@@ -163,11 +163,14 @@ class Index {
       this.identitiesByTrustDistance = await btree.MerkleBTree.getByHash(rootObj.identitiesByTrustDistance, this.storage, IPFS_INDEX_WIDTH);
       this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(rootObj.identitiesBySearchKey, this.storage, IPFS_INDEX_WIDTH);
       this.messagesByTimestamp = await btree.MerkleBTree.getByHash(rootObj.messagesByTimestamp, this.storage, IPFS_INDEX_WIDTH);
+      this.messagesByDistance = await btree.MerkleBTree.getByHash(rootObj.messagesByDistance, this.storage, IPFS_INDEX_WIDTH);
     } else {
       this.identitiesByTrustDistance = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_distance`, this.storage, IPFS_INDEX_WIDTH);
       this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_searchkey`, this.storage, IPFS_INDEX_WIDTH);
       this.messagesByTimestamp = await btree.MerkleBTree.getByHash(`${indexRoot}/messages_by_timestamp`, this.storage, IPFS_INDEX_WIDTH);
+      this.messagesByDistance = await btree.MerkleBTree.getByHash(`${indexRoot}/messages_by_distance`, this.storage, IPFS_INDEX_WIDTH);
     }
+    this.viewpoint = await this.getViewpoint();
     return true;
   }
 

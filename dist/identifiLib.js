@@ -14240,7 +14240,7 @@ var Index = function () {
               }
 
               if (!rootObj) {
-                _context4.next = 70;
+                _context4.next = 73;
                 break;
               }
 
@@ -14259,30 +14259,45 @@ var Index = function () {
 
             case 67:
               this.messagesByTimestamp = _context4.sent;
-              _context4.next = 79;
-              break;
+              _context4.next = 70;
+              return merkleBtree.MerkleBTree.getByHash(rootObj.messagesByDistance, this.storage, IPFS_INDEX_WIDTH);
 
             case 70:
-              _context4.next = 72;
+              this.messagesByDistance = _context4.sent;
+              _context4.next = 85;
+              break;
+
+            case 73:
+              _context4.next = 75;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_distance', this.storage, IPFS_INDEX_WIDTH);
 
-            case 72:
+            case 75:
               this.identitiesByTrustDistance = _context4.sent;
-              _context4.next = 75;
+              _context4.next = 78;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_searchkey', this.storage, IPFS_INDEX_WIDTH);
 
-            case 75:
+            case 78:
               this.identitiesBySearchKey = _context4.sent;
-              _context4.next = 78;
+              _context4.next = 81;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_timestamp', this.storage, IPFS_INDEX_WIDTH);
 
-            case 78:
+            case 81:
               this.messagesByTimestamp = _context4.sent;
+              _context4.next = 84;
+              return merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_distance', this.storage, IPFS_INDEX_WIDTH);
 
-            case 79:
+            case 84:
+              this.messagesByDistance = _context4.sent;
+
+            case 85:
+              _context4.next = 87;
+              return this.getViewpoint();
+
+            case 87:
+              this.viewpoint = _context4.sent;
               return _context4.abrupt('return', true);
 
-            case 80:
+            case 89:
             case 'end':
               return _context4.stop();
           }
