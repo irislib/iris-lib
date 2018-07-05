@@ -164,13 +164,17 @@ class Index {
       this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(rootObj.identitiesBySearchKey, this.storage, IPFS_INDEX_WIDTH);
       this.messagesByTimestamp = await btree.MerkleBTree.getByHash(rootObj.messagesByTimestamp, this.storage, IPFS_INDEX_WIDTH);
       this.messagesByDistance = await btree.MerkleBTree.getByHash(rootObj.messagesByDistance, this.storage, IPFS_INDEX_WIDTH);
+      this.viewpoint = rootObj.viewpoint;
     } else {
       this.identitiesByTrustDistance = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_distance`, this.storage, IPFS_INDEX_WIDTH);
       this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_searchkey`, this.storage, IPFS_INDEX_WIDTH);
       this.messagesByTimestamp = await btree.MerkleBTree.getByHash(`${indexRoot}/messages_by_timestamp`, this.storage, IPFS_INDEX_WIDTH);
       this.messagesByDistance = await btree.MerkleBTree.getByHash(`${indexRoot}/messages_by_distance`, this.storage, IPFS_INDEX_WIDTH);
     }
-    this.viewpoint = await this.getViewpoint();
+    if (!this.viewpoint) {
+      const vp = await this.getViewpoint();
+      this.viewpoint = vp.mostVerifiedAttributes.keyID.attribute.val;
+    }
     return true;
   }
 
@@ -182,7 +186,7 @@ class Index {
         {path: `identitiesBySearchKey`, content: new Buffer(this.identitiesBySearchKey.rootNode.serialize(), `utf8`)},
         {path: `identitiesByTrustDistance`, content: new Buffer(this.identitiesByTrustDistance.rootNode.serialize(), `utf8`)},
       ]);
-      const root = {};
+      const root = {viewpoint: this.viewpoint};
       for (let i = 0;i < r.length;i += 1) {
         root[r[i].path] = r[i].hash;
       }
@@ -380,9 +384,6 @@ class Index {
       id.sentIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       id.receivedIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       // TODO: take msg author trust into account
-      if (msg.isPositive()) {
-        id.data.trustDistance = msg.distance + 1;
-      }
       await this._saveIdentityToIpfs(id);
       recipientIdentities[id.ipfsHash] = id;
     }
@@ -407,9 +408,28 @@ class Index {
             id.data.attrs.push({name: a1[0], val: a1[1], conf: 1, ref: 0});
           }
         });
+        if (msg.signedData.type === `rating`) {
+          if (msg.isPositive()) {
+            id.data.trustDistance = msg.distance + 1;
+            id.data.receivedPositive ++;
+          } else if (msg.isNegative()) {
+            id.data.receivedNegative ++;
+          } else {
+            id.data.receivedNeutral ++;
+          }
+        }
         await id.receivedIndex.put(msgIndexKey, msg);
       }
       if (authorIdentities.hasOwnProperty(id.ipfsHash)) {
+        if (msg.signedData.type === `rating`) {
+          if (msg.isPositive()) {
+            id.data.sentPositive ++;
+          } else if (msg.isNegative()) {
+            id.data.sentNegative ++;
+          } else {
+            id.data.sentNeutral ++;
+          }
+        }
         await id.sentIndex.put(msgIndexKey, msg);
       }
       await this._addIdentityToIndexes(id);

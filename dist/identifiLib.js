@@ -5565,6 +5565,9 @@ var Identity = function () {
     this.data.receivedNegative |= 0;
     this.data.receivedPositive |= 0;
     this.data.receivedNeutral |= 0;
+    this.data.sentNegative |= 0;
+    this.data.sentPositive |= 0;
+    this.data.sentNeutral |= 0;
     this.data.trustDistance = this.data.hasOwnProperty('trustDistance') ? this.data.trustDistance : 1000;
     this.data.attrs.forEach(function (a) {
       if (!_this.linkTo && Attribute.isUniqueType(a.name)) {
@@ -14094,7 +14097,7 @@ var Index = function () {
     var _ref4 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(indexRoot) {
       var ipfs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DEFAULT_IPFS_PROXIES;
       var timeout = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : DEFAULT_TIMEOUT;
-      var useDefaultIndex, url, i, res, u, root, rootObj;
+      var useDefaultIndex, url, i, res, u, root, rootObj, vp;
       return regenerator.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
@@ -14240,7 +14243,7 @@ var Index = function () {
               }
 
               if (!rootObj) {
-                _context4.next = 73;
+                _context4.next = 74;
                 break;
               }
 
@@ -14264,40 +14267,51 @@ var Index = function () {
 
             case 70:
               this.messagesByDistance = _context4.sent;
-              _context4.next = 85;
+
+              this.viewpoint = rootObj.viewpoint;
+              _context4.next = 86;
               break;
 
-            case 73:
-              _context4.next = 75;
+            case 74:
+              _context4.next = 76;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_distance', this.storage, IPFS_INDEX_WIDTH);
 
-            case 75:
+            case 76:
               this.identitiesByTrustDistance = _context4.sent;
-              _context4.next = 78;
+              _context4.next = 79;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_searchkey', this.storage, IPFS_INDEX_WIDTH);
 
-            case 78:
+            case 79:
               this.identitiesBySearchKey = _context4.sent;
-              _context4.next = 81;
+              _context4.next = 82;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_timestamp', this.storage, IPFS_INDEX_WIDTH);
 
-            case 81:
+            case 82:
               this.messagesByTimestamp = _context4.sent;
-              _context4.next = 84;
+              _context4.next = 85;
               return merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_distance', this.storage, IPFS_INDEX_WIDTH);
 
-            case 84:
+            case 85:
               this.messagesByDistance = _context4.sent;
 
-            case 85:
-              _context4.next = 87;
+            case 86:
+              if (this.viewpoint) {
+                _context4.next = 91;
+                break;
+              }
+
+              _context4.next = 89;
               return this.getViewpoint();
 
-            case 87:
-              this.viewpoint = _context4.sent;
+            case 89:
+              vp = _context4.sent;
+
+              this.viewpoint = vp.mostVerifiedAttributes.keyID.attribute.val;
+
+            case 91:
               return _context4.abrupt('return', true);
 
-            case 89:
+            case 92:
             case 'end':
               return _context4.stop();
           }
@@ -14325,7 +14339,7 @@ var Index = function () {
 
             case 3:
               r = _context5.sent;
-              root = {};
+              root = { viewpoint: this.viewpoint };
 
               for (i = 0; i < r.length; i += 1) {
                 root[r[i].path] = r[i].hash;
@@ -15010,7 +15024,7 @@ var Index = function () {
 
             case 24:
               if (_Object$keys(recipientIdentities).length) {
-                _context18.next = 34;
+                _context18.next = 33;
                 break;
               }
 
@@ -15025,16 +15039,13 @@ var Index = function () {
               _id2.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
               _id2.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
               // TODO: take msg author trust into account
-              if (msg.isPositive()) {
-                _id2.data.trustDistance = msg.distance + 1;
-              }
-              _context18.next = 33;
+              _context18.next = 32;
               return this._saveIdentityToIpfs(_id2);
 
-            case 33:
+            case 32:
               recipientIdentities[_id2.ipfsHash] = _id2;
 
-            case 34:
+            case 33:
               msgIndexKey = Index.getMsgIndexKey(msg);
 
               msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(':') + 1);
@@ -15052,7 +15063,7 @@ var Index = function () {
 
                       case 3:
                         if (!recipientIdentities.hasOwnProperty(id.ipfsHash)) {
-                          _context17.next = 7;
+                          _context17.next = 8;
                           break;
                         }
 
@@ -15070,23 +15081,42 @@ var Index = function () {
                             id.data.attrs.push({ name: a1[0], val: a1[1], conf: 1, ref: 0 });
                           }
                         });
-                        _context17.next = 7;
+                        if (msg.signedData.type === 'rating') {
+                          if (msg.isPositive()) {
+                            id.data.trustDistance = msg.distance + 1;
+                            id.data.receivedPositive++;
+                          } else if (msg.isNegative()) {
+                            id.data.receivedNegative++;
+                          } else {
+                            id.data.receivedNeutral++;
+                          }
+                        }
+                        _context17.next = 8;
                         return id.receivedIndex.put(msgIndexKey, msg);
 
-                      case 7:
+                      case 8:
                         if (!authorIdentities.hasOwnProperty(id.ipfsHash)) {
-                          _context17.next = 10;
+                          _context17.next = 12;
                           break;
                         }
 
-                        _context17.next = 10;
+                        if (msg.signedData.type === 'rating') {
+                          if (msg.isPositive()) {
+                            id.data.sentPositive++;
+                          } else if (msg.isNegative()) {
+                            id.data.sentNegative++;
+                          } else {
+                            id.data.sentNeutral++;
+                          }
+                        }
+                        _context17.next = 12;
                         return id.sentIndex.put(msgIndexKey, msg);
 
-                      case 10:
-                        _context17.next = 12;
+                      case 12:
+                        _context17.next = 14;
                         return _this2._addIdentityToIndexes(id);
 
-                      case 12:
+                      case 14:
                       case 'end':
                         return _context17.stop();
                     }
@@ -15095,20 +15125,20 @@ var Index = function () {
               });
               _i2 = 0;
 
-            case 39:
+            case 38:
               if (!(_i2 < ids.length)) {
-                _context18.next = 44;
+                _context18.next = 43;
                 break;
               }
 
-              return _context18.delegateYield(_loop(_i2), 't0', 41);
+              return _context18.delegateYield(_loop(_i2), 't0', 40);
 
-            case 41:
+            case 40:
               _i2++;
-              _context18.next = 39;
+              _context18.next = 38;
               break;
 
-            case 44:
+            case 43:
             case 'end':
               return _context18.stop();
           }

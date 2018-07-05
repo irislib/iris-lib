@@ -16,6 +16,9 @@ class Identity {
     this.data.receivedNegative |= 0;
     this.data.receivedPositive |= 0;
     this.data.receivedNeutral |= 0;
+    this.data.sentNegative |= 0;
+    this.data.sentPositive |= 0;
+    this.data.sentNeutral |= 0;
     this.data.trustDistance = this.data.hasOwnProperty(`trustDistance`) ? this.data.trustDistance : 1000;
     this.data.attrs.forEach(a => {
       if (!this.linkTo && Attribute.isUniqueType(a.name)) {

@@ -22,53 +22,6 @@ beforeAll(async () => {
   return true;
 });
 
-function testIndex(i) {
-  let p;
-  test('add trust rating to bob', async () => {
-    const msg = identifi.Message.createRating({recipient:[['email', 'bob@example.com']], rating:10}, key);
-    const r = await i.addMessage(msg);
-    expect(typeof r).toBe('string');
-  });
-  test('get added identity', async () => {
-    p = await i.get('bob@example.com');
-    expect(p).toBeInstanceOf(identifi.Identity);
-    expect(p.data.trustDistance).toBe(1);
-  });
-  test('get messages received by bob', async () => {
-    const r = await i.getReceivedMsgs(p);
-    expect(r.length).toBe(1);
-  });
-  test('get messages sent by bob', async () => {
-    const r = await i.getSentMsgs(p);
-    expect(r.length).toBe(0);
-  });
-  test('get messages sent by self', async () => {
-    const viewpoint = await i.getViewpoint();
-    expect(viewpoint).toBeInstanceOf(identifi.Identity);
-    const r = await i.getSentMsgs(viewpoint);
-    expect(r.length).toBe(1);
-  });
-  test('add name to self identity', async () => {
-    let viewpoint = await i.getViewpoint();
-    expect(viewpoint).toBeInstanceOf(identifi.Identity);
-    const recipient = [['name', 'Alice']];
-    viewpoint.data.attrs.forEach(a => {
-      recipient.push([a.name, a.val]);
-    });
-    const msg = identifi.Message.createVerification({recipient}, key);
-    const r = await i.addMessage(msg);
-    viewpoint = await i.getViewpoint();
-    expect(viewpoint.data.attrs.length).toBe(2);
-    expect(viewpoint.mostVerifiedAttributes.name.attribute.val).toBe('Alice');
-  });
-  test('get viewpoint identity by searching the default keyID', async () => {
-    const defaultKey = identifi.util.getDefaultKey();
-    p = await i.get(defaultKey.keyID, 'keyID');
-    expect(p).toBeInstanceOf(identifi.Identity);
-    expect(p.data.trustDistance).toBe(0);
-  });
-}
-
 describe('local index', async () => {
   let i, h;
   test('create new Index', async () => {
@@ -86,6 +39,9 @@ describe('local index', async () => {
       p = await i.get('bob@example.com');
       expect(p).toBeInstanceOf(identifi.Identity);
       expect(p.data.trustDistance).toBe(1);
+      expect(p.data.receivedPositive).toBe(1);
+      expect(p.data.receivedNeutral).toBe(0);
+      expect(p.data.receivedNegative).toBe(0);
     });
     test('get messages received by bob', async () => {
       const r = await i.getReceivedMsgs(p);
@@ -130,6 +86,7 @@ describe('local index', async () => {
     p = await i.get(defaultKey.keyID, 'keyID');
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(p.data.trustDistance).toBe(0);
+    expect(p.data.sentPositive).toBe(1);
   });
   describe('save & load', async () => {
     test('save index', async () => {
