@@ -331,14 +331,18 @@ class Index {
 
   async getAttributeTrustDistance(a) {
     if (!Attribute.isUniqueType(a.name)) {
-      return 99;
+      return;
     }
     const id = await this.get(a.val, a.name);
-    return id && id.data.hasOwnProperty(`trustDistance`) ? id.data.trustDistance : 99;
+    return id && id.data && id.data.trustDistance;
   }
 
   async getMsgTrustDistance(msg) {
-    let shortestDistance = 99;
+    let shortestDistance = 1000;
+    const signer = await this.get(msg.getSignerKeyID(), `keyID`);
+    if (!signer) {
+      return;
+    }
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = new Attribute(msg.signedData.author[i]);
       if (Attribute.equals(a, this.viewpoint)) {
@@ -350,7 +354,7 @@ class Index {
         }
       }
     }
-    return shortestDistance;
+    return shortestDistance < 1000 ? shortestDistance : undefined;
   }
 
   async _updateIdentityIndexesByMsg(msg) {
@@ -373,8 +377,6 @@ class Index {
         recipientIdentities[id.ipfsHash] = id;
       }
     }
-    // TODO: update identity stats
-    // TODO: check message signer as well
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
       const attrs = [];
       msg.signedData.recipient.forEach(a => {
@@ -442,7 +444,7 @@ class Index {
   async addMessage(msg: Message, updateIdentityIndexes = true) {
     if (this.ipfs) {
       msg.distance = await this.getMsgTrustDistance(msg);
-      if (msg.distance === 99) {
+      if (msg.distance === undefined) {
         return; // do not save messages from untrusted author
       }
       let indexKey = Index.getMsgIndexKey(msg);

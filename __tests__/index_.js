@@ -58,10 +58,39 @@ describe('local index', async () => {
       expect(r.length).toBe(1);
     });
   });
+  describe('add more identities', async () => {
+    test('bob -> carl', async () => {
+      let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'carl@example.com']], rating:10}, key);
+      await i.addMessage(msg);
+      msg = identifi.Message.createRating({author: [['email', 'carl@example.com']], recipient: [['email', 'david@example.com']], rating:10}, key);
+      await i.addMessage(msg);
+      p = await i.get('david@example.com');
+      expect(p.data.trustDistance).toBe(3);
+    });
+  });
+  describe ('untrusted key', async () => {
+    const u = identifi.util.generateKey();
+    test('should not create new identity', async () => {
+      let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'angus@example.com']], rating:10}, u);
+      await i.addMessage(msg);
+      p = await i.get('angus@example.com');
+      expect(p).toBeUndefined();
+    });
+    test('should not affect scores', async () => {
+      p = await i.get('david@example.com');
+      const pos = p.data.receivedPositive;
+      let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'david@example.com']], rating:10}, u);
+      await i.addMessage(msg);
+      p = await i.get('david@example.com');
+      expect(p.data.receivedPositive).toEqual(pos);
+    });
+  });
   describe('adding attributes to an identity', async () => {
+    let c;
     test('get identity count', async () => {
       const r = await i.search('');
-      expect(r.length).toEqual(2);
+      c = r.length;
+      expect(r.length).toBeGreaterThan(1);
     });
     test('add name to self identity', async () => {
       let viewpoint = await i.getViewpoint();
@@ -78,7 +107,7 @@ describe('local index', async () => {
     });
     test('identity count should remain the same', async () => {
       const r = await i.search('');
-      expect(r.length).toEqual(2);
+      expect(r.length).toEqual(c);
     });
   });
   test('get viewpoint identity by searching the default keyID', async () => {
