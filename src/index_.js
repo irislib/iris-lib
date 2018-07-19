@@ -4,6 +4,8 @@ import Message from './message';
 import Identity from './identity';
 import Attribute from './attribute';
 import fetch from 'node-fetch';
+import Gun from 'gun';
+import Gthen from 'gun/lib/then';
 
 const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
 const DEFAULT_STATIC_FALLBACK_INDEX = `/ipfs/QmPxLM631zJQ12tUDWs55LkGqqroFZKHeLjAZ2XwL9Miu3`;
@@ -18,7 +20,8 @@ const DEFAULT_TIMEOUT = 10000;
 
 // TODO: make the whole thing use GUN for indexing and flush onto IPFS
 class Index {
-  constructor(ipfs, viewpoint) {
+  constructor(ipfs, viewpoint, gun) {
+    this.gun = gun || new Gun();
     if (ipfs) {
       this.ipfs = ipfs;
       this.storage = new btree.IPFSStorage(ipfs);
@@ -223,7 +226,8 @@ class Index {
   async getViewpoint() {
     const r = await this.identitiesByTrustDistance.searchText(`00`, 1);
     if (r.length) {
-      const p = await this.storage.get(r[0].value);
+      //const p = await this.storage.get(r[0].value);
+      const p = await this.gun.get(r[0].value).get('raw').then();
       const vp = new Identity(JSON.parse(p));
       await this._setSentRcvdIndexes(vp);
       return vp;
@@ -244,7 +248,8 @@ class Index {
 
     const profileUri = await this.identitiesBySearchKey.get(`${encodeURIComponent(value)}:${encodeURIComponent(type)}`);
     if (profileUri) {
-      const p = await this.storage.get(profileUri);
+      //const p = await this.storage.get(profileUri);
+      const p = await this.gun.get(profileUri).get('raw').then();
       const id = new Identity(JSON.parse(p));
       id.ipfsHash = profileUri;
       await this._setSentRcvdIndexes(id);
@@ -275,6 +280,7 @@ class Index {
     const r = await this.ipfs.files.add(buffer);
     const hash = r.length ? r[0].hash : ``;
     id.ipfsHash = hash;
+    this.gun.get(hash).get('raw').put(JSON.stringify(id.data));
     return hash;
   }
 
@@ -497,7 +503,8 @@ class Index {
         for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {
           if (r[i].value && !identitiesByHash.hasOwnProperty(r[i].value)) {
             try {
-              const d = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
+              //const d = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
+              const d = JSON.parse(await this.gun.get(r[i].value).get('raw').then());
               const id = new Identity(d);
               id.ipfsHash = r[i].value;
               id.cursor = r[i].key;
