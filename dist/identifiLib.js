@@ -3348,7 +3348,7 @@
 	};
 	});
 
-	var _typeof = unwrapExports(_typeof_1);
+	unwrapExports(_typeof_1);
 
 	var possibleConstructorReturn = createCommonjsModule(function (module, exports) {
 
@@ -4178,813 +4178,6 @@
 	  }
 	};
 
-	var runtime = createCommonjsModule(function (module) {
-	/**
-	 * Copyright (c) 2014-present, Facebook, Inc.
-	 *
-	 * This source code is licensed under the MIT license found in the
-	 * LICENSE file in the root directory of this source tree.
-	 */
-
-	!(function(global) {
-
-	  var Op = Object.prototype;
-	  var hasOwn = Op.hasOwnProperty;
-	  var undefined; // More compressible than void 0.
-	  var $Symbol = typeof Symbol === "function" ? Symbol : {};
-	  var iteratorSymbol = $Symbol.iterator || "@@iterator";
-	  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
-	  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
-	  var runtime = global.regeneratorRuntime;
-	  if (runtime) {
-	    {
-	      // If regeneratorRuntime is defined globally and we're in a module,
-	      // make the exports object identical to regeneratorRuntime.
-	      module.exports = runtime;
-	    }
-	    // Don't bother evaluating the rest of this file if the runtime was
-	    // already defined globally.
-	    return;
-	  }
-
-	  // Define the runtime globally (as expected by generated code) as either
-	  // module.exports (if we're in a module) or a new, empty object.
-	  runtime = global.regeneratorRuntime = module.exports;
-
-	  function wrap(innerFn, outerFn, self, tryLocsList) {
-	    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
-	    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
-	    var generator = Object.create(protoGenerator.prototype);
-	    var context = new Context(tryLocsList || []);
-
-	    // The ._invoke method unifies the implementations of the .next,
-	    // .throw, and .return methods.
-	    generator._invoke = makeInvokeMethod(innerFn, self, context);
-
-	    return generator;
-	  }
-	  runtime.wrap = wrap;
-
-	  // Try/catch helper to minimize deoptimizations. Returns a completion
-	  // record like context.tryEntries[i].completion. This interface could
-	  // have been (and was previously) designed to take a closure to be
-	  // invoked without arguments, but in all the cases we care about we
-	  // already have an existing method we want to call, so there's no need
-	  // to create a new function object. We can even get away with assuming
-	  // the method takes exactly one argument, since that happens to be true
-	  // in every case, so we don't have to touch the arguments object. The
-	  // only additional allocation required is the completion record, which
-	  // has a stable shape and so hopefully should be cheap to allocate.
-	  function tryCatch(fn, obj, arg) {
-	    try {
-	      return { type: "normal", arg: fn.call(obj, arg) };
-	    } catch (err) {
-	      return { type: "throw", arg: err };
-	    }
-	  }
-
-	  var GenStateSuspendedStart = "suspendedStart";
-	  var GenStateSuspendedYield = "suspendedYield";
-	  var GenStateExecuting = "executing";
-	  var GenStateCompleted = "completed";
-
-	  // Returning this object from the innerFn has the same effect as
-	  // breaking out of the dispatch switch statement.
-	  var ContinueSentinel = {};
-
-	  // Dummy constructor functions that we use as the .constructor and
-	  // .constructor.prototype properties for functions that return Generator
-	  // objects. For full spec compliance, you may wish to configure your
-	  // minifier not to mangle the names of these two functions.
-	  function Generator() {}
-	  function GeneratorFunction() {}
-	  function GeneratorFunctionPrototype() {}
-
-	  // This is a polyfill for %IteratorPrototype% for environments that
-	  // don't natively support it.
-	  var IteratorPrototype = {};
-	  IteratorPrototype[iteratorSymbol] = function () {
-	    return this;
-	  };
-
-	  var getProto = Object.getPrototypeOf;
-	  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
-	  if (NativeIteratorPrototype &&
-	      NativeIteratorPrototype !== Op &&
-	      hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
-	    // This environment has a native %IteratorPrototype%; use it instead
-	    // of the polyfill.
-	    IteratorPrototype = NativeIteratorPrototype;
-	  }
-
-	  var Gp = GeneratorFunctionPrototype.prototype =
-	    Generator.prototype = Object.create(IteratorPrototype);
-	  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
-	  GeneratorFunctionPrototype.constructor = GeneratorFunction;
-	  GeneratorFunctionPrototype[toStringTagSymbol] =
-	    GeneratorFunction.displayName = "GeneratorFunction";
-
-	  // Helper for defining the .next, .throw, and .return methods of the
-	  // Iterator interface in terms of a single ._invoke method.
-	  function defineIteratorMethods(prototype) {
-	    ["next", "throw", "return"].forEach(function(method) {
-	      prototype[method] = function(arg) {
-	        return this._invoke(method, arg);
-	      };
-	    });
-	  }
-
-	  runtime.isGeneratorFunction = function(genFun) {
-	    var ctor = typeof genFun === "function" && genFun.constructor;
-	    return ctor
-	      ? ctor === GeneratorFunction ||
-	        // For the native GeneratorFunction constructor, the best we can
-	        // do is to check its .name property.
-	        (ctor.displayName || ctor.name) === "GeneratorFunction"
-	      : false;
-	  };
-
-	  runtime.mark = function(genFun) {
-	    if (Object.setPrototypeOf) {
-	      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
-	    } else {
-	      genFun.__proto__ = GeneratorFunctionPrototype;
-	      if (!(toStringTagSymbol in genFun)) {
-	        genFun[toStringTagSymbol] = "GeneratorFunction";
-	      }
-	    }
-	    genFun.prototype = Object.create(Gp);
-	    return genFun;
-	  };
-
-	  // Within the body of any async function, `await x` is transformed to
-	  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
-	  // `hasOwn.call(value, "__await")` to determine if the yielded value is
-	  // meant to be awaited.
-	  runtime.awrap = function(arg) {
-	    return { __await: arg };
-	  };
-
-	  function AsyncIterator(generator) {
-	    function invoke(method, arg, resolve, reject) {
-	      var record = tryCatch(generator[method], generator, arg);
-	      if (record.type === "throw") {
-	        reject(record.arg);
-	      } else {
-	        var result = record.arg;
-	        var value = result.value;
-	        if (value &&
-	            typeof value === "object" &&
-	            hasOwn.call(value, "__await")) {
-	          return Promise.resolve(value.__await).then(function(value) {
-	            invoke("next", value, resolve, reject);
-	          }, function(err) {
-	            invoke("throw", err, resolve, reject);
-	          });
-	        }
-
-	        return Promise.resolve(value).then(function(unwrapped) {
-	          // When a yielded Promise is resolved, its final value becomes
-	          // the .value of the Promise<{value,done}> result for the
-	          // current iteration. If the Promise is rejected, however, the
-	          // result for this iteration will be rejected with the same
-	          // reason. Note that rejections of yielded Promises are not
-	          // thrown back into the generator function, as is the case
-	          // when an awaited Promise is rejected. This difference in
-	          // behavior between yield and await is important, because it
-	          // allows the consumer to decide what to do with the yielded
-	          // rejection (swallow it and continue, manually .throw it back
-	          // into the generator, abandon iteration, whatever). With
-	          // await, by contrast, there is no opportunity to examine the
-	          // rejection reason outside the generator function, so the
-	          // only option is to throw it from the await expression, and
-	          // let the generator function handle the exception.
-	          result.value = unwrapped;
-	          resolve(result);
-	        }, reject);
-	      }
-	    }
-
-	    var previousPromise;
-
-	    function enqueue(method, arg) {
-	      function callInvokeWithMethodAndArg() {
-	        return new Promise(function(resolve, reject) {
-	          invoke(method, arg, resolve, reject);
-	        });
-	      }
-
-	      return previousPromise =
-	        // If enqueue has been called before, then we want to wait until
-	        // all previous Promises have been resolved before calling invoke,
-	        // so that results are always delivered in the correct order. If
-	        // enqueue has not been called before, then it is important to
-	        // call invoke immediately, without waiting on a callback to fire,
-	        // so that the async generator function has the opportunity to do
-	        // any necessary setup in a predictable way. This predictability
-	        // is why the Promise constructor synchronously invokes its
-	        // executor callback, and why async functions synchronously
-	        // execute code before the first await. Since we implement simple
-	        // async functions in terms of async generators, it is especially
-	        // important to get this right, even though it requires care.
-	        previousPromise ? previousPromise.then(
-	          callInvokeWithMethodAndArg,
-	          // Avoid propagating failures to Promises returned by later
-	          // invocations of the iterator.
-	          callInvokeWithMethodAndArg
-	        ) : callInvokeWithMethodAndArg();
-	    }
-
-	    // Define the unified helper method that is used to implement .next,
-	    // .throw, and .return (see defineIteratorMethods).
-	    this._invoke = enqueue;
-	  }
-
-	  defineIteratorMethods(AsyncIterator.prototype);
-	  AsyncIterator.prototype[asyncIteratorSymbol] = function () {
-	    return this;
-	  };
-	  runtime.AsyncIterator = AsyncIterator;
-
-	  // Note that simple async functions are implemented on top of
-	  // AsyncIterator objects; they just return a Promise for the value of
-	  // the final result produced by the iterator.
-	  runtime.async = function(innerFn, outerFn, self, tryLocsList) {
-	    var iter = new AsyncIterator(
-	      wrap(innerFn, outerFn, self, tryLocsList)
-	    );
-
-	    return runtime.isGeneratorFunction(outerFn)
-	      ? iter // If outerFn is a generator, return the full iterator.
-	      : iter.next().then(function(result) {
-	          return result.done ? result.value : iter.next();
-	        });
-	  };
-
-	  function makeInvokeMethod(innerFn, self, context) {
-	    var state = GenStateSuspendedStart;
-
-	    return function invoke(method, arg) {
-	      if (state === GenStateExecuting) {
-	        throw new Error("Generator is already running");
-	      }
-
-	      if (state === GenStateCompleted) {
-	        if (method === "throw") {
-	          throw arg;
-	        }
-
-	        // Be forgiving, per 25.3.3.3.3 of the spec:
-	        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
-	        return doneResult();
-	      }
-
-	      context.method = method;
-	      context.arg = arg;
-
-	      while (true) {
-	        var delegate = context.delegate;
-	        if (delegate) {
-	          var delegateResult = maybeInvokeDelegate(delegate, context);
-	          if (delegateResult) {
-	            if (delegateResult === ContinueSentinel) continue;
-	            return delegateResult;
-	          }
-	        }
-
-	        if (context.method === "next") {
-	          // Setting context._sent for legacy support of Babel's
-	          // function.sent implementation.
-	          context.sent = context._sent = context.arg;
-
-	        } else if (context.method === "throw") {
-	          if (state === GenStateSuspendedStart) {
-	            state = GenStateCompleted;
-	            throw context.arg;
-	          }
-
-	          context.dispatchException(context.arg);
-
-	        } else if (context.method === "return") {
-	          context.abrupt("return", context.arg);
-	        }
-
-	        state = GenStateExecuting;
-
-	        var record = tryCatch(innerFn, self, context);
-	        if (record.type === "normal") {
-	          // If an exception is thrown from innerFn, we leave state ===
-	          // GenStateExecuting and loop back for another invocation.
-	          state = context.done
-	            ? GenStateCompleted
-	            : GenStateSuspendedYield;
-
-	          if (record.arg === ContinueSentinel) {
-	            continue;
-	          }
-
-	          return {
-	            value: record.arg,
-	            done: context.done
-	          };
-
-	        } else if (record.type === "throw") {
-	          state = GenStateCompleted;
-	          // Dispatch the exception by looping back around to the
-	          // context.dispatchException(context.arg) call above.
-	          context.method = "throw";
-	          context.arg = record.arg;
-	        }
-	      }
-	    };
-	  }
-
-	  // Call delegate.iterator[context.method](context.arg) and handle the
-	  // result, either by returning a { value, done } result from the
-	  // delegate iterator, or by modifying context.method and context.arg,
-	  // setting context.delegate to null, and returning the ContinueSentinel.
-	  function maybeInvokeDelegate(delegate, context) {
-	    var method = delegate.iterator[context.method];
-	    if (method === undefined) {
-	      // A .throw or .return when the delegate iterator has no .throw
-	      // method always terminates the yield* loop.
-	      context.delegate = null;
-
-	      if (context.method === "throw") {
-	        if (delegate.iterator.return) {
-	          // If the delegate iterator has a return method, give it a
-	          // chance to clean up.
-	          context.method = "return";
-	          context.arg = undefined;
-	          maybeInvokeDelegate(delegate, context);
-
-	          if (context.method === "throw") {
-	            // If maybeInvokeDelegate(context) changed context.method from
-	            // "return" to "throw", let that override the TypeError below.
-	            return ContinueSentinel;
-	          }
-	        }
-
-	        context.method = "throw";
-	        context.arg = new TypeError(
-	          "The iterator does not provide a 'throw' method");
-	      }
-
-	      return ContinueSentinel;
-	    }
-
-	    var record = tryCatch(method, delegate.iterator, context.arg);
-
-	    if (record.type === "throw") {
-	      context.method = "throw";
-	      context.arg = record.arg;
-	      context.delegate = null;
-	      return ContinueSentinel;
-	    }
-
-	    var info = record.arg;
-
-	    if (! info) {
-	      context.method = "throw";
-	      context.arg = new TypeError("iterator result is not an object");
-	      context.delegate = null;
-	      return ContinueSentinel;
-	    }
-
-	    if (info.done) {
-	      // Assign the result of the finished delegate to the temporary
-	      // variable specified by delegate.resultName (see delegateYield).
-	      context[delegate.resultName] = info.value;
-
-	      // Resume execution at the desired location (see delegateYield).
-	      context.next = delegate.nextLoc;
-
-	      // If context.method was "throw" but the delegate handled the
-	      // exception, let the outer generator proceed normally. If
-	      // context.method was "next", forget context.arg since it has been
-	      // "consumed" by the delegate iterator. If context.method was
-	      // "return", allow the original .return call to continue in the
-	      // outer generator.
-	      if (context.method !== "return") {
-	        context.method = "next";
-	        context.arg = undefined;
-	      }
-
-	    } else {
-	      // Re-yield the result returned by the delegate method.
-	      return info;
-	    }
-
-	    // The delegate iterator is finished, so forget it and continue with
-	    // the outer generator.
-	    context.delegate = null;
-	    return ContinueSentinel;
-	  }
-
-	  // Define Generator.prototype.{next,throw,return} in terms of the
-	  // unified ._invoke helper method.
-	  defineIteratorMethods(Gp);
-
-	  Gp[toStringTagSymbol] = "Generator";
-
-	  // A Generator should always return itself as the iterator object when the
-	  // @@iterator function is called on it. Some browsers' implementations of the
-	  // iterator prototype chain incorrectly implement this, causing the Generator
-	  // object to not be returned from this call. This ensures that doesn't happen.
-	  // See https://github.com/facebook/regenerator/issues/274 for more details.
-	  Gp[iteratorSymbol] = function() {
-	    return this;
-	  };
-
-	  Gp.toString = function() {
-	    return "[object Generator]";
-	  };
-
-	  function pushTryEntry(locs) {
-	    var entry = { tryLoc: locs[0] };
-
-	    if (1 in locs) {
-	      entry.catchLoc = locs[1];
-	    }
-
-	    if (2 in locs) {
-	      entry.finallyLoc = locs[2];
-	      entry.afterLoc = locs[3];
-	    }
-
-	    this.tryEntries.push(entry);
-	  }
-
-	  function resetTryEntry(entry) {
-	    var record = entry.completion || {};
-	    record.type = "normal";
-	    delete record.arg;
-	    entry.completion = record;
-	  }
-
-	  function Context(tryLocsList) {
-	    // The root entry object (effectively a try statement without a catch
-	    // or a finally block) gives us a place to store values thrown from
-	    // locations where there is no enclosing try statement.
-	    this.tryEntries = [{ tryLoc: "root" }];
-	    tryLocsList.forEach(pushTryEntry, this);
-	    this.reset(true);
-	  }
-
-	  runtime.keys = function(object) {
-	    var keys = [];
-	    for (var key in object) {
-	      keys.push(key);
-	    }
-	    keys.reverse();
-
-	    // Rather than returning an object with a next method, we keep
-	    // things simple and return the next function itself.
-	    return function next() {
-	      while (keys.length) {
-	        var key = keys.pop();
-	        if (key in object) {
-	          next.value = key;
-	          next.done = false;
-	          return next;
-	        }
-	      }
-
-	      // To avoid creating an additional object, we just hang the .value
-	      // and .done properties off the next function object itself. This
-	      // also ensures that the minifier will not anonymize the function.
-	      next.done = true;
-	      return next;
-	    };
-	  };
-
-	  function values(iterable) {
-	    if (iterable) {
-	      var iteratorMethod = iterable[iteratorSymbol];
-	      if (iteratorMethod) {
-	        return iteratorMethod.call(iterable);
-	      }
-
-	      if (typeof iterable.next === "function") {
-	        return iterable;
-	      }
-
-	      if (!isNaN(iterable.length)) {
-	        var i = -1, next = function next() {
-	          while (++i < iterable.length) {
-	            if (hasOwn.call(iterable, i)) {
-	              next.value = iterable[i];
-	              next.done = false;
-	              return next;
-	            }
-	          }
-
-	          next.value = undefined;
-	          next.done = true;
-
-	          return next;
-	        };
-
-	        return next.next = next;
-	      }
-	    }
-
-	    // Return an iterator with no values.
-	    return { next: doneResult };
-	  }
-	  runtime.values = values;
-
-	  function doneResult() {
-	    return { value: undefined, done: true };
-	  }
-
-	  Context.prototype = {
-	    constructor: Context,
-
-	    reset: function(skipTempReset) {
-	      this.prev = 0;
-	      this.next = 0;
-	      // Resetting context._sent for legacy support of Babel's
-	      // function.sent implementation.
-	      this.sent = this._sent = undefined;
-	      this.done = false;
-	      this.delegate = null;
-
-	      this.method = "next";
-	      this.arg = undefined;
-
-	      this.tryEntries.forEach(resetTryEntry);
-
-	      if (!skipTempReset) {
-	        for (var name in this) {
-	          // Not sure about the optimal order of these conditions:
-	          if (name.charAt(0) === "t" &&
-	              hasOwn.call(this, name) &&
-	              !isNaN(+name.slice(1))) {
-	            this[name] = undefined;
-	          }
-	        }
-	      }
-	    },
-
-	    stop: function() {
-	      this.done = true;
-
-	      var rootEntry = this.tryEntries[0];
-	      var rootRecord = rootEntry.completion;
-	      if (rootRecord.type === "throw") {
-	        throw rootRecord.arg;
-	      }
-
-	      return this.rval;
-	    },
-
-	    dispatchException: function(exception) {
-	      if (this.done) {
-	        throw exception;
-	      }
-
-	      var context = this;
-	      function handle(loc, caught) {
-	        record.type = "throw";
-	        record.arg = exception;
-	        context.next = loc;
-
-	        if (caught) {
-	          // If the dispatched exception was caught by a catch block,
-	          // then let that catch block handle the exception normally.
-	          context.method = "next";
-	          context.arg = undefined;
-	        }
-
-	        return !! caught;
-	      }
-
-	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-	        var entry = this.tryEntries[i];
-	        var record = entry.completion;
-
-	        if (entry.tryLoc === "root") {
-	          // Exception thrown outside of any try block that could handle
-	          // it, so set the completion value of the entire function to
-	          // throw the exception.
-	          return handle("end");
-	        }
-
-	        if (entry.tryLoc <= this.prev) {
-	          var hasCatch = hasOwn.call(entry, "catchLoc");
-	          var hasFinally = hasOwn.call(entry, "finallyLoc");
-
-	          if (hasCatch && hasFinally) {
-	            if (this.prev < entry.catchLoc) {
-	              return handle(entry.catchLoc, true);
-	            } else if (this.prev < entry.finallyLoc) {
-	              return handle(entry.finallyLoc);
-	            }
-
-	          } else if (hasCatch) {
-	            if (this.prev < entry.catchLoc) {
-	              return handle(entry.catchLoc, true);
-	            }
-
-	          } else if (hasFinally) {
-	            if (this.prev < entry.finallyLoc) {
-	              return handle(entry.finallyLoc);
-	            }
-
-	          } else {
-	            throw new Error("try statement without catch or finally");
-	          }
-	        }
-	      }
-	    },
-
-	    abrupt: function(type, arg) {
-	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-	        var entry = this.tryEntries[i];
-	        if (entry.tryLoc <= this.prev &&
-	            hasOwn.call(entry, "finallyLoc") &&
-	            this.prev < entry.finallyLoc) {
-	          var finallyEntry = entry;
-	          break;
-	        }
-	      }
-
-	      if (finallyEntry &&
-	          (type === "break" ||
-	           type === "continue") &&
-	          finallyEntry.tryLoc <= arg &&
-	          arg <= finallyEntry.finallyLoc) {
-	        // Ignore the finally entry if control is not jumping to a
-	        // location outside the try/catch block.
-	        finallyEntry = null;
-	      }
-
-	      var record = finallyEntry ? finallyEntry.completion : {};
-	      record.type = type;
-	      record.arg = arg;
-
-	      if (finallyEntry) {
-	        this.method = "next";
-	        this.next = finallyEntry.finallyLoc;
-	        return ContinueSentinel;
-	      }
-
-	      return this.complete(record);
-	    },
-
-	    complete: function(record, afterLoc) {
-	      if (record.type === "throw") {
-	        throw record.arg;
-	      }
-
-	      if (record.type === "break" ||
-	          record.type === "continue") {
-	        this.next = record.arg;
-	      } else if (record.type === "return") {
-	        this.rval = this.arg = record.arg;
-	        this.method = "return";
-	        this.next = "end";
-	      } else if (record.type === "normal" && afterLoc) {
-	        this.next = afterLoc;
-	      }
-
-	      return ContinueSentinel;
-	    },
-
-	    finish: function(finallyLoc) {
-	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-	        var entry = this.tryEntries[i];
-	        if (entry.finallyLoc === finallyLoc) {
-	          this.complete(entry.completion, entry.afterLoc);
-	          resetTryEntry(entry);
-	          return ContinueSentinel;
-	        }
-	      }
-	    },
-
-	    "catch": function(tryLoc) {
-	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
-	        var entry = this.tryEntries[i];
-	        if (entry.tryLoc === tryLoc) {
-	          var record = entry.completion;
-	          if (record.type === "throw") {
-	            var thrown = record.arg;
-	            resetTryEntry(entry);
-	          }
-	          return thrown;
-	        }
-	      }
-
-	      // The context.catch method must only be called with a location
-	      // argument that corresponds to a known catch block.
-	      throw new Error("illegal catch attempt");
-	    },
-
-	    delegateYield: function(iterable, resultName, nextLoc) {
-	      this.delegate = {
-	        iterator: values(iterable),
-	        resultName: resultName,
-	        nextLoc: nextLoc
-	      };
-
-	      if (this.method === "next") {
-	        // Deliberately forget the last sent value so that we don't
-	        // accidentally pass it on to the delegate.
-	        this.arg = undefined;
-	      }
-
-	      return ContinueSentinel;
-	    }
-	  };
-	})(
-	  // In sloppy mode, unbound `this` refers to the global object, fallback to
-	  // Function constructor if we're in global strict mode. That is sadly a form
-	  // of indirect eval which violates Content Security Policy.
-	  (function() { return this })() || Function("return this")()
-	);
-	});
-
-	/**
-	 * Copyright (c) 2014-present, Facebook, Inc.
-	 *
-	 * This source code is licensed under the MIT license found in the
-	 * LICENSE file in the root directory of this source tree.
-	 */
-
-	// This method of obtaining a reference to the global object needs to be
-	// kept identical to the way it is obtained in runtime.js
-	var g = (function() { return this })() || Function("return this")();
-
-	// Use `getOwnPropertyNames` because not all browsers support calling
-	// `hasOwnProperty` on the global `self` object in a worker. See #183.
-	var hadRuntime = g.regeneratorRuntime &&
-	  Object.getOwnPropertyNames(g).indexOf("regeneratorRuntime") >= 0;
-
-	// Save the old regeneratorRuntime in case it needs to be restored later.
-	var oldRuntime = hadRuntime && g.regeneratorRuntime;
-
-	// Force reevalutation of runtime.js.
-	g.regeneratorRuntime = undefined;
-
-	var runtimeModule = runtime;
-
-	if (hadRuntime) {
-	  // Restore the original runtime.
-	  g.regeneratorRuntime = oldRuntime;
-	} else {
-	  // Remove the global property added by runtime.js.
-	  try {
-	    delete g.regeneratorRuntime;
-	  } catch(e) {
-	    g.regeneratorRuntime = undefined;
-	  }
-	}
-
-	var regenerator = runtimeModule;
-
-	var asyncToGenerator = createCommonjsModule(function (module, exports) {
-
-	exports.__esModule = true;
-
-
-
-	var _promise2 = _interopRequireDefault(promise$1);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	exports.default = function (fn) {
-	  return function () {
-	    var gen = fn.apply(this, arguments);
-	    return new _promise2.default(function (resolve, reject) {
-	      function step(key, arg) {
-	        try {
-	          var info = gen[key](arg);
-	          var value = info.value;
-	        } catch (error) {
-	          reject(error);
-	          return;
-	        }
-
-	        if (info.done) {
-	          resolve(value);
-	        } else {
-	          return _promise2.default.resolve(value).then(function (value) {
-	            step("next", value);
-	          }, function (err) {
-	            step("throw", err);
-	          });
-	        }
-	      }
-
-	      return step("next");
-	    });
-	  };
-	};
-	});
-
-	var _asyncToGenerator = unwrapExports(asyncToGenerator);
-
 	// most Object methods by ES6 should accept primitives
 
 
@@ -5722,8 +4915,6 @@
 	  };
 
 	  Identity.appendSearchWidget = function appendSearchWidget(parentElement, index) {
-	    var _this2 = this;
-
 	    var form = document.createElement('form');
 
 	    var input = document.createElement('input');
@@ -5737,33 +4928,16 @@
 	    parentElement.appendChild(form);
 	    form.appendChild(input);
 	    form.appendChild(searchResults);
-	    input.addEventListener('keyup', _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee() {
-	      var r;
-	      return regenerator.wrap(function _callee$(_context) {
-	        while (1) {
-	          switch (_context.prev = _context.next) {
-	            case 0:
-	              _context.next = 2;
-	              return index.search(input.value);
-
-	            case 2:
-	              r = _context.sent;
-
-	              searchResults.innerHTML = '';
-	              r.sort(function (a, b) {
-	                return a.trustDistance - b.trustDistance;
-	              });
-	              r.forEach(function (i) {
-	                searchResults.appendChild(i.profileCard());
-	              });
-
-	            case 6:
-	            case 'end':
-	              return _context.stop();
-	          }
-	        }
-	      }, _callee, _this2);
-	    })));
+	    input.addEventListener('keyup', async function () {
+	      var r = await index.search(input.value);
+	      searchResults.innerHTML = '';
+	      r.sort(function (a, b) {
+	        return a.trustDistance - b.trustDistance;
+	      });
+	      r.forEach(function (i) {
+	        searchResults.appendChild(i.profileCard());
+	      });
+	    });
 	  };
 
 	  Identity._ordinal = function _ordinal(n) {
@@ -13734,74 +12908,23 @@
 	        this.viewpoint = { name: 'keyID', val: util.getDefaultKey().keyID, conf: 1, ref: 0 };
 	      }
 	      var vp = new Identity({ attrs: [this.viewpoint], trustDistance: 0 });
-	      this.ready = new _Promise(function () {
-	        var _ref = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee(resolve, reject) {
-	          return regenerator.wrap(function _callee$(_context) {
-	            while (1) {
-	              switch (_context.prev = _context.next) {
-	                case 0:
-	                  _context.prev = 0;
-	                  _context.next = 3;
-	                  return _this._setSentRcvdIndexes(vp);
-
-	                case 3:
-	                  _context.next = 5;
-	                  return _this._addIdentityToIndexes(vp);
-
-	                case 5:
-	                  resolve();
-	                  _context.next = 11;
-	                  break;
-
-	                case 8:
-	                  _context.prev = 8;
-	                  _context.t0 = _context['catch'](0);
-
-	                  reject(_context.t0);
-
-	                case 11:
-	                case 'end':
-	                  return _context.stop();
-	              }
-	            }
-	          }, _callee, _this, [[0, 8]]);
-	        }));
-
-	        return function (_x, _x2) {
-	          return _ref.apply(this, arguments);
-	        };
-	      }());
+	      this.ready = new _Promise(async function (resolve, reject) {
+	        try {
+	          await _this._setSentRcvdIndexes(vp);
+	          await _this._addIdentityToIndexes(vp);
+	          resolve();
+	        } catch (e) {
+	          reject(e);
+	        }
+	      });
 	    }
 	  }
 
-	  Index.create = function () {
-	    var _ref2 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee2(ipfs, viewpoint) {
-	      var i;
-	      return regenerator.wrap(function _callee2$(_context2) {
-	        while (1) {
-	          switch (_context2.prev = _context2.next) {
-	            case 0:
-	              i = new Index(ipfs, viewpoint);
-	              _context2.next = 3;
-	              return i.ready;
-
-	            case 3:
-	              return _context2.abrupt('return', i);
-
-	            case 4:
-	            case 'end':
-	              return _context2.stop();
-	          }
-	        }
-	      }, _callee2, this);
-	    }));
-
-	    function create(_x3, _x4) {
-	      return _ref2.apply(this, arguments);
-	    }
-
-	    return create;
-	  }();
+	  Index.create = async function create(ipfs, viewpoint) {
+	    var i = new Index(ipfs, viewpoint);
+	    await i.ready;
+	    return i;
+	  };
 
 	  Index.getMsgIndexKey = function getMsgIndexKey(msg) {
 	    var distance = parseInt(msg.distance);
@@ -13852,439 +12975,138 @@
 	    return indexKeys;
 	  };
 
-	  Index.load = function () {
-	    var _ref3 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee3(indexRoot, ipfs) {
-	      var i;
-	      return regenerator.wrap(function _callee3$(_context3) {
-	        while (1) {
-	          switch (_context3.prev = _context3.next) {
-	            case 0:
-	              i = new Index();
-	              _context3.next = 3;
-	              return i.init(indexRoot, ipfs);
+	  Index.load = async function load(indexRoot, ipfs) {
+	    var i = new Index();
+	    await i.init(indexRoot, ipfs);
+	    return i;
+	  };
 
-	            case 3:
-	              return _context3.abrupt('return', i);
+	  Index.prototype.init = async function init(indexRoot) {
+	    var ipfs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DEFAULT_IPFS_PROXIES;
+	    var timeout = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : DEFAULT_TIMEOUT;
 
-	            case 4:
-	            case 'end':
-	              return _context3.stop();
+	    var useDefaultIndex = false;
+	    if (typeof indexRoot === 'undefined') {
+	      useDefaultIndex = true;
+	      indexRoot = DEFAULT_INDEX;
+	    }
+	    if (typeof ipfs === 'string') {
+	      this.storage = new merkleBtree.IPFSGatewayStorage(ipfs);
+	    } else if (Array.isArray(ipfs)) {
+	      var url = void 0;
+	      for (var i = 0; i < ipfs.length; i++) {
+	        var res = void 0;
+	        var u = '' + ipfs[i] + indexRoot;
+	        try {
+	          res = await util.timeoutPromise(browser(u, { timeout: timeout }).catch(function () {}), timeout);
+	          if (!res) {
+	            console.log('fetching ' + u + ' timed out');
+	          }
+	        } catch (e) {
+	          console.log('fetching ' + u + ' failed:', e);
+	        }
+	        if (!(res && res.ok && res.status === 200) && useDefaultIndex) {
+	          // try static fallback
+	          u = '' + ipfs[i] + DEFAULT_STATIC_FALLBACK_INDEX;
+	          try {
+	            res = await util.timeoutPromise(browser(u, { timeout: timeout }).catch(function () {}), timeout);
+	            if (res) {
+	              indexRoot = DEFAULT_STATIC_FALLBACK_INDEX;
+	            } else {
+	              console.log('fetching ' + u + ' timed out');
+	            }
+	          } catch (e) {
+	            console.log('fetching ' + u + ' failed:', e);
 	          }
 	        }
-	      }, _callee3, this);
-	    }));
-
-	    function load(_x5, _x6) {
-	      return _ref3.apply(this, arguments);
-	    }
-
-	    return load;
-	  }();
-
-	  Index.prototype.init = function () {
-	    var _ref4 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee4(indexRoot) {
-	      var ipfs = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DEFAULT_IPFS_PROXIES;
-	      var timeout = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : DEFAULT_TIMEOUT;
-	      var useDefaultIndex, url, i, res, u, root, rootObj, vp;
-	      return regenerator.wrap(function _callee4$(_context4) {
-	        while (1) {
-	          switch (_context4.prev = _context4.next) {
-	            case 0:
-	              useDefaultIndex = false;
-
-	              if (typeof indexRoot === 'undefined') {
-	                useDefaultIndex = true;
-	                indexRoot = DEFAULT_INDEX;
-	              }
-
-	              if (!(typeof ipfs === 'string')) {
-	                _context4.next = 6;
-	                break;
-	              }
-
-	              this.storage = new merkleBtree.IPFSGatewayStorage(ipfs);
-	              _context4.next = 53;
-	              break;
-
-	            case 6:
-	              if (!Array.isArray(ipfs)) {
-	                _context4.next = 47;
-	                break;
-	              }
-
-	              url = void 0;
-	              i = 0;
-
-	            case 9:
-	              if (!(i < ipfs.length)) {
-	                _context4.next = 40;
-	                break;
-	              }
-
-	              res = void 0;
-	              u = '' + ipfs[i] + indexRoot;
-	              _context4.prev = 12;
-	              _context4.next = 15;
-	              return util.timeoutPromise(browser(u, { timeout: timeout }).catch(function () {}), timeout);
-
-	            case 15:
-	              res = _context4.sent;
-
-	              if (!res) {
-	                console.log('fetching ' + u + ' timed out');
-	              }
-	              _context4.next = 22;
-	              break;
-
-	            case 19:
-	              _context4.prev = 19;
-	              _context4.t0 = _context4['catch'](12);
-
-	              console.log('fetching ' + u + ' failed:', _context4.t0);
-
-	            case 22:
-	              if (!(!(res && res.ok && res.status === 200) && useDefaultIndex)) {
-	                _context4.next = 34;
-	                break;
-	              }
-
-	              // try static fallback
-	              u = '' + ipfs[i] + DEFAULT_STATIC_FALLBACK_INDEX;
-	              _context4.prev = 24;
-	              _context4.next = 27;
-	              return util.timeoutPromise(browser(u, { timeout: timeout }).catch(function () {}), timeout);
-
-	            case 27:
-	              res = _context4.sent;
-
-	              if (res) {
-	                indexRoot = DEFAULT_STATIC_FALLBACK_INDEX;
-	              } else {
-	                console.log('fetching ' + u + ' timed out');
-	              }
-	              _context4.next = 34;
-	              break;
-
-	            case 31:
-	              _context4.prev = 31;
-	              _context4.t1 = _context4['catch'](24);
-
-	              console.log('fetching ' + u + ' failed:', _context4.t1);
-
-	            case 34:
-	              if (!(res && res.ok && res.status === 200)) {
-	                _context4.next = 37;
-	                break;
-	              }
-
-	              url = ipfs[i];
-	              return _context4.abrupt('break', 40);
-
-	            case 37:
-	              i++;
-	              _context4.next = 9;
-	              break;
-
-	            case 40:
-	              if (!url) {
-	                _context4.next = 44;
-	                break;
-	              }
-
-	              this.storage = new merkleBtree.IPFSGatewayStorage(url);
-	              _context4.next = 45;
-	              break;
-
-	            case 44:
-	              throw 'Could not load index via given ipfs gateways';
-
-	            case 45:
-	              _context4.next = 53;
-	              break;
-
-	            case 47:
-	              if (!((typeof ipfs === 'undefined' ? 'undefined' : _typeof(ipfs)) === 'object')) {
-	                _context4.next = 52;
-	                break;
-	              }
-
-	              this.storage = new merkleBtree.IPFSStorage(ipfs);
-	              this.ipfs = ipfs;
-	              _context4.next = 53;
-	              break;
-
-	            case 52:
-	              throw 'ipfs param must be a gateway url, array of urls or a js-ipfs object';
-
-	            case 53:
-	              _context4.next = 55;
-	              return this.storage.get(indexRoot);
-
-	            case 55:
-	              root = _context4.sent;
-	              rootObj = void 0;
-
-	              try {
-	                rootObj = JSON.parse(root);
-	              } catch (e) {
-	                console.log('Old format index root');
-	              }
-
-	              if (!rootObj) {
-	                _context4.next = 74;
-	                break;
-	              }
-
-	              _context4.next = 61;
-	              return merkleBtree.MerkleBTree.getByHash(rootObj.identitiesByTrustDistance, this.storage, IPFS_INDEX_WIDTH);
-
-	            case 61:
-	              this.identitiesByTrustDistance = _context4.sent;
-	              _context4.next = 64;
-	              return merkleBtree.MerkleBTree.getByHash(rootObj.identitiesBySearchKey, this.storage, IPFS_INDEX_WIDTH);
-
-	            case 64:
-	              this.identitiesBySearchKey = _context4.sent;
-	              _context4.next = 67;
-	              return merkleBtree.MerkleBTree.getByHash(rootObj.messagesByTimestamp, this.storage, IPFS_INDEX_WIDTH);
-
-	            case 67:
-	              this.messagesByTimestamp = _context4.sent;
-	              _context4.next = 70;
-	              return merkleBtree.MerkleBTree.getByHash(rootObj.messagesByDistance, this.storage, IPFS_INDEX_WIDTH);
-
-	            case 70:
-	              this.messagesByDistance = _context4.sent;
-
-	              this.viewpoint = rootObj.viewpoint;
-	              _context4.next = 86;
-	              break;
-
-	            case 74:
-	              _context4.next = 76;
-	              return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_distance', this.storage, IPFS_INDEX_WIDTH);
-
-	            case 76:
-	              this.identitiesByTrustDistance = _context4.sent;
-	              _context4.next = 79;
-	              return merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_searchkey', this.storage, IPFS_INDEX_WIDTH);
-
-	            case 79:
-	              this.identitiesBySearchKey = _context4.sent;
-	              _context4.next = 82;
-	              return merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_timestamp', this.storage, IPFS_INDEX_WIDTH);
-
-	            case 82:
-	              this.messagesByTimestamp = _context4.sent;
-	              _context4.next = 85;
-	              return merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_distance', this.storage, IPFS_INDEX_WIDTH);
-
-	            case 85:
-	              this.messagesByDistance = _context4.sent;
-
-	            case 86:
-	              if (this.viewpoint) {
-	                _context4.next = 91;
-	                break;
-	              }
-
-	              _context4.next = 89;
-	              return this.getViewpoint();
-
-	            case 89:
-	              vp = _context4.sent;
-
-	              this.viewpoint = vp.mostVerifiedAttributes.keyID.attribute.val;
-
-	            case 91:
-	              return _context4.abrupt('return', true);
-
-	            case 92:
-	            case 'end':
-	              return _context4.stop();
-	          }
+	        if (res && res.ok && res.status === 200) {
+	          url = ipfs[i];
+	          break;
 	        }
-	      }, _callee4, this, [[12, 19], [24, 31]]);
-	    }));
-
-	    function init(_x9) {
-	      return _ref4.apply(this, arguments);
+	      }
+	      if (url) {
+	        this.storage = new merkleBtree.IPFSGatewayStorage(url);
+	      } else {
+	        throw 'Could not load index via given ipfs gateways';
+	      }
+	    } else if (typeof ipfs === 'object') {
+	      this.storage = new merkleBtree.IPFSStorage(ipfs);
+	      this.ipfs = ipfs;
+	    } else {
+	      throw 'ipfs param must be a gateway url, array of urls or a js-ipfs object';
 	    }
-
-	    return init;
-	  }();
-
-	  Index.prototype.save = function () {
-	    var _ref5 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee5() {
-	      var r, root, i, rootHash, n;
-	      return regenerator.wrap(function _callee5$(_context5) {
-	        while (1) {
-	          switch (_context5.prev = _context5.next) {
-	            case 0:
-	              _context5.prev = 0;
-	              _context5.next = 3;
-	              return this.ipfs.files.add([{ path: 'messagesByDistance', content: new Buffer(this.messagesByDistance.rootNode.serialize(), 'utf8') }, { path: 'messagesByTimestamp', content: new Buffer(this.messagesByTimestamp.rootNode.serialize(), 'utf8') }, { path: 'identitiesBySearchKey', content: new Buffer(this.identitiesBySearchKey.rootNode.serialize(), 'utf8') }, { path: 'identitiesByTrustDistance', content: new Buffer(this.identitiesByTrustDistance.rootNode.serialize(), 'utf8') }]);
-
-	            case 3:
-	              r = _context5.sent;
-	              root = { viewpoint: this.viewpoint };
-
-	              for (i = 0; i < r.length; i += 1) {
-	                root[r[i].path] = r[i].hash;
-	              }
-	              _context5.next = 8;
-	              return this.ipfs.files.add(new Buffer(_JSON$stringify(root), 'utf8'));
-
-	            case 8:
-	              r = _context5.sent;
-	              rootHash = r[0].hash;
-
-	              if (!this.ipfs.name) {
-	                _context5.next = 16;
-	                break;
-	              }
-
-	              console.log('publishing index', rootHash);
-	              _context5.next = 14;
-	              return this.ipfs.name.publish(rootHash, {});
-
-	            case 14:
-	              n = _context5.sent;
-
-	              console.log('published index', n);
-
-	            case 16:
-	              return _context5.abrupt('return', rootHash);
-
-	            case 19:
-	              _context5.prev = 19;
-	              _context5.t0 = _context5['catch'](0);
-
-	              console.log('error publishing index', _context5.t0);
-
-	            case 22:
-	            case 'end':
-	              return _context5.stop();
-	          }
-	        }
-	      }, _callee5, this, [[0, 19]]);
-	    }));
-
-	    function save() {
-	      return _ref5.apply(this, arguments);
+	    var root = await this.storage.get(indexRoot);
+	    var rootObj = void 0;
+	    try {
+	      rootObj = JSON.parse(root);
+	    } catch (e) {
+	      console.log('Old format index root');
 	    }
-
-	    return save;
-	  }();
-
-	  Index.prototype._setSentRcvdIndexes = function () {
-	    var _ref6 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee6(id) {
-	      return regenerator.wrap(function _callee6$(_context6) {
-	        while (1) {
-	          switch (_context6.prev = _context6.next) {
-	            case 0:
-	              if (id.sentIndex) {
-	                _context6.next = 8;
-	                break;
-	              }
-
-	              if (!id.data.sent) {
-	                _context6.next = 7;
-	                break;
-	              }
-
-	              _context6.next = 4;
-	              return merkleBtree.MerkleBTree.getByHash(id.data.sent, this.storage, IPFS_INDEX_WIDTH);
-
-	            case 4:
-	              id.sentIndex = _context6.sent;
-	              _context6.next = 8;
-	              break;
-
-	            case 7:
-	              id.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-
-	            case 8:
-	              if (id.receivedIndex) {
-	                _context6.next = 16;
-	                break;
-	              }
-
-	              if (!id.data.received) {
-	                _context6.next = 15;
-	                break;
-	              }
-
-	              _context6.next = 12;
-	              return merkleBtree.MerkleBTree.getByHash(id.data.received, this.storage, IPFS_INDEX_WIDTH);
-
-	            case 12:
-	              id.receivedIndex = _context6.sent;
-	              _context6.next = 16;
-	              break;
-
-	            case 15:
-	              id.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-
-	            case 16:
-	            case 'end':
-	              return _context6.stop();
-	          }
-	        }
-	      }, _callee6, this);
-	    }));
-
-	    function _setSentRcvdIndexes(_x10) {
-	      return _ref6.apply(this, arguments);
+	    if (rootObj) {
+	      this.identitiesByTrustDistance = await merkleBtree.MerkleBTree.getByHash(rootObj.identitiesByTrustDistance, this.storage, IPFS_INDEX_WIDTH);
+	      this.identitiesBySearchKey = await merkleBtree.MerkleBTree.getByHash(rootObj.identitiesBySearchKey, this.storage, IPFS_INDEX_WIDTH);
+	      this.messagesByTimestamp = await merkleBtree.MerkleBTree.getByHash(rootObj.messagesByTimestamp, this.storage, IPFS_INDEX_WIDTH);
+	      this.messagesByDistance = await merkleBtree.MerkleBTree.getByHash(rootObj.messagesByDistance, this.storage, IPFS_INDEX_WIDTH);
+	      this.viewpoint = rootObj.viewpoint;
+	    } else {
+	      this.identitiesByTrustDistance = await merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_distance', this.storage, IPFS_INDEX_WIDTH);
+	      this.identitiesBySearchKey = await merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_searchkey', this.storage, IPFS_INDEX_WIDTH);
+	      this.messagesByTimestamp = await merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_timestamp', this.storage, IPFS_INDEX_WIDTH);
+	      this.messagesByDistance = await merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_distance', this.storage, IPFS_INDEX_WIDTH);
 	    }
-
-	    return _setSentRcvdIndexes;
-	  }();
-
-	  Index.prototype.getViewpoint = function () {
-	    var _ref7 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee7() {
-	      var r, p, vp;
-	      return regenerator.wrap(function _callee7$(_context7) {
-	        while (1) {
-	          switch (_context7.prev = _context7.next) {
-	            case 0:
-	              _context7.next = 2;
-	              return this.identitiesByTrustDistance.searchText('00', 1);
-
-	            case 2:
-	              r = _context7.sent;
-
-	              if (!r.length) {
-	                _context7.next = 11;
-	                break;
-	              }
-
-	              _context7.next = 6;
-	              return this.storage.get(r[0].value);
-
-	            case 6:
-	              p = _context7.sent;
-	              vp = new Identity(JSON.parse(p));
-	              _context7.next = 10;
-	              return this._setSentRcvdIndexes(vp);
-
-	            case 10:
-	              return _context7.abrupt('return', vp);
-
-	            case 11:
-	            case 'end':
-	              return _context7.stop();
-	          }
-	        }
-	      }, _callee7, this);
-	    }));
-
-	    function getViewpoint() {
-	      return _ref7.apply(this, arguments);
+	    if (!this.viewpoint) {
+	      var vp = await this.getViewpoint();
+	      this.viewpoint = vp.mostVerifiedAttributes.keyID.attribute.val;
 	    }
+	    return true;
+	  };
 
-	    return getViewpoint;
-	  }();
+	  Index.prototype.save = async function save() {
+	    try {
+	      var r = await this.ipfs.files.add([{ path: 'messagesByDistance', content: new Buffer(this.messagesByDistance.rootNode.serialize(), 'utf8') }, { path: 'messagesByTimestamp', content: new Buffer(this.messagesByTimestamp.rootNode.serialize(), 'utf8') }, { path: 'identitiesBySearchKey', content: new Buffer(this.identitiesBySearchKey.rootNode.serialize(), 'utf8') }, { path: 'identitiesByTrustDistance', content: new Buffer(this.identitiesByTrustDistance.rootNode.serialize(), 'utf8') }]);
+	      var root = { viewpoint: this.viewpoint };
+	      for (var i = 0; i < r.length; i += 1) {
+	        root[r[i].path] = r[i].hash;
+	      }
+	      r = await this.ipfs.files.add(new Buffer(_JSON$stringify(root), 'utf8'));
+	      var rootHash = r[0].hash;
+	      if (this.ipfs.name) {
+	        console.log('publishing index', rootHash);
+	        var n = await this.ipfs.name.publish(rootHash, {});
+	        console.log('published index', n);
+	      }
+	      return rootHash;
+	    } catch (e) {
+	      console.log('error publishing index', e);
+	    }
+	  };
+
+	  Index.prototype._setSentRcvdIndexes = async function _setSentRcvdIndexes(id) {
+	    if (!id.sentIndex) {
+	      if (id.data.sent) {
+	        id.sentIndex = await merkleBtree.MerkleBTree.getByHash(id.data.sent, this.storage, IPFS_INDEX_WIDTH);
+	      } else {
+	        id.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+	      }
+	    }
+	    if (!id.receivedIndex) {
+	      if (id.data.received) {
+	        id.receivedIndex = await merkleBtree.MerkleBTree.getByHash(id.data.received, this.storage, IPFS_INDEX_WIDTH);
+	      } else {
+	        id.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+	      }
+	    }
+	  };
+
+	  Index.prototype.getViewpoint = async function getViewpoint() {
+	    var r = await this.identitiesByTrustDistance.searchText('00', 1);
+	    if (r.length) {
+	      var p = await this.storage.get(r[0].value);
+	      var vp = new Identity(JSON.parse(p));
+	      await this._setSentRcvdIndexes(vp);
+	      return vp;
+	    }
+	  };
 
 	  /*
 	  Get an identity referenced by an identifier.
@@ -14292,939 +13114,312 @@
 	  */
 
 
-	  Index.prototype.get = function () {
-	    var _ref8 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee8(value, type) {
-	      var profileUri, p, id;
-	      return regenerator.wrap(function _callee8$(_context8) {
-	        while (1) {
-	          switch (_context8.prev = _context8.next) {
-	            case 0:
-	              if (!(typeof value === 'undefined')) {
-	                _context8.next = 2;
-	                break;
-	              }
-
-	              throw 'Value is undefined';
-
-	            case 2:
-	              if (typeof type === 'undefined') {
-	                type = Attribute.guessTypeOf(value);
-	              }
-
-	              _context8.next = 5;
-	              return this.identitiesBySearchKey.get(encodeURIComponent(value) + ':' + encodeURIComponent(type));
-
-	            case 5:
-	              profileUri = _context8.sent;
-
-	              if (!profileUri) {
-	                _context8.next = 15;
-	                break;
-	              }
-
-	              _context8.next = 9;
-	              return this.storage.get(profileUri);
-
-	            case 9:
-	              p = _context8.sent;
-	              id = new Identity(JSON.parse(p));
-
-	              id.ipfsHash = profileUri;
-	              _context8.next = 14;
-	              return this._setSentRcvdIndexes(id);
-
-	            case 14:
-	              return _context8.abrupt('return', id);
-
-	            case 15:
-	            case 'end':
-	              return _context8.stop();
-	          }
-	        }
-	      }, _callee8, this);
-	    }));
-
-	    function get(_x11, _x12) {
-	      return _ref8.apply(this, arguments);
+	  Index.prototype.get = async function get(value, type) {
+	    if (typeof value === 'undefined') {
+	      throw 'Value is undefined';
+	    }
+	    if (typeof type === 'undefined') {
+	      type = Attribute.guessTypeOf(value);
 	    }
 
-	    return get;
-	  }();
-
-	  Index.prototype._getMsgs = function () {
-	    var _ref9 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee9(msgIndex, limit, cursor) {
-	      var rawMsgs, msgs;
-	      return regenerator.wrap(function _callee9$(_context9) {
-	        while (1) {
-	          switch (_context9.prev = _context9.next) {
-	            case 0:
-	              _context9.next = 2;
-	              return msgIndex.searchText('', limit, cursor, true);
-
-	            case 2:
-	              rawMsgs = _context9.sent;
-	              msgs = [];
-
-	              rawMsgs.forEach(function (row) {
-	                var msg = Message.fromJws(row.value.jws);
-	                msg.cursor = row.key;
-	                msg.authorPos = row.value.author_pos;
-	                msg.authorNeg = row.value.author_neg;
-	                msg.recipientPos = row.value.recipient_pos;
-	                msg.recipientNeg = row.value.recipient_neg;
-	                msg.authorTrustDistance = row.value.distance;
-	                msg.authorName = row.value.author_name;
-	                msg.recipientName = row.value.recipient_name;
-	                msgs.push(msg);
-	              });
-	              return _context9.abrupt('return', msgs);
-
-	            case 6:
-	            case 'end':
-	              return _context9.stop();
-	          }
-	        }
-	      }, _callee9, this);
-	    }));
-
-	    function _getMsgs(_x13, _x14, _x15) {
-	      return _ref9.apply(this, arguments);
+	    var profileUri = await this.identitiesBySearchKey.get(encodeURIComponent(value) + ':' + encodeURIComponent(type));
+	    if (profileUri) {
+	      var p = await this.storage.get(profileUri);
+	      var id = new Identity(JSON.parse(p));
+	      id.ipfsHash = profileUri;
+	      await this._setSentRcvdIndexes(id);
+	      return id;
 	    }
+	  };
 
-	    return _getMsgs;
-	  }();
+	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, limit, cursor) {
+	    var rawMsgs = await msgIndex.searchText('', limit, cursor, true);
+	    var msgs = [];
+	    rawMsgs.forEach(function (row) {
+	      var msg = Message.fromJws(row.value.jws);
+	      msg.cursor = row.key;
+	      msg.authorPos = row.value.author_pos;
+	      msg.authorNeg = row.value.author_neg;
+	      msg.recipientPos = row.value.recipient_pos;
+	      msg.recipientNeg = row.value.recipient_neg;
+	      msg.authorTrustDistance = row.value.distance;
+	      msg.authorName = row.value.author_name;
+	      msg.recipientName = row.value.recipient_name;
+	      msgs.push(msg);
+	    });
+	    return msgs;
+	  };
 
-	  Index.prototype._saveIdentityToIpfs = function () {
-	    var _ref10 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee10(id) {
-	      var buffer, r, hash;
-	      return regenerator.wrap(function _callee10$(_context10) {
-	        while (1) {
-	          switch (_context10.prev = _context10.next) {
-	            case 0:
-	              buffer = new this.ipfs.types.Buffer(_JSON$stringify(id.data));
-	              _context10.next = 3;
-	              return this.ipfs.files.add(buffer);
+	  Index.prototype._saveIdentityToIpfs = async function _saveIdentityToIpfs(id) {
+	    var buffer = new this.ipfs.types.Buffer(_JSON$stringify(id.data));
+	    var r = await this.ipfs.files.add(buffer);
+	    var hash = r.length ? r[0].hash : '';
+	    id.ipfsHash = hash;
+	    return hash;
+	  };
 
-	            case 3:
-	              r = _context10.sent;
-	              hash = r.length ? r[0].hash : '';
-
-	              id.ipfsHash = hash;
-	              return _context10.abrupt('return', hash);
-
-	            case 7:
-	            case 'end':
-	              return _context10.stop();
-	          }
-	        }
-	      }, _callee10, this);
-	    }));
-
-	    function _saveIdentityToIpfs(_x16) {
-	      return _ref10.apply(this, arguments);
+	  Index.prototype._removeIdentityFromIndexes = async function _removeIdentityFromIndexes(id) {
+	    var hash = id.ipfsHash;
+	    if (!hash) {
+	      hash = await this._saveIdentityToIpfs(id);
 	    }
+	    var indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
+	    for (var i = 0; i < indexKeys.length; i++) {
+	      var key = indexKeys[i];
+	      console.log('deleting key ' + key);
+	      await this.identitiesByTrustDistance.delete(key);
+	      await this.identitiesBySearchKey.delete(key.substr(key.indexOf(':') + 1));
+	    }
+	  };
 
-	    return _saveIdentityToIpfs;
-	  }();
+	  Index.prototype._addIdentityToIndexes = async function _addIdentityToIndexes(id) {
+	    if (id.sentIndex && id.receivedIndex) {
+	      if (id.sentIndex.rootNode.hash && id.receivedIndex.rootNode.hash) {
+	        id.data.sent = id.sentIndex.rootNode.hash;
+	        id.data.received = id.receivedIndex.rootNode.hash;
+	      } else {
+	        var s = await this.ipfs.files.add(new Buffer(id.sentIndex.rootNode.serialize(), 'utf8'));
+	        id.data.sent = s[0].hash;
+	        var r = await this.ipfs.files.add(new Buffer(id.receivedIndex.rootNode.serialize(), 'utf8'));
+	        id.data.received = r[0].hash;
+	      }
+	    }
+	    var hash = await this._saveIdentityToIpfs(id);
+	    var indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
+	    for (var i = 0; i < indexKeys.length; i++) {
+	      var key = indexKeys[i];
+	      console.log('adding key ' + key);
+	      await this.identitiesByTrustDistance.put(key, hash);
+	      await this.identitiesBySearchKey.put(key.substr(key.indexOf(':') + 1), hash);
+	    }
+	    return { hash: hash };
+	  };
 
-	  Index.prototype._removeIdentityFromIndexes = function () {
-	    var _ref11 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee11(id) {
-	      var hash, indexKeys, i, key;
-	      return regenerator.wrap(function _callee11$(_context11) {
-	        while (1) {
-	          switch (_context11.prev = _context11.next) {
-	            case 0:
-	              hash = id.ipfsHash;
+	  Index.prototype.getSentMsgs = async function getSentMsgs(identity, limit) {
+	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	              if (hash) {
-	                _context11.next = 5;
-	                break;
-	              }
+	    if (!identity.sentIndex) {
+	      identity.sentIndex = await merkleBtree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
+	    }
+	    return this._getMsgs(identity.sentIndex, limit, cursor);
+	  };
 
-	              _context11.next = 4;
-	              return this._saveIdentityToIpfs(id);
+	  Index.prototype.getReceivedMsgs = async function getReceivedMsgs(identity, limit) {
+	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	            case 4:
-	              hash = _context11.sent;
+	    if (!identity.receivedIndex) {
+	      identity.receivedIndex = await merkleBtree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
+	    }
+	    return this._getMsgs(identity.receivedIndex, limit, cursor);
+	  };
 
-	            case 5:
-	              indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
-	              i = 0;
+	  Index.prototype.getAttributeTrustDistance = async function getAttributeTrustDistance(a) {
+	    if (!Attribute.isUniqueType(a.name)) {
+	      return;
+	    }
+	    var id = await this.get(a.val, a.name);
+	    return id && id.data && id.data.trustDistance;
+	  };
 
-	            case 7:
-	              if (!(i < indexKeys.length)) {
-	                _context11.next = 17;
-	                break;
-	              }
+	  Index.prototype.getMsgTrustDistance = async function getMsgTrustDistance(msg) {
+	    var shortestDistance = 1000;
+	    var signer = await this.get(msg.getSignerKeyID(), 'keyID');
+	    if (!signer) {
+	      return;
+	    }
+	    for (var i = 0; i < msg.signedData.author.length; i++) {
+	      var a = new Attribute(msg.signedData.author[i]);
+	      if (Attribute.equals(a, this.viewpoint)) {
+	        return 0;
+	      } else {
+	        var d = await this.getAttributeTrustDistance(a);
+	        if (d < shortestDistance) {
+	          shortestDistance = d;
+	        }
+	      }
+	    }
+	    return shortestDistance < 1000 ? shortestDistance : undefined;
+	  };
 
-	              key = indexKeys[i];
+	  Index.prototype._updateIdentityIndexesByMsg = async function _updateIdentityIndexesByMsg(msg) {
+	    var _this2 = this;
 
-	              console.log('deleting key ' + key);
-	              _context11.next = 12;
-	              return this.identitiesByTrustDistance.delete(key);
+	    var recipientIdentities = {};
+	    var authorIdentities = {};
+	    for (var i = 0; i < msg.signedData.author.length; i++) {
+	      var a = msg.signedData.author[i];
+	      var id = await this.get(a[1], a[0]);
+	      if (id) {
+	        authorIdentities[id.ipfsHash] = id;
+	      }
+	    }
+	    if (!_Object$keys(authorIdentities).length) {
+	      return; // unknown author, do nothing
+	    }
+	    for (var _i = 0; _i < msg.signedData.recipient.length; _i++) {
+	      var _a = msg.signedData.recipient[_i];
+	      var _id = await this.get(_a[1], _a[0]);
+	      if (_id) {
+	        recipientIdentities[_id.ipfsHash] = _id;
+	      }
+	    }
+	    if (!_Object$keys(recipientIdentities).length) {
+	      // recipient is previously unknown
+	      var attrs = [];
+	      msg.signedData.recipient.forEach(function (a) {
+	        attrs.push({ name: a[0], val: a[1], conf: 1, ref: 0 });
+	      });
+	      var _id2 = new Identity({ attrs: attrs });
+	      _id2.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+	      _id2.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+	      // TODO: take msg author trust into account
+	      await this._saveIdentityToIpfs(_id2);
+	      recipientIdentities[_id2.ipfsHash] = _id2;
+	    }
+	    var msgIndexKey = Index.getMsgIndexKey(msg);
+	    msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(':') + 1);
+	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
 
-	            case 12:
-	              _context11.next = 14;
-	              return this.identitiesBySearchKey.delete(key.substr(key.indexOf(':') + 1));
-
-	            case 14:
-	              i++;
-	              _context11.next = 7;
+	    var _loop = async function _loop(_i2) {
+	      // add new identifiers to identity
+	      var id = ids[_i2];
+	      await _this2._removeIdentityFromIndexes(id);
+	      if (recipientIdentities.hasOwnProperty(id.ipfsHash)) {
+	        msg.signedData.recipient.forEach(function (a1) {
+	          var hasAttr = false;
+	          for (var j = 0; j < id.data.attrs.length; j++) {
+	            if (Attribute.equals(a1, id.data.attrs[j])) {
+	              id.data.attrs[j].conf |= 0;
+	              id.data.attrs[j].conf += 1;
+	              hasAttr = true;
 	              break;
-
-	            case 17:
-	            case 'end':
-	              return _context11.stop();
+	            }
+	          }
+	          if (!hasAttr) {
+	            id.data.attrs.push({ name: a1[0], val: a1[1], conf: 1, ref: 0 });
+	          }
+	        });
+	        if (msg.signedData.type === 'rating') {
+	          if (msg.isPositive()) {
+	            if (msg.distance + 1 < id.data.trustDistance) {
+	              id.data.trustDistance = msg.distance + 1;
+	            }
+	            id.data.receivedPositive++;
+	          } else if (msg.isNegative()) {
+	            id.data.receivedNegative++;
+	          } else {
+	            id.data.receivedNeutral++;
 	          }
 	        }
-	      }, _callee11, this);
-	    }));
-
-	    function _removeIdentityFromIndexes(_x17) {
-	      return _ref11.apply(this, arguments);
-	    }
-
-	    return _removeIdentityFromIndexes;
-	  }();
-
-	  Index.prototype._addIdentityToIndexes = function () {
-	    var _ref12 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee12(id) {
-	      var s, r, hash, indexKeys, i, key;
-	      return regenerator.wrap(function _callee12$(_context12) {
-	        while (1) {
-	          switch (_context12.prev = _context12.next) {
-	            case 0:
-	              if (!(id.sentIndex && id.receivedIndex)) {
-	                _context12.next = 14;
-	                break;
-	              }
-
-	              if (!(id.sentIndex.rootNode.hash && id.receivedIndex.rootNode.hash)) {
-	                _context12.next = 6;
-	                break;
-	              }
-
-	              id.data.sent = id.sentIndex.rootNode.hash;
-	              id.data.received = id.receivedIndex.rootNode.hash;
-	              _context12.next = 14;
-	              break;
-
-	            case 6:
-	              _context12.next = 8;
-	              return this.ipfs.files.add(new Buffer(id.sentIndex.rootNode.serialize(), 'utf8'));
-
-	            case 8:
-	              s = _context12.sent;
-
-	              id.data.sent = s[0].hash;
-	              _context12.next = 12;
-	              return this.ipfs.files.add(new Buffer(id.receivedIndex.rootNode.serialize(), 'utf8'));
-
-	            case 12:
-	              r = _context12.sent;
-
-	              id.data.received = r[0].hash;
-
-	            case 14:
-	              _context12.next = 16;
-	              return this._saveIdentityToIpfs(id);
-
-	            case 16:
-	              hash = _context12.sent;
-	              indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
-	              i = 0;
-
-	            case 19:
-	              if (!(i < indexKeys.length)) {
-	                _context12.next = 29;
-	                break;
-	              }
-
-	              key = indexKeys[i];
-
-	              console.log('adding key ' + key);
-	              _context12.next = 24;
-	              return this.identitiesByTrustDistance.put(key, hash);
-
-	            case 24:
-	              _context12.next = 26;
-	              return this.identitiesBySearchKey.put(key.substr(key.indexOf(':') + 1), hash);
-
-	            case 26:
-	              i++;
-	              _context12.next = 19;
-	              break;
-
-	            case 29:
-	              return _context12.abrupt('return', { hash: hash });
-
-	            case 30:
-	            case 'end':
-	              return _context12.stop();
+	        await id.receivedIndex.put(msgIndexKey, msg);
+	      }
+	      if (authorIdentities.hasOwnProperty(id.ipfsHash)) {
+	        if (msg.signedData.type === 'rating') {
+	          if (msg.isPositive()) {
+	            id.data.sentPositive++;
+	          } else if (msg.isNegative()) {
+	            id.data.sentNegative++;
+	          } else {
+	            id.data.sentNeutral++;
 	          }
 	        }
-	      }, _callee12, this);
-	    }));
+	        await id.sentIndex.put(msgIndexKey, msg);
+	      }
+	      await _this2._addIdentityToIndexes(id);
+	    };
 
-	    function _addIdentityToIndexes(_x18) {
-	      return _ref12.apply(this, arguments);
+	    for (var _i2 = 0; _i2 < ids.length; _i2++) {
+	      await _loop(_i2);
 	    }
-
-	    return _addIdentityToIndexes;
-	  }();
-
-	  Index.prototype.getSentMsgs = function () {
-	    var _ref13 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee13(identity, limit) {
-	      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-	      return regenerator.wrap(function _callee13$(_context13) {
-	        while (1) {
-	          switch (_context13.prev = _context13.next) {
-	            case 0:
-	              if (identity.sentIndex) {
-	                _context13.next = 4;
-	                break;
-	              }
-
-	              _context13.next = 3;
-	              return merkleBtree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
-
-	            case 3:
-	              identity.sentIndex = _context13.sent;
-
-	            case 4:
-	              return _context13.abrupt('return', this._getMsgs(identity.sentIndex, limit, cursor));
-
-	            case 5:
-	            case 'end':
-	              return _context13.stop();
-	          }
-	        }
-	      }, _callee13, this);
-	    }));
-
-	    function getSentMsgs(_x20, _x21) {
-	      return _ref13.apply(this, arguments);
-	    }
-
-	    return getSentMsgs;
-	  }();
-
-	  Index.prototype.getReceivedMsgs = function () {
-	    var _ref14 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee14(identity, limit) {
-	      var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-	      return regenerator.wrap(function _callee14$(_context14) {
-	        while (1) {
-	          switch (_context14.prev = _context14.next) {
-	            case 0:
-	              if (identity.receivedIndex) {
-	                _context14.next = 4;
-	                break;
-	              }
-
-	              _context14.next = 3;
-	              return merkleBtree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
-
-	            case 3:
-	              identity.receivedIndex = _context14.sent;
-
-	            case 4:
-	              return _context14.abrupt('return', this._getMsgs(identity.receivedIndex, limit, cursor));
-
-	            case 5:
-	            case 'end':
-	              return _context14.stop();
-	          }
-	        }
-	      }, _callee14, this);
-	    }));
-
-	    function getReceivedMsgs(_x23, _x24) {
-	      return _ref14.apply(this, arguments);
-	    }
-
-	    return getReceivedMsgs;
-	  }();
-
-	  Index.prototype.getAttributeTrustDistance = function () {
-	    var _ref15 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee15(a) {
-	      var id;
-	      return regenerator.wrap(function _callee15$(_context15) {
-	        while (1) {
-	          switch (_context15.prev = _context15.next) {
-	            case 0:
-	              if (Attribute.isUniqueType(a.name)) {
-	                _context15.next = 2;
-	                break;
-	              }
-
-	              return _context15.abrupt('return');
-
-	            case 2:
-	              _context15.next = 4;
-	              return this.get(a.val, a.name);
-
-	            case 4:
-	              id = _context15.sent;
-	              return _context15.abrupt('return', id && id.data && id.data.trustDistance);
-
-	            case 6:
-	            case 'end':
-	              return _context15.stop();
-	          }
-	        }
-	      }, _callee15, this);
-	    }));
-
-	    function getAttributeTrustDistance(_x25) {
-	      return _ref15.apply(this, arguments);
-	    }
-
-	    return getAttributeTrustDistance;
-	  }();
-
-	  Index.prototype.getMsgTrustDistance = function () {
-	    var _ref16 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee16(msg) {
-	      var shortestDistance, signer, i, a, d;
-	      return regenerator.wrap(function _callee16$(_context16) {
-	        while (1) {
-	          switch (_context16.prev = _context16.next) {
-	            case 0:
-	              shortestDistance = 1000;
-	              _context16.next = 3;
-	              return this.get(msg.getSignerKeyID(), 'keyID');
-
-	            case 3:
-	              signer = _context16.sent;
-
-	              if (signer) {
-	                _context16.next = 6;
-	                break;
-	              }
-
-	              return _context16.abrupt('return');
-
-	            case 6:
-	              i = 0;
-
-	            case 7:
-	              if (!(i < msg.signedData.author.length)) {
-	                _context16.next = 20;
-	                break;
-	              }
-
-	              a = new Attribute(msg.signedData.author[i]);
-
-	              if (!Attribute.equals(a, this.viewpoint)) {
-	                _context16.next = 13;
-	                break;
-	              }
-
-	              return _context16.abrupt('return', 0);
-
-	            case 13:
-	              _context16.next = 15;
-	              return this.getAttributeTrustDistance(a);
-
-	            case 15:
-	              d = _context16.sent;
-
-	              if (d < shortestDistance) {
-	                shortestDistance = d;
-	              }
-
-	            case 17:
-	              i++;
-	              _context16.next = 7;
-	              break;
-
-	            case 20:
-	              return _context16.abrupt('return', shortestDistance < 1000 ? shortestDistance : undefined);
-
-	            case 21:
-	            case 'end':
-	              return _context16.stop();
-	          }
-	        }
-	      }, _callee16, this);
-	    }));
-
-	    function getMsgTrustDistance(_x26) {
-	      return _ref16.apply(this, arguments);
-	    }
-
-	    return getMsgTrustDistance;
-	  }();
-
-	  Index.prototype._updateIdentityIndexesByMsg = function () {
-	    var _ref17 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee17(msg) {
-	      var _this2 = this;
-
-	      var recipientIdentities, authorIdentities, i, a, id, _i, _a, _id, attrs, _id2, msgIndexKey, ids, _loop, _i2;
-
-	      return regenerator.wrap(function _callee17$(_context18) {
-	        while (1) {
-	          switch (_context18.prev = _context18.next) {
-	            case 0:
-	              recipientIdentities = {};
-	              authorIdentities = {};
-	              i = 0;
-
-	            case 3:
-	              if (!(i < msg.signedData.author.length)) {
-	                _context18.next = 12;
-	                break;
-	              }
-
-	              a = msg.signedData.author[i];
-	              _context18.next = 7;
-	              return this.get(a[1], a[0]);
-
-	            case 7:
-	              id = _context18.sent;
-
-	              if (id) {
-	                authorIdentities[id.ipfsHash] = id;
-	              }
-
-	            case 9:
-	              i++;
-	              _context18.next = 3;
-	              break;
-
-	            case 12:
-	              if (_Object$keys(authorIdentities).length) {
-	                _context18.next = 14;
-	                break;
-	              }
-
-	              return _context18.abrupt('return');
-
-	            case 14:
-	              _i = 0;
-
-	            case 15:
-	              if (!(_i < msg.signedData.recipient.length)) {
-	                _context18.next = 24;
-	                break;
-	              }
-
-	              _a = msg.signedData.recipient[_i];
-	              _context18.next = 19;
-	              return this.get(_a[1], _a[0]);
-
-	            case 19:
-	              _id = _context18.sent;
-
-	              if (_id) {
-	                recipientIdentities[_id.ipfsHash] = _id;
-	              }
-
-	            case 21:
-	              _i++;
-	              _context18.next = 15;
-	              break;
-
-	            case 24:
-	              if (_Object$keys(recipientIdentities).length) {
-	                _context18.next = 33;
-	                break;
-	              }
-
-	              // recipient is previously unknown
-	              attrs = [];
-
-	              msg.signedData.recipient.forEach(function (a) {
-	                attrs.push({ name: a[0], val: a[1], conf: 1, ref: 0 });
-	              });
-	              _id2 = new Identity({ attrs: attrs });
-
-	              _id2.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-	              _id2.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-	              // TODO: take msg author trust into account
-	              _context18.next = 32;
-	              return this._saveIdentityToIpfs(_id2);
-
-	            case 32:
-	              recipientIdentities[_id2.ipfsHash] = _id2;
-
-	            case 33:
-	              msgIndexKey = Index.getMsgIndexKey(msg);
-
-	              msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(':') + 1);
-	              ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
-	              _loop = /*#__PURE__*/regenerator.mark(function _loop(_i2) {
-	                var id;
-	                return regenerator.wrap(function _loop$(_context17) {
-	                  while (1) {
-	                    switch (_context17.prev = _context17.next) {
-	                      case 0:
-	                        // add new identifiers to identity
-	                        id = ids[_i2];
-	                        _context17.next = 3;
-	                        return _this2._removeIdentityFromIndexes(id);
-
-	                      case 3:
-	                        if (!recipientIdentities.hasOwnProperty(id.ipfsHash)) {
-	                          _context17.next = 8;
-	                          break;
-	                        }
-
-	                        msg.signedData.recipient.forEach(function (a1) {
-	                          var hasAttr = false;
-	                          for (var j = 0; j < id.data.attrs.length; j++) {
-	                            if (Attribute.equals(a1, id.data.attrs[j])) {
-	                              id.data.attrs[j].conf |= 0;
-	                              id.data.attrs[j].conf += 1;
-	                              hasAttr = true;
-	                              break;
-	                            }
-	                          }
-	                          if (!hasAttr) {
-	                            id.data.attrs.push({ name: a1[0], val: a1[1], conf: 1, ref: 0 });
-	                          }
-	                        });
-	                        if (msg.signedData.type === 'rating') {
-	                          if (msg.isPositive()) {
-	                            if (msg.distance + 1 < id.data.trustDistance) {
-	                              id.data.trustDistance = msg.distance + 1;
-	                            }
-	                            id.data.receivedPositive++;
-	                          } else if (msg.isNegative()) {
-	                            id.data.receivedNegative++;
-	                          } else {
-	                            id.data.receivedNeutral++;
-	                          }
-	                        }
-	                        _context17.next = 8;
-	                        return id.receivedIndex.put(msgIndexKey, msg);
-
-	                      case 8:
-	                        if (!authorIdentities.hasOwnProperty(id.ipfsHash)) {
-	                          _context17.next = 12;
-	                          break;
-	                        }
-
-	                        if (msg.signedData.type === 'rating') {
-	                          if (msg.isPositive()) {
-	                            id.data.sentPositive++;
-	                          } else if (msg.isNegative()) {
-	                            id.data.sentNegative++;
-	                          } else {
-	                            id.data.sentNeutral++;
-	                          }
-	                        }
-	                        _context17.next = 12;
-	                        return id.sentIndex.put(msgIndexKey, msg);
-
-	                      case 12:
-	                        _context17.next = 14;
-	                        return _this2._addIdentityToIndexes(id);
-
-	                      case 14:
-	                      case 'end':
-	                        return _context17.stop();
-	                    }
-	                  }
-	                }, _loop, _this2);
-	              });
-	              _i2 = 0;
-
-	            case 38:
-	              if (!(_i2 < ids.length)) {
-	                _context18.next = 43;
-	                break;
-	              }
-
-	              return _context18.delegateYield(_loop(_i2), 't0', 40);
-
-	            case 40:
-	              _i2++;
-	              _context18.next = 38;
-	              break;
-
-	            case 43:
-	            case 'end':
-	              return _context18.stop();
-	          }
-	        }
-	      }, _callee17, this);
-	    }));
-
-	    function _updateIdentityIndexesByMsg(_x27) {
-	      return _ref17.apply(this, arguments);
-	    }
-
-	    return _updateIdentityIndexesByMsg;
-	  }();
+	  };
 
 	  /* Add message to index */
 
 
-	  Index.prototype.addMessage = function () {
-	    var _ref18 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee18(msg) {
-	      var updateIdentityIndexes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-	      var indexKey, h;
-	      return regenerator.wrap(function _callee18$(_context19) {
-	        while (1) {
-	          switch (_context19.prev = _context19.next) {
-	            case 0:
-	              if (!this.ipfs) {
-	                _context19.next = 17;
-	                break;
-	              }
+	  Index.prototype.addMessage = async function addMessage(msg) {
+	    var updateIdentityIndexes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
-	              _context19.next = 3;
-	              return this.getMsgTrustDistance(msg);
-
-	            case 3:
-	              msg.distance = _context19.sent;
-
-	              if (!(msg.distance === undefined)) {
-	                _context19.next = 6;
-	                break;
-	              }
-
-	              return _context19.abrupt('return');
-
-	            case 6:
-	              indexKey = Index.getMsgIndexKey(msg);
-	              _context19.next = 9;
-	              return this.messagesByDistance.put(indexKey, msg);
-
-	            case 9:
-	              indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
-	              _context19.next = 12;
-	              return this.messagesByTimestamp.put(indexKey, msg);
-
-	            case 12:
-	              h = _context19.sent;
-
-	              if (!updateIdentityIndexes) {
-	                _context19.next = 16;
-	                break;
-	              }
-
-	              _context19.next = 16;
-	              return this._updateIdentityIndexesByMsg(msg);
-
-	            case 16:
-	              return _context19.abrupt('return', h);
-
-	            case 17:
-	            case 'end':
-	              return _context19.stop();
-	          }
-	        }
-	      }, _callee18, this);
-	    }));
-
-	    function addMessage(_x29) {
-	      return _ref18.apply(this, arguments);
+	    if (this.ipfs) {
+	      msg.distance = await this.getMsgTrustDistance(msg);
+	      if (msg.distance === undefined) {
+	        return; // do not save messages from untrusted author
+	      }
+	      var indexKey = Index.getMsgIndexKey(msg);
+	      await this.messagesByDistance.put(indexKey, msg);
+	      indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
+	      var h = await this.messagesByTimestamp.put(indexKey, msg);
+	      if (updateIdentityIndexes) {
+	        await this._updateIdentityIndexesByMsg(msg);
+	      }
+	      // save() ?
+	      return h;
 	    }
-
-	    return addMessage;
-	  }();
+	  };
 
 	  /* Save message to ipfs and announce it on ipfs pubsub */
 
 
-	  Index.prototype.publishMessage = function () {
-	    var _ref19 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee19(msg) {
-	      var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-	      var r, hash, body, res, t;
-	      return regenerator.wrap(function _callee19$(_context20) {
-	        while (1) {
-	          switch (_context20.prev = _context20.next) {
-	            case 0:
-	              r = {};
+	  Index.prototype.publishMessage = async function publishMessage(msg) {
+	    var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
-	              if (!this.ipfs) {
-	                _context20.next = 14;
-	                break;
-	              }
-
-	              _context20.next = 4;
-	              return this.ipfs.files.add(new Buffer(msg.jws, 'utf8'));
-
-	            case 4:
-	              hash = _context20.sent;
-
-	              r.hash = hash;
-	              _context20.next = 8;
-	              return this.ipfs.pubsub.publish('identifi', new Buffer(hash, 'utf8'));
-
-	            case 8:
-	              if (!addToIndex) {
-	                _context20.next = 12;
-	                break;
-	              }
-
-	              _context20.next = 11;
-	              return this.addMessage(msg);
-
-	            case 11:
-	              r.indexUri = _context20.sent;
-
-	            case 12:
-	              _context20.next = 25;
-	              break;
-
-	            case 14:
-	              // No IPFS, post to identi.fi
-	              body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
-	              _context20.next = 17;
-	              return browser('https://identi.fi/api/messages', {
-	                method: 'POST',
-	                headers: { 'Content-Type': 'application/json' },
-	                body: body
-	              });
-
-	            case 17:
-	              res = _context20.sent;
-
-	              if (!(res.status && res.status === 201)) {
-	                _context20.next = 25;
-	                break;
-	              }
-
-	              _context20.t0 = JSON;
-	              _context20.next = 22;
-	              return res.text();
-
-	            case 22:
-	              _context20.t1 = _context20.sent;
-	              t = _context20.t0.parse.call(_context20.t0, _context20.t1);
-
-	              r.hash = t.ipfs_hash;
-
-	            case 25:
-	              return _context20.abrupt('return', r);
-
-	            case 26:
-	            case 'end':
-	              return _context20.stop();
-	          }
-	        }
-	      }, _callee19, this);
-	    }));
-
-	    function publishMessage(_x31) {
-	      return _ref19.apply(this, arguments);
+	    var r = {};
+	    if (this.ipfs) {
+	      var hash = await this.ipfs.files.add(new Buffer(msg.jws, 'utf8'));
+	      r.hash = hash;
+	      await this.ipfs.pubsub.publish('identifi', new Buffer(hash, 'utf8'));
+	      if (addToIndex) {
+	        r.indexUri = await this.addMessage(msg);
+	      }
+	    } else {
+	      // No IPFS, post to identi.fi
+	      var body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
+	      var res = await browser('https://identi.fi/api/messages', {
+	        method: 'POST',
+	        headers: { 'Content-Type': 'application/json' },
+	        body: body
+	      });
+	      if (res.status && res.status === 201) {
+	        var t = JSON.parse((await res.text()));
+	        r.hash = t.ipfs_hash;
+	      }
 	    }
+	    return r;
+	  };
 
-	    return publishMessage;
-	  }();
-
-	  Index.prototype.search = function () {
-	    var _ref20 = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee20(value, type) {
-	      var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
-	      var cursor = arguments[3];
-	      var depth = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 20;
-
-	      var identitiesByHash, initialDepth, d, useCursor, paddedDistance, r, i, _d, id;
-
-	      return regenerator.wrap(function _callee20$(_context21) {
-	        while (1) {
-	          switch (_context21.prev = _context21.next) {
-	            case 0:
-	              // TODO: param 'exact'
-	              identitiesByHash = {};
-	              initialDepth = cursor ? _Number$parseInt(cursor.substring(0, cursor.indexOf(':'))) : 0;
-	              d = initialDepth;
-
-	            case 3:
-	              if (!(d <= depth)) {
-	                _context21.next = 39;
-	                break;
-	              }
-
-	              useCursor = d === initialDepth;
-	              paddedDistance = ('00' + d).substring(d.toString().length);
-	              //console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
-
-	              _context21.next = 8;
-	              return this.identitiesByTrustDistance.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, useCursor ? cursor : undefined);
-
-	            case 8:
-	              r = _context21.sent;
-
-	            case 9:
-	              if (!(r && r.length && _Object$keys(identitiesByHash).length < limit)) {
-	                _context21.next = 36;
-	                break;
-	              }
-
-	              i = 0;
-
-	            case 11:
-	              if (!(i < r.length && _Object$keys(identitiesByHash).length < limit)) {
-	                _context21.next = 31;
-	                break;
-	              }
-
-	              if (!(r[i].value && !identitiesByHash.hasOwnProperty(r[i].value))) {
-	                _context21.next = 28;
-	                break;
-	              }
-
-	              _context21.prev = 13;
-	              _context21.t0 = JSON;
-	              _context21.next = 17;
-	              return this.storage.get('/ipfs/' + r[i].value);
-
-	            case 17:
-	              _context21.t1 = _context21.sent;
-	              _d = _context21.t0.parse.call(_context21.t0, _context21.t1);
-	              id = new Identity(_d);
-
+	  Index.prototype.search = async function search(value, type) {
+	    var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
+	    var cursor = arguments[3];
+	    var depth = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 20;
+	    // TODO: param 'exact'
+	    var identitiesByHash = {};
+	    var initialDepth = cursor ? _Number$parseInt(cursor.substring(0, cursor.indexOf(':'))) : 0;
+	    for (var d = initialDepth; d <= depth; d++) {
+	      var useCursor = d === initialDepth;
+	      var paddedDistance = ('00' + d).substring(d.toString().length);
+	      //console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
+	      var r = await this.identitiesByTrustDistance.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, useCursor ? cursor : undefined);
+	      //console.log(`r`, r);
+	      while (r && r.length && _Object$keys(identitiesByHash).length < limit) {
+	        for (var i = 0; i < r.length && _Object$keys(identitiesByHash).length < limit; i++) {
+	          if (r[i].value && !identitiesByHash.hasOwnProperty(r[i].value)) {
+	            try {
+	              var _d = JSON.parse((await this.storage.get('/ipfs/' + r[i].value)));
+	              var id = new Identity(_d);
 	              id.ipfsHash = r[i].value;
 	              id.cursor = r[i].key;
 	              identitiesByHash[r[i].value] = id;
-	              _context21.next = 28;
-	              break;
-
-	            case 25:
-	              _context21.prev = 25;
-	              _context21.t2 = _context21['catch'](13);
-
-	              console.error(_context21.t2);
-
-	            case 28:
-	              i++;
-	              _context21.next = 11;
-	              break;
-
-	            case 31:
-	              _context21.next = 33;
-	              return this.identitiesBySearchKey.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, r[r.length - 1].key);
-
-	            case 33:
-	              r = _context21.sent;
-	              _context21.next = 9;
-	              break;
-
-	            case 36:
-	              d++;
-	              _context21.next = 3;
-	              break;
-
-	            case 39:
-	              return _context21.abrupt('return', _Object$values(identitiesByHash));
-
-	            case 40:
-	            case 'end':
-	              return _context21.stop();
+	            } catch (e) {
+	              console.error(e);
+	            }
 	          }
 	        }
-	      }, _callee20, this, [[13, 25]]);
-	    }));
-
-	    function search(_x34, _x35) {
-	      return _ref20.apply(this, arguments);
+	        //console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, r[r.length - 1].key);
+	        r = await this.identitiesBySearchKey.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, r[r.length - 1].key);
+	        //console.log(`r`, r);
+	      }
 	    }
-
-	    return search;
-	  }();
+	    return _Object$values(identitiesByHash);
+	  };
 
 	  return Index;
 	}();
