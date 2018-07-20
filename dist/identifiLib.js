@@ -1,8 +1,10 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.identifiLib = factory());
-}(this, (function () { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('gun')) :
+	typeof define === 'function' && define.amd ? define(['gun'], factory) :
+	(global.identifiLib = factory(global.Gun));
+}(this, (function (Gun) { 'use strict';
+
+	Gun = Gun && Gun.hasOwnProperty('default') ? Gun['default'] : Gun;
 
 	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -4155,7 +4157,7 @@
 	        var jwk = JSON.parse(f);
 	        myKey = this.jwkToPrvKey(jwk);
 	      } else {
-	        fs.writeFile(privKeyFile, this._generateAndSerializeKey());
+	        fs.writeFileSync(privKeyFile, this._generateAndSerializeKey());
 	        fs.chmodSync(privKeyFile, 400);
 	      }
 	    } else {
@@ -13716,11 +13718,12 @@
 	// TODO: make the whole thing use GUN for indexing and flush onto IPFS
 
 	var Index = function () {
-	  function Index(ipfs, viewpoint) {
+	  function Index(ipfs, viewpoint, gun) {
 	    var _this = this;
 
 	    _classCallCheck(this, Index);
 
+	    this.gun = gun || new Gun(['http://localhost:8080/gun']);
 	    if (ipfs) {
 	      this.ipfs = ipfs;
 	      this.storage = new merkleBtree.IPFSStorage(ipfs);
@@ -14260,7 +14263,7 @@
 	              }
 
 	              _context7.next = 6;
-	              return this.storage.get(r[0].value);
+	              return this.gun.get(r[0].value).get('raw').then();
 
 	            case 6:
 	              p = _context7.sent;
@@ -14323,7 +14326,7 @@
 	              }
 
 	              _context8.next = 9;
-	              return this.storage.get(profileUri);
+	              return this.gun.get(profileUri).get('raw').then();
 
 	            case 9:
 	              p = _context8.sent;
@@ -14410,9 +14413,10 @@
 	              hash = r.length ? r[0].hash : '';
 
 	              id.ipfsHash = hash;
+	              this.gun.get(hash).get('raw').put(_JSON$stringify(id.data));
 	              return _context10.abrupt('return', hash);
 
-	            case 7:
+	            case 8:
 	            case 'end':
 	              return _context10.stop();
 	          }
@@ -15170,7 +15174,7 @@
 	              _context21.prev = 13;
 	              _context21.t0 = JSON;
 	              _context21.next = 17;
-	              return this.storage.get('/ipfs/' + r[i].value);
+	              return this.gun.get(r[i].value).get('raw').then();
 
 	            case 17:
 	              _context21.t1 = _context21.sent;

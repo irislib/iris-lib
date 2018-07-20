@@ -20,7 +20,7 @@ const DEFAULT_TIMEOUT = 10000;
 // TODO: make the whole thing use GUN for indexing and flush onto IPFS
 class Index {
   constructor(ipfs, viewpoint, gun) {
-    this.gun = gun || new Gun();
+    this.gun = gun || new Gun(['http://localhost:8080/gun']);
     if (ipfs) {
       this.ipfs = ipfs;
       this.storage = new btree.IPFSStorage(ipfs);
