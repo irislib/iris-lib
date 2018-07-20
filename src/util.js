@@ -63,7 +63,7 @@ export default {
         const jwk = JSON.parse(f);
         myKey = this.jwkToPrvKey(jwk);
       } else {
-        fs.writeFile(privKeyFile, this._generateAndSerializeKey());
+        fs.writeFileSync(privKeyFile, this._generateAndSerializeKey());
         fs.chmodSync(privKeyFile, 400);
       }
     } else {
