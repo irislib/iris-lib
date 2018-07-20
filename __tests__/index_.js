@@ -6,6 +6,25 @@ let key, ipfsNode;
 
 jest.setTimeout(30000);
 
+function shuffle(array) {
+  let currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+};
+
 beforeAll(async () => {
   key = identifi.util.getDefaultKey();
   ipfsNode = new IPFS({repo: './ipfs_repo'});
@@ -67,6 +86,25 @@ describe('local index', async () => {
       p = await i.get('david@example.com');
       expect(p.data.trustDistance).toBe(3);
     });
+    test('add a collection of messages using addMessages', async () => {
+      const msgs = [];
+      let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'bob1@example.com']], rating:10}, key);
+      msgs.push(msg);
+      for (let i = 0;i < 10;i++) {
+        msg = identifi.Message.createRating({author: [['email', `bob${i}@example.com`]], recipient: [['email', `bob${i+1}@example.com`]], rating:10}, key);
+        msgs.push(msg);
+      }
+      msg = identifi.Message.createRating({author: [['email', 'bert@example.com']], recipient: [['email', 'chris@example.com']], rating:10}, key);
+      msgs.push(msg);
+      await i.addMessages(shuffle(msgs));
+      p = await i.get('bob10@example.com');
+      expect(p).toBeDefined();
+      expect(p.data.trustDistance).toBe(11);
+      p = await i.get('bert@example.com');
+      expect(p).toBeUndefined();
+      p = await i.get('chris@example.com');
+      expect(p).toBeUndefined();
+    });
   });
   describe ('untrusted key', async () => {
     const u = identifi.util.generateKey();
@@ -127,7 +165,6 @@ describe('local index', async () => {
       i = await identifi.Index.load(h, ipfsNode);
       expect(i).toBeInstanceOf(identifi.Index);
     });
-
   });
 });
 
