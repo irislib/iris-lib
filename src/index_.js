@@ -440,6 +440,26 @@ class Index {
     }
   }
 
+  /*
+    Add a list of messages to the index.
+    Useful for example when adding a new WoT dataset that contains previously
+    unknown authors.
+
+    Iteratively performs sorted merge joins on previously known identities and
+    new msgs authors, until all messages from within the WoT have been added.
+
+    Msgs can be either a merkle-btree or an array of messages.
+  */
+  async addMessages(msgs) {
+    if (Array.isArray(msgs)) {
+      msgs.sort();
+    } else if (msgs instanceof btree.MerkleBTree) {
+      // assign
+    } else {
+      throw `msgs param must be an array or MerkleBTree`;
+    }
+  }
+
   /* Add message to index */
   async addMessage(msg: Message, updateIdentityIndexes = true) {
     if (this.ipfs) {
