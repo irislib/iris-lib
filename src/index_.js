@@ -451,13 +451,24 @@ class Index {
     Msgs can be either a merkle-btree or an array of messages.
   */
   async addMessages(msgs) {
+    let msgsByAuthor;
     if (Array.isArray(msgs)) {
-      msgs.sort();
+      msgsByAuthor = new btree.MerkleBTree();
+      for (let i = 0;i < msgs.length;i++) {
+        for (let j = 0;j < msgs[i].data.author.length;j++) {
+          let id = msgs[i].data.author[j];
+          if (Attribute.isUniqueType(id[0])) {
+            let key = `${encodeURIComponent(id[1]):encodeURIComponent(id[0])}`;
+            msgsByAuthor.put(key, msgs[i]);
+          }
+        }
+      }
     } else if (msgs instanceof btree.MerkleBTree) {
-      // assign
+      msgsByAuthor = msgs;
     } else {
       throw `msgs param must be an array or MerkleBTree`;
     }
+    // TODO: sorted merge join identitiesBySearchKey and msgsByAuthor
   }
 
   /* Add message to index */
