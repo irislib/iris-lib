@@ -1,0 +1,17 @@
+{
+  "name": "identifi-lib",
+  "description": "Basic tools for reading and writing Identifi messages and identities.",
+  "main": "dist/identifiLib.js",
+  "authors": [
+    "Martti Malmi (martti.malmi@iki.fi)"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/identifi/identifi-lib",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

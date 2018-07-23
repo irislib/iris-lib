@@ -1,0 +1,262 @@
+<html>
+<head>
+  <title>identifi-lib</title>
+  <!--<script type="text/javascript" src="../dist/identifiLib.js"></script>-->
+  <script type="text/javascript" src="../dist/identifiLib.js"></script>
+  <script src="https://unpkg.com/ipfs/dist/index.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+<body>
+  <div class="container">
+    <h1>Saving the world with identifi-lib</h1>
+
+    <p>The building blocks of Identifi data are digitally signed <b>Messages</b>
+    which are typically <i>verifications</i> or <i>ratings</i>.</p>
+
+    <p>Ratings are used to build a <i>web of trust</i>. Your web of trust consists
+    of the identities that you have rated positively, the identities that they have rated
+    positively and so on, up to an arbitrary <i>trust distance</i>.</p>
+
+    <p>Verifications are claims that certain <b>Attributes</b>
+    (name, email, bitcoin address etc.) belong to the same <b>Identity</b>.
+    Verifications from your web of trust are used to bundle together
+    attributes into Identity objects.</p>
+
+    <p>Identifi-lib can be used to read and write <b>Indices</b> of Messages and
+    Identities. An Identifi <i>index root</i> typically contains four indices:
+    <i>messagesByTimestamp</i>, <i>messagesByTrustDistance</i>,
+    <i>identitiesByTrustDistance</i> and <i>identitiesBySearchKey</i>.</p>
+
+    <p>Index root example:
+    <a href="https://identi.fi/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs">
+      https://identi.fi/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs
+    </a></p>
+
+    <p>Identifi messages and indices are stored on the distributed, censorship-resistant
+    IPFS network</p>
+
+    <h2>Including the library</h2>
+    <h3>Browser</h3>
+    <pre>&lt;script type="text/javascript" src="https://unpkg.com/identifi-lib/dist/identifiLib.min.js">&lt;/script></pre>
+    <p>The lib will be available as <i>window.identifiLib</i>.</p>
+
+    <h3>Node.js</h3>
+    <pre>npm install identifi-lib</pre>
+
+    <h2>index = await Index.load(indexRootIpfsUri)</h2>
+    <p>Load an Index from a given index root IPFS/IPNS URI. If ipfsUri is undefined,
+    identi.fi index is loaded by default. As of April 2018, identi.fi index consists
+    mostly of data crawled from bitcoin-otc.com.</p>
+
+    <h2>index.search(query, limit)</h2>
+    <p>Search an identifi index for identitiesBySearchKey. A list of matching
+    Identity objects is returned.</p>
+    <input type="text" value="ma" id="query" onkeyup="search()" class="form-control">
+    <p id="searchResults"></p>
+
+    <p>You can create a similar search widget with:</p>
+    <pre>window.identifiLib.Identity.appendSearchWidget(parentElement, index);</pre>
+    <p id="searchWidget"></p>
+
+    <h2>index.get(value [, type])</h2>
+    <p>Search the identitiesBySearchKey index using value and type. If an exact
+    match is found, the resulting Identity object is returned. If type is not defined,
+    it will be guessed using a regex list.</p>
+    <p><input type="text" value="martti@moni.com" id="profileQuery" onkeyup="getProfile()" class="form-control"></p>
+    <textarea style="width:100%" rows=10 id="profileResults" class="form-control"></textarea>
+
+    <h3>identity.identicon(100)</h3>
+    <p>Generate identicon of width 100px:</p>
+    <p id="identicon"></p>
+
+    <h3>identity.verified('name')</h3>
+    <p>Get the most verified attribute of type 'name':</p>
+    <p>Result: <b id="verifiedAttribute"></b></p>
+
+    <h2>Create, sign and publish a message</h2>
+    <pre>msg = Message.createRating(</pre>
+    <textarea id="ratingMsg" style="width: 100%" rows=12 class="form-control">
+      {
+        "author": [
+          ["name", "Alice"],
+          ["email", "alice@example.com"]
+        ],
+        "recipient": [
+          ["name", "Bob"],
+          ["keyID", "4321DCBA"]
+        ],
+        "rating": 10,
+        "comment": "Good"
+      }</textarea>
+    <pre>
+);
+key = util.getDefaultKey();</pre>
+    <p><input type="button" value="msg.sign(key);" id="signMsg" class="btn btn-primary"></p>
+    <pre id="signMsgResult"></pre>
+    <p><input type="button" value="index.publishMessage(msg);" id="publishMsg" class="btn btn-primary"></p>
+    <pre id="publishMsgResult"></pre>
+    <p id="publishMsgResultLink"></p>
+
+    <p>By default, maxRating is 10 and minRating is -10.</p>
+
+    <p>Messages are encoded and signed as <a href="https://jwt.io">JSON Web Tokens</a>.
+    The signing EC key is included in the message header along with signature algorithm.
+    In the future, we may link to the IPFS URI of the signing key instead, so that long RSA
+    keys can be used without replicating them in every message.</p>
+
+    <p>Default key is read from localStorage/filesystem or a new one is generated.</p>
+
+    <p>If using js-ipfs, broadcast to IPFS pubsub 'identifi' channel and add to index.
+    If using an ipfs proxy, post message to identi.fi which broadcasts it on the pubsub.</p>
+
+    <p>Identifi indexers listening to the pubsub channel update their message and identity
+    indices in respect to the new message, if its author and signer are within the indexer's
+    web of trust.</p>
+
+    <p>Verification message example:</p>
+
+    <pre>
+msg = Message.createVerification({
+  author: [['name', 'Alice'], ['email', 'alice@example.com']],
+  recipient: [
+    ['name', 'Bob'],
+    ['keyID', '4321DCBA'],
+    ['email', 'bob@example.com'],
+    ['bitcoin_address', '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa']
+  ],
+  comment 'Verified in person'
+});
+    </pre>
+
+    <h2>Index.create()</h2>
+    <p>Indexing with identifi-lib is work-in-progress. Indexing features are being moved to identifi-lib from
+    <a href="https://github.com/identifi/identifi-daemon">identifi-daemon</a>.</p>
+
+    <p><a href="https://github.com/ipfs/js-ipfs">Js-ipfs</a> is needed in order to write your own index.</p>
+
+    <pre>
+ipfs = new window.Ipfs();
+await new Promise((resolve, reject) => {
+  ipfs.on('ready', () => {
+    console.log('ipfs ready');
+    resolve();
+  });
+  ipfs.on('error', error => {
+    console.error(error.message);
+    reject();
+  });
+});
+index = await window.identifiLib.Index.create(ipfs);
+myKey = window.identifiLib.util.getDefaultKey('.');
+msg = window.identifiLib.Message.createVerification({
+  recipient: [['keyID', myKey.keyID], ['name', 'Alice Example']],
+  comment: 'add name'
+}, myKey);
+await index.addMessage(msg);
+msg2 = window.identifiLib.Message.createRating({
+  recipient: [['email', 'bob@example.com']],
+  rating: 5
+}, myKey);
+await index.addMessage(msg2);
+identities = await index.search('');
+uri = await index.save();
+    </pre>
+    <p><input type="button" value="Run" id="runIndexExample" class="btn btn-primary"></p>
+    <pre id="runIndexExampleResult"></pre>
+
+    <p>Indices use <a href="https://github.com/mmalmi/merkle-btree">merkle-btrees</a>
+    that anyone can easily write messages to, essentially creating a fork of the original
+    index. Since it's a btree, you only need to rewrite one branch, not the whole tree.</p>
+
+    <p>As of June 2018, the JS-IPFS team <a href="https://github.com/ipfs/js-ipfs/issues/209#issuecomment-382593283">
+    is working on</a> adding IPNS support, which is needed
+    for browser users of identifi to maintain permanent IPNS pointers to their indices,
+    whose IPFS hash changes on every write. Currently, only
+    <a href="https://github.com/identifi/identifi-daemon">identifi-daemon</a> which
+    connects to <a href="https://github.com/ipfs/go-ipfs">go-ipfs</a> can maintain
+    the index at a permanent address.</p>
+
+    <h3>How to build an identifi index</h3>
+    <p>Start by writing positive rating messages to the people or organizations that you trust
+    (message author is you, trust distance 0). Iterate up to the wanted trust distance:</p>
+    <ol>
+      <li>Add the messages to messagesByTrustDistance</li>
+      <li>Add the recipient attributes of the messages to helper index trustDistancesByAttribute (if not already there)</li>
+      <li>If recipient attribute type is identifiIndexURI, add to identifiIndexList</li>
+      <li>For each attribute that is not already in identitiesByAttribute index</li>
+        <ol>
+          <li>Search indexes on identifiIndexList to get verification messages where the attribute is marked as recipient (messages that connect the attribute to other attributes)</li>
+          <li>If the other attributes are already in identitiesByAttribute, add attribute to the existing identity</li>
+          <li>If not, add a new identity with the connected attributes to identitiesByAttribute</li>
+        </ol>
+      </li>
+      <li>Add message to sentMessages index of the author and receivedMessages index of the recipient identity.</li>
+      <li>Search indexes on identifiIndexList to get messages authored by attributes whose trust distance is at the current level of trust distance iteration</li>
+    </ol>
+
+    <h2>So, what about saving the world?</h2>
+    <p>Identifi's web-of-trust approach to identity management could be more resilient,
+    accessible and intuitive than the hierarchical approach of DNS. It could free our
+    digital identities from domain names, email providers, social media companies and phone carriers.
+    Instead, we can use public key hashes as unique identifiers. Identifi solves the
+    problem of connecting human-readable names (and faces) to public keys without
+    a single source of truth.
+    </p>
+
+    <p>Ubiquitously available identity and reputation data would bring us closer to our
+    native social habitat - a tribe or a village society where everyone knows each other.
+    That would incentivize people to treat each other well and apologize and compensate
+    for misdeeds. It would be a cost-effective and non-violent alternative to the punitive,
+    expensive, slow and too often corrupt or unjust state monopolies of justice. See
+    <a href="https://medium.com/@mmalmi/learning-to-trust-strangers-167b652a654f">
+    Learning to Trust Strangers</a> and
+    <a href="https://medium.com/liberation-day/law-is-better-without-monopoly-778963880276">
+    Law Is Better Without Monopoly</a>.</p>
+
+    <p>We must not let centrally managed "good citizen score" systems define how we regard each other. Identifi's reputation scores always
+    depend on whose web-of-trust you are looking through (and you can easily maintain your own). You can also choose the scoring algorithm
+    that you want to use.</p>
+
+    <p>Identifi's web of trust can be used in other system to filter out spam,
+    fake users, propaganda or other untrusted content. That is helpful when building
+    decentralized social media applications, which need some way to limit write access.</p>
+
+    <p>Storing all data on the IPFS network makes it more difficult to be shut down
+    by lawsuits or oppressive governments.</p>
+
+    <h3>In the future</h3>
+    Self-driving cars, drones and other autonomous agents inhabiting the same physical space
+    will need to identify each other and be accountable for their behavior. Unidentifiable
+    agents, much like masked people or cars without license plates, will probably be seen
+    as a threat by others and can be stopped without recourse. To avoid centralization of power,
+    we should pursue a decentralized web of trust registry rather than a top-down system.
+
+    <h2>How to solve the chicken-and-egg problem?</h2>
+    <p><b>The signer and author of an Identifi message need not be the same person.</b>
+    A signature on an identifi message means just that the signer verifies its authenticity.</p>
+    <p>That allows us to write crawlers that import content into Identifi from other platforms.
+    That makes Identifi useful even with no initial users. In the beginning, people
+    can rely on 3rd parties to sign and import their messages into Identifi.</p>
+    <p>The dataset you see as of April 2018 is crawled from bitcoin-otc.com.</p>
+
+    <h2>What's next?</h2>
+    <p>If you like the idea, you can help by integrating and improving identifi-lib
+    (<a href="https://github.com/identifi/identifi-lib">Github</a>) or writing crawlers.</p>
+
+    <p>Possible applications:</p>
+    <ul>
+      <li>Contact details search in any application</li>
+      <li>Finding payment addresses in crypto wallets</li>
+      <li>Finding public keys of other users in encrypted instant messaging apps</li>
+      <li>Finding network addresses of servers (instead of using DNS)</li>
+      <li>Filter out untrusted content in decentralized social media</li>
+      <li>Browser plugin to filter the content in existing social media</li>
+      <li>Email spam filtering</li>
+      <li>Filter reviews on marketplace platforms (Airbnb, eBay, Uber, LocalBitcoins)</li>
+      <li>Uncensorable platforms for dispute announcement and resolution</li>
+    </ul>
+  </div>
+</body>
+</html>
