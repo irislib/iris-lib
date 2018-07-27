@@ -468,23 +468,31 @@ class Index {
     } else {
       throw `msgs param must be an array or MerkleBTree`;
     }
-    let leftCursor, rightCursor;
-    let leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
-    let rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
-    while (leftRes.length && rightRes.length) {
-      leftCursor = leftRes[0].key;
-      rightCursor = rightRes[0].key;
-      if (leftRes[0].key === rightRes[0].key) {
-        console.log(`adding msg by`, rightRes[0].key);
-        await this.addMessage(Message.fromJws(rightRes[0].value.jws));
-      } else if (leftRes[0].key < rightRes[0].key) {
-        leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
-      } else {
-        rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
+    let messagesAdded = true;
+    while (messagesAdded) {
+      messagesAdded = false;
+      let leftCursor, rightCursor;
+      let leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
+      let rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
+      // sort-merge join identitiesBySearchKey and msgsByAuthor
+      while (leftRes.length && rightRes.length) {
+        leftCursor = leftRes[0].key;
+        rightCursor = rightRes[0].key;
+        console.log(leftCursor, rightCursor);
+        if (leftRes[0].key === rightRes[0].key) {
+          console.log(`adding msg by`, rightRes[0].key);
+          await this.addMessage(Message.fromJws(rightRes[0].value.jws));
+          leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
+          rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
+          messagesAdded = true;
+        } else if (leftRes[0].key < rightRes[0].key) {
+          leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
+        } else {
+          rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
+        }
       }
     }
     return true;
-    // TODO: sorted merge join identitiesBySearchKey and msgsByAuthor
   }
 
   /* Add message to index */
