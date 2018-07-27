@@ -453,13 +453,13 @@ class Index {
   async addMessages(msgs) {
     let msgsByAuthor;
     if (Array.isArray(msgs)) {
-      msgsByAuthor = new btree.MerkleBTree(this.storage);
-      for (let i = 0;i < msgs.length;i++) {
-        for (let j = 0;j < msgs[i].signedData.author.length;j++) {
-          let id = msgs[i].signedData.author[j];
+      msgsByAuthor = new btree.MerkleBTree(this.storage, 1000);
+      for (let i = 0;i < msgs.length;i ++) {
+        for (let j = 0;j < msgs[i].signedData.author.length;j ++) {
+          const id = msgs[i].signedData.author[j];
           if (Attribute.isUniqueType(id[0])) {
-            let key = `${encodeURIComponent(id[1])}:${encodeURIComponent(id[0])}`;
-            msgsByAuthor.put(key, msgs[i]);
+            const key = `${encodeURIComponent(id[1])}:${encodeURIComponent(id[0])}`;
+            await msgsByAuthor.put(key, msgs[i]);
           }
         }
       }
@@ -468,6 +468,22 @@ class Index {
     } else {
       throw `msgs param must be an array or MerkleBTree`;
     }
+    let leftCursor, rightCursor;
+    let leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
+    let rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
+    while (leftRes.length && rightRes.length) {
+      leftCursor = leftRes[0].key;
+      rightCursor = rightRes[0].key;
+      if (leftRes[0].key === rightRes[0].key) {
+        console.log(`adding msg by`, rightRes[0].key);
+        await this.addMessage(Message.fromJws(rightRes[0].value.jws));
+      } else if (leftRes[0].key < rightRes[0].key) {
+        leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
+      } else {
+        rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
+      }
+    }
+    return true;
     // TODO: sorted merge join identitiesBySearchKey and msgsByAuthor
   }
 
