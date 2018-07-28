@@ -468,9 +468,9 @@ class Index {
     } else {
       throw `msgs param must be an array or MerkleBTree`;
     }
-    let messagesAdded = true;
-    while (messagesAdded) {
-      messagesAdded = false;
+    let initialMsgCount, msgCountAfterwards;
+    do {
+      initialMsgCount = await msgsByAuthor.size();
       let leftCursor, rightCursor;
       let leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
       let rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
@@ -482,16 +482,17 @@ class Index {
         if (leftRes[0].key === rightRes[0].key) {
           console.log(`adding msg by`, rightRes[0].key);
           await this.addMessage(Message.fromJws(rightRes[0].value.jws));
+          await msgsByAuthor.delete(rightCursor);
           leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
           rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
-          messagesAdded = true;
         } else if (leftRes[0].key < rightRes[0].key) {
           leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
         } else {
           rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
         }
       }
-    }
+      msgCountAfterwards = await msgsByAuthor.size();
+    } while (msgCountAfterwards != initialMsgCount)
     return true;
   }
 

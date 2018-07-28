@@ -90,16 +90,16 @@ describe('local index', async () => {
       const msgs = [];
       let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'bob1@example.com']], rating:10}, key);
       msgs.push(msg);
-      for (let i = 0;i < 10;i++) {
+      for (let i = 0;i < 4;i++) {
         msg = identifi.Message.createRating({author: [['email', `bob${i}@example.com`]], recipient: [['email', `bob${i+1}@example.com`]], rating:10}, key);
         msgs.push(msg);
       }
       msg = identifi.Message.createRating({author: [['email', 'bert@example.com']], recipient: [['email', 'chris@example.com']], rating:10}, key);
       msgs.push(msg);
       await i.addMessages(shuffle(msgs));
-      p = await i.get('bob10@example.com');
+      p = await i.get('bob4@example.com');
       expect(p).toBeDefined();
-      expect(p.data.trustDistance).toBe(11);
+      expect(p.data.trustDistance).toBe(5);
       p = await i.get('bert@example.com');
       expect(p).toBeUndefined();
       p = await i.get('chris@example.com');
