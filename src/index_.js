@@ -492,7 +492,7 @@ class Index {
         }
       }
       msgCountAfterwards = await msgsByAuthor.size();
-    } while (msgCountAfterwards != initialMsgCount)
+    } while (msgCountAfterwards !== initialMsgCount);
     return true;
   }
 
