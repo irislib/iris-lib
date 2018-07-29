@@ -453,6 +453,7 @@ class Index {
   async addMessages(msgs) {
     let msgsByAuthor;
     if (Array.isArray(msgs)) {
+      console.log(`sorting ${msgs.length} messages onto a search tree...`);
       msgsByAuthor = new btree.MerkleBTree(new btree.RAMStorage(), 1000);
       for (let i = 0;i < msgs.length;i ++) {
         for (let j = 0;j < msgs[i].signedData.author.length;j ++) {
@@ -463,6 +464,7 @@ class Index {
           }
         }
       }
+      console.log(`...done`);
     } else if (msgs instanceof btree.MerkleBTree) {
       msgsByAuthor = msgs;
     } else {
@@ -480,7 +482,11 @@ class Index {
         rightCursor = rightRes[0].key;
         if (rightRes[0].key.indexOf(leftRes[0].key) === 0) {
           console.log(`adding msg by`, rightRes[0].key);
-          await this.addMessage(Message.fromJws(rightRes[0].value.jws));
+          try {
+            await this.addMessage(Message.fromJws(rightRes[0].value.jws));
+          } catch (e) {
+            console.log(`adding failed:`, e);
+          }
           await msgsByAuthor.delete(rightCursor);
           leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
           rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
