@@ -13373,7 +13373,6 @@
 	      while (leftRes.length && rightRes.length) {
 	        leftCursor = leftRes[0].key;
 	        rightCursor = rightRes[0].key;
-	        console.log(leftCursor, rightCursor);
 	        if (leftRes[0].key === rightRes[0].key) {
 	          console.log('adding msg by', rightRes[0].key);
 	          await this.addMessage(Message.fromJws(rightRes[0].value.jws));
@@ -13482,7 +13481,7 @@
 	  return Index;
 	}();
 
-	var version$2 = "0.0.61";
+	var version$2 = "0.0.62";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

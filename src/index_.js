@@ -453,12 +453,12 @@ class Index {
   async addMessages(msgs) {
     let msgsByAuthor;
     if (Array.isArray(msgs)) {
-      msgsByAuthor = new btree.MerkleBTree(this.storage, 1000);
+      msgsByAuthor = new btree.MerkleBTree(new btree.RAMStorage(), 1000);
       for (let i = 0;i < msgs.length;i ++) {
         for (let j = 0;j < msgs[i].signedData.author.length;j ++) {
           const id = msgs[i].signedData.author[j];
           if (Attribute.isUniqueType(id[0])) {
-            const key = `${encodeURIComponent(id[1])}:${encodeURIComponent(id[0])}`;
+            const key = `${encodeURIComponent(id[1])}:${encodeURIComponent(id[0])}:${msgs[i].getHash()}`;
             await msgsByAuthor.put(key, msgs[i]);
           }
         }
@@ -478,8 +478,7 @@ class Index {
       while (leftRes.length && rightRes.length) {
         leftCursor = leftRes[0].key;
         rightCursor = rightRes[0].key;
-        console.log(leftCursor, rightCursor);
-        if (leftRes[0].key === rightRes[0].key) {
+        if (rightRes[0].key.indexOf(leftRes[0].key) === 0) {
           console.log(`adding msg by`, rightRes[0].key);
           await this.addMessage(Message.fromJws(rightRes[0].value.jws));
           await msgsByAuthor.delete(rightCursor);
