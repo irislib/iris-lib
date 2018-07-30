@@ -13346,16 +13346,18 @@
 	  Index.prototype.addMessages = async function addMessages(msgs) {
 	    var msgsByAuthor = void 0;
 	    if (Array.isArray(msgs)) {
-	      msgsByAuthor = new merkleBtree.MerkleBTree(this.storage, 1000);
+	      console.log('sorting ' + msgs.length + ' messages onto a search tree...');
+	      msgsByAuthor = new merkleBtree.MerkleBTree(new merkleBtree.RAMStorage(), 1000);
 	      for (var i = 0; i < msgs.length; i++) {
 	        for (var j = 0; j < msgs[i].signedData.author.length; j++) {
 	          var id = msgs[i].signedData.author[j];
 	          if (Attribute.isUniqueType(id[0])) {
-	            var key = encodeURIComponent(id[1]) + ':' + encodeURIComponent(id[0]);
+	            var key = encodeURIComponent(id[1]) + ':' + encodeURIComponent(id[0]) + ':' + msgs[i].getHash();
 	            await msgsByAuthor.put(key, msgs[i]);
 	          }
 	        }
 	      }
+	      console.log('...done');
 	    } else if (msgs instanceof merkleBtree.MerkleBTree) {
 	      msgsByAuthor = msgs;
 	    } else {
@@ -13373,9 +13375,13 @@
 	      while (leftRes.length && rightRes.length) {
 	        leftCursor = leftRes[0].key;
 	        rightCursor = rightRes[0].key;
-	        if (leftRes[0].key === rightRes[0].key) {
+	        if (rightRes[0].key.indexOf(leftRes[0].key) === 0) {
 	          console.log('adding msg by', rightRes[0].key);
-	          await this.addMessage(Message.fromJws(rightRes[0].value.jws));
+	          try {
+	            await this.addMessage(Message.fromJws(rightRes[0].value.jws));
+	          } catch (e) {
+	            console.log('adding failed:', e);
+	          }
 	          await msgsByAuthor.delete(rightCursor);
 	          leftRes = await this.identitiesBySearchKey.searchText('', 1, leftCursor);
 	          rightRes = await msgsByAuthor.searchText('', 1, rightCursor);

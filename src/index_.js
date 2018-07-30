@@ -21,7 +21,7 @@ class Index {
   constructor(ipfs, viewpoint) {
     if (ipfs) {
       this.ipfs = ipfs;
-      this.storage = new btree.IPFSStorage(ipfs);
+      this.storage = new btree.RAMStorage();
       this.identitiesBySearchKey = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       this.identitiesByTrustDistance = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       this.messagesByTimestamp = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
@@ -147,7 +147,7 @@ class Index {
         throw `Could not load index via given ipfs gateways`;
       }
     } else if (typeof ipfs === `object`) {
-      this.storage = new btree.IPFSStorage(ipfs);
+      this.storage = new btree.RAMStorage();
       this.ipfs = ipfs;
     } else {
       throw `ipfs param must be a gateway url, array of urls or a js-ipfs object`;
@@ -180,23 +180,20 @@ class Index {
 
   async save() {
     try {
-      let r = await this.ipfs.files.add([
-        {path: `messagesByDistance`, content: new Buffer(this.messagesByDistance.rootNode.serialize(), `utf8`)},
-        {path: `messagesByTimestamp`, content: new Buffer(this.messagesByTimestamp.rootNode.serialize(), `utf8`)},
-        {path: `identitiesBySearchKey`, content: new Buffer(this.identitiesBySearchKey.rootNode.serialize(), `utf8`)},
-        {path: `identitiesByTrustDistance`, content: new Buffer(this.identitiesByTrustDistance.rootNode.serialize(), `utf8`)},
-      ]);
       const root = {viewpoint: this.viewpoint};
-      for (let i = 0;i < r.length;i += 1) {
-        root[r[i].path] = r[i].hash;
-      }
-      r = await this.ipfs.files.add(new Buffer(JSON.stringify(root), `utf8`));
-      const rootHash = r[0].hash;
+      // TODO: convert merkle-btrees to ipfsstorage
+      root.messagesByDistance = await this.storage.put(this.messagesByDistance.rootNode.serialize());
+      root.messagesByTimestamp = await this.storage.put(this.messagesByTimestamp.rootNode.serialize());
+      root.identitiesBySearchKey = await this.storage.put(this.identitiesBySearchKey.rootNode.serialize());
+      root.identitiesByTrustDistance = await this.storage.put(this.identitiesByTrustDistance.rootNode.serialize());
+      const rootHash = await this.storage.put(JSON.stringify(root));
+      /*
       if (this.ipfs.name) {
         console.log(`publishing index`, rootHash);
         const n = await this.ipfs.name.publish(rootHash, {});
         console.log(`published index`, n);
       }
+      */
       return rootHash;
     } catch (e) {
       console.log(`error publishing index`, e);
@@ -271,9 +268,7 @@ class Index {
   }
 
   async _saveIdentityToIpfs(id: Identity) {
-    const buffer = new this.ipfs.types.Buffer(JSON.stringify(id.data));
-    const r = await this.ipfs.files.add(buffer);
-    const hash = r.length ? r[0].hash : ``;
+    const hash = await this.storage.put(JSON.stringify(id.data));
     id.ipfsHash = hash;
     return hash;
   }
@@ -298,10 +293,8 @@ class Index {
         id.data.sent = id.sentIndex.rootNode.hash;
         id.data.received = id.receivedIndex.rootNode.hash;
       } else {
-        const s = await this.ipfs.files.add(new Buffer(id.sentIndex.rootNode.serialize(), `utf8`));
-        id.data.sent = s[0].hash;
-        const r = await this.ipfs.files.add(new Buffer(id.receivedIndex.rootNode.serialize(), `utf8`));
-        id.data.received = r[0].hash;
+        id.data.sent = await this.storage.put(id.sentIndex.rootNode.serialize());
+        id.data.received = await this.storage.put(id.receivedIndex.rootNode.serialize());
       }
     }
     const hash = await this._saveIdentityToIpfs(id);
@@ -483,9 +476,11 @@ class Index {
         if (rightRes[0].key.indexOf(leftRes[0].key) === 0) {
           console.log(`adding msg by`, rightRes[0].key);
           try {
-            await this.addMessage(Message.fromJws(rightRes[0].value.jws));
+            const m = Message.fromJws(rightRes[0].value.jws);
+            await this.addMessage(m);
           } catch (e) {
-            console.log(`adding failed:`, e);
+            const m = Message.fromJws(rightRes[0].value.jws);
+            console.log(`adding failed:`, e, JSON.stringify(m, null, 2));
           }
           await msgsByAuthor.delete(rightCursor);
           leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
@@ -504,14 +499,19 @@ class Index {
   /* Add message to index */
   async addMessage(msg: Message, updateIdentityIndexes = true) {
     if (this.ipfs) {
+      console.log(1111);
       msg.distance = await this.getMsgTrustDistance(msg);
+      console.log(2222);
       if (msg.distance === undefined) {
         return; // do not save messages from untrusted author
       }
       let indexKey = Index.getMsgIndexKey(msg);
+      console.log(3333);
       await this.messagesByDistance.put(indexKey, msg);
+      console.log(4444);
       indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
       const h = await this.messagesByTimestamp.put(indexKey, msg);
+      console.log(5555);
       if (updateIdentityIndexes) {
         await this._updateIdentityIndexesByMsg(msg);
       }
