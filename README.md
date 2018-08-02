@@ -77,7 +77,7 @@ The code is available under the [MIT](LICENSE) license.
 
 ### Contributing
 
-We are open to contributions, see [CONTRIBUTING.md](CONTRIBUTING.md) for more info.
+Please do **integrate** identifi-lib with your existing application or with a test application and **create Github issues** for the bugs and other problems you may encounter. Your help is much appreciated!
 
 ### Misc
 
