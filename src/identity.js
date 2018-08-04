@@ -2,6 +2,9 @@ import {MessageDigest} from 'jsrsasign';
 import Identicon from 'identicon.js';
 import Attribute from './attribute';
 
+/**
+* An Identifi identity profile
+*/
 class Identity {
   constructor(data) {
     this.data = data; // data to (de)serialize
@@ -126,10 +129,17 @@ class Identity {
     });
   }
 
-  verified(attribute) {
+  /**
+  * @param {string} attribute attribute type
+  * @returns {string} most verified value of the param type
+  */
+  verified(attribute: String) {
     return this.mostVerifiedAttributes.hasOwnProperty(attribute) ? this.mostVerifiedAttributes[attribute].attribute.val : undefined;
   }
 
+  /**
+  * @returns {HTMLElement} profile card html element describing the identity
+  */
   profileCard() {
     const card = document.createElement(`div`);
     card.className = `identifi-card`;
@@ -191,6 +201,11 @@ class Identity {
     return card;
   }
 
+  /**
+  * Appends a search widget to the given HTMLElement
+  * @param {HTMLElement} parentElement element where the search widget is added and event listener attached
+  * @param {Index} index index root to use for search
+  */
   static appendSearchWidget(parentElement, index) {
     const form = document.createElement(`form`);
 
@@ -313,6 +328,12 @@ class Identity {
     document.body.appendChild(sheet);
   }
 
+  /**
+  * @param {number} width of the identicon
+  * @param {number} border identicon border (aura) width
+  * @param {boolean} showDistance whether to show web of trust distance ordinal
+  * @returns {HTMLElement} identicon element that can be appended to DOM
+  */
   identicon(width, border = 4, showDistance = true) {
     Identity._injectCss(); // some other way that is not called on each identicon generation?
     const identicon = document.createElement(`div`);

@@ -9,17 +9,25 @@ const errorMsg = `Invalid Identifi message:`;
 
 class ValidationError extends Error {}
 
+/**
+* Identifi message - a JWS serialized object that has an author, a recipient and a signer.
+* On Identifi, signer and author can be different entities. This enables the crawling of content
+* from existing datasets. That makes Identifi an useful search tool even with no initial userbase.
+*/
 class Message {
   constructor(signedData) {
     this.signedData = signedData;
-    this.validate();
+    this._validate();
   }
 
+  /**
+  * @returns {string} Message signer keyID, i.e. base64 hash of public key
+  */
   getSignerKeyID() {
     return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
   }
 
-  validate() {
+  _validate() {
     if (!this.signedData) {throw new ValidationError(`${errorMsg} Missing signedData`);}
     if (typeof this.signedData !== `object`) {throw new ValidationError(`${errorMsg} signedData must be an object`);}
     const d = this.signedData;
@@ -65,28 +73,47 @@ class Message {
     return true;
   }
 
+  /**
+  * @returns {boolean} true if message has a positive rating
+  */
   isPositive() {
     return this.signedData.type === `rating` && this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
   }
 
+  /**
+  * @returns {boolean} true if message has a negative rating
+  */
   isNegative() {
     return this.signedData.type === `rating` && this.signedData.rating < (this.signedData.maxRating + this.signedData.minRating) / 2;
   }
 
+  /**
+  * @returns {boolean} true if message has a neutral rating
+  */
   isNeutral() {
     return this.signedData.type === `rating` && this.signedData.rating === (this.signedData.maxRating + this.signedData.minRating) / 2;
   }
 
+  /**
+  * @param {Object} key key to sign the message with
+  * @param {boolean} skipValidation if true, skips message validation
+  */
   sign(key, skipValidation) {
     this.jwsHeader = {alg: `ES256`, key: key.pubKeyASN1};
     this.jws = jws.JWS.sign(this.jwsHeader.alg, JSON.stringify(this.jwsHeader), JSON.stringify(this.signedData), key);
     if (!skipValidation) {
-      Message.validateJws(this.jws);
+      Message._validateJws(this.jws);
     }
     this.getHash();
     return this;
   }
 
+  /**
+  * Create an identifi message. Message timestamp and context (identifi) are automatically set.
+  * @param {Object} signedData message data object including author, recipient and other possible attributes
+  * @param {Object} signingKey optionally, you can set the key to sign the message with
+  * @returns {Message} Identifi message
+  */
   static create(signedData, signingKey) {
     if (!signedData.author && signingKey) {
       signedData.author = [[`keyID`, signingKey.keyID]];
@@ -100,11 +127,17 @@ class Message {
     return m;
   }
 
+  /**
+  * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set.
+  */
   static createVerification(signedData, signingKey) {
     signedData.type = `verification`;
     return Message.create(signedData, signingKey);
   }
 
+  /**
+  * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically.
+  */
   static createRating(signedData, signingKey) {
     signedData.type = `rating`;
     signedData.maxRating = signedData.maxRating || 10;
@@ -112,8 +145,13 @@ class Message {
     return Message.create(signedData, signingKey);
   }
 
+  /**
+  * Deserialize a message from a JWS string
+  * @param {string} jwsString JWS serialized Identifi message
+  * @returns {Message} Identifi message object
+  */
   static fromJws(jwsString) {
-    Message.validateJws(jwsString);
+    Message._validateJws(jwsString);
     const d = jws.JWS.parse(jwsString);
     const msg = new Message(d.payloadObj);
     msg.hash = Message.getHash(jwsString);
@@ -122,6 +160,10 @@ class Message {
     return msg;
   }
 
+  /**
+  * @param {Index} index index to look up the message author from
+  * @returns {Identity} message author identity
+  */
   getAuthor(index) {
     if (index) {
       // TODO: search from index
@@ -145,6 +187,10 @@ class Message {
     }
   }
 
+  /**
+  * @param {Index} index index to look up the message recipient from
+  * @returns {Identity} message recipient identity
+  */
   getRecipient(index) {
     if (index) {
       // TODO: search from index
@@ -168,6 +214,9 @@ class Message {
     }
   }
 
+  /**
+  * @returns {string} base64 hash of message jws
+  */
   getHash() {
     if (this.jws && !this.hash) {
       this.hash = Message.getHash(this.jws);
@@ -175,11 +224,17 @@ class Message {
     return this.hash;
   }
 
+  /**
+  * @returns {string} base64 hash of jws string
+  */
   static getHash(jwsString) {
     const hex = new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(jwsString);
     return new Buffer(hex, `hex`).toString(`base64`);
   }
 
+  /**
+  * @return {boolean} true if message signature is valid. Otherwise throws ValidationError.
+  */
   verify() {
     const keyHex = this.jwsHeader.key || this.jwsHeader.kid;
     const pem = asn1.ASN1Util.getPEMStringFromHex(keyHex, `PUBLIC KEY`);
@@ -197,7 +252,7 @@ class Message {
     return true;
   }
 
-  static validateJws(jwsString) {
+  static _validateJws(jwsString) {
     if (typeof jwsString !== `string`) {throw new ValidationError(`${errorMsg} Message JWS must be a string`);}
     if (jwsString.length > JWS_MAX_LENGTH) {throw new ValidationError(`${errorMsg} Message JWS max length is ${JWS_MAX_LENGTH}`);}
     return true;

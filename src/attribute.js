@@ -16,7 +16,13 @@ const UNIQUE_ID_VALIDATORS = {
   account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
 };
 
+/**
+* Identifi attribute - a key-value pair.
+*/
 class Attribute {
+  /**
+  * @param {Object|Array} data {name, val} or [name, val]
+  */
   constructor(data) {
     if (data.hasOwnProperty(`val`)) {
       this.val = data.val;
@@ -42,14 +48,25 @@ class Attribute {
     }
   }
 
+  /**
+  * @returns {Object} an object with attribute types as keys and regex patterns as values
+  */
   static getUniqueIdValidators() {
     return UNIQUE_ID_VALIDATORS;
   }
 
+  /**
+  * @param {string} type attribute type
+  * @returns {boolean} true if the attribute type is unique
+  */
   static isUniqueType(type) {
     return Object.keys(UNIQUE_ID_VALIDATORS).indexOf(type) > - 1;
   }
 
+  /**
+  * @param {string} value guess type of this attribute value
+  * @returns {string} type of attribute value or undefined
+  */
   static guessTypeOf(value) {
     for (const key in UNIQUE_ID_VALIDATORS) {
       if (value.match(UNIQUE_ID_VALIDATORS[key])) {
@@ -58,14 +75,26 @@ class Attribute {
     }
   }
 
+  /**
+  * @param {Attribute} a
+  * @param {Attribute} b
+  * @returns {boolean} true if params are equal
+  */
   static equals(a, b) {
     return new Attribute(a).equals(new Attribute(b));
   }
 
+  /**
+  * @returns {Array} attribute represented as a [name, val] array
+  */
   toArray() {
     return [this.name, this.val];
   }
 
+  /**
+  * @param {Attribute} a attribute to compare to
+  * @returns {boolean} true if attribute matches param
+  */
   equals(a: Attribute) {
     return this.name === a.name && this.val === a.val;
   }

@@ -17,8 +17,12 @@ const IPFS_INDEX_WIDTH = 200;
 const DEFAULT_TIMEOUT = 10000;
 
 // TODO: make the whole thing use GUN for indexing and flush onto IPFS
+/**
+* Identifi index root. Contains four indexes: identitiesBySearchKey, identitiesByTrustDistance,
+* messagesByTimestamp, messagesByDistance.
+*/
 class Index {
-  constructor(ipfs, viewpoint) {
+  constructor(ipfs: Object, viewpoint: Attribute) {
     if (ipfs) {
       this.ipfs = ipfs;
       this.storage = new btree.RAMStorage();
@@ -44,7 +48,12 @@ class Index {
     }
   }
 
-  static async create(ipfs, viewpoint) {
+  /**
+  * Create a new index
+  * @returns {Index} promise
+  * @param {Object} ipfs js-ipfs or js-ipfs-api object
+  */
+  static async create(ipfs: Object, viewpoint: Attribute) {
     const i = new Index(ipfs, viewpoint);
     await i.ready;
     return i;
@@ -98,13 +107,19 @@ class Index {
     return indexKeys;
   }
 
+  /**
+  * Load an existing Identifi index from indexRoot.
+  * @returns {Index}
+  * @param {string} indexRoot ipfs URI of the index to load. If omitted, identi.fi indexRoot is used by default.
+  * @param ipfs js-ipfs, js-ipfs-api, gateway URL (read-only) or array of gateway URLs (read-only). If omitted, a default list of gateway URLs is used.
+  */
   static async load(indexRoot, ipfs) {
     const i = new Index();
-    await i.init(indexRoot, ipfs);
+    await i._init(indexRoot, ipfs);
     return i;
   }
 
-  async init(indexRoot, ipfs = DEFAULT_IPFS_PROXIES, timeout = DEFAULT_TIMEOUT) {
+  async _init(indexRoot, ipfs = DEFAULT_IPFS_PROXIES, timeout = DEFAULT_TIMEOUT) {
     let useDefaultIndex = false;
     if (typeof indexRoot === `undefined`) {
       useDefaultIndex = true;
@@ -178,6 +193,10 @@ class Index {
     return true;
   }
 
+  /**
+  * (Re-)save the index root
+  * @returns {string} URI of the saved index root
+  */
   async save() {
     try {
       const root = {viewpoint: this.viewpoint};
@@ -217,6 +236,9 @@ class Index {
     }
   }
 
+  /**
+  * @returns {Identity} viewpoint identity of the index
+  */
   async getViewpoint() {
     const r = await this.identitiesByTrustDistance.searchText(`00`, 1);
     if (r.length) {
@@ -227,11 +249,13 @@ class Index {
     }
   }
 
-  /*
-  Get an identity referenced by an identifier.
-  If type is undefined, tries to guess it.
+  /**
+  * Get an identity referenced by an identifier.
+  * @param value identifier value to search by
+  * @param type (optional) identifier type to search by. If omitted, tries to guess it
+  * @returns {Identity} identity that is connected to the identifier param
   */
-  async get(value, type) {
+  async get(value: String, type: String) {
     if (typeof value === `undefined`) {
       throw `Value is undefined`;
     }
@@ -308,13 +332,19 @@ class Index {
     return {hash};
   }
 
-  async getSentMsgs(identity, limit, cursor = ``) {
+  /**
+  * @returns {Array} list of messages sent by param identity
+  */
+  async getSentMsgs(identity: Identity, limit, cursor = ``) {
     if (!identity.sentIndex) {
       identity.sentIndex = await btree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
     }
     return this._getMsgs(identity.sentIndex, limit, cursor);
   }
 
+  /**
+  * @returns {Array} list of messages received by param identity
+  */
   async getReceivedMsgs(identity, limit, cursor = ``) {
     if (!identity.receivedIndex) {
       identity.receivedIndex = await btree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
@@ -322,7 +352,7 @@ class Index {
     return this._getMsgs(identity.receivedIndex, limit, cursor);
   }
 
-  async getAttributeTrustDistance(a) {
+  async _getAttributeTrustDistance(a) {
     if (!Attribute.isUniqueType(a.name)) {
       return;
     }
@@ -330,6 +360,10 @@ class Index {
     return id && id.data && id.data.trustDistance;
   }
 
+  /**
+  * @param {Message} msg
+  * @returns {number} trust distance to msg author. Returns undefined if msg signer is not trusted.
+  */
   async getMsgTrustDistance(msg) {
     let shortestDistance = 1000;
     const signer = await this.get(msg.getSignerKeyID(), `keyID`);
@@ -341,7 +375,7 @@ class Index {
       if (Attribute.equals(a, this.viewpoint)) {
         return 0;
       } else {
-        const d = await this.getAttributeTrustDistance(a);
+        const d = await this._getAttributeTrustDistance(a);
         if (d < shortestDistance) {
           shortestDistance = d;
         }
@@ -433,15 +467,16 @@ class Index {
     }
   }
 
-  /*
-    Add a list of messages to the index.
-    Useful for example when adding a new WoT dataset that contains previously
-    unknown authors.
-
-    Iteratively performs sorted merge joins on previously known identities and
-    new msgs authors, until all messages from within the WoT have been added.
-
-    Msgs can be either a merkle-btree or an array of messages.
+  /**
+  * Add a list of messages to the index.
+  * Useful for example when adding a new WoT dataset that contains previously
+  * unknown authors.
+  *
+  * Iteratively performs sorted merge joins on [previously known identities] and
+  * [new msgs authors], until all messages from within the WoT have been added.
+  *
+  * @param msgs can be either a merkle-btree or an array of messages.
+  * @returns {boolean} true on success
   */
   async addMessages(msgs) {
     let msgsByAuthor;
@@ -496,22 +531,20 @@ class Index {
     return true;
   }
 
-  /* Add message to index */
+  /**
+  * @param msg Message to add to the index
+  * @param {boolean} updateIdentityIndexes default true
+  */
   async addMessage(msg: Message, updateIdentityIndexes = true) {
     if (this.ipfs) {
-      console.log(1111);
       msg.distance = await this.getMsgTrustDistance(msg);
-      console.log(2222);
       if (msg.distance === undefined) {
         return; // do not save messages from untrusted author
       }
       let indexKey = Index.getMsgIndexKey(msg);
-      console.log(3333);
       await this.messagesByDistance.put(indexKey, msg);
-      console.log(4444);
       indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
       const h = await this.messagesByTimestamp.put(indexKey, msg);
-      console.log(5555);
       if (updateIdentityIndexes) {
         await this._updateIdentityIndexesByMsg(msg);
       }
@@ -520,7 +553,9 @@ class Index {
     }
   }
 
-  /* Save message to ipfs and announce it on ipfs pubsub */
+  /**
+  * Save message to ipfs and announce it on ipfs pubsub
+  */
   async publishMessage(msg: Message, addToIndex = true) {
     const r = {};
     if (this.ipfs) {
@@ -545,6 +580,11 @@ class Index {
     return r;
   }
 
+  /**
+  * @param {string} value search string
+  * @param {string} type (optional) type of searched value
+  * @returns {Array} list of matching identities
+  */
   async search(value, type, limit = 5, cursor, depth = 20) { // TODO: param 'exact'
     const identitiesByHash = {};
     const initialDepth = cursor ? Number.parseInt(cursor.substring(0, cursor.indexOf(`:`))) : 0;
