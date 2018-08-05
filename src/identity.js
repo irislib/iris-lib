@@ -3,10 +3,11 @@ import Identicon from 'identicon.js';
 import Attribute from './attribute';
 
 /**
-* An Identifi identity profile
+* An Identifi identity profile. Usually you don't create them yourself, but get them
+* from Index methods such as search().
 */
 class Identity {
-  constructor(data) {
+  constructor(data: Object) {
     this.data = data; // data to (de)serialize
     this.profile = {};
     this.mostVerifiedAttributes = {};
@@ -127,6 +128,21 @@ class Identity {
         this.profile[k] = this.mostVerifiedAttributes[k].attribute.val;
       }
     });
+  }
+
+  /**
+  * @returns {string} stringified JSON from the identity data
+  */
+  serialize() {
+    return JSON.stringify(this.data, `utf8`);
+  }
+
+  /**
+  * @param {string} str stringified JSON of the identity data
+  * @returns {Identity} Identity object from the serialized data
+  */
+  static deserialize(str) {
+    return new Identity(JSON.parse(str));
   }
 
   /**

@@ -10,12 +10,19 @@ const errorMsg = `Invalid Identifi message:`;
 class ValidationError extends Error {}
 
 /**
-* Identifi message - a JWS serialized object that has an author, a recipient and a signer.
+* Identifi message: an object that has an author, recipient, signer, type, timestamp, context and optionally other fields.
+*
 * On Identifi, signer and author can be different entities. This enables the crawling of content
 * from existing datasets. That makes Identifi an useful search tool even with no initial userbase.
+*
+* Messages are serialized as JSON Web Signatures.
 */
 class Message {
-  constructor(signedData) {
+  /**
+  * Creates a message from the param object that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
+  * @param signedData
+  */
+  constructor(signedData: Object) {
     this.signedData = signedData;
     this._validate();
   }
@@ -98,7 +105,7 @@ class Message {
   * @param {Object} key key to sign the message with
   * @param {boolean} skipValidation if true, skips message validation
   */
-  sign(key, skipValidation) {
+  sign(key: Object, skipValidation: Boolean) {
     this.jwsHeader = {alg: `ES256`, key: key.pubKeyASN1};
     this.jws = jws.JWS.sign(this.jwsHeader.alg, JSON.stringify(this.jwsHeader), JSON.stringify(this.signedData), key);
     if (!skipValidation) {
@@ -109,12 +116,12 @@ class Message {
   }
 
   /**
-  * Create an identifi message. Message timestamp and context (identifi) are automatically set.
+  * Create an identifi message. Message timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @param {Object} signedData message data object including author, recipient and other possible attributes
   * @param {Object} signingKey optionally, you can set the key to sign the message with
   * @returns {Message} Identifi message
   */
-  static create(signedData, signingKey) {
+  static create(signedData: Object, signingKey: Object) {
     if (!signedData.author && signingKey) {
       signedData.author = [[`keyID`, signingKey.keyID]];
     }
@@ -128,17 +135,17 @@ class Message {
   }
 
   /**
-  * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set.
+  * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
   */
-  static createVerification(signedData, signingKey) {
+  static createVerification(signedData: Object, signingKey: Object) {
     signedData.type = `verification`;
     return Message.create(signedData, signingKey);
   }
 
   /**
-  * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically.
+  * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.
   */
-  static createRating(signedData, signingKey) {
+  static createRating(signedData: Object, signingKey: Object) {
     signedData.type = `rating`;
     signedData.maxRating = signedData.maxRating || 10;
     signedData.minRating = signedData.minRating || - 10;

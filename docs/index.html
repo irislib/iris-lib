@@ -101,6 +101,12 @@
                     <li class='h5'><span>Static members</span></li>
                     
                       <li><a
+                        href='#identitydeserialize'
+                        class='regular pre-open'>
+                        .deserialize
+                      </a></li>
+                    
+                      <li><a
                         href='#identityappendsearchwidget'
                         class='regular pre-open'>
                         .appendSearchWidget
@@ -111,6 +117,12 @@
                   
                     <ul class='list-reset py1-ul pl1'>
                       <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#identityserialize'
+                        class='regular pre-open'>
+                        #serialize
+                      </a></li>
                       
                       <li><a
                         href='#identityverified'
@@ -429,7 +441,7 @@
   </div>
   
 
-  <p>Identifi attribute - a key-value pair.</p>
+  <p>Identifi attribute - a simple key-value pair.</p>
 
  
   
@@ -903,11 +915,12 @@ name, val
   </div>
   
 
-  <p>An Identifi identity profile</p>
+  <p>An Identifi identity profile. Usually you don't create them yourself, but get them
+from Index methods such as search().</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>new Identity(data: any)</div>
+    <div class='pre p1 fill-light mt0'>new Identity(data: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
    
   
   
@@ -925,7 +938,7 @@ name, val
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>data</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>data</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    
           </div>
           
@@ -945,6 +958,75 @@ name, val
   
     <div class='py1 quiet mt1 prose-big'>Static Members</div>
     <div class="clearfix">
+  
+    <div class='border-bottom' id='identitydeserialize'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>deserialize(str)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+ 
+  
+    <div class='pre p1 fill-light mt0'>deserialize(str: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>): <a href="#identity">Identity</a></div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>str</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
+	    stringified JSON of the identity data
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="#identity">Identity</a></code>:
+        Identity object from the serialized data
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
   
     <div class='border-bottom' id='identityappendsearchwidget'>
       <div class="clearfix small pointer toggle-sibling">
@@ -1024,6 +1106,61 @@ name, val
   
     <div class='py1 quiet mt1 prose-big'>Instance Members</div>
     <div class="clearfix">
+  
+    <div class='border-bottom' id='identityserialize'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>serialize()</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+ 
+  
+    <div class='pre p1 fill-light mt0'>serialize(): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>:
+        stringified JSON from the identity data
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
   
     <div class='border-bottom' id='identityverified'>
       <div class="clearfix small pointer toggle-sibling">
@@ -2246,13 +2383,14 @@ unknown authors.</p>
   </div>
   
 
-  <p>Identifi message - a JWS serialized object that has an author, a recipient and a signer.
-On Identifi, signer and author can be different entities. This enables the crawling of content
+  <p>Identifi message: an object that has an author, recipient, signer, type, timestamp, context and optionally other fields.</p>
+<p>On Identifi, signer and author can be different entities. This enables the crawling of content
 from existing datasets. That makes Identifi an useful search tool even with no initial userbase.</p>
+<p>Messages are serialized as JSON Web Signatures.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>new Message(signedData: any)</div>
+    <div class='pre p1 fill-light mt0'>new Message(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
    
   
   
@@ -2270,7 +2408,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>signedData</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>signedData</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    
           </div>
           
@@ -2303,7 +2441,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
   
 
-  <p>Create an identifi message. Message timestamp and context (identifi) are automatically set.</p>
+  <p>Create an identifi message. Message timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
 
  
   
@@ -2382,11 +2520,11 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
   
 
-  <p>Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set.</p>
+  <p>Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>createVerification(signedData: any, signingKey: any)</div>
+    <div class='pre p1 fill-light mt0'>createVerification(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
    
   
   
@@ -2404,7 +2542,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>signedData</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>signedData</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    
           </div>
           
@@ -2412,7 +2550,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>signingKey</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>signingKey</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    
           </div>
           
@@ -2451,11 +2589,11 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
   
 
-  <p>Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically.</p>
+  <p>Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>createRating(signedData: any, signingKey: any)</div>
+    <div class='pre p1 fill-light mt0'>createRating(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
    
   
   
@@ -2473,7 +2611,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>signedData</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>signedData</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    
           </div>
           
@@ -2481,7 +2619,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>signingKey</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>signingKey</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    
           </div>
           
