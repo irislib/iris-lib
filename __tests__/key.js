@@ -9,13 +9,13 @@ beforeAll(() => {
   }
 });
 test('Generate key', async () => {
-  const i = await identifi.util.generateKey('.');
+  const i = await identifi.Key.generate('.');
   expect(i).toBeDefined();
 });
 test('Get default key', async () => {
-  const i = await identifi.util.getDefaultKey('.');
+  const i = await identifi.Key.getDefault('.');
   expect(i).toBeDefined();
-  const j = await identifi.util.getDefaultKey('.');
+  const j = await identifi.Key.getDefault('.');
   expect(i).toEqual(j);
   const msg = identifi.Message.createRating({
     author: [['email', 'alice@example.com']],

@@ -2,7 +2,8 @@ const identifi = require('../cjs/index.js');
 const IPFS = require('ipfs');
 const fs = require('fs');
 
-let key, ipfsNode;
+let key = identifi.Key.getDefault();
+let ipfsNode = new IPFS({repo: './ipfs_repo'});
 
 jest.setTimeout(30000);
 
@@ -25,10 +26,8 @@ function shuffle(array) {
   return array;
 };
 
-beforeAll(async () => {
-  key = identifi.util.getDefaultKey();
-  ipfsNode = new IPFS({repo: './ipfs_repo'});
-  await new Promise((resolve, reject) => {
+beforeAll(() => {
+  return new Promise((resolve, reject) => {
     ipfsNode.on('ready', () => {
       console.log('ipfs ready');
       resolve();
@@ -38,7 +37,6 @@ beforeAll(async () => {
       reject();
     });
   });
-  return true;
 });
 
 describe('local index', async () => {
@@ -107,7 +105,7 @@ describe('local index', async () => {
     });
   });
   describe ('untrusted key', async () => {
-    const u = identifi.util.generateKey();
+    const u = identifi.Key.generate();
     test('should not create new identity', async () => {
       let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'angus@example.com']], rating:10}, u);
       await i.addMessage(msg);
@@ -149,7 +147,7 @@ describe('local index', async () => {
     });
   });
   test('get viewpoint identity by searching the default keyID', async () => {
-    const defaultKey = identifi.util.getDefaultKey();
+    const defaultKey = identifi.Key.getDefault();
     p = await i.get(defaultKey.keyID, 'keyID');
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(p.data.trustDistance).toBe(0);
@@ -162,6 +160,7 @@ describe('local index', async () => {
       expect(h.length).toBeGreaterThan(0);
     });
     test('load saved index', async () => {
+      console.log('loading', h);
       i = await identifi.Index.load(h, ipfsNode);
       expect(i).toBeInstanceOf(identifi.Index);
     });
@@ -221,6 +220,6 @@ describe('remote index via ipfs gateway', async () => {
 });
 */
 
-afterAll(async () => {
-  await ipfsNode.stop();
+afterAll(() => {
+  return ipfsNode.stop();
 });

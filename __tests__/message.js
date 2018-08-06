@@ -2,7 +2,7 @@
 const crypto = require('crypto');
 const Message = require('../cjs/message.js');
 const Identity = require('../cjs/identity.js');
-const util = require('../cjs/util.js');
+const Key = require('../cjs/key.js');
 
 jest.setTimeout(30000);
 
@@ -25,7 +25,7 @@ describe('Message', function() {
       expect(msg.getRecipient()).toBeInstanceOf(Identity);
     });
     test('should use signing key as author if not defined', function() {
-      const defaultKey = util.getDefaultKey('.');
+      const defaultKey = Key.getDefault('.');
       msg = Message.createRating({
         recipient: [['email', 'bob@example.com']],
         rating: 5,
@@ -64,7 +64,7 @@ describe('Message', function() {
         rating: 5,
         comment: 'Good guy'
       });
-      key = util.generateKey();
+      key = Key.generate();
     });
     test('should be signed with sign()', function() {
       msg.sign(key);

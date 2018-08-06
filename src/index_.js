@@ -1,6 +1,7 @@
 import btree from 'merkle-btree';
 import util from './util';
 import Message from './message';
+import Key from './key';
 import Identity from './identity';
 import Attribute from './attribute';
 import fetch from 'node-fetch';
@@ -22,10 +23,14 @@ const DEFAULT_TIMEOUT = 10000;
 * messagesByTimestamp, messagesByDistance.
 */
 class Index {
-  constructor(ipfs: Object, viewpoint: Attribute) {
-    if (ipfs) {
-      this.ipfs = ipfs;
-      this.storage = new btree.RAMStorage();
+  constructor(storage: Object, viewpoint: Attribute) {
+    if (storage) {
+      console.log(`constructor`);
+      if (storage.constructor.name === `IPFS`) {
+        this.storage = new btree.IPFSStorage(storage);
+      } else {
+        this.storage = storage;
+      }
       this.identitiesBySearchKey = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       this.identitiesByTrustDistance = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       this.messagesByTimestamp = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
@@ -33,7 +38,7 @@ class Index {
       if (viewpoint) {
         this.viewpoint = new Attribute(viewpoint);
       } else {
-        this.viewpoint = {name: `keyID`, val: util.getDefaultKey().keyID, conf: 1, ref: 0};
+        this.viewpoint = {name: `keyID`, val: Key.getDefault().keyID, conf: 1, ref: 0};
       }
       const vp = new Identity({attrs: [this.viewpoint], trustDistance: 0});
       this.ready = new Promise(async (resolve, reject) => {
@@ -51,10 +56,10 @@ class Index {
   /**
   * Create a new index
   * @returns {Index} promise
-  * @param {Object} ipfs js-ipfs or js-ipfs-api object
+  * @param {Object} storage storage, js-ipfs or js-ipfs-api object
   */
-  static async create(ipfs: Object, viewpoint: Attribute) {
-    const i = new Index(ipfs, viewpoint);
+  static async create(storage: Object, viewpoint: Attribute) {
+    const i = new Index(storage, viewpoint);
     await i.ready;
     return i;
   }
@@ -113,25 +118,25 @@ class Index {
   * @param {string} indexRoot ipfs URI of the index to load. If omitted, identi.fi indexRoot is used by default.
   * @param ipfs js-ipfs, js-ipfs-api, gateway URL (read-only) or array of gateway URLs (read-only). If omitted, a default list of gateway URLs is used.
   */
-  static async load(indexRoot, ipfs) {
+  static async load(indexRoot, storage) {
     const i = new Index();
-    await i._init(indexRoot, ipfs);
+    await i._init(indexRoot, storage);
     return i;
   }
 
-  async _init(indexRoot, ipfs = DEFAULT_IPFS_PROXIES, timeout = DEFAULT_TIMEOUT) {
+  async _init(indexRoot, storage = DEFAULT_IPFS_PROXIES, timeout = DEFAULT_TIMEOUT) {
     let useDefaultIndex = false;
     if (typeof indexRoot === `undefined`) {
       useDefaultIndex = true;
       indexRoot = DEFAULT_INDEX;
     }
-    if (typeof ipfs === `string`) {
-      this.storage = new btree.IPFSGatewayStorage(ipfs);
-    } else if (Array.isArray(ipfs)) {
+    if (typeof storage === `string`) {
+      this.storage = new btree.IPFSGatewayStorage(storage);
+    } else if (Array.isArray(storage)) {
       let url;
-      for (let i = 0;i < ipfs.length;i ++) {
+      for (let i = 0;i < storage.length;i ++) {
         let res;
-        let u = `${ipfs[i]}${indexRoot}`;
+        let u = `${storage[i]}${indexRoot}`;
         try {
           res = await util.timeoutPromise(fetch(u, {timeout}).catch(() => {}), timeout);
           if (!res) {console.log(`fetching ${u} timed out`);}
@@ -139,7 +144,7 @@ class Index {
           console.log(`fetching ${u} failed:`, e);
         }
         if (!(res && res.ok && res.status === 200) && useDefaultIndex) { // try static fallback
-          u = `${ipfs[i]}${DEFAULT_STATIC_FALLBACK_INDEX}`;
+          u = `${storage[i]}${DEFAULT_STATIC_FALLBACK_INDEX}`;
           try {
             res = await util.timeoutPromise(fetch(u, {timeout}).catch(() => {}), timeout);
             if (res) {
@@ -152,7 +157,7 @@ class Index {
           }
         }
         if (res && res.ok && res.status === 200) {
-          url = ipfs[i];
+          url = storage[i];
           break;
         }
       }
@@ -161,9 +166,12 @@ class Index {
       } else {
         throw `Could not load index via given ipfs gateways`;
       }
-    } else if (typeof ipfs === `object`) {
-      this.storage = new btree.RAMStorage();
-      this.ipfs = ipfs;
+    } else if (typeof storage === `object`) {
+      if (storage.constructor.name === `IPFS`) {
+        this.storage = new btree.IPFSStorage(storage);
+      } else {
+        this.storage = storage;
+      }
     } else {
       throw `ipfs param must be a gateway url, array of urls or a js-ipfs object`;
     }
@@ -198,24 +206,28 @@ class Index {
   * @returns {string} URI of the saved index root
   */
   async save() {
-    try {
-      const root = {viewpoint: this.viewpoint};
-      // TODO: convert merkle-btrees to ipfsstorage
-      root.messagesByDistance = await this.storage.put(this.messagesByDistance.rootNode.serialize());
-      root.messagesByTimestamp = await this.storage.put(this.messagesByTimestamp.rootNode.serialize());
-      root.identitiesBySearchKey = await this.storage.put(this.identitiesBySearchKey.rootNode.serialize());
-      root.identitiesByTrustDistance = await this.storage.put(this.identitiesByTrustDistance.rootNode.serialize());
-      const rootHash = await this.storage.put(JSON.stringify(root));
-      /*
-      if (this.ipfs.name) {
-        console.log(`publishing index`, rootHash);
-        const n = await this.ipfs.name.publish(rootHash, {});
-        console.log(`published index`, n);
+    if (this.storage.put) {
+      try {
+        const root = {viewpoint: this.viewpoint};
+        // TODO: convert merkle-btrees to ipfsstorage
+        root.messagesByDistance = await this.storage.put(this.messagesByDistance.rootNode.serialize());
+        root.messagesByTimestamp = await this.storage.put(this.messagesByTimestamp.rootNode.serialize());
+        root.identitiesBySearchKey = await this.storage.put(this.identitiesBySearchKey.rootNode.serialize());
+        root.identitiesByTrustDistance = await this.storage.put(this.identitiesByTrustDistance.rootNode.serialize());
+        const rootHash = await this.storage.put(JSON.stringify(root));
+        /*
+        if (this.storage.ipfs.name) {
+          console.log(`publishing index`, rootHash);
+          const n = await this.storage.ipfs.name.publish(rootHash, {});
+          console.log(`published index`, n);
+        }
+        */
+        return rootHash;
+      } catch (e) {
+        console.log(`error saving index`, e);
       }
-      */
-      return rootHash;
-    } catch (e) {
-      console.log(`error publishing index`, e);
+    } else {
+      console.log(`storage`, this.storage.constructor.name, `has no .put(), not saving`);
     }
   }
 
@@ -312,6 +324,10 @@ class Index {
   }
 
   async _addIdentityToIndexes(id: Identity) {
+    if (!this.storage.put) {
+      console.log(`no this.storage.put()`);
+      return;
+    }
     if (id.sentIndex && id.receivedIndex) {
       if (id.sentIndex.rootNode.hash && id.receivedIndex.rootNode.hash) {
         id.data.sent = id.sentIndex.rootNode.hash;
@@ -475,7 +491,7 @@ class Index {
   * Iteratively performs sorted merge joins on [previously known identities] and
   * [new msgs authors], until all messages from within the WoT have been added.
   *
-  * @param msgs can be either a merkle-btree or an array of messages.
+  * @param {MerkleBTree | Array} msgs can be either a merkle-btree or an array of messages.
   * @returns {boolean} true on success
   */
   async addMessages(msgs) {
@@ -536,7 +552,7 @@ class Index {
   * @param {boolean} updateIdentityIndexes default true
   */
   async addMessage(msg: Message, updateIdentityIndexes = true) {
-    if (this.ipfs) {
+    if (this.storage.put) {
       msg.distance = await this.getMsgTrustDistance(msg);
       if (msg.distance === undefined) {
         return; // do not save messages from untrusted author
@@ -558,10 +574,10 @@ class Index {
   */
   async publishMessage(msg: Message, addToIndex = true) {
     const r = {};
-    if (this.ipfs) {
-      const hash = await this.ipfs.files.add(new Buffer(msg.jws, `utf8`));
+    if (this.storage.ipfs) {
+      const hash = await this.storage.ipfs.files.add(new Buffer(msg.jws, `utf8`));
       r.hash = hash;
-      await this.ipfs.pubsub.publish(`identifi`, new Buffer(hash, `utf8`));
+      await this.storage.ipfs.pubsub.publish(`identifi`, new Buffer(hash, `utf8`));
       if (addToIndex) {
         r.indexUri = await this.addMessage(msg);
       }
@@ -591,14 +607,12 @@ class Index {
     for (let d = initialDepth;d <= depth;d ++) {
       const useCursor = d === initialDepth;
       const paddedDistance = (`00${d}`).substring(d.toString().length);
-      //console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
       let r = await this.identitiesByTrustDistance.searchText(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
-      //console.log(`r`, r);
       while (r && r.length && Object.keys(identitiesByHash).length < limit) {
         for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {
           if (r[i].value && !identitiesByHash.hasOwnProperty(r[i].value)) {
             try {
-              const d = JSON.parse(await this.storage.get(`/ipfs/${r[i].value}`));
+              const d = JSON.parse(await this.storage.get(r[i].value));
               const id = new Identity(d);
               id.ipfsHash = r[i].value;
               id.cursor = r[i].key;
@@ -608,9 +622,7 @@ class Index {
             }
           }
         }
-        //console.log(`${paddedDistance}:${encodeURIComponent(value)}`, limit, r[r.length - 1].key);
         r = await this.identitiesBySearchKey.searchText(`${paddedDistance}:${encodeURIComponent(value)}`, limit, r[r.length - 1].key);
-        //console.log(`r`, r);
       }
     }
     return Object.values(identitiesByHash);

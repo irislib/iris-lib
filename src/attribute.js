@@ -17,7 +17,7 @@ const UNIQUE_ID_VALIDATORS = {
 };
 
 /**
-* Identifi attribute - a simple key-value pair.
+* A simple key-value pair.
 */
 class Attribute {
   /**
