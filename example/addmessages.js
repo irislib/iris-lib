@@ -4,7 +4,7 @@ const fs = require('fs');
 
 let key, ipfsNode;
 async function init() {
-  key = identifi.util.getDefaultKey();
+  key = identifi.Key.getDefault();
   ipfsNode = new IPFS({repo: './ipfs_repo'});
   await new Promise((resolve, reject) => {
     ipfsNode.on('ready', () => {

@@ -92,7 +92,7 @@
       }</textarea>
     <pre>
 );
-key = util.getDefaultKey();</pre>
+key = Key.getDefault();</pre>
     <p><input type="button" value="msg.sign(key);" id="signMsg" class="btn btn-primary"></p>
     <pre id="signMsgResult"></pre>
     <p><input type="button" value="index.publishMessage(msg);" id="publishMsg" class="btn btn-primary"></p>
@@ -149,7 +149,7 @@ await new Promise((resolve, reject) => {
   });
 });
 index = await window.identifiLib.Index.create(ipfs);
-myKey = window.identifiLib.util.getDefaultKey('.');
+myKey = window.identifiLib.Key.getDefault('.');
 msg = window.identifiLib.Message.createVerification({
   recipient: [['keyID', myKey.keyID], ['name', 'Alice Example']],
   comment: 'add name'

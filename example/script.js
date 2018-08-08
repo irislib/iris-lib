@@ -58,7 +58,7 @@ function signMsg() {
   const d = document.getElementById('ratingMsg').value;
   const msgData = JSON.parse(d);
   window.message = window.identifiLib.Message.createRating(msgData); // <--- Create an Identifi message
-  key = window.identifiLib.util.getDefaultKey(); // <--- Get or generate local key
+  key = window.identifiLib.Key.getDefault(); // <--- Get or generate local key
   window.message.sign(key); // <--- Sign message with the key
   document.getElementById('signMsgResult').textContent = JSON.stringify(window.message, null, 2);
 }
@@ -90,7 +90,7 @@ async function runIndexExample() {
     });
   });
   index = await window.identifiLib.Index.create(ipfs);
-  myKey = window.identifiLib.util.getDefaultKey('.');
+  myKey = window.identifiLib.Key.getDefault('.');
   msg = window.identifiLib.Message.createVerification({
     recipient: [['keyID', myKey.keyID], ['name', 'Alice Example']],
     comment: 'add name'
