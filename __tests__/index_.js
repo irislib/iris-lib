@@ -1,9 +1,11 @@
 const identifi = require('../cjs/index.js');
 const IPFS = require('ipfs');
 const fs = require('fs');
+const GUN = require('gun');
 
 let key = identifi.Key.getDefault();
-let ipfsNode = new IPFS({repo: './ipfs_repo'});
+//let ipfsNode = new IPFS({repo: './ipfs_repo'});
+const gun = new GUN({radisk: false});
 
 jest.setTimeout(30000);
 
@@ -26,6 +28,7 @@ function shuffle(array) {
   return array;
 };
 
+/*
 beforeAll(() => {
   return new Promise((resolve, reject) => {
     ipfsNode.on('ready', () => {
@@ -38,11 +41,12 @@ beforeAll(() => {
     });
   });
 });
+*/
 
 describe('local index', async () => {
   let i, h;
   test('create new Index', async () => {
-    i = await identifi.Index.create(ipfsNode);
+    i = await identifi.Index.create(gun);
     expect(i).toBeInstanceOf(identifi.Index);
   });
   let p;
@@ -50,7 +54,7 @@ describe('local index', async () => {
     test('add trust rating to bob', async () => {
       const msg = identifi.Message.createRating({recipient:[['email', 'bob@example.com']], rating:10}, key);
       const r = await i.addMessage(msg);
-      expect(typeof r).toBe('string');
+      expect(r).toBe(true);
     });
     test('get added identity', async () => {
       p = await i.get('bob@example.com');
@@ -220,6 +224,8 @@ describe('remote index via ipfs gateway', async () => {
 });
 */
 
+/*
 afterAll(() => {
   return ipfsNode.stop();
 });
+*/

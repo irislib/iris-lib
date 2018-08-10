@@ -26,7 +26,16 @@ class Identity {
     this.data.sentPositive |= 0;
     this.data.sentNeutral |= 0;
     this.data.trustDistance = this.data.hasOwnProperty(`trustDistance`) ? this.data.trustDistance : 99;
-    this.data.attrs.forEach(a => {
+    if (Array.isArray(this.data.attrs)) {
+      const attrs = {};
+      while (this.data.attrs.length) {
+        const a = this.data.attrs.pop();
+        attrs[`${encodeURIComponent(a.name)}:${encodeURIComponent(a.val)}`] = a;
+      }
+      this.data.attrs = attrs;
+    }
+    Object.keys(this.data.attrs).forEach(k => {
+      const a = this.data.attrs[k];
       if (!this.linkTo && Attribute.isUniqueType(a.name)) {
         this.linkTo = a;
       }
@@ -34,82 +43,6 @@ class Identity {
         this.data.trustDistance = parseInt(a.dist);
         if (Attribute.isUniqueType(a.name)) {
           this.linkTo = a;
-        }
-      }
-      switch (a.name) {
-      case `email`:
-        a.iconStyle = `glyphicon glyphicon-envelope`;
-        a.btnStyle = `btn-success`;
-        a.link = `mailto:${a.val}`;
-        a.quickContact = true;
-        break;
-      case `bitcoin_address`:
-      case `bitcoin`:
-        a.iconStyle = `fa fa-bitcoin`;
-        a.btnStyle = `btn-primary`;
-        a.link = `https://blockchain.info/address/${a.val}`;
-        a.quickContact = true;
-        break;
-      case `gpg_fingerprint`:
-      case `gpg_keyid`:
-        a.iconStyle = `fa fa-key`;
-        a.btnStyle = `btn-default`;
-        a.link = `https://pgp.mit.edu/pks/lookup?op=get&search=0x${a.val}`;
-        break;
-      case `account`:
-        a.iconStyle = `fa fa-at`;
-        break;
-      case `nickname`:
-        a.iconStyle = `glyphicon glyphicon-font`;
-        break;
-      case `name`:
-        a.iconStyle = `glyphicon glyphicon-font`;
-        break;
-      case `tel`:
-      case `phone`:
-        a.iconStyle = `glyphicon glyphicon-earphone`;
-        a.btnStyle = `btn-success`;
-        a.link = `tel:${a.val}`;
-        a.quickContact = true;
-        break;
-      case `keyID`:
-        a.iconStyle = `fa fa-key`;
-        break;
-      case `url`:
-        a.link = a.val;
-        if (a.val.indexOf(`facebook.com/`) > - 1) {
-          a.iconStyle = `fa fa-facebook`;
-          a.btnStyle = `btn-facebook`;
-          a.link = a.val;
-          a.linkName = a.val.split(`facebook.com/`)[1];
-          a.quickContact = true;
-        } else if (a.val.indexOf(`twitter.com/`) > - 1) {
-          a.iconStyle = `fa fa-twitter`;
-          a.btnStyle = `btn-twitter`;
-          a.link = a.val;
-          a.linkName = a.val.split(`twitter.com/`)[1];
-          a.quickContact = true;
-        } else if (a.val.indexOf(`plus.google.com/`) > - 1) {
-          a.iconStyle = `fa fa-google-plus`;
-          a.btnStyle = `btn-google-plus`;
-          a.link = a.val;
-          a.linkName = a.val.split(`plus.google.com/`)[1];
-          a.quickContact = true;
-        } else if (a.val.indexOf(`linkedin.com/`) > - 1) {
-          a.iconStyle = `fa fa-linkedin`;
-          a.btnStyle = `btn-linkedin`;
-          a.link = a.val;
-          a.linkName = a.val.split(`linkedin.com/`)[1];
-          a.quickContact = true;
-        } else if (a.val.indexOf(`github.com/`) > - 1) {
-          a.iconStyle = `fa fa-github`;
-          a.btnStyle = `btn-github`;
-          a.link = a.val;
-          a.linkName = a.val.split(`github.com/`)[1];
-          a.quickContact = true;
-        } else {
-          a.iconStyle = `glyphicon glyphicon-link`;
-          a.btnStyle = `btn-default`;
         }
       }
       const keyExists = Object.keys(this.mostVerifiedAttributes).indexOf(a.name) > - 1;

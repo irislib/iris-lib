@@ -23,18 +23,9 @@ const DEFAULT_TIMEOUT = 10000;
 * messagesByTimestamp, messagesByDistance.
 */
 class Index {
-  constructor(storage: Object, viewpoint: Attribute) {
-    if (storage) {
-      console.log(`constructor`);
-      if (storage.constructor.name === `IPFS`) {
-        this.storage = new btree.IPFSStorage(storage);
-      } else {
-        this.storage = storage;
-      }
-      this.identitiesBySearchKey = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-      this.identitiesByTrustDistance = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-      this.messagesByTimestamp = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-      this.messagesByDistance = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+  constructor(gun: Object, viewpoint: Attribute) {
+    if (gun) {
+      this.gun = gun;
       if (viewpoint) {
         this.viewpoint = new Attribute(viewpoint);
       } else {
@@ -43,7 +34,6 @@ class Index {
       const vp = new Identity({attrs: [this.viewpoint], trustDistance: 0});
       this.ready = new Promise(async (resolve, reject) => {
         try {
-          await this._setSentRcvdIndexes(vp);
           await this._addIdentityToIndexes(vp);
           resolve();
         } catch (e) {
@@ -53,15 +43,14 @@ class Index {
     }
   }
 
-  /**
-  * Create a new index
-  * @returns {Index} promise
-  * @param {Object} storage storage, js-ipfs or js-ipfs-api object
-  */
-  static async create(storage: Object, viewpoint: Attribute) {
-    const i = new Index(storage, viewpoint);
+  static async create(gun: Object, viewpoint: Attribute) {
+    const i = new Index(gun, viewpoint);
     await i.ready;
     return i;
+  }
+
+  _i(key: String) {
+    return this.gun.get(`identifi`).get(key);
   }
 
   static getMsgIndexKey(msg) {
@@ -74,13 +63,12 @@ class Index {
 
   static getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
-    const attrs = identity.data.attrs;
-    for (let j = 0;j < attrs.length;j += 1) {
-      let distance = identity.data.hasOwnProperty(`trustDistance`) ? identity.data.trustDistance : parseInt(attrs[j].dist);
+    Object.values(identity.data.attrs).forEach(a => {
+      let distance = identity.data.hasOwnProperty(`trustDistance`) ? identity.data.trustDistance : parseInt(a.dist);
       distance = Number.isNaN(distance) ? 99 : distance;
       distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
-      const v = attrs[j].val || attrs[j][1];
-      const n = attrs[j].name || attrs[j][0];
+      const v = a.val || a[1];
+      const n = a.name || a[0];
       const value = encodeURIComponent(v);
       const lowerCaseValue = encodeURIComponent(v.toLowerCase());
       const name = encodeURIComponent(n);
@@ -108,144 +96,8 @@ class Index {
         const split = key.split(`/`);
         indexKeys.push(split[split.length - 1]);
       }
-    }
+    });
     return indexKeys;
-  }
-
-  /**
-  * Load an existing Identifi index from indexRoot.
-  * @returns {Index}
-  * @param {string} indexRoot ipfs URI of the index to load. If omitted, identi.fi indexRoot is used by default.
-  * @param ipfs js-ipfs, js-ipfs-api, gateway URL (read-only) or array of gateway URLs (read-only). If omitted, a default list of gateway URLs is used.
-  */
-  static async load(indexRoot, storage) {
-    const i = new Index();
-    await i._init(indexRoot, storage);
-    return i;
-  }
-
-  async _init(indexRoot, storage = DEFAULT_IPFS_PROXIES, timeout = DEFAULT_TIMEOUT) {
-    let useDefaultIndex = false;
-    if (typeof indexRoot === `undefined`) {
-      useDefaultIndex = true;
-      indexRoot = DEFAULT_INDEX;
-    }
-    if (typeof storage === `string`) {
-      this.storage = new btree.IPFSGatewayStorage(storage);
-    } else if (Array.isArray(storage)) {
-      let url;
-      for (let i = 0;i < storage.length;i ++) {
-        let res;
-        let u = `${storage[i]}${indexRoot}`;
-        try {
-          res = await util.timeoutPromise(fetch(u, {timeout}).catch(() => {}), timeout);
-          if (!res) {console.log(`fetching ${u} timed out`);}
-        } catch (e) {
-          console.log(`fetching ${u} failed:`, e);
-        }
-        if (!(res && res.ok && res.status === 200) && useDefaultIndex) { // try static fallback
-          u = `${storage[i]}${DEFAULT_STATIC_FALLBACK_INDEX}`;
-          try {
-            res = await util.timeoutPromise(fetch(u, {timeout}).catch(() => {}), timeout);
-            if (res) {
-              indexRoot = DEFAULT_STATIC_FALLBACK_INDEX;
-            } else {
-              console.log(`fetching ${u} timed out`);
-            }
-          } catch (e) {
-            console.log(`fetching ${u} failed:`, e);
-          }
-        }
-        if (res && res.ok && res.status === 200) {
-          url = storage[i];
-          break;
-        }
-      }
-      if (url) {
-        this.storage = new btree.IPFSGatewayStorage(url);
-      } else {
-        throw `Could not load index via given ipfs gateways`;
-      }
-    } else if (typeof storage === `object`) {
-      if (storage.constructor.name === `IPFS`) {
-        this.storage = new btree.IPFSStorage(storage);
-      } else {
-        this.storage = storage;
-      }
-    } else {
-      throw `ipfs param must be a gateway url, array of urls or a js-ipfs object`;
-    }
-    const root = await this.storage.get(indexRoot);
-    let rootObj;
-    try {
-      rootObj = JSON.parse(root);
-    } catch (e) {
-      console.log(`Old format index root`);
-    }
-    if (rootObj) {
-      this.identitiesByTrustDistance = await btree.MerkleBTree.getByHash(rootObj.identitiesByTrustDistance, this.storage, IPFS_INDEX_WIDTH);
-      this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(rootObj.identitiesBySearchKey, this.storage, IPFS_INDEX_WIDTH);
-      this.messagesByTimestamp = await btree.MerkleBTree.getByHash(rootObj.messagesByTimestamp, this.storage, IPFS_INDEX_WIDTH);
-      this.messagesByDistance = await btree.MerkleBTree.getByHash(rootObj.messagesByDistance, this.storage, IPFS_INDEX_WIDTH);
-      this.viewpoint = rootObj.viewpoint;
-    } else {
-      this.identitiesByTrustDistance = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_distance`, this.storage, IPFS_INDEX_WIDTH);
-      this.identitiesBySearchKey = await btree.MerkleBTree.getByHash(`${indexRoot}/identities_by_searchkey`, this.storage, IPFS_INDEX_WIDTH);
-      this.messagesByTimestamp = await btree.MerkleBTree.getByHash(`${indexRoot}/messages_by_timestamp`, this.storage, IPFS_INDEX_WIDTH);
-      this.messagesByDistance = await btree.MerkleBTree.getByHash(`${indexRoot}/messages_by_distance`, this.storage, IPFS_INDEX_WIDTH);
-    }
-    if (!this.viewpoint) {
-      const vp = await this.getViewpoint();
-      this.viewpoint = vp.mostVerifiedAttributes.keyID.attribute.val;
-    }
-    return true;
-  }
-
-  /**
-  * (Re-)save the index root
-  * @returns {string} URI of the saved index root
-  */
-  async save() {
-    if (this.storage.put) {
-      try {
-        const root = {viewpoint: this.viewpoint};
-        // TODO: convert merkle-btrees to ipfsstorage
-        root.messagesByDistance = await this.storage.put(this.messagesByDistance.rootNode.serialize());
-        root.messagesByTimestamp = await this.storage.put(this.messagesByTimestamp.rootNode.serialize());
-        root.identitiesBySearchKey = await this.storage.put(this.identitiesBySearchKey.rootNode.serialize());
-        root.identitiesByTrustDistance = await this.storage.put(this.identitiesByTrustDistance.rootNode.serialize());
-        const rootHash = await this.storage.put(JSON.stringify(root));
-        /*
-        if (this.storage.ipfs.name) {
-          console.log(`publishing index`, rootHash);
-          const n = await this.storage.ipfs.name.publish(rootHash, {});
-          console.log(`published index`, n);
-        }
-        */
-        return rootHash;
-      } catch (e) {
-        console.log(`error saving index`, e);
-      }
-    } else {
-      console.log(`storage`, this.storage.constructor.name, `has no .put(), not saving`);
-    }
-  }
-
-  async _setSentRcvdIndexes(id) {
-    if (!id.sentIndex) {
-      if (id.data.sent) {
-        id.sentIndex = await btree.MerkleBTree.getByHash(id.data.sent, this.storage, IPFS_INDEX_WIDTH);
-      } else {
-        id.sentIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-      }
-    }
-    if (!id.receivedIndex) {
-      if (id.data.received) {
-        id.receivedIndex = await btree.MerkleBTree.getByHash(id.data.received, this.storage, IPFS_INDEX_WIDTH);
-      } else {
-        id.receivedIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-      }
-    }
   }
 
   /**
@@ -254,10 +106,7 @@ class Index {
   async getViewpoint() {
     const r = await this.identitiesByTrustDistance.searchText(`00`, 1);
     if (r.length) {
-      const p = await this.storage.get(r[0].value);
-      const vp = new Identity(JSON.parse(p));
-      await this._setSentRcvdIndexes(vp);
-      return vp;
+      return r[0].value;
     }
   }
 
@@ -274,15 +123,12 @@ class Index {
     if (typeof type === `undefined`) {
       type = Attribute.guessTypeOf(value);
     }
-
-    const profileUri = await this.identitiesBySearchKey.get(`${encodeURIComponent(value)}:${encodeURIComponent(type)}`);
-    if (profileUri) {
-      const p = await this.storage.get(profileUri);
-      const id = new Identity(JSON.parse(p));
-      id.ipfsHash = profileUri;
-      await this._setSentRcvdIndexes(id);
-      return id;
-    }
+    return new Promise(resolve => {
+      const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
+      this._i(`identitiesBySearchKey`).get(key).once((val) => {
+        resolve(val && Identity.deserialize(val));
+      });
+    });
   }
 
   async _getMsgs(msgIndex, limit, cursor) {
@@ -303,69 +149,44 @@ class Index {
     return msgs;
   }
 
-  async _saveIdentityToIpfs(id: Identity) {
-    const hash = await this.storage.put(JSON.stringify(id.data));
-    id.ipfsHash = hash;
-    return hash;
-  }
-
   async _removeIdentityFromIndexes(id: Identity) {
-    let hash = id.ipfsHash;
-    if (!hash) {
-      hash = await this._saveIdentityToIpfs(id);
-    }
+    const hash = `TODO`;
     const indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`deleting key ${key}`);
-      await this.identitiesByTrustDistance.delete(key);
-      await this.identitiesBySearchKey.delete(key.substr(key.indexOf(`:`) + 1));
+      this._i(`identitiesByTrustDistance`).get(key).put(null);
+      this._i(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(null);
     }
   }
 
   async _addIdentityToIndexes(id: Identity) {
-    if (!this.storage.put) {
-      console.log(`no this.storage.put()`);
-      return;
-    }
-    if (id.sentIndex && id.receivedIndex) {
-      if (id.sentIndex.rootNode.hash && id.receivedIndex.rootNode.hash) {
-        id.data.sent = id.sentIndex.rootNode.hash;
-        id.data.received = id.receivedIndex.rootNode.hash;
-      } else {
-        id.data.sent = await this.storage.put(id.sentIndex.rootNode.serialize());
-        id.data.received = await this.storage.put(id.receivedIndex.rootNode.serialize());
-      }
-    }
-    const hash = await this._saveIdentityToIpfs(id);
+    const hash = `TODO`;
     const indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`adding key ${key}`);
-      await this.identitiesByTrustDistance.put(key, hash);
-      await this.identitiesBySearchKey.put(key.substr(key.indexOf(`:`) + 1), hash);
+      await new Promise(resolve => {
+        this._i(`identitiesByTrustDistance`).get(key).put(id.serialize(), () => {resolve();}); // TODO: use unserialized
+      });
+      await new Promise(resolve => {
+        this._i(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id.serialize(), () => {resolve();});
+      });
     }
-    return {hash};
   }
 
   /**
   * @returns {Array} list of messages sent by param identity
   */
   async getSentMsgs(identity: Identity, limit, cursor = ``) {
-    if (!identity.sentIndex) {
-      identity.sentIndex = await btree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
-    }
-    return this._getMsgs(identity.sentIndex, limit, cursor);
+    return this._getMsgs(identity.sent, limit, cursor);
   }
 
   /**
   * @returns {Array} list of messages received by param identity
   */
   async getReceivedMsgs(identity, limit, cursor = ``) {
-    if (!identity.receivedIndex) {
-      identity.receivedIndex = await btree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
-    }
-    return this._getMsgs(identity.receivedIndex, limit, cursor);
+    return this._getMsgs(identity.received, limit, cursor);
   }
 
   async _getAttributeTrustDistance(a) {
@@ -383,6 +204,7 @@ class Index {
   async getMsgTrustDistance(msg) {
     let shortestDistance = 1000;
     const signer = await this.get(msg.getSignerKeyID(), `keyID`);
+    console.log(msg.getSignerKeyID(), `keyID`, signer);
     if (!signer) {
       return;
     }
@@ -403,6 +225,7 @@ class Index {
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = {};
     const authorIdentities = {};
+    console.log(`msg`, msg);
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = await this.get(a[1], a[0]);
@@ -426,10 +249,7 @@ class Index {
         attrs.push({name: a[0], val: a[1], conf: 1, ref: 0});
       });
       const id = new Identity({attrs});
-      id.sentIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-      id.receivedIndex = new btree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
       // TODO: take msg author trust into account
-      await this._saveIdentityToIpfs(id);
       recipientIdentities[id.ipfsHash] = id;
     }
     let msgIndexKey = Index.getMsgIndexKey(msg);
@@ -437,6 +257,7 @@ class Index {
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
       const id = ids[i];
+      console.log(`aand id is`, id);
       await this._removeIdentityFromIndexes(id);
       if (recipientIdentities.hasOwnProperty(id.ipfsHash)) {
         msg.signedData.recipient.forEach(a1 => {
@@ -450,7 +271,7 @@ class Index {
             }
           }
           if (!hasAttr) {
-            id.data.attrs.push({name: a1[0], val: a1[1], conf: 1, ref: 0});
+            id.data.attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0};
           }
         });
         if (msg.signedData.type === `rating`) {
@@ -465,7 +286,7 @@ class Index {
             id.data.receivedNeutral ++;
           }
         }
-        await id.receivedIndex.put(msgIndexKey, msg);
+        await this._i(`id key`).get(`received`).get(msgIndexKey).put(msg.jws); // TODO
       }
       if (authorIdentities.hasOwnProperty(id.ipfsHash)) {
         if (msg.signedData.type === `rating`) {
@@ -477,7 +298,7 @@ class Index {
             id.data.sentNeutral ++;
           }
         }
-        await id.sentIndex.put(msgIndexKey, msg);
+        await this._i(`id key`).get(`sent`).get(msgIndexKey).put(msg.jws);
       }
       await this._addIdentityToIndexes(id);
     }
@@ -552,48 +373,22 @@ class Index {
   * @param {boolean} updateIdentityIndexes default true
   */
   async addMessage(msg: Message, updateIdentityIndexes = true) {
-    if (this.storage.put) {
-      msg.distance = await this.getMsgTrustDistance(msg);
-      if (msg.distance === undefined) {
-        return; // do not save messages from untrusted author
-      }
-      let indexKey = Index.getMsgIndexKey(msg);
-      await this.messagesByDistance.put(indexKey, msg);
-      indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
-      const h = await this.messagesByTimestamp.put(indexKey, msg);
-      if (updateIdentityIndexes) {
-        await this._updateIdentityIndexesByMsg(msg);
-      }
-      // save() ?
-      return h;
+    msg.distance = await this.getMsgTrustDistance(msg);
+    if (msg.distance === undefined) {
+      return false; // do not save messages from untrusted author
     }
-  }
-
-  /**
-  * Save message to ipfs and announce it on ipfs pubsub
-  */
-  async publishMessage(msg: Message, addToIndex = true) {
-    const r = {};
-    if (this.storage.ipfs) {
-      const hash = await this.storage.ipfs.files.add(new Buffer(msg.jws, `utf8`));
-      r.hash = hash;
-      await this.storage.ipfs.pubsub.publish(`identifi`, new Buffer(hash, `utf8`));
-      if (addToIndex) {
-        r.indexUri = await this.addMessage(msg);
-      }
-    } else { // No IPFS, post to identi.fi
-      const body = JSON.stringify({jws: msg.jws, hash: msg.getHash()});
-      const res = await fetch(`https://identi.fi/api/messages`, {
-        method: `POST`,
-        headers: {'Content-Type': `application/json`},
-        body,
-      });
-      if (res.status && res.status === 201) {
-        const t = JSON.parse(await res.text());
-        r.hash = t.ipfs_hash;
-      }
+    let indexKey = Index.getMsgIndexKey(msg);
+    await new Promise(resolve => {
+      this._i(`messagesByDistance`).get(indexKey).put(msg.jws, () => {resolve();});
+    });
+    indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
+    await new Promise(resolve => {
+      this._i(`messagesByTimestamp`).get(indexKey).put(msg.jws, () => {resolve();});
+    });
+    if (updateIdentityIndexes) {
+      await this._updateIdentityIndexesByMsg(msg);
     }
-    return r;
+    return true;
   }
 
   /**
