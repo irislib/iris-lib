@@ -13,13 +13,14 @@ class Identity {
 
   static create(gunRoot: Object, data: Object) {
     data.mostVerifiedAttributes = {};
-    data.receivedNegative |= 0;
-    data.receivedPositive |= 0;
-    data.receivedNeutral |= 0;
-    data.sentNegative |= 0;
-    data.sentPositive |= 0;
-    data.sentNeutral |= 0;
+    data.receivedNegative |= data.receivedNegative || 0;
+    data.receivedPositive |= data.receivedPositive || 0;
+    data.receivedNeutral = data.receivedNeutral || 0;
+    data.sentNegative = data.sentNegative || 0;
+    data.sentPositive = data.sentPositive || 0;
+    data.sentNeutral = data.sentNeutral || 0;
     data.trustDistance = data.hasOwnProperty(`trustDistance`) ? data.trustDistance : 99;
+    data.attrs = data.attrs || {};
     if (Array.isArray(data.attrs)) {
       const attrs = {};
       while (data.attrs.length) {

@@ -58,11 +58,9 @@ class Index {
 
   static async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
-    console.log('aaaa');
     const d = await identity.gun.get(`trustDistance`).load().then();
-    console.log('bbbb');
+    const f = await identity.gun.get(`attrs`).once().then();
     await identity.gun.get(`attrs`).map().once(a => {
-      console.log(76576457654);
       let distance = d !== undefined ? d : parseInt(a.dist);
       distance = Number.isNaN(distance) ? 99 : distance;
       distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
@@ -123,6 +121,18 @@ class Index {
       type = Attribute.guessTypeOf(value);
     }
     const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
+    console.log(1111);
+    const found = await new Promise(resolve => {
+      this.gun.get(`identitiesBySearchKey`).get(key).on((r) => {
+        console.log(`this never gets called?`);
+        console.log(a,b,c,d);
+        resolve(r);
+      });
+    });
+    console.log(2222);
+    if (!found) {
+      return undefined;
+    }
     return new Identity(this.gun.get(`identitiesBySearchKey`).get(key));
   }
 
@@ -146,9 +156,7 @@ class Index {
 
   async _removeIdentityFromIndexes(id: Identity) {
     const hash = `TODO`;
-    console.log(313);
     const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(2));
-    console.log(3133);
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`deleting key ${key}`);
@@ -160,9 +168,7 @@ class Index {
   async _addIdentityToIndexes(id: Identity) {
     const hash = `todo`;
     const idNode = this.gun.get(`identities`).set(id);
-    console.log(131);
     const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(2));
-    console.log(1311);
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`adding key ${key}`);
@@ -250,15 +256,13 @@ class Index {
       // TODO: take msg author trust into account
       recipientIdentities[id.gun[`#`]] = id;
     }
-    console.log(123213);
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
+    console.log('ids', ids);
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
       const id = ids[i];
-      console.log(34243);
       await this._removeIdentityFromIndexes(id);
-      console.log(432432);
       if (recipientIdentities.hasOwnProperty(id.ipfsHash)) {
         msg.signedData.recipient.forEach(a1 => {
           let hasAttr = false;
@@ -286,9 +290,7 @@ class Index {
             id.data.receivedNeutral ++;
           }
         }
-        console.log(313);
         await this.gun.get(`id key`).get(`received`).get(msgIndexKey).put(msg.jws); // TODO
-        console.log(3133);
       }
       if (authorIdentities.hasOwnProperty(id.ipfsHash)) {
         if (msg.signedData.type === `rating`) {
@@ -300,9 +302,7 @@ class Index {
             id.data.sentNeutral ++;
           }
         }
-        console.log(414);
         await this.gun.get(`id key`).get(`sent`).get(msgIndexKey).put(msg.jws);
-        console.log(4144);
       }
       await this._addIdentityToIndexes(id);
     }
@@ -381,7 +381,6 @@ class Index {
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
     }
-    console.log(515);
     let indexKey = Index.getMsgIndexKey(msg);
     await new Promise(resolve => {
       this.gun.get(`messagesByDistance`).get(indexKey).put(msg.jws, () => {resolve();});
@@ -390,10 +389,8 @@ class Index {
     await new Promise(resolve => {
       this.gun.get(`messagesByTimestamp`).get(indexKey).put(msg.jws, () => {resolve();});
     });
-    console.log(5155);
     if (updateIdentityIndexes) {
       await this._updateIdentityIndexesByMsg(msg);
-      console.log(51555);
     }
     return true;
   }
@@ -409,7 +406,7 @@ class Index {
         return;
       }
       return new Identity(id);
-    }).then();
+    }).once().then();
   }
 }
 
