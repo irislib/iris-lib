@@ -5,6 +5,9 @@ import Key from './key';
 import Identity from './identity';
 import Attribute from './attribute';
 import fetch from 'node-fetch';
+import Gun from 'gun';
+import then from 'gun/lib/then';
+import load from 'gun/lib/load';
 
 const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
 const DEFAULT_STATIC_FALLBACK_INDEX = `/ipfs/QmPxLM631zJQ12tUDWs55LkGqqroFZKHeLjAZ2XwL9Miu3`;
@@ -17,9 +20,18 @@ const DEFAULT_IPFS_PROXIES = [
 const IPFS_INDEX_WIDTH = 200;
 const DEFAULT_TIMEOUT = 10000;
 
+// temp method for GUN search
+function searchText(node, query) {
+  return new Promise(resolve => {
+    node.once().map(
+      (value, key) => { key.indexOf(query) ? undefined : value }
+    ).once(() => resolve(results));
+  });
+}
+
 // TODO: make the whole thing use GUN for indexing and flush onto IPFS
 /**
-* Identifi index root. Contains four indexes: identitiesBySearchKey, identitiesByTrustDistance,
+* Identifi index root. Contains four indexes: identitiesBySearchKey, gun.get(`identitiesByTrustDistance`),
 * messagesByTimestamp, messagesByDistance.
 */
 class Index {
@@ -31,7 +43,7 @@ class Index {
       } else {
         this.viewpoint = {name: `keyID`, val: Key.getDefault().keyID, conf: 1, ref: 0};
       }
-      const vp = new Identity({attrs: [this.viewpoint], trustDistance: 0});
+      const vp = Identity.create(this.gun.get(`identities`), {attrs: [this.viewpoint], trustDistance: 0});
       this.ready = new Promise(async (resolve, reject) => {
         try {
           await this._addIdentityToIndexes(vp);
@@ -49,10 +61,6 @@ class Index {
     return i;
   }
 
-  _i(key: String) {
-    return this.gun.get(`identifi`).get(key);
-  }
-
   static getMsgIndexKey(msg) {
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
@@ -61,10 +69,11 @@ class Index {
     return key;
   }
 
-  static getIdentityIndexKeys(identity, hash) {
+  static async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
-    Object.values(identity.data.attrs).forEach(a => {
-      let distance = identity.data.hasOwnProperty(`trustDistance`) ? identity.data.trustDistance : parseInt(a.dist);
+    const d = await identity.gun.get(`trustDistance`).load().then();
+    await identity.gun.get(`attrs`).map(a => {
+      let distance = d !== undefined ? d : parseInt(a.dist);
       distance = Number.isNaN(distance) ? 99 : distance;
       distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
       const v = a.val || a[1];
@@ -96,7 +105,7 @@ class Index {
         const split = key.split(`/`);
         indexKeys.push(split[split.length - 1]);
       }
-    });
+    }).then();
     return indexKeys;
   }
 
@@ -104,7 +113,7 @@ class Index {
   * @returns {Identity} viewpoint identity of the index
   */
   async getViewpoint() {
-    const r = await this.identitiesByTrustDistance.searchText(`00`, 1);
+    const r = await this.gun.get(`identitiesByTrustDistance`).searchText(`00`, 1);
     if (r.length) {
       return r[0].value;
     }
@@ -123,16 +132,12 @@ class Index {
     if (typeof type === `undefined`) {
       type = Attribute.guessTypeOf(value);
     }
-    return new Promise(resolve => {
-      const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
-      this._i(`identitiesBySearchKey`).get(key).once((val) => {
-        resolve(val && Identity.deserialize(val));
-      });
-    });
+    const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
+    return new Identity(this.gun.get(`identitiesBySearchKey`).get(key));
   }
 
   async _getMsgs(msgIndex, limit, cursor) {
-    const rawMsgs = await msgIndex.searchText(``, limit, cursor, true);
+    const rawMsgs = await searchText(msgIndex, ``, limit, cursor, true);
     const msgs = [];
     rawMsgs.forEach(row => {
       const msg = Message.fromJws(row.value.jws);
@@ -151,26 +156,29 @@ class Index {
 
   async _removeIdentityFromIndexes(id: Identity) {
     const hash = `TODO`;
-    const indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
+    const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(2));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`deleting key ${key}`);
-      this._i(`identitiesByTrustDistance`).get(key).put(null);
-      this._i(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(null);
+      this.gun.get(`identitiesByTrustDistance`).get(key).put(null);
+      this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(null);
     }
   }
 
   async _addIdentityToIndexes(id: Identity) {
-    const hash = `TODO`;
-    const indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
+    const hash = `todo`;
+    const idNode = this.gun.get(`identities`).set(id);
+    console.log(131);
+    const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(2));
+    console.log(1311);
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`adding key ${key}`);
       await new Promise(resolve => {
-        this._i(`identitiesByTrustDistance`).get(key).put(id.serialize(), () => {resolve();}); // TODO: use unserialized
+        this.gun.get(`identitiesByTrustDistance`).get(key).put(idNode, () => {resolve();});
       });
       await new Promise(resolve => {
-        this._i(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id.serialize(), () => {resolve();});
+        this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(idNode, () => {resolve();});
       });
     }
   }
@@ -179,14 +187,14 @@ class Index {
   * @returns {Array} list of messages sent by param identity
   */
   async getSentMsgs(identity: Identity, limit, cursor = ``) {
-    return this._getMsgs(identity.sent, limit, cursor);
+    return this._getMsgs(identity.get(`sent`), limit, cursor);
   }
 
   /**
   * @returns {Array} list of messages received by param identity
   */
   async getReceivedMsgs(identity, limit, cursor = ``) {
-    return this._getMsgs(identity.received, limit, cursor);
+    return this._getMsgs(identity.get(`received`), limit, cursor);
   }
 
   async _getAttributeTrustDistance(a) {
@@ -194,7 +202,7 @@ class Index {
       return;
     }
     const id = await this.get(a.val, a.name);
-    return id && id.data && id.data.trustDistance;
+    return id && id.gun.get(`trustDistance`).once().then();
   }
 
   /**
@@ -202,9 +210,8 @@ class Index {
   * @returns {number} trust distance to msg author. Returns undefined if msg signer is not trusted.
   */
   async getMsgTrustDistance(msg) {
-    let shortestDistance = 1000;
+    let shortestDistance = Infinity;
     const signer = await this.get(msg.getSignerKeyID(), `keyID`);
-    console.log(msg.getSignerKeyID(), `keyID`, signer);
     if (!signer) {
       return;
     }
@@ -219,13 +226,12 @@ class Index {
         }
       }
     }
-    return shortestDistance < 1000 ? shortestDistance : undefined;
+    return shortestDistance < Infinity ? shortestDistance : undefined;
   }
 
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = {};
     const authorIdentities = {};
-    console.log(`msg`, msg);
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = await this.get(a[1], a[0]);
@@ -248,16 +254,15 @@ class Index {
       msg.signedData.recipient.forEach(a => {
         attrs.push({name: a[0], val: a[1], conf: 1, ref: 0});
       });
-      const id = new Identity({attrs});
+      const id = Identity.create(this.gun.get(`identities`), {attrs});
       // TODO: take msg author trust into account
-      recipientIdentities[id.ipfsHash] = id;
+      recipientIdentities[id.gun['#']] = id;
     }
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
       const id = ids[i];
-      console.log(`aand id is`, id);
       await this._removeIdentityFromIndexes(id);
       if (recipientIdentities.hasOwnProperty(id.ipfsHash)) {
         msg.signedData.recipient.forEach(a1 => {
@@ -286,7 +291,9 @@ class Index {
             id.data.receivedNeutral ++;
           }
         }
-        await this._i(`id key`).get(`received`).get(msgIndexKey).put(msg.jws); // TODO
+        console.log(313);
+        await this.gun.get(`id key`).get(`received`).get(msgIndexKey).put(msg.jws); // TODO
+        console.log(3133);
       }
       if (authorIdentities.hasOwnProperty(id.ipfsHash)) {
         if (msg.signedData.type === `rating`) {
@@ -298,7 +305,9 @@ class Index {
             id.data.sentNeutral ++;
           }
         }
-        await this._i(`id key`).get(`sent`).get(msgIndexKey).put(msg.jws);
+        console.log(414);
+        await this.gun.get(`id key`).get(`sent`).get(msgIndexKey).put(msg.jws);
+        console.log(4144);
       }
       await this._addIdentityToIndexes(id);
     }
@@ -339,7 +348,7 @@ class Index {
     do {
       initialMsgCount = await msgsByAuthor.size();
       let leftCursor, rightCursor;
-      let leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
+      let leftRes = await searchText(this.gun.get(`identitiesBySearchKey`), ``, 1, leftCursor);
       let rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
       // sort-merge join identitiesBySearchKey and msgsByAuthor
       while (leftRes.length && rightRes.length) {
@@ -355,10 +364,10 @@ class Index {
             console.log(`adding failed:`, e, JSON.stringify(m, null, 2));
           }
           await msgsByAuthor.delete(rightCursor);
-          leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
+          leftRes = await this.gun.get(`identitiesBySearchKey`).searchText(``, 1, leftCursor);
           rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
         } else if (leftRes[0].key < rightRes[0].key) {
-          leftRes = await this.identitiesBySearchKey.searchText(``, 1, leftCursor);
+          leftRes = await this.gun.get(`identitiesBySearchKey`).searchText(``, 1, leftCursor);
         } else {
           rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
         }
@@ -377,16 +386,19 @@ class Index {
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
     }
+    console.log(515);
     let indexKey = Index.getMsgIndexKey(msg);
     await new Promise(resolve => {
-      this._i(`messagesByDistance`).get(indexKey).put(msg.jws, () => {resolve();});
+      this.gun.get(`messagesByDistance`).get(indexKey).put(msg.jws, () => {resolve();});
     });
     indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
     await new Promise(resolve => {
-      this._i(`messagesByTimestamp`).get(indexKey).put(msg.jws, () => {resolve();});
+      this.gun.get(`messagesByTimestamp`).get(indexKey).put(msg.jws, () => {resolve();});
     });
+    console.log(5155);
     if (updateIdentityIndexes) {
       await this._updateIdentityIndexesByMsg(msg);
+      console.log(51555);
     }
     return true;
   }
@@ -399,28 +411,13 @@ class Index {
   async search(value, type, limit = 5, cursor, depth = 20) { // TODO: param 'exact'
     const identitiesByHash = {};
     const initialDepth = cursor ? Number.parseInt(cursor.substring(0, cursor.indexOf(`:`))) : 0;
-    for (let d = initialDepth;d <= depth;d ++) {
-      const useCursor = d === initialDepth;
-      const paddedDistance = (`00${d}`).substring(d.toString().length);
-      let r = await this.identitiesByTrustDistance.searchText(`${paddedDistance}:${encodeURIComponent(value)}`, limit, useCursor ? cursor : undefined);
-      while (r && r.length && Object.keys(identitiesByHash).length < limit) {
-        for (let i = 0;i < r.length && Object.keys(identitiesByHash).length < limit;i ++) {
-          if (r[i].value && !identitiesByHash.hasOwnProperty(r[i].value)) {
-            try {
-              const d = JSON.parse(await this.storage.get(r[i].value));
-              const id = new Identity(d);
-              id.ipfsHash = r[i].value;
-              id.cursor = r[i].key;
-              identitiesByHash[r[i].value] = id;
-            } catch (e) {
-              console.error(e);
-            }
-          }
-        }
-        r = await this.identitiesBySearchKey.searchText(`${paddedDistance}:${encodeURIComponent(value)}`, limit, r[r.length - 1].key);
+
+    return this.gun.get(`identitiesByTrustDistance`).map((id, key) => {
+      if (key.indexOf(encodeURIComponent(value)) === -1) {
+        return;
       }
-    }
-    return Object.values(identitiesByHash);
+      return new Identity(id);
+    }).then();
   }
 }
 

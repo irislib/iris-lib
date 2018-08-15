@@ -7,75 +7,50 @@ import Attribute from './attribute';
 * from Index methods such as search().
 */
 class Identity {
-  constructor(data: Object) {
-    this.data = data; // data to (de)serialize
-    this.profile = {};
-    this.mostVerifiedAttributes = {};
-    if (data.attrs.length) { // old index format
-      const c = data.attrs[0];
-      if (c.pos !== undefined && c.neg !== undefined && c.neut !== undefined) {
-        this.data.receivedPositive = c.pos;
-        this.data.receivedNegative = c.neg;
-        this.data.receivedNeutral = c.neut;
-      }
-    }
-    this.data.receivedNegative |= 0;
-    this.data.receivedPositive |= 0;
-    this.data.receivedNeutral |= 0;
-    this.data.sentNegative |= 0;
-    this.data.sentPositive |= 0;
-    this.data.sentNeutral |= 0;
-    this.data.trustDistance = this.data.hasOwnProperty(`trustDistance`) ? this.data.trustDistance : 99;
-    if (Array.isArray(this.data.attrs)) {
+  constructor(gun: Object) {
+    this.gun = gun;
+  }
+
+  static create(gunRoot: Object, data: Object) {
+    data.mostVerifiedAttributes = {};
+    data.receivedNegative |= 0;
+    data.receivedPositive |= 0;
+    data.receivedNeutral |= 0;
+    data.sentNegative |= 0;
+    data.sentPositive |= 0;
+    data.sentNeutral |= 0;
+    data.trustDistance = data.hasOwnProperty(`trustDistance`) ? data.trustDistance : 99;
+    if (Array.isArray(data.attrs)) {
       const attrs = {};
-      while (this.data.attrs.length) {
-        const a = this.data.attrs.pop();
+      while (data.attrs.length) {
+        const a = data.attrs.pop();
         attrs[`${encodeURIComponent(a.name)}:${encodeURIComponent(a.val)}`] = a;
       }
-      this.data.attrs = attrs;
+      data.attrs = attrs;
     }
-    Object.keys(this.data.attrs).forEach(k => {
-      const a = this.data.attrs[k];
-      if (!this.linkTo && Attribute.isUniqueType(a.name)) {
-        this.linkTo = a;
+    Object.keys(data.attrs).forEach(k => {
+      const a = data.attrs[k];
+      if (!data.linkTo && Attribute.isUniqueType(a.name)) {
+        data.linkTo = a;
       }
-      if (!Number.isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < this.data.trustDistance) {
-        this.data.trustDistance = parseInt(a.dist);
+      if (!Number.isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < data.trustDistance) {
+        data.trustDistance = parseInt(a.dist);
         if (Attribute.isUniqueType(a.name)) {
-          this.linkTo = a;
+          data.linkTo = a;
         }
       }
-      const keyExists = Object.keys(this.mostVerifiedAttributes).indexOf(a.name) > - 1;
-      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > this.mostVerifiedAttributes[a.name].verificationScore)) {
-        this.mostVerifiedAttributes[a.name] = {
+      const keyExists = Object.keys(data.mostVerifiedAttributes).indexOf(a.name) > - 1;
+      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > data.mostVerifiedAttributes[a.name].verificationScore)) {
+        data.mostVerifiedAttributes[a.name] = {
           attribute: a,
           verificationScore: a.conf - a.ref
         };
       }
     });
-    if (this.linkTo.name !== `keyID` && this.mostVerifiedAttributes.keyID) {
-      this.linkTo = this.mostVerifiedAttributes.keyID.attribute;
+    if (data.linkTo.name !== `keyID` && data.mostVerifiedAttributes.keyID) {
+      data.linkTo = data.mostVerifiedAttributes.keyID.attribute;
     }
-    Object.keys(this.mostVerifiedAttributes).forEach(k => {
-      if ([`name`, `nickname`, `email`, `url`, `coverPhoto`, `profilePhoto`].indexOf(k) > - 1) {
-        this.profile[k] = this.mostVerifiedAttributes[k].attribute.val;
-      }
-    });
-  }
-
-  /**
-  * @returns {string} stringified JSON from the identity data
-  */
-  serialize() {
-    return JSON.stringify(this.data, `utf8`);
-  }
-
-  /**
-  * @param {string} str stringified JSON of the identity data
-  * @returns {Identity} Identity object from the serialized data
-  */
-  static deserialize(str) {
-    return new Identity(JSON.parse(str));
+    return new Identity(gunRoot.set(data));
   }
 
   /**
