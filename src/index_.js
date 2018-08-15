@@ -1,31 +1,18 @@
 import btree from 'merkle-btree';
-import util from './util';
 import Message from './message';
 import Key from './key';
 import Identity from './identity';
 import Attribute from './attribute';
-import fetch from 'node-fetch';
-import Gun from 'gun';
-import then from 'gun/lib/then';
-import load from 'gun/lib/load';
-
-const DEFAULT_INDEX = `/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs`;
-const DEFAULT_STATIC_FALLBACK_INDEX = `/ipfs/QmPxLM631zJQ12tUDWs55LkGqqroFZKHeLjAZ2XwL9Miu3`;
-const DEFAULT_IPFS_PROXIES = [
-  `https://identi.fi`,
-  `https://ipfs.io`,
-  `https://ipfs.infura.io`,
-  `https://www.eternum.io`
-];
-const IPFS_INDEX_WIDTH = 200;
-const DEFAULT_TIMEOUT = 10000;
+import Gun from 'gun'; // eslint-disable-line no-unused-vars
+import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
+import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 
 // temp method for GUN search
 function searchText(node, query) {
   return new Promise(resolve => {
     node.once().map(
-      (value, key) => { key.indexOf(query) ? undefined : value }
-    ).once(() => resolve(results));
+      (value, key) => { key.indexOf(query) ? undefined : value; }
+    ).once(results => resolve(results));
   });
 }
 
@@ -71,8 +58,11 @@ class Index {
 
   static async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
+    console.log('aaaa');
     const d = await identity.gun.get(`trustDistance`).load().then();
-    await identity.gun.get(`attrs`).map(a => {
+    console.log('bbbb');
+    await identity.gun.get(`attrs`).map().once(a => {
+      console.log(76576457654);
       let distance = d !== undefined ? d : parseInt(a.dist);
       distance = Number.isNaN(distance) ? 99 : distance;
       distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
@@ -156,7 +146,9 @@ class Index {
 
   async _removeIdentityFromIndexes(id: Identity) {
     const hash = `TODO`;
+    console.log(313);
     const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(2));
+    console.log(3133);
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`deleting key ${key}`);
@@ -256,14 +248,17 @@ class Index {
       });
       const id = Identity.create(this.gun.get(`identities`), {attrs});
       // TODO: take msg author trust into account
-      recipientIdentities[id.gun['#']] = id;
+      recipientIdentities[id.gun[`#`]] = id;
     }
+    console.log(123213);
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
       const id = ids[i];
+      console.log(34243);
       await this._removeIdentityFromIndexes(id);
+      console.log(432432);
       if (recipientIdentities.hasOwnProperty(id.ipfsHash)) {
         msg.signedData.recipient.forEach(a1 => {
           let hasAttr = false;
@@ -408,12 +403,9 @@ class Index {
   * @param {string} type (optional) type of searched value
   * @returns {Array} list of matching identities
   */
-  async search(value, type, limit = 5, cursor, depth = 20) { // TODO: param 'exact'
-    const identitiesByHash = {};
-    const initialDepth = cursor ? Number.parseInt(cursor.substring(0, cursor.indexOf(`:`))) : 0;
-
+  async search(value) { // TODO: param 'exact'
     return this.gun.get(`identitiesByTrustDistance`).map((id, key) => {
-      if (key.indexOf(encodeURIComponent(value)) === -1) {
+      if (key.indexOf(encodeURIComponent(value)) === - 1) {
         return;
       }
       return new Identity(id);

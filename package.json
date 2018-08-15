@@ -19,7 +19,6 @@
     "node": ">=4.0.0"
   },
   "scripts": {
-    "prepublish": "npm run build",
     "precommit": "npm run lint:test",
     "prepush": "npm run lint:test",
     "release": "release-it",
@@ -76,7 +75,6 @@
   "dependencies": {
     "identicon.js": "^2.3.2",
     "jsrsasign": "^8.0.12",
-    "merkle-btree": "^1.0.24",
-    "node-fetch": "^2.1.2"
+    "merkle-btree": "^1.0.24"
   }
 }
