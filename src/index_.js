@@ -121,15 +121,7 @@ class Index {
       type = Attribute.guessTypeOf(value);
     }
     const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
-    console.log(1111);
-    const found = await new Promise(resolve => {
-      this.gun.get(`identitiesBySearchKey`).get(key).on((r) => {
-        console.log(`this never gets called?`);
-        console.log(a,b,c,d);
-        resolve(r);
-      });
-    });
-    console.log(2222);
+    const found = await this.gun.get(`identitiesBySearchKey`).get(key).once().then();
     if (!found) {
       return undefined;
     }
@@ -167,7 +159,8 @@ class Index {
 
   async _addIdentityToIndexes(id: Identity) {
     const hash = `todo`;
-    const idNode = this.gun.get(`identities`).set(id);
+    const prs = await id.gun.load().then();
+    const idNode = this.gun.get(`identities`).set(id.gun);
     const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(2));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
