@@ -8,11 +8,17 @@ import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 
 // temp method for GUN search
-function searchText(node, query) {
-  return new Promise(resolve => {
-    node.once().map(
-      (value, key) => { key.indexOf(query) ? undefined : value; }
-    ).once(results => resolve(results));
+async function searchText(node, query) {
+  return new Promise((resolve) => {
+    const r = [];
+    node.once().map((value, key) => {
+      if (key.indexOf(query) === 0) {
+        if (value) {
+          r.push(value);
+        }
+      }
+    });
+    setTimeout(() => { /* console.log(`r`, r);*/ resolve(r); }, 100);
   });
 }
 
@@ -101,7 +107,7 @@ class Index {
   * @returns {Identity} viewpoint identity of the index
   */
   async getViewpoint() {
-    const r = await this.gun.get(`identitiesByTrustDistance`).searchText(`00`, 1);
+    const r = await searchText(this.gun.get(`identitiesByTrustDistance`), `00`, 1);
     if (r.length) {
       return r[0].value;
     }
@@ -130,17 +136,11 @@ class Index {
 
   async _getMsgs(msgIndex, limit, cursor) {
     const rawMsgs = await searchText(msgIndex, ``, limit, cursor, true);
+    msgIndex.once(r => console.log(11111, r));
+    console.log('rawMsgs', rawMsgs);
     const msgs = [];
-    rawMsgs.forEach(row => {
-      const msg = Message.fromJws(row.value.jws);
-      msg.cursor = row.key;
-      msg.authorPos = row.value.author_pos;
-      msg.authorNeg = row.value.author_neg;
-      msg.recipientPos = row.value.recipient_pos;
-      msg.recipientNeg = row.value.recipient_neg;
-      msg.authorTrustDistance = row.value.distance;
-      msg.authorName = row.value.author_name;
-      msg.recipientName = row.value.recipient_name;
+    rawMsgs.forEach(jws => {
+      const msg = Message.fromJws(jws);
       msgs.push(msg);
     });
     return msgs;
@@ -159,7 +159,6 @@ class Index {
 
   async _addIdentityToIndexes(id: Identity) {
     const hash = `todo`;
-    const prs = await id.gun.load().then();
     const idNode = this.gun.get(`identities`).set(id.gun);
     const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(2));
     for (let i = 0;i < indexKeys.length;i ++) {
@@ -178,14 +177,14 @@ class Index {
   * @returns {Array} list of messages sent by param identity
   */
   async getSentMsgs(identity: Identity, limit, cursor = ``) {
-    return this._getMsgs(identity.get(`sent`), limit, cursor);
+    return this._getMsgs(identity.gun.get(`sent`), limit, cursor);
   }
 
   /**
   * @returns {Array} list of messages received by param identity
   */
   async getReceivedMsgs(identity, limit, cursor = ``) {
-    return this._getMsgs(identity.get(`received`), limit, cursor);
+    return this._getMsgs(identity.gun.get(`received`), limit, cursor);
   }
 
   async _getAttributeTrustDistance(a) {
@@ -252,52 +251,52 @@ class Index {
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
-    console.log('ids', ids);
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
-      const id = ids[i];
-      await this._removeIdentityFromIndexes(id);
+      const id = await new Promise(resolve => {
+        ids[i].gun.load(r => resolve(r));
+      });
+      await this._removeIdentityFromIndexes(ids[i]);
       if (recipientIdentities.hasOwnProperty(id.ipfsHash)) {
         msg.signedData.recipient.forEach(a1 => {
           let hasAttr = false;
-          for (let j = 0;j < id.data.attrs.length;j ++) {
-            if (Attribute.equals(a1, id.data.attrs[j])) {
-              id.data.attrs[j].conf |= 0;
-              id.data.attrs[j].conf += 1;
+          Object.keys(id.attrs).forEach(k => {
+            if (Attribute.equals(a1, id.attrs[k])) {
+              id.attrs[k].conf = (id.attrs[k].conf || 0) + 1;
               hasAttr = true;
-              break;
             }
-          }
+          });
           if (!hasAttr) {
-            id.data.attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0};
+            id.attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0}
           }
         });
         if (msg.signedData.type === `rating`) {
           if (msg.isPositive()) {
-            if (msg.distance + 1 < id.data.trustDistance) {
-              id.data.trustDistance = msg.distance + 1;
+            if (msg.distance + 1 < id.trustDistance) {
+              id.trustDistance = msg.distance + 1;
             }
-            id.data.receivedPositive ++;
+            id.receivedPositive ++;
           } else if (msg.isNegative()) {
-            id.data.receivedNegative ++;
+            id.receivedNegative ++;
           } else {
-            id.data.receivedNeutral ++;
+            id.receivedNeutral ++;
           }
         }
-        await this.gun.get(`id key`).get(`received`).get(msgIndexKey).put(msg.jws); // TODO
+        await ids[i].gun.get(`received`).get(msgIndexKey).put(msg.jws); // TODO
       }
       if (authorIdentities.hasOwnProperty(id.ipfsHash)) {
         if (msg.signedData.type === `rating`) {
           if (msg.isPositive()) {
-            id.data.sentPositive ++;
+            id.sentPositive ++;
           } else if (msg.isNegative()) {
-            id.data.sentNegative ++;
+            id.sentNegative ++;
           } else {
-            id.data.sentNeutral ++;
+            id.sentNeutral ++;
           }
         }
-        await this.gun.get(`id key`).get(`sent`).get(msgIndexKey).put(msg.jws);
+        await ids[i].gun.get(`sent`).get(msgIndexKey).put(msg.jws);
       }
-      await this._addIdentityToIndexes(id);
+      await ids[i].gun.put(id);
+      await this._addIdentityToIndexes(ids[i]);
     }
   }
 
@@ -352,10 +351,10 @@ class Index {
             console.log(`adding failed:`, e, JSON.stringify(m, null, 2));
           }
           await msgsByAuthor.delete(rightCursor);
-          leftRes = await this.gun.get(`identitiesBySearchKey`).searchText(``, 1, leftCursor);
+          leftRes = await searchText(this.gun.get(`identitiesBySearchKey`), ``, 1, leftCursor);
           rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
         } else if (leftRes[0].key < rightRes[0].key) {
-          leftRes = await this.gun.get(`identitiesBySearchKey`).searchText(``, 1, leftCursor);
+          leftRes = await searchText(this.gun.get(`identitiesBySearchKey`), ``, 1, leftCursor);
         } else {
           rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
         }

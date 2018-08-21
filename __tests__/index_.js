@@ -6,7 +6,7 @@ let key = identifi.Key.getDefault();
 //let ipfsNode = new IPFS({repo: './ipfs_repo'});
 const gun = new GUN({radisk: false});
 
-jest.setTimeout(30000);
+jest.setTimeout(5000);
 
 function shuffle(array) {
   let currentIndex = array.length, temporaryValue, randomIndex;
@@ -58,7 +58,7 @@ describe('local index', async () => {
     test('get added identity', async () => {
       p = await i.get('bob@example.com');
       console.log(p);
-      const data = await p.once().then();
+      const data = await p.gun.once().then();
       //expect(q).toBeInstanceOf(identifi.Identity);
       expect(data.trustDistance).toBe(1);
       expect(data.receivedPositive).toBe(1);
@@ -87,7 +87,8 @@ describe('local index', async () => {
       msg = identifi.Message.createRating({author: [['email', 'carl@example.com']], recipient: [['email', 'david@example.com']], rating:10}, key);
       await i.addMessage(msg);
       p = await i.get('david@example.com');
-      expect(p.data.trustDistance).toBe(3);
+      const data = await p.gun.once().then();
+      expect(data.trustDistance).toBe(3);
     });
     test('add a collection of messages using addMessages', async () => {
       const msgs = [];
@@ -102,7 +103,7 @@ describe('local index', async () => {
       await i.addMessages(shuffle(msgs));
       p = await i.get('bob4@example.com');
       expect(p).toBeDefined();
-      expect(p.data.trustDistance).toBe(5);
+      const trustDistance = p.gun.get(`trustDistance`);
       p = await i.get('bert@example.com');
       expect(p).toBeUndefined();
       p = await i.get('chris@example.com');
@@ -119,11 +120,12 @@ describe('local index', async () => {
     });
     test('should not affect scores', async () => {
       p = await i.get('david@example.com');
-      const pos = p.data.receivedPositive;
+      const pos = await p.gun.get(`receivedPositive`).once().then();
       let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'david@example.com']], rating:10}, u);
       await i.addMessage(msg);
       p = await i.get('david@example.com');
-      expect(p.data.receivedPositive).toEqual(pos);
+      const pos2 = await p.gun.get(`receivedPositive`).once().then();
+      expect(pos2).toEqual(pos);
     });
   });
   describe('adding attributes to an identity', async () => {
@@ -137,14 +139,16 @@ describe('local index', async () => {
       let viewpoint = await i.getViewpoint();
       expect(viewpoint).toBeInstanceOf(identifi.Identity);
       const recipient = [['name', 'Alice']];
-      viewpoint.data.attrs.forEach(a => {
+      let data = await viewpoint.gun.once().then();
+      data.attrs.forEach(a => {
         recipient.push([a.name, a.val]);
       });
       const msg = identifi.Message.createVerification({recipient}, key);
       const r = await i.addMessage(msg);
       viewpoint = await i.getViewpoint();
-      expect(viewpoint.data.attrs.length).toBe(2);
-      expect(viewpoint.mostVerifiedAttributes.name.attribute.val).toBe('Alice');
+      data = await viewpoint.gun.once().then();
+      expect(data.attrs.length).toBe(2);
+      expect(data.mostVerifiedAttributes.name.attribute.val).toBe('Alice');
     });
     test('identity count should remain the same', async () => {
       const r = await i.search('');
@@ -154,9 +158,10 @@ describe('local index', async () => {
   test('get viewpoint identity by searching the default keyID', async () => {
     const defaultKey = identifi.Key.getDefault();
     p = await i.get(defaultKey.keyID, 'keyID');
+    const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);
-    expect(p.data.trustDistance).toBe(0);
-    expect(p.data.sentPositive).toBe(1);
+    expect(data.trustDistance).toBe(0);
+    expect(data.sentPositive).toBe(1);
   });
   describe('save & load', async () => {
     test('load saved index', async () => {
