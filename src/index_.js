@@ -136,8 +136,6 @@ class Index {
 
   async _getMsgs(msgIndex, limit, cursor) {
     const rawMsgs = await searchText(msgIndex, ``, limit, cursor, true);
-    msgIndex.once(r => console.log(11111, r));
-    console.log('rawMsgs', rawMsgs);
     const msgs = [];
     rawMsgs.forEach(jws => {
       const msg = Message.fromJws(jws);
@@ -222,11 +220,13 @@ class Index {
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = {};
     const authorIdentities = {};
+    console.log('msg', JSON.stringify(msg));
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = await this.get(a[1], a[0]);
+      console.log('author', Gun.node.soul(id.gun));
       if (id) {
-        authorIdentities[id.ipfsHash] = id;
+        authorIdentities[Gun.node.soul(id.gun)] = id;
       }
     }
     if (!Object.keys(authorIdentities).length) {
@@ -236,7 +236,7 @@ class Index {
       const a = msg.signedData.recipient[i];
       const id = await this.get(a[1], a[0]);
       if (id) {
-        recipientIdentities[id.ipfsHash] = id;
+        recipientIdentities[Gun.node.soul(id.gun)] = id;
       }
     }
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
@@ -246,7 +246,7 @@ class Index {
       });
       const id = Identity.create(this.gun.get(`identities`), {attrs});
       // TODO: take msg author trust into account
-      recipientIdentities[id.gun[`#`]] = id;
+      recipientIdentities[Gun.node.soul(id)] = id;
     }
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
@@ -256,7 +256,7 @@ class Index {
         ids[i].gun.load(r => resolve(r));
       });
       await this._removeIdentityFromIndexes(ids[i]);
-      if (recipientIdentities.hasOwnProperty(id.ipfsHash)) {
+      if (recipientIdentities.hasOwnProperty(Gun.node.soul(ids[i].gun))) {
         msg.signedData.recipient.forEach(a1 => {
           let hasAttr = false;
           Object.keys(id.attrs).forEach(k => {
@@ -281,9 +281,9 @@ class Index {
             id.receivedNeutral ++;
           }
         }
-        await ids[i].gun.get(`received`).get(msgIndexKey).put(msg.jws); // TODO
+        await ids[i].gun.get(`received`).get(msgIndexKey).put(msg.jws).then(); // TODO
       }
-      if (authorIdentities.hasOwnProperty(id.ipfsHash)) {
+      if (authorIdentities.hasOwnProperty(Gun.node.soul(ids[i].gun))) {
         if (msg.signedData.type === `rating`) {
           if (msg.isPositive()) {
             id.sentPositive ++;
@@ -292,10 +292,11 @@ class Index {
           } else {
             id.sentNeutral ++;
           }
+          console.log('yesss', msg, id);
         }
-        await ids[i].gun.get(`sent`).get(msgIndexKey).put(msg.jws);
+        await ids[i].gun.get(`sent`).get(msgIndexKey).put(msg.jws).then();
       }
-      await ids[i].gun.put(id);
+      await ids[i].gun.put(id).then();
       await this._addIdentityToIndexes(ids[i]);
     }
   }
