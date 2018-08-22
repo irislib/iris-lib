@@ -8,13 +8,16 @@ import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 
 // temp method for GUN search
-async function searchText(node, query) {
+async function searchText(node, query, limit, cursor) {
   return new Promise((resolve) => {
     const r = [];
     node.once().map((value, key) => {
-      if (key.indexOf(query) === 0) {
+      if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
         if (value) {
           r.push({value, key});
+        }
+        if (r.length >= limit) {
+          resolve(r);
         }
       }
     });
