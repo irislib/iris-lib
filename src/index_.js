@@ -14,11 +14,11 @@ async function searchText(node, query) {
     node.once().map((value, key) => {
       if (key.indexOf(query) === 0) {
         if (value) {
-          r.push(value);
+          r.push({value, key});
         }
       }
     });
-    setTimeout(() => { /* console.log(`r`, r);*/ resolve(r); }, 100);
+    setTimeout(() => { /* console.log(`r`, r);*/ resolve(r); }, 200);
   });
 }
 
@@ -108,8 +108,9 @@ class Index {
   */
   async getViewpoint() {
     const r = await searchText(this.gun.get(`identitiesByTrustDistance`), `00`, 1);
+    console.log(r);
     if (r.length) {
-      return r[0].value;
+      return new Identity(this.gun.get(`identities`).get(r[0].key));
     }
   }
 
@@ -137,8 +138,8 @@ class Index {
   async _getMsgs(msgIndex, limit, cursor) {
     const rawMsgs = await searchText(msgIndex, ``, limit, cursor, true);
     const msgs = [];
-    rawMsgs.forEach(jws => {
-      const msg = Message.fromJws(jws);
+    rawMsgs.forEach(row => {
+      const msg = Message.fromJws(row.value);
       msgs.push(msg);
     });
     return msgs;
@@ -220,11 +221,9 @@ class Index {
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = {};
     const authorIdentities = {};
-    console.log('msg', JSON.stringify(msg));
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = await this.get(a[1], a[0]);
-      console.log('author', Gun.node.soul(id.gun));
       if (id) {
         authorIdentities[Gun.node.soul(id.gun)] = id;
       }
@@ -292,7 +291,6 @@ class Index {
           } else {
             id.sentNeutral ++;
           }
-          console.log('yesss', msg, id);
         }
         await ids[i].gun.get(`sent`).get(msgIndexKey).put(msg.jws).then();
       }
@@ -394,12 +392,16 @@ class Index {
   * @returns {Array} list of matching identities
   */
   async search(value) { // TODO: param 'exact'
-    return this.gun.get(`identitiesByTrustDistance`).map((id, key) => {
-      if (key.indexOf(encodeURIComponent(value)) === - 1) {
-        return;
-      }
-      return new Identity(id);
-    }).once().then();
+    const r = [];
+    return new Promise(resolve => {
+      this.gun.get(`identitiesByTrustDistance`).map((id, key) => {
+        if (key.indexOf(encodeURIComponent(value)) === - 1) {
+          return;
+        }
+        r.push(new Identity(id));
+      });
+      setTimeout(() => { resolve(r); }, 200);
+    });
   }
 }
 
