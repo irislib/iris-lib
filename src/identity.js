@@ -51,7 +51,6 @@ class Identity {
     if (data.linkTo.name !== `keyID` && data.mostVerifiedAttributes.keyID) {
       data.linkTo = data.mostVerifiedAttributes.keyID.attribute;
     }
-    Gun.
     return new Identity(gunRoot.set(data));
   }
 

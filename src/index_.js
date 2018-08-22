@@ -108,9 +108,8 @@ class Index {
   */
   async getViewpoint() {
     const r = await searchText(this.gun.get(`identitiesByTrustDistance`), `00`, 1);
-    console.log(r);
     if (r.length) {
-      return new Identity(this.gun.get(`identities`).get(r[0].key));
+      return new Identity(this.gun.get(`identitiesByTrustDistance`).get(r[0].key));
     }
   }
 
@@ -146,8 +145,9 @@ class Index {
   }
 
   async _removeIdentityFromIndexes(id: Identity) {
-    const hash = `TODO`;
-    const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(2));
+    const hash = Gun.node.soul(id.gun) || 'todo';
+    console.log(777, hash);
+    const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(6));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`deleting key ${key}`);
@@ -157,17 +157,17 @@ class Index {
   }
 
   async _addIdentityToIndexes(id: Identity) {
-    const hash = `todo`;
-    const idNode = this.gun.get(`identities`).set(id.gun);
-    const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(2));
+    const hash = Gun.node.soul(id.gun) || 'todo';
+    console.log(777, hash);
+    const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(6));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`adding key ${key}`);
       await new Promise(resolve => {
-        this.gun.get(`identitiesByTrustDistance`).get(key).put(idNode, () => {resolve();});
+        this.gun.get(`identitiesByTrustDistance`).get(key).put(id.gun, () => {resolve();});
       });
       await new Promise(resolve => {
-        this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(idNode, () => {resolve();});
+        this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id.gun, () => {resolve();});
       });
     }
   }
@@ -292,10 +292,11 @@ class Index {
             id.sentNeutral ++;
           }
         }
+        console.log(msgIndexKey);
         await ids[i].gun.get(`sent`).get(msgIndexKey).put(msg.jws).then();
       }
       await ids[i].gun.put(id).then();
-      await this._addIdentityToIndexes(ids[i]);
+      await this._addIdentityToIndexes(Identity.create(this.gun.get(`identities`), id));
     }
   }
 
@@ -391,16 +392,18 @@ class Index {
   * @param {string} type (optional) type of searched value
   * @returns {Array} list of matching identities
   */
-  async search(value) { // TODO: param 'exact'
-    const r = [];
+  async search(value) { // TODO: param 'exact', type param
+    const r = {};
     return new Promise(resolve => {
       this.gun.get(`identitiesByTrustDistance`).map((id, key) => {
         if (key.indexOf(encodeURIComponent(value)) === - 1) {
           return;
         }
-        r.push(new Identity(id));
+        if (!r.hasOwnProperty(Gun.node.soul(id))) {
+          r[Gun.node.soul(id)] = new Identity(id);
+        }
       });
-      setTimeout(() => { resolve(r); }, 200);
+      setTimeout(() => { resolve(Object.values(r)); }, 200);
     });
   }
 }

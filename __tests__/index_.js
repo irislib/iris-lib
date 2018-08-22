@@ -1,6 +1,7 @@
 const identifi = require('../cjs/index.js');
 const fs = require('fs');
 const GUN = require('gun');
+const load = require('gun/lib/load');
 
 let key = identifi.Key.getDefault();
 //let ipfsNode = new IPFS({repo: './ipfs_repo'});
@@ -57,7 +58,6 @@ describe('local index', async () => {
     });
     test('get added identity', async () => {
       p = await i.get('bob@example.com');
-      console.log(p);
       const data = await p.gun.once().then();
       //expect(q).toBeInstanceOf(identifi.Identity);
       expect(data.trustDistance).toBe(1);
@@ -139,15 +139,23 @@ describe('local index', async () => {
       let viewpoint = await i.getViewpoint();
       expect(viewpoint).toBeInstanceOf(identifi.Identity);
       const recipient = [['name', 'Alice']];
-      let data = await viewpoint.gun.once().then();
-      data.attrs.forEach(a => {
-        recipient.push([a.name, a.val]);
+      await new Promise(resolve => {
+        viewpoint.gun.load(r => {
+          Object.keys(r.attrs).forEach(key => {
+            recipient.push([r.attrs[key].name, r.attrs[key].val]);
+          });
+          resolve();
+        });
       });
       const msg = identifi.Message.createVerification({recipient}, key);
       const r = await i.addMessage(msg);
       viewpoint = await i.getViewpoint();
-      data = await viewpoint.gun.once().then();
-      expect(data.attrs.length).toBe(2);
+      const data = await new Promise(resolve => {
+        viewpoint.gun.load(r => {
+          resolve(r);
+        });
+      });
+      expect(Object.keys(data.attrs).length).toBe(2);
       expect(data.mostVerifiedAttributes.name.attribute.val).toBe('Alice');
     });
     test('identity count should remain the same', async () => {
