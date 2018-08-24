@@ -11,17 +11,29 @@ import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 async function searchText(node, query, limit, cursor) {
   return new Promise((resolve) => {
     const r = [];
+    function sortAndResolve() {
+      r.sort((a, b) => {
+        if (a.key < b.key) {
+          return -1;
+        }
+        if (a.key > b.key) {
+          return
+        }
+        return 0;
+      });
+      resolve(r);
+    }
     node.once().map((value, key) => {
       if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
         if (value) {
           r.push({value, key});
         }
         if (r.length >= limit) {
-          resolve(r);
+          sortAndResolve();
         }
       }
     });
-    setTimeout(() => { /* console.log(`r`, r);*/ resolve(r); }, 200);
+    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve() }, 200);
   });
 }
 
@@ -252,7 +264,6 @@ class Index {
     if (msg.signedData.type === `rating`) {
       const id = await author.once().then();
       if (msg.isPositive()) {
-        console.log('yes', msg.signedData.author);
         await author.get(`sentPositive`).put(id.sentPositive + 1);
       } else if (msg.isNegative()) {
         await author.get(`sentNegative`).put(id.sentNegative + 1);
@@ -297,7 +308,6 @@ class Index {
       const a = msg.signedData.recipient[i];
       const id = await this.get(a[1], a[0]);
       if (id) {
-        console.log(id.gun['_'].link, id);
         recipientIdentities[id.gun['_'].link] = id;
       }
     }
@@ -321,58 +331,54 @@ class Index {
   * Iteratively performs sorted merge joins on [previously known identities] and
   * [new msgs authors], until all messages from within the WoT have been added.
   *
-  * @param {MerkleBTree | Array} msgs can be either a merkle-btree or an array of messages.
+  * @param {Array} msgs can be either a merkle-btree or an array of messages.
   * @returns {boolean} true on success
   */
   async addMessages(msgs) {
-    let msgsByAuthor;
+    const msgsByAuthor = {};
     if (Array.isArray(msgs)) {
       console.log(`sorting ${msgs.length} messages onto a search tree...`);
-      msgsByAuthor = new btree.MerkleBTree(new btree.RAMStorage(), 1000);
       for (let i = 0;i < msgs.length;i ++) {
         for (let j = 0;j < msgs[i].signedData.author.length;j ++) {
           const id = msgs[i].signedData.author[j];
           if (Attribute.isUniqueType(id[0])) {
             const key = `${encodeURIComponent(id[1])}:${encodeURIComponent(id[0])}:${msgs[i].getHash()}`;
-            await msgsByAuthor.put(key, msgs[i]);
+            msgsByAuthor[key] = msgs[i];
           }
         }
       }
       console.log(`...done`);
-    } else if (msgs instanceof btree.MerkleBTree) {
-      msgsByAuthor = msgs;
     } else {
-      throw `msgs param must be an array or MerkleBTree`;
+      throw `msgs param must be an array`;
     }
+    const msgAuthors = Object.keys(msgsByAuthor).sort();
     let initialMsgCount, msgCountAfterwards;
     do {
-      initialMsgCount = await msgsByAuthor.size();
-      let leftCursor, rightCursor;
-      let leftRes = await searchText(this.gun.get(`identitiesBySearchKey`), ``, 1, leftCursor);
-      let rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
+      let knownIdentities = await searchText(this.gun.get(`identitiesBySearchKey`), ``);
+      let leftRes = msgAuthors.shift();
+      let rightRes = knownIdentities.shift();
+      initialMsgCount = msgAuthors.length;
+      console.log(666, knownIdentities, msgAuthors);
       // sort-merge join identitiesBySearchKey and msgsByAuthor
-      while (leftRes.length && rightRes.length) {
-        leftCursor = leftRes[0].key;
-        rightCursor = rightRes[0].key;
-        if (rightRes[0].key.indexOf(leftRes[0].key) === 0) {
-          console.log(`adding msg by`, rightRes[0].key);
+      while (msgAuthors.length && knownIdentities.length) {
+        if (rightRes.key.indexOf(leftRes) === 0) {
+          console.log(`adding msg by`, rightRes.key);
           try {
-            const m = Message.fromJws(rightRes[0].value.jws);
+            const m = Message.fromJws(rightRes.value.jws);
             await this.addMessage(m);
           } catch (e) {
-            const m = Message.fromJws(rightRes[0].value.jws);
+            const m = Message.fromJws(rightRes.value.jws);
             console.log(`adding failed:`, e, JSON.stringify(m, null, 2));
           }
-          await msgsByAuthor.delete(rightCursor);
-          leftRes = await searchText(this.gun.get(`identitiesBySearchKey`), ``, 1, leftCursor);
-          rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
-        } else if (leftRes[0].key < rightRes[0].key) {
-          leftRes = await searchText(this.gun.get(`identitiesBySearchKey`), ``, 1, leftCursor);
+          leftRes = msgAuthors.shift();
+          rightRes = knownIdentities.shift();
+        } else if (leftRes < rightRes.key) {
+          leftRes = msgAuthors.shift();
         } else {
-          rightRes = await msgsByAuthor.searchText(``, 1, rightCursor);
+          rightRes = knownIdentities.shift();
         }
       }
-      msgCountAfterwards = await msgsByAuthor.size();
+      msgCountAfterwards = msgAuthors.length;
     } while (msgCountAfterwards !== initialMsgCount);
     return true;
   }
