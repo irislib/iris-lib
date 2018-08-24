@@ -42,7 +42,7 @@ class Index {
       const vp = Identity.create(this.gun.get(`identities`), {attrs: [this.viewpoint], trustDistance: 0});
       this.ready = new Promise(async (resolve, reject) => {
         try {
-          await this._addIdentityToIndexes(vp);
+          await this._addIdentityToIndexes(vp.gun);
           resolve();
         } catch (e) {
           reject(e);
@@ -67,9 +67,9 @@ class Index {
 
   static async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
-    const d = await identity.gun.get(`trustDistance`).load().then();
-    const f = await identity.gun.get(`attrs`).once().then();
-    await identity.gun.get(`attrs`).map().once(a => {
+    const d = await identity.get(`trustDistance`).load().then();
+    const f = await identity.get(`attrs`).once().then();
+    await identity.get(`attrs`).map().once(a => {
       let distance = d !== undefined ? d : parseInt(a.dist);
       distance = Number.isNaN(distance) ? 99 : distance;
       distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
@@ -147,31 +147,14 @@ class Index {
     return msgs;
   }
 
-  async _removeIdentityFromIndexes(id: Identity) {
-    const hash = Gun.node.soul(id.gun) || 'todo';
-    console.log(777, hash);
-    const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(6));
-    for (let i = 0;i < indexKeys.length;i ++) {
-      const key = indexKeys[i];
-      console.log(`deleting key ${key}`);
-      this.gun.get(`identitiesByTrustDistance`).get(key).put(null);
-      this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(null);
-    }
-  }
-
-  async _addIdentityToIndexes(id: Identity) {
-    const hash = Gun.node.soul(id.gun) || 'todo';
-    console.log(777, hash);
-    const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(6));
+  async _addIdentityToIndexes(id) {
+    const hash = Gun.node.soul(id) || 'todo';
+    const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(0, 6));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`adding key ${key}`);
-      await new Promise(resolve => {
-        this.gun.get(`identitiesByTrustDistance`).get(key).put(id.gun, () => {resolve();});
-      });
-      await new Promise(resolve => {
-        this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id.gun, () => {resolve();});
-      });
+      await this.gun.get(`identitiesByTrustDistance`).get(key).put(id).then();
+      await this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id).then();
     }
   }
 
@@ -221,6 +204,78 @@ class Index {
     return shortestDistance < Infinity ? shortestDistance : undefined;
   }
 
+  async _updateMsgRecipientIdentity(msg, msgIndexKey, recipient) {
+    const hash = `todo`;
+    const identityIndexKeysBefore = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
+    const attrs = await new Promise(resolve => { recipient.get(`attrs`).load(r => resolve(r)); });
+    msg.signedData.recipient.forEach(a1 => {
+      let hasAttr = false;
+      Object.keys(attrs).forEach(k => {
+        if (Attribute.equals(a1, attrs[k])) {
+          attrs[k].conf = (attrs[k].conf || 0) + 1;
+          hasAttr = true;
+        }
+      });
+      if (!hasAttr) {
+        attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0}
+      }
+    });
+    await recipient.get(`attrs`).put(attrs);
+    if (msg.signedData.type === `rating`) {
+      const id = await recipient.once().then();
+      if (msg.isPositive()) {
+        if (msg.distance + 1 < id.trustDistance) {
+          recipient.get(`trustDistance`).put(msg.distance + 1);
+        }
+        await recipient.get(`receivedPositive`).put(id.receivedPositive + 1);
+      } else if (msg.isNegative()) {
+        await recipient.get(`receivedNegative`).put(id.receivedNegative + 1);
+      } else {
+        await recipient.get(`receivedNeutral`).put(id.receivedNeutral + 1);
+      }
+    }
+    await recipient.get(`received`).get(msgIndexKey).put(msg.jws).then();
+    const identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
+    for (let j = 0;j < identityIndexKeysBefore.length;j ++) {
+      const k = identityIndexKeysBefore[j];
+      if (identityIndexKeysAfter.indexOf(k) === -1) {
+        await this.gun.get(`identitiesByTrustDistance`).get(k).put(null);
+        await this.gun.get(`identitiesBySearchKey`).get(k.substr(k.indexOf(`:`) + 1)).put(null);
+      }
+    }
+  }
+
+  async _updateMsgAuthorIdentity(msg, msgIndexKey, author) {
+    if (msg.signedData.type === `rating`) {
+      const id = await author.once().then();
+      if (msg.isPositive()) {
+        console.log('yes', msg.signedData.author);
+        await author.get(`sentPositive`).put(id.sentPositive + 1);
+      } else if (msg.isNegative()) {
+        await author.get(`sentNegative`).put(id.sentNegative + 1);
+      } else {
+        await author.get(`sentNeutral`).put(id.sentNeutral + 1);
+      }
+    }
+    return author.get(`sent`).get(msgIndexKey).put(msg.jws).then();
+  }
+
+  async _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
+    let msgIndexKey = Index.getMsgIndexKey(msg);
+    msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
+    const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
+    for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
+      if (recipientIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
+        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
+      }
+      if (authorIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
+        await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
+      }
+      const s = await ids[i].gun.load().then();
+      await this._addIdentityToIndexes(ids[i].gun);
+    }
+  }
+
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = {};
     const authorIdentities = {};
@@ -228,7 +283,8 @@ class Index {
       const a = msg.signedData.author[i];
       const id = await this.get(a[1], a[0]);
       if (id) {
-        authorIdentities[Gun.node.soul(id.gun)] = id;
+
+        authorIdentities[id.gun['_'].link] = id;
       }
     }
     if (!Object.keys(authorIdentities).length) {
@@ -238,7 +294,8 @@ class Index {
       const a = msg.signedData.recipient[i];
       const id = await this.get(a[1], a[0]);
       if (id) {
-        recipientIdentities[Gun.node.soul(id.gun)] = id;
+        console.log(id.gun['_'].link, id);
+        recipientIdentities[id.gun['_'].link] = id;
       }
     }
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
@@ -248,59 +305,9 @@ class Index {
       });
       const id = Identity.create(this.gun.get(`identities`), {attrs});
       // TODO: take msg author trust into account
-      recipientIdentities[Gun.node.soul(id)] = id;
+      recipientIdentities[id.gun['_'].link] = id;
     }
-    let msgIndexKey = Index.getMsgIndexKey(msg);
-    msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
-    const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
-    for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
-      const id = await new Promise(resolve => {
-        ids[i].gun.load(r => resolve(r));
-      });
-      await this._removeIdentityFromIndexes(ids[i]);
-      if (recipientIdentities.hasOwnProperty(Gun.node.soul(ids[i].gun))) {
-        msg.signedData.recipient.forEach(a1 => {
-          let hasAttr = false;
-          Object.keys(id.attrs).forEach(k => {
-            if (Attribute.equals(a1, id.attrs[k])) {
-              id.attrs[k].conf = (id.attrs[k].conf || 0) + 1;
-              hasAttr = true;
-            }
-          });
-          if (!hasAttr) {
-            id.attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0}
-          }
-        });
-        if (msg.signedData.type === `rating`) {
-          if (msg.isPositive()) {
-            if (msg.distance + 1 < id.trustDistance) {
-              id.trustDistance = msg.distance + 1;
-            }
-            id.receivedPositive ++;
-          } else if (msg.isNegative()) {
-            id.receivedNegative ++;
-          } else {
-            id.receivedNeutral ++;
-          }
-        }
-        await ids[i].gun.get(`received`).get(msgIndexKey).put(msg.jws).then(); // TODO
-      }
-      if (authorIdentities.hasOwnProperty(Gun.node.soul(ids[i].gun))) {
-        if (msg.signedData.type === `rating`) {
-          if (msg.isPositive()) {
-            id.sentPositive ++;
-          } else if (msg.isNegative()) {
-            id.sentNegative ++;
-          } else {
-            id.sentNeutral ++;
-          }
-        }
-        console.log(msgIndexKey);
-        await ids[i].gun.get(`sent`).get(msgIndexKey).put(msg.jws).then();
-      }
-      await ids[i].gun.put(id).then();
-      await this._addIdentityToIndexes(Identity.create(this.gun.get(`identities`), id));
-    }
+    return this._updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities);
   }
 
   /**
@@ -371,22 +378,16 @@ class Index {
   * @param msg Message to add to the index
   * @param {boolean} updateIdentityIndexes default true
   */
-  async addMessage(msg: Message, updateIdentityIndexes = true) {
+  async addMessage(msg: Message) {
     msg.distance = await this.getMsgTrustDistance(msg);
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
     }
     let indexKey = Index.getMsgIndexKey(msg);
-    await new Promise(resolve => {
-      this.gun.get(`messagesByDistance`).get(indexKey).put(msg.jws, () => {resolve();});
-    });
+    await this.gun.get(`messagesByDistance`).get(indexKey).put(msg.jws).then();
     indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
-    await new Promise(resolve => {
-      this.gun.get(`messagesByTimestamp`).get(indexKey).put(msg.jws, () => {resolve();});
-    });
-    if (updateIdentityIndexes) {
-      await this._updateIdentityIndexesByMsg(msg);
-    }
+    await this.gun.get(`messagesByTimestamp`).get(indexKey).put(msg.jws).then();
+    await this._updateIdentityIndexesByMsg(msg);
     return true;
   }
 
