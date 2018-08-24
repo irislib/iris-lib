@@ -208,19 +208,22 @@ class Index {
     const hash = `todo`;
     const identityIndexKeysBefore = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     const attrs = await new Promise(resolve => { recipient.get(`attrs`).load(r => resolve(r)); });
-    msg.signedData.recipient.forEach(a1 => {
-      let hasAttr = false;
-      Object.keys(attrs).forEach(k => {
-        if (Attribute.equals(a1, attrs[k])) {
-          attrs[k].conf = (attrs[k].conf || 0) + 1;
-          hasAttr = true;
+    if (msg.signedData.type === `verification`) {
+      msg.signedData.recipient.forEach(a1 => {
+        let hasAttr = false;
+        Object.keys(attrs).forEach(k => {
+          if (Attribute.equals(a1, attrs[k])) {
+            attrs[k].conf = (attrs[k].conf || 0) + 1;
+            hasAttr = true;
+          }
+        });
+        if (!hasAttr) {
+          attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0}
         }
       });
-      if (!hasAttr) {
-        attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0}
-      }
-    });
-    await recipient.get(`attrs`).put(attrs);
+      await recipient.get(`mostVerifiedAttributes`).put(Identity.getMostVerifiedAttributes(attrs));
+      await recipient.get(`attrs`).put(attrs);
+    }
     if (msg.signedData.type === `rating`) {
       const id = await recipient.once().then();
       if (msg.isPositive()) {

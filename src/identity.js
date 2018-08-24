@@ -12,7 +12,6 @@ class Identity {
   }
 
   static create(gunRoot: Object, data: Object) {
-    data.mostVerifiedAttributes = {};
     data.receivedNegative |= data.receivedNegative || 0;
     data.receivedPositive |= data.receivedPositive || 0;
     data.receivedNeutral = data.receivedNeutral || 0;
@@ -29,29 +28,34 @@ class Identity {
       }
       data.attrs = attrs;
     }
-    Object.keys(data.attrs).forEach(k => {
-      const a = data.attrs[k];
-      if (!data.linkTo && Attribute.isUniqueType(a.name)) {
-        data.linkTo = a;
-      }
-      if (!Number.isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < data.trustDistance) {
-        data.trustDistance = parseInt(a.dist);
-        if (Attribute.isUniqueType(a.name)) {
-          data.linkTo = a;
-        }
-      }
-      const keyExists = Object.keys(data.mostVerifiedAttributes).indexOf(a.name) > - 1;
-      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > data.mostVerifiedAttributes[a.name].verificationScore)) {
-        data.mostVerifiedAttributes[a.name] = {
-          attribute: a,
-          verificationScore: a.conf - a.ref
-        };
+    data.mostVerifiedAttributes = Identity.getMostVerifiedAttributes(data.attrs);
+    let bestVerificationScore = -1;
+    Object.keys(data.mostVerifiedAttributes).forEach(k => {
+      const v = data.mostVerifiedAttributes[k];
+      if (v.verificationScore > bestVerificationScore) {
+        data.linkTo = {name: k, val: v.attribute.val};
+        bestVerificationScore = v.verificationScore;
       }
     });
     if (data.linkTo.name !== `keyID` && data.mostVerifiedAttributes.keyID) {
       data.linkTo = data.mostVerifiedAttributes.keyID.attribute;
     }
     return new Identity(gunRoot.set(data));
+  }
+
+  static getMostVerifiedAttributes(attrs) {
+    const mostVerifiedAttributes = {};
+    Object.keys(attrs).forEach(k => {
+      const a = attrs[k];
+      const keyExists = Object.keys(mostVerifiedAttributes).indexOf(a.name) > - 1;
+      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.name].verificationScore)) {
+        mostVerifiedAttributes[a.name] = {
+          attribute: a,
+          verificationScore: a.conf - a.ref
+        };
+      }
+    });
+    return mostVerifiedAttributes;
   }
 
   /**
