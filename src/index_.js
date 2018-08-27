@@ -23,7 +23,7 @@ async function searchText(node, query, limit, cursor) {
       });
       resolve(r);
     }
-    node.once().map((value, key) => {
+    node.map((value, key) => {
       if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
         if (value) {
           r.push({value, key});
@@ -33,7 +33,7 @@ async function searchText(node, query, limit, cursor) {
         }
       }
     });
-    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve() }, 200);
+    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve() }, 300);
   });
 }
 
@@ -44,23 +44,21 @@ async function searchText(node, query, limit, cursor) {
 */
 class Index {
   constructor(gun: Object, viewpoint: Attribute) {
-    if (gun) {
-      this.gun = gun;
-      if (viewpoint) {
-        this.viewpoint = new Attribute(viewpoint);
-      } else {
-        this.viewpoint = {name: `keyID`, val: Key.getDefault().keyID, conf: 1, ref: 0};
-      }
-      const vp = Identity.create(this.gun.get(`identities`), {attrs: [this.viewpoint], trustDistance: 0});
-      this.ready = new Promise(async (resolve, reject) => {
-        try {
-          await this._addIdentityToIndexes(vp.gun);
-          resolve();
-        } catch (e) {
-          reject(e);
-        }
-      });
+    this.gun = gun || new Gun();
+    if (viewpoint) {
+      this.viewpoint = new Attribute(viewpoint);
+    } else {
+      this.viewpoint = {name: `keyID`, val: Key.getDefault().keyID, conf: 1, ref: 0};
     }
+    const vp = Identity.create(this.gun.get(`identities`), {attrs: [this.viewpoint], trustDistance: 0});
+    this.ready = new Promise(async (resolve, reject) => {
+      try {
+        await this._addIdentityToIndexes(vp.gun);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 
   static async create(gun: Object, viewpoint: Attribute) {
@@ -79,7 +77,7 @@ class Index {
 
   static async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
-    const d = await identity.get(`trustDistance`).load().then();
+    const d = await identity.get(`trustDistance`).once().then();
     const f = await identity.get(`attrs`).once().then();
     await identity.get(`attrs`).map().once(a => {
       let distance = d !== undefined ? d : parseInt(a.dist);
@@ -167,6 +165,14 @@ class Index {
       console.log(`adding key ${key}`);
       await this.gun.get(`identitiesByTrustDistance`).get(key).put(id).then();
       await this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id).then();
+      if (key.indexOf('bob1%40example.com:email') !== -1) {
+        console.log(1414, key.substr(key.indexOf(`:`) + 1));
+      }
+      const c = await this.gun.get(`identitiesBySearchKey`).then();
+      console.log(1515, c);
+      if (key.indexOf('bob1%40example.com:email') !== -1) {
+        console.log(1515, c);
+      }
     }
   }
 
@@ -352,30 +358,37 @@ class Index {
       throw `msgs param must be an array`;
     }
     const msgAuthors = Object.keys(msgsByAuthor).sort();
+    if (!msgAuthors.length) {
+      return;
+    }
     let initialMsgCount, msgCountAfterwards;
+    const index = this.gun.get(`identitiesBySearchKey`);
     do {
-      let knownIdentities = await searchText(this.gun.get(`identitiesBySearchKey`), ``);
-      let leftRes = msgAuthors.shift();
-      let rightRes = knownIdentities.shift();
+      console.log(`do`);
+      let knownIdentities = await searchText(index, ``);
+      let i = 0;
+      let author = msgAuthors[i];
+      let knownIdentity = knownIdentities.shift();
       initialMsgCount = msgAuthors.length;
-      console.log(666, knownIdentities, msgAuthors);
       // sort-merge join identitiesBySearchKey and msgsByAuthor
-      while (msgAuthors.length && knownIdentities.length) {
-        if (rightRes.key.indexOf(leftRes) === 0) {
-          console.log(`adding msg by`, rightRes.key);
+      while (author && knownIdentity) {
+        console.log(author, knownIdentity.key, author.indexOf(knownIdentity.key) === 0);
+        if (author.indexOf(knownIdentity.key) === 0) {
+          console.log(`adding msg by`, knownIdentity.key);
           try {
-            const m = Message.fromJws(rightRes.value.jws);
+            const m = Message.fromJws(msgsByAuthor[author].jws);
             await this.addMessage(m);
           } catch (e) {
-            const m = Message.fromJws(rightRes.value.jws);
+            const m = Message.fromJws(msgsByAuthor[author].jws);
             console.log(`adding failed:`, e, JSON.stringify(m, null, 2));
           }
-          leftRes = msgAuthors.shift();
-          rightRes = knownIdentities.shift();
-        } else if (leftRes < rightRes.key) {
-          leftRes = msgAuthors.shift();
+          msgAuthors.splice(i, 1);
+          author = i < msgAuthors.length ? msgAuthors[i] : undefined;
+          //knownIdentity = knownIdentities.shift();
+        } else if (author < knownIdentity.key) {
+          author = i < msgAuthors.length ? msgAuthors[++ i] : undefined;
         } else {
-          rightRes = knownIdentities.shift();
+          knownIdentity = knownIdentities.shift();
         }
       }
       msgCountAfterwards = msgAuthors.length;

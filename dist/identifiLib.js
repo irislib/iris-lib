@@ -3822,7 +3822,7 @@
 	var v8 = versions && versions.v8 || '';
 	var $Promise = _global[PROMISE];
 	var isNode$1 = _classof(process$2) == 'process';
-	var empty = function () { /* empty */ };
+	var empty$1 = function () { /* empty */ };
 	var Internal, newGenericPromiseCapability, OwnPromiseCapability, Wrapper;
 	var newPromiseCapability = newGenericPromiseCapability = _newPromiseCapability.f;
 
@@ -3831,11 +3831,11 @@
 	    // correct subclassing with @@species support
 	    var promise = $Promise.resolve(1);
 	    var FakePromise = (promise.constructor = {})[_wks('species')] = function (exec) {
-	      exec(empty, empty);
+	      exec(empty$1, empty$1);
 	    };
 	    // unhandled rejections tracking support, NodeJS Promise without it fails @@species test
 	    return (isNode$1 || typeof PromiseRejectionEvent == 'function')
-	      && promise.then(empty) instanceof FakePromise
+	      && promise.then(empty$1) instanceof FakePromise
 	      // v8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
 	      // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
 	      // we can't detect it synchronously, so just check versions
@@ -4041,7 +4041,7 @@
 	  }
 	});
 	_export(_export.S + _export.F * !(USE_NATIVE$1 && _iterDetect(function (iter) {
-	  $Promise.all(iter)['catch'](empty);
+	  $Promise.all(iter)['catch'](empty$1);
 	})), PROMISE, {
 	  // 25.4.4.1 Promise.all(iterable)
 	  all: function all(iterable) {
@@ -4170,24 +4170,6 @@
 	});
 
 	var _Object$keys = unwrapExports(keys$1);
-
-	// 20.1.2.4 Number.isNaN(number)
-
-
-	_export(_export.S, 'Number', {
-	  isNaN: function isNaN(number) {
-	    // eslint-disable-next-line no-self-compare
-	    return number != number;
-	  }
-	});
-
-	var isNan = _core.Number.isNaN;
-
-	var isNan$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": isNan, __esModule: true };
-	});
-
-	var _Number$isNaN = unwrapExports(isNan$1);
 
 	var pnglib = createCommonjsModule(function (module) {
 	/**
@@ -4732,151 +4714,57 @@
 	*/
 
 	var Identity = function () {
-	  function Identity(data) {
-	    var _this = this;
-
+	  function Identity(gun) {
 	    _classCallCheck(this, Identity);
 
-	    this.data = data; // data to (de)serialize
-	    this.profile = {};
-	    this.mostVerifiedAttributes = {};
-	    if (data.attrs.length) {
-	      // old index format
-	      var c = data.attrs[0];
-	      if (c.pos !== undefined && c.neg !== undefined && c.neut !== undefined) {
-	        this.data.receivedPositive = c.pos;
-	        this.data.receivedNegative = c.neg;
-	        this.data.receivedNeutral = c.neut;
+	    this.gun = gun;
+	  }
+
+	  Identity.create = function create(gunRoot, data) {
+	    data.receivedNegative |= data.receivedNegative || 0;
+	    data.receivedPositive |= data.receivedPositive || 0;
+	    data.receivedNeutral = data.receivedNeutral || 0;
+	    data.sentNegative = data.sentNegative || 0;
+	    data.sentPositive = data.sentPositive || 0;
+	    data.sentNeutral = data.sentNeutral || 0;
+	    data.trustDistance = data.hasOwnProperty('trustDistance') ? data.trustDistance : 99;
+	    data.attrs = data.attrs || {};
+	    if (Array.isArray(data.attrs)) {
+	      var attrs = {};
+	      while (data.attrs.length) {
+	        var a = data.attrs.pop();
+	        attrs[encodeURIComponent(a.name) + ':' + encodeURIComponent(a.val)] = a;
 	      }
+	      data.attrs = attrs;
 	    }
-	    this.data.receivedNegative |= 0;
-	    this.data.receivedPositive |= 0;
-	    this.data.receivedNeutral |= 0;
-	    this.data.sentNegative |= 0;
-	    this.data.sentPositive |= 0;
-	    this.data.sentNeutral |= 0;
-	    this.data.trustDistance = this.data.hasOwnProperty('trustDistance') ? this.data.trustDistance : 99;
-	    this.data.attrs.forEach(function (a) {
-	      if (!_this.linkTo && Attribute.isUniqueType(a.name)) {
-	        _this.linkTo = a;
+	    data.mostVerifiedAttributes = Identity.getMostVerifiedAttributes(data.attrs);
+	    var bestVerificationScore = -1;
+	    _Object$keys(data.mostVerifiedAttributes).forEach(function (k) {
+	      var v = data.mostVerifiedAttributes[k];
+	      if (v.verificationScore > bestVerificationScore) {
+	        data.linkTo = { name: k, val: v.attribute.val };
+	        bestVerificationScore = v.verificationScore;
 	      }
-	      if (!_Number$isNaN(parseInt(a.dist)) && a.dist >= 0 && a.dist < _this.data.trustDistance) {
-	        _this.data.trustDistance = parseInt(a.dist);
-	        if (Attribute.isUniqueType(a.name)) {
-	          _this.linkTo = a;
-	        }
-	      }
-	      switch (a.name) {
-	        case 'email':
-	          a.iconStyle = 'glyphicon glyphicon-envelope';
-	          a.btnStyle = 'btn-success';
-	          a.link = 'mailto:' + a.val;
-	          a.quickContact = true;
-	          break;
-	        case 'bitcoin_address':
-	        case 'bitcoin':
-	          a.iconStyle = 'fa fa-bitcoin';
-	          a.btnStyle = 'btn-primary';
-	          a.link = 'https://blockchain.info/address/' + a.val;
-	          a.quickContact = true;
-	          break;
-	        case 'gpg_fingerprint':
-	        case 'gpg_keyid':
-	          a.iconStyle = 'fa fa-key';
-	          a.btnStyle = 'btn-default';
-	          a.link = 'https://pgp.mit.edu/pks/lookup?op=get&search=0x' + a.val;
-	          break;
-	        case 'account':
-	          a.iconStyle = 'fa fa-at';
-	          break;
-	        case 'nickname':
-	          a.iconStyle = 'glyphicon glyphicon-font';
-	          break;
-	        case 'name':
-	          a.iconStyle = 'glyphicon glyphicon-font';
-	          break;
-	        case 'tel':
-	        case 'phone':
-	          a.iconStyle = 'glyphicon glyphicon-earphone';
-	          a.btnStyle = 'btn-success';
-	          a.link = 'tel:' + a.val;
-	          a.quickContact = true;
-	          break;
-	        case 'keyID':
-	          a.iconStyle = 'fa fa-key';
-	          break;
-	        case 'url':
-	          a.link = a.val;
-	          if (a.val.indexOf('facebook.com/') > -1) {
-	            a.iconStyle = 'fa fa-facebook';
-	            a.btnStyle = 'btn-facebook';
-	            a.link = a.val;
-	            a.linkName = a.val.split('facebook.com/')[1];
-	            a.quickContact = true;
-	          } else if (a.val.indexOf('twitter.com/') > -1) {
-	            a.iconStyle = 'fa fa-twitter';
-	            a.btnStyle = 'btn-twitter';
-	            a.link = a.val;
-	            a.linkName = a.val.split('twitter.com/')[1];
-	            a.quickContact = true;
-	          } else if (a.val.indexOf('plus.google.com/') > -1) {
-	            a.iconStyle = 'fa fa-google-plus';
-	            a.btnStyle = 'btn-google-plus';
-	            a.link = a.val;
-	            a.linkName = a.val.split('plus.google.com/')[1];
-	            a.quickContact = true;
-	          } else if (a.val.indexOf('linkedin.com/') > -1) {
-	            a.iconStyle = 'fa fa-linkedin';
-	            a.btnStyle = 'btn-linkedin';
-	            a.link = a.val;
-	            a.linkName = a.val.split('linkedin.com/')[1];
-	            a.quickContact = true;
-	          } else if (a.val.indexOf('github.com/') > -1) {
-	            a.iconStyle = 'fa fa-github';
-	            a.btnStyle = 'btn-github';
-	            a.link = a.val;
-	            a.linkName = a.val.split('github.com/')[1];
-	            a.quickContact = true;
-	          } else {
-	            a.iconStyle = 'glyphicon glyphicon-link';
-	            a.btnStyle = 'btn-default';
-	          }
-	      }
-	      var keyExists = _Object$keys(_this.mostVerifiedAttributes).indexOf(a.name) > -1;
-	      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > _this.mostVerifiedAttributes[a.name].verificationScore)) {
-	        _this.mostVerifiedAttributes[a.name] = {
+	    });
+	    if (data.linkTo.name !== 'keyID' && data.mostVerifiedAttributes.keyID) {
+	      data.linkTo = data.mostVerifiedAttributes.keyID.attribute;
+	    }
+	    return new Identity(gunRoot.set(data));
+	  };
+
+	  Identity.getMostVerifiedAttributes = function getMostVerifiedAttributes(attrs) {
+	    var mostVerifiedAttributes = {};
+	    _Object$keys(attrs).forEach(function (k) {
+	      var a = attrs[k];
+	      var keyExists = _Object$keys(mostVerifiedAttributes).indexOf(a.name) > -1;
+	      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.name].verificationScore)) {
+	        mostVerifiedAttributes[a.name] = {
 	          attribute: a,
 	          verificationScore: a.conf - a.ref
 	        };
 	      }
 	    });
-	    if (this.linkTo.name !== 'keyID' && this.mostVerifiedAttributes.keyID) {
-	      this.linkTo = this.mostVerifiedAttributes.keyID.attribute;
-	    }
-	    _Object$keys(this.mostVerifiedAttributes).forEach(function (k) {
-	      if (['name', 'nickname', 'email', 'url', 'coverPhoto', 'profilePhoto'].indexOf(k) > -1) {
-	        _this.profile[k] = _this.mostVerifiedAttributes[k].attribute.val;
-	      }
-	    });
-	  }
-
-	  /**
-	  * @returns {string} stringified JSON from the identity data
-	  */
-
-
-	  Identity.prototype.serialize = function serialize() {
-	    return _JSON$stringify(this.data, 'utf8');
-	  };
-
-	  /**
-	  * @param {string} str stringified JSON of the identity data
-	  * @returns {Identity} Identity object from the serialized data
-	  */
-
-
-	  Identity.deserialize = function deserialize(str) {
-	    return new Identity(JSON.parse(str));
+	    return mostVerifiedAttributes;
 	  };
 
 	  /**
@@ -5427,57 +5315,6 @@
 	  return Message;
 	}();
 
-	var _stringWs = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
-	  '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
-
-	var space = '[' + _stringWs + ']';
-	var non = '\u200b\u0085';
-	var ltrim = RegExp('^' + space + space + '*');
-	var rtrim = RegExp(space + space + '*$');
-
-	var exporter = function (KEY, exec, ALIAS) {
-	  var exp = {};
-	  var FORCE = _fails(function () {
-	    return !!_stringWs[KEY]() || non[KEY]() != non;
-	  });
-	  var fn = exp[KEY] = FORCE ? exec(trim) : _stringWs[KEY];
-	  if (ALIAS) exp[ALIAS] = fn;
-	  _export(_export.P + _export.F * FORCE, 'String', exp);
-	};
-
-	// 1 -> String#trimLeft
-	// 2 -> String#trimRight
-	// 3 -> String#trim
-	var trim = exporter.trim = function (string, TYPE) {
-	  string = String(_defined(string));
-	  if (TYPE & 1) string = string.replace(ltrim, '');
-	  if (TYPE & 2) string = string.replace(rtrim, '');
-	  return string;
-	};
-
-	var _stringTrim = exporter;
-
-	var $parseInt = _global.parseInt;
-	var $trim = _stringTrim.trim;
-
-	var hex = /^[-+]?0[xX]/;
-
-	var _parseInt = $parseInt(_stringWs + '08') !== 8 || $parseInt(_stringWs + '0x16') !== 22 ? function parseInt(str, radix) {
-	  var string = $trim(String(str), 3);
-	  return $parseInt(string, (radix >>> 0) || (hex.test(string) ? 16 : 10));
-	} : $parseInt;
-
-	// 20.1.2.13 Number.parseInt(string, radix)
-	_export(_export.S + _export.F * (Number.parseInt != _parseInt), 'Number', { parseInt: _parseInt });
-
-	var _parseInt$1 = _core.Number.parseInt;
-
-	var _parseInt$2 = createCommonjsModule(function (module) {
-	module.exports = { "default": _parseInt$1, __esModule: true };
-	});
-
-	var _Number$parseInt = unwrapExports(_parseInt$2);
-
 	var isEnum$1 = _objectPie.f;
 	var _objectToArray = function (isEntries) {
 	  return function (it) {
@@ -5511,10 +5348,28 @@
 
 	var _Object$values = unwrapExports(values$1);
 
-	var empty$1 = {};
+	// 20.1.2.4 Number.isNaN(number)
 
-	var empty$2 = /*#__PURE__*/Object.freeze({
-		default: empty$1
+
+	_export(_export.S, 'Number', {
+	  isNaN: function isNaN(number) {
+	    // eslint-disable-next-line no-self-compare
+	    return number != number;
+	  }
+	});
+
+	var isNan = _core.Number.isNaN;
+
+	var isNan$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": isNan, __esModule: true };
+	});
+
+	var _Number$isNaN = unwrapExports(isNan$1);
+
+	var empty$2 = {};
+
+	var empty$3 = /*#__PURE__*/Object.freeze({
+		default: empty$2
 	});
 
 	// shim for using process in browser
@@ -5680,19 +5535,19 @@
 	}function umask() { return 0; }
 
 	// from https://github.com/kumavis/browser-process-hrtime/blob/master/index.js
-	var performance = global$1.performance || {};
+	var performance$1 = global$1.performance || {};
 	var performanceNow =
-	  performance.now        ||
-	  performance.mozNow     ||
-	  performance.msNow      ||
-	  performance.oNow       ||
-	  performance.webkitNow  ||
+	  performance$1.now        ||
+	  performance$1.mozNow     ||
+	  performance$1.msNow      ||
+	  performance$1.oNow       ||
+	  performance$1.webkitNow  ||
 	  function(){ return (new Date()).getTime() };
 
 	// generate timestamp or delta
 	// see http://nodejs.org/api/process.html#process_process_hrtime
 	function hrtime(previousTimestamp){
-	  var clocktime = performanceNow.call(performance)*1e-3;
+	  var clocktime = performanceNow.call(performance$1)*1e-3;
 	  var seconds = Math.floor(clocktime);
 	  var nanoseconds = Math.floor((clocktime%1)*1e9);
 	  if (previousTimestamp) {
@@ -9184,7 +9039,7 @@
 	 * item.
 	 * @returns {Array} A new array of values returned by the callback function.
 	 */
-	function map(array, fn) {
+	function map$1(array, fn) {
 	  var length = array.length;
 	  var result = [];
 	  while (length--) {
@@ -9215,7 +9070,7 @@
 	  // Avoid `split(regex)` for IE8 compatibility. See #17.
 	  string = string.replace(regexSeparators, '\x2E');
 	  var labels = string.split('.');
-	  var encoded = map(labels, fn).join('.');
+	  var encoded = map$1(labels, fn).join('.');
 	  return result + encoded;
 	}
 
@@ -9478,10 +9333,10 @@
 	  }
 
 	  if (typeof obj === 'object') {
-	    return map$1(objectKeys(obj), function(k) {
+	    return map$2(objectKeys(obj), function(k) {
 	      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
 	      if (isArray$2(obj[k])) {
-	        return map$1(obj[k], function(v) {
+	        return map$2(obj[k], function(v) {
 	          return ks + encodeURIComponent(stringifyPrimitive(v));
 	        }).join(sep);
 	      } else {
@@ -9495,7 +9350,7 @@
 	  return encodeURIComponent(stringifyPrimitive(name)) + eq +
 	         encodeURIComponent(stringifyPrimitive(obj));
 	}
-	function map$1 (xs, f) {
+	function map$2 (xs, f) {
 	  if (xs.map) return xs.map(f);
 	  var res = [];
 	  for (var i = 0; i < xs.length; i++) {
@@ -10398,7 +10253,7 @@
 		default: http
 	});
 
-	var require$$0 = ( empty$2 && empty$1 ) || empty$2;
+	var require$$0 = ( empty$3 && empty$2 ) || empty$3;
 
 	var require$$2 = ( http$1 && http ) || http$1;
 
@@ -13241,62 +13096,2279 @@
 	  return Key;
 	}();
 
-	var DEFAULT_INDEX = '/ipns/Qmbb1DRwd75rZk5TotTXJYzDSJL6BaNT1DAQ6VbKcKLhbs';
-	var DEFAULT_STATIC_FALLBACK_INDEX = '/ipfs/QmPxLM631zJQ12tUDWs55LkGqqroFZKHeLjAZ2XwL9Miu3';
-	var DEFAULT_IPFS_PROXIES = ['https://identi.fi', 'https://ipfs.io', 'https://ipfs.infura.io', 'https://www.eternum.io'];
-	var IPFS_INDEX_WIDTH = 200;
-	var DEFAULT_TIMEOUT = 10000;
+	var gun_min = createCommonjsModule(function (module) {
+	!function(){var t;"undefined"!=typeof window&&(t=window),"undefined"!=typeof commonjsGlobal&&(t=commonjsGlobal);var b=(t=t||{}).console||{log:function(){}};function _(o){return o.slice?_[e(o)]:function(t,n){o(t={exports:{}}),_[e(n)]=t.exports;};function e(t){return t.split("/").slice(-1).toString().replace(".js","")}}var f=module;_(function(t){var p={fn:{is:function(t){return !!t&&"function"==typeof t}}};p.bi={is:function(t){return t instanceof Boolean||"boolean"==typeof t}},p.num={is:function(t){return !d(t)&&(0<=t-parseFloat(t)+1||1/0===t||-1/0===t)}},p.text={is:function(t){return "string"==typeof t}},p.text.ify=function(t){return p.text.is(t)?t:"undefined"!=typeof JSON?JSON.stringify(t):t&&t.toString?t.toString():t},p.text.random=function(t,n){var o="";for(t=t||24,n=n||"0123456789ABCDEFGHIJKLMNOPQRSTUVWXZabcdefghijklmnopqrstuvwxyz";0<t;)o+=n.charAt(Math.floor(Math.random()*n.length)),t--;return o},p.text.match=function(n,t){var o=!1;if(n=n||"",t=p.text.is(t)?{"=":t}:t||{},p.obj.has(t,"~")&&(n=n.toLowerCase(),t["="]=(t["="]||t["~"]).toLowerCase()),p.obj.has(t,"="))return n===t["="];if(p.obj.has(t,"*")){if(n.slice(0,t["*"].length)!==t["*"])return !1;o=!0,n=n.slice(t["*"].length);}if(p.obj.has(t,"!")){if(n.slice(-t["!"].length)!==t["!"])return !1;o=!0;}if(p.obj.has(t,"+")&&p.list.map(p.list.is(t["+"])?t["+"]:[t["+"]],function(t){if(!(0<=n.indexOf(t)))return !0;o=!0;}))return !1;if(p.obj.has(t,"-")&&p.list.map(p.list.is(t["-"])?t["-"]:[t["-"]],function(t){if(!(n.indexOf(t)<0))return !0;o=!0;}))return !1;if(p.obj.has(t,">")){if(!(n>t[">"]))return !1;o=!0;}if(p.obj.has(t,"<")){if(!(n<t["<"]))return !1;o=!0;}if(p.obj.has(t,"?")){if(!function(t,n){for(var o,e=-1,i=0;o=n[i++];)if(!~(e=t.indexOf(o,e+1)))return !1;return !0}(n,t["?"]))return !1;o=!0;}return o},p.list={is:function(t){return t instanceof Array}},p.list.slit=Array.prototype.slice,p.list.sort=function(o){return function(t,n){return t&&n?(t=t[o])<(n=n[o])?-1:n<t?1:0:0}},p.list.map=function(t,n,o){return e(t,n,o)},p.list.index=1,p.obj={is:function(t){return !!t&&(t instanceof Object&&t.constructor===Object||"Object"===Object.prototype.toString.call(t).match(/^\[object (\w+)\]$/)[1])}},p.obj.put=function(t,n,o){return (t||{})[n]=o,t},p.obj.has=function(t,n){return t&&Object.prototype.hasOwnProperty.call(t,n)},p.obj.del=function(t,n){if(t)return t[n]=null,delete t[n],t},p.obj.as=function(t,n,o,e){return t[n]=t[n]||(e===o?{}:o)},p.obj.ify=function(n){if(g(n))return n;try{n=JSON.parse(n);}catch(t){n={};}return n},function(){function o(t,n){v(this,n)&&void 0!==this[n]||(this[n]=t);}p.obj.to=function(t,n){return e(t,o,n=n||{}),n};}(),p.obj.copy=function(t){return t?JSON.parse(JSON.stringify(t)):t},function(){function o(t,n){var o=this.n;if(!o||!(n===o||g(o)&&v(o,n)))return !!n||void 0}p.obj.empty=function(t,n){return !t||!e(t,o,{n:n})};}(),function(){function c(t,n){2!==arguments.length?(c.r=c.r||[]).push(t):(c.r=c.r||{})[t]=n;}var l=Object.keys;p.obj.map=function(t,n,o){var e,i,r,a,u=0,s=h(n);if(c.r=null,l&&g(t)&&(r=l(t),a=!0),d(t)||r)for(e=(r||t).length;u<e;u++){var f=u+p.list.index;if(s){if(void 0!==(i=a?n.call(o||this,t[r[u]],r[u],c):n.call(o||this,t[u],f,c)))return i}else if(n===t[a?r[u]:u])return r?r[u]:f}else for(u in t)if(s){if(v(t,u)&&void 0!==(i=o?n.call(o,t[u],u,c):n(t[u],u,c)))return i}else if(n===t[u])return u;return s?c.r:p.list.index?0:-1};}(),p.time={},p.time.is=function(t){return t?t instanceof Date:+(new Date).getTime()};var h=p.fn.is,d=p.list.is,n=p.obj,g=n.is,v=n.has,e=n.map;t.exports=p;})(_,"./type"),_(function(t){t.exports=function t(n,o,e){if(!n)return {to:t};n=(this.tag||(this.tag={}))[n]||(this.tag[n]={tag:n,to:t._={next:function(t){var n;(n=this.to)&&n.next(t);}}});if(o instanceof Function){var i={off:t.off||(t.off=function(){if(this.next===t._.next)return !0;this===this.the.last&&(this.the.last=this.back),this.to.back=this.back,this.next=t._.next,this.back.to=this.to,this.the.last===this.the&&delete this.on.tag[this.the.tag];}),to:t._,next:o,the:n,on:this,as:e};return (i.back=n.last||n).to=i,n.last=i}return (n=n.to)&&void 0!==o&&n.next(o),n};})(_,"./onto"),_(function(t){if("undefined"==typeof JSON)throw new Error("JSON is not included in this browser. Please load it first: ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js");var r=JSON.stringify;t.exports=function(t,n,o,e,i){if(t<n)return {defer:!0};if(n<o)return {historical:!0};if(o<n)return {converge:!0,incoming:!0};if(n===o){if((e=r(e)||"")===(i=r(i)||""))return {state:!0};if(e<i)return {converge:!0,current:!0};if(i<e)return {converge:!0,incoming:!0}}return {err:"Invalid CRDT Data: "+e+" to "+i+" at "+n+" to "+o+"!"}};})(_,"./HAM"),_(function(t){var n=_("./type"),e={is:function(t){return void 0!==t&&(null===t||t!==1/0&&(!!(a(t)||o(t)||r(t))||(e.rel.is(t)||!1)))}};e.link=e.rel={_:"#"},function(){function o(t,n){return this.id?this.id=!1:n==i&&a(t)?void(this.id=t):this.id=!1}e.rel.is=function(t){if(t&&t[i]&&!t._&&s(t)){var n={};if(c(t,o,n),n.id)return n.id}return !1};}(),e.rel.ify=function(t){return f({},i,t)},n.obj.has._=".";var i=e.link._,o=n.bi.is,r=n.num.is,a=n.text.is,u=n.obj,s=u.is,f=u.put,c=u.map;t.exports=e;})(_,"./val"),_(function(t){var n=_("./type"),r=_("./val"),a={_:"_",soul:function(t,n){return t&&t._&&t._[n||f]}};a.soul.ify=function(t,n){return n="string"==typeof n?{soul:n}:n||{},(t=t||{})._=t._||{},t._[f]=n.soul||t._[f]||e(),t},a.soul._=r.link._,function(){function i(t,n){if(n!==a._)return !r.is(t)||void(this.cb&&this.cb.call(this.as,t,n,this.n,this.s))}a.is=function(t,n,o){var e;return !!u(t)&&(!!(e=a.soul(t))&&!s(t,i,{as:o,cb:n,s:e,n:t}))};}(),function(){function e(t,n){var o,e=this.o;e.map?void 0===(o=e.map.call(this.as,t,""+n,e.node))?i(e.node,n):e.node&&(e.node[n]=o):r.is(t)&&(e.node[n]=t);}a.ify=function(t,n,o){return n?"string"==typeof n?n={soul:n}:n instanceof Function&&(n={map:n}):n={},n.map&&(n.node=n.map.call(o,t,void 0,n.node||{})),(n.node=a.soul.ify(n.node||{},n))&&s(t,e,{o:n,as:o}),n.node};}();var o=n.obj,u=o.is,i=o.del,s=o.map,e=n.text.random,f=a.soul._;t.exports=a;})(_,"./node"),_(function(t){var n=_("./type"),a=_("./node");function s(){var t;return t=o(),e<t?(i=0,e=t+s.drift):e=t+(i+=1)/r+s.drift}var o=n.time.is,e=-1/0,i=0,r=1e3,u="undefined"!=typeof performance&&(performance.timing&&performance);u&&u.timing&&u.timing.navigationStart||(u=!1);s._=">",s.drift=0,s.is=function(t,n,o){var e=n&&t&&t[m]&&t[m][s._]||o;if(e)return g(e=e[n])?e:-1/0},s.lex=function(){return s().toString(36).replace(".","")},s.ify=function(t,n,o,e,i){if(!t||!t[m]){if(!i)return;t=a.soul.ify(t,i);}var r=c(t[m],s._);return void 0!==n&&n!==m&&(g(o)&&(r[n]=o),void 0!==e&&(t[n]=e)),t},s.to=function(t,n,o){var e=t[n];return p(e)&&(e=d(e)),s.ify(o,n,s.is(t,n),e,a.soul(t))},function(){function u(t,n){m!==n&&s.ify(this.o,n,this.s);}s.map=function(i,r,a){var t=p(t=i||r)?t:null;return i=v(i=i||r)?i:null,t&&!i?(r=g(r)?r:s(),t[m]=t[m]||{},h(t,u,{o:t,s:r}),t):(a=a||p(r)?r:void 0,r=g(r)?r:s(),function(t,n,o,e){if(!i)return u.call({o:o,s:r},t,n),t;i.call(a||this||{},t,n,o,e),l(o,n)&&void 0===o[n]||u.call({o:o,s:r},t,n);})};}();var f=n.obj,c=f.as,l=f.has,p=f.is,h=f.map,d=f.copy,g=n.num.is,v=n.fn.is,m=a._;t.exports=s;})(_,"./state"),_(function(t){var a=_("./type"),f=_("./val"),c=_("./node"),r={};!function(){function i(t,n){if(!t||n!==c.soul(t)||!c.is(t,this.fn,this.as))return !0;this.cb&&(o.n=t,o.as=this.as,this.cb.call(o.as,t,n,o));}function o(t){t&&c.is(o.n,t,o.as);}r.is=function(t,n,o,e){return !(!t||!l(t)||u(t))&&!s(t,i,{cb:n,fn:o,as:e})};}(),function(){function u(t,n){var o;return (o=function(t,n){var o,e=t.seen,i=e.length;for(;i--;)if(o=e[i],n.obj===o.obj)return o;e.push(n);}(t,n))?o:(n.env=t,n.soul=i,c.ify(n.obj,e,n)&&(t.graph[f.rel.is(n.rel)]=n.node),n)}function e(t,n,o){var e,i,r=this,a=r.env;if(c._===n&&h(t,f.rel._))return o._;if(e=s(t,n,o,r,a)){if(n||(r.node=r.node||o||{},h(t,c._)&&c.soul(t)&&(r.node._=d(t._)),r.node=c.soul.ify(r.node,f.rel.is(r.rel)),r.rel=r.rel||f.rel.ify(c.soul(r.node))),(i=a.map)&&(i.call(a.as||{},t,n,o,r),h(o,n))){if(void 0===(t=o[n]))return void p(o,n);if(!(e=s(t,n,o,r,a)))return}if(!n)return r.node;if(!0===e)return t;if((i=u(a,{obj:t,path:r.path.concat(n)})).node)return i.rel}}function i(t){var n=this,o=f.link.is(n.rel),e=n.env.graph;n.rel=n.rel||f.rel.ify(t),n.rel[f.rel._]=t,n.node&&n.node[c._]&&(n.node[c._][f.rel._]=t),h(e,o)&&(e[t]=e[o],p(e,o));}function s(t,n,o,e,i){var r;return !!f.is(t)||(l(t)?1:(r=i.invalid)?s(t=r.call(i.as||{},t,n,o),n,o,e,i):(i.err="Invalid value at '"+e.path.concat(n).join(".")+"'!",void(a.list.is(t)&&(i.err+=" Use `.set(item)` instead of an Array."))))}r.ify=function(t,n,o){var e={path:[],obj:t};return n?"string"==typeof n?n={soul:n}:n instanceof Function&&(n.map=n):n={},n.soul&&(e.rel=f.rel.ify(n.soul)),n.graph=n.graph||{},n.seen=n.seen||[],n.as=n.as||o,u(n,e),n.root=e.node,n.graph};}(),r.node=function(t){var n=c.soul(t);if(n)return o({},n,t)},function(){function i(t,n){var o,e;if(c._!==n)(o=f.rel.is(t))?(e=this.opt.seen[o])?this.obj[n]=e:this.obj[n]=this.opt.seen[o]=r.to(this.graph,o,this.opt):this.obj[n]=t;else{if(u(t,f.rel._))return;this.obj[n]=d(t);}}r.to=function(t,n,o){if(t){var e={};return o=o||{seen:{}},s(t[n],i,{obj:e,graph:t,opt:o}),e}};}();a.fn.is;var n=a.obj,l=n.is,p=n.del,h=n.has,u=n.empty,o=n.put,s=n.map,d=n.copy;t.exports=r;})(_,"./graph"),_(function(t){_("./onto"),t.exports=function(t,n){if(this.on){if(!(t instanceof Function)){if(!t||!n)return;var o=t["#"]||t,e=(this.tag||empty)[o];if(!e)return;return e=this.on(o,n),clearTimeout(e.err),!0}o=n&&n["#"]||Math.random().toString(36).slice(2);if(!t)return o;var i=this.on(o,t,n);return i.err=i.err||setTimeout(function(){i.next({err:"Error: No ACK received yet.",lack:!0}),i.off();},(this.opt||{}).lack||9e3),o}};})(_,"./ask"),_(function(t){var r=_("./type");var a=r.time.is;t.exports=function(e){var i={s:{}};return e=e||{max:1e3,age:9e3},i.check=function(t){var n;return !!(n=i.s[t])&&(n.pass?n.pass=!1:i.track(t))},i.track=function(t,n){var o=i.s[t]||(i.s[t]={});return o.was=a(),n&&(o.pass=!0),i.to||(i.to=setTimeout(function(){var o=a();r.obj.map(i.s,function(t,n){e.age>o-t.was||r.obj.del(i.s,n);}),i.to=null;},e.age+9)),o},i};})(_,"./dup"),_(function(t){function c(t){return t instanceof c?(this._={gun:this,$:this}).$:this instanceof c?c.create(this._={gun:this,$:this,opt:t}):new c(t)}c.is=function(t){return t instanceof c||t&&t._&&t===t._.$||!1},c.version=.9,(c.chain=c.prototype).toJSON=function(){};var n=_("./type");n.obj.to(n,c),c.HAM=_("./HAM"),c.val=_("./val"),c.node=_("./node"),c.state=_("./state"),c.graph=_("./graph"),c.on=_("./onto"),c.ask=_("./ask"),c.dup=_("./dup"),function(){function a(t){var n,o,e=this.as,i=e.at||e,r=i.$;(o=t["#"])||(o=t["#"]=u(9)),(n=i.dup).check(o)?e.out===t.out&&(t.out=void 0,this.to.next(t)):(n.track(o),i.ask(t["@"],t)||(t.get&&c.on.get(t,r),t.put&&c.on.put(t,r)),this.to.next(t),e.out||(t.out=a,i.on("out",t)));}c.create=function(t){t.root=t.root||t,t.graph=t.graph||{},t.on=t.on||c.on,t.ask=t.ask||c.ask,t.dup=t.dup||c.dup();var n=t.$.opt(t.opt);return t.once||(t.on("in",a,t),t.on("out",a,{at:t,out:a}),c.on("create",t),t.on("create",t)),t.once=1,n};}(),function(){function i(t,n,o,e){var i=this,r=c.state.is(o,n);if(!r)return i.err="Error: No state on '"+n+"' in node '"+e+"'!";var a=i.graph[e]||v,u=c.state.is(a,n,!0),s=a[n],f=c.HAM(i.machine,r,u,t,s);f.incoming?(i.put[e]=c.state.to(o,n,i.put[e]),(i.diff||(i.diff={}))[e]=c.state.to(o,n,i.diff[e]),i.souls[e]=!0):f.defer&&(i.defer=r<(i.defer||1/0)?r:i.defer);}function r(t,n){var o=this,e=o.$._,i=(e.next||v)[n];if(!i){if(!(e.opt||v).super)return void(o.souls[n]=!1);i=o.$.get(n)._;}var r=o.map[n]={put:t,get:n,$:i.$},a={ctx:o,msg:r};o.async=!!e.tag.node,o.ack&&(r["@"]=o.ack),h(t,u,a),o.async&&(o.and||e.on("node",function(t){this.to.next(t),t===o.map[t.get]&&(o.souls[t.get]=!1,h(t.put,s,t),h(o.souls,function(t){if(t)return t})||o.c||(o.c=1,this.off(),h(o.map,f,o)));}),o.and=!0,e.on("node",r));}function u(t,n){var o=this.ctx,e=o.graph,i=this.msg,r=i.get,a=i.put,u=i.$._;e[r]=c.state.to(a,n,e[r]),o.async||(u.put=c.state.to(a,n,u.put));}function s(t,n){var o=this.put,e=this.$._;e.put=c.state.to(o,n,e.put);}function f(t,n){t.$&&(this.cat.stop=this.stop,t.$._.on("in",t),this.cat.stop=null);}c.on.put=function(t,n){var o=n._,e={$:n,graph:o.graph,put:{},map:{},souls:{},machine:c.state(),ack:t["@"],cat:o,stop:{}};if(c.graph.is(t.put,null,i,e)||(e.err="Error: Invalid graph!"),e.err)return o.on("in",{"@":t["#"],err:c.log(e.err)});h(e.put,r,e),e.async||h(e.map,f,e),void 0!==e.defer&&setTimeout(function(){c.on.put(t,n);},e.defer-e.machine),e.diff&&o.on("put",p(t,{put:e.diff}));},c.on.get=function(t,n){var o=n._,e=t.get[d],i=o.graph[e],r=t.get[g],a=(o.next||(o.next={}))[e];if(!i||!a)return o.on("get",t);if(r){if(!l(i,r))return o.on("get",t);i=c.state.to(i,r);}else i=c.obj.copy(i);i=c.graph.node(i),a.ack,o.on("in",{"@":t["#"],how:"mem",put:i,$:n}),o.on("get",t);};}(),c.chain.opt=function(t){t=t||{};var n=this._,o=t.peers||t;return a(t)||(t={}),a(n.opt)||(n.opt=t),i(o)&&(o=[o]),e(o)&&(o=h(o,function(t,n,o){o(t,{url:t});}),a(n.opt.peers)||(n.opt.peers={}),n.opt.peers=p(o,n.opt.peers)),n.opt.peers=n.opt.peers||{},p(t,n.opt),c.on("opt",n),n.opt.uuid=n.opt.uuid||function(){return s()+u(12)},this};var e=c.list.is,o=c.text,i=o.is,u=o.random,r=c.obj,a=r.is,l=r.has,p=r.to,h=r.map,s=(r.copy,c.state.lex),d=c.val.rel._,g=".",v=(c.node._,c.val.link.is,{});b.debug=function(t,n){return b.debug.i&&t===b.debug.i&&b.debug.i++&&(b.log.apply(b,arguments)||n)},(c.log=function(){return !c.log.off&&b.log.apply(b,arguments),[].slice.call(arguments).join(" ")}).once=function(t,n,o){return (o=c.log.once)[t]=o[t]||0,o[t]++||c.log(n)},c.log.once("welcome","Hello wonderful person! :) Thanks for using GUN, feel free to ask for help on https://gitter.im/amark/gun and ask StackOverflow questions tagged with 'gun'!"),"undefined"!=typeof window&&(window.Gun=c);try{void 0!==f&&(f.exports=c);}catch(t){}t.exports=c;})(_,"./root"),_(function(t){var u=_("./root");u.chain.back=function(t,n){if(-1===(t=t||1)||1/0===t)return this._.root.$;if(1===t)return (this._.back||this._).$;var o=this._;if("string"==typeof t&&(t=t.split(".")),t instanceof Array){for(var e=0,i=t.length,r=o;e<i;e++)r=(r||s)[t[e]];return void 0!==r?n?this:r:(r=o.back)?r.$.back(t,n):void 0}if(t instanceof Function){var a;for(r={back:o};(r=r.back)&&void 0===(a=t(r,n)););return a}return u.num.is(t)?(o.back||o).$.back(t-1):this};var s={};})(_,"./back"),_(function(t){var s=_("./root");function r(t){var n,o,e,i=this.as,r=i.back,a=i.root;if(t.I||(t.I=i.$),t.$||(t.$=i.$),this.to.next(t),o=t.get){if(o["#"]||i.soul){if(o["#"]=o["#"]||i.soul,t["#"]||(t["#"]=k(9)),r=a.$.get(o["#"])._,o=o["."]){if(g(r.put,o)&&((e=(n=r.$.get(o)._).ack)||(n.ack=-1),r.on("in",{$:r.$,put:s.state.to(r.put,o),get:r.get}),e))return}else{if((e=r.ack)||(r.ack=-1),g(r,"put")&&r.on("in",r),e)return;t.$=r.$;}return a.ask(u,t),a.on("in",t)}if(a.now&&(a.now[i.id]=a.now[i.id]||!0,i.pass={}),o["."])return i.get?(t={get:{".":i.get},$:i.$},r.ask||(r.ask={}),r.ask[i.get]=t.$._):t={get:{},$:i.$},r.on("out",t);if(i.ack=i.ack||-1,i.get)return t.$=i.$,o["."]=i.get,(r.ask||(r.ask={}))[i.get]=t.$._,r.on("out",t)}return r.on("out",t)}function a(t){var n,o,e=this,i=e.as,r=i.root,a=(t.$||d)._||d,u=t.put;if(i.get&&t.get!==i.get&&(t=m(t,{get:i.get})),i.has&&a!==i&&(t=m(t,{$:i.$}),a.ack&&(i.ack=a.ack)),h===u){if(o=a.put,e.to.next(t),i.soul)return;if(h===o&&h!==a.put)return;return c(i,t,e),i.has&&p(i,t),v(a.echo,i.id),void v(i.map,a.id)}if(i.soul)return e.to.next(t),c(i,t,e),void(i.next&&b(u,l,{msg:t,cat:i}));if(!(n=s.val.link.is(u)))return s.val.is(u)?(i.has||i.soul?p(i,t):(a.has||a.soul)&&((a.echo||(a.echo={}))[i.id]=a.echo[a.id]||i,(i.map||(i.map={}))[a.id]=i.map[a.id]||{at:a}),e.to.next(t),void c(i,t,e)):(i.has&&a!==i&&g(a,"put")&&(i.put=a.put),(n=s.node.soul(u))&&a.has&&(a.put=i.root.$.get(n)._.put),o=(r.stop||{})[a.id],e.to.next(t),f(i,t,a,n),c(i,t,e),void(i.next&&b(u,l,{msg:t,cat:i})));r.stop;(o=(o=r.stop||{})[a.id]||(o[a.id]={})).is=o.is||a.put,o[i.id]=a.put||!0,e.to.next(t),f(i,t,a,n),c(i,t,e);}s.chain.chain=function(t){var n,o=this._,e=new(t||this).constructor(this),i=e._;return i.root=n=o.root,i.id=++n.once,i.back=this._,i.on=s.on,i.on("in",a,i),i.on("out",r,i),e};function f(t,n,o,e){if(e&&y!==t.get){var i=t.root.$.get(e)._;t.has?o=i:o.has&&f(o,n,o,e),o!==t&&(o.$||(o={}),(o.echo||(o.echo={}))[t.id]=o.echo[t.id]||t,t.has&&!(t.map||d)[o.id]&&p(t,n),(e!==(i=o.id?(t.map||(t.map={}))[o.id]=t.map[o.id]||{at:o}:{}).link||i.pass||t.pass)&&(t.pass&&(s.obj.map(t.map,function(t){t.pass=!0;}),v(t,"pass")),i.pass&&v(i,"pass"),t.has&&(t.link=e),function(t,o){var n=t.root.$.get(o)._;if(t.ack&&(n.on("out",{get:{"#":o}}),!t.ask))return;n=t.ask,s.obj.del(t,"ask"),b(n||t.next,function(t,n){t.on("out",{get:{"#":o,".":n}});}),s.obj.del(t,"ask");}(t,i.link=e)));}}function c(t,n,o){t.echo&&b(t.echo,e,n);}function e(t){t&&t.on&&t.on("in",this);}function l(t,n){var o,e,i,r=this.cat.next||d,a=this.msg;(y!==n||r[n])&&(e=r[n])&&(e.has?(h!==e.put&&s.val.link.is(t)||(e.put=t),o=e.$):(i=a.$)&&(i=(o=a.$.get(n))._,h!==i.put&&s.val.link.is(t)||(i.put=t)),e.on("in",{put:t,get:n,$:o,via:a}));}function p(o,t){if(o.has||o.soul){var e=o.map;o.root;o.map=null,o.has&&(o.link=null),(o.pass||t["@"]||null!==e)&&(h===e&&s.val.link.is(o.put)||(b(e,function(t){(t=t.at)&&v(t.echo,o.id);}),e=o.put,b(o.next,function(t,n){if(h===e&&h!==o.put)return !0;t.put=h,t.ack&&(t.ack=-1),t.on("in",{get:n,$:t.$,put:h});})));}}function u(t,n){var o=this.as,e=o.get||d,i=o.$._,r=(t.put||d)[e["#"]];if(i.ack&&(i.ack=i.ack+1||1),!t.put||e["."]&&!g(r,i.get)){if(i.put!==h)return;i.on("in",{get:i.get,put:i.put=h,$:i.$,"@":t["@"]});}else y!=e["."]?(t.$=i.root.$,s.on.put(t,i.root.$)):i.on("in",{get:i.get,put:s.val.link.ify(e["#"]),$:i.$,"@":t["@"]});}var h,d={},n=s.obj,g=n.has,v=(n.put,n.del),m=n.to,b=n.map,k=s.text.random,y=(s.val.rel._,s.node._);})(_,"./chain"),_(function(t){var c=_("./root");function l(t){var n,o=this,e=o.as,i=e.at.root,r=(t.$||{})._||{},a=t.put||r.put;if((n=i.now)&&o!==n[e.now])return o.to.next(t);if(o.seen&&r.id&&o.seen[r.id])return o.to.next(t);if((n=a)&&n[d._]&&(n=d.is(n))&&void 0!==(n=(t.$$=r.root.gun.get(n))._).put&&(t=u(t,{put:a=n.put})),(n=i.mum)&&r.id){if(n[r.id])return;void 0===a||d.is(a)||(n[r.id]=!0);}e.use(t,o),o.stun?o.stun=null:o.to.next(t);}function p(t){var n=this.on;if(!t||n.soul||n.has)return this.off();if(t=(t=(t=t.$||t)._||t).id){var o;n.map;if((o=this.seen||(this.seen={}))[t])return !0;o[t]=!0;}}c.chain.get=function(t,n,o){var e;if("string"!=typeof t){if(t instanceof Function){if(!0===n)return function(t,e,n,i){var r,o=t._;if(r=o.soul)return e(r,i,o),t;if(r=o.link)return e(r,i,o),t;return t.get(function(t,n){n.rid(t);var o=(o=t.$)&&o._||{};r=o.link||o.soul||d.is(t.put)||g(t.put),e(r,i,t,n);},{out:{get:{".":!0}}}),t}(this,t,0,o);var i,r=(e=this)._,a=r.root,u=a.now;(o=n||{}).at=r,o.use=t,o.out=o.out||{},o.out.get=o.out.get||{},(i=r.on("in",l,o)).rid=p,(a.now={$:1})[o.now=r.id]=i;var s=a.mum;return a.mum={},r.on("out",o.out),a.mum=s,a.now=u,e}return h(t)?this.get(""+t,n,o):(u=d.is(t))?this.get(u,n,o):((o=this.chain())._.err={err:c.log("Invalid get request!",t)},n&&n.call(o,o._.err),o)}var f=this._;return (e=(f.next||v)[t])||(e=function(t,n){var o=n._,e=o.next,i=n.chain()._;e||(e=o.next={});e[i.get=t]=i,n===o.root.$?i.soul=t:(o.soul||o.has)&&(i.has=t);return i}(t,this)),e=e.$,(u=f.stun)&&(e._.stun=e._.stun||u),n&&n instanceof Function&&e.get(n,o),e};c.obj.has;var u=c.obj.to,h=c.num.is,d=c.val.link,g=c.node.soul,v=(c.node._,{});})(_,"./get"),_(function(t){var f=_("./root");function u(t){t&&t();}function s(){var i=this;i.graph&&!o(i.stun,n)&&(i.res=i.res||function(t){t&&t();},i.res(function(){var n=i.$.back(-1)._,t=n.ask(function(t){n.root.on("ack",t),t.err&&f.log(t),t.lack||this.off(),i.ack&&i.ack(t,this);},i.opt),o=n.root.now;r.del(n.root,"now");var e=n.root.mum;n.root.mum={},i.ref._.on("out",{$:i.ref,put:i.out=i.env.graph,opt:i.opt,"#":t}),n.root.mum=e?r.to(e,n.root.mum):e,n.root.now=o;},i),i.res&&i.res());}function n(t,n){if(t)return !0}function c(r,t,n,a){var u=this,s=f.is(r);!t&&a.path.length&&(u.res||e)(function(){for(var t=a.path,n=u.ref,o=(u.opt,0),e=t.length;o<e;o++)n=n.get(t[o]);s&&(n=r);var i=n._.dub;if(i||(i=f.node.soul(a.obj)))return n.back(-1).get(i),void a.soul(i);(u.stun=u.stun||{})[t]=!0,n.get(l,!0,{as:{at:a,as:u,p:t}});},{as:u,at:a});}function l(t,o,n,e){var i=(o=o.as).at;o=o.as;var r=((n||{}).$||{})._||{};t=r.dub=r.dub||t||f.node.soul(i.obj)||f.node.soul(n.put||r.put)||f.val.rel.is(n.put||r.put)||(o.via.back("opt.uuid")||f.text.random)(),e&&(e.stun=!0),t?a(r,r.dub=t,i,o):r.via.back("opt.uuid")(function(t,n){if(t)return f.log(t);a(r,r.dub=r.dub||n,i,o);});}function a(t,n,o,e){t.$.back(-1).get(n),o.soul(n),e.stun[o.path]=!1,e.batch();}function p(t,o,n,e){if(o=o.as,n.$&&n.$._)if(n.err)b.log("Please report this as an issue! Put.any.err");else{var i,r=n.$._,a=r.put,u=o.opt||{};if(!(i=o.ref)||!i._.now){if(e&&(e.stun=!0),o.ref!==o.$){if(!(i=o.$._.get||r.get))return void b.log("Please report this as an issue! Put.no.get");o.data=d({},i,o.data),i=null;}if(void 0===a){if(!r.get)return;t||(i=r.$.back(function(t){if(t.link||t.soul)return t.link||t.soul;o.data=d({},t.get,o.data);})),i=i||r.get,r=r.root.$.get(i)._,o.soul=i,a=o.data;}o.not||(o.soul=o.soul||t)||(o.path&&h(o.data)?o.soul=(u.uuid||o.via.back("opt.uuid")||f.text.random)():(m==r.get&&(o.soul=(r.put||g)["#"]||r.dub),o.soul=o.soul||r.soul||r.soul||(u.uuid||o.via.back("opt.uuid")||f.text.random)()),o.soul)?o.ref.put(o.data,o.soul,o):o.via.back("opt.uuid")(function(t,n){if(t)return f.log(t);o.ref.put(o.data,o.soul=n,o);});}}}f.chain.put=function(t,e,i){var n,r=this,o=r._,a=o.root.$;return (i=i||{}).data=t,i.via=i.$=i.via||i.$||r,"string"==typeof e?i.soul=e:i.ack=i.ack||e,o.soul&&(i.soul=o.soul),i.soul||a===r?h(i.data)?(i.soul=i.soul||(i.not=f.node.soul(i.data)||(i.via.back("opt.uuid")||f.text.random)()),i.soul?(i.$=r=a.get(i.soul),i.ref=i.$,function(t){t.batch=s;var n=t.opt||{},o=t.env=f.state.map(c,n.state);if(o.soul=t.soul,t.graph=f.graph.ify(t.data,o,t),o.err)return (t.ack||v).call(t,t.out={err:f.log(o.err)}),t.res&&t.res();t.batch();}(i)):i.via.back("opt.uuid")(function(t,n){if(t)return f.log(t);(i.ref||i.$).put(i.data,i.soul=n,i);}),r):((i.ack||v).call(i,i.out={err:f.log("Data saved to the root level of the graph must be a node (an object), not a",typeof i.data,'of "'+i.data+'"!')}),i.res&&i.res(),r):f.is(t)?(t.get(function(t,n,o){if(!t&&f.val.is(o.put))return f.log("The reference you are saving is a",typeof o.put,'"'+o.put+'", not a node (object)!');r.put(f.val.rel.ify(t),e,i);},!0),r):(i.ref=i.ref||a._===(n=o.back)?r:n.$,i.ref._.soul&&f.val.is(i.data)&&o.get?(i.data=d({},o.get,i.data),i.ref.put(i.data,i.soul,i)):(i.ref.get(p,!0,{as:i}),i.out||(i.res=i.res||u,i.$._.stun=i.ref._.stun)),r)};var r=f.obj,h=r.is,d=r.put,o=r.map,g={},v=function(){},e=function(t,n){t.call(n||g);},m=f.node._;})(_,"./put"),_(function(t){var n=_("./root");_("./chain"),_("./back"),_("./put"),_("./get"),t.exports=n;})(_,"./index"),_(function(t){var a=_("./index");function u(t,n){var o,e=this,i=t.$,r=((i||{})._||{}).put||t.put;e.at;if(c!==r){if(o=t.$$){if(o=t.$$._,c===o.put)return;r=o.put;}e.change&&(r=t.put),e.as?e.ok.call(e.as,t,n):e.ok.call(i,r,t.get,t,n);}}function f(t,n,o){var e,i,r=this.as,a=(r.at,t.$),u=a._,s=u.put||t.put;if(i=t.$$){if(e=i=t.$$._,c===i.put)return;s=i.put;}(i=n.wait)&&(i=i[u.id])&&clearTimeout(i),o||c!==s&&!u.soul&&!u.link&&(!e||0<e.ack)?(n.rid(t),r.ok.call(a||r.$,s,t.get)):i=(n.wait={})[u.id]=setTimeout(function(){f.call({as:r},t,n,i||1);},r.wait||99);}a.chain.on=function(t,n,o,e){var i,r=this._;if("string"==typeof t)return n?(i=r.on(t,n,o||r,e),o&&o.$&&(o.subs||(o.subs=[])).push(i),this):r.on(t);var a=n;return (a=!0===a?{change:!0}:a||{}).at=r,a.ok=t,this.get(u,a),this},a.chain.val=function(t,n){return a.log.once("onceval","Future Breaking API Change: .val -> .once, apologies unexpected."),this.once(t,n)},a.chain.once=function(t,n){var o=this,e=o._,i=e.put;if(0<e.ack&&c!==i)return (t||s).call(o,i,e.get),o;if(!t){a.log.once("valonce","Chainable val is experimental, its behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");var r=o.chain();return r._.nix=o.once(function(){r._.on("in",o._);}),r}return (n=n||{}).ok=t,n.at=e,n.out={"#":a.text.random(9)},o.get(f,{as:n}),n.async=!0,o},a.chain.off=function(){var t,n=this._,o=n.back;if(o)return (t=o.next)&&t[n.get]&&i(t,n.get),(t=o.ask)&&i(t,n.get),(t=o.put)&&i(t,n.get),(t=n.soul)&&i(o.root.graph,t),(t=n.map)&&e(t,function(t){t.link&&o.root.$.get(t.link).off();}),(t=n.next)&&e(t,function(t){t.$.off();}),n.on("off",{}),this};var c,n=a.obj,e=n.map,i=(n.has,n.del),s=(n.to,a.val.link,function(){});})(_,"./on"),_(function(t){var u=_("./index");function i(t){if(!t.put||u.val.is(t.put))return this.to.next(t);this.as.nix&&this.off(),o(t.put,n,{at:this.as,msg:t}),this.to.next(t);}function n(t,n){if(r!==n){var o=this.msg.$,e=this.at,i=o.get(n)._;(i.echo||(i.echo={}))[e.id]=i.echo[e.id]||e;}}u.chain.map=function(r,t,n){var a,o=this,e=o._;return r?(u.log.once("mapfn","Map functions are experimental, their behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it."),a=o.chain(),o.map().on(function(t,n,o,e){var i=(r||s).call(this,t,n,o,e);void 0!==i&&(t===i||u.is(i)?a._.on("in",i._):a._.on("in",{get:n,put:i}));})):(a=e.each)||(e.each=a=o.chain(),a._.nix=o.back("nix"),o.on("in",i,a._)),a};var o=u.obj.map,s=function(){},r=u.node._;})(_,"./map"),_(function(t){var a=_("./index");a.chain.set=function(t,e,i){var n,r=this;if(e=e||function(){},(i=i||{}).item=i.item||t,n=a.node.soul(t))return r.set(r.back(-1).get(n),e,i);if(!a.is(t)){var o=r.back("opt.uuid")();return o&&a.obj.is(t)?r.set(r._.root.$.put(t,o),e,i):r.get(a.state.lex()+a.text.random(7)).put(t,e,i)}return t.get(function(t,n,o){if(!t)return e.call(r,{err:a.log('Only a node can be linked! Not "'+o.put+'"!')});r.put(a.obj.put({},t,a.val.link.ify(t)),e,i);},!0),t};})(_,"./set"),_(function(t){if("undefined"!=typeof Gun){var n,o=function(){};"undefined"!=typeof window&&(n=window);var c=n.localStorage||{setItem:o,removeItem:o,getItem:o};Gun.on("create",function(t){var n=this.to,o=t.opt;if(t.once)return n.next(t);if(!1===o.localStorage)return n.next(t);o.file=o.file||"gun/";var i,e,r=Gun.obj.ify(c.getItem("gap/"+o.file))||{},a=Gun.obj.empty;function u(t){if(!t.err&&t.ok){var e=t["@"];setTimeout(function(){Gun.obj.map(r,function(o,t){Gun.obj.map(o,function(t,n){e===t&&delete o[n];}),a(o)&&delete r[t];}),f();},o.wait||1);}}a(r)||t.on("localStorage",function(e){this.off();var i={};Gun.obj.map(r,function(t,o){Gun.obj.map(t,function(t,n){i[o]=Gun.state.to(e[o],n,i[o]);});}),setTimeout(function(){t.on("out",{put:i,"#":t.ask(u),I:t.$});},10);}),t.on("out",function(t){t.lS||(t.I&&t.put&&!t["@"]&&!a(o.peers)&&(i=t["#"],Gun.graph.is(t.put,null,s),e||(e=setTimeout(f,o.wait||1))),this.to.next(t));}),t.on("ack",u),n.next(t);var s=function(t,n,o,e){(r[e]||(r[e]={}))[n]=i;},f=function(){clearTimeout(e),e=!1;try{c.setItem("gap/"+o.file,JSON.stringify(r));}catch(t){Gun.log(err=t||"localStorage failure");}};}),Gun.on("create",function(r){this.to.next(r);var a=r.opt;if(!r.once&&!1!==a.localStorage){a.file=a.file||a.prefix||"gun/";r.graph;var e,i={},u=0,s=Gun.obj.ify(c.getItem(a.file))||{};r.on("localStorage",s),r.on("put",function(t){if(this.to.next(t),Gun.graph.is(t.put,null,n),t["@"]||(i[t["#"]]=!0),(u+=1)>=(a.batch||1e3))return f();e||(e=setTimeout(f,a.wait||1));}),r.on("get",function(n){this.to.next(n);var o,e,i=n.get;function t(){if(i&&(o=i["#"])){var t=i["."];(e=s[o]||void 0)&&t&&(e=Gun.state.to(e,t)),(e||Gun.obj.empty(a.peers))&&r.on("in",{"@":n["#"],put:Gun.graph.node(e),how:"lS",lS:n.I});}}Gun.debug?setTimeout(t,1):t();});var n=function(t,n,o,e){s[e]=Gun.state.to(o,n,s[e]);},f=function(t){var o;u=0,clearTimeout(e),e=!1;var n=i;i={},t&&(s=t);try{c.setItem(a.file,JSON.stringify(s));}catch(t){Gun.log(o=t||"localStorage failure"),r.on("localStorage:error",{err:o,file:a.file,flush:s,retry:f});}(o||Gun.obj.empty(a.peers))&&Gun.obj.map(n,function(t,n){r.on("in",{"@":n,err:o,ok:0});});};}});}})(_,"./adapters/localStorage"),_(function(t){var d=_("../type");function o(p){var h=function(){};return h.out=function(t){var n;if(this.to&&this.to.next(t),(n=t["@"])&&(n=p.dup.s[n])&&(n=n.it)&&n.mesh)return h.say(t,n.mesh.via),void(n["##"]=t["##"]);h.say(t);},h.hear=function(t,n){if(t){var o,e,i,r=p.dup,a=t[0];try{i=JSON.parse(t);}catch(t){}if("{"===a){if(!i)return;if(r.check(o=i["#"]))return;if((a=(r.track(o,!0).it=i)["@"])&&i.put&&(a+=e=i["##"]||(i["##"]=h.hash(i)))!=o){if(r.check(a))return;(a=r.s)[e]=a[o];}return (i.mesh=function(){}).via=n,(a=i["><"])&&(i.mesh.to=d.obj.map(a.split(","),function(t,n,o){o(t,!0);})),void p.on("in",i)}if("["!==a);else{if(!i)return;for(var u,s=0;u=i[s++];)h.hear(u,n);}}},function(){function r(n,o){var t=o.wire;try{t.send?t.readyState===t.OPEN?t.send(n):(o.queue=o.queue||[]).push(n):o.say&&o.say(n);}catch(t){(o.queue=o.queue||[]).push(n);}}h.say=function(n,o){var t,e,i;o?(o.wire||p.opt.wire&&p.opt.wire(o))&&(e=n.mesh||a,o!==e.via&&((i=e.raw)||(i=h.raw(n)),(t=n["@"])&&(t=p.dup.s[t])&&(t=t.it)&&t.get&&t["##"]&&t["##"]===n["##"]||(t=e.to)&&(t[o.url]||t[o.id])||(o.batch?o.batch.push(i):(o.batch=[],setTimeout(function(){var t=o.batch;t&&(o.batch=null,t.length&&r(JSON.stringify(t),o));},p.opt.gap||p.opt.wait||1),r(i,o))))):d.obj.map(p.opt.peers,function(t){h.say(n,t);});};}(),function(){function f(t,n){var o;return n instanceof Object?(d.obj.map(Object.keys(n).sort(),e,{to:o={},on:n}),o):n}function e(t){this.to[t]=this.on[t];}h.raw=function(t){if(!t)return "";var n,o,e,i=p.dup,r=t.mesh||{};if(e=r.raw)return e;if("string"==typeof t)return t;t["@"]&&(e=t.put)&&((o=t["##"])||(n=c(e,f)||"",o=h.hash(t,n),t["##"]=o),(e=i.s)[o=t["@"]+o]=e[t["#"]],t["#"]=o||t["#"],n&&((t=d.obj.to(t)).put=l));var a=0,u=[];d.obj.map(p.opt.peers,function(t){if(u.push(t.url||t.id),9<++a)return !0}),t["><"]=u.join();var s=c(t);return g!==n&&(s=s.replace('"'+l+'"',n)),r&&(r.raw=s),s},h.hash=function(t,n){return o.hash(n||c(t.put,f)||"")||t["#"]||d.text.random(9)};var c=JSON.stringify,l=":])([:";}(),h.hi=function(n){p.on("hi",n);var t=n.queue;n.queue=[],d.obj.map(t,function(t){h.say(t,n);});},h}o.hash=function(t){if("string"!=typeof t)return {err:1};var n=0;if(!t.length)return n;for(var o=0,e=t.length;o<e;++o)n=(n<<5)-n+t.charCodeAt(o),n|=0;return n};var g,a={};Object.keys=Object.keys||function(t){return map(t,function(t,n,o){o(n);})};try{t.exports=o;}catch(t){}})(_,"./adapters/mesh"),_(function(t){var o=_("../index");o.Mesh=_("./mesh"),o.on("opt",function(e){this.to.next(e);var i=e.opt;if(!e.once&&!1!==i.WebSocket){var r;"undefined"!=typeof window&&(r=window),"undefined"!=typeof commonjsGlobal&&(r=commonjsGlobal),r=r||{};var t=i.WebSocket||r.WebSocket||r.webkitWebSocket||r.mozWebSocket;if(t){i.WebSocket=t;var a=i.mesh=i.mesh||o.Mesh(e);e.on("create",function(t){this.to.next(t),e.on("out",a.out);}),i.wire=i.wire||n;}}function n(n){if(n&&n.url){var t=n.url.replace("http","ws"),o=n.wire=new i.WebSocket(t);return o.onclose=function(){e.on("bye",n),u(n);},o.onerror=function(t){u(n),t&&t.code;},o.onopen=function(){a.hi(n);},o.onmessage=function(t){t&&(r.inLength=(r.inLength||0)+(t.data||t).length,a.hear(t.data||t,n));},o}}function u(t){clearTimeout(t.defer),t.defer=setTimeout(function(){n(t);},2e3);}});})(_,"./adapters/websocket");}();
+	});
+
+	var gun = createCommonjsModule(function (module) {
+	(function(){
+
+		/* UNBUILD */
+		var root;
+		if(typeof window !== "undefined"){ root = window; }
+		if(typeof commonjsGlobal !== "undefined"){ root = commonjsGlobal; }
+		root = root || {};
+		var console = root.console || {log: function(){}};
+		function USE(arg){
+			return arg.slice? USE[R(arg)] : function(mod, path){
+				arg(mod = {exports: {}});
+				USE[R(path)] = mod.exports;
+			}
+			function R(p){
+				return p.split('/').slice(-1).toString().replace('.js','');
+			}
+		}
+		{ var common = module; }
+	USE(function(module){
+			// Generic javascript utilities.
+			var Type = {};
+			//Type.fns = Type.fn = {is: function(fn){ return (!!fn && fn instanceof Function) }}
+			Type.fn = {is: function(fn){ return (!!fn && 'function' == typeof fn) }};
+			Type.bi = {is: function(b){ return (b instanceof Boolean || typeof b == 'boolean') }};
+			Type.num = {is: function(n){ return !list_is(n) && ((n - parseFloat(n) + 1) >= 0 || Infinity === n || -Infinity === n) }};
+			Type.text = {is: function(t){ return (typeof t == 'string') }};
+			Type.text.ify = function(t){
+				if(Type.text.is(t)){ return t }
+				if(typeof JSON !== "undefined"){ return JSON.stringify(t) }
+				return (t && t.toString)? t.toString() : t;
+			};
+			Type.text.random = function(l, c){
+				var s = '';
+				l = l || 24; // you are not going to make a 0 length random number, so no need to check type
+				c = c || '0123456789ABCDEFGHIJKLMNOPQRSTUVWXZabcdefghijklmnopqrstuvwxyz';
+				while(l > 0){ s += c.charAt(Math.floor(Math.random() * c.length)); l--; }
+				return s;
+			};
+			Type.text.match = function(t, o){ var r = false;
+				t = t || '';
+				o = Type.text.is(o)? {'=': o} : o || {}; // {'~', '=', '*', '<', '>', '+', '-', '?', '!'} // ignore case, exactly equal, anything after, lexically larger, lexically lesser, added in, subtacted from, questionable fuzzy match, and ends with.
+				if(Type.obj.has(o,'~')){ t = t.toLowerCase(); o['='] = (o['='] || o['~']).toLowerCase(); }
+				if(Type.obj.has(o,'=')){ return t === o['='] }
+				if(Type.obj.has(o,'*')){ if(t.slice(0, o['*'].length) === o['*']){ r = true; t = t.slice(o['*'].length); } else { return false }}
+				if(Type.obj.has(o,'!')){ if(t.slice(-o['!'].length) === o['!']){ r = true; } else { return false }}
+				if(Type.obj.has(o,'+')){
+					if(Type.list.map(Type.list.is(o['+'])? o['+'] : [o['+']], function(m){
+						if(t.indexOf(m) >= 0){ r = true; } else { return true }
+					})){ return false }
+				}
+				if(Type.obj.has(o,'-')){
+					if(Type.list.map(Type.list.is(o['-'])? o['-'] : [o['-']], function(m){
+						if(t.indexOf(m) < 0){ r = true; } else { return true }
+					})){ return false }
+				}
+				if(Type.obj.has(o,'>')){ if(t > o['>']){ r = true; } else { return false }}
+				if(Type.obj.has(o,'<')){ if(t < o['<']){ r = true; } else { return false }}
+				function fuzzy(t,f){ var n = -1, i = 0, c; for(;c = f[i++];){ if(!~(n = t.indexOf(c, n+1))){ return false }} return true } // via http://stackoverflow.com/questions/9206013/javascript-fuzzy-search
+				if(Type.obj.has(o,'?')){ if(fuzzy(t, o['?'])){ r = true; } else { return false }} // change name!
+				return r;
+			};
+			Type.list = {is: function(l){ return (l instanceof Array) }};
+			Type.list.slit = Array.prototype.slice;
+			Type.list.sort = function(k){ // creates a new sort function based off some key
+				return function(A,B){
+					if(!A || !B){ return 0 } A = A[k]; B = B[k];
+					if(A < B){ return -1 }else if(A > B){ return 1 }
+					else { return 0 }
+				}
+			};
+			Type.list.map = function(l, c, _){ return obj_map(l, c, _) };
+			Type.list.index = 1; // change this to 0 if you want non-logical, non-mathematical, non-matrix, non-convenient array notation
+			Type.obj = {is: function(o){ return o? (o instanceof Object && o.constructor === Object) || Object.prototype.toString.call(o).match(/^\[object (\w+)\]$/)[1] === 'Object' : false }};
+			Type.obj.put = function(o, k, v){ return (o||{})[k] = v, o };
+			Type.obj.has = function(o, k){ return o && Object.prototype.hasOwnProperty.call(o, k) };
+			Type.obj.del = function(o, k){
+				if(!o){ return }
+				o[k] = null;
+				delete o[k];
+				return o;
+			};
+			Type.obj.as = function(o, k, v, u){ return o[k] = o[k] || (u === v? {} : v) };
+			Type.obj.ify = function(o){
+				if(obj_is(o)){ return o }
+				try{o = JSON.parse(o);
+				}catch(e){o={};}			return o;
+			}
+			;(function(){ var u;
+				function map(v,k){
+					if(obj_has(this,k) && u !== this[k]){ return }
+					this[k] = v;
+				}
+				Type.obj.to = function(from, to){
+					to = to || {};
+					obj_map(from, map, to);
+					return to;
+				};
+			}());
+			Type.obj.copy = function(o){ // because http://web.archive.org/web/20140328224025/http://jsperf.com/cloning-an-object/2
+				return !o? o : JSON.parse(JSON.stringify(o)); // is shockingly faster than anything else, and our data has to be a subset of JSON anyways!
+			}
+			;(function(){
+				function empty(v,i){ var n = this.n;
+					if(n && (i === n || (obj_is(n) && obj_has(n, i)))){ return }
+					if(i){ return true }
+				}
+				Type.obj.empty = function(o, n){
+					if(!o){ return true }
+					return obj_map(o,empty,{n:n})? false : true;
+				};
+			}());
+	(function(){
+				function t(k,v){
+					if(2 === arguments.length){
+						t.r = t.r || {};
+						t.r[k] = v;
+						return;
+					} t.r = t.r || [];
+					t.r.push(k);
+				}			var keys = Object.keys;
+				Type.obj.map = function(l, c, _){
+					var u, i = 0, x, r, ll, lle, f = fn_is(c);
+					t.r = null;
+					if(keys && obj_is(l)){
+						ll = keys(l); lle = true;
+					}
+					if(list_is(l) || ll){
+						x = (ll || l).length;
+						for(;i < x; i++){
+							var ii = (i + Type.list.index);
+							if(f){
+								r = lle? c.call(_ || this, l[ll[i]], ll[i], t) : c.call(_ || this, l[i], ii, t);
+								if(r !== u){ return r }
+							} else {
+								//if(Type.test.is(c,l[i])){ return ii } // should implement deep equality testing!
+								if(c === l[lle? ll[i] : i]){ return ll? ll[i] : ii } // use this for now
+							}
+						}
+					} else {
+						for(i in l){
+							if(f){
+								if(obj_has(l,i)){
+									r = _? c.call(_, l[i], i, t) : c(l[i], i, t);
+									if(r !== u){ return r }
+								}
+							} else {
+								//if(a.test.is(c,l[i])){ return i } // should implement deep equality testing!
+								if(c === l[i]){ return i } // use this for now
+							}
+						}
+					}
+					return f? t.r : Type.list.index? 0 : -1;
+				};
+			}());
+			Type.time = {};
+			Type.time.is = function(t){ return t? t instanceof Date : (+new Date().getTime()) };
+
+			var fn_is = Type.fn.is;
+			var list_is = Type.list.is;
+			var obj = Type.obj, obj_is = obj.is, obj_has = obj.has, obj_map = obj.map;
+			module.exports = Type;
+		})(USE, './type');
+	USE(function(module){
+			// On event emitter generic javascript utility.
+			module.exports = function onto(tag, arg, as){
+				if(!tag){ return {to: onto} }
+				var u, tag = (this.tag || (this.tag = {}))[tag] ||
+				(this.tag[tag] = {tag: tag, to: onto._ = {
+					next: function(arg){ var tmp;
+						if((tmp = this.to)){ 
+							tmp.next(arg);
+					}}
+				}});
+				if(arg instanceof Function){
+					var be = {
+						off: onto.off || 
+						(onto.off = function(){
+							if(this.next === onto._.next){ return !0 }
+							if(this === this.the.last){
+								this.the.last = this.back;
+							}
+							this.to.back = this.back;
+							this.next = onto._.next;
+							this.back.to = this.to;
+							if(this.the.last === this.the){
+								delete this.on.tag[this.the.tag];
+							}
+						}),
+						to: onto._,
+						next: arg,
+						the: tag,
+						on: this,
+						as: as,
+					};
+					(be.back = tag.last || tag).to = be;
+					return tag.last = be;
+				}
+				if((tag = tag.to) && u !== arg){ tag.next(arg); }
+				return tag;
+			};
+		})(USE, './onto');
+	USE(function(module){
+			/* Based on the Hypothetical Amnesia Machine thought experiment */
+			function HAM(machineState, incomingState, currentState, incomingValue, currentValue){
+				if(machineState < incomingState){
+					return {defer: true}; // the incoming value is outside the boundary of the machine's state, it must be reprocessed in another state.
+				}
+				if(incomingState < currentState){
+					return {historical: true}; // the incoming value is within the boundary of the machine's state, but not within the range.
+
+				}
+				if(currentState < incomingState){
+					return {converge: true, incoming: true}; // the incoming value is within both the boundary and the range of the machine's state.
+
+				}
+				if(incomingState === currentState){
+					incomingValue = Lexical(incomingValue) || "";
+					currentValue = Lexical(currentValue) || "";
+					if(incomingValue === currentValue){ // Note: while these are practically the same, the deltas could be technically different
+						return {state: true};
+					}
+					/*
+						The following is a naive implementation, but will always work.
+						Never change it unless you have specific needs that absolutely require it.
+						If changed, your data will diverge unless you guarantee every peer's algorithm has also been changed to be the same.
+						As a result, it is highly discouraged to modify despite the fact that it is naive,
+						because convergence (data integrity) is generally more important.
+						Any difference in this algorithm must be given a new and different name.
+					*/
+					if(incomingValue < currentValue){ // Lexical only works on simple value types!
+						return {converge: true, current: true};
+					}
+					if(currentValue < incomingValue){ // Lexical only works on simple value types!
+						return {converge: true, incoming: true};
+					}
+				}
+				return {err: "Invalid CRDT Data: "+ incomingValue +" to "+ currentValue +" at "+ incomingState +" to "+ currentState +"!"};
+			}
+			if(typeof JSON === 'undefined'){
+				throw new Error(
+					'JSON is not included in this browser. Please load it first: ' +
+					'ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js'
+				);
+			}
+			var Lexical = JSON.stringify;
+			module.exports = HAM;
+		})(USE, './HAM');
+	USE(function(module){
+			var Type = USE('./type');
+			var Val = {};
+			Val.is = function(v){ // Valid values are a subset of JSON: null, binary, number (!Infinity), text, or a soul relation. Arrays need special algorithms to handle concurrency, so they are not supported directly. Use an extension that supports them if needed but research their problems first.
+				if(v === u){ return false }
+				if(v === null){ return true } // "deletes", nulling out keys.
+				if(v === Infinity){ return false } // we want this to be, but JSON does not support it, sad face.
+				if(text_is(v) // by "text" we mean strings.
+				|| bi_is(v) // by "binary" we mean boolean.
+				|| num_is(v)){ // by "number" we mean integers or decimals. 
+					return true; // simple values are valid.
+				}
+				return Val.rel.is(v) || false; // is the value a soul relation? Then it is valid and return it. If not, everything else remaining is an invalid data type. Custom extensions can be built on top of these primitives to support other types.
+			};
+			Val.link = Val.rel = {_: '#'};
+	(function(){
+				Val.rel.is = function(v){ // this defines whether an object is a soul relation or not, they look like this: {'#': 'UUID'}
+					if(v && v[rel_] && !v._ && obj_is(v)){ // must be an object.
+						var o = {};
+						obj_map(v, map, o);
+						if(o.id){ // a valid id was found.
+							return o.id; // yay! Return it.
+						}
+					}
+					return false; // the value was not a valid soul relation.
+				};
+				function map(s, k){ var o = this; // map over the object...
+					if(o.id){ return o.id = false } // if ID is already defined AND we're still looping through the object, it is considered invalid.
+					if(k == rel_ && text_is(s)){ // the key should be '#' and have a text value.
+						o.id = s; // we found the soul!
+					} else {
+						return o.id = false; // if there exists anything else on the object that isn't the soul, then it is considered invalid.
+					}
+				}
+			}());
+			Val.rel.ify = function(t){ return obj_put({}, rel_, t) }; // convert a soul into a relation and return it.
+			Type.obj.has._ = '.';
+			var rel_ = Val.link._, u;
+			var bi_is = Type.bi.is;
+			var num_is = Type.num.is;
+			var text_is = Type.text.is;
+			var obj = Type.obj, obj_is = obj.is, obj_put = obj.put, obj_map = obj.map;
+			module.exports = Val;
+		})(USE, './val');
+	USE(function(module){
+			var Type = USE('./type');
+			var Val = USE('./val');
+			var Node = {_: '_'};
+			Node.soul = function(n, o){ return (n && n._ && n._[o || soul_]) }; // convenience function to check to see if there is a soul on a node and return it.
+			Node.soul.ify = function(n, o){ // put a soul on an object.
+				o = (typeof o === 'string')? {soul: o} : o || {};
+				n = n || {}; // make sure it exists.
+				n._ = n._ || {}; // make sure meta exists.
+				n._[soul_] = o.soul || n._[soul_] || text_random(); // put the soul on it.
+				return n;
+			};
+			Node.soul._ = Val.link._;
+	(function(){
+				Node.is = function(n, cb, as){ var s; // checks to see if an object is a valid node.
+					if(!obj_is(n)){ return false } // must be an object.
+					if(s = Node.soul(n)){ // must have a soul on it.
+						return !obj_map(n, map, {as:as,cb:cb,s:s,n:n});
+					}
+					return false; // nope! This was not a valid node.
+				};
+				function map(v, k){ // we invert this because the way we check for this is via a negation.
+					if(k === Node._){ return } // skip over the metadata.
+					if(!Val.is(v)){ return true } // it is true that this is an invalid node.
+					if(this.cb){ this.cb.call(this.as, v, k, this.n, this.s); } // optionally callback each key/value.
+				}
+			}());
+	(function(){
+				Node.ify = function(obj, o, as){ // returns a node from a shallow object.
+					if(!o){ o = {}; }
+					else if(typeof o === 'string'){ o = {soul: o}; }
+					else if(o instanceof Function){ o = {map: o}; }
+					if(o.map){ o.node = o.map.call(as, obj, u, o.node || {}); }
+					if(o.node = Node.soul.ify(o.node || {}, o)){
+						obj_map(obj, map, {o:o,as:as});
+					}
+					return o.node; // This will only be a valid node if the object wasn't already deep!
+				};
+				function map(v, k){ var o = this.o, tmp, u; // iterate over each key/value.
+					if(o.map){
+						tmp = o.map.call(this.as, v, ''+k, o.node);
+						if(u === tmp){
+							obj_del(o.node, k);
+						} else
+						if(o.node){ o.node[k] = tmp; }
+						return;
+					}
+					if(Val.is(v)){
+						o.node[k] = v;
+					}
+				}
+			}());
+			var obj = Type.obj, obj_is = obj.is, obj_del = obj.del, obj_map = obj.map;
+			var text = Type.text, text_random = text.random;
+			var soul_ = Node.soul._;
+			var u;
+			module.exports = Node;
+		})(USE, './node');
+	USE(function(module){
+			var Type = USE('./type');
+			var Node = USE('./node');
+			function State(){
+				var t;
+				/*if(perf){
+					t = start + perf.now(); // Danger: Accuracy decays significantly over time, even if precise.
+				} else {*/
+					t = time();
+				//}
+				if(last < t){
+					return N = 0, last = t + State.drift;
+				}
+				return last = t + ((N += 1) / D) + State.drift;
+			}
+			var time = Type.time.is, last = -Infinity, N = 0, D = 1000; // WARNING! In the future, on machines that are D times faster than 2016AD machines, you will want to increase D by another several orders of magnitude so the processing speed never out paces the decimal resolution (increasing an integer effects the state accuracy).
+			var perf = (typeof performance !== 'undefined')? (performance.timing && performance) : false, start = (perf && perf.timing && perf.timing.navigationStart) || (perf = false);
+			State._ = '>';
+			State.drift = 0;
+			State.is = function(n, k, o){ // convenience function to get the state on a key on a node and return it.
+				var tmp = (k && n && n[N_] && n[N_][State._]) || o;
+				if(!tmp){ return }
+				return num_is(tmp = tmp[k])? tmp : -Infinity;
+			};
+			State.lex = function(){ return State().toString(36).replace('.','') };
+			State.ify = function(n, k, s, v, soul){ // put a key's state on a node.
+				if(!n || !n[N_]){ // reject if it is not node-like.
+					if(!soul){ // unless they passed a soul
+						return; 
+					}
+					n = Node.soul.ify(n, soul); // then make it so!
+				} 
+				var tmp = obj_as(n[N_], State._); // grab the states data.
+				if(u !== k && k !== N_){
+					if(num_is(s)){
+						tmp[k] = s; // add the valid state.
+					}
+					if(u !== v){ // Note: Not its job to check for valid values!
+						n[k] = v;
+					}
+				}
+				return n;
+			};
+			State.to = function(from, k, to){
+				var val = from[k]; // BUGGY!
+				if(obj_is(val)){
+					val = obj_copy(val);
+				}
+				return State.ify(to, k, State.is(from, k), val, Node.soul(from));
+			}
+			;(function(){
+				State.map = function(cb, s, as){ var u; // for use with Node.ify
+					var o = obj_is(o = cb || s)? o : null;
+					cb = fn_is(cb = cb || s)? cb : null;
+					if(o && !cb){
+						s = num_is(s)? s : State();
+						o[N_] = o[N_] || {};
+						obj_map(o, map, {o:o,s:s});
+						return o;
+					}
+					as = as || obj_is(s)? s : u;
+					s = num_is(s)? s : State();
+					return function(v, k, o, opt){
+						if(!cb){
+							map.call({o: o, s: s}, v,k);
+							return v;
+						}
+						cb.call(as || this || {}, v, k, o, opt);
+						if(obj_has(o,k) && u === o[k]){ return }
+						map.call({o: o, s: s}, v,k);
+					}
+				};
+				function map(v,k){
+					if(N_ === k){ return }
+					State.ify(this.o, k, this.s) ;
+				}
+			}());
+			var obj = Type.obj, obj_as = obj.as, obj_has = obj.has, obj_is = obj.is, obj_map = obj.map, obj_copy = obj.copy;
+			var num = Type.num, num_is = num.is;
+			var fn = Type.fn, fn_is = fn.is;
+			var N_ = Node._, u;
+			module.exports = State;
+		})(USE, './state');
+	USE(function(module){
+			var Type = USE('./type');
+			var Val = USE('./val');
+			var Node = USE('./node');
+			var Graph = {};
+	(function(){
+				Graph.is = function(g, cb, fn, as){ // checks to see if an object is a valid graph.
+					if(!g || !obj_is(g) || obj_empty(g)){ return false } // must be an object.
+					return !obj_map(g, map, {cb:cb,fn:fn,as:as}); // makes sure it wasn't an empty object.
+				};
+				function map(n, s){ // we invert this because the way'? we check for this is via a negation.
+					if(!n || s !== Node.soul(n) || !Node.is(n, this.fn, this.as)){ return true } // it is true that this is an invalid graph.
+					if(!this.cb){ return }
+					nf.n = n; nf.as = this.as; // sequential race conditions aren't races.
+					this.cb.call(nf.as, n, s, nf);
+				}
+				function nf(fn){ // optional callback for each node.
+					if(fn){ Node.is(nf.n, fn, nf.as); } // where we then have an optional callback for each key/value.
+				}
+			}());
+	(function(){
+				Graph.ify = function(obj, env, as){
+					var at = {path: [], obj: obj};
+					if(!env){
+						env = {};
+					} else
+					if(typeof env === 'string'){
+						env = {soul: env};
+					} else
+					if(env instanceof Function){
+						env.map = env;
+					}
+					if(env.soul){
+						at.rel = Val.rel.ify(env.soul);
+					}
+					env.graph = env.graph || {};
+					env.seen = env.seen || [];
+					env.as = env.as || as;
+					node(env, at);
+					env.root = at.node;
+					return env.graph;
+				};
+				function node(env, at){ var tmp;
+					if(tmp = seen(env, at)){ return tmp }
+					at.env = env;
+					at.soul = soul;
+					if(Node.ify(at.obj, map, at)){
+						//at.rel = at.rel || Val.rel.ify(Node.soul(at.node));
+						env.graph[Val.rel.is(at.rel)] = at.node;
+					}
+					return at;
+				}
+				function map(v,k,n){
+					var at = this, env = at.env, is, tmp;
+					if(Node._ === k && obj_has(v,Val.rel._)){
+						return n._; // TODO: Bug?
+					}
+					if(!(is = valid(v,k,n, at,env))){ return }
+					if(!k){
+						at.node = at.node || n || {};
+						if(obj_has(v, Node._) && Node.soul(v)){ // ? for safety ?
+							at.node._ = obj_copy(v._);
+						}
+						at.node = Node.soul.ify(at.node, Val.rel.is(at.rel));
+						at.rel = at.rel || Val.rel.ify(Node.soul(at.node));
+					}
+					if(tmp = env.map){
+						tmp.call(env.as || {}, v,k,n, at);
+						if(obj_has(n,k)){
+							v = n[k];
+							if(u === v){
+								obj_del(n, k);
+								return;
+							}
+							if(!(is = valid(v,k,n, at,env))){ return }
+						}
+					}
+					if(!k){ return at.node }
+					if(true === is){
+						return v;
+					}
+					tmp = node(env, {obj: v, path: at.path.concat(k)});
+					if(!tmp.node){ return }
+					return tmp.rel; //{'#': Node.soul(tmp.node)};
+				}
+				function soul(id){ var at = this;
+					var prev = Val.link.is(at.rel), graph = at.env.graph;
+					at.rel = at.rel || Val.rel.ify(id);
+					at.rel[Val.rel._] = id;
+					if(at.node && at.node[Node._]){
+						at.node[Node._][Val.rel._] = id;
+					}
+					if(obj_has(graph, prev)){
+						graph[id] = graph[prev];
+						obj_del(graph, prev);
+					}
+				}
+				function valid(v,k,n, at,env){ var tmp;
+					if(Val.is(v)){ return true }
+					if(obj_is(v)){ return 1 }
+					if(tmp = env.invalid){
+						v = tmp.call(env.as || {}, v,k,n);
+						return valid(v,k,n, at,env);
+					}
+					env.err = "Invalid value at '" + at.path.concat(k).join('.') + "'!";
+					if(Type.list.is(v)){ env.err += " Use `.set(item)` instead of an Array."; }
+				}
+				function seen(env, at){
+					var arr = env.seen, i = arr.length, has;
+					while(i--){ has = arr[i];
+						if(at.obj === has.obj){ return has }
+					}
+					arr.push(at);
+				}
+			}());
+			Graph.node = function(node){
+				var soul = Node.soul(node);
+				if(!soul){ return }
+				return obj_put({}, soul, node);
+			}
+			;(function(){
+				Graph.to = function(graph, root, opt){
+					if(!graph){ return }
+					var obj = {};
+					opt = opt || {seen: {}};
+					obj_map(graph[root], map, {obj:obj, graph: graph, opt: opt});
+					return obj;
+				};
+				function map(v,k){ var tmp, obj;
+					if(Node._ === k){
+						if(obj_empty(v, Val.rel._)){
+							return;
+						}
+						this.obj[k] = obj_copy(v);
+						return;
+					}
+					if(!(tmp = Val.rel.is(v))){
+						this.obj[k] = v;
+						return;
+					}
+					if(obj = this.opt.seen[tmp]){
+						this.obj[k] = obj;
+						return;
+					}
+					this.obj[k] = this.opt.seen[tmp] = Graph.to(this.graph, tmp, this.opt);
+				}
+			}());
+			var fn_is = Type.fn.is;
+			var obj = Type.obj, obj_is = obj.is, obj_del = obj.del, obj_has = obj.has, obj_empty = obj.empty, obj_put = obj.put, obj_map = obj.map, obj_copy = obj.copy;
+			var u;
+			module.exports = Graph;
+		})(USE, './graph');
+	USE(function(module){
+			// request / response module, for asking and acking messages.
+			USE('./onto'); // depends upon onto!
+			module.exports = function ask(cb, as){
+				if(!this.on){ return }
+				if(!(cb instanceof Function)){
+					if(!cb || !as){ return }
+					var id = cb['#'] || cb, tmp = (this.tag||empty)[id];
+					if(!tmp){ return }
+					tmp = this.on(id, as);
+					clearTimeout(tmp.err);
+					return true;
+				}
+				var id = (as && as['#']) || Math.random().toString(36).slice(2);
+				if(!cb){ return id }
+				var to = this.on(id, cb, as);
+				to.err = to.err || setTimeout(function(){
+					to.next({err: "Error: No ACK received yet.", lack: true});
+					to.off();
+				}, (this.opt||{}).lack || 9000);
+				return id;
+			};
+		})(USE, './ask');
+	USE(function(module){
+			var Type = USE('./type');
+			function Dup(opt){
+				var dup = {s:{}};
+				opt = opt || {max: 1000, age: 1000 * 9};//1000 * 60 * 2};
+				dup.check = function(id){ var tmp;
+					if(!(tmp = dup.s[id])){ return false }
+					if(tmp.pass){ return tmp.pass = false }
+					return dup.track(id);
+				};
+				dup.track = function(id, pass){
+					var it = dup.s[id] || (dup.s[id] = {});
+					it.was = time_is();
+					if(pass){ it.pass = true; }
+					if(!dup.to){
+						dup.to = setTimeout(function(){
+							var now = time_is();
+							Type.obj.map(dup.s, function(it, id){
+								if(opt.age > (now - it.was)){ return }
+								Type.obj.del(dup.s, id);
+							});
+							dup.to = null;
+						}, opt.age + 9);
+					}
+					return it;
+				};
+				return dup;
+			}
+			var time_is = Type.time.is;
+			module.exports = Dup;
+		})(USE, './dup');
+	USE(function(module){
+
+			function Gun(o){
+				if(o instanceof Gun){ return (this._ = {gun: this, $: this}).$ }
+				if(!(this instanceof Gun)){ return new Gun(o) }
+				return Gun.create(this._ = {gun: this, $: this, opt: o});
+			}
+
+			Gun.is = function($){ return ($ instanceof Gun) || ($ && $._ && ($ === $._.$)) || false };
+
+			Gun.version = 0.9;
+
+			Gun.chain = Gun.prototype;
+			Gun.chain.toJSON = function(){};
+
+			var Type = USE('./type');
+			Type.obj.to(Type, Gun);
+			Gun.HAM = USE('./HAM');
+			Gun.val = USE('./val');
+			Gun.node = USE('./node');
+			Gun.state = USE('./state');
+			Gun.graph = USE('./graph');
+			Gun.on = USE('./onto');
+			Gun.ask = USE('./ask');
+			Gun.dup = USE('./dup');
+	(function(){
+				Gun.create = function(at){
+					at.root = at.root || at;
+					at.graph = at.graph || {};
+					at.on = at.on || Gun.on;
+					at.ask = at.ask || Gun.ask;
+					at.dup = at.dup || Gun.dup();
+					var gun = at.$.opt(at.opt);
+					if(!at.once){
+						at.on('in', root, at);
+						at.on('out', root, {at: at, out: root});
+						Gun.on('create', at);
+						at.on('create', at);
+					}
+					at.once = 1;
+					return gun;
+				};
+				function root(msg){
+					//add to.next(at); // TODO: MISSING FEATURE!!!
+					var ev = this, as = ev.as, at = as.at || as, gun = at.$, dup, tmp;
+					if(!(tmp = msg['#'])){ tmp = msg['#'] = text_rand(9); }
+					if((dup = at.dup).check(tmp)){
+						if(as.out === msg.out){
+							msg.out = u;
+							ev.to.next(msg);
+						}
+						return;
+					}
+					dup.track(tmp);
+					if(!at.ask(msg['@'], msg)){
+						if(msg.get){
+							Gun.on.get(msg, gun); //at.on('get', get(msg));
+						}
+						if(msg.put){
+							Gun.on.put(msg, gun); //at.on('put', put(msg));
+						}
+					}
+					ev.to.next(msg);
+					if(!as.out){
+						msg.out = root;
+						at.on('out', msg);
+					}
+				}
+			}());
+	(function(){
+				Gun.on.put = function(msg, gun){
+					var at = gun._, ctx = {$: gun, graph: at.graph, put: {}, map: {}, souls: {}, machine: Gun.state(), ack: msg['@'], cat: at, stop: {}};
+					if(!Gun.graph.is(msg.put, null, verify, ctx)){ ctx.err = "Error: Invalid graph!"; }
+					if(ctx.err){ return at.on('in', {'@': msg['#'], err: Gun.log(ctx.err) }) }
+					obj_map(ctx.put, merge, ctx);
+					if(!ctx.async){ obj_map(ctx.map, map, ctx); }
+					if(u !== ctx.defer){
+						setTimeout(function(){
+							Gun.on.put(msg, gun);
+						}, ctx.defer - ctx.machine);
+					}
+					if(!ctx.diff){ return }
+					at.on('put', obj_to(msg, {put: ctx.diff}));
+				};
+				function verify(val, key, node, soul){ var ctx = this;
+					var state = Gun.state.is(node, key);
+					if(!state){ return ctx.err = "Error: No state on '"+key+"' in node '"+soul+"'!" }
+					var vertex = ctx.graph[soul] || empty, was = Gun.state.is(vertex, key, true), known = vertex[key];
+					var HAM = Gun.HAM(ctx.machine, state, was, val, known);
+					if(!HAM.incoming){
+						if(HAM.defer){ // pick the lowest
+							ctx.defer = (state < (ctx.defer || Infinity))? state : ctx.defer;
+						}
+						return;
+					}
+					ctx.put[soul] = Gun.state.to(node, key, ctx.put[soul]);
+					(ctx.diff || (ctx.diff = {}))[soul] = Gun.state.to(node, key, ctx.diff[soul]);
+					ctx.souls[soul] = true;
+				}
+				function merge(node, soul){
+					var ctx = this, cat = ctx.$._, at = (cat.next || empty)[soul];
+					if(!at){
+						if(!(cat.opt||empty).super){
+							ctx.souls[soul] = false;
+							return; 
+						}
+						at = (ctx.$.get(soul)._);
+					}
+					var msg = ctx.map[soul] = {
+						put: node,
+						get: soul,
+						$: at.$
+					}, as = {ctx: ctx, msg: msg};
+					ctx.async = !!cat.tag.node;
+					if(ctx.ack){ msg['@'] = ctx.ack; }
+					obj_map(node, each, as);
+					if(!ctx.async){ return }
+					if(!ctx.and){
+						// If it is async, we only need to setup one listener per context (ctx)
+						cat.on('node', function(m){
+							this.to.next(m); // make sure to call other context's listeners.
+							if(m !== ctx.map[m.get]){ return } // filter out events not from this context!
+							ctx.souls[m.get] = false; // set our many-async flag
+							obj_map(m.put, patch, m); // merge into view
+							if(obj_map(ctx.souls, function(v){ if(v){ return v } })){ return } // if flag still outstanding, keep waiting.
+							if(ctx.c){ return } ctx.c = 1; // failsafe for only being called once per context.
+							this.off();
+							obj_map(ctx.map, map, ctx); // all done, trigger chains.
+						});
+					}
+					ctx.and = true;
+					cat.on('node', msg); // each node on the current context's graph needs to be emitted though.
+				}
+				function each(val, key){
+					var ctx = this.ctx, graph = ctx.graph, msg = this.msg, soul = msg.get, node = msg.put, at = (msg.$._);
+					graph[soul] = Gun.state.to(node, key, graph[soul]);
+					if(ctx.async){ return }
+					at.put = Gun.state.to(node, key, at.put);
+				}
+				function patch(val, key){
+					var msg = this, node = msg.put, at = (msg.$._);
+					at.put = Gun.state.to(node, key, at.put);
+				}
+				function map(msg, soul){
+					if(!msg.$){ return }
+					this.cat.stop = this.stop; // temporary fix till a better solution?
+					(msg.$._).on('in', msg);
+					this.cat.stop = null; // temporary fix till a better solution?
+				}
+
+				Gun.on.get = function(msg, gun){
+					var root = gun._, soul = msg.get[_soul], node = root.graph[soul], has = msg.get[_has], tmp;
+					var next = root.next || (root.next = {}), at = next[soul];
+					if(!node || !at){ return root.on('get', msg) }
+					if(has){
+						if(!obj_has(node, has)){ return root.on('get', msg) }
+						node = Gun.state.to(node, has);
+						// If we have a key in-memory, do we really need to fetch?
+						// Maybe... in case the in-memory key we have is a local write
+						// we still need to trigger a pull/merge from peers.
+					} else {
+						node = Gun.obj.copy(node);
+					}
+					node = Gun.graph.node(node);
+					tmp = at.ack;
+					root.on('in', {
+						'@': msg['#'],
+						how: 'mem',
+						put: node,
+						$: gun
+					});
+					//if(0 < tmp){ return }
+					root.on('get', msg);
+				};
+			}());
+	(function(){
+				Gun.chain.opt = function(opt){
+					opt = opt || {};
+					var gun = this, at = gun._, tmp = opt.peers || opt;
+					if(!obj_is(opt)){ opt = {}; }
+					if(!obj_is(at.opt)){ at.opt = opt; }
+					if(text_is(tmp)){ tmp = [tmp]; }
+					if(list_is(tmp)){
+						tmp = obj_map(tmp, function(url, i, map){
+							map(url, {url: url});
+						});
+						if(!obj_is(at.opt.peers)){ at.opt.peers = {};}
+						at.opt.peers = obj_to(tmp, at.opt.peers);
+					}
+					at.opt.peers = at.opt.peers || {};
+					obj_to(opt, at.opt); // copies options on to `at.opt` only if not already taken.
+					Gun.on('opt', at);
+					at.opt.uuid = at.opt.uuid || function(){ return state_lex() + text_rand(12) };
+					return gun;
+				};
+			}());
+
+			var list_is = Gun.list.is;
+			var text = Gun.text, text_is = text.is, text_rand = text.random;
+			var obj = Gun.obj, obj_is = obj.is, obj_has = obj.has, obj_to = obj.to, obj_map = obj.map, obj_copy = obj.copy;
+			var state_lex = Gun.state.lex, _soul = Gun.val.rel._, _has = '.', node_ = Gun.node._, rel_is = Gun.val.link.is;
+			var empty = {}, u;
+
+			console.debug = function(i, s){ return (console.debug.i && i === console.debug.i && console.debug.i++) && (console.log.apply(console, arguments) || s) };
+
+			Gun.log = function(){ return (!Gun.log.off && console.log.apply(console, arguments)), [].slice.call(arguments).join(' ') };
+			Gun.log.once = function(w,s,o){ return (o = Gun.log.once)[w] = o[w] || 0, o[w]++ || Gun.log(s) }
+
+			;		Gun.log.once("welcome", "Hello wonderful person! :) Thanks for using GUN, feel free to ask for help on https://gitter.im/amark/gun and ask StackOverflow questions tagged with 'gun'!");
+			
+			if(typeof window !== "undefined"){ window.Gun = Gun; }
+			try{ if(typeof common !== "undefined"){ common.exports = Gun; } }catch(e){}
+			module.exports = Gun;
+
+			/*Gun.on('opt', function(ctx){ // FOR TESTING PURPOSES
+				this.to.next(ctx);
+				if(ctx.once){ return }
+				ctx.on('node', function(msg){
+					var to = this.to;
+					//Gun.node.is(msg.put, function(v,k){ msg.put[k] = v + v });
+					setTimeout(function(){
+						to.next(msg);
+					},1);
+				});
+			});*/
+		})(USE, './root');
+	USE(function(module){
+			var Gun = USE('./root');
+			Gun.chain.back = function(n, opt){ var tmp;
+				n = n || 1;
+				if(-1 === n || Infinity === n){
+					return this._.root.$;
+				} else
+				if(1 === n){
+					return (this._.back || this._).$;
+				}
+				var gun = this, at = gun._;
+				if(typeof n === 'string'){
+					n = n.split('.');
+				}
+				if(n instanceof Array){
+					var i = 0, l = n.length, tmp = at;
+					for(i; i < l; i++){
+						tmp = (tmp||empty)[n[i]];
+					}
+					if(u !== tmp){
+						return opt? gun : tmp;
+					} else
+					if((tmp = at.back)){
+						return tmp.$.back(n, opt);
+					}
+					return;
+				}
+				if(n instanceof Function){
+					var yes, tmp = {back: at};
+					while((tmp = tmp.back)
+					&& u === (yes = n(tmp, opt))){}
+					return yes;
+				}
+				if(Gun.num.is(n)){
+					return (at.back || at).$.back(n - 1);
+				}
+				return this;
+			};
+			var empty = {}, u;
+		})(USE, './back');
+	USE(function(module){
+			// WARNING: GUN is very simple, but the JavaScript chaining API around GUN
+			// is complicated and was extremely hard to build. If you port GUN to another
+			// language, consider implementing an easier API to build.
+			var Gun = USE('./root');
+			Gun.chain.chain = function(sub){
+				var gun = this, at = gun._, chain = new (sub || gun).constructor(gun), cat = chain._, root;
+				cat.root = root = at.root;
+				cat.id = ++root.once;
+				cat.back = gun._;
+				cat.on = Gun.on;
+				cat.on('in', input, cat); // For 'in' if I add my own listeners to each then I MUST do it before in gets called. If I listen globally for all incoming data instead though, regardless of individual listeners, I can transform the data there and then as well.
+				cat.on('out', output, cat); // However for output, there isn't really the global option. I must listen by adding my own listener individually BEFORE this one is ever called.
+				return chain;
+			};
+
+			function output(msg){
+				var put, get, at = this.as, back = at.back, root = at.root, tmp;
+				if(!msg.I){ msg.I = at.$; }
+				if(!msg.$){ msg.$ = at.$; }
+				this.to.next(msg);
+				if(get = msg.get){
+					/*if(u !== at.put){
+						at.on('in', at);
+						return;
+					}*/
+					//console.log("out!", at.get, get);
+					if(get['#'] || at.soul){
+						get['#'] = get['#'] || at.soul;
+						msg['#'] || (msg['#'] = text_rand(9));
+						back = (root.$.get(get['#'])._);
+						if(!(get = get['.'])){
+							tmp = back.ack;
+							if(!tmp){ back.ack = -1; }
+							if(obj_has(back, 'put')){
+								back.on('in', back);
+							}
+							if(tmp){ return }
+							msg.$ = back.$;
+						} else
+						if(obj_has(back.put, get)){
+							put = (back.$.get(get)._);
+							if(!(tmp = put.ack)){ put.ack = -1; }
+							back.on('in', {
+								$: back.$,
+								put: Gun.state.to(back.put, get),
+								get: back.get
+							});
+							if(tmp){ return }
+						}
+						root.ask(ack, msg);
+						return root.on('in', msg);
+					}
+					if(root.now){ root.now[at.id] = root.now[at.id] || true; at.pass = {}; }
+					if(get['.']){
+						if(at.get){
+							msg = {get: {'.': at.get}, $: at.$};
+							//if(back.ask || (back.ask = {})[at.get]){ return }
+							(back.ask || (back.ask = {}));
+							back.ask[at.get] = msg.$._; // TODO: PERFORMANCE? More elegant way?
+							return back.on('out', msg);
+						}
+						msg = {get: {}, $: at.$};
+						return back.on('out', msg);
+					}
+					at.ack = at.ack || -1;
+					if(at.get){
+						msg.$ = at.$;
+						get['.'] = at.get;
+						(back.ask || (back.ask = {}))[at.get] = msg.$._; // TODO: PERFORMANCE? More elegant way?
+						return back.on('out', msg);
+					}
+				}
+				return back.on('out', msg);
+			}
+
+			function input(msg){
+				var eve = this, cat = eve.as, root = cat.root, gun = msg.$, at = (gun||empty)._ || empty, change = msg.put, rel, tmp;
+				if(cat.get && msg.get !== cat.get){
+					msg = obj_to(msg, {get: cat.get});
+				}
+				if(cat.has && at !== cat){
+					msg = obj_to(msg, {$: cat.$});
+					if(at.ack){
+						cat.ack = at.ack;
+						//cat.ack = cat.ack || at.ack;
+					}
+				}
+				if(u === change){
+					tmp = at.put;
+					eve.to.next(msg);
+					if(cat.soul){ return } // TODO: BUG, I believee the fresh input refactor caught an edge case that a `gun.get('soul').get('key')` that points to a soul that doesn't exist will not trigger val/get etc.
+					if(u === tmp && u !== at.put){ return }
+					echo(cat, msg, eve);
+					if(cat.has){
+						not(cat, msg);
+					}
+					obj_del(at.echo, cat.id);
+					obj_del(cat.map, at.id);
+					return;
+				}
+				if(cat.soul){
+					eve.to.next(msg);
+					echo(cat, msg, eve);
+					if(cat.next){ obj_map(change, map, {msg: msg, cat: cat}); }
+					return;
+				}
+				if(!(rel = Gun.val.link.is(change))){
+					if(Gun.val.is(change)){
+						if(cat.has || cat.soul){
+							not(cat, msg);
+						} else
+						if(at.has || at.soul){
+							(at.echo || (at.echo = {}))[cat.id] = at.echo[at.id] || cat;
+							(cat.map || (cat.map = {}))[at.id] = cat.map[at.id] || {at: at};
+							//if(u === at.put){ return } // Not necessary but improves performance. If we have it but at does not, that means we got things out of order and at will get it. Once at gets it, it will tell us again.
+						}
+						eve.to.next(msg);
+						echo(cat, msg, eve);
+						return;
+					}
+					if(cat.has && at !== cat && obj_has(at, 'put')){
+						cat.put = at.put;
+					}				if((rel = Gun.node.soul(change)) && at.has){
+						at.put = (cat.root.$.get(rel)._).put;
+					}
+					tmp = (root.stop || {})[at.id];
+					//if(tmp && tmp[cat.id]){ } else {
+						eve.to.next(msg);
+					//}
+					relate(cat, msg, at, rel);
+					echo(cat, msg, eve);
+					if(cat.next){ obj_map(change, map, {msg: msg, cat: cat}); }
+					return;
+				}
+				var was = root.stop;
+				tmp = root.stop || {};
+				tmp = tmp[at.id] || (tmp[at.id] = {});
+				//if(tmp[cat.id]){ return }
+				tmp.is = tmp.is || at.put;
+				tmp[cat.id] = at.put || true;
+				//if(root.stop){ 
+					eve.to.next(msg);
+				//}
+				relate(cat, msg, at, rel);
+				echo(cat, msg, eve);
+			}
+
+			function relate(at, msg, from, rel){
+				if(!rel || node_ === at.get){ return }
+				var tmp = (at.root.$.get(rel)._);
+				if(at.has){
+					from = tmp;
+				} else 
+				if(from.has){
+					relate(from, msg, from, rel);
+				}
+				if(from === at){ return }
+				if(!from.$){ from = {}; }
+				(from.echo || (from.echo = {}))[at.id] = from.echo[at.id] || at;
+				if(at.has && !(at.map||empty)[from.id]){ // if we haven't seen this before.
+					not(at, msg);
+				}
+				tmp = from.id? ((at.map || (at.map = {}))[from.id] = at.map[from.id] || {at: from}) : {};
+				//console.log("REL?", at.id, at.get, rel === tmp.link, tmp.pass || at.pass);
+				if(rel === tmp.link){
+					if(!(tmp.pass || at.pass)){
+						return;
+					}
+				}
+				if(at.pass){ 
+					Gun.obj.map(at.map, function(tmp){ tmp.pass = true; });
+					obj_del(at, 'pass');
+				}
+				if(tmp.pass){ obj_del(tmp, 'pass'); }
+				if(at.has){ at.link = rel; }
+				ask(at, tmp.link = rel);
+			}
+			function echo(at, msg, ev){
+				if(!at.echo){ return } // || node_ === at.get ?
+				//if(at.has){ msg = obj_to(msg, {event: ev}) }
+				obj_map(at.echo, reverb, msg);
+			}
+			function reverb(to){
+				if(!to || !to.on){ return }
+				to.on('in', this);
+			}
+			function map(data, key){ // Map over only the changes on every update.
+				var cat = this.cat, next = cat.next || empty, via = this.msg, chain, at, tmp;
+				if(node_ === key && !next[key]){ return }
+				if(!(at = next[key])){
+					return;
+				}
+				//if(data && data[_soul] && (tmp = Gun.val.rel.is(data)) && (tmp = (cat.root.$.get(tmp)._)) && obj_has(tmp, 'put')){
+				//	data = tmp.put;
+				//}
+				if(at.has){
+					//if(!(data && data[_soul] && Gun.val.rel.is(data) === Gun.node.soul(at.put))){
+					if(u === at.put || !Gun.val.link.is(data)){
+						at.put = data;
+					}
+					chain = at.$;
+				} else
+				if(tmp = via.$){
+					tmp = (chain = via.$.get(key))._;
+					if(u === tmp.put || !Gun.val.link.is(data)){
+						tmp.put = data; 
+					}
+				}
+				at.on('in', {
+					put: data,
+					get: key,
+					$: chain,
+					via: via
+				});
+			}
+			function not(at, msg){
+				if(!(at.has || at.soul)){ return }
+				var tmp = at.map, root = at.root;
+				at.map = null;
+				if(at.has){ at.link = null; }
+				//if(!root.now || !root.now[at.id]){
+				if(!at.pass){
+					if((!msg['@']) && null === tmp){ return }
+					//obj_del(at, 'pass');
+				}
+				if(u === tmp && Gun.val.link.is(at.put)){ return } // This prevents the very first call of a thing from triggering a "clean up" call. // TODO: link.is(at.put) || !val.is(at.put) ?
+				obj_map(tmp, function(proxy){
+					if(!(proxy = proxy.at)){ return }
+					obj_del(proxy.echo, at.id);
+				});
+				tmp = at.put;
+				obj_map(at.next, function(neat, key){
+					if(u === tmp && u !== at.put){ return true }
+					neat.put = u;
+					if(neat.ack){
+						neat.ack = -1;
+					}
+					neat.on('in', {
+						get: key,
+						$: neat.$,
+						put: u
+					});
+				});
+			}
+			function ask(at, soul){
+				var tmp = (at.root.$.get(soul)._);
+				if(at.ack){
+					tmp.on('out', {get: {'#': soul}});
+					if(!at.ask){ return } // TODO: PERFORMANCE? More elegant way?
+				}
+				tmp = at.ask; Gun.obj.del(at, 'ask');
+				obj_map(tmp || at.next, function(neat, key){
+					neat.on('out', {get: {'#': soul, '.': key}});
+				});
+				Gun.obj.del(at, 'ask'); // TODO: PERFORMANCE? More elegant way?
+			}
+			function ack(msg, ev){
+				var as = this.as, get = as.get || empty, at = as.$._, tmp = (msg.put||empty)[get['#']];
+				if(at.ack){ at.ack = (at.ack + 1) || 1; }
+				if(!msg.put || (get['.'] && !obj_has(tmp, at.get))){
+					if(at.put !== u){ return }
+					at.on('in', {
+						get: at.get,
+						put: at.put = u,
+						$: at.$,
+						'@': msg['@']
+					});
+					return;
+				}
+				if(node_ == get['.']){ // is this a security concern?
+					at.on('in', {get: at.get, put: Gun.val.link.ify(get['#']), $: at.$, '@': msg['@']});
+					return;
+				}
+				msg.$ = at.root.$;
+				Gun.on.put(msg, at.root.$);
+			}
+			var empty = {}, u;
+			var obj = Gun.obj, obj_has = obj.has, obj_put = obj.put, obj_del = obj.del, obj_to = obj.to, obj_map = obj.map;
+			var text_rand = Gun.text.random;
+			var _soul = Gun.val.rel._, node_ = Gun.node._;
+		})(USE, './chain');
+	USE(function(module){
+			var Gun = USE('./root');
+			Gun.chain.get = function(key, cb, as){
+				var gun, tmp;
+				if(typeof key === 'string'){
+					var back = this, cat = back._;
+					var next = cat.next || empty;
+					if(!(gun = next[key])){
+						gun = cache(key, back);
+					}
+					gun = gun.$;
+				} else
+				if(key instanceof Function){
+					if(true === cb){ return soul(this, key, cb, as) }
+					gun = this;
+					var at = gun._, root = at.root, tmp = root.now, ev;
+					as = cb || {};
+					as.at = at;
+					as.use = key;
+					as.out = as.out || {};
+					as.out.get = as.out.get || {};
+					(ev = at.on('in', use, as)).rid = rid;
+					(root.now = {$:1})[as.now = at.id] = ev;
+					var mum = root.mum; root.mum = {};
+					at.on('out', as.out);
+					root.mum = mum;
+					root.now = tmp;
+					return gun;
+				} else
+				if(num_is(key)){
+					return this.get(''+key, cb, as);
+				} else
+				if(tmp = rel.is(key)){
+					return this.get(tmp, cb, as);
+				} else {
+					(as = this.chain())._.err = {err: Gun.log('Invalid get request!', key)}; // CLEAN UP
+					if(cb){ cb.call(as, as._.err); }
+					return as;
+				}
+				if(tmp = cat.stun){ // TODO: Refactor?
+					gun._.stun = gun._.stun || tmp;
+				}
+				if(cb && cb instanceof Function){
+					gun.get(cb, as);
+				}
+				return gun;
+			};
+			function cache(key, back){
+				var cat = back._, next = cat.next, gun = back.chain(), at = gun._;
+				if(!next){ next = cat.next = {}; }
+				next[at.get = key] = at;
+				if(back === cat.root.$){
+					at.soul = key;
+				} else
+				if(cat.soul || cat.has){
+					at.has = key;
+					//if(obj_has(cat.put, key)){
+						//at.put = cat.put[key];
+					//}
+				}
+				return at;
+			}
+			function soul(gun, cb, opt, as){
+				var cat = gun._, tmp;
+				if(tmp = cat.soul){ return cb(tmp, as, cat), gun }
+				if(tmp = cat.link){ return cb(tmp, as, cat), gun }
+				gun.get(function(msg, ev){
+					ev.rid(msg);
+					var at = ((at = msg.$) && at._) || {};
+					tmp = at.link || at.soul || rel.is(msg.put) || node_soul(msg.put);
+					cb(tmp, as, msg, ev);
+				}, {out: {get: {'.':true}}});
+				return gun;
+			}
+			function use(msg){
+				var eve = this, as = eve.as, cat = as.at, root = cat.root, gun = msg.$, at = (gun||{})._ || {}, data = msg.put || at.put, tmp;
+				if((tmp = root.now) && eve !== tmp[as.now]){ return eve.to.next(msg) }
+				//console.log("USE:", cat.id, cat.soul, cat.has, cat.get, msg, root.mum);
+				//if(at.async && msg.root){ return }
+				//if(at.async === 1 && cat.async !== true){ return }
+				//if(root.stop && root.stop[at.id]){ return } root.stop && (root.stop[at.id] = true);
+				//if(!at.async && !cat.async && at.put && msg.put === at.put){ return }
+				//else if(!cat.async && msg.put !== at.put && root.stop && root.stop[at.id]){ return } root.stop && (root.stop[at.id] = true);
+
+
+				//root.stop && (root.stop.ID = root.stop.ID || Gun.text.random(2));
+				//if((tmp = root.stop) && (tmp = tmp[at.id] || (tmp[at.id] = {})) && tmp[cat.id]){ return } tmp && (tmp[cat.id] = true);
+				if(eve.seen && at.id && eve.seen[at.id]){ return eve.to.next(msg) }	
+				//if((tmp = root.stop)){ if(tmp[at.id]){ return } tmp[at.id] = msg.root; } // temporary fix till a better solution?
+				if((tmp = data) && tmp[rel._] && (tmp = rel.is(tmp))){
+					tmp = ((msg.$$ = at.root.gun.get(tmp))._);
+					if(u !== tmp.put){
+						msg = obj_to(msg, {put: data = tmp.put});
+					}
+				}
+				if((tmp = root.mum) && at.id){
+					if(tmp[at.id]){ return }
+					if(u !== data && !rel.is(data)){ tmp[at.id] = true; }
+				}
+				as.use(msg, eve);
+				if(eve.stun){
+					eve.stun = null;
+					return;
+				}
+				eve.to.next(msg);
+			}
+			function rid(at){
+				var cat = this.on;
+				if(!at || cat.soul || cat.has){ return this.off() }
+				if(!(at = (at = (at = at.$ || at)._ || at).id)){ return }
+				var map = cat.map, tmp, seen;
+				//if(!map || !(tmp = map[at]) || !(tmp = tmp.at)){ return }
+				if(tmp = (seen = this.seen || (this.seen = {}))[at]){ return true }
+				seen[at] = true;
+				return;
+				//tmp.echo[cat.id] = {}; // TODO: Warning: This unsubscribes ALL of this chain's listeners from this link, not just the one callback event.
+				//obj.del(map, at); // TODO: Warning: This unsubscribes ALL of this chain's listeners from this link, not just the one callback event.
+				return;
+			}
+			var obj = Gun.obj, obj_has = obj.has, obj_to = Gun.obj.to;
+			var num_is = Gun.num.is;
+			var rel = Gun.val.link, node_soul = Gun.node.soul, node_ = Gun.node._;
+			var empty = {}, u;
+		})(USE, './get');
+	USE(function(module){
+			var Gun = USE('./root');
+			Gun.chain.put = function(data, cb, as){
+				// #soul.has=value>state
+				// ~who#where.where=what>when@was
+				// TODO: BUG! Put probably cannot handle plural chains!
+				var gun = this, at = (gun._), root = at.root.$, tmp;
+				as = as || {};
+				as.data = data;
+				as.via = as.$ = as.via || as.$ || gun;
+				if(typeof cb === 'string'){
+					as.soul = cb;
+				} else {
+					as.ack = as.ack || cb;
+				}
+				if(at.soul){
+					as.soul = at.soul;
+				}
+				if(as.soul || root === gun){
+					if(!obj_is(as.data)){
+						(as.ack||noop).call(as, as.out = {err: Gun.log("Data saved to the root level of the graph must be a node (an object), not a", (typeof as.data), 'of "' + as.data + '"!')});
+						if(as.res){ as.res(); }
+						return gun;
+					}
+					as.soul = as.soul || (as.not = Gun.node.soul(as.data) || (as.via.back('opt.uuid') || Gun.text.random)());
+					if(!as.soul){ // polyfill async uuid for SEA
+						as.via.back('opt.uuid')(function(err, soul){ // TODO: improve perf without anonymous callback
+							if(err){ return Gun.log(err) } // TODO: Handle error!
+							(as.ref||as.$).put(as.data, as.soul = soul, as);
+						});
+						return gun;
+					}
+					as.$ = gun = root.get(as.soul);
+					as.ref = as.$;
+					ify(as);
+					return gun;
+				}
+				if(Gun.is(data)){
+					data.get(function(soul, o, msg){
+						if(!soul && Gun.val.is(msg.put)){
+							return Gun.log("The reference you are saving is a", typeof msg.put, '"'+ msg.put +'", not a node (object)!');
+						}
+						gun.put(Gun.val.rel.ify(soul), cb, as);
+					}, true);
+					return gun;
+				}
+				as.ref = as.ref || (root._ === (tmp = at.back))? gun : tmp.$;
+				if(as.ref._.soul && Gun.val.is(as.data) && at.get){
+					as.data = obj_put({}, at.get, as.data);
+					as.ref.put(as.data, as.soul, as);
+					return gun;
+				}
+				as.ref.get(any, true, {as: as});
+				if(!as.out){
+					// TODO: Perf idea! Make a global lock, that blocks everything while it is on, but if it is on the lock it does the expensive lookup to see if it is a dependent write or not and if not then it proceeds full speed. Meh? For write heavy async apps that would be terrible.
+					as.res = as.res || stun; // Gun.on.stun(as.ref); // TODO: BUG! Deal with locking?
+					as.$._.stun = as.ref._.stun;
+				}
+				return gun;
+			};
+
+			function ify(as){
+				as.batch = batch;
+				var opt = as.opt||{}, env = as.env = Gun.state.map(map, opt.state);
+				env.soul = as.soul;
+				as.graph = Gun.graph.ify(as.data, env, as);
+				if(env.err){
+					(as.ack||noop).call(as, as.out = {err: Gun.log(env.err)});
+					if(as.res){ as.res(); }
+					return;
+				}
+				as.batch();
+			}
+
+			function stun(cb){
+				if(cb){ cb(); }
+				return;
+				var as = this;
+				if(!as.ref){ return }
+				if(cb){
+					as.after = as.ref._.tag;
+					as.now = as.ref._.tag = {};
+					cb();
+					return;
+				}
+				if(as.after){
+					as.ref._.tag = as.after;
+				}
+			}
+
+			function batch(){ var as = this;
+				if(!as.graph || obj_map(as.stun, no)){ return }
+				as.res = as.res || function(cb){ if(cb){ cb(); } };
+				as.res(function(){
+					var cat = (as.$.back(-1)._), ask = cat.ask(function(ack){
+						cat.root.on('ack', ack);
+						if(ack.err){ Gun.log(ack); }
+						if(!ack.lack){ this.off(); } // One response is good enough for us currently. Later we may want to adjust this.
+						if(!as.ack){ return }
+						as.ack(ack, this);
+					}, as.opt);
+					// NOW is a hack to get synchronous replies to correctly call.
+					// and STOP is a hack to get async behavior to correctly call.
+					// neither of these are ideal, need to be fixed without hacks,
+					// but for now, this works for current tests. :/
+					var tmp = cat.root.now; obj.del(cat.root, 'now');
+					var mum = cat.root.mum; cat.root.mum = {};
+					(as.ref._).on('out', {
+						$: as.ref, put: as.out = as.env.graph, opt: as.opt, '#': ask
+					});
+					cat.root.mum = mum? obj.to(mum, cat.root.mum) : mum;
+					cat.root.now = tmp;
+				}, as);
+				if(as.res){ as.res(); }
+			} function no(v,k){ if(v){ return true } }
+
+			function map(v,k,n, at){ var as = this;
+				var is = Gun.is(v);
+				if(k || !at.path.length){ return }
+				(as.res||iife)(function(){
+					var path = at.path, ref = as.ref, opt = as.opt;
+					var i = 0, l = path.length;
+					for(i; i < l; i++){
+						ref = ref.get(path[i]);
+					}
+					if(is){ ref = v; }
+					var id = (ref._).dub;
+					if(id || (id = Gun.node.soul(at.obj))){
+						ref.back(-1).get(id);
+						at.soul(id);
+						return;
+					}
+					(as.stun = as.stun || {})[path] = true;
+					ref.get(soul, true, {as: {at: at, as: as, p:path}});
+				}, {as: as, at: at});
+				//if(is){ return {} }
+			}
+
+			function soul(id, as, msg, eve){
+				var as = as.as, cat = as.at; as = as.as;
+				var at = ((msg || {}).$ || {})._ || {};
+				id = at.dub = at.dub || id || Gun.node.soul(cat.obj) || Gun.node.soul(msg.put || at.put) || Gun.val.rel.is(msg.put || at.put) || (as.via.back('opt.uuid') || Gun.text.random)(); // TODO: BUG!? Do we really want the soul of the object given to us? Could that be dangerous?
+				if(eve){ eve.stun = true; }
+				if(!id){ // polyfill async uuid for SEA
+					at.via.back('opt.uuid')(function(err, id){ // TODO: improve perf without anonymous callback
+						if(err){ return Gun.log(err) } // TODO: Handle error.
+						solve(at, at.dub = at.dub || id, cat, as);
+					});
+					return;
+				}
+				solve(at, at.dub = id, cat, as);
+			}
+
+			function solve(at, id, cat, as){
+				at.$.back(-1).get(id);
+				cat.soul(id);
+				as.stun[cat.path] = false;
+				as.batch();
+			}
+
+			function any(soul, as, msg, eve){
+				as = as.as;
+				if(!msg.$ || !msg.$._){ return } // TODO: Handle
+				if(msg.err){ // TODO: Handle
+					console.log("Please report this as an issue! Put.any.err");
+					return;
+				}
+				var at = (msg.$._), data = at.put, opt = as.opt||{}, tmp;
+				if((tmp = as.ref) && tmp._.now){ return }
+				if(eve){ eve.stun = true; }
+				if(as.ref !== as.$){
+					tmp = (as.$._).get || at.get;
+					if(!tmp){ // TODO: Handle
+						console.log("Please report this as an issue! Put.no.get"); // TODO: BUG!??
+						return;
+					}
+					as.data = obj_put({}, tmp, as.data);
+					tmp = null;
+				}
+				if(u === data){
+					if(!at.get){ return } // TODO: Handle
+					if(!soul){
+						tmp = at.$.back(function(at){
+							if(at.link || at.soul){ return at.link || at.soul }
+							as.data = obj_put({}, at.get, as.data);
+						});
+					}
+					tmp = tmp || at.get;
+					at = (at.root.$.get(tmp)._);
+					as.soul = tmp;
+					data = as.data;
+				}
+				if(!as.not && !(as.soul = as.soul || soul)){
+					if(as.path && obj_is(as.data)){
+						as.soul = (opt.uuid || as.via.back('opt.uuid') || Gun.text.random)();
+					} else {
+						//as.data = obj_put({}, as.$._.get, as.data);
+						if(node_ == at.get){
+							as.soul = (at.put||empty)['#'] || at.dub;
+						}
+						as.soul = as.soul || at.soul || at.soul || (opt.uuid || as.via.back('opt.uuid') || Gun.text.random)();
+					}
+					if(!as.soul){ // polyfill async uuid for SEA
+						as.via.back('opt.uuid')(function(err, soul){ // TODO: improve perf without anonymous callback
+							if(err){ return Gun.log(err) } // Handle error.
+							as.ref.put(as.data, as.soul = soul, as);
+						});
+						return;
+					}
+				}
+				as.ref.put(as.data, as.soul, as);
+			}
+			var obj = Gun.obj, obj_is = obj.is, obj_put = obj.put, obj_map = obj.map;
+			var u, empty = {}, noop = function(){}, iife = function(fn,as){fn.call(as||empty);};
+			var node_ = Gun.node._;
+		})(USE, './put');
+	USE(function(module){
+			var Gun = USE('./root');
+			USE('./chain');
+			USE('./back');
+			USE('./put');
+			USE('./get');
+			module.exports = Gun;
+		})(USE, './index');
+	USE(function(module){
+			var Gun = USE('./index');
+			Gun.chain.on = function(tag, arg, eas, as){
+				var gun = this, at = gun._, act;
+				if(typeof tag === 'string'){
+					if(!arg){ return at.on(tag) }
+					act = at.on(tag, arg, eas || at, as);
+					if(eas && eas.$){
+						(eas.subs || (eas.subs = [])).push(act);
+					}
+					return gun;
+				}
+				var opt = arg;
+				opt = (true === opt)? {change: true} : opt || {};
+				opt.at = at;
+				opt.ok = tag;
+				//opt.last = {};
+				gun.get(ok, opt); // TODO: PERF! Event listener leak!!!?
+				return gun;
+			};
+
+			function ok(msg, ev){ var opt = this;
+				var gun = msg.$, at = (gun||{})._ || {}, data = at.put || msg.put, cat = opt.at, tmp;
+				if(u === data){
+					return;
+				}
+				if(tmp = msg.$$){
+					tmp = (msg.$$._);
+					if(u === tmp.put){
+						return;
+					}
+					data = tmp.put;
+				}
+				if(opt.change){ // TODO: BUG? Move above the undef checks?
+					data = msg.put;
+				}
+				// DEDUPLICATE // TODO: NEEDS WORK! BAD PROTOTYPE
+				//if(tmp.put === data && tmp.get === id && !Gun.node.soul(data)){ return }
+				//tmp.put = data;
+				//tmp.get = id;
+				// DEDUPLICATE // TODO: NEEDS WORK! BAD PROTOTYPE
+				//at.last = data;
+				if(opt.as){
+					opt.ok.call(opt.as, msg, ev);
+				} else {
+					opt.ok.call(gun, data, msg.get, msg, ev);
+				}
+			}
+
+			Gun.chain.val = function(cb, opt){
+				Gun.log.once("onceval", "Future Breaking API Change: .val -> .once, apologies unexpected.");
+				return this.once(cb, opt);
+			};
+			Gun.chain.once = function(cb, opt){
+				var gun = this, at = gun._, data = at.put;
+				if(0 < at.ack && u !== data){
+					(cb || noop).call(gun, data, at.get);
+					return gun;
+				}
+				if(cb){
+					(opt = opt || {}).ok = cb;
+					opt.at = at;
+					opt.out = {'#': Gun.text.random(9)};
+					gun.get(val, {as: opt});
+					opt.async = true; //opt.async = at.stun? 1 : true;
+				} else {
+					Gun.log.once("valonce", "Chainable val is experimental, its behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");
+					var chain = gun.chain();
+					chain._.nix = gun.once(function(){
+						chain._.on('in', gun._);
+					});
+					return chain;
+				}
+				return gun;
+			};
+
+			function val(msg, eve, to){
+				var opt = this.as, cat = opt.at, gun = msg.$, at = gun._, data = at.put || msg.put, link, tmp;
+				if(tmp = msg.$$){
+					link = tmp = (msg.$$._);
+					if(u === tmp.put){
+						return;
+					}
+					data = tmp.put;
+				}
+				if((tmp = eve.wait) && (tmp = tmp[at.id])){ clearTimeout(tmp); }
+				if(!to && (u === data || at.soul || at.link || (link && !(0 < link.ack)))){
+					tmp = (eve.wait = {})[at.id] = setTimeout(function(){
+						val.call({as:opt}, msg, eve, tmp || 1);
+					}, opt.wait || 99);
+					return;
+				}
+				eve.rid(msg);
+				opt.ok.call(gun || opt.$, data, msg.get);
+			}
+
+			Gun.chain.off = function(){
+				// make off more aggressive. Warning, it might backfire!
+				var gun = this, at = gun._, tmp;
+				var cat = at.back;
+				if(!cat){ return }
+				if(tmp = cat.next){
+					if(tmp[at.get]){
+						obj_del(tmp, at.get);
+					}
+				}
+				if(tmp = cat.ask){
+					obj_del(tmp, at.get);
+				}
+				if(tmp = cat.put){
+					obj_del(tmp, at.get);
+				}
+				if(tmp = at.soul){
+					obj_del(cat.root.graph, tmp);
+				}
+				if(tmp = at.map){
+					obj_map(tmp, function(at){
+						if(at.link){
+							cat.root.$.get(at.link).off();
+						}
+					});
+				}
+				if(tmp = at.next){
+					obj_map(tmp, function(neat){
+						neat.$.off();
+					});
+				}
+				at.on('off', {});
+				return gun;
+			};
+			var obj = Gun.obj, obj_map = obj.map, obj_has = obj.has, obj_del = obj.del, obj_to = obj.to;
+			var rel = Gun.val.link;
+			var noop = function(){}, u;
+		})(USE, './on');
+	USE(function(module){
+			var Gun = USE('./index');
+			Gun.chain.map = function(cb, opt, t){
+				var gun = this, cat = gun._, chain;
+				if(!cb){
+					if(chain = cat.each){ return chain }
+					cat.each = chain = gun.chain();
+					chain._.nix = gun.back('nix');
+					gun.on('in', map, chain._);
+					return chain;
+				}
+				Gun.log.once("mapfn", "Map functions are experimental, their behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");
+				chain = gun.chain();
+				gun.map().on(function(data, key, at, ev){
+					var next = (cb||noop).call(this, data, key, at, ev);
+					if(u === next){ return }
+					if(data === next || Gun.is(next)){
+						chain._.on('in', next._);
+						return;
+					}
+					chain._.on('in', {get: key, put: next});
+				});
+				return chain;
+			};
+			function map(msg){
+				if(!msg.put || Gun.val.is(msg.put)){ return this.to.next(msg) }
+				if(this.as.nix){ this.off(); } // TODO: Ugly hack!
+				obj_map(msg.put, each, {at: this.as, msg: msg});
+				this.to.next(msg);
+			}
+			function each(v,k){
+				if(n_ === k){ return }
+				var msg = this.msg, gun = msg.$, at = this.at, tmp = (gun.get(k)._);
+				(tmp.echo || (tmp.echo = {}))[at.id] = tmp.echo[at.id] || at;
+			}
+			var obj_map = Gun.obj.map, noop = function(){}, n_ = Gun.node._, u;
+		})(USE, './map');
+	USE(function(module){
+			var Gun = USE('./index');
+			Gun.chain.set = function(item, cb, opt){
+				var gun = this, soul;
+				cb = cb || function(){};
+				opt = opt || {}; opt.item = opt.item || item;
+				if(soul = Gun.node.soul(item)){ return gun.set(gun.back(-1).get(soul), cb, opt) }
+				if(!Gun.is(item)){
+					var id = gun.back('opt.uuid')();
+					if(id && Gun.obj.is(item)){
+						return gun.set(gun._.root.$.put(item, id), cb, opt);
+					}
+					return gun.get((Gun.state.lex() + Gun.text.random(7))).put(item, cb, opt);
+				}
+				item.get(function(soul, o, msg){
+					if(!soul){ return cb.call(gun, {err: Gun.log('Only a node can be linked! Not "' + msg.put + '"!')}) }
+					gun.put(Gun.obj.put({}, soul, Gun.val.link.ify(soul)), cb, opt);
+				},true);
+				return item;
+			};
+		})(USE, './set');
+	USE(function(module){
+			if(typeof Gun === 'undefined'){ return } // TODO: localStorage is Browser only. But it would be nice if it could somehow plugin into NodeJS compatible localStorage APIs?
+
+			var root, noop = function(){};
+			if(typeof window !== 'undefined'){ root = window; }
+			var store = root.localStorage || {setItem: noop, removeItem: noop, getItem: noop};
+
+			/*
+				NOTE: Both `lib/file.js` and `lib/memdisk.js` are based on this design!
+				If you update anything here, consider updating the other adapters as well.
+			*/
+
+			Gun.on('create', function(root){
+				// This code is used to queue offline writes for resync.
+				// See the next 'opt' code below for actual saving of data.
+				var ev = this.to, opt = root.opt;
+				if(root.once){ return ev.next(root) }
+				if(false === opt.localStorage){ return ev.next(root) }
+				opt.file = opt.file || 'gun/';
+				var gap = Gun.obj.ify(store.getItem('gap/'+opt.file)) || {};
+				var empty = Gun.obj.empty, id, to;
+				// add re-sync command.
+				if(!empty(gap)){
+					root.on('localStorage', function(disk){
+						this.off();
+						var send = {};
+						Gun.obj.map(gap, function(node, soul){
+							Gun.obj.map(node, function(val, key){
+								send[soul] = Gun.state.to(disk[soul], key, send[soul]);
+							});
+						});
+						setTimeout(function(){
+							root.on('out', {put: send, '#': root.ask(ack), I: root.$});
+						},10);
+					});
+				}
+
+				root.on('out', function(msg){
+					if(msg.lS){ return }
+					if(msg.I && msg.put && !msg['@'] && !empty(opt.peers)){
+						id = msg['#'];
+						Gun.graph.is(msg.put, null, map);
+						if(!to){ to = setTimeout(flush, opt.wait || 1); }
+					}
+					this.to.next(msg);
+				});
+				root.on('ack', ack);
+
+				function ack(ack){ // TODO: This is experimental, not sure if we should keep this type of event hook.
+					if(ack.err || !ack.ok){ return }
+					var id = ack['@'];
+					setTimeout(function(){
+						Gun.obj.map(gap, function(node, soul){
+							Gun.obj.map(node, function(val, key){
+								if(id !== val){ return }
+								delete node[key];
+							});
+							if(empty(node)){
+								delete gap[soul];
+							}
+						});
+						flush();
+					}, opt.wait || 1);
+				}			ev.next(root);
+
+				var map = function(val, key, node, soul){
+					(gap[soul] || (gap[soul] = {}))[key] = id;
+				};
+				var flush = function(){
+					clearTimeout(to);
+					to = false;
+					try{store.setItem('gap/'+opt.file, JSON.stringify(gap));
+					}catch(e){ Gun.log(err = e || "localStorage failure"); }
+				};
+			});
+
+			Gun.on('create', function(root){
+				this.to.next(root);
+				var opt = root.opt;
+				if(root.once){ return }
+				if(false === opt.localStorage){ return }
+				opt.file = opt.file || opt.prefix || 'gun/'; // support old option name.
+				var graph = root.graph, acks = {}, count = 0, to;
+				var disk = Gun.obj.ify(store.getItem(opt.file)) || {};
+				root.on('localStorage', disk); // NON-STANDARD EVENT!
+				
+				root.on('put', function(at){
+					this.to.next(at);
+					Gun.graph.is(at.put, null, map);
+					if(!at['@']){ acks[at['#']] = true; } // only ack non-acks.
+					count += 1;
+					if(count >= (opt.batch || 1000)){
+						return flush();
+					}
+					if(to){ return }
+					to = setTimeout(flush, opt.wait || 1);
+				});
+
+				root.on('get', function(msg){
+					this.to.next(msg);
+					var lex = msg.get, soul, data, u;
+					function to(){
+					if(!lex || !(soul = lex['#'])){ return }
+					//if(0 >= msg.cap){ return }
+					var has = lex['.'];
+					data = disk[soul] || u;
+					if(data && has){
+						data = Gun.state.to(data, has);
+					}
+					if(!data && !Gun.obj.empty(opt.peers)){ // if data not found, don't ack if there are peers.
+						return; // Hmm, what if we have peers but we are disconnected?
+					}
+					//console.log("lS get", lex, data);
+					root.on('in', {'@': msg['#'], put: Gun.graph.node(data), how: 'lS', lS: msg.I});
+					}				Gun.debug? setTimeout(to,1) : to();
+				});
+
+				var map = function(val, key, node, soul){
+					disk[soul] = Gun.state.to(node, key, disk[soul]);
+				};
+
+				var flush = function(data){
+					var err;
+					count = 0;
+					clearTimeout(to);
+					to = false;
+					var ack = acks;
+					acks = {};
+					if(data){ disk = data; }
+					try{store.setItem(opt.file, JSON.stringify(disk));
+					}catch(e){ 
+						Gun.log(err = e || "localStorage failure");
+						root.on('localStorage:error', {err: err, file: opt.file, flush: disk, retry: flush});
+					}
+					if(!err && !Gun.obj.empty(opt.peers)){ return } // only ack if there are no peers.
+					Gun.obj.map(ack, function(yes, id){
+						root.on('in', {
+							'@': id,
+							err: err,
+							ok: 0 // localStorage isn't reliable, so make its `ok` code be a low number.
+						});
+					});
+				};
+			});
+		})(USE, './adapters/localStorage');
+	USE(function(module){
+			var Type = USE('../type');
+
+			function Mesh(ctx){
+				var mesh = function(){};
+
+				mesh.out = function(msg){ var tmp;
+					if(this.to){ this.to.next(msg); }
+					//if(mesh.last != msg['#']){ return mesh.last = msg['#'], this.to.next(msg) }
+					if((tmp = msg['@'])
+					&& (tmp = ctx.dup.s[tmp])
+					&& (tmp = tmp.it)
+					&& tmp.mesh){
+						mesh.say(msg, tmp.mesh.via);
+						tmp['##'] = msg['##'];
+						return;
+					}
+					// add hook for AXE?
+					mesh.say(msg);
+				};
+
+				mesh.hear = function(raw, peer){
+					if(!raw){ return }
+					var dup = ctx.dup, id, hash, msg, tmp = raw[0];
+					try{msg = JSON.parse(raw);
+					}catch(e){}
+					if('{' === tmp){
+						if(!msg){ return }
+						if(dup.check(id = msg['#'])){ return }
+						dup.track(id, true).it = msg; // GUN core also dedups, so `true` is needed.
+						if((tmp = msg['@']) && msg.put){
+							hash = msg['##'] || (msg['##'] = mesh.hash(msg));
+							if((tmp = tmp + hash) != id){
+								if(dup.check(tmp)){ return }
+								(tmp = dup.s)[hash] = tmp[id];
+							}
+						}
+						(msg.mesh = function(){}).via = peer;
+						if((tmp = msg['><'])){
+							msg.mesh.to = Type.obj.map(tmp.split(','), function(k,i,m){m(k,true);});
+						}
+						ctx.on('in', msg);
+						
+						return;
+					} else
+					if('[' === tmp){
+						if(!msg){ return }
+						var i = 0, m;
+						while(m = msg[i++]){
+							mesh.hear(m, peer);
+						}
+
+						return;
+					}
+				}
+
+				;(function(){
+					mesh.say = function(msg, peer){
+						/*
+							TODO: Plenty of performance optimizations
+							that can be made just based off of ordering,
+							and reducing function calls for cached writes.
+						*/
+						if(!peer){
+							Type.obj.map(ctx.opt.peers, function(peer){
+								mesh.say(msg, peer);
+							});
+							return;
+						}
+						var tmp, wire = peer.wire || ((ctx.opt.wire) && ctx.opt.wire(peer)), msh, raw;// || open(peer, ctx); // TODO: Reopen!
+						if(!wire){ return }
+						msh = msg.mesh || empty;
+						if(peer === msh.via){ return }
+						if(!(raw = msh.raw)){ raw = mesh.raw(msg); }
+						if((tmp = msg['@'])
+						&& (tmp = ctx.dup.s[tmp])
+						&& (tmp = tmp.it)){
+							if(tmp.get && tmp['##'] && tmp['##'] === msg['##']){ // PERF: move this condition outside say?
+								return; // TODO: this still needs to be tested in the browser!
+							}
+						}
+						if((tmp = msh.to) && (tmp[peer.url] || tmp[peer.id])){ return } // TODO: still needs to be tested
+						if(peer.batch){
+							peer.batch.push(raw);
+							return;
+						}
+						peer.batch = [];
+						setTimeout(function(){
+							var tmp = peer.batch;
+							if(!tmp){ return }
+							peer.batch = null;
+							if(!tmp.length){ return }
+							send(JSON.stringify(tmp), peer);
+						}, ctx.opt.gap || ctx.opt.wait || 1);
+						send(raw, peer);
+					};
+
+					function send(raw, peer){
+						var wire = peer.wire;
+						try{
+							if(wire.send){
+								if(wire.readyState === wire.OPEN){
+									wire.send(raw);
+								} else {
+									(peer.queue = peer.queue || []).push(raw);
+								}
+							} else
+							if(peer.say){
+								peer.say(raw);
+							}
+						}catch(e){
+							(peer.queue = peer.queue || []).push(raw);
+						}
+					}
+
+				}());
+	(function(){
+
+					mesh.raw = function(msg){
+						if(!msg){ return '' }
+						var dup = ctx.dup, msh = msg.mesh || {}, put, hash, tmp;
+						if(tmp = msh.raw){ return tmp }
+						if(typeof msg === 'string'){ return msg }
+						if(msg['@'] && (tmp = msg.put)){
+							if(!(hash = msg['##'])){
+								put = $(tmp, sort) || '';
+								hash = mesh.hash(msg, put);
+								msg['##'] = hash;
+							}
+							(tmp = dup.s)[hash = msg['@']+hash] = tmp[msg['#']];
+							msg['#'] = hash || msg['#'];
+							if(put){ (msg = Type.obj.to(msg)).put = _; }
+						}
+						var i = 0, to = []; Type.obj.map(ctx.opt.peers, function(p){
+							to.push(p.url || p.id); if(++i > 9){ return true } // limit server, fast fix, improve later!
+						}); msg['><'] = to.join();
+						var raw = $(msg);
+						if(u !== put){
+							raw = raw.replace('"'+ _ +'"', put);
+						}
+						if(msh){
+							msh.raw = raw;
+						}
+						return raw;
+					};
+
+					mesh.hash = function(msg, hash){
+						return Mesh.hash(hash || $(msg.put, sort) || '') || msg['#'] || Type.text.random(9);
+					};
+
+					function sort(k, v){ var tmp;
+						if(!(v instanceof Object)){ return v }
+						Type.obj.map(Object.keys(v).sort(), map, {to: tmp = {}, on: v});
+						return tmp;
+					}
+
+					function map(k){
+						this.to[k] = this.on[k];
+					}
+					var $ = JSON.stringify, _ = ':])([:';
+
+				}());
+
+				mesh.hi = function(peer){
+					ctx.on('hi', peer);
+					var queue = peer.queue;
+					peer.queue = [];
+					Type.obj.map(queue, function(msg){
+						mesh.say(msg, peer);
+					});
+				};
+
+				return mesh;
+			}
+
+			Mesh.hash = function(s){ // via SO
+				if(typeof s !== 'string'){ return {err: 1} }
+		    var c = 0;
+		    if(!s.length){ return c }
+		    for(var i=0,l=s.length,n; i<l; ++i){
+		      n = s.charCodeAt(i);
+		      c = ((c<<5)-c)+n;
+		      c |= 0;
+		    }
+		    return c; // Math.abs(c);
+		  };
+
+		  var empty = {}, u;
+		  Object.keys = Object.keys || function(o){ return map(o, function(v,k,t){t(k);}) };
+
+		  try{ module.exports = Mesh; }catch(e){}
+
+		})(USE, './adapters/mesh');
+	USE(function(module){
+			var Gun = USE('../index');
+			Gun.Mesh = USE('./mesh');
+
+			Gun.on('opt', function(root){
+				this.to.next(root);
+				var opt = root.opt;
+				if(root.once){ return }
+				if(false === opt.WebSocket){ return }
+
+				var env;
+				if(typeof window !== "undefined"){ env = window; }
+				if(typeof commonjsGlobal !== "undefined"){ env = commonjsGlobal; }
+				env = env || {};
+
+				var websocket = opt.WebSocket || env.WebSocket || env.webkitWebSocket || env.mozWebSocket;
+				if(!websocket){ return }
+				opt.WebSocket = websocket;
+
+				var mesh = opt.mesh = opt.mesh || Gun.Mesh(root);
+				root.on('create', function(at){
+					this.to.next(at);
+					root.on('out', mesh.out);
+				});
+
+				opt.wire = opt.wire || open;
+				function open(peer){
+					if(!peer || !peer.url){ return }
+					var url = peer.url.replace('http', 'ws');
+					var wire = peer.wire = new opt.WebSocket(url);
+					wire.onclose = function(){
+						root.on('bye', peer);
+						reconnect(peer);
+					};
+					wire.onerror = function(error){
+						reconnect(peer); // placement?
+						if(!error){ return }
+						if(error.code === 'ECONNREFUSED');
+					};
+					wire.onopen = function(){
+						mesh.hi(peer);
+					};
+					wire.onmessage = function(msg){
+						if(!msg){ return }
+						env.inLength = (env.inLength || 0) + (msg.data || msg).length; // TEMPORARY, NON-STANDARD, FOR DEBUG
+						mesh.hear(msg.data || msg, peer);
+					};
+					return wire;
+				}
+
+				function reconnect(peer){
+					clearTimeout(peer.defer);
+					peer.defer = setTimeout(function(){
+						open(peer);
+					}, 2 * 1000);
+				}
+			});
+		})(USE, './adapters/websocket');
+
+	}());
+	});
+
+	var Gun$1 = (typeof window !== "undefined")? window.Gun : gun;
+
+	Gun$1.chain.promise = function(cb) {
+	  var gun$$1 = this, cb = cb || function(ctx) { return ctx };
+	  return (new Promise(function(res, rej) {
+	    gun$$1.once(function(data, key){
+	    	res({put: data, get: key, gun: this});
+	    });
+	  })).then(cb);
+	};
+
+	Gun$1.chain.then = function(cb) {
+		return this.promise(function(res){
+			return cb? cb(res.put) : res.put;
+		});
+	};
+
+	var Gun$2 = (typeof window !== "undefined")? window.Gun : gun;
+
+	Gun$2.chain.open = function(cb, opt, at){
+		opt = opt || {};
+		opt.doc = opt.doc || {};
+		opt.ids = opt.ids || {};
+		opt.any = opt.any || cb;
+		opt.ev = opt.ev || {off: function(){
+			Gun$2.obj.map(opt.ev.s, function(e){
+				if(e){ e.off(); }
+			});
+			opt.ev.s = {};
+		}, s:{}};
+		return this.on(function(data, key, ctx, ev){
+			delete ((data = Gun$2.obj.copy(data))||{})._;
+			clearTimeout(opt.to);
+			opt.to = setTimeout(function(){
+				if(!opt.any){ return }
+				opt.any.call(opt.at.$, opt.doc, opt.key, opt, opt.ev);
+				if(opt.off){
+					opt.ev.off();
+					opt.any = null;
+				}
+			}, opt.wait || 1);
+			opt.at = opt.at || ctx;
+			opt.key = opt.key || key;
+			opt.ev.s[this._.id] = ev;
+			if(Gun$2.val.is(data)){
+				if(!at){
+					opt.doc = data;
+				} else {
+					at[key] = data;
+				}
+				return;
+			}
+			var tmp = this, id;
+			Gun$2.obj.map(data, function(val, key){
+				if(!(id = Gun$2.val.link.is(val))){
+					(at || opt.doc)[key] = val;
+					return;
+				}
+				if(opt.ids[id]){
+					(at || opt.doc)[key] = opt.ids[id];
+					return;
+				}
+				tmp.get(key).open(opt.any, opt, opt.ids[id] = (at || opt.doc)[key] = {});
+			});
+		})
+	};
+
+	var open = {
+
+	};
+
+	var Gun$3 = (typeof window !== "undefined")? window.Gun : gun;
+	Gun$3.chain.open || open;
+
+	Gun$3.chain.load = function(cb, opt, at){
+		(opt = opt || {}).off = !0;
+		return this.open(cb, opt, at);
+	};
+
+	// temp method for GUN search
+	async function searchText(node, query, limit, cursor) {
+	  return new _Promise(function (resolve) {
+	    var r = [];
+	    function sortAndResolve() {
+	      r.sort(function (a, b) {
+	        if (a.key < b.key) {
+	          return -1;
+	        }
+	        if (a.key > b.key) {
+	          return;
+	        }
+	        return 0;
+	      });
+	      resolve(r);
+	    }
+	    node.once().map(function (value, key) {
+	      if ((!cursor || key > cursor) && key.indexOf(query) === 0) {
+	        if (value) {
+	          r.push({ value: value, key: key });
+	        }
+	        if (r.length >= limit) {
+	          sortAndResolve();
+	        }
+	      }
+	    });
+	    setTimeout(function () {
+	      /* console.log(`r`, r);*/sortAndResolve();
+	    }, 200);
+	  });
+	}
 
 	// TODO: make the whole thing use GUN for indexing and flush onto IPFS
 	/**
-	* Identifi index root. Contains four indexes: identitiesBySearchKey, identitiesByTrustDistance,
+	* Identifi index root. Contains four indexes: identitiesBySearchKey, gun.get(`identitiesByTrustDistance`),
 	* messagesByTimestamp, messagesByDistance.
 	*/
 
 	var Index = function () {
-	  function Index(storage, viewpoint) {
+	  function Index(gun, viewpoint) {
 	    var _this = this;
 
 	    _classCallCheck(this, Index);
 
-	    if (storage) {
-	      console.log('constructor');
-	      if (storage.constructor.name === 'IPFS') {
-	        this.storage = new merkleBtree.IPFSStorage(storage);
-	      } else {
-	        this.storage = storage;
-	      }
-	      this.identitiesBySearchKey = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-	      this.identitiesByTrustDistance = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-	      this.messagesByTimestamp = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-	      this.messagesByDistance = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-	      if (viewpoint) {
-	        this.viewpoint = new Attribute(viewpoint);
-	      } else {
-	        this.viewpoint = { name: 'keyID', val: Key.getDefault().keyID, conf: 1, ref: 0 };
-	      }
-	      var vp = new Identity({ attrs: [this.viewpoint], trustDistance: 0 });
-	      this.ready = new _Promise(async function (resolve, reject) {
-	        try {
-	          await _this._setSentRcvdIndexes(vp);
-	          await _this._addIdentityToIndexes(vp);
-	          resolve();
-	        } catch (e) {
-	          reject(e);
-	        }
-	      });
+	    this.gun = gun || new gun_min();
+	    if (viewpoint) {
+	      this.viewpoint = new Attribute(viewpoint);
+	    } else {
+	      this.viewpoint = { name: 'keyID', val: Key.getDefault().keyID, conf: 1, ref: 0 };
 	    }
+	    var vp = Identity.create(this.gun.get('identities'), { attrs: [this.viewpoint], trustDistance: 0 });
+	    this.ready = new _Promise(async function (resolve, reject) {
+	      try {
+	        await _this._addIdentityToIndexes(vp.gun);
+	        resolve();
+	      } catch (e) {
+	        reject(e);
+	      }
+	    });
 	  }
 
-	  /**
-	  * Create a new index
-	  * @returns {Index} promise
-	  * @param {Object} storage storage, js-ipfs or js-ipfs-api object
-	  */
-
-
-	  Index.create = async function create(storage, viewpoint) {
-	    var i = new Index(storage, viewpoint);
+	  Index.create = async function create(gun, viewpoint) {
+	    var i = new Index(gun, viewpoint);
 	    await i.ready;
 	    return i;
 	  };
@@ -13309,15 +15381,16 @@
 	    return key;
 	  };
 
-	  Index.getIdentityIndexKeys = function getIdentityIndexKeys(identity, hash) {
+	  Index.getIdentityIndexKeys = async function getIdentityIndexKeys(identity, hash) {
 	    var indexKeys = [];
-	    var attrs = identity.data.attrs;
-	    for (var j = 0; j < attrs.length; j += 1) {
-	      var distance = identity.data.hasOwnProperty('trustDistance') ? identity.data.trustDistance : parseInt(attrs[j].dist);
+	    var d = await identity.get('trustDistance').once().then();
+	    var f = await identity.get('attrs').once().then();
+	    await identity.get('attrs').map().once(function (a) {
+	      var distance = d !== undefined ? d : parseInt(a.dist);
 	      distance = _Number$isNaN(distance) ? 99 : distance;
 	      distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
-	      var v = attrs[j].val || attrs[j][1];
-	      var n = attrs[j].name || attrs[j][0];
+	      var v = a.val || a[1];
+	      var n = a.name || a[0];
 	      var value = encodeURIComponent(v);
 	      var lowerCaseValue = encodeURIComponent(v.toLowerCase());
 	      var name = encodeURIComponent(n);
@@ -13346,154 +15419,8 @@
 	        var split = key.split('/');
 	        indexKeys.push(split[split.length - 1]);
 	      }
-	    }
+	    }).then();
 	    return indexKeys;
-	  };
-
-	  /**
-	  * Load an existing Identifi index from indexRoot.
-	  * @returns {Index}
-	  * @param {string} indexRoot ipfs URI of the index to load. If omitted, identi.fi indexRoot is used by default.
-	  * @param ipfs js-ipfs, js-ipfs-api, gateway URL (read-only) or array of gateway URLs (read-only). If omitted, a default list of gateway URLs is used.
-	  */
-
-
-	  Index.load = async function load(indexRoot, storage) {
-	    var i = new Index();
-	    await i._init(indexRoot, storage);
-	    return i;
-	  };
-
-	  Index.prototype._init = async function _init(indexRoot) {
-	    var storage = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DEFAULT_IPFS_PROXIES;
-	    var timeout = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : DEFAULT_TIMEOUT;
-
-	    var useDefaultIndex = false;
-	    if (typeof indexRoot === 'undefined') {
-	      useDefaultIndex = true;
-	      indexRoot = DEFAULT_INDEX;
-	    }
-	    if (typeof storage === 'string') {
-	      this.storage = new merkleBtree.IPFSGatewayStorage(storage);
-	    } else if (Array.isArray(storage)) {
-	      var url = void 0;
-	      for (var i = 0; i < storage.length; i++) {
-	        var res = void 0;
-	        var u = '' + storage[i] + indexRoot;
-	        try {
-	          res = await util.timeoutPromise(browser(u, { timeout: timeout }).catch(function () {}), timeout);
-	          if (!res) {
-	            console.log('fetching ' + u + ' timed out');
-	          }
-	        } catch (e) {
-	          console.log('fetching ' + u + ' failed:', e);
-	        }
-	        if (!(res && res.ok && res.status === 200) && useDefaultIndex) {
-	          // try static fallback
-	          u = '' + storage[i] + DEFAULT_STATIC_FALLBACK_INDEX;
-	          try {
-	            res = await util.timeoutPromise(browser(u, { timeout: timeout }).catch(function () {}), timeout);
-	            if (res) {
-	              indexRoot = DEFAULT_STATIC_FALLBACK_INDEX;
-	            } else {
-	              console.log('fetching ' + u + ' timed out');
-	            }
-	          } catch (e) {
-	            console.log('fetching ' + u + ' failed:', e);
-	          }
-	        }
-	        if (res && res.ok && res.status === 200) {
-	          url = storage[i];
-	          break;
-	        }
-	      }
-	      if (url) {
-	        this.storage = new merkleBtree.IPFSGatewayStorage(url);
-	      } else {
-	        throw 'Could not load index via given ipfs gateways';
-	      }
-	    } else if (typeof storage === 'object') {
-	      if (storage.constructor.name === 'IPFS') {
-	        this.storage = new merkleBtree.IPFSStorage(storage);
-	      } else {
-	        this.storage = storage;
-	      }
-	    } else {
-	      throw 'ipfs param must be a gateway url, array of urls or a js-ipfs object';
-	    }
-	    var root = await this.storage.get(indexRoot);
-	    var rootObj = void 0;
-	    try {
-	      rootObj = JSON.parse(root);
-	    } catch (e) {
-	      console.log('Old format index root');
-	    }
-	    if (rootObj) {
-	      this.identitiesByTrustDistance = await merkleBtree.MerkleBTree.getByHash(rootObj.identitiesByTrustDistance, this.storage, IPFS_INDEX_WIDTH);
-	      this.identitiesBySearchKey = await merkleBtree.MerkleBTree.getByHash(rootObj.identitiesBySearchKey, this.storage, IPFS_INDEX_WIDTH);
-	      this.messagesByTimestamp = await merkleBtree.MerkleBTree.getByHash(rootObj.messagesByTimestamp, this.storage, IPFS_INDEX_WIDTH);
-	      this.messagesByDistance = await merkleBtree.MerkleBTree.getByHash(rootObj.messagesByDistance, this.storage, IPFS_INDEX_WIDTH);
-	      this.viewpoint = rootObj.viewpoint;
-	    } else {
-	      this.identitiesByTrustDistance = await merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_distance', this.storage, IPFS_INDEX_WIDTH);
-	      this.identitiesBySearchKey = await merkleBtree.MerkleBTree.getByHash(indexRoot + '/identities_by_searchkey', this.storage, IPFS_INDEX_WIDTH);
-	      this.messagesByTimestamp = await merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_timestamp', this.storage, IPFS_INDEX_WIDTH);
-	      this.messagesByDistance = await merkleBtree.MerkleBTree.getByHash(indexRoot + '/messages_by_distance', this.storage, IPFS_INDEX_WIDTH);
-	    }
-	    if (!this.viewpoint) {
-	      var vp = await this.getViewpoint();
-	      this.viewpoint = vp.mostVerifiedAttributes.keyID.attribute.val;
-	    }
-	    return true;
-	  };
-
-	  /**
-	  * (Re-)save the index root
-	  * @returns {string} URI of the saved index root
-	  */
-
-
-	  Index.prototype.save = async function save() {
-	    if (this.storage.put) {
-	      try {
-	        var root = { viewpoint: this.viewpoint };
-	        // TODO: convert merkle-btrees to ipfsstorage
-	        root.messagesByDistance = await this.storage.put(this.messagesByDistance.rootNode.serialize());
-	        root.messagesByTimestamp = await this.storage.put(this.messagesByTimestamp.rootNode.serialize());
-	        root.identitiesBySearchKey = await this.storage.put(this.identitiesBySearchKey.rootNode.serialize());
-	        root.identitiesByTrustDistance = await this.storage.put(this.identitiesByTrustDistance.rootNode.serialize());
-	        var rootHash = await this.storage.put(_JSON$stringify(root));
-	        /*
-	        if (this.storage.ipfs.name) {
-	          console.log(`publishing index`, rootHash);
-	          const n = await this.storage.ipfs.name.publish(rootHash, {});
-	          console.log(`published index`, n);
-	        }
-	        */
-	        return rootHash;
-	      } catch (e) {
-	        console.log('error saving index', e);
-	      }
-	    } else {
-	      console.log('storage', this.storage.constructor.name, 'has no .put(), not saving');
-	    }
-	  };
-
-	  Index.prototype._setSentRcvdIndexes = async function _setSentRcvdIndexes(id) {
-	    if (!id.sentIndex) {
-	      if (id.data.sent) {
-	        id.sentIndex = await merkleBtree.MerkleBTree.getByHash(id.data.sent, this.storage, IPFS_INDEX_WIDTH);
-	      } else {
-	        id.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-	      }
-	    }
-	    if (!id.receivedIndex) {
-	      if (id.data.received) {
-	        id.receivedIndex = await merkleBtree.MerkleBTree.getByHash(id.data.received, this.storage, IPFS_INDEX_WIDTH);
-	      } else {
-	        id.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-	      }
-	    }
 	  };
 
 	  /**
@@ -13502,12 +15429,9 @@
 
 
 	  Index.prototype.getViewpoint = async function getViewpoint() {
-	    var r = await this.identitiesByTrustDistance.searchText('00', 1);
+	    var r = await searchText(this.gun.get('identitiesByTrustDistance'), '00', 1);
 	    if (r.length) {
-	      var p = await this.storage.get(r[0].value);
-	      var vp = new Identity(JSON.parse(p));
-	      await this._setSentRcvdIndexes(vp);
-	      return vp;
+	      return new Identity(this.gun.get('identitiesByTrustDistance').get(r[0].key));
 	    }
 	  };
 
@@ -13526,78 +15450,33 @@
 	    if (typeof type === 'undefined') {
 	      type = Attribute.guessTypeOf(value);
 	    }
-
-	    var profileUri = await this.identitiesBySearchKey.get(encodeURIComponent(value) + ':' + encodeURIComponent(type));
-	    if (profileUri) {
-	      var p = await this.storage.get(profileUri);
-	      var id = new Identity(JSON.parse(p));
-	      id.ipfsHash = profileUri;
-	      await this._setSentRcvdIndexes(id);
-	      return id;
+	    var key = encodeURIComponent(value) + ':' + encodeURIComponent(type);
+	    var found = await this.gun.get('identitiesBySearchKey').get(key).once().then();
+	    if (!found) {
+	      return undefined;
 	    }
+	    return new Identity(this.gun.get('identitiesBySearchKey').get(key));
 	  };
 
 	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, limit, cursor) {
-	    var rawMsgs = await msgIndex.searchText('', limit, cursor, true);
+	    var rawMsgs = await searchText(msgIndex, '', limit, cursor, true);
 	    var msgs = [];
 	    rawMsgs.forEach(function (row) {
-	      var msg = Message.fromJws(row.value.jws);
-	      msg.cursor = row.key;
-	      msg.authorPos = row.value.author_pos;
-	      msg.authorNeg = row.value.author_neg;
-	      msg.recipientPos = row.value.recipient_pos;
-	      msg.recipientNeg = row.value.recipient_neg;
-	      msg.authorTrustDistance = row.value.distance;
-	      msg.authorName = row.value.author_name;
-	      msg.recipientName = row.value.recipient_name;
+	      var msg = Message.fromJws(row.value);
 	      msgs.push(msg);
 	    });
 	    return msgs;
 	  };
 
-	  Index.prototype._saveIdentityToIpfs = async function _saveIdentityToIpfs(id) {
-	    var hash = await this.storage.put(_JSON$stringify(id.data));
-	    id.ipfsHash = hash;
-	    return hash;
-	  };
-
-	  Index.prototype._removeIdentityFromIndexes = async function _removeIdentityFromIndexes(id) {
-	    var hash = id.ipfsHash;
-	    if (!hash) {
-	      hash = await this._saveIdentityToIpfs(id);
-	    }
-	    var indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
-	    for (var i = 0; i < indexKeys.length; i++) {
-	      var key = indexKeys[i];
-	      console.log('deleting key ' + key);
-	      await this.identitiesByTrustDistance.delete(key);
-	      await this.identitiesBySearchKey.delete(key.substr(key.indexOf(':') + 1));
-	    }
-	  };
-
 	  Index.prototype._addIdentityToIndexes = async function _addIdentityToIndexes(id) {
-	    if (!this.storage.put) {
-	      console.log('no this.storage.put()');
-	      return;
-	    }
-	    if (id.sentIndex && id.receivedIndex) {
-	      if (id.sentIndex.rootNode.hash && id.receivedIndex.rootNode.hash) {
-	        id.data.sent = id.sentIndex.rootNode.hash;
-	        id.data.received = id.receivedIndex.rootNode.hash;
-	      } else {
-	        id.data.sent = await this.storage.put(id.sentIndex.rootNode.serialize());
-	        id.data.received = await this.storage.put(id.receivedIndex.rootNode.serialize());
-	      }
-	    }
-	    var hash = await this._saveIdentityToIpfs(id);
-	    var indexKeys = Index.getIdentityIndexKeys(id, hash.substr(2));
+	    var hash = gun_min.node.soul(id) || 'todo';
+	    var indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(0, 6));
 	    for (var i = 0; i < indexKeys.length; i++) {
 	      var key = indexKeys[i];
 	      console.log('adding key ' + key);
-	      await this.identitiesByTrustDistance.put(key, hash);
-	      await this.identitiesBySearchKey.put(key.substr(key.indexOf(':') + 1), hash);
+	      await this.gun.get('identitiesByTrustDistance').get(key).put(id).then();
+	      await this.gun.get('identitiesBySearchKey').get(key.substr(key.indexOf(':') + 1)).put(id).then();
 	    }
-	    return { hash: hash };
 	  };
 
 	  /**
@@ -13608,10 +15487,7 @@
 	  Index.prototype.getSentMsgs = async function getSentMsgs(identity, limit) {
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    if (!identity.sentIndex) {
-	      identity.sentIndex = await merkleBtree.MerkleBTree.getByHash(identity.data.sent, this.storage, IPFS_INDEX_WIDTH);
-	    }
-	    return this._getMsgs(identity.sentIndex, limit, cursor);
+	    return this._getMsgs(identity.gun.get('sent'), limit, cursor);
 	  };
 
 	  /**
@@ -13622,10 +15498,7 @@
 	  Index.prototype.getReceivedMsgs = async function getReceivedMsgs(identity, limit) {
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    if (!identity.receivedIndex) {
-	      identity.receivedIndex = await merkleBtree.MerkleBTree.getByHash(identity.data.received, this.storage, IPFS_INDEX_WIDTH);
-	    }
-	    return this._getMsgs(identity.receivedIndex, limit, cursor);
+	    return this._getMsgs(identity.gun.get('received'), limit, cursor);
 	  };
 
 	  Index.prototype._getAttributeTrustDistance = async function _getAttributeTrustDistance(a) {
@@ -13633,7 +15506,7 @@
 	      return;
 	    }
 	    var id = await this.get(a.val, a.name);
-	    return id && id.data && id.data.trustDistance;
+	    return id && id.gun.get('trustDistance').once().then();
 	  };
 
 	  /**
@@ -13643,7 +15516,7 @@
 
 
 	  Index.prototype.getMsgTrustDistance = async function getMsgTrustDistance(msg) {
-	    var shortestDistance = 1000;
+	    var shortestDistance = Infinity;
 	    var signer = await this.get(msg.getSignerKeyID(), 'keyID');
 	    if (!signer) {
 	      return;
@@ -13659,19 +15532,97 @@
 	        }
 	      }
 	    }
-	    return shortestDistance < 1000 ? shortestDistance : undefined;
+	    return shortestDistance < Infinity ? shortestDistance : undefined;
+	  };
+
+	  Index.prototype._updateMsgRecipientIdentity = async function _updateMsgRecipientIdentity(msg, msgIndexKey, recipient) {
+	    var hash = 'todo';
+	    var identityIndexKeysBefore = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
+	    var attrs = await new _Promise(function (resolve) {
+	      recipient.get('attrs').load(function (r) {
+	        return resolve(r);
+	      });
+	    });
+	    if (msg.signedData.type === 'verification') {
+	      msg.signedData.recipient.forEach(function (a1) {
+	        var hasAttr = false;
+	        _Object$keys(attrs).forEach(function (k) {
+	          if (Attribute.equals(a1, attrs[k])) {
+	            attrs[k].conf = (attrs[k].conf || 0) + 1;
+	            hasAttr = true;
+	          }
+	        });
+	        if (!hasAttr) {
+	          attrs[encodeURIComponent(a1[0]) + ':' + encodeURIComponent(a1[1])] = { name: a1[0], val: a1[1], conf: 1, ref: 0 };
+	        }
+	      });
+	      await recipient.get('mostVerifiedAttributes').put(Identity.getMostVerifiedAttributes(attrs));
+	      await recipient.get('attrs').put(attrs);
+	    }
+	    if (msg.signedData.type === 'rating') {
+	      var id = await recipient.once().then();
+	      if (msg.isPositive()) {
+	        if (msg.distance + 1 < id.trustDistance) {
+	          recipient.get('trustDistance').put(msg.distance + 1);
+	        }
+	        await recipient.get('receivedPositive').put(id.receivedPositive + 1);
+	      } else if (msg.isNegative()) {
+	        await recipient.get('receivedNegative').put(id.receivedNegative + 1);
+	      } else {
+	        await recipient.get('receivedNeutral').put(id.receivedNeutral + 1);
+	      }
+	    }
+	    await recipient.get('received').get(msgIndexKey).put(msg.jws).then();
+	    var identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
+	    for (var j = 0; j < identityIndexKeysBefore.length; j++) {
+	      var k = identityIndexKeysBefore[j];
+	      if (identityIndexKeysAfter.indexOf(k) === -1) {
+	        await this.gun.get('identitiesByTrustDistance').get(k).put(null);
+	        await this.gun.get('identitiesBySearchKey').get(k.substr(k.indexOf(':') + 1)).put(null);
+	      }
+	    }
+	  };
+
+	  Index.prototype._updateMsgAuthorIdentity = async function _updateMsgAuthorIdentity(msg, msgIndexKey, author) {
+	    if (msg.signedData.type === 'rating') {
+	      var id = await author.once().then();
+	      if (msg.isPositive()) {
+	        await author.get('sentPositive').put(id.sentPositive + 1);
+	      } else if (msg.isNegative()) {
+	        await author.get('sentNegative').put(id.sentNegative + 1);
+	      } else {
+	        await author.get('sentNeutral').put(id.sentNeutral + 1);
+	      }
+	    }
+	    return author.get('sent').get(msgIndexKey).put(msg.jws).then();
+	  };
+
+	  Index.prototype._updateIdentityProfilesByMsg = async function _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
+	    var msgIndexKey = Index.getMsgIndexKey(msg);
+	    msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(':') + 1);
+	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
+	    for (var i = 0; i < ids.length; i++) {
+	      // add new identifiers to identity
+	      if (recipientIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
+	        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
+	      }
+	      if (authorIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
+	        await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
+	      }
+	      var s = await ids[i].gun.load().then();
+	      await this._addIdentityToIndexes(ids[i].gun);
+	    }
 	  };
 
 	  Index.prototype._updateIdentityIndexesByMsg = async function _updateIdentityIndexesByMsg(msg) {
-	    var _this2 = this;
-
 	    var recipientIdentities = {};
 	    var authorIdentities = {};
 	    for (var i = 0; i < msg.signedData.author.length; i++) {
 	      var a = msg.signedData.author[i];
 	      var id = await this.get(a[1], a[0]);
 	      if (id) {
-	        authorIdentities[id.ipfsHash] = id;
+
+	        authorIdentities[id.gun['_'].link] = id;
 	      }
 	    }
 	    if (!_Object$keys(authorIdentities).length) {
@@ -13681,7 +15632,7 @@
 	      var _a = msg.signedData.recipient[_i];
 	      var _id = await this.get(_a[1], _a[0]);
 	      if (_id) {
-	        recipientIdentities[_id.ipfsHash] = _id;
+	        recipientIdentities[_id.gun['_'].link] = _id;
 	      }
 	    }
 	    if (!_Object$keys(recipientIdentities).length) {
@@ -13690,68 +15641,11 @@
 	      msg.signedData.recipient.forEach(function (a) {
 	        attrs.push({ name: a[0], val: a[1], conf: 1, ref: 0 });
 	      });
-	      var _id2 = new Identity({ attrs: attrs });
-	      _id2.sentIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
-	      _id2.receivedIndex = new merkleBtree.MerkleBTree(this.storage, IPFS_INDEX_WIDTH);
+	      var _id2 = Identity.create(this.gun.get('identities'), { attrs: attrs });
 	      // TODO: take msg author trust into account
-	      await this._saveIdentityToIpfs(_id2);
-	      recipientIdentities[_id2.ipfsHash] = _id2;
+	      recipientIdentities[_id2.gun['_'].link] = _id2;
 	    }
-	    var msgIndexKey = Index.getMsgIndexKey(msg);
-	    msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(':') + 1);
-	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
-
-	    var _loop = async function _loop(_i2) {
-	      // add new identifiers to identity
-	      var id = ids[_i2];
-	      await _this2._removeIdentityFromIndexes(id);
-	      if (recipientIdentities.hasOwnProperty(id.ipfsHash)) {
-	        msg.signedData.recipient.forEach(function (a1) {
-	          var hasAttr = false;
-	          for (var j = 0; j < id.data.attrs.length; j++) {
-	            if (Attribute.equals(a1, id.data.attrs[j])) {
-	              id.data.attrs[j].conf |= 0;
-	              id.data.attrs[j].conf += 1;
-	              hasAttr = true;
-	              break;
-	            }
-	          }
-	          if (!hasAttr) {
-	            id.data.attrs.push({ name: a1[0], val: a1[1], conf: 1, ref: 0 });
-	          }
-	        });
-	        if (msg.signedData.type === 'rating') {
-	          if (msg.isPositive()) {
-	            if (msg.distance + 1 < id.data.trustDistance) {
-	              id.data.trustDistance = msg.distance + 1;
-	            }
-	            id.data.receivedPositive++;
-	          } else if (msg.isNegative()) {
-	            id.data.receivedNegative++;
-	          } else {
-	            id.data.receivedNeutral++;
-	          }
-	        }
-	        await id.receivedIndex.put(msgIndexKey, msg);
-	      }
-	      if (authorIdentities.hasOwnProperty(id.ipfsHash)) {
-	        if (msg.signedData.type === 'rating') {
-	          if (msg.isPositive()) {
-	            id.data.sentPositive++;
-	          } else if (msg.isNegative()) {
-	            id.data.sentNegative++;
-	          } else {
-	            id.data.sentNeutral++;
-	          }
-	        }
-	        await id.sentIndex.put(msgIndexKey, msg);
-	      }
-	      await _this2._addIdentityToIndexes(id);
-	    };
-
-	    for (var _i2 = 0; _i2 < ids.length; _i2++) {
-	      await _loop(_i2);
-	    }
+	    return this._updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities);
 	  };
 
 	  /**
@@ -13762,62 +15656,62 @@
 	  * Iteratively performs sorted merge joins on [previously known identities] and
 	  * [new msgs authors], until all messages from within the WoT have been added.
 	  *
-	  * @param {MerkleBTree | Array} msgs can be either a merkle-btree or an array of messages.
+	  * @param {Array} msgs can be either a merkle-btree or an array of messages.
 	  * @returns {boolean} true on success
 	  */
 
 
 	  Index.prototype.addMessages = async function addMessages(msgs) {
-	    var msgsByAuthor = void 0;
+	    var msgsByAuthor = {};
 	    if (Array.isArray(msgs)) {
 	      console.log('sorting ' + msgs.length + ' messages onto a search tree...');
-	      msgsByAuthor = new merkleBtree.MerkleBTree(new merkleBtree.RAMStorage(), 1000);
 	      for (var i = 0; i < msgs.length; i++) {
 	        for (var j = 0; j < msgs[i].signedData.author.length; j++) {
 	          var id = msgs[i].signedData.author[j];
 	          if (Attribute.isUniqueType(id[0])) {
 	            var key = encodeURIComponent(id[1]) + ':' + encodeURIComponent(id[0]) + ':' + msgs[i].getHash();
-	            await msgsByAuthor.put(key, msgs[i]);
+	            msgsByAuthor[key] = msgs[i];
 	          }
 	        }
 	      }
 	      console.log('...done');
-	    } else if (msgs instanceof merkleBtree.MerkleBTree) {
-	      msgsByAuthor = msgs;
 	    } else {
-	      throw 'msgs param must be an array or MerkleBTree';
+	      throw 'msgs param must be an array';
+	    }
+	    var msgAuthors = _Object$keys(msgsByAuthor).sort();
+	    if (!msgAuthors.length) {
+	      return;
 	    }
 	    var initialMsgCount = void 0,
 	        msgCountAfterwards = void 0;
 	    do {
-	      initialMsgCount = await msgsByAuthor.size();
-	      var leftCursor = void 0,
-	          rightCursor = void 0;
-	      var leftRes = await this.identitiesBySearchKey.searchText('', 1, leftCursor);
-	      var rightRes = await msgsByAuthor.searchText('', 1, rightCursor);
+	      var knownIdentities = await searchText(this.gun.get('identitiesBySearchKey'), '');
+	      var _i2 = 0;
+	      var author = msgAuthors[_i2];
+	      var knownIdentity = knownIdentities.shift();
+	      initialMsgCount = msgAuthors.length;
 	      // sort-merge join identitiesBySearchKey and msgsByAuthor
-	      while (leftRes.length && rightRes.length) {
-	        leftCursor = leftRes[0].key;
-	        rightCursor = rightRes[0].key;
-	        if (rightRes[0].key.indexOf(leftRes[0].key) === 0) {
-	          console.log('adding msg by', rightRes[0].key);
+	      while (author && knownIdentity) {
+	        console.log(author, knownIdentity.key, author.indexOf(knownIdentity.key) === 0);
+	        if (author.indexOf(knownIdentity.key) === 0) {
+	          console.log('adding msg by', knownIdentity.key);
 	          try {
-	            var m = Message.fromJws(rightRes[0].value.jws);
+	            var m = Message.fromJws(msgsByAuthor[author].jws);
 	            await this.addMessage(m);
 	          } catch (e) {
-	            var _m = Message.fromJws(rightRes[0].value.jws);
+	            var _m = Message.fromJws(msgsByAuthor[author].jws);
 	            console.log('adding failed:', e, _JSON$stringify(_m, null, 2));
 	          }
-	          await msgsByAuthor.delete(rightCursor);
-	          leftRes = await this.identitiesBySearchKey.searchText('', 1, leftCursor);
-	          rightRes = await msgsByAuthor.searchText('', 1, rightCursor);
-	        } else if (leftRes[0].key < rightRes[0].key) {
-	          leftRes = await this.identitiesBySearchKey.searchText('', 1, leftCursor);
+	          msgAuthors.splice(_i2, 1);
+	          author = _i2 < msgAuthors.length ? msgAuthors[_i2] : undefined;
+	          //knownIdentity = knownIdentities.shift();
+	        } else if (author < knownIdentity.key) {
+	          author = _i2 < msgAuthors.length ? msgAuthors[++_i2] : undefined;
 	        } else {
-	          rightRes = await msgsByAuthor.searchText('', 1, rightCursor);
+	          knownIdentity = knownIdentities.shift();
 	        }
 	      }
-	      msgCountAfterwards = await msgsByAuthor.size();
+	      msgCountAfterwards = msgAuthors.length;
 	    } while (msgCountAfterwards !== initialMsgCount);
 	    return true;
 	  };
@@ -13829,55 +15723,16 @@
 
 
 	  Index.prototype.addMessage = async function addMessage(msg) {
-	    var updateIdentityIndexes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
-	    if (this.storage.put) {
-	      msg.distance = await this.getMsgTrustDistance(msg);
-	      if (msg.distance === undefined) {
-	        return; // do not save messages from untrusted author
-	      }
-	      var indexKey = Index.getMsgIndexKey(msg);
-	      await this.messagesByDistance.put(indexKey, msg);
-	      indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
-	      var h = await this.messagesByTimestamp.put(indexKey, msg);
-	      if (updateIdentityIndexes) {
-	        await this._updateIdentityIndexesByMsg(msg);
-	      }
-	      // save() ?
-	      return h;
+	    msg.distance = await this.getMsgTrustDistance(msg);
+	    if (msg.distance === undefined) {
+	      return false; // do not save messages from untrusted author
 	    }
-	  };
-
-	  /**
-	  * Save message to ipfs and announce it on ipfs pubsub
-	  */
-
-
-	  Index.prototype.publishMessage = async function publishMessage(msg) {
-	    var addToIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
-	    var r = {};
-	    if (this.storage.ipfs) {
-	      var hash = await this.storage.ipfs.files.add(new Buffer(msg.jws, 'utf8'));
-	      r.hash = hash;
-	      await this.storage.ipfs.pubsub.publish('identifi', new Buffer(hash, 'utf8'));
-	      if (addToIndex) {
-	        r.indexUri = await this.addMessage(msg);
-	      }
-	    } else {
-	      // No IPFS, post to identi.fi
-	      var body = _JSON$stringify({ jws: msg.jws, hash: msg.getHash() });
-	      var res = await browser('https://identi.fi/api/messages', {
-	        method: 'POST',
-	        headers: { 'Content-Type': 'application/json' },
-	        body: body
-	      });
-	      if (res.status && res.status === 201) {
-	        var t = JSON.parse((await res.text()));
-	        r.hash = t.ipfs_hash;
-	      }
-	    }
-	    return r;
+	    var indexKey = Index.getMsgIndexKey(msg);
+	    await this.gun.get('messagesByDistance').get(indexKey).put(msg.jws).then();
+	    indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
+	    await this.gun.get('messagesByTimestamp').get(indexKey).put(msg.jws).then();
+	    await this._updateIdentityIndexesByMsg(msg);
+	    return true;
 	  };
 
 	  /**
@@ -13887,41 +15742,30 @@
 	  */
 
 
-	  Index.prototype.search = async function search(value, type) {
-	    var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
-	    var cursor = arguments[3];
-	    var depth = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 20;
-	    // TODO: param 'exact'
-	    var identitiesByHash = {};
-	    var initialDepth = cursor ? _Number$parseInt(cursor.substring(0, cursor.indexOf(':'))) : 0;
-	    for (var d = initialDepth; d <= depth; d++) {
-	      var useCursor = d === initialDepth;
-	      var paddedDistance = ('00' + d).substring(d.toString().length);
-	      var r = await this.identitiesByTrustDistance.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, useCursor ? cursor : undefined);
-	      while (r && r.length && _Object$keys(identitiesByHash).length < limit) {
-	        for (var i = 0; i < r.length && _Object$keys(identitiesByHash).length < limit; i++) {
-	          if (r[i].value && !identitiesByHash.hasOwnProperty(r[i].value)) {
-	            try {
-	              var _d = JSON.parse((await this.storage.get(r[i].value)));
-	              var id = new Identity(_d);
-	              id.ipfsHash = r[i].value;
-	              id.cursor = r[i].key;
-	              identitiesByHash[r[i].value] = id;
-	            } catch (e) {
-	              console.error(e);
-	            }
-	          }
+	  Index.prototype.search = async function search(value) {
+	    var _this2 = this;
+
+	    // TODO: param 'exact', type param
+	    var r = {};
+	    return new _Promise(function (resolve) {
+	      _this2.gun.get('identitiesByTrustDistance').map(function (id, key) {
+	        if (key.indexOf(encodeURIComponent(value)) === -1) {
+	          return;
 	        }
-	        r = await this.identitiesBySearchKey.searchText(paddedDistance + ':' + encodeURIComponent(value), limit, r[r.length - 1].key);
-	      }
-	    }
-	    return _Object$values(identitiesByHash);
+	        if (!r.hasOwnProperty(gun_min.node.soul(id))) {
+	          r[gun_min.node.soul(id)] = new Identity(id);
+	        }
+	      });
+	      setTimeout(function () {
+	        resolve(_Object$values(r));
+	      }, 200);
+	    });
 	  };
 
 	  return Index;
 	}();
 
-	var version$2 = "0.0.62";
+	var version$2 = "0.0.63";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

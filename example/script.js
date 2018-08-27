@@ -1,6 +1,6 @@
 let index, msg, key;
 
-const loadIdentifi = window.identifiLib.Index.load(); // <--- Load identifi index
+const loadIdentifi = window.identifiLib.Index.create(); // <--- Create identifi index
 
 loadIdentifi.then(async (index_) => {
   index = index_;
