@@ -7,7 +7,7 @@ let key = identifi.Key.getDefault();
 //let ipfsNode = new IPFS({repo: './ipfs_repo'});
 const gun = new GUN({radisk: false});
 
-jest.setTimeout(5000);
+jest.setTimeout(15000);
 
 function shuffle(array) {
   let currentIndex = array.length, temporaryValue, randomIndex;

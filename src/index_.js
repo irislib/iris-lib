@@ -17,7 +17,7 @@ async function searchText(node, query, limit, cursor) {
           return -1;
         }
         if (a.key > b.key) {
-          return
+          return 1;
         }
         return 0;
       });
@@ -163,17 +163,9 @@ class Index {
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`adding key ${key}`);
-      console.log(11111111, JSON.stringify(id));
       await this.gun.get(`identitiesByTrustDistance`).get(key).put(id).then();
       await this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id).then();
-      if (key.indexOf('bob1%40example.com:email') !== -1) {
-        console.log(1414, key.substr(key.indexOf(`:`) + 1));
-      }
       const c = await this.gun.get(`identitiesBySearchKey`).then();
-      console.log(1515, c);
-      if (key.indexOf('bob1%40example.com:email') !== -1) {
-        console.log(1515, c);
-      }
     }
   }
 
@@ -365,8 +357,8 @@ class Index {
     let initialMsgCount, msgCountAfterwards;
     const index = this.gun.get(`identitiesBySearchKey`);
     do {
-      console.log(`do`);
       let knownIdentities = await searchText(index, ``);
+      console.log(knownIdentities);
       let i = 0;
       let author = msgAuthors[i];
       let knownIdentity = knownIdentities.shift();
@@ -375,7 +367,6 @@ class Index {
       while (author && knownIdentity) {
         console.log(author, knownIdentity.key, author.indexOf(knownIdentity.key) === 0);
         if (author.indexOf(knownIdentity.key) === 0) {
-          console.log(`adding msg by`, knownIdentity.key);
           try {
             const m = Message.fromJws(msgsByAuthor[author].jws);
             await this.addMessage(m);
