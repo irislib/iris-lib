@@ -1,6 +1,5 @@
 import {MessageDigest} from 'jsrsasign';
 import Identicon from 'identicon.js';
-import Attribute from './attribute';
 
 /**
 * An Identifi identity profile. Usually you don't create them yourself, but get them
@@ -29,7 +28,7 @@ class Identity {
       data.attrs = attrs;
     }
     data.mostVerifiedAttributes = Identity.getMostVerifiedAttributes(data.attrs);
-    let bestVerificationScore = -1;
+    let bestVerificationScore = - 1;
     Object.keys(data.mostVerifiedAttributes).forEach(k => {
       const v = data.mostVerifiedAttributes[k];
       if (v.verificationScore > bestVerificationScore) {

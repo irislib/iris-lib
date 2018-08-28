@@ -1,4 +1,3 @@
-import btree from 'merkle-btree';
 import Message from './message';
 import Key from './key';
 import Identity from './identity';
@@ -9,12 +8,12 @@ import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 
 // temp method for GUN search
 async function searchText(node, query, limit, cursor) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const r = [];
     function sortAndResolve() {
       r.sort((a, b) => {
         if (a.key < b.key) {
-          return -1;
+          return - 1;
         }
         if (a.key > b.key) {
           return 1;
@@ -33,7 +32,7 @@ async function searchText(node, query, limit, cursor) {
         }
       }
     });
-    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve() }, 300);
+    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve(); }, 300);
   });
 }
 
@@ -78,7 +77,6 @@ class Index {
   static async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
     const d = await identity.get(`trustDistance`).once().then();
-    const f = await identity.get(`attrs`).once().then();
     await identity.get(`attrs`).map().once(a => {
       let distance = d !== undefined ? d : parseInt(a.dist);
       distance = Number.isNaN(distance) ? 99 : distance;
@@ -158,14 +156,13 @@ class Index {
   }
 
   async _addIdentityToIndexes(id) {
-    const hash = Gun.node.soul(id) || 'todo';
+    const hash = Gun.node.soul(id) || `todo`;
     const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(0, 6));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`adding key ${key}`);
       await this.gun.get(`identitiesByTrustDistance`).get(key).put(id).then();
       await this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id).then();
-      const c = await this.gun.get(`identitiesBySearchKey`).then();
     }
   }
 
@@ -229,7 +226,7 @@ class Index {
           }
         });
         if (!hasAttr) {
-          attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0}
+          attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0};
         }
       });
       await recipient.get(`mostVerifiedAttributes`).put(Identity.getMostVerifiedAttributes(attrs));
@@ -252,7 +249,7 @@ class Index {
     const identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     for (let j = 0;j < identityIndexKeysBefore.length;j ++) {
       const k = identityIndexKeysBefore[j];
-      if (identityIndexKeysAfter.indexOf(k) === -1) {
+      if (identityIndexKeysAfter.indexOf(k) === - 1) {
         await this.gun.get(`identitiesByTrustDistance`).get(k).put(null);
         await this.gun.get(`identitiesBySearchKey`).get(k.substr(k.indexOf(`:`) + 1)).put(null);
       }
@@ -278,13 +275,12 @@ class Index {
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
-      if (recipientIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
+      if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
       }
-      if (authorIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
+      if (authorIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
       }
-      const s = await ids[i].gun.load().then();
       await this._addIdentityToIndexes(ids[i].gun);
     }
   }
@@ -297,7 +293,7 @@ class Index {
       const id = await this.get(a[1], a[0]);
       if (id) {
 
-        authorIdentities[id.gun['_'].link] = id;
+        authorIdentities[id.gun[`_`].link] = id;
       }
     }
     if (!Object.keys(authorIdentities).length) {
@@ -307,7 +303,7 @@ class Index {
       const a = msg.signedData.recipient[i];
       const id = await this.get(a[1], a[0]);
       if (id) {
-        recipientIdentities[id.gun['_'].link] = id;
+        recipientIdentities[id.gun[`_`].link] = id;
       }
     }
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
@@ -317,7 +313,7 @@ class Index {
       });
       const id = Identity.create(this.gun.get(`identities`), {attrs});
       // TODO: take msg author trust into account
-      recipientIdentities[id.gun['_'].link] = id;
+      recipientIdentities[id.gun[`_`].link] = id;
     }
     return this._updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities);
   }
@@ -330,7 +326,7 @@ class Index {
   * Iteratively performs sorted merge joins on [previously known identities] and
   * [new msgs authors], until all messages from within the WoT have been added.
   *
-  * @param {Array} msgs can be either a merkle-btree or an array of messages.
+  * @param {Array} msgs an array of messages.
   * @returns {boolean} true on success
   */
   async addMessages(msgs) {
@@ -357,15 +353,13 @@ class Index {
     let initialMsgCount, msgCountAfterwards;
     const index = this.gun.get(`identitiesBySearchKey`);
     do {
-      let knownIdentities = await searchText(index, ``);
-      console.log(knownIdentities);
+      const knownIdentities = await searchText(index, ``);
       let i = 0;
       let author = msgAuthors[i];
       let knownIdentity = knownIdentities.shift();
       initialMsgCount = msgAuthors.length;
       // sort-merge join identitiesBySearchKey and msgsByAuthor
       while (author && knownIdentity) {
-        console.log(author, knownIdentity.key, author.indexOf(knownIdentity.key) === 0);
         if (author.indexOf(knownIdentity.key) === 0) {
           try {
             const m = Message.fromJws(msgsByAuthor[author].jws);
