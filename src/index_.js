@@ -163,6 +163,7 @@ class Index {
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`adding key ${key}`);
+      console.log(11111111, JSON.stringify(id));
       await this.gun.get(`identitiesByTrustDistance`).get(key).put(id).then();
       await this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id).then();
       if (key.indexOf('bob1%40example.com:email') !== -1) {
