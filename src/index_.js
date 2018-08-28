@@ -76,7 +76,7 @@ class Index {
 
   static async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
-    const d = await identity.get(`trustDistance`).once().then();
+    const d = await identity.get(`trustDistance`).then();
     await identity.get(`attrs`).map().once(a => {
       let distance = d !== undefined ? d : parseInt(a.dist);
       distance = Number.isNaN(distance) ? 99 : distance;
@@ -138,7 +138,7 @@ class Index {
       type = Attribute.guessTypeOf(value);
     }
     const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
-    const found = await this.gun.get(`identitiesBySearchKey`).get(key).once().then();
+    const found = await this.gun.get(`identitiesBySearchKey`).get(key).then();
     if (!found) {
       return undefined;
     }
@@ -185,7 +185,7 @@ class Index {
       return;
     }
     const id = await this.get(a.val, a.name);
-    return id && id.gun.get(`trustDistance`).once().then();
+    return id && id.gun.get(`trustDistance`).then();
   }
 
   /**
@@ -233,7 +233,7 @@ class Index {
       await recipient.get(`attrs`).put(attrs);
     }
     if (msg.signedData.type === `rating`) {
-      const id = await recipient.once().then();
+      const id = await recipient.then();
       if (msg.isPositive()) {
         if (msg.distance + 1 < id.trustDistance) {
           recipient.get(`trustDistance`).put(msg.distance + 1);
@@ -258,7 +258,7 @@ class Index {
 
   async _updateMsgAuthorIdentity(msg, msgIndexKey, author) {
     if (msg.signedData.type === `rating`) {
-      const id = await author.once().then();
+      const id = await author.then();
       if (msg.isPositive()) {
         await author.get(`sentPositive`).put(id.sentPositive + 1);
       } else if (msg.isNegative()) {
@@ -412,7 +412,7 @@ class Index {
           return;
         }
         if (!r.hasOwnProperty(Gun.node.soul(id))) {
-          r[Gun.node.soul(id)] = new Identity(id);
+          r[Gun.node.soul(id)] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
         }
       });
       setTimeout(() => { resolve(Object.values(r)); }, 200);

@@ -81,19 +81,26 @@ class Identity {
     details.style.padding = `5px`;
     details.style.order = 2;
     details.style.flexGrow = 1;
-    const link = `https://identi.fi/#/identities/${this.linkTo.name}/${this.linkTo.val}`;
-    details.innerHTML = `<a href="${link}">${this.profile.name || this.profile.nickname || `${this.linkTo.name}:${this.linkTo.val}`}</a><br>`;
-    details.innerHTML += `<small>Received: <span class="identifi-pos">+${this.data.receivedPositive || 0}</span> / <span class="identifi-neg">-${this.data.receivedNegative || 0}</span></small><br>`;
-    const links = document.createElement(`small`);
-    this.data.attrs.forEach(a => {
-      if (a.link) {
-        links.innerHTML += `${a.name}: <a href="${a.link}">${a.val}</a> `;
-      }
-    });
-    details.appendChild(links);
 
     card.appendChild(identicon);
     card.appendChild(details);
+
+    this.gun.on(data => {
+      const link = `https://identi.fi/#/identities/${data.linkTo.name}/${data.linkTo.val}`;
+      const mva = Identity.getMostVerifiedAttributes(data.attrs);
+      details.innerHTML = `<a href="${link}">${mva.name || mva.nickname || `${data.linkTo.name}:${data.linkTo.val}`}</a><br>`;
+      details.innerHTML += `<small>Received: <span class="identifi-pos">+${data.receivedPositive || 0}</span> / <span class="identifi-neg">-${data.receivedNegative || 0}</span></small><br>`;
+      const links = document.createElement(`small`);
+      details.appendChild(links);
+      Object.keys(data.attrs).forEach(k => {
+        const a = data.attrs[k];
+        if (a.link) {
+          links.innerHTML += `${a.name}: <a href="${a.link}">${a.val}</a> `;
+        }
+      });
+
+    });
+
     /*
     const template = ```
     <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
@@ -269,56 +276,63 @@ class Identity {
     identicon.style.width = `${width}px`;
     identicon.style.height = `${width}px`;
 
-    // Define colors etc
-    let bgColor = `rgba(0,0,0,0.2)`;
-    let bgImage = `none`;
-    let transform = ``;
-    let boxShadow = `0px 0px 0px 0px #82FF84`;
-    if (this.data.receivedPositive > this.data.receivedNegative * 20) {
-      boxShadow = `0px 0px ${border * this.data.receivedPositive / 50}px 0px #82FF84`;
-    } else if (this.data.receivedPositive < this.data.receivedNegative * 3) {
-      boxShadow = `0px 0px ${border * this.data.receivedNegative / 10}px 0px #BF0400`;
-    }
-    if (this.data.receivedPositive + this.data.receivedNegative > 0) {
-      if (this.data.receivedPositive > this.data.receivedNegative) {
-        transform = `rotate(${((- this.data.receivedPositive / (this.data.receivedPositive + this.data.receivedNegative) * 360 - 180) / 2)}deg)`;
-        bgColor = `#A94442`;
-        bgImage = `linear-gradient(${this.data.receivedPositive / (this.data.receivedPositive + this.data.receivedNegative) * 360}deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)`;
-      } else {
-        transform = `rotate(${((- this.data.receivedNegative / (this.data.receivedPositive + this.data.receivedNegative) * 360 - 180) / 2) + 180}deg)`;
-        bgColor = `#3C763D`;
-        bgImage = `linear-gradient(${this.data.receivedNegative / (this.data.receivedPositive + this.data.receivedNegative) * 360}deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)`;
-      }
-    }
-
     const pie = document.createElement(`div`);
     pie.className = `identifi-pie`;
-    pie.style.backgroundColor = bgColor;
-    pie.style.backgroundImage = bgImage;
     pie.style.width = `${width}px`;
-    pie.style.boxShadow = boxShadow;
-    pie.style.opacity = (this.data.receivedPositive + this.data.receivedNegative) / 10 * 0.5 + 0.35;
-    pie.style.transform = transform;
-
-    const hash = new MessageDigest({alg: `md5`, prov: `cryptojs`}).digestString(JSON.stringify(this.linkTo));
-    const identiconImg = new Identicon(hash, {width, format: `svg`});
 
     const img = document.createElement(`img`);
-    img.src = `data:image/svg+xml;base64,${identiconImg.toString()}`;
     img.alt = ``;
     img.width = width;
     img.style.borderWidth = `${border}px`;
 
+    let distance;
     if (showDistance) {
-      const distance = document.createElement(`span`);
-      distance.textContent = this.data.trustDistance < 1000 ? Identity._ordinal(this.data.trustDistance) : `–`;
+      distance = document.createElement(`span`);
       distance.className = `identifi-distance`;
       distance.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
       identicon.appendChild(distance);
     }
-
     identicon.appendChild(pie);
     identicon.appendChild(img);
+
+    this.gun.on(data => {
+      // Define colors etc
+      let bgColor = `rgba(0,0,0,0.2)`;
+      let bgImage = `none`;
+      let transform = ``;
+      let boxShadow = `0px 0px 0px 0px #82FF84`;
+      if (data.receivedPositive > data.receivedNegative * 20) {
+        boxShadow = `0px 0px ${border * data.receivedPositive / 50}px 0px #82FF84`;
+      } else if (data.receivedPositive < data.receivedNegative * 3) {
+        boxShadow = `0px 0px ${border * data.receivedNegative / 10}px 0px #BF0400`;
+      }
+      if (data.receivedPositive + data.receivedNegative > 0) {
+        if (data.receivedPositive > data.receivedNegative) {
+          transform = `rotate(${((- data.receivedPositive / (data.receivedPositive + data.receivedNegative) * 360 - 180) / 2)}deg)`;
+          bgColor = `#A94442`;
+          bgImage = `linear-gradient(${data.receivedPositive / (data.receivedPositive + data.receivedNegative) * 360}deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)`;
+        } else {
+          transform = `rotate(${((- data.receivedNegative / (data.receivedPositive + data.receivedNegative) * 360 - 180) / 2) + 180}deg)`;
+          bgColor = `#3C763D`;
+          bgImage = `linear-gradient(${data.receivedNegative / (data.receivedPositive + data.receivedNegative) * 360}deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)`;
+        }
+      }
+
+      pie.style.backgroundColor = bgColor;
+      pie.style.backgroundImage = bgImage;
+      pie.style.boxShadow = boxShadow;
+      pie.style.transform = transform;
+      pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
+
+      const hash = new MessageDigest({alg: `md5`, prov: `cryptojs`}).digestString(JSON.stringify(data.linkTo));
+      const identiconImg = new Identicon(hash, {width, format: `svg`});
+
+      img.src = `data:image/svg+xml;base64,${identiconImg.toString()}`;
+
+      if (showDistance) {
+        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : `–`;
+      }
+    });
 
     return identicon;
   }

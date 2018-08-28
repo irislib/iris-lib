@@ -1,6 +1,8 @@
 let index, msg, key;
 
-const loadIdentifi = window.identifiLib.Index.create(); // <--- Create identifi index
+gun = new Gun();
+
+const loadIdentifi = window.identifiLib.Index.create(gun); // <--- Create identifi index
 
 loadIdentifi.then(async (index_) => {
   index = index_;
@@ -26,6 +28,7 @@ async function search() {
   document.getElementById('searchResults').textContent = text;
   r.sort((a, b) => {return a.trustDistance - b.trustDistance;});
   r.forEach(i => {
+    console.log('ii', i);
     document.getElementById('searchResults').appendChild(i.profileCard());
   });
 }
@@ -43,6 +46,7 @@ async function getProfile() {
     const verifiedName = i.verified('name'); // <--- Get a verified name of an identity
     verifiedAttributeEl.textContent = verifiedName;
 
+    console.log('i', i);
     const identicon = i.identicon(100); // <--- Generate an identity icon as a DOM element, width 100px
     identiconParent.innerHTML = '';
     identiconParent.appendChild(identicon);
