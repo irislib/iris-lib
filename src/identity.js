@@ -82,23 +82,27 @@ class Identity {
     details.style.order = 2;
     details.style.flexGrow = 1;
 
+    const linkEl = document.createElement(`span`);
+    const links = document.createElement(`small`);
     card.appendChild(identicon);
     card.appendChild(details);
+    details.appendChild(linkEl);
+    details.appendChild(links);
 
-    this.gun.on(data => {
-      const link = `https://identi.fi/#/identities/${data.linkTo.name}/${data.linkTo.val}`;
-      const mva = Identity.getMostVerifiedAttributes(data.attrs);
-      details.innerHTML = `<a href="${link}">${mva.name || mva.nickname || `${data.linkTo.name}:${data.linkTo.val}`}</a><br>`;
-      details.innerHTML += `<small>Received: <span class="identifi-pos">+${data.receivedPositive || 0}</span> / <span class="identifi-neg">-${data.receivedNegative || 0}</span></small><br>`;
-      const links = document.createElement(`small`);
-      details.appendChild(links);
-      Object.keys(data.attrs).forEach(k => {
-        const a = data.attrs[k];
+    this.gun.on(async data => {
+      const attrs = await new Promise(resolve => { this.gun.get(`attrs`).load(r => resolve(r)); });
+      const linkTo = await this.gun.get(`linkTo`).then();
+      const link = `https://identi.fi/#/identities/${linkTo.name}/${linkTo.val}`;
+      const mva = Identity.getMostVerifiedAttributes(attrs);
+      linkEl.innerHTML = `<a href="${link}">${(mva.name && mva.name.attribute.val) || (mva.nickname && mva.nickname.attribute.val) || `${linkTo.name}:${linkTo.val}`}</a><br>`;
+      linkEl.innerHTML += `<small>Received: <span class="identifi-pos">+${data.receivedPositive || 0}</span> / <span class="identifi-neg">-${data.receivedNegative || 0}</span></small><br>`;
+      links.innerHTML = ``;
+      Object.keys(attrs).forEach(k => {
+        const a = attrs[k];
         if (a.link) {
           links.innerHTML += `${a.name}: <a href="${a.link}">${a.val}</a> `;
         }
       });
-
     });
 
     /*

@@ -4661,6 +4661,8 @@
 
 
 	  Identity.prototype.profileCard = function profileCard() {
+	    var _this = this;
+
 	    var card = document.createElement('div');
 	    card.className = 'identifi-card';
 
@@ -4674,18 +4676,27 @@
 	    details.style.order = 2;
 	    details.style.flexGrow = 1;
 
+	    var linkEl = document.createElement('span');
+	    var links = document.createElement('small');
 	    card.appendChild(identicon$$1);
 	    card.appendChild(details);
+	    details.appendChild(linkEl);
+	    details.appendChild(links);
 
-	    this.gun.on(function (data) {
-	      var link = 'https://identi.fi/#/identities/' + data.linkTo.name + '/' + data.linkTo.val;
-	      var mva = Identity.getMostVerifiedAttributes(data.attrs);
-	      details.innerHTML = '<a href="' + link + '">' + (mva.name || mva.nickname || data.linkTo.name + ':' + data.linkTo.val) + '</a><br>';
-	      details.innerHTML += '<small>Received: <span class="identifi-pos">+' + (data.receivedPositive || 0) + '</span> / <span class="identifi-neg">-' + (data.receivedNegative || 0) + '</span></small><br>';
-	      var links = document.createElement('small');
-	      details.appendChild(links);
-	      _Object$keys(data.attrs).forEach(function (k) {
-	        var a = data.attrs[k];
+	    this.gun.on(async function (data) {
+	      var attrs = await new _Promise(function (resolve) {
+	        _this.gun.get('attrs').load(function (r) {
+	          return resolve(r);
+	        });
+	      });
+	      var linkTo = await _this.gun.get('linkTo').then();
+	      var link = 'https://identi.fi/#/identities/' + linkTo.name + '/' + linkTo.val;
+	      var mva = Identity.getMostVerifiedAttributes(attrs);
+	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.name && mva.name.attribute.val || mva.nickname && mva.nickname.attribute.val || linkTo.name + ':' + linkTo.val) + '</a><br>';
+	      linkEl.innerHTML += '<small>Received: <span class="identifi-pos">+' + (data.receivedPositive || 0) + '</span> / <span class="identifi-neg">-' + (data.receivedNegative || 0) + '</span></small><br>';
+	      links.innerHTML = '';
+	      _Object$keys(attrs).forEach(function (k) {
+	        var a = attrs[k];
 	        if (a.link) {
 	          links.innerHTML += a.name + ': <a href="' + a.link + '">' + a.val + '</a> ';
 	        }

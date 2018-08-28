@@ -1,6 +1,6 @@
 let index, msg, key;
 
-gun = new Gun();
+gun = new Gun(['http://localhost:8765/gun']);
 
 const loadIdentifi = window.identifiLib.Index.create(gun); // <--- Create identifi index
 
