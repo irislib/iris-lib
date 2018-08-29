@@ -65,8 +65,10 @@ class Identity {
   * @param {string} attribute attribute type
   * @returns {string} most verified value of the param type
   */
-  verified(attribute: String) {
-    return this.mostVerifiedAttributes.hasOwnProperty(attribute) ? this.mostVerifiedAttributes[attribute].attribute.val : undefined;
+  async verified(attribute: String) {
+    const attrs = await this.gun.get(`attrs`).then();
+    const mva = Identity.getMostVerifiedAttributes(attrs);
+    return mva.hasOwnProperty(attribute) ? mva[attribute].attribute.val : undefined;
   }
 
   /**

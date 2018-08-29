@@ -42,8 +42,9 @@ async function getProfile() {
 
   let text = `Identity profile for ${profileQuery}:\n`;
   if (i) {
-    text += JSON.stringify(i, null, 2);
-    const verifiedName = i.verified('name'); // <--- Get a verified name of an identity
+    const data = await new Promise(resolve => i.gun.load(r => resolve(r)));
+    text += JSON.stringify(data, null, 2);
+    const verifiedName = await i.verified('name'); // <--- Get a verified name of an identity
     verifiedAttributeEl.textContent = verifiedName;
 
     console.log('i', i);
