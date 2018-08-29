@@ -4167,6 +4167,447 @@
 
 	var _Object$keys = unwrapExports(keys$1);
 
+	/*eslint no-useless-escape: "off", camelcase: "off" */
+
+	var UNIQUE_ID_VALIDATORS = {
+	  email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
+	  bitcoin: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
+	  bitcoin_address: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
+	  ip: /^(([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)\.){3}([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)$/,
+	  ipv6: /^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$/,
+	  gpg_fingerprint: null,
+	  gpg_keyid: null,
+	  google_oauth2: null,
+	  tel: /^\d{7,}$/,
+	  phone: /^\d{7,}$/,
+	  keyID: null,
+	  url: /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi,
+	  account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i
+	};
+
+	/**
+	* A simple key-value pair.
+	*/
+
+	var Attribute = function () {
+	  /**
+	  * @param {Object|Array} data {name, val} or [name, val]
+	  */
+	  function Attribute(data) {
+	    _classCallCheck(this, Attribute);
+
+	    if (data.hasOwnProperty("val")) {
+	      this.val = data.val;
+	      if (data.hasOwnProperty("name")) {
+	        this.name = data.name;
+	      } else {
+	        var n = Attribute.guessTypeOf(this.val);
+	        if (n) {
+	          this.name = n;
+	        } else {
+	          throw new Error("Type of attribute was omitted and could not be guessed");
+	        }
+	      }
+	    } else if (Array.isArray(data)) {
+	      if (data.length !== 2) {
+	        throw new Error("Invalid Attribute");
+	      }
+	      this.name = data[0];
+	      this.val = data[1];
+	    } else {
+	      throw new Error("Invalid attribute data", data);
+	    }
+	  }
+
+	  /**
+	  * @returns {Object} an object with attribute types as keys and regex patterns as values
+	  */
+
+
+	  Attribute.getUniqueIdValidators = function getUniqueIdValidators() {
+	    return UNIQUE_ID_VALIDATORS;
+	  };
+
+	  /**
+	  * @param {string} type attribute type
+	  * @returns {boolean} true if the attribute type is unique
+	  */
+
+
+	  Attribute.isUniqueType = function isUniqueType(type) {
+	    return _Object$keys(UNIQUE_ID_VALIDATORS).indexOf(type) > -1;
+	  };
+
+	  /**
+	  * @param {string} value guess type of this attribute value
+	  * @returns {string} type of attribute value or undefined
+	  */
+
+
+	  Attribute.guessTypeOf = function guessTypeOf(value) {
+	    for (var key in UNIQUE_ID_VALIDATORS) {
+	      if (value.match(UNIQUE_ID_VALIDATORS[key])) {
+	        return key;
+	      }
+	    }
+	  };
+
+	  /**
+	  * @param {Attribute} a
+	  * @param {Attribute} b
+	  * @returns {boolean} true if params are equal
+	  */
+
+
+	  Attribute.equals = function equals(a, b) {
+	    return new Attribute(a).equals(new Attribute(b));
+	  };
+
+	  /**
+	  * @returns {Array} attribute represented as a [name, val] array
+	  */
+
+
+	  Attribute.prototype.toArray = function toArray() {
+	    return [this.name, this.val];
+	  };
+
+	  /**
+	  * @param {Attribute} a attribute to compare to
+	  * @returns {boolean} true if attribute matches param
+	  */
+
+
+	  Attribute.prototype.equals = function equals(a) {
+	    return this.name === a.name && this.val === a.val;
+	  };
+
+	  return Attribute;
+	}();
+
+	var JWS_MAX_LENGTH = 10000;
+	var errorMsg = 'Invalid Identifi message:';
+
+	var ValidationError = function (_Error) {
+	  _inherits(ValidationError, _Error);
+
+	  function ValidationError() {
+	    _classCallCheck(this, ValidationError);
+
+	    return _possibleConstructorReturn(this, _Error.apply(this, arguments));
+	  }
+
+	  return ValidationError;
+	}(Error);
+
+	/**
+	* Identifi message: an object that has an author, recipient, signer, type, timestamp, context and optionally other fields.
+	*
+	* On Identifi, signer and author can be different entities. This enables the crawling of content
+	* from existing datasets. That makes Identifi an useful search tool even with no initial userbase.
+	*
+	* Messages are serialized as JSON Web Signatures.
+	*/
+
+
+	var Message = function () {
+	  /**
+	  * Creates a message from the param object that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
+	  * @param signedData
+	  */
+	  function Message(signedData) {
+	    _classCallCheck(this, Message);
+
+	    this.signedData = signedData;
+	    this._validate();
+	  }
+
+	  /**
+	  * @returns {string} Message signer keyID, i.e. base64 hash of public key
+	  */
+
+
+	  Message.prototype.getSignerKeyID = function getSignerKeyID() {
+	    return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
+	  };
+
+	  Message.prototype._validate = function _validate() {
+	    if (!this.signedData) {
+	      throw new ValidationError(errorMsg + ' Missing signedData');
+	    }
+	    if (typeof this.signedData !== 'object') {
+	      throw new ValidationError(errorMsg + ' signedData must be an object');
+	    }
+	    var d = this.signedData;
+
+	    if (!d.type) {
+	      throw new ValidationError(errorMsg + ' Missing type definition');
+	    }
+	    if (!d.author) {
+	      throw new ValidationError(errorMsg + ' Missing author');
+	    }
+	    if (!d.author.length) {
+	      throw new ValidationError(errorMsg + ' Author empty');
+	    }
+	    var i = void 0;
+	    var authorKeyID = void 0;
+	    if (this.jwsHeader) {
+	      this.signerKeyHash = this.getSignerKeyID();
+	    }
+	    for (i = 0; i < d.author.length; i++) {
+	      if (d.author[i].length !== 2) {
+	        throw new ValidationError(errorMsg + ' Invalid author: ' + d.author[i].toString());
+	      }
+	      if (d.author[i][0] === 'keyID') {
+	        if (authorKeyID) {
+	          throw new ValidationError(errorMsg + ' Author may have only one keyID');
+	        } else {
+	          authorKeyID = d.author[i][1];
+	        }
+	        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {
+	          throw new ValidationError(errorMsg + ' If message has a keyID author, it must be signed by the same key');
+	        }
+	      }
+	    }
+	    if (!d.recipient) {
+	      throw new ValidationError(errorMsg + ' Missing recipient');
+	    }
+	    if (!d.recipient.length) {
+	      throw new ValidationError(errorMsg + ' Author empty');
+	    }
+	    for (i = 0; i < d.recipient.length; i++) {
+	      if (d.recipient[i].length !== 2) {
+	        throw new ValidationError(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
+	      }
+	    }
+	    if (!d.timestamp) {
+	      throw new ValidationError(errorMsg + ' Missing timestamp');
+	    }
+
+	    if (!Date.parse(d.timestamp)) {
+	      throw new ValidationError(errorMsg + ' Invalid timestamp');
+	    }
+
+	    if (d.type === 'rating') {
+	      if (isNaN(d.rating)) {
+	        throw new ValidationError(errorMsg + ' Invalid rating');
+	      }
+	      if (isNaN(d.maxRating)) {
+	        throw new ValidationError(errorMsg + ' Invalid maxRating');
+	      }
+	      if (isNaN(d.minRating)) {
+	        throw new ValidationError(errorMsg + ' Invalid minRating');
+	      }
+	      if (d.rating > d.maxRating) {
+	        throw new ValidationError(errorMsg + ' Rating is above maxRating');
+	      }
+	      if (d.rating < d.minRating) {
+	        throw new ValidationError(errorMsg + ' Rating is below minRating');
+	      }
+	      if (typeof d.context !== 'string' || !d.context.length) {
+	        throw new ValidationError(errorMsg + ' Rating messages must have a context field');
+	      }
+	    }
+
+	    if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
+	      if (d.recipient.length < 2) {
+	        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
+	      }
+	    }
+
+	    return true;
+	  };
+
+	  /**
+	  * @returns {boolean} true if message has a positive rating
+	  */
+
+
+	  Message.prototype.isPositive = function isPositive() {
+	    return this.signedData.type === 'rating' && this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
+	  };
+
+	  /**
+	  * @returns {boolean} true if message has a negative rating
+	  */
+
+
+	  Message.prototype.isNegative = function isNegative() {
+	    return this.signedData.type === 'rating' && this.signedData.rating < (this.signedData.maxRating + this.signedData.minRating) / 2;
+	  };
+
+	  /**
+	  * @returns {boolean} true if message has a neutral rating
+	  */
+
+
+	  Message.prototype.isNeutral = function isNeutral() {
+	    return this.signedData.type === 'rating' && this.signedData.rating === (this.signedData.maxRating + this.signedData.minRating) / 2;
+	  };
+
+	  /**
+	  * @param {Object} key key to sign the message with
+	  * @param {boolean} skipValidation if true, skips message validation
+	  */
+
+
+	  Message.prototype.sign = function sign(key, skipValidation) {
+	    this.jwsHeader = { alg: 'ES256', key: key.pubKeyASN1 };
+	    this.jws = jws.JWS.sign(this.jwsHeader.alg, _JSON$stringify(this.jwsHeader), _JSON$stringify(this.signedData), key);
+	    if (!skipValidation) {
+	      Message._validateJws(this.jws);
+	    }
+	    this.getHash();
+	    return this;
+	  };
+
+	  /**
+	  * Create an identifi message. Message timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+	  * @param {Object} signedData message data object including author, recipient and other possible attributes
+	  * @param {Object} signingKey optionally, you can set the key to sign the message with
+	  * @returns {Message} Identifi message
+	  */
+
+
+	  Message.create = function create(signedData, signingKey) {
+	    if (!signedData.author && signingKey) {
+	      signedData.author = [['keyID', signingKey.keyID]];
+	    }
+	    signedData.timestamp = signedData.timestamp || new Date().toISOString();
+	    signedData.context = signedData.context || 'identifi';
+	    var m = new Message(signedData);
+	    if (signingKey) {
+	      m.sign(signingKey);
+	    }
+	    return m;
+	  };
+
+	  /**
+	  * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+	  */
+
+
+	  Message.createVerification = function createVerification(signedData, signingKey) {
+	    signedData.type = 'verification';
+	    return Message.create(signedData, signingKey);
+	  };
+
+	  /**
+	  * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.
+	  */
+
+
+	  Message.createRating = function createRating(signedData, signingKey) {
+	    signedData.type = 'rating';
+	    signedData.maxRating = signedData.maxRating || 10;
+	    signedData.minRating = signedData.minRating || -10;
+	    return Message.create(signedData, signingKey);
+	  };
+
+	  /**
+	  * Deserialize a message from a JWS string
+	  * @param {string} jwsString JWS serialized Identifi message
+	  * @returns {Message} Identifi message object
+	  */
+
+
+	  Message.fromJws = function fromJws(jwsString) {
+	    Message._validateJws(jwsString);
+	    var d = jws.JWS.parse(jwsString);
+	    var msg = new Message(d.payloadObj);
+	    msg.hash = Message.getHash(jwsString);
+	    msg.jwsHeader = d.headerObj;
+	    msg.jws = jwsString;
+	    return msg;
+	  };
+
+	  /**
+	  * @param {Index} index index to look up the message author from
+	  * @returns {Promise(Identity)} message author identity
+	  */
+
+
+	  Message.prototype.getAuthor = function getAuthor(index) {
+	    for (var i = 0; i < this.signedData.author.length; i++) {
+	      var a = this.signedData.author[i];
+	      if (Attribute.isUniqueType(a[0])) {
+	        return index.get(a[1], a[0]);
+	      }
+	    }
+	  };
+
+	  /**
+	  * @param {Index} index index to look up the message recipient from
+	  * @returns {Promise(Identity)} message recipient identity
+	  */
+
+
+	  Message.prototype.getRecipient = function getRecipient(index) {
+	    for (var i = 0; i < this.signedData.recipient.length; i++) {
+	      var a = this.signedData.recipient[i];
+	      if (Attribute.isUniqueType(a[0])) {
+	        return index.get(a[1], a[0]);
+	      }
+	    }
+	  };
+
+	  /**
+	  * @returns {string} base64 hash of message jws
+	  */
+
+
+	  Message.prototype.getHash = function getHash() {
+	    if (this.jws && !this.hash) {
+	      this.hash = Message.getHash(this.jws);
+	    }
+	    return this.hash;
+	  };
+
+	  /**
+	  * @returns {string} base64 hash of jws string
+	  */
+
+
+	  Message.getHash = function getHash(jwsString) {
+	    var hex = new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(jwsString);
+	    return new Buffer(hex, 'hex').toString('base64');
+	  };
+
+	  /**
+	  * @return {boolean} true if message signature is valid. Otherwise throws ValidationError.
+	  */
+
+
+	  Message.prototype.verify = function verify() {
+	    var keyHex = this.jwsHeader.key || this.jwsHeader.kid;
+	    var pem = asn1.ASN1Util.getPEMStringFromHex(keyHex, 'PUBLIC KEY');
+	    var pubKey = KEYUTIL_1.getKey(pem);
+	    if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
+	      throw new ValidationError(errorMsg + ' Invalid signature');
+	    }
+	    if (this.hash) {
+	      if (this.hash !== Message.getHash(this.jws)) {
+	        throw new ValidationError(errorMsg + ' Invalid message hash');
+	      }
+	    } else {
+	      this.getHash();
+	    }
+	    return true;
+	  };
+
+	  Message._validateJws = function _validateJws(jwsString) {
+	    if (typeof jwsString !== 'string') {
+	      throw new ValidationError(errorMsg + ' Message JWS must be a string');
+	    }
+	    if (jwsString.length > JWS_MAX_LENGTH) {
+	      throw new ValidationError(errorMsg + ' Message JWS max length is ' + JWS_MAX_LENGTH);
+	    }
+	    return true;
+	  };
+
+	  return Message;
+	}();
+
 	var pnglib = createCommonjsModule(function (module) {
 	/**
 	* A handy class to calculate color values.
@@ -4619,7 +5060,7 @@
 	    var bestVerificationScore = -1;
 	    _Object$keys(data.mostVerifiedAttributes).forEach(function (k) {
 	      var v = data.mostVerifiedAttributes[k];
-	      if (v.verificationScore > bestVerificationScore) {
+	      if (Attribute.isUniqueType(k) && v.verificationScore > bestVerificationScore) {
 	        data.linkTo = { name: k, val: v.attribute.val };
 	        bestVerificationScore = v.verificationScore;
 	      }
@@ -4684,6 +5125,9 @@
 	    details.appendChild(links);
 
 	    this.gun.on(async function (data) {
+	      if (!data) {
+	        return;
+	      }
 	      var attrs = await new _Promise(function (resolve) {
 	        _this.gun.get('attrs').load(function (r) {
 	          return resolve(r);
@@ -4826,6 +5270,9 @@
 	    identicon$$1.appendChild(img);
 
 	    this.gun.on(function (data) {
+	      if (!data) {
+	        return;
+	      }
 	      // Define colors etc
 	      var bgColor = 'rgba(0,0,0,0.2)';
 	      var bgImage = 'none';
@@ -4868,471 +5315,6 @@
 	  };
 
 	  return Identity;
-	}();
-
-	var JWS_MAX_LENGTH = 10000;
-	var errorMsg = 'Invalid Identifi message:';
-
-	var ValidationError = function (_Error) {
-	  _inherits(ValidationError, _Error);
-
-	  function ValidationError() {
-	    _classCallCheck(this, ValidationError);
-
-	    return _possibleConstructorReturn(this, _Error.apply(this, arguments));
-	  }
-
-	  return ValidationError;
-	}(Error);
-
-	/**
-	* Identifi message: an object that has an author, recipient, signer, type, timestamp, context and optionally other fields.
-	*
-	* On Identifi, signer and author can be different entities. This enables the crawling of content
-	* from existing datasets. That makes Identifi an useful search tool even with no initial userbase.
-	*
-	* Messages are serialized as JSON Web Signatures.
-	*/
-
-
-	var Message = function () {
-	  /**
-	  * Creates a message from the param object that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
-	  * @param signedData
-	  */
-	  function Message(signedData) {
-	    _classCallCheck(this, Message);
-
-	    this.signedData = signedData;
-	    this._validate();
-	  }
-
-	  /**
-	  * @returns {string} Message signer keyID, i.e. base64 hash of public key
-	  */
-
-
-	  Message.prototype.getSignerKeyID = function getSignerKeyID() {
-	    return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
-	  };
-
-	  Message.prototype._validate = function _validate() {
-	    if (!this.signedData) {
-	      throw new ValidationError(errorMsg + ' Missing signedData');
-	    }
-	    if (typeof this.signedData !== 'object') {
-	      throw new ValidationError(errorMsg + ' signedData must be an object');
-	    }
-	    var d = this.signedData;
-
-	    if (!d.type) {
-	      throw new ValidationError(errorMsg + ' Missing type definition');
-	    }
-	    if (!d.author) {
-	      throw new ValidationError(errorMsg + ' Missing author');
-	    }
-	    if (!d.author.length) {
-	      throw new ValidationError(errorMsg + ' Author empty');
-	    }
-	    var i = void 0;
-	    var authorKeyID = void 0;
-	    if (this.jwsHeader) {
-	      this.signerKeyHash = this.getSignerKeyID();
-	    }
-	    for (i = 0; i < d.author.length; i++) {
-	      if (d.author[i].length !== 2) {
-	        throw new ValidationError(errorMsg + ' Invalid author: ' + d.author[i].toString());
-	      }
-	      if (d.author[i][0] === 'keyID') {
-	        if (authorKeyID) {
-	          throw new ValidationError(errorMsg + ' Author may have only one keyID');
-	        } else {
-	          authorKeyID = d.author[i][1];
-	        }
-	        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {
-	          throw new ValidationError(errorMsg + ' If message has a keyID author, it must be signed by the same key');
-	        }
-	      }
-	    }
-	    if (!d.recipient) {
-	      throw new ValidationError(errorMsg + ' Missing recipient');
-	    }
-	    if (!d.recipient.length) {
-	      throw new ValidationError(errorMsg + ' Author empty');
-	    }
-	    for (i = 0; i < d.recipient.length; i++) {
-	      if (d.recipient[i].length !== 2) {
-	        throw new ValidationError(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
-	      }
-	    }
-	    if (!d.timestamp) {
-	      throw new ValidationError(errorMsg + ' Missing timestamp');
-	    }
-
-	    if (!Date.parse(d.timestamp)) {
-	      throw new ValidationError(errorMsg + ' Invalid timestamp');
-	    }
-
-	    if (d.type === 'rating') {
-	      if (isNaN(d.rating)) {
-	        throw new ValidationError(errorMsg + ' Invalid rating');
-	      }
-	      if (isNaN(d.maxRating)) {
-	        throw new ValidationError(errorMsg + ' Invalid maxRating');
-	      }
-	      if (isNaN(d.minRating)) {
-	        throw new ValidationError(errorMsg + ' Invalid minRating');
-	      }
-	      if (d.rating > d.maxRating) {
-	        throw new ValidationError(errorMsg + ' Rating is above maxRating');
-	      }
-	      if (d.rating < d.minRating) {
-	        throw new ValidationError(errorMsg + ' Rating is below minRating');
-	      }
-	      if (typeof d.context !== 'string' || !d.context.length) {
-	        throw new ValidationError(errorMsg + ' Rating messages must have a context field');
-	      }
-	    }
-
-	    if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
-	      if (d.recipient.length < 2) {
-	        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
-	      }
-	    }
-
-	    return true;
-	  };
-
-	  /**
-	  * @returns {boolean} true if message has a positive rating
-	  */
-
-
-	  Message.prototype.isPositive = function isPositive() {
-	    return this.signedData.type === 'rating' && this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
-	  };
-
-	  /**
-	  * @returns {boolean} true if message has a negative rating
-	  */
-
-
-	  Message.prototype.isNegative = function isNegative() {
-	    return this.signedData.type === 'rating' && this.signedData.rating < (this.signedData.maxRating + this.signedData.minRating) / 2;
-	  };
-
-	  /**
-	  * @returns {boolean} true if message has a neutral rating
-	  */
-
-
-	  Message.prototype.isNeutral = function isNeutral() {
-	    return this.signedData.type === 'rating' && this.signedData.rating === (this.signedData.maxRating + this.signedData.minRating) / 2;
-	  };
-
-	  /**
-	  * @param {Object} key key to sign the message with
-	  * @param {boolean} skipValidation if true, skips message validation
-	  */
-
-
-	  Message.prototype.sign = function sign(key, skipValidation) {
-	    this.jwsHeader = { alg: 'ES256', key: key.pubKeyASN1 };
-	    this.jws = jws.JWS.sign(this.jwsHeader.alg, _JSON$stringify(this.jwsHeader), _JSON$stringify(this.signedData), key);
-	    if (!skipValidation) {
-	      Message._validateJws(this.jws);
-	    }
-	    this.getHash();
-	    return this;
-	  };
-
-	  /**
-	  * Create an identifi message. Message timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
-	  * @param {Object} signedData message data object including author, recipient and other possible attributes
-	  * @param {Object} signingKey optionally, you can set the key to sign the message with
-	  * @returns {Message} Identifi message
-	  */
-
-
-	  Message.create = function create(signedData, signingKey) {
-	    if (!signedData.author && signingKey) {
-	      signedData.author = [['keyID', signingKey.keyID]];
-	    }
-	    signedData.timestamp = signedData.timestamp || new Date().toISOString();
-	    signedData.context = signedData.context || 'identifi';
-	    var m = new Message(signedData);
-	    if (signingKey) {
-	      m.sign(signingKey);
-	    }
-	    return m;
-	  };
-
-	  /**
-	  * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
-	  */
-
-
-	  Message.createVerification = function createVerification(signedData, signingKey) {
-	    signedData.type = 'verification';
-	    return Message.create(signedData, signingKey);
-	  };
-
-	  /**
-	  * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.
-	  */
-
-
-	  Message.createRating = function createRating(signedData, signingKey) {
-	    signedData.type = 'rating';
-	    signedData.maxRating = signedData.maxRating || 10;
-	    signedData.minRating = signedData.minRating || -10;
-	    return Message.create(signedData, signingKey);
-	  };
-
-	  /**
-	  * Deserialize a message from a JWS string
-	  * @param {string} jwsString JWS serialized Identifi message
-	  * @returns {Message} Identifi message object
-	  */
-
-
-	  Message.fromJws = function fromJws(jwsString) {
-	    Message._validateJws(jwsString);
-	    var d = jws.JWS.parse(jwsString);
-	    var msg = new Message(d.payloadObj);
-	    msg.hash = Message.getHash(jwsString);
-	    msg.jwsHeader = d.headerObj;
-	    msg.jws = jwsString;
-	    return msg;
-	  };
-
-	  /**
-	  * @param {Index} index index to look up the message author from
-	  * @returns {Identity} message author identity
-	  */
-
-
-	  Message.prototype.getAuthor = function getAuthor(index) {
-	    if (index) ; else {
-	      var attrs = [];
-	      this.signedData.author.forEach(function (a) {
-	        attrs.push({ name: a[0], val: a[1] });
-	      });
-	      var id = new Identity({ attrs: attrs });
-	      if (this.hasOwnProperty('authorPos') && this.hasOwnProperty('authorNeg')) {
-	        id.data.receivedPositive = this.authorPos;
-	        id.data.receivedNegative = this.authorNeg;
-	      }
-	      if (this.hasOwnProperty('authorTrustDistance')) {
-	        id.data.trustDistance = this.authorTrustDistance;
-	      }
-	      if (this.authorName) {
-	        id.profile.name = this.authorName;
-	      }
-	      return id;
-	    }
-	  };
-
-	  /**
-	  * @param {Index} index index to look up the message recipient from
-	  * @returns {Identity} message recipient identity
-	  */
-
-
-	  Message.prototype.getRecipient = function getRecipient(index) {
-	    if (index) ; else {
-	      var attrs = [];
-	      this.signedData.recipient.forEach(function (a) {
-	        attrs.push({ name: a[0], val: a[1] });
-	      });
-	      var id = new Identity({ attrs: attrs });
-	      if (this.hasOwnProperty('recipientPos') && this.hasOwnProperty('recipientNeg')) {
-	        id.data.receivedPositive = this.recipientPos;
-	        id.data.receivedNegative = this.recipientNeg;
-	      }
-	      if (this.hasOwnProperty('recipientTrustDistance')) {
-	        id.data.trustDistance = this.recipientTrustDistance;
-	      }
-	      if (this.recipientName) {
-	        id.profile.name = this.recipientName;
-	      }
-	      return id;
-	    }
-	  };
-
-	  /**
-	  * @returns {string} base64 hash of message jws
-	  */
-
-
-	  Message.prototype.getHash = function getHash() {
-	    if (this.jws && !this.hash) {
-	      this.hash = Message.getHash(this.jws);
-	    }
-	    return this.hash;
-	  };
-
-	  /**
-	  * @returns {string} base64 hash of jws string
-	  */
-
-
-	  Message.getHash = function getHash(jwsString) {
-	    var hex = new MessageDigest({ alg: 'sha256', prov: 'cryptojs' }).digestString(jwsString);
-	    return new Buffer(hex, 'hex').toString('base64');
-	  };
-
-	  /**
-	  * @return {boolean} true if message signature is valid. Otherwise throws ValidationError.
-	  */
-
-
-	  Message.prototype.verify = function verify() {
-	    var keyHex = this.jwsHeader.key || this.jwsHeader.kid;
-	    var pem = asn1.ASN1Util.getPEMStringFromHex(keyHex, 'PUBLIC KEY');
-	    var pubKey = KEYUTIL_1.getKey(pem);
-	    if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
-	      throw new ValidationError(errorMsg + ' Invalid signature');
-	    }
-	    if (this.hash) {
-	      if (this.hash !== Message.getHash(this.jws)) {
-	        throw new ValidationError(errorMsg + ' Invalid message hash');
-	      }
-	    } else {
-	      this.getHash();
-	    }
-	    return true;
-	  };
-
-	  Message._validateJws = function _validateJws(jwsString) {
-	    if (typeof jwsString !== 'string') {
-	      throw new ValidationError(errorMsg + ' Message JWS must be a string');
-	    }
-	    if (jwsString.length > JWS_MAX_LENGTH) {
-	      throw new ValidationError(errorMsg + ' Message JWS max length is ' + JWS_MAX_LENGTH);
-	    }
-	    return true;
-	  };
-
-	  return Message;
-	}();
-
-	/*eslint no-useless-escape: "off", camelcase: "off" */
-
-	var UNIQUE_ID_VALIDATORS = {
-	  email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
-	  bitcoin: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
-	  bitcoin_address: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
-	  ip: /^(([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)\.){3}([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)$/,
-	  ipv6: /^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$/,
-	  gpg_fingerprint: null,
-	  gpg_keyid: null,
-	  google_oauth2: null,
-	  tel: /^\d{7,}$/,
-	  phone: /^\d{7,}$/,
-	  keyID: null,
-	  url: /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi,
-	  account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i
-	};
-
-	/**
-	* A simple key-value pair.
-	*/
-
-	var Attribute = function () {
-	  /**
-	  * @param {Object|Array} data {name, val} or [name, val]
-	  */
-	  function Attribute(data) {
-	    _classCallCheck(this, Attribute);
-
-	    if (data.hasOwnProperty("val")) {
-	      this.val = data.val;
-	      if (data.hasOwnProperty("name")) {
-	        this.name = data.name;
-	      } else {
-	        var n = Attribute.guessTypeOf(this.val);
-	        if (n) {
-	          this.name = n;
-	        } else {
-	          throw new Error("Type of attribute was omitted and could not be guessed");
-	        }
-	      }
-	    } else if (Array.isArray(data)) {
-	      if (data.length !== 2) {
-	        throw new Error("Invalid Attribute");
-	      }
-	      this.name = data[0];
-	      this.val = data[1];
-	    } else {
-	      throw new Error("Invalid attribute data", data);
-	    }
-	  }
-
-	  /**
-	  * @returns {Object} an object with attribute types as keys and regex patterns as values
-	  */
-
-
-	  Attribute.getUniqueIdValidators = function getUniqueIdValidators() {
-	    return UNIQUE_ID_VALIDATORS;
-	  };
-
-	  /**
-	  * @param {string} type attribute type
-	  * @returns {boolean} true if the attribute type is unique
-	  */
-
-
-	  Attribute.isUniqueType = function isUniqueType(type) {
-	    return _Object$keys(UNIQUE_ID_VALIDATORS).indexOf(type) > -1;
-	  };
-
-	  /**
-	  * @param {string} value guess type of this attribute value
-	  * @returns {string} type of attribute value or undefined
-	  */
-
-
-	  Attribute.guessTypeOf = function guessTypeOf(value) {
-	    for (var key in UNIQUE_ID_VALIDATORS) {
-	      if (value.match(UNIQUE_ID_VALIDATORS[key])) {
-	        return key;
-	      }
-	    }
-	  };
-
-	  /**
-	  * @param {Attribute} a
-	  * @param {Attribute} b
-	  * @returns {boolean} true if params are equal
-	  */
-
-
-	  Attribute.equals = function equals(a, b) {
-	    return new Attribute(a).equals(new Attribute(b));
-	  };
-
-	  /**
-	  * @returns {Array} attribute represented as a [name, val] array
-	  */
-
-
-	  Attribute.prototype.toArray = function toArray() {
-	    return [this.name, this.val];
-	  };
-
-	  /**
-	  * @param {Attribute} a attribute to compare to
-	  * @returns {boolean} true if attribute matches param
-	  */
-
-
-	  Attribute.prototype.equals = function equals(a) {
-	    return this.name === a.name && this.val === a.val;
-	  };
-
-	  return Attribute;
 	}();
 
 	var isEnum$1 = _objectPie.f;

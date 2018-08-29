@@ -1,5 +1,6 @@
 import {MessageDigest} from 'jsrsasign';
 import Identicon from 'identicon.js';
+import Attribute from './attribute';
 
 /**
 * An Identifi identity profile. Usually you don't create them yourself, but get them
@@ -31,7 +32,7 @@ class Identity {
     let bestVerificationScore = - 1;
     Object.keys(data.mostVerifiedAttributes).forEach(k => {
       const v = data.mostVerifiedAttributes[k];
-      if (v.verificationScore > bestVerificationScore) {
+      if (Attribute.isUniqueType(k) && v.verificationScore > bestVerificationScore) {
         data.linkTo = {name: k, val: v.attribute.val};
         bestVerificationScore = v.verificationScore;
       }
@@ -90,6 +91,9 @@ class Identity {
     details.appendChild(links);
 
     this.gun.on(async data => {
+      if (!data) {
+        return;
+      }
       const attrs = await new Promise(resolve => { this.gun.get(`attrs`).load(r => resolve(r)); });
       const linkTo = await this.gun.get(`linkTo`).then();
       const link = `https://identi.fi/#/identities/${linkTo.name}/${linkTo.val}`;
@@ -300,6 +304,9 @@ class Identity {
     identicon.appendChild(img);
 
     this.gun.on(data => {
+      if (!data) {
+        return;
+      }
       // Define colors etc
       let bgColor = `rgba(0,0,0,0.2)`;
       let bgImage = `none`;

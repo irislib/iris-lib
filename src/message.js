@@ -2,7 +2,7 @@
 `use strict`;
 import {MessageDigest, jws, KEYUTIL, asn1} from 'jsrsasign';
 import util from './util';
-import Identity from './identity';
+import Attribute from './attribute';
 
 const JWS_MAX_LENGTH = 10000;
 const errorMsg = `Invalid Identifi message:`;
@@ -169,55 +169,27 @@ class Message {
 
   /**
   * @param {Index} index index to look up the message author from
-  * @returns {Identity} message author identity
+  * @returns {Promise(Identity)} message author identity
   */
   getAuthor(index) {
-    if (index) {
-      // TODO: search from index
-    } else {
-      const attrs = [];
-      this.signedData.author.forEach(a => {
-        attrs.push({name: a[0], val: a[1]});
-      });
-      const id = new Identity({attrs});
-      if (this.hasOwnProperty(`authorPos`) && this.hasOwnProperty(`authorNeg`)) {
-        id.data.receivedPositive = this.authorPos;
-        id.data.receivedNegative = this.authorNeg;
+    for (let i = 0;i < this.signedData.author.length;i ++) {
+      const a = this.signedData.author[i];
+      if (Attribute.isUniqueType(a[0])) {
+        return index.get(a[1], a[0]);
       }
-      if (this.hasOwnProperty(`authorTrustDistance`)) {
-        id.data.trustDistance = this.authorTrustDistance;
-      }
-      if (this.authorName) {
-        id.profile.name = this.authorName;
-      }
-      return id;
     }
   }
 
   /**
   * @param {Index} index index to look up the message recipient from
-  * @returns {Identity} message recipient identity
+  * @returns {Promise(Identity)} message recipient identity
   */
   getRecipient(index) {
-    if (index) {
-      // TODO: search from index
-    } else {
-      const attrs = [];
-      this.signedData.recipient.forEach(a => {
-        attrs.push({name: a[0], val: a[1]});
-      });
-      const id = new Identity({attrs});
-      if (this.hasOwnProperty(`recipientPos`) && this.hasOwnProperty(`recipientNeg`)) {
-        id.data.receivedPositive = this.recipientPos;
-        id.data.receivedNegative = this.recipientNeg;
+    for (let i = 0;i < this.signedData.recipient.length;i ++) {
+      const a = this.signedData.recipient[i];
+      if (Attribute.isUniqueType(a[0])) {
+        return index.get(a[1], a[0]);
       }
-      if (this.hasOwnProperty(`recipientTrustDistance`)) {
-        id.data.trustDistance = this.recipientTrustDistance;
-      }
-      if (this.recipientName) {
-        id.profile.name = this.recipientName;
-      }
-      return id;
     }
   }
 
