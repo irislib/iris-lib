@@ -57,7 +57,6 @@
     "eslint-config-devine": "^1.8.1",
     "eslint-plugin-babel": "^5.1.0",
     "flow-bin": "^0.79.1",
-    "gun": "^0.9.99991",
     "husky": "^0.14.3",
     "jest": "^23.5.0",
     "libp2p-connection-manager": "0.0.2",
@@ -76,6 +75,6 @@
   "dependencies": {
     "identicon.js": "^2.3.2",
     "jsrsasign": "^8.0.12",
-    "gun": "^0.9.99991"
+    "gun": "^0.9.99992"
   }
 }

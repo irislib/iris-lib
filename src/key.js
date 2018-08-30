@@ -25,8 +25,7 @@ class Key {
       const privKeyFile = `${datadir}/private.key`;
       if (fs.existsSync(privKeyFile)) {
         const f = fs.readFileSync(privKeyFile, `utf8`);
-        const jwk = JSON.parse(f);
-        myKey = Key.fromJwk(jwk);
+        myKey = Key.fromJwk(f);
       } else {
         myKey = Key.generate();
         fs.writeFileSync(privKeyFile, Key.toJwk(myKey));
@@ -35,7 +34,7 @@ class Key {
     } else {
       const jwk = window.localStorage.getItem(`identifi.myKey`);
       if (jwk) {
-        myKey = Key.fromJwk(JSON.parse(jwk));
+        myKey = Key.fromJwk(jwk);
       } else {
         myKey = Key.generate();
         window.localStorage.setItem(`identifi.myKey`, Key.toJwk(myKey));
@@ -46,19 +45,19 @@ class Key {
 
   /**
   * Serialize key as JSON Web key
-  * @returns {String} JSON Web Key
+  * @returns {String} JSON Web Key string
   */
   static toJwk(key) {
     return JSON.stringify(KEYUTIL.getJWKFromKey(key));
   }
 
   /**
-  * Get a Key from a JSON Web Key string.
-  * @param {string} jwk JSON Web Key
-  * @returns {Object}
+  * Get a Key from a JSON Web Key object.
+  * @param {Object} jwk JSON Web Key
+  * @returns {String}
   */
   static fromJwk(jwk) {
-    const prv = KEYUTIL.getKey(jwk);
+    const prv = KEYUTIL.getKey(JSON.parse(jwk));
     prv.pubKeyASN1 = Key._getPubKeyASN1(prv);
     prv.keyID = util.getHash(prv.pubKeyASN1);
     return prv;

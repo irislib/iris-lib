@@ -12,6 +12,14 @@ test('Generate key', async () => {
   const i = await identifi.Key.generate('.');
   expect(i).toBeDefined();
 });
+test('Serialize and deserialize a key', async () => {
+  const i = await identifi.Key.generate('.');
+  const serialized = identifi.Key.toJwk(i);
+  expect(typeof serialized).toBe('string');
+  const deserialized = identifi.Key.fromJwk(serialized);
+  expect(typeof deserialized).toBe('object')
+  expect(i).toBeDefined();
+});
 test('Get default key', async () => {
   const i = await identifi.Key.getDefault('.');
   expect(i).toBeDefined();

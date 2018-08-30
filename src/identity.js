@@ -37,6 +37,9 @@ class Identity {
         bestVerificationScore = v.verificationScore;
       }
     });
+    if (!data.linkTo) {
+      data.linkTo = data.attrs[Object.keys(data.attrs)[0]];
+    }
     if (data.linkTo.name !== `keyID` && data.mostVerifiedAttributes.keyID) {
       data.linkTo = data.mostVerifiedAttributes.keyID.attribute;
     }
