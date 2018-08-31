@@ -7742,7 +7742,7 @@
 	    });
 	    setTimeout(function () {
 	      /* console.log(`r`, r);*/sortAndResolve();
-	    }, 300);
+	    }, 1000);
 	  });
 	}
 
@@ -7753,31 +7753,20 @@
 	*/
 
 	var Index = function () {
-	  function Index(gun, viewpoint) {
-	    var _this = this;
-
+	  function Index(gun) {
 	    _classCallCheck(this, Index);
 
 	    this.gun = gun || new gun_min();
-	    if (viewpoint) {
-	      this.viewpoint = new Attribute(viewpoint);
-	    } else {
-	      this.viewpoint = { name: 'keyID', val: Key.getDefault().keyID, conf: 1, ref: 0 };
-	    }
-	    var vp = Identity.create(this.gun.get('identities'), { attrs: [this.viewpoint], trustDistance: 0 });
-	    this.ready = new _Promise(async function (resolve, reject) {
-	      try {
-	        await _this._addIdentityToIndexes(vp.gun);
-	        resolve();
-	      } catch (e) {
-	        reject(e);
-	      }
-	    });
 	  }
 
 	  Index.create = async function create(gun, viewpoint) {
-	    var i = new Index(gun, viewpoint);
-	    await i.ready;
+	    var i = new Index(gun);
+	    if (!viewpoint) {
+	      viewpoint = { name: 'keyID', val: Key.getDefault().keyID, conf: 1, ref: 0 };
+	    }
+	    i.gun.get('viewpoint').put(new Attribute(viewpoint));
+	    var vp = Identity.create(i.gun.get('identities'), { attrs: [viewpoint], trustDistance: 0 });
+	    await i._addIdentityToIndexes(vp.gun);
 	    return i;
 	  };
 
@@ -7793,6 +7782,10 @@
 	    var indexKeys = [];
 	    var d = await identity.get('trustDistance').then();
 	    await identity.get('attrs').map().once(function (a) {
+	      if (!a) {
+	        // TODO: this sometimes returns undefined
+	        return;
+	      }
 	      var distance = d !== undefined ? d : parseInt(a.dist);
 	      distance = _Number$isNaN(distance) ? 99 : distance;
 	      distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
@@ -7836,10 +7829,14 @@
 
 
 	  Index.prototype.getViewpoint = async function getViewpoint() {
-	    var r = await searchText(this.gun.get('identitiesByTrustDistance'), '00', 1);
-	    if (r.length) {
-	      return new Identity(this.gun.get('identitiesByTrustDistance').get(r[0].key));
-	    }
+	    var _this = this;
+
+	    var k = await new _Promise(function (resolve) {
+	      return _this.gun.get('identitiesByTrustDistance').map(function (v, k) {
+	        return k.indexOf('00') === 0 ? resolve(k) : 0;
+	      });
+	    });
+	    return new Identity(this.gun.get('identitiesByTrustDistance').get(k));
 	  };
 
 	  /**
@@ -7928,9 +7925,10 @@
 	    if (!signer) {
 	      return;
 	    }
+	    var vp = await this.gun.get('viewpoint').then();
 	    for (var i = 0; i < msg.signedData.author.length; i++) {
 	      var a = new Attribute(msg.signedData.author[i]);
-	      if (Attribute.equals(a, this.viewpoint)) {
+	      if (Attribute.equals(a, vp)) {
 	        return 0;
 	      } else {
 	        var d = await this._getAttributeTrustDistance(a);
@@ -8102,7 +8100,7 @@
 	        if (author.indexOf(knownIdentity.key) === 0) {
 	          try {
 	            var m = Message.fromJws(msgsByAuthor[author].jws);
-	            await this.addMessage(m);
+	            await util.timeoutPromise(this.addMessage(m), 10000);
 	          } catch (e) {
 	            var _m = Message.fromJws(msgsByAuthor[author].jws);
 	            console.log('adding failed:', e, _JSON$stringify(_m, null, 2));

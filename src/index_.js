@@ -2,6 +2,7 @@ import Message from './message';
 import Key from './key';
 import Identity from './identity';
 import Attribute from './attribute';
+import util from './util';
 import Gun from 'gun'; // eslint-disable-line no-unused-vars
 import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
@@ -32,7 +33,7 @@ async function searchText(node, query, limit, cursor) {
         }
       }
     });
-    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve(); }, 300);
+    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve(); }, 1000);
   });
 }
 
@@ -42,27 +43,18 @@ async function searchText(node, query, limit, cursor) {
 * messagesByTimestamp, messagesByDistance.
 */
 class Index {
-  constructor(gun: Object, viewpoint: Attribute) {
+  constructor(gun: Object) {
     this.gun = gun || new Gun();
-    if (viewpoint) {
-      this.viewpoint = new Attribute(viewpoint);
-    } else {
-      this.viewpoint = {name: `keyID`, val: Key.getDefault().keyID, conf: 1, ref: 0};
-    }
-    const vp = Identity.create(this.gun.get(`identities`), {attrs: [this.viewpoint], trustDistance: 0});
-    this.ready = new Promise(async (resolve, reject) => {
-      try {
-        await this._addIdentityToIndexes(vp.gun);
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    });
   }
 
   static async create(gun: Object, viewpoint: Attribute) {
-    const i = new Index(gun, viewpoint);
-    await i.ready;
+    const i = new Index(gun);
+    if (!viewpoint) {
+      viewpoint = {name: `keyID`, val: Key.getDefault().keyID, conf: 1, ref: 0};
+    }
+    i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
+    const vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});
+    await i._addIdentityToIndexes(vp.gun);
     return i;
   }
 
@@ -78,6 +70,9 @@ class Index {
     const indexKeys = [];
     const d = await identity.get(`trustDistance`).then();
     await identity.get(`attrs`).map().once(a => {
+      if (!a) { // TODO: this sometimes returns undefined
+        return;
+      }
       let distance = d !== undefined ? d : parseInt(a.dist);
       distance = Number.isNaN(distance) ? 99 : distance;
       distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
@@ -118,10 +113,8 @@ class Index {
   * @returns {Identity} viewpoint identity of the index
   */
   async getViewpoint() {
-    const r = await searchText(this.gun.get(`identitiesByTrustDistance`), `00`, 1);
-    if (r.length) {
-      return new Identity(this.gun.get(`identitiesByTrustDistance`).get(r[0].key));
-    }
+    const k = await new Promise(resolve => this.gun.get(`identitiesByTrustDistance`).map((v, k) => k.indexOf(`00`) === 0 ? resolve(k) : 0));
+    return new Identity(this.gun.get(`identitiesByTrustDistance`).get(k));
   }
 
   /**
@@ -198,9 +191,10 @@ class Index {
     if (!signer) {
       return;
     }
+    const vp = await this.gun.get(`viewpoint`).then();
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = new Attribute(msg.signedData.author[i]);
-      if (Attribute.equals(a, this.viewpoint)) {
+      if (Attribute.equals(a, vp)) {
         return 0;
       } else {
         const d = await this._getAttributeTrustDistance(a);
@@ -363,7 +357,7 @@ class Index {
         if (author.indexOf(knownIdentity.key) === 0) {
           try {
             const m = Message.fromJws(msgsByAuthor[author].jws);
-            await this.addMessage(m);
+            await util.timeoutPromise(this.addMessage(m), 10000);
           } catch (e) {
             const m = Message.fromJws(msgsByAuthor[author].jws);
             console.log(`adding failed:`, e, JSON.stringify(m, null, 2));
