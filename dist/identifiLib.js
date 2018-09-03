@@ -5263,6 +5263,7 @@
 	    var img = document.createElement('img');
 	    img.alt = '';
 	    img.width = width;
+	    img.height = width;
 	    img.style.borderWidth = border + 'px';
 
 	    var distance = void 0;
@@ -5321,7 +5322,7 @@
 	      this.gun.get('attrs').open(function (attrs) {
 	        var mva = Identity.getMostVerifiedAttributes(attrs);
 	        if (mva.profilePhoto) {
-	          var timeout = ipfs.isOnline() ? 0 : 1000;
+	          var timeout = ipfs.isOnline() ? 0 : 5000;
 	          setTimeout(function () {
 	            ipfs.files.cat(mva.profilePhoto.attribute.val).then(function (file) {
 	              var f = ipfs.types.Buffer.from(file).toString('base64');

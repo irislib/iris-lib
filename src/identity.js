@@ -296,6 +296,7 @@ class Identity {
     const img = document.createElement(`img`);
     img.alt = ``;
     img.width = width;
+    img.height = width;
     img.style.borderWidth = `${border}px`;
 
     let distance;
@@ -354,7 +355,7 @@ class Identity {
       this.gun.get(`attrs`).open(attrs => {
         const mva = Identity.getMostVerifiedAttributes(attrs);
         if (mva.profilePhoto) {
-          const timeout = ipfs.isOnline() ? 0 : 1000;
+          const timeout = ipfs.isOnline() ? 0 : 5000;
           setTimeout(() => {
             ipfs.files.cat(mva.profilePhoto.attribute.val).then(file => {
               const f = ipfs.types.Buffer.from(file).toString(`base64`);
