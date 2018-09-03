@@ -70,13 +70,14 @@ class Identity {
   }
 
   /**
+  * @param {Object} ipfs (optional) an IPFS instance that is used to fetch images
   * @returns {HTMLElement} profile card html element describing the identity
   */
-  profileCard() {
+  profileCard(ipfs: Object) {
     const card = document.createElement(`div`);
     card.className = `identifi-card`;
 
-    const identicon = this.identicon(60);
+    const identicon = this.identicon(60, null, null, ipfs);
     identicon.style.order = 1;
     identicon.style.flexShrink = 0;
     identicon.style.marginRight = `15px`;
@@ -278,9 +279,10 @@ class Identity {
   * @param {number} width of the identicon
   * @param {number} border identicon border (aura) width
   * @param {boolean} showDistance whether to show web of trust distance ordinal
+  * @param {Object} ipfs (optional) an IPFS instance that is used to fetch images
   * @returns {HTMLElement} identicon element that can be appended to DOM
   */
-  identicon(width, border = 4, showDistance = true) {
+  identicon(width, border = 4, showDistance = true, ipfs) {
     Identity._injectCss(); // some other way that is not called on each identicon generation?
     const identicon = document.createElement(`div`);
     identicon.className = `identifi-identicon`;
@@ -341,12 +343,27 @@ class Identity {
       const hash = new MessageDigest({alg: `md5`, prov: `cryptojs`}).digestString(JSON.stringify(data.linkTo));
       const identiconImg = new Identicon(hash, {width, format: `svg`});
 
-      img.src = `data:image/svg+xml;base64,${identiconImg.toString()}`;
+      img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;
 
       if (showDistance) {
         distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : `–`;
       }
     });
+
+    if (ipfs) {
+      this.gun.get(`attrs`).open(attrs => {
+        const mva = Identity.getMostVerifiedAttributes(attrs);
+        if (mva.profilePhoto) {
+          const timeout = ipfs.isOnline() ? 0 : 1000;
+          setTimeout(() => {
+            ipfs.files.cat(mva.profilePhoto.attribute.val).then(file => {
+              const f = ipfs.types.Buffer.from(file).toString(`base64`);
+              img.src = `data:image;base64,${f}`;
+            });
+          }, timeout);
+        }
+      });
+    }
 
     return identicon;
   }

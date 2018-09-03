@@ -378,7 +378,6 @@ class Index {
 
   /**
   * @param msg Message to add to the index
-  * @param {boolean} updateIdentityIndexes default true
   */
   async addMessage(msg: Message) {
     msg.distance = await this.getMsgTrustDistance(msg);
