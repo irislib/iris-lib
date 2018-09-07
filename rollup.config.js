@@ -6,10 +6,25 @@ import filesize from 'rollup-plugin-filesize';
 import commonjs from 'rollup-plugin-commonjs';
 import builtins from 'rollup-plugin-node-builtins';
 import globals from 'rollup-plugin-node-globals';
+import hypothetical from 'rollup-plugin-hypothetical';
 
 const name = `identifiLib`;
 
 const plugins = [
+  hypothetical({
+    allowFallthrough: true,
+    files: {
+      'node-webcrypto-ossl/': `
+        export default {};
+      `,
+      'text-encoding/': `
+        export default {};
+      `,
+      '@trust/webcrypto/': `
+        export default {};
+      `
+    }
+  }),
   json(),
   babel({
     exclude: 'node_modules/**',

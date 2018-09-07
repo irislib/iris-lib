@@ -3,7 +3,7 @@ const fs = require('fs');
 const GUN = require('gun');
 const load = require('gun/lib/load');
 
-let key = identifi.Key.getDefault();
+let key;
 //let ipfsNode = new IPFS({repo: './ipfs_repo'});
 const gun = new GUN({radisk: false});
 
@@ -46,13 +46,14 @@ beforeAll(() => {
 describe('local index', async () => {
   let i, h;
   test('create new Index', async () => {
+    key = await identifi.Key.getDefault();
     i = await identifi.Index.create(gun.get(`identifi`));
     expect(i).toBeInstanceOf(identifi.Index);
   });
   let p;
   describe('create and fetch an identity using identifi messages', async () => {
     test('add trust rating to bob', async () => {
-      const msg = identifi.Message.createRating({recipient:[['email', 'bob@example.com']], rating:10}, key);
+      const msg = await identifi.Message.createRating({recipient:[['email', 'bob@example.com']], rating:10}, key);
       const r = await i.addMessage(msg);
       expect(r).toBe(true);
     });
@@ -84,7 +85,7 @@ describe('local index', async () => {
     test('bob -> carl', async () => {
       let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'carl@example.com']], rating:10}, key);
       await i.addMessage(msg);
-      msg = identifi.Message.createRating({author: [['email', 'carl@example.com']], recipient: [['email', 'david@example.com']], rating:10}, key);
+      msg = await identifi.Message.createRating({author: [['email', 'carl@example.com']], recipient: [['email', 'david@example.com']], rating:10}, key);
       await i.addMessage(msg);
       p = await i.get('david@example.com');
       const data = await p.gun.once().then();
@@ -92,13 +93,13 @@ describe('local index', async () => {
     });
     test('add a collection of messages using addMessages', async () => {
       const msgs = [];
-      let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'bob1@example.com']], rating:10}, key);
+      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'bob1@example.com']], rating:10}, key);
       msgs.push(msg);
       for (let i = 0;i < 4;i++) {
-        msg = identifi.Message.createRating({author: [['email', `bob${i}@example.com`]], recipient: [['email', `bob${i+1}@example.com`]], rating:10}, key);
+        msg = await identifi.Message.createRating({author: [['email', `bob${i}@example.com`]], recipient: [['email', `bob${i+1}@example.com`]], rating:10}, key);
         msgs.push(msg);
       }
-      msg = identifi.Message.createRating({author: [['email', 'bert@example.com']], recipient: [['email', 'chris@example.com']], rating:10}, key);
+      msg = await identifi.Message.createRating({author: [['email', 'bert@example.com']], recipient: [['email', 'chris@example.com']], rating:10}, key);
       msgs.push(msg);
       await i.addMessages(shuffle(msgs));
       p = await i.get('bob4@example.com');
@@ -113,7 +114,7 @@ describe('local index', async () => {
   describe ('untrusted key', async () => {
     const u = identifi.Key.generate();
     test('should not create new identity', async () => {
-      let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'angus@example.com']], rating:10}, u);
+      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'angus@example.com']], rating:10}, u);
       await i.addMessage(msg);
       p = await i.get('angus@example.com');
       expect(p).toBeUndefined();
@@ -121,7 +122,7 @@ describe('local index', async () => {
     test('should not affect scores', async () => {
       p = await i.get('david@example.com');
       const pos = await p.gun.get(`receivedPositive`).once().then();
-      let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'david@example.com']], rating:10}, u);
+      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'david@example.com']], rating:10}, u);
       await i.addMessage(msg);
       p = await i.get('david@example.com');
       const pos2 = await p.gun.get(`receivedPositive`).once().then();
@@ -164,7 +165,7 @@ describe('local index', async () => {
     });
   });
   test('get viewpoint identity by searching the default keyID', async () => {
-    const defaultKey = identifi.Key.getDefault();
+    const defaultKey = await identifi.Key.getDefault();
     p = await i.get(defaultKey.keyID, 'keyID');
     const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);

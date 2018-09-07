@@ -1,7 +1,9 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
-import {KEYUTIL, pemtohex} from 'jsrsasign';
 import util from './util';
+import Gun from 'gun';
+import sea from 'gun/sea';
+const SEA = Gun.SEA;
 
 let myKey;
 
@@ -16,7 +18,7 @@ class Key {
   * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
   * @returns {Object} Key object
   */
-  static getDefault(datadir = `.`) {
+  static async getDefault(datadir = `.`) {
     if (myKey) {
       return myKey;
     }
@@ -27,7 +29,7 @@ class Key {
         const f = fs.readFileSync(privKeyFile, `utf8`);
         myKey = Key.fromJwk(f);
       } else {
-        myKey = Key.generate();
+        myKey = await Key.generate();
         fs.writeFileSync(privKeyFile, Key.toJwk(myKey));
         fs.chmodSync(privKeyFile, 400);
       }
@@ -36,10 +38,11 @@ class Key {
       if (jwk) {
         myKey = Key.fromJwk(jwk);
       } else {
-        myKey = Key.generate();
+        myKey = await Key.generate();
         window.localStorage.setItem(`identifi.myKey`, Key.toJwk(myKey));
       }
     }
+    console.log(myKey);
     return myKey;
   }
 
@@ -48,7 +51,11 @@ class Key {
   * @returns {String} JSON Web Key string
   */
   static toJwk(key) {
-    return JSON.stringify(KEYUTIL.getJWKFromKey(key));
+    return JSON.stringify(key);
+  }
+
+  static getId(key) {
+    return util.getHash(key.pub);
   }
 
   /**
@@ -57,29 +64,23 @@ class Key {
   * @returns {String}
   */
   static fromJwk(jwk) {
-    const prv = KEYUTIL.getKey(JSON.parse(jwk));
-    prv.pubKeyASN1 = Key._getPubKeyASN1(prv);
-    prv.keyID = util.getHash(prv.pubKeyASN1);
-    return prv;
+    return JSON.parse(jwk);
   }
 
   /**
   * Generate a new key
-  * @returns {Object} jsrsasign private key object with additional attributes "pubKeyASN1" and "keyID".
+  * @returns {Object} Gun.SEA private key object
   */
   static generate() {
-    const key = KEYUTIL.generateKeypair(`EC`, `secp256r1`);
-    key.prvKeyObj.pubKeyASN1 = Key._getPubKeyASN1(key.pubKeyObj);
-    key.prvKeyObj.keyID = util.getHash(key.prvKeyObj.pubKeyASN1);
-    return key.prvKeyObj;
+    return SEA.pair();
   }
 
-  static _getPubKeyASN1(key) {
-    if (key.curveName === `P-256`) { // bug in jsrsasign
-      key.curveName = `secp256r1`;
-    }
-    const pem = KEYUTIL.getPEM(key);
-    return pemtohex(pem);
+  static sign(msg, pair) {
+    return SEA.sign(msg, pair);
+  }
+
+  static verify(msg, pubKey) {
+    return SEA.verify(msg, pubKey);
   }
 }
 

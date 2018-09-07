@@ -1,10 +1,9 @@
 /*jshint unused: false */
 `use strict`;
-import {MessageDigest, jws, KEYUTIL, asn1} from 'jsrsasign';
 import util from './util';
 import Attribute from './attribute';
+import Key from './key';
 
-const JWS_MAX_LENGTH = 10000;
 const errorMsg = `Invalid Identifi message:`;
 
 class ValidationError extends Error {}
@@ -22,8 +21,17 @@ class Message {
   * Creates a message from the param object that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
   * @param signedData
   */
-  constructor(signedData: Object) {
-    this.signedData = signedData;
+  constructor(obj: Object) {
+    if (obj.signedData) {
+      this.signedData = obj.signedData;
+    }
+    if (obj.pubKey) {
+      this.pubKey = obj.pubKey;
+    }
+    if (obj.sig) {
+      this.sig = obj.sig;
+      this.getHash();
+    }
     this._validate();
   }
 
@@ -31,7 +39,7 @@ class Message {
   * @returns {string} Message signer keyID, i.e. base64 hash of public key
   */
   getSignerKeyID() {
-    return util.getHash(this.jwsHeader.key || this.jwsHeader.kid);
+    return util.getHash(this.pubKey);
   }
 
   _validate() {
@@ -44,7 +52,7 @@ class Message {
     if (!d.author.length) {throw new ValidationError(`${errorMsg} Author empty`);}
     let i;
     let authorKeyID;
-    if (this.jwsHeader) {
+    if (this.pubKey) {
       this.signerKeyHash = this.getSignerKeyID();
     }
     for (i = 0;i < d.author.length;i ++) {
@@ -102,15 +110,11 @@ class Message {
   }
 
   /**
-  * @param {Object} key key to sign the message with
+  * @param {Object} key Gun.SEA keypair to sign the message with
   * @param {boolean} skipValidation if true, skips message validation
   */
-  sign(key: Object, skipValidation: Boolean) {
-    this.jwsHeader = {alg: `ES256`, key: key.pubKeyASN1};
-    this.jws = jws.JWS.sign(this.jwsHeader.alg, JSON.stringify(this.jwsHeader), JSON.stringify(this.signedData), key);
-    if (!skipValidation) {
-      Message._validateJws(this.jws);
-    }
+  async sign(key: Object) {
+    this.sig = await Key.sign(JSON.stringify(this.signedData), key);
     this.getHash();
     return this;
   }
@@ -121,15 +125,16 @@ class Message {
   * @param {Object} signingKey optionally, you can set the key to sign the message with
   * @returns {Message} Identifi message
   */
-  static create(signedData: Object, signingKey: Object) {
+  static async create(signedData: Object, signingKey: Object) {
     if (!signedData.author && signingKey) {
-      signedData.author = [[`keyID`, signingKey.keyID]];
+      signedData.author = [[`keyID`, Key.getId(signingKey)]];
     }
     signedData.timestamp = signedData.timestamp || (new Date()).toISOString();
     signedData.context = signedData.context || `identifi`;
-    const m = new Message(signedData);
+    const m = new Message({signedData});
     if (signingKey) {
-      m.sign(signingKey);
+      await m.sign(signingKey);
+      m.pubKey = signingKey.pub;
     }
     return m;
   }
@@ -150,21 +155,6 @@ class Message {
     signedData.maxRating = signedData.maxRating || 10;
     signedData.minRating = signedData.minRating || - 10;
     return Message.create(signedData, signingKey);
-  }
-
-  /**
-  * Deserialize a message from a JWS string
-  * @param {string} jwsString JWS serialized Identifi message
-  * @returns {Message} Identifi message object
-  */
-  static fromJws(jwsString) {
-    Message._validateJws(jwsString);
-    const d = jws.JWS.parse(jwsString);
-    const msg = new Message(d.payloadObj);
-    msg.hash = Message.getHash(jwsString);
-    msg.jwsHeader = d.headerObj;
-    msg.jws = jwsString;
-    return msg;
   }
 
   /**
@@ -194,46 +184,29 @@ class Message {
   }
 
   /**
-  * @returns {string} base64 hash of message jws
+  * @returns {string} base64 hash of message
   */
   getHash() {
-    if (this.jws && !this.hash) {
-      this.hash = Message.getHash(this.jws);
+    if (this.sig && !this.hash) {
+      this.hash = util.getHash(this.sig);
     }
     return this.hash;
-  }
-
-  /**
-  * @returns {string} base64 hash of jws string
-  */
-  static getHash(jwsString) {
-    const hex = new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(jwsString);
-    return new Buffer(hex, `hex`).toString(`base64`);
   }
 
   /**
   * @return {boolean} true if message signature is valid. Otherwise throws ValidationError.
   */
   verify() {
-    const keyHex = this.jwsHeader.key || this.jwsHeader.kid;
-    const pem = asn1.ASN1Util.getPEMStringFromHex(keyHex, `PUBLIC KEY`);
-    const pubKey = KEYUTIL.getKey(pem);
-    if (!jws.JWS.verify(this.jws, pubKey, [this.jwsHeader.alg])) {
+    if (!Key.verify(this.sig, this.pubKey)) {
       throw new ValidationError(`${errorMsg} Invalid signature`);
     }
     if (this.hash) {
-      if (this.hash !== Message.getHash(this.jws)) {
+      if (this.hash !== Message.getHash(this.sig)) {
         throw new ValidationError(`${errorMsg} Invalid message hash`);
       }
     } else {
       this.getHash();
     }
-    return true;
-  }
-
-  static _validateJws(jwsString) {
-    if (typeof jwsString !== `string`) {throw new ValidationError(`${errorMsg} Message JWS must be a string`);}
-    if (jwsString.length > JWS_MAX_LENGTH) {throw new ValidationError(`${errorMsg} Message JWS max length is ${JWS_MAX_LENGTH}`);}
     return true;
   }
 }

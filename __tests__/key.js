@@ -9,29 +9,31 @@ beforeAll(() => {
   }
 });
 test('Generate key', async () => {
-  const i = await identifi.Key.generate('.');
+  const i = await identifi.Key.generate();
   expect(i).toBeDefined();
 });
 test('Serialize and deserialize a key', async () => {
-  const i = await identifi.Key.generate('.');
+  const i = await identifi.Key.generate();
   const serialized = identifi.Key.toJwk(i);
   expect(typeof serialized).toBe('string');
   const deserialized = identifi.Key.fromJwk(serialized);
   expect(typeof deserialized).toBe('object')
   expect(i).toBeDefined();
 });
-test('Get default key', async () => {
+test('Get default key and sign a message with it', async () => {
   const i = await identifi.Key.getDefault('.');
   expect(i).toBeDefined();
   const j = await identifi.Key.getDefault('.');
   expect(i).toEqual(j);
-  const msg = identifi.Message.createRating({
+  const msg = await identifi.Message.createRating({
     author: [['email', 'alice@example.com']],
     recipient: [['email', 'bob@example.com']],
     rating: 5,
     comment: 'Good guy'
   });
+  console.log(111);
   msg.sign(i);
+  console.log(222);
   expect(msg.verify()).toBe(true);
 });
 afterAll(() => {

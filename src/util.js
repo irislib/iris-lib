@@ -1,6 +1,6 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
-import {MessageDigest} from 'jsrsasign';
+import createHash from 'create-hash';
 
 let isNode = false;
 try {
@@ -9,8 +9,9 @@ try {
 
 export default {
   getHash: function(str) {
-    const hex = new MessageDigest({alg: `sha256`, prov: `cryptojs`}).digestString(str);
-    return new Buffer(hex, `hex`).toString(`base64`);
+    const hash = createHash('sha256');
+    hash.update(str);
+    return hash.digest('base64');
   },
 
   timeoutPromise(promise, timeout) {
