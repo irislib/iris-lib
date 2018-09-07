@@ -112,8 +112,9 @@ describe('local index', async () => {
     });
   });
   describe ('untrusted key', async () => {
-    const u = identifi.Key.generate();
+    let u;
     test('should not create new identity', async () => {
+      u = await identifi.Key.generate();
       let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'angus@example.com']], rating:10}, u);
       await i.addMessage(msg);
       p = await i.get('angus@example.com');

@@ -50,7 +50,8 @@ class Index {
   static async create(gun: Object, viewpoint: Attribute) {
     const i = new Index(gun);
     if (!viewpoint) {
-      viewpoint = {name: `keyID`, val: Key.getId(await Key.getDefault()), conf: 1, ref: 0};
+      const defaultKey = await Key.getDefault();
+      viewpoint = {name: `keyID`, val: Key.getId(defaultKey), conf: 1, ref: 0};
     }
     i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
     const vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});
@@ -141,10 +142,11 @@ class Index {
   async _getMsgs(msgIndex, limit, cursor) {
     const rawMsgs = await searchText(msgIndex, ``, limit, cursor, true);
     const msgs = [];
-    rawMsgs.forEach(row => {
-      const msg = Message.fromJws(row.value);
+    for (let i = 0;i < rawMsgs.length;i ++) {
+      console.log(4444, rawMsgs[i].value);
+      const msg = await Message.fromSig(rawMsgs[i].value);
       msgs.push(msg);
-    });
+    }
     return msgs;
   }
 
@@ -163,6 +165,7 @@ class Index {
   * @returns {Array} list of messages sent by param identity
   */
   async getSentMsgs(identity: Identity, limit, cursor = ``) {
+    console.log('getSentMsgs');
     return this._getMsgs(identity.gun.get(`sent`), limit, cursor);
   }
 
@@ -170,6 +173,7 @@ class Index {
   * @returns {Array} list of messages received by param identity
   */
   async getReceivedMsgs(identity, limit, cursor = ``) {
+    console.log('getReceivedMsgs');
     return this._getMsgs(identity.gun.get(`received`), limit, cursor);
   }
 
@@ -239,7 +243,8 @@ class Index {
         await recipient.get(`receivedNeutral`).put(id.receivedNeutral + 1);
       }
     }
-    await recipient.get(`received`).get(msgIndexKey).put(msg.jws).then();
+    console.log('le put', {sig: msg.sig, pubKey: msg.pubKey});
+    await recipient.get(`received`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
     const identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     for (let j = 0;j < identityIndexKeysBefore.length;j ++) {
       const k = identityIndexKeysBefore[j];
@@ -261,7 +266,7 @@ class Index {
         await author.get(`sentNeutral`).put(id.sentNeutral + 1);
       }
     }
-    return author.get(`sent`).get(msgIndexKey).put(msg.jws).then();
+    return author.get(`sent`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
   }
 
   async _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
@@ -286,7 +291,6 @@ class Index {
       const a = msg.signedData.author[i];
       const id = await this.get(a[1], a[0]);
       if (id) {
-
         authorIdentities[id.gun[`_`].link] = id;
       }
     }
@@ -356,11 +360,9 @@ class Index {
       while (author && knownIdentity) {
         if (author.indexOf(knownIdentity.key) === 0) {
           try {
-            const m = Message.fromJws(msgsByAuthor[author].jws);
-            await util.timeoutPromise(this.addMessage(m), 10000);
+            await util.timeoutPromise(this.addMessage(msgsByAuthor[author]), 10000);
           } catch (e) {
-            const m = Message.fromJws(msgsByAuthor[author].jws);
-            console.log(`adding failed:`, e, JSON.stringify(m, null, 2));
+            console.log(`adding failed:`, e, JSON.stringify(msgsByAuthor[author], null, 2));
           }
           msgAuthors.splice(i, 1);
           author = i < msgAuthors.length ? msgAuthors[i] : undefined;
@@ -385,9 +387,10 @@ class Index {
       return false; // do not save messages from untrusted author
     }
     let indexKey = Index.getMsgIndexKey(msg);
-    await this.gun.get(`messagesByDistance`).get(indexKey).put(msg.jws).then();
+    console.log({sig: msg.sig, pubKey: msg.pubKey});
+    await this.gun.get(`messagesByDistance`).get(indexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
     indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
-    await this.gun.get(`messagesByTimestamp`).get(indexKey).put(msg.jws).then();
+    await this.gun.get(`messagesByTimestamp`).get(indexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
     await this._updateIdentityIndexesByMsg(msg);
     return true;
   }

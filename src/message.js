@@ -29,6 +29,9 @@ class Message {
       this.pubKey = obj.pubKey;
     }
     if (obj.sig) {
+      if (typeof obj.sig !== 'string') {
+        throw new ValidationError(`Message signature must be a string`);
+      }
       this.sig = obj.sig;
       this.getHash();
     }
@@ -111,10 +114,9 @@ class Message {
 
   /**
   * @param {Object} key Gun.SEA keypair to sign the message with
-  * @param {boolean} skipValidation if true, skips message validation
   */
   async sign(key: Object) {
-    this.sig = await Key.sign(JSON.stringify(this.signedData), key);
+    this.sig = await Key.sign(this.signedData, key);
     this.pubKey = key.pub;
     this.getHash();
     return true;
@@ -191,6 +193,12 @@ class Message {
       this.hash = util.getHash(this.sig);
     }
     return this.hash;
+  }
+
+  static async fromSig(obj) {
+    const signedData = await Key.verify(obj.sig, obj.pubKey);
+    console.log(obj.sig, obj.pubKey, signedData);
+    return new Message({signedData, sig: obj.sig, pubKey: obj.pubKey});
   }
 
   /**
