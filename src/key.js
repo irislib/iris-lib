@@ -42,7 +42,6 @@ class Key {
         window.localStorage.setItem(`identifi.myKey`, Key.toJwk(myKey));
       }
     }
-    console.log(myKey);
     return myKey;
   }
 

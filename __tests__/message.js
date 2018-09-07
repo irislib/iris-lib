@@ -29,7 +29,6 @@ describe('Message', async () => {
     */
     test('should use signing key as author if not defined', async () => {
       const defaultKey = await Key.getDefault('.');
-      console.log('defaultKey', defaultKey);
       msg = await Message.createRating({
         recipient: [['email', 'bob@example.com']],
         rating: 5,
@@ -68,16 +67,16 @@ describe('Message', async () => {
         rating: 5,
         comment: 'Good guy'
       });
-      key = Key.generate();
+      key = await Key.generate();
     });
     test('should be signed with sign()', async () => {
-      msg.sign(key);
+      await msg.sign(key);
       expect(msg).toHaveProperty('sig');
       expect(msg).toHaveProperty('pubKey');
       expect(msg).toHaveProperty('hash');
     });
     test('should be verified with verify()', async () => {
-      expect(msg.verify()).toBe(true);
+      expect(await msg.verify()).toBe(true);
     });
   });
 });

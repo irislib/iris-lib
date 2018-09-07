@@ -50,7 +50,7 @@ class Index {
   static async create(gun: Object, viewpoint: Attribute) {
     const i = new Index(gun);
     if (!viewpoint) {
-      viewpoint = {name: `keyID`, val: Key.getDefault().keyID, conf: 1, ref: 0};
+      viewpoint = {name: `keyID`, val: Key.getId(await Key.getDefault()), conf: 1, ref: 0};
     }
     i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
     const vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});

@@ -31,10 +31,9 @@ test('Get default key and sign a message with it', async () => {
     rating: 5,
     comment: 'Good guy'
   });
-  console.log(111);
-  msg.sign(i);
-  console.log(222);
-  expect(msg.verify()).toBe(true);
+  await msg.sign(i);
+  console.log(i, msg);
+  expect(await msg.verify()).toBe(true);
 });
 afterAll(() => {
   if (fs.existsSync('./private.key')) {

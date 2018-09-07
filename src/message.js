@@ -115,8 +115,9 @@ class Message {
   */
   async sign(key: Object) {
     this.sig = await Key.sign(JSON.stringify(this.signedData), key);
+    this.pubKey = key.pub;
     this.getHash();
-    return this;
+    return true;
   }
 
   /**
@@ -134,7 +135,6 @@ class Message {
     const m = new Message({signedData});
     if (signingKey) {
       await m.sign(signingKey);
-      m.pubKey = signingKey.pub;
     }
     return m;
   }
@@ -196,12 +196,16 @@ class Message {
   /**
   * @return {boolean} true if message signature is valid. Otherwise throws ValidationError.
   */
-  verify() {
-    if (!Key.verify(this.sig, this.pubKey)) {
+  async verify() {
+    if (!this.pubKey) {
+      throw new ValidationError(`${errorMsg} Message has no .pubKey`);
+    }
+    this.signedData = await Key.verify(this.sig, this.pubKey);
+    if (!this.signedData) {
       throw new ValidationError(`${errorMsg} Invalid signature`);
     }
     if (this.hash) {
-      if (this.hash !== Message.getHash(this.sig)) {
+      if (this.hash !== util.getHash(this.sig)) {
         throw new ValidationError(`${errorMsg} Invalid message hash`);
       }
     } else {
