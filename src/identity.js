@@ -1,5 +1,6 @@
 import Identicon from 'identicon.js';
 import Attribute from './attribute';
+import util from './util';
 
 /**
 * An Identifi identity profile. Usually you don't create them yourself, but get them

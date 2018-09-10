@@ -2,7 +2,7 @@
 
 import util from './util';
 import Gun from 'gun';
-import sea from 'gun/sea';
+import sea from 'gun/sea'; // eslint-disable-line no-unused-vars
 const SEA = Gun.SEA;
 
 let myKey;
@@ -33,6 +33,9 @@ class Key {
         fs.writeFileSync(privKeyFile, Key.toJwk(myKey));
         fs.chmodSync(privKeyFile, 400);
       }
+      if (!myKey) {
+        throw new Error(`loading default key failed - check ${datadir}/private.key`);
+      }
     } else {
       const jwk = window.localStorage.getItem(`identifi.myKey`);
       if (jwk) {
@@ -40,6 +43,9 @@ class Key {
       } else {
         myKey = await Key.generate();
         window.localStorage.setItem(`identifi.myKey`, Key.toJwk(myKey));
+      }
+      if (!myKey) {
+        throw new Error(`loading default key failed - check localStorage identifi.myKey`);
       }
     }
     return myKey;

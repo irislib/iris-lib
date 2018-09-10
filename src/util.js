@@ -9,9 +9,12 @@ try {
 
 export default {
   getHash: function(str) {
-    const hash = createHash('sha256');
+    if (!str) {
+      return undefined;
+    }
+    const hash = createHash(`sha256`);
     hash.update(str);
-    return hash.digest('base64');
+    return hash.digest(`base64`);
   },
 
   timeoutPromise(promise, timeout) {

@@ -33,7 +33,7 @@ async function searchText(node, query, limit, cursor) {
         }
       }
     });
-    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve(); }, 1000);
+    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve(); }, 100);
   });
 }
 
@@ -53,7 +53,7 @@ class Index {
       const defaultKey = await Key.getDefault();
       viewpoint = {name: `keyID`, val: Key.getId(defaultKey), conf: 1, ref: 0};
     }
-    i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
+    await i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
     const vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});
     await i._addIdentityToIndexes(vp.gun);
     return i;
@@ -164,7 +164,7 @@ class Index {
   * @returns {Array} list of messages sent by param identity
   */
   async getSentMsgs(identity: Identity, limit, cursor = ``) {
-    console.log('getSentMsgs');
+    console.log(`getSentMsgs`);
     return this._getMsgs(identity.gun.get(`sent`), limit, cursor);
   }
 
@@ -172,7 +172,7 @@ class Index {
   * @returns {Array} list of messages received by param identity
   */
   async getReceivedMsgs(identity, limit, cursor = ``) {
-    console.log('getReceivedMsgs');
+    console.log(`getReceivedMsgs`);
     return this._getMsgs(identity.gun.get(`received`), limit, cursor);
   }
 
@@ -381,7 +381,7 @@ class Index {
   */
   async addMessage(msg: Message) {
     if (msg.constructor.name !== `Message`) {
-      throw new ValidationError(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
+      throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
     }
     msg.distance = await this.getMsgTrustDistance(msg);
     if (msg.distance === undefined) {

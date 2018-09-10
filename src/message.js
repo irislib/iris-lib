@@ -29,7 +29,7 @@ class Message {
       this.pubKey = obj.pubKey;
     }
     if (obj.sig) {
-      if (typeof obj.sig !== 'string') {
+      if (typeof obj.sig !== `string`) {
         throw new ValidationError(`Message signature must be a string`);
       }
       this.sig = obj.sig;
