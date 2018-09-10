@@ -116,7 +116,7 @@ class Message {
   * @param {Object} key Gun.SEA keypair to sign the message with
   */
   async sign(key: Object) {
-    this.sig = await Key.sign(this.signedData, key);
+    this.sig = `a${await Key.sign(this.signedData, key)}`;
     this.pubKey = key.pub;
     this.getHash();
     return true;
@@ -196,8 +196,7 @@ class Message {
   }
 
   static async fromSig(obj) {
-    const signedData = await Key.verify(obj.sig, obj.pubKey);
-    console.log(obj.sig, obj.pubKey, signedData);
+    const signedData = await Key.verify(obj.sig.slice(1), obj.pubKey);
     return new Message({signedData, sig: obj.sig, pubKey: obj.pubKey});
   }
 
@@ -208,7 +207,10 @@ class Message {
     if (!this.pubKey) {
       throw new ValidationError(`${errorMsg} Message has no .pubKey`);
     }
-    this.signedData = await Key.verify(this.sig, this.pubKey);
+    if (!this.sig) {
+      throw new ValidationError(`${errorMsg} Message has no .sig`);
+    }
+    this.signedData = await Key.verify(this.sig.slice(1), this.pubKey);
     if (!this.signedData) {
       throw new ValidationError(`${errorMsg} Invalid signature`);
     }

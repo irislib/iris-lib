@@ -32,7 +32,6 @@ test('Get default key and sign a message with it', async () => {
     comment: 'Good guy'
   });
   await msg.sign(i);
-  console.log(i, msg);
   expect(await msg.verify()).toBe(true);
 });
 afterAll(() => {

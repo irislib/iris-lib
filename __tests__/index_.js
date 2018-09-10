@@ -83,7 +83,7 @@ describe('local index', async () => {
   });
   describe('add more identities', async () => {
     test('bob -> carl', async () => {
-      let msg = identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'carl@example.com']], rating:10}, key);
+      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'carl@example.com']], rating:10}, key);
       await i.addMessage(msg);
       msg = await identifi.Message.createRating({author: [['email', 'carl@example.com']], recipient: [['email', 'david@example.com']], rating:10}, key);
       await i.addMessage(msg);
@@ -149,7 +149,7 @@ describe('local index', async () => {
           resolve();
         });
       });
-      const msg = identifi.Message.createVerification({recipient}, key);
+      const msg = await identifi.Message.createVerification({recipient}, key);
       const r = await i.addMessage(msg);
       viewpoint = await i.getViewpoint();
       const data = await new Promise(resolve => {
@@ -167,7 +167,7 @@ describe('local index', async () => {
   });
   test('get viewpoint identity by searching the default keyID', async () => {
     const defaultKey = await identifi.Key.getDefault();
-    p = await i.get(defaultKey.keyID, 'keyID');
+    p = await i.get(identifi.Key.getId(defaultKey), 'keyID');
     const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(data.trustDistance).toBe(0);

@@ -143,7 +143,6 @@ class Index {
     const rawMsgs = await searchText(msgIndex, ``, limit, cursor, true);
     const msgs = [];
     for (let i = 0;i < rawMsgs.length;i ++) {
-      console.log(4444, rawMsgs[i].value);
       const msg = await Message.fromSig(rawMsgs[i].value);
       msgs.push(msg);
     }
@@ -243,7 +242,6 @@ class Index {
         await recipient.get(`receivedNeutral`).put(id.receivedNeutral + 1);
       }
     }
-    console.log('le put', {sig: msg.sig, pubKey: msg.pubKey});
     await recipient.get(`received`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
     const identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     for (let j = 0;j < identityIndexKeysBefore.length;j ++) {
@@ -382,12 +380,14 @@ class Index {
   * @param msg Message to add to the index
   */
   async addMessage(msg: Message) {
+    if (msg.constructor.name !== `Message`) {
+      throw new ValidationError(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
+    }
     msg.distance = await this.getMsgTrustDistance(msg);
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
     }
     let indexKey = Index.getMsgIndexKey(msg);
-    console.log({sig: msg.sig, pubKey: msg.pubKey});
     await this.gun.get(`messagesByDistance`).get(indexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
     indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
     await this.gun.get(`messagesByTimestamp`).get(indexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
