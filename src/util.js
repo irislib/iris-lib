@@ -8,13 +8,13 @@ try {
 } catch (e) { null; }
 
 export default {
-  getHash: function(str) {
+  getHash: function(str, format = `base64`) {
     if (!str) {
       return undefined;
     }
     const hash = createHash(`sha256`);
     hash.update(str);
-    return hash.digest(`base64`);
+    return hash.digest(format);
   },
 
   timeoutPromise(promise, timeout) {

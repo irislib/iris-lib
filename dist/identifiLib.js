@@ -8289,12 +8289,14 @@
 
 	var util$1 = {
 	  getHash: function getHash(str) {
+	    var format = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'base64';
+
 	    if (!str) {
 	      return undefined;
 	    }
 	    var hash = browser$1('sha256');
 	    hash.update(str);
-	    return hash.digest('base64');
+	    return hash.digest(format);
 	  },
 
 	  timeoutPromise: function timeoutPromise(promise, timeout) {
@@ -12279,8 +12281,6 @@
 	}());
 	});
 
-	var SEA = gun_min.SEA;
-
 	var myKey = void 0;
 
 	/**
@@ -12366,15 +12366,16 @@
 
 
 	  Key.generate = function generate() {
-	    return SEA.pair();
+	    return (gun_min.SEA || window.SEA).pair();
 	  };
 
 	  Key.sign = function sign(msg, pair) {
-	    return SEA.sign(msg, pair);
+	    return (gun_min.SEA || window.SEA).sign(msg, pair);
 	  };
 
 	  Key.verify = function verify(msg, pubKey) {
-	    return SEA.verify(msg, pubKey);
+	    console.log('verifying', msg, 'with', pubKey);
+	    return (gun_min.SEA || window.SEA).verify(msg, pubKey);
 	  };
 
 	  return Key;
@@ -13384,7 +13385,7 @@
 	      pie.style.transform = transform;
 	      pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
 
-	      var hash = util$1.getHash(_JSON$stringify(data.linkTo));
+	      var hash = util$1.getHash(_JSON$stringify(data.linkTo), 'hex');
 	      var identiconImg = new identicon(hash, { width: width, format: 'svg' });
 
 	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();

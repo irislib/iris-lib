@@ -343,7 +343,7 @@ class Identity {
       pie.style.transform = transform;
       pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
 
-      const hash = util.getHash(JSON.stringify(data.linkTo));
+      const hash = util.getHash(JSON.stringify(data.linkTo), `hex`);
       const identiconImg = new Identicon(hash, {width, format: `svg`});
 
       img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;

@@ -3,7 +3,6 @@
 import util from './util';
 import Gun from 'gun';
 import sea from 'gun/sea'; // eslint-disable-line no-unused-vars
-const SEA = Gun.SEA;
 
 let myKey;
 
@@ -77,15 +76,16 @@ class Key {
   * @returns {Object} Gun.SEA private key object
   */
   static generate() {
-    return SEA.pair();
+    return (Gun.SEA || window.SEA).pair();
   }
 
   static sign(msg, pair) {
-    return SEA.sign(msg, pair);
+    return (Gun.SEA || window.SEA).sign(msg, pair);
   }
 
   static verify(msg, pubKey) {
-    return SEA.verify(msg, pubKey);
+    console.log(`verifying`, msg, `with`, pubKey);
+    return (Gun.SEA || window.SEA).verify(msg, pubKey);
   }
 }
 
