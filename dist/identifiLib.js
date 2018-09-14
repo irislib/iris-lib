@@ -12366,16 +12366,16 @@
 
 
 	  Key.generate = function generate() {
-	    return (gun_min.SEA || window.SEA).pair();
+	    return (gun_min.SEA || window.Gun.SEA).pair();
 	  };
 
-	  Key.sign = function sign(msg, pair) {
-	    return (gun_min.SEA || window.SEA).sign(msg, pair);
+	  Key.sign = async function sign(msg, pair) {
+	    var sig = await (gun_min.SEA || window.Gun.SEA).sign(msg, pair);
+	    return 'a' + sig;
 	  };
 
 	  Key.verify = function verify(msg, pubKey) {
-	    console.log('verifying', msg, 'with', pubKey);
-	    return (gun_min.SEA || window.SEA).verify(msg, pubKey);
+	    return (gun_min.SEA || window.Gun.SEA).verify(msg.slice(1), pubKey);
 	  };
 
 	  return Key;
@@ -12558,7 +12558,7 @@
 
 
 	  Message.prototype.sign = async function sign(key) {
-	    this.sig = 'a' + (await Key.sign(this.signedData, key));
+	    this.sig = await Key.sign(this.signedData, key);
 	    this.pubKey = key.pub;
 	    this.getHash();
 	    return true;
@@ -12650,7 +12650,7 @@
 	  };
 
 	  Message.fromSig = async function fromSig(obj) {
-	    var signedData = await Key.verify(obj.sig.slice(1), obj.pubKey);
+	    var signedData = await Key.verify(obj.sig, obj.pubKey);
 	    return new Message({ signedData: signedData, sig: obj.sig, pubKey: obj.pubKey });
 	  };
 
@@ -12666,7 +12666,7 @@
 	    if (!this.sig) {
 	      throw new ValidationError(errorMsg + ' Message has no .sig');
 	    }
-	    this.signedData = await Key.verify(this.sig.slice(1), this.pubKey);
+	    this.signedData = await Key.verify(this.sig, this.pubKey);
 	    if (!this.signedData) {
 	      throw new ValidationError(errorMsg + ' Invalid signature');
 	    }

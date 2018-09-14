@@ -76,16 +76,16 @@ class Key {
   * @returns {Object} Gun.SEA private key object
   */
   static generate() {
-    return (Gun.SEA || window.SEA).pair();
+    return (Gun.SEA || window.Gun.SEA).pair();
   }
 
-  static sign(msg, pair) {
-    return (Gun.SEA || window.SEA).sign(msg, pair);
+  static async sign(msg, pair) {
+    const sig = await (Gun.SEA || window.Gun.SEA).sign(msg, pair);
+    return `a${sig}`;
   }
 
   static verify(msg, pubKey) {
-    console.log(`verifying`, msg, `with`, pubKey);
-    return (Gun.SEA || window.SEA).verify(msg, pubKey);
+    return (Gun.SEA || window.Gun.SEA).verify(msg.slice(1), pubKey);
   }
 }
 
