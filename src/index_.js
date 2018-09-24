@@ -6,35 +6,26 @@ import util from './util';
 import Gun from 'gun'; // eslint-disable-line no-unused-vars
 import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
+import space from 'gun/lib/space'; // eslint-disable-line no-unused-vars
 
 // temp method for GUN search
 async function searchText(node, query, limit, cursor) {
-  return new Promise(resolve => {
-    const r = [];
-    function sortAndResolve() {
-      r.sort((a, b) => {
-        if (a.key < b.key) {
-          return - 1;
-        }
-        if (a.key > b.key) {
-          return 1;
-        }
-        return 0;
-      });
-      resolve(r);
+  const reply = await node.space(query);
+  const keys = Object.keys(reply.tree);
+  const r = [];
+  for (let i = 0;i < keys.length;i ++) {
+    r.push({key:keys[i], val:reply.tree[keys[i]]});
+  }
+  r.sort((a, b) => {
+    if (a.key < b.key) {
+      return - 1;
     }
-    node.map((value, key) => {
-      if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
-        if (value) {
-          r.push({value, key});
-        }
-        if (r.length >= limit) {
-          sortAndResolve();
-        }
-      }
-    });
-    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve(); }, 100);
+    if (a.key > b.key) {
+      return 1;
+    }
+    return 0;
   });
+  return r;
 }
 
 // TODO: make the whole thing use GUN for indexing and flush onto IPFS
@@ -54,6 +45,7 @@ class Index {
       viewpoint = {name: `keyID`, val: Key.getId(defaultKey), conf: 1, ref: 0};
     }
     await i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
+    console.log(viewpoint, new Attribute(viewpoint));
     const vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});
     await i._addIdentityToIndexes(vp.gun);
     return i;
@@ -114,8 +106,12 @@ class Index {
   * @returns {Identity} viewpoint identity of the index
   */
   async getViewpoint() {
-    const k = await new Promise(resolve => this.gun.get(`identitiesByTrustDistance`).map((v, k) => k.indexOf(`00`) === 0 ? resolve(k) : 0));
-    return new Identity(this.gun.get(`identitiesByTrustDistance`).get(k));
+    const r = await this.gun.get(`identitiesByTrustDistance`).space(`00`);
+    console.log(`r`, r);
+    const keys = Object.keys(r.tree);
+    if (keys.length) {
+      return new Identity(this.gun.get(`identitiesByTrustDistance`).get(r.tree[keys[0]]));
+    }
   }
 
   /**
@@ -140,10 +136,11 @@ class Index {
   }
 
   async _getMsgs(msgIndex, limit, cursor) {
-    const rawMsgs = await searchText(msgIndex, ``, limit, cursor, true);
+    const rawMsgs = await msgIndex.space(``);
     const msgs = [];
-    for (let i = 0;i < rawMsgs.length;i ++) {
-      const msg = await Message.fromSig(rawMsgs[i].value);
+    const keys = Object.keys(rawMsgs);
+    for (let i = 0;i < keys.length;i ++) {
+      const msg = await Message.fromSig(rawMsgs[keys[i]].value);
       msgs.push(msg);
     }
     return msgs;
@@ -154,10 +151,11 @@ class Index {
     const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(0, 6));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
-      console.log(`adding key ${key}`);
-      await this.gun.get(`identitiesByTrustDistance`).get(key).put(id).then();
-      await this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id).then();
+      console.log(`adding key ${key}, id ${JSON.stringify(id)}`, id);
+      await this.gun.get(`identitiesByTrustDistance`).space('tuuuuut', id).then();
+      await this.gun.get(`identitiesBySearchKey`).space(key.substr(key.indexOf(`:`) + 1), id).then();
     }
+    this.gun.get(`identitiesByTrustDistance`).space(`tuu`, r => console.log(6666,r));
   }
 
   /**
