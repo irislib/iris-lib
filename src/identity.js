@@ -18,6 +18,8 @@ class Identity {
     data.sentNegative = data.sentNegative || 0;
     data.sentPositive = data.sentPositive || 0;
     data.sentNeutral = data.sentNeutral || 0;
+    data.sent = {};
+    data.received = {};
     data.trustDistance = data.hasOwnProperty(`trustDistance`) ? data.trustDistance : 99;
     data.attrs = data.attrs || {};
     if (Array.isArray(data.attrs)) {

@@ -6,6 +6,10 @@
 
 	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
+	function commonjsRequire () {
+		throw new Error('Dynamic requires are not currently supported by rollup-plugin-commonjs');
+	}
+
 	function unwrapExports (x) {
 		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 	}
@@ -8470,53 +8474,2897 @@
 	var _JSON$stringify = unwrapExports(stringify$1);
 
 	var gun_min = createCommonjsModule(function (module) {
-	!function(){function t(n){function o(t){return t.split("/").slice(-1).toString().replace(".js","")}return n.slice?t[o(n)]:function(e,i){n(e={exports:{}}),t[o(i)]=e.exports;}}var n;"undefined"!=typeof window&&(n=window),"undefined"!=typeof commonjsGlobal&&(n=commonjsGlobal),n=n||{};var o=n.console||{log:function(){}};var e=module;t(function(t){var n={};n.fn={is:function(t){return !!t&&"function"==typeof t}},n.bi={is:function(t){return t instanceof Boolean||"boolean"==typeof t}},n.num={is:function(t){return !e(t)&&(t-parseFloat(t)+1>=0||1/0===t||-(1/0)===t)}},n.text={is:function(t){return "string"==typeof t}},n.text.ify=function(t){return n.text.is(t)?t:"undefined"!=typeof JSON?JSON.stringify(t):t&&t.toString?t.toString():t},n.text.random=function(t,n){var o="";for(t=t||24,n=n||"0123456789ABCDEFGHIJKLMNOPQRSTUVWXZabcdefghijklmnopqrstuvwxyz";t>0;)o+=n.charAt(Math.floor(Math.random()*n.length)),t--;return o},n.text.match=function(t,o){function e(t,n){for(var o,e=-1,i=0;o=n[i++];)if(!~(e=t.indexOf(o,e+1)))return !1;return !0}var i=!1;if(t=t||"",o=n.text.is(o)?{"=":o}:o||{},n.obj.has(o,"~")&&(t=t.toLowerCase(),o["="]=(o["="]||o["~"]).toLowerCase()),n.obj.has(o,"="))return t===o["="];if(n.obj.has(o,"*")){if(t.slice(0,o["*"].length)!==o["*"])return !1;i=!0,t=t.slice(o["*"].length);}if(n.obj.has(o,"!")){if(t.slice(-o["!"].length)!==o["!"])return !1;i=!0;}if(n.obj.has(o,"+")&&n.list.map(n.list.is(o["+"])?o["+"]:[o["+"]],function(n){return t.indexOf(n)>=0?void(i=!0):!0}))return !1;if(n.obj.has(o,"-")&&n.list.map(n.list.is(o["-"])?o["-"]:[o["-"]],function(n){return t.indexOf(n)<0?void(i=!0):!0}))return !1;if(n.obj.has(o,">")){if(!(t>o[">"]))return !1;i=!0;}if(n.obj.has(o,"<")){if(!(t<o["<"]))return !1;i=!0;}if(n.obj.has(o,"?")){if(!e(t,o["?"]))return !1;i=!0;}return i},n.list={is:function(t){return t instanceof Array}},n.list.slit=Array.prototype.slice,n.list.sort=function(t){return function(n,o){return n&&o?(n=n[t],o=o[t],o>n?-1:n>o?1:0):0}},n.list.map=function(t,n,o){return a(t,n,o)},n.list.index=1,n.obj={is:function(t){return t?t instanceof Object&&t.constructor===Object||"Object"===Object.prototype.toString.call(t).match(/^\[object (\w+)\]$/)[1]:!1}},n.obj.put=function(t,n,o){return (t||{})[n]=o,t},n.obj.has=function(t,n){return t&&Object.prototype.hasOwnProperty.call(t,n)},n.obj.del=function(t,n){return t?(t[n]=null,delete t[n],t):void 0},n.obj.as=function(t,n,o,e){return t[n]=t[n]||(e===o?{}:o)},n.obj.ify=function(t){if(r(t))return t;try{t=JSON.parse(t);}catch(n){t={};}return t},function(){function t(t,n){u(this,n)&&o!==this[n]||(this[n]=t);}var o;n.obj.to=function(n,o){return o=o||{},a(n,t,o),o};}(),n.obj.copy=function(t){return t?JSON.parse(JSON.stringify(t)):t},function(){function t(t,n){var o=this.n;if(!o||!(n===o||r(o)&&u(o,n)))return n?!0:void 0}n.obj.empty=function(n,o){return n&&a(n,t,{n:o})?!1:!0};}(),function(){function t(n,o){return 2===arguments.length?(t.r=t.r||{},void(t.r[n]=o)):(t.r=t.r||[],void t.r.push(n))}var i=Object.keys;n.obj.map=function(a,s,f){var c,l,p,d,h,v=0,g=o(s);if(t.r=null,i&&r(a)&&(d=i(a),h=!0),e(a)||d)for(l=(d||a).length;l>v;v++){var m=v+n.list.index;if(g){if(p=h?s.call(f||this,a[d[v]],d[v],t):s.call(f||this,a[v],m,t),p!==c)return p}else if(s===a[h?d[v]:v])return d?d[v]:m}else for(v in a)if(g){if(u(a,v)&&(p=f?s.call(f,a[v],v,t):s(a[v],v,t),p!==c))return p}else if(s===a[v])return v;return g?t.r:n.list.index?0:-1};}(),n.time={},n.time.is=function(t){return t?t instanceof Date:+(new Date).getTime()};var o=n.fn.is,e=n.list.is,i=n.obj,r=i.is,u=i.has,a=i.map;t.exports=n;})(t,"./type"),t(function(t){t.exports=function n(t,o,e){if(!t)return {to:n};var i,t=(this.tag||(this.tag={}))[t]||(this.tag[t]={tag:t,to:n._={next:function(t){var n;(n=this.to)&&n.next(t);}}});if(o instanceof Function){var r={off:n.off||(n.off=function(){return this.next===n._.next?!0:(this===this.the.last&&(this.the.last=this.back),this.to.back=this.back,this.next=n._.next,this.back.to=this.to,void(this.the.last===this.the&&delete this.on.tag[this.the.tag]))}),to:n._,next:o,the:t,on:this,as:e};return (r.back=t.last||t).to=r,t.last=r}return (t=t.to)&&i!==o&&t.next(o),t};})(t,"./onto"),t(function(t){function n(t,n,e,i,r){if(n>t)return {defer:!0};if(e>n)return {historical:!0};if(n>e)return {converge:!0,incoming:!0};if(n===e){if(i=o(i)||"",r=o(r)||"",i===r)return {state:!0};if(r>i)return {converge:!0,current:!0};if(i>r)return {converge:!0,incoming:!0}}return {err:"Invalid CRDT Data: "+i+" to "+r+" at "+n+" to "+e+"!"}}if("undefined"==typeof JSON)throw new Error("JSON is not included in this browser. Please load it first: ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js");var o=JSON.stringify;t.exports=n;})(t,"./HAM"),t(function(n){var o=t("./type"),e={};e.is=function(t){return t===i?!1:null===t?!0:t===1/0?!1:s(t)||u(t)||a(t)?!0:e.rel.is(t)||!1},e.link=e.rel={_:"#"},function(){function t(t,n){var o=this;return o.id?o.id=!1:n==r&&s(t)?void(o.id=t):o.id=!1}e.rel.is=function(n){if(n&&n[r]&&!n._&&c(n)){var o={};if(p(n,t,o),o.id)return o.id}return !1};}(),e.rel.ify=function(t){return l({},r,t)},o.obj.has._=".";var i,r=e.link._,u=o.bi.is,a=o.num.is,s=o.text.is,f=o.obj,c=f.is,l=f.put,p=f.map;n.exports=e;})(t,"./val"),t(function(n){var o=t("./type"),e=t("./val"),i={_:"_"};i.soul=function(t,n){return t&&t._&&t._[n||p]},i.soul.ify=function(t,n){return n="string"==typeof n?{soul:n}:n||{},t=t||{},t._=t._||{},t._[p]=n.soul||t._[p]||l(),t},i.soul._=e.link._,function(){function t(t,n){return n!==i._?e.is(t)?void(this.cb&&this.cb.call(this.as,t,n,this.n,this.s)):!0:void 0}i.is=function(n,o,e){var r;return a(n)&&(r=i.soul(n))?!f(n,t,{as:e,cb:o,s:r,n:n}):!1};}(),function(){function t(t,n){var o,i,r=this.o;return r.map?(o=r.map.call(this.as,t,""+n,r.node),void(i===o?s(r.node,n):r.node&&(r.node[n]=o))):void(e.is(t)&&(r.node[n]=t))}i.ify=function(n,o,e){return o?"string"==typeof o?o={soul:o}:o instanceof Function&&(o={map:o}):o={},o.map&&(o.node=o.map.call(e,n,r,o.node||{})),(o.node=i.soul.ify(o.node||{},o))&&f(n,t,{o:o,as:e}),o.node};}();var r,u=o.obj,a=u.is,s=u.del,f=u.map,c=o.text,l=c.random,p=i.soul._;n.exports=i;})(t,"./node"),t(function(n){function o(){var t;return t=r(),t>u?(a=0,u=t+o.drift):u=t+(a+=1)/s+o.drift}{var e=t("./type"),i=t("./node"),r=e.time.is,u=-(1/0),a=0,s=1e3,f="undefined"!=typeof performance?performance.timing&&performance:!1;f&&f.timing&&f.timing.navigationStart||(f=!1);}o._=">",o.drift=0,o.is=function(t,n,e){var i=n&&t&&t[_]&&t[_][o._]||e;if(i)return b(i=i[n])?i:-(1/0)},o.lex=function(){return o().toString(36).replace(".","")},o.ify=function(t,n,e,r,u){if(!t||!t[_]){if(!u)return;t=i.soul.ify(t,u);}var a=p(t[_],o._);return c!==n&&n!==_&&(b(e)&&(a[n]=e),c!==r&&(t[n]=r)),t},o.to=function(t,n,e){var r=t[n];return h(r)&&(r=g(r)),o.ify(e,n,o.is(t,n),r,i.soul(t))},function(){function t(t,n){_!==n&&o.ify(this.o,n,this.s);}o.map=function(n,e,i){var r,u=h(u=n||e)?u:null;return n=y(n=n||e)?n:null,u&&!n?(e=b(e)?e:o(),u[_]=u[_]||{},v(u,t,{o:u,s:e}),u):(i=i||h(e)?e:r,e=b(e)?e:o(),function(o,u,a,s){return n?(n.call(i||this||{},o,u,a,s),void(d(a,u)&&r===a[u]||t.call({o:a,s:e},o,u))):(t.call({o:a,s:e},o,u),o)})};}();var c,l=e.obj,p=l.as,d=l.has,h=l.is,v=l.map,g=l.copy,m=e.num,b=m.is,k=e.fn,y=k.is,_=i._;n.exports=o;})(t,"./state"),t(function(n){var o=t("./type"),e=t("./val"),i=t("./node"),r={};!function(){function t(t,o){return t&&o===i.soul(t)&&i.is(t,this.fn,this.as)?void(this.cb&&(n.n=t,n.as=this.as,this.cb.call(n.as,t,o,n))):!0}function n(t){t&&i.is(n.n,t,n.as);}r.is=function(n,o,e,i){return n&&s(n)&&!l(n)?!d(n,t,{cb:o,fn:e,as:i}):!1};}(),function(){function t(t,o){var r;return (r=p(t,o))?r:(o.env=t,o.soul=a,i.ify(o.obj,n,o)&&(o.rel=o.rel||e.rel.ify(i.soul(o.node)),o.obj!==t.shell&&(t.graph[e.rel.is(o.rel)]=o.node)),o)}function n(n,o,r){var a,s,p=this,d=p.env;if(i._===o&&c(n,e.rel._))return r._;if(a=l(n,o,r,p,d)){if(o||(p.node=p.node||r||{},c(n,i._)&&i.soul(n)&&(p.node._=h(n._)),p.node=i.soul.ify(p.node,e.rel.is(p.rel)),p.rel=p.rel||e.rel.ify(i.soul(p.node))),(s=d.map)&&(s.call(d.as||{},n,o,r,p),c(r,o))){if(n=r[o],u===n)return void f(r,o);if(!(a=l(n,o,r,p,d)))return}if(!o)return p.node;if(!0===a)return n;if(s=t(d,{obj:n,path:p.path.concat(o)}),s.node)return s.rel}}function a(t){var n=this,o=e.link.is(n.rel),r=n.env.graph;n.rel=n.rel||e.rel.ify(t),n.rel[e.rel._]=t,n.node&&n.node[i._]&&(n.node[i._][e.rel._]=t),c(r,o)&&(r[t]=r[o],f(r,o));}function l(t,n,i,r,u){var a;return e.is(t)?!0:s(t)?1:(a=u.invalid)?(t=a.call(u.as||{},t,n,i),l(t,n,i,r,u)):(u.err="Invalid value at '"+r.path.concat(n).join(".")+"'!",void(o.list.is(t)&&(u.err+=" Use `.set(item)` instead of an Array.")))}function p(t,n){for(var o,e=t.seen,i=e.length;i--;)if(o=e[i],n.obj===o.obj)return o;e.push(n);}r.ify=function(n,o,i){var r={path:[],obj:n};return o?"string"==typeof o?o={soul:o}:o instanceof Function&&(o.map=o):o={},o.soul&&(r.rel=e.rel.ify(o.soul)),o.shell=(i||{}).shell,o.graph=o.graph||{},o.seen=o.seen||[],o.as=o.as||i,t(o,r),o.root=r.node,o.graph};}(),r.node=function(t){var n=i.soul(t);if(n)return p({},n,t)},function(){function t(t,n){var o,u;if(i._===n){if(l(t,e.rel._))return;return void(this.obj[n]=h(t))}return (o=e.rel.is(t))?(u=this.opt.seen[o])?void(this.obj[n]=u):void(this.obj[n]=this.opt.seen[o]=r.to(this.graph,o,this.opt)):void(this.obj[n]=t)}r.to=function(n,o,e){if(n){var i={};return e=e||{seen:{}},d(n[o],t,{obj:i,graph:n,opt:e}),i}};}();var u,a=(o.fn.is,o.obj),s=a.is,f=a.del,c=a.has,l=a.empty,p=a.put,d=a.map,h=a.copy;n.exports=r;})(t,"./graph"),t(function(n){t("./onto"),n.exports=function(t,n){if(this.on){if(!(t instanceof Function)){if(!t||!n)return;var o=t["#"]||t,e=(this.tag||empty)[o];if(!e)return;return e=this.on(o,n),clearTimeout(e.err),!0}var o=n&&n["#"]||Math.random().toString(36).slice(2);if(!t)return o;var i=this.on(o,t,n);return i.err=i.err||setTimeout(function(){i.next({err:"Error: No ACK received yet.",lack:!0}),i.off();},(this.opt||{}).lack||9e3),o}};})(t,"./ask"),t(function(n){function o(t){var n={s:{}};return t=t||{max:1e3,age:9e3},n.check=function(t){var o;return (o=n.s[t])?o.pass?o.pass=!1:n.track(t):!1},n.track=function(o,r){var u=n.s[o]||(n.s[o]={});return u.was=i(),r&&(u.pass=!0),n.to||(n.to=setTimeout(function(){var o=i();e.obj.map(n.s,function(i,r){t.age>o-i.was||e.obj.del(n.s,r);}),n.to=null;},t.age+9)),u},n}var e=t("./type"),i=e.time.is;n.exports=o;})(t,"./dup"),t(function(n){function i(t){return t instanceof i?(this._={gun:this,$:this}).$:this instanceof i?i.create(this._={gun:this,$:this,opt:t}):new i(t)}i.is=function(t){return t instanceof i||t&&t._&&t===t._.$||!1},i.version=.9,i.chain=i.prototype,i.chain.toJSON=function(){};var r=t("./type");r.obj.to(r,i),i.HAM=t("./HAM"),i.val=t("./val"),i.node=t("./node"),i.state=t("./state"),i.graph=t("./graph"),i.on=t("./onto"),i.ask=t("./ask"),i.dup=t("./dup"),function(){function t(n){var o,e,r=this,a=r.as,s=a.at||a,f=s.$;return (e=n["#"])||(e=n["#"]=c(9)),(o=s.dup).check(e)?void(a.out===n.out&&(n.out=u,r.to.next(n))):(o.track(e),s.ask(n["@"],n)||(n.get&&i.on.get(n,f),n.put&&i.on.put(n,f)),r.to.next(n),void(a.out||(n.out=t,s.on("out",n))))}i.create=function(n){n.root=n.root||n,n.graph=n.graph||{},n.on=n.on||i.on,n.ask=n.ask||i.ask,n.dup=n.dup||i.dup();var o=n.$.opt(n.opt);return n.once||(n.on("in",t,n),n.on("out",t,{at:n,out:t}),i.on("create",n),n.on("create",n)),n.once=1,o};}(),function(){function t(t,n,o,e){var r=this,u=i.state.is(o,n);if(!u)return r.err="Error: No state on '"+n+"' in node '"+e+"'!";var a=r.graph[e]||k,s=i.state.is(a,n,!0),f=a[n],c=i.HAM(r.machine,u,s,t,f);return c.incoming?(r.put[e]=i.state.to(o,n,r.put[e]),(r.diff||(r.diff={}))[e]=i.state.to(o,n,r.diff[e]),void(r.souls[e]=!0)):void(c.defer&&(r.defer=u<(r.defer||1/0)?u:r.defer))}function n(t,n){var i=this,u=i.$._,a=(u.next||k)[n];if(!a){if(!(u.opt||k)["super"])return void(i.souls[n]=!1);a=i.$.get(n)._;}var s=i.map[n]={put:t,get:n,$:a.$},f={ctx:i,msg:s};i.async=!!u.tag.node,i.ack&&(s["@"]=i.ack),v(t,o,f),i.async&&(i.and||u.on("node",function(t){this.to.next(t),t===i.map[t.get]&&(i.souls[t.get]=!1,v(t.put,e,t),v(i.souls,function(t){return t?t:void 0})||i.c||(i.c=1,this.off(),v(i.map,r,i)));}),i.and=!0,u.on("node",s));}function o(t,n){var o=this.ctx,e=o.graph,r=this.msg,u=r.get,a=r.put,s=r.$._;e[u]=i.state.to(a,n,e[u]),o.async||(s.put=i.state.to(a,n,s.put));}function e(t,n){var o=this,e=o.put,r=o.$._;r.put=i.state.to(e,n,r.put);}function r(t){t.$&&(this.cat.stop=this.stop,t.$._.on("in",t),this.cat.stop=null);}i.on.put=function(o,e){var a=e._,s={$:e,graph:a.graph,put:{},map:{},souls:{},machine:i.state(),ack:o["@"],cat:a,stop:{}};return i.graph.is(o.put,null,t,s)||(s.err="Error: Invalid graph!"),s.err?a.on("in",{"@":o["#"],err:i.log(s.err)}):(v(s.put,n,s),s.async||v(s.map,r,s),u!==s.defer&&setTimeout(function(){i.on.put(o,e);},s.defer-s.machine),void(s.diff&&a.on("put",h(o,{put:s.diff}))))},i.on.get=function(t,n){var o,e=n._,r=t.get,u=r[m],a=e.graph[u],s=r[b],f=e.next||(e.next={}),c=f[u];if(d(u,"*")){var l={};i.obj.map(e.graph,function(t,n){i.text.match(n,u)&&(l[n]=i.obj.copy(t));}),i.obj.empty(l)||e.on("in",{"@":t["#"],how:"*",put:l,$:n});}if(!a)return e.on("get",t);if(s){if(!d(a,s))return e.on("get",t);a=i.state.to(a,s);}else a=i.obj.copy(a);a=i.graph.node(a),o=(c||k).ack,e.on("in",{"@":t["#"],how:"mem",put:a,$:n}),e.on("get",t);};}(),function(){i.chain.opt=function(t){t=t||{};var n=this,o=n._,e=t.peers||t;return p(t)||(t={}),p(o.opt)||(o.opt=t),f(e)&&(e=[e]),a(e)&&(e=v(e,function(t,n,o){o(t,{url:t});}),p(o.opt.peers)||(o.opt.peers={}),o.opt.peers=h(e,o.opt.peers)),o.opt.peers=o.opt.peers||{},h(t,o.opt),i.on("opt",o),o.opt.uuid=o.opt.uuid||function(){return g()+c(12)},n};}();var u,a=i.list.is,s=i.text,f=s.is,c=s.random,l=i.obj,p=l.is,d=l.has,h=l.to,v=l.map,g=(l.copy,i.state.lex),m=i.val.rel._,b=".",k=(i.node._,i.val.link.is,{});o.debug=function(t,n){return o.debug.i&&t===o.debug.i&&o.debug.i++&&(o.log.apply(o,arguments)||n)},i.log=function(){return !i.log.off&&o.log.apply(o,arguments),[].slice.call(arguments).join(" ")},i.log.once=function(t,n,o){return (o=i.log.once)[t]=o[t]||0,o[t]++||i.log(n)},i.log.once("welcome","Hello wonderful person! :) Thanks for using GUN, feel free to ask for help on https://gitter.im/amark/gun and ask StackOverflow questions tagged with 'gun'!"),"undefined"!=typeof window&&((window.Gun=i).window=window);try{"undefined"!=typeof e&&(e.exports=i);}catch(y){}n.exports=i;})(t,"./root"),t(function(){var n=t("./root");n.chain.back=function(t,i){var r;if(t=t||1,-1===t||1/0===t)return this._.root.$;if(1===t)return (this._.back||this._).$;var u=this,a=u._;if("string"==typeof t&&(t=t.split(".")),!(t instanceof Array)){if(t instanceof Function){for(var s,r={back:a};(r=r.back)&&o===(s=t(r,i)););return s}return n.num.is(t)?(a.back||a).$.back(t-1):this}var f=0,c=t.length,r=a;for(f;c>f;f++)r=(r||e)[t[f]];return o!==r?i?u:r:(r=a.back)?r.$.back(t,i):void 0};var o,e={};})(t,"./back"),t(function(){function n(t){var n,o,e,i=this.as,r=i.back,u=i.root;if(t.I||(t.I=i.$),t.$||(t.$=i.$),this.to.next(t),o=t.get){if(o["#"]||i.soul){if(o["#"]=o["#"]||i.soul,t["#"]||(t["#"]=b(9)),r=u.$.get(o["#"])._,o=o["."]){if(h(r.put,o)&&(n=r.$.get(o)._,(e=n.ack)||(n.ack=-1),r.on("in",{$:r.$,put:c.state.to(r.put,o),get:r.get}),e))return}else{if(e=r.ack,e||(r.ack=-1),h(r,"put")&&r.on("in",r),e)return;t.$=r.$;}return u.ask(f,t),u.on("in",t)}if(u.now&&(u.now[i.id]=u.now[i.id]||!0,i.pass={}),o["."])return i.get?(t={get:{".":i.get},$:i.$},r.ask||(r.ask={}),r.ask[i.get]=t.$._,r.on("out",t)):(t={get:{},$:i.$},r.on("out",t));if(i.ack=i.ack||-1,i.get)return t.$=i.$,o["."]=i.get,(r.ask||(r.ask={}))[i.get]=t.$._,r.on("out",t)}return r.on("out",t)}function o(t){var n,o,r=this,s=r.as,f=s.root,d=t.$,b=(d||p)._||p,k=t.put;if(s.get&&t.get!==s.get&&(t=g(t,{get:s.get})),s.has&&b!==s&&(t=g(t,{$:s.$}),b.ack&&(s.ack=b.ack)),l===k){if(o=b.put,r.to.next(t),s.soul)return;if(l===o&&l!==b.put)return;return i(s,t,r),s.has&&a(s,t),v(b.echo,s.id),void v(s.map,b.id)}if(s.soul)return r.to.next(t),i(s,t,r),void(s.next&&m(k,u,{msg:t,cat:s}));if(!(n=c.val.link.is(k)))return c.val.is(k)?(s.has||s.soul?a(s,t):(b.has||b.soul)&&((b.echo||(b.echo={}))[s.id]=b.echo[b.id]||s,(s.map||(s.map={}))[b.id]=s.map[b.id]||{at:b}),r.to.next(t),void i(s,t,r)):(s.has&&b!==s&&h(b,"put")&&(s.put=b.put),(n=c.node.soul(k))&&b.has&&(b.put=s.root.$.get(n)._.put),o=(f.stop||{})[b.id],r.to.next(t),e(s,t,b,n),i(s,t,r),void(s.next&&m(k,u,{msg:t,cat:s})));f.stop;o=f.stop||{},o=o[b.id]||(o[b.id]={}),o.is=o.is||b.put,o[s.id]=b.put||!0,r.to.next(t),e(s,t,b,n),i(s,t,r);}function e(t,n,o,i){if(i&&k!==t.get){var r=t.root.$.get(i)._;t.has?o=r:o.has&&e(o,n,o,i),o!==t&&(o.$||(o={}),(o.echo||(o.echo={}))[t.id]=o.echo[t.id]||t,t.has&&!(t.map||p)[o.id]&&a(t,n),r=o.id?(t.map||(t.map={}))[o.id]=t.map[o.id]||{at:o}:{},(i!==r.link||r.pass||t.pass)&&(t.pass&&(c.obj.map(t.map,function(t){t.pass=!0;}),v(t,"pass")),r.pass&&v(r,"pass"),t.has&&(t.link=i),s(t,r.link=i)));}}function i(t,n){t.echo&&m(t.echo,r,n);}function r(t){t&&t.on&&t.on("in",this);}function u(t,n){var o,e,i,r=this.cat,u=r.next||p,a=this.msg;(k!==n||u[n])&&(e=u[n])&&(e.has?(l!==e.put&&c.val.link.is(t)||(e.put=t),o=e.$):(i=a.$)&&(i=(o=a.$.get(n))._,l!==i.put&&c.val.link.is(t)||(i.put=t)),e.on("in",{put:t,get:n,$:o,via:a}));}function a(t,n){if(t.has||t.soul){{var o=t.map;t.root;}t.map=null,t.has&&(t.link=null),(t.pass||n["@"]||null!==o)&&(l===o&&c.val.link.is(t.put)||(m(o,function(n){(n=n.at)&&v(n.echo,t.id);}),o=t.put,m(t.next,function(n,e){return l===o&&l!==t.put?!0:(n.put=l,n.ack&&(n.ack=-1),void n.on("in",{get:e,$:n.$,put:l}))})));}}function s(t,n){var o=t.root.$.get(n)._;(!t.ack||(o.on("out",{get:{"#":n}}),t.ask))&&(o=t.ask,c.obj.del(t,"ask"),m(o||t.next,function(t,o){t.on("out",{get:{"#":n,".":o}});}),c.obj.del(t,"ask"));}function f(t){var n=this.as,o=n.get||p,e=n.$._,i=(t.put||p)[o["#"]];if(e.ack&&(e.ack=e.ack+1||1),!t.put||o["."]&&!h(i,e.get)){if(e.put!==l)return;return void e.on("in",{get:e.get,put:e.put=l,$:e.$,"@":t["@"]})}return k==o["."]?void e.on("in",{get:e.get,put:c.val.link.ify(o["#"]),$:e.$,"@":t["@"]}):(t.$=e.root.$,void c.on.put(t,e.root.$))}var c=t("./root");c.chain.chain=function(t){var e,i=this,r=i._,u=new(t||i).constructor(i),a=u._;return a.root=e=r.root,a.id=++e.once,a.back=i._,a.on=c.on,a.on("in",o,a),a.on("out",n,a),u};var l,p={},d=c.obj,h=d.has,v=(d.put,d.del),g=d.to,m=d.map,b=c.text.random,k=(c.val.rel._,c.node._);})(t,"./chain"),t(function(){function n(t,n){var o=n._,e=o.next,i=n.chain(),r=i._;return e||(e=o.next={}),e[r.get=t]=r,n===o.root.$?r.soul=t:(o.soul||o.has)&&(r.has=t),r}function o(t,n,o,e){var i,r=t._;return (i=r.soul)?(n(i,e,r),t):(i=r.link)?(n(i,e,r),t):(t.get(function(t,o){o.rid(t);var r=(r=t.$)&&r._||{};i=r.link||r.soul||c.is(t.put)||l(t.put),n(i,e,t,o);},{out:{get:{".":!0}}}),t)}function e(t){var n,o=this,e=o.as,i=e.at,r=i.root,a=t.$,f=(a||{})._||{},l=t.put||f.put;if((n=r.now)&&o!==n[e.now])return o.to.next(t);if(o.seen&&f.id&&o.seen[f.id])return o.to.next(t);if((n=l)&&n[c._]&&(n=c.is(n))&&(n=(t.$$=f.root.gun.get(n))._,u!==n.put&&(t=s(t,{put:l=n.put}))),(n=r.mum)&&f.id){if(n[f.id])return;u===l||c.is(l)||(n[f.id]=!0);}return e.use(t,o),o.stun?void(o.stun=null):void o.to.next(t)}function i(t){var n=this.on;if(!t||n.soul||n.has)return this.off();if(t=(t=(t=t.$||t)._||t).id){{var o,e;n.map;}return (o=(e=this.seen||(this.seen={}))[t])?!0:void(e[t]=!0)}}var r=t("./root");r.chain.get=function(t,u,a){var s,l;if("string"!=typeof t){if(t instanceof Function){if(!0===u)return o(this,t,u,a);s=this;var d,h=s._,v=h.root,l=v.now;a=u||{},a.at=h,a.use=t,a.out=a.out||{},a.out.get=a.out.get||{},(d=h.on("in",e,a)).rid=i,(v.now={$:1})[a.now=h.id]=d;var g=v.mum;return v.mum={},h.on("out",a.out),v.mum=g,v.now=l,s}return f(t)?this.get(""+t,u,a):(l=c.is(t))?this.get(l,u,a):((a=this.chain())._.err={err:r.log("Invalid get request!",t)},u&&u.call(a,a._.err),a)}var m=this,b=m._,k=b.next||p;return (s=k[t])||(s=n(t,m)),s=s.$,(l=b.stun)&&(s._.stun=s._.stun||l),u&&u instanceof Function&&s.get(u,a),s};var u,a=r.obj,s=(a.has,r.obj.to),f=r.num.is,c=r.val.link,l=r.node.soul,p=(r.node._,{});})(t,"./get"),t(function(){function n(t){t.batch=i;var n=t.opt||{},o=t.env=c.state.map(u,n.state);return o.soul=t.soul,t.graph=c.graph.ify(t.data,o,t),o.err?((t.ack||m).call(t,t.out={err:c.log(o.err)}),void(t.res&&t.res())):void t.batch()}function e(t){return void(t&&t())}function i(){var t=this;t.graph&&!v(t.stun,r)&&(t.res=t.res||function(t){t&&t();},t.res(function(){var n=t.$.back(-1)._,o=n.ask(function(o){n.root.on("ack",o),o.err&&c.log(o),o.lack||this.off(),t.ack&&t.ack(o,this);},t.opt),e=n.root.now;p.del(n.root,"now");var i=n.root.mum;n.root.mum={},t.ref._.on("out",{$:t.ref,put:t.out=t.env.graph,opt:t.opt,"#":o}),n.root.mum=i?p.to(i,n.root.mum):i,n.root.now=e;},t),t.res&&t.res());}function r(t){return t?!0:void 0}function u(t,n,o,e){var i=this,r=c.is(t);!n&&e.path.length&&(i.res||b)(function(){var n=e.path,o=i.ref,u=(i.opt,0),s=n.length;for(u;s>u;u++)o=o.get(n[u]);r&&(o=t);var f=o._.dub;return f||(f=c.node.soul(e.obj))?(o.back(-1).get(f),void e.soul(f)):((i.stun=i.stun||{})[n]=!0,void o.get(a,!0,{as:{at:e,as:i,p:n}}))},{as:i,at:e});}function a(t,n,o,e){var n=n.as,i=n.at;n=n.as;var r=((o||{}).$||{})._||{};return t=r.dub=r.dub||t||c.node.soul(i.obj)||c.node.soul(o.put||r.put)||c.val.rel.is(o.put||r.put)||(n.via.back("opt.uuid")||c.text.random)(),e&&(e.stun=!0),t?void s(r,r.dub=t,i,n):void r.via.back("opt.uuid")(function(t,o){return t?c.log(t):void s(r,r.dub=r.dub||o,i,n)})}function s(t,n,o,e){t.$.back(-1).get(n),o.soul(n),e.stun[o.path]=!1,e.batch();}function f(t,n,e,i){if(n=n.as,e.$&&e.$._){if(e.err)return void o.log("Please report this as an issue! Put.any.err");var r,u=e.$._,a=u.put,s=n.opt||{};if(!(r=n.ref)||!r._.now){if(i&&(i.stun=!0),n.ref!==n.$){if(r=n.$._.get||u.get,!r)return void o.log("Please report this as an issue! Put.no.get");n.data=h({},r,n.data),r=null;}if(l===a){if(!u.get)return;t||(r=u.$.back(function(t){return t.link||t.soul?t.link||t.soul:void(n.data=h({},t.get,n.data))})),r=r||u.get,u=u.root.$.get(r)._,n.soul=r,a=n.data;}return n.not||(n.soul=n.soul||t)||(n.path&&d(n.data)?n.soul=(s.uuid||n.via.back("opt.uuid")||c.text.random)():(k==u.get&&(n.soul=(u.put||g)["#"]||u.dub),n.soul=n.soul||u.soul||u.soul||(s.uuid||n.via.back("opt.uuid")||c.text.random)()),n.soul)?void n.ref.put(n.data,n.soul,n):void n.via.back("opt.uuid")(function(t,o){return t?c.log(t):void n.ref.put(n.data,n.soul=o,n)})}}}var c=t("./root");c.chain.put=function(t,o,i){var r,u=this,a=u._,s=a.root.$;return i=i||{},i.data=t,i.via=i.$=i.via||i.$||u,"string"==typeof o?i.soul=o:i.ack=i.ack||o,a.soul&&(i.soul=a.soul),i.soul||s===u?d(i.data)?(i.soul=i.soul||(i.not=c.node.soul(i.data)||(i.via.back("opt.uuid")||c.text.random)()),i.soul?(i.$=u=s.get(i.soul),i.ref=i.$,n(i),u):(i.via.back("opt.uuid")(function(t,n){return t?c.log(t):void(i.ref||i.$).put(i.data,i.soul=n,i)}),u)):((i.ack||m).call(i,i.out={err:c.log("Data saved to the root level of the graph must be a node (an object), not a",typeof i.data,'of "'+i.data+'"!')}),i.res&&i.res(),u):c.is(t)?(t.get(function(t,n,e){return !t&&c.val.is(e.put)?c.log("The reference you are saving is a",typeof e.put,'"'+e.put+'", not a node (object)!'):void u.put(c.val.rel.ify(t),o,i)},!0),u):(i.ref=i.ref||s._===(r=a.back)?u:r.$,i.ref._.soul&&c.val.is(i.data)&&a.get?(i.data=h({},a.get,i.data),i.ref.put(i.data,i.soul,i),u):(i.ref.get(f,!0,{as:i}),i.out||(i.res=i.res||e,i.$._.stun=i.ref._.stun),u))};var l,p=c.obj,d=p.is,h=p.put,v=p.map,g={},m=function(){},b=function(t,n){t.call(n||g);},k=c.node._;})(t,"./put"),t(function(n){var o=t("./root");t("./chain"),t("./back"),t("./put"),t("./get"),n.exports=o;})(t,"./index"),t(function(){function n(t,n){{var o,e=this,r=t.$,u=(r||{})._||{},a=u.put||t.put;e.at;}if(i!==a){if(o=t.$$){if(o=t.$$._,i===o.put)return;a=o.put;}e.change&&(a=t.put),e.as?e.ok.call(e.as,t,n):e.ok.call(r,a,t.get,t,n);}}function o(t,n,e){var r,u,a=this.as,s=(a.at,t.$),f=s._,c=f.put||t.put;if(u=t.$$){if(r=u=t.$$._,i===u.put)return;c=u.put;}return (u=n.wait)&&(u=u[f.id])&&clearTimeout(u),e||i!==c&&!f.soul&&!f.link&&(!r||0<r.ack)?(n.rid(t),void a.ok.call(s||a.$,c,t.get)):void(u=(n.wait={})[f.id]=setTimeout(function(){o.call({as:a},t,n,u||1);},a.wait||99))}var e=t("./index");e.chain.on=function(t,o,e,i){var r,u=this,a=u._;if("string"==typeof t)return o?(r=a.on(t,o,e||a,i),e&&e.$&&(e.subs||(e.subs=[])).push(r),u):a.on(t);var s=o;return s=!0===s?{change:!0}:s||{},s.at=a,s.ok=t,u.get(n,s),u},e.chain.val=function(t,n){return e.log.once("onceval","Future Breaking API Change: .val -> .once, apologies unexpected."),this.once(t,n)},e.chain.once=function(t,n){var r=this,u=r._,a=u.put;if(0<u.ack&&i!==a)return (t||s).call(r,a,u.get),r;if(!t){e.log.once("valonce","Chainable val is experimental, its behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");var f=r.chain();return f._.nix=r.once(function(){f._.on("in",r._);}),f}return (n=n||{}).ok=t,n.at=u,n.out={"#":e.text.random(9)},r.get(o,{as:n}),n.async=!0,r},e.chain.off=function(){var t,n=this,o=n._,e=o.back;return e?((t=e.next)&&t[o.get]&&a(t,o.get),(t=e.ask)&&a(t,o.get),(t=e.put)&&a(t,o.get),(t=o.soul)&&a(e.root.graph,t),(t=o.map)&&u(t,function(t){t.link&&e.root.$.get(t.link).off();}),(t=o.next)&&u(t,function(t){t.$.off();}),o.on("off",{}),n):void 0};var i,r=e.obj,u=r.map,a=(r.has,r.del),s=(r.to,e.val.link,function(){});})(t,"./on"),t(function(){function n(t){return !t.put||e.val.is(t.put)?this.to.next(t):(this.as.nix&&this.off(),r(t.put,o,{at:this.as,msg:t}),void this.to.next(t))}function o(t,n){if(a!==n){var o=this.msg,e=o.$,i=this.at,r=e.get(n)._;(r.echo||(r.echo={}))[i.id]=r.echo[i.id]||i;}}var e=t("./index");e.chain.map=function(t){var o,r=this,a=r._;return t?(e.log.once("mapfn","Map functions are experimental, their behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it."),o=r.chain(),r.map().on(function(n,r,a,s){var f=(t||u).call(this,n,r,a,s);if(i!==f)return n===f?o._.on("in",a):e.is(f)?o._.on("in",f._):void o._.on("in",{get:r,put:f})}),o):(o=a.each)?o:(a.each=o=r.chain(),o._.nix=r.back("nix"),r.on("in",n,o._),o)};var i,r=e.obj.map,u=function(){},a=e.node._;})(t,"./map"),t(function(){var n=t("./index");n.chain.set=function(t,o,e){var i,r=this;if(o=o||function(){},e=e||{},e.item=e.item||t,i=n.node.soul(t))return r.set(r.back(-1).get(i),o,e);if(!n.is(t)){var u=r.back("opt.uuid")();return u&&n.obj.is(t)?r.set(r._.root.$.put(t,u),o,e):r.get(n.state.lex()+n.text.random(7)).put(t,o,e)}return t.get(function(t,i,u){return t?void r.put(n.obj.put({},t,n.val.link.ify(t)),o,e):o.call(r,{err:n.log('Only a node can be linked! Not "'+u.put+'"!')})},!0),t};})(t,"./set"),t(function(){if("undefined"!=typeof Gun){var t,n=function(){};"undefined"!=typeof window&&(t=window);var o=t.localStorage||{setItem:n,removeItem:n,getItem:n};Gun.on("create",function(t){function n(t){if(!t.err&&t.ok){var n=t["@"];setTimeout(function(){Gun.obj.map(a,function(t,o){Gun.obj.map(t,function(o,e){n===o&&delete t[e];}),s(t)&&delete a[o];}),p();},i.wait||1);}}var e=this.to,i=t.opt;if(t.once)return e.next(t);i.prefix=i.file||"gun/";var r,u,a=Gun.obj.ify(o.getItem("gap/"+i.prefix))||{},s=Gun.obj.empty;if(!s(a)){var f=Gun.obj.ify(o.getItem(i.prefix))||{},c={};Gun.obj.map(a,function(t,n){Gun.obj.map(t,function(t,o){c[n]=Gun.state.to(f[n],o,c[n]);});}),setTimeout(function(){t.on("out",{put:c,"#":t.ask(n),I:t.$});},1);}t.on("out",function(t){t.lS||(t.I&&t.put&&!t["@"]&&!s(i.peers)&&(r=t["#"],Gun.graph.is(t.put,null,l),u||(u=setTimeout(p,i.wait||1))),this.to.next(t));}),t.on("ack",n),e.next(t);var l=function(t,n,o,e){(a[e]||(a[e]={}))[n]=r;},p=function(){clearTimeout(u),u=!1;try{o.setItem("gap/"+i.prefix,JSON.stringify(a));}catch(t){Gun.log(err=t||"localStorage failure");}};}),Gun.on("create",function(t){this.to.next(t);var n=t.opt;if(!t.once&&!1!==n.localStorage){n.prefix=n.file||"gun/";var e,i=(t.graph,{}),r=0,u=Gun.obj.ify(o.getItem(n.prefix))||{};t.on("localStorage",u),t.on("put",function(t){return this.to.next(t),Gun.graph.is(t.put,null,a),t["@"]||(i[t["#"]]=!0),r+=1,r>=(n.batch||1e3)?s():void(e||(e=setTimeout(s,n.wait||1)))}),t.on("get",function(o){function e(){if(s&&(i=s["#"])){var e=s["."];r=u[i]||a,r&&e&&(r=Gun.state.to(r,e)),(r||Gun.obj.empty(n.peers))&&t.on("in",{"@":o["#"],put:Gun.graph.node(r),how:"lS",lS:o.I});}}this.to.next(o);var i,r,a,s=o.get;Gun.debug?setTimeout(e,1):e();});var a=function(t,n,o,e){u[e]=Gun.state.to(o,n,u[e]);},s=function(a){var f;r=0,clearTimeout(e),e=!1;var c=i;i={},a&&(u=a);try{o.setItem(n.prefix,JSON.stringify(u));}catch(l){Gun.log(f=l||"localStorage failure"),t.on("localStorage:error",{err:f,file:n.prefix,flush:u,retry:s});}(f||Gun.obj.empty(n.peers))&&Gun.obj.map(c,function(n,o){t.on("in",{"@":o,err:f,ok:0});});};}});}})(t,"./adapters/localStorage"),t(function(n){function e(t){var n=function(){},a=t.opt;return n.out=function(o){var e;return this.to&&this.to.next(o),(e=o["@"])&&(e=t.dup.s[e])&&(e=e.it)&&e.mesh?(n.say(o,e.mesh.via,1),void(e["##"]=o["##"])):void n.say(o)},t.on("create",function(o){o.opt.pid=o.opt.pid||i.text.random(9),this.to.next(o),t.on("out",n.out);}),n.hear=function(e,r){if(e){var u,a,s,f=t.dup,c=e[0];try{s=JSON.parse(e);}catch(l){o.log("DAM JSON parse error",l);}if("{"===c){if(!s)return;if(f.check(u=s["#"]))return;if(f.track(u,!0).it=s,(c=s["@"])&&s.put&&(a=s["##"]||(s["##"]=n.hash(s)),(c+=a)!=u)){if(f.check(c))return;(c=f.s)[a]=c[u];}return (s.mesh=function(){}).via=r,(c=s["><"])&&(s.mesh.to=i.obj.map(c.split(","),function(t,n,o){o(t,!0);})),s.dam?void((c=n.hear[s.dam])&&c(s,r,t)):void t.on("in",s)}if("["!==c);else{if(!s)return;for(var p,d=0;p=s[d++];)n.hear(p,r);}}},function(){function o(t,n){var o=n.wire;try{o.send?o.send(t):n.say&&n.say(t);}catch(e){(n.queue=n.queue||[]).push(t);}}n.say=function(e,r,s){if(!r)return void i.obj.map(a.peers,function(t){n.say(e,t);});var f,c,l,p=r.wire||a.wire&&a.wire(r);if(p&&(c=e.mesh||u,r!==c.via&&((l=c.raw)||(l=n.raw(e)),!((f=e["@"])&&(f=t.dup.s[f])&&(f=f.it)&&f.get&&f["##"]&&f["##"]===e["##"]||(f=c.to)&&(f[r.url]||f[r.id])&&!s)))){if(r.batch)return void r.batch.push(l);r.batch=[],setTimeout(function(){var t=r.batch;t&&(r.batch=null,t.length&&o(JSON.stringify(t),r));},a.gap||a.wait||1),o(l,r);}};}(),function(){function o(t,n){var o;return n instanceof Object?(i.obj.map(Object.keys(n).sort(),u,{to:o={},on:n}),o):n}function u(t){this.to[t]=this.on[t];}n.raw=function(e){if(!e)return "";var u,c,l,p=t.dup,d=e.mesh||{};if(l=d.raw)return l;if("string"==typeof e)return e;e["@"]&&(l=e.put)&&((c=e["##"])||(u=s(l,o)||"",c=n.hash(e,u),e["##"]=c),(l=p.s)[c=e["@"]+c]=l[e["#"]],e["#"]=c||e["#"],u&&((e=i.obj.to(e)).put=f));var h=0,v=[];i.obj.map(a.peers,function(t){return v.push(t.url||t.id),++h>9?!0:void 0}),e["><"]=v.join();var g=s(e);return r!==u&&(l=g.indexOf(f,g.indexOf("put")),g=g.slice(0,l-1)+u+g.slice(l+f.length+1)),d&&(d.raw=g),g},n.hash=function(t,n){return e.hash(n||s(t.put,o)||"")||t["#"]||i.text.random(9)};var s=JSON.stringify,f=":])([:";}(),n.hi=function(o){var e=o.wire||{};o.id||o.url?(a.peers[o.url||o.id]=o,i.obj.del(a.peers,e.id)):(e=e.id=e.id||i.text.random(9),n.say({dam:"?"},a.peers[e]=o)),e.hied||t.on(e.hied="hi",o),e=o.queue,o.queue=[],i.obj.map(e,function(t){n.say(t,o);});},n.bye=function(n){i.obj.del(a.peers,n.id),t.on("bye",n);},n.hear["?"]=function(t,o){return t.pid?(o.id=o.id||t.pid,void n.hi(o)):n.say({dam:"?",pid:a.pid,"@":t["#"]},o)},n}var i=t("../type");e.hash=function(t){if("string"!=typeof t)return {err:1};var n=0;if(!t.length)return n;for(var o,e=0,i=t.length;i>e;++e)o=t.charCodeAt(e),n=(n<<5)-n+o,n|=0;return n};var r,u={};Object.keys=Object.keys||function(t){return map(t,function(t,n,o){o(n);})};try{n.exports=e;}catch(a){}})(t,"./adapters/mesh"),t(function(){var n=t("../index");n.Mesh=t("./mesh"),n.on("opt",function(t){function o(t){if(!t||!t.url)return o&&o(t);var n=t.url.replace("http","ws"),o=t.wire=new i.WebSocket(n);return o.onclose=function(){i.mesh.bye(t),e(t);},o.onerror=function(n){e(t),n&&"ECONNREFUSED"===n.code;},o.onopen=function(){i.mesh.hi(t);},o.onmessage=function(n){n&&i.mesh.hear(n.data||n,t);},o}function e(t){clearTimeout(t.defer),t.defer=setTimeout(function(){
-	o(t);},2e3);}this.to.next(t);var i=t.opt;if(!t.once&&!1!==i.WebSocket){var r;"undefined"!=typeof window&&(r=window),"undefined"!=typeof commonjsGlobal&&(r=commonjsGlobal),r=r||{};var u=i.WebSocket||r.WebSocket||r.webkitWebSocket||r.mozWebSocket;if(u){i.WebSocket=u;{i.mesh=i.mesh||n.Mesh(t),i.wire;}i.wire=o;}}});})(t,"./adapters/websocket");}();
+	!function(){function t(n,o){function e(t){return t.split("/").slice(-1).toString().replace(".js","")}return o?commonjsRequire(n):n.slice?t[e(n)]:function(o,i){n(o={exports:{}}),t[e(i)]=o.exports;}}var n;"undefined"!=typeof window&&(n=window),"undefined"!=typeof commonjsGlobal&&(n=commonjsGlobal),n=n||{};var o=n.console||{log:function(){}};var e=module;t(function(t){var n={};n.fn={is:function(t){return !!t&&"function"==typeof t}},n.bi={is:function(t){return t instanceof Boolean||"boolean"==typeof t}},n.num={is:function(t){return !e(t)&&(t-parseFloat(t)+1>=0||1/0===t||-(1/0)===t)}},n.text={is:function(t){return "string"==typeof t}},n.text.ify=function(t){return n.text.is(t)?t:"undefined"!=typeof JSON?JSON.stringify(t):t&&t.toString?t.toString():t},n.text.random=function(t,n){var o="";for(t=t||24,n=n||"0123456789ABCDEFGHIJKLMNOPQRSTUVWXZabcdefghijklmnopqrstuvwxyz";t>0;)o+=n.charAt(Math.floor(Math.random()*n.length)),t--;return o},n.text.match=function(t,o){function e(t,n){for(var o,e=-1,i=0;o=n[i++];)if(!~(e=t.indexOf(o,e+1)))return !1;return !0}var i=!1;if(t=t||"",o=n.text.is(o)?{"=":o}:o||{},n.obj.has(o,"~")&&(t=t.toLowerCase(),o["="]=(o["="]||o["~"]).toLowerCase()),n.obj.has(o,"="))return t===o["="];if(n.obj.has(o,"*")){if(t.slice(0,o["*"].length)!==o["*"])return !1;i=!0,t=t.slice(o["*"].length);}if(n.obj.has(o,"!")){if(t.slice(-o["!"].length)!==o["!"])return !1;i=!0;}if(n.obj.has(o,"+")&&n.list.map(n.list.is(o["+"])?o["+"]:[o["+"]],function(n){return t.indexOf(n)>=0?void(i=!0):!0}))return !1;if(n.obj.has(o,"-")&&n.list.map(n.list.is(o["-"])?o["-"]:[o["-"]],function(n){return t.indexOf(n)<0?void(i=!0):!0}))return !1;if(n.obj.has(o,">")){if(!(t>o[">"]))return !1;i=!0;}if(n.obj.has(o,"<")){if(!(t<o["<"]))return !1;i=!0;}if(n.obj.has(o,"?")){if(!e(t,o["?"]))return !1;i=!0;}return i},n.list={is:function(t){return t instanceof Array}},n.list.slit=Array.prototype.slice,n.list.sort=function(t){return function(n,o){return n&&o?(n=n[t],o=o[t],o>n?-1:n>o?1:0):0}},n.list.map=function(t,n,o){return a(t,n,o)},n.list.index=1,n.obj={is:function(t){return t?t instanceof Object&&t.constructor===Object||"Object"===Object.prototype.toString.call(t).match(/^\[object (\w+)\]$/)[1]:!1}},n.obj.put=function(t,n,o){return (t||{})[n]=o,t},n.obj.has=function(t,n){return t&&Object.prototype.hasOwnProperty.call(t,n)},n.obj.del=function(t,n){return t?(t[n]=null,delete t[n],t):void 0},n.obj.as=function(t,n,o,e){return t[n]=t[n]||(e===o?{}:o)},n.obj.ify=function(t){if(r(t))return t;try{t=JSON.parse(t);}catch(n){t={};}return t},function(){function t(t,n){u(this,n)&&o!==this[n]||(this[n]=t);}var o;n.obj.to=function(n,o){return o=o||{},a(n,t,o),o};}(),n.obj.copy=function(t){return t?JSON.parse(JSON.stringify(t)):t},function(){function t(t,n){var o=this.n;if(!o||!(n===o||r(o)&&u(o,n)))return n?!0:void 0}n.obj.empty=function(n,o){return n&&a(n,t,{n:o})?!1:!0};}(),function(){function t(n,o){return 2===arguments.length?(t.r=t.r||{},void(t.r[n]=o)):(t.r=t.r||[],void t.r.push(n))}var i=Object.keys;n.obj.map=function(a,s,f){var c,l,p,d,h,v=0,g=o(s);if(t.r=null,i&&r(a)&&(d=i(a),h=!0),e(a)||d)for(l=(d||a).length;l>v;v++){var m=v+n.list.index;if(g){if(p=h?s.call(f||this,a[d[v]],d[v],t):s.call(f||this,a[v],m,t),p!==c)return p}else if(s===a[h?d[v]:v])return d?d[v]:m}else for(v in a)if(g){if(u(a,v)&&(p=f?s.call(f,a[v],v,t):s(a[v],v,t),p!==c))return p}else if(s===a[v])return v;return g?t.r:n.list.index?0:-1};}(),n.time={},n.time.is=function(t){return t?t instanceof Date:+(new Date).getTime()};var o=n.fn.is,e=n.list.is,i=n.obj,r=i.is,u=i.has,a=i.map;t.exports=n;})(t,"./type"),t(function(t){t.exports=function n(t,o,e){if(!t)return {to:n};var i,t=(this.tag||(this.tag={}))[t]||(this.tag[t]={tag:t,to:n._={next:function(t){var n;(n=this.to)&&n.next(t);}}});if(o instanceof Function){var r={off:n.off||(n.off=function(){return this.next===n._.next?!0:(this===this.the.last&&(this.the.last=this.back),this.to.back=this.back,this.next=n._.next,this.back.to=this.to,void(this.the.last===this.the&&delete this.on.tag[this.the.tag]))}),to:n._,next:o,the:t,on:this,as:e};return (r.back=t.last||t).to=r,t.last=r}return (t=t.to)&&i!==o&&t.next(o),t};})(t,"./onto"),t(function(t){function n(t,n,e,i,r){if(n>t)return {defer:!0};if(e>n)return {historical:!0};if(n>e)return {converge:!0,incoming:!0};if(n===e){if(i=o(i)||"",r=o(r)||"",i===r)return {state:!0};if(r>i)return {converge:!0,current:!0};if(i>r)return {converge:!0,incoming:!0}}return {err:"Invalid CRDT Data: "+i+" to "+r+" at "+n+" to "+e+"!"}}if("undefined"==typeof JSON)throw new Error("JSON is not included in this browser. Please load it first: ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js");var o=JSON.stringify;t.exports=n;})(t,"./HAM"),t(function(n){var o=t("./type"),e={};e.is=function(t){return t===i?!1:null===t?!0:t===1/0?!1:s(t)||u(t)||a(t)?!0:e.rel.is(t)||!1},e.link=e.rel={_:"#"},function(){function t(t,n){var o=this;return o.id?o.id=!1:n==r&&s(t)?void(o.id=t):o.id=!1}e.rel.is=function(n){if(n&&n[r]&&!n._&&c(n)){var o={};if(p(n,t,o),o.id)return o.id}return !1};}(),e.rel.ify=function(t){return l({},r,t)},o.obj.has._=".";var i,r=e.link._,u=o.bi.is,a=o.num.is,s=o.text.is,f=o.obj,c=f.is,l=f.put,p=f.map;n.exports=e;})(t,"./val"),t(function(n){var o=t("./type"),e=t("./val"),i={_:"_"};i.soul=function(t,n){return t&&t._&&t._[n||p]},i.soul.ify=function(t,n){return n="string"==typeof n?{soul:n}:n||{},t=t||{},t._=t._||{},t._[p]=n.soul||t._[p]||l(),t},i.soul._=e.link._,function(){function t(t,n){return n!==i._?e.is(t)?void(this.cb&&this.cb.call(this.as,t,n,this.n,this.s)):!0:void 0}i.is=function(n,o,e){var r;return a(n)&&(r=i.soul(n))?!f(n,t,{as:e,cb:o,s:r,n:n}):!1};}(),function(){function t(t,n){var o,i,r=this.o;return r.map?(o=r.map.call(this.as,t,""+n,r.node),void(i===o?s(r.node,n):r.node&&(r.node[n]=o))):void(e.is(t)&&(r.node[n]=t))}i.ify=function(n,o,e){return o?"string"==typeof o?o={soul:o}:o instanceof Function&&(o={map:o}):o={},o.map&&(o.node=o.map.call(e,n,r,o.node||{})),(o.node=i.soul.ify(o.node||{},o))&&f(n,t,{o:o,as:e}),o.node};}();var r,u=o.obj,a=u.is,s=u.del,f=u.map,c=o.text,l=c.random,p=i.soul._;n.exports=i;})(t,"./node"),t(function(n){function o(){var t;return t=r(),t>u?(a=0,u=t+o.drift):u=t+(a+=1)/s+o.drift}{var e=t("./type"),i=t("./node"),r=e.time.is,u=-(1/0),a=0,s=1e3,f="undefined"!=typeof performance?performance.timing&&performance:!1;f&&f.timing&&f.timing.navigationStart||(f=!1);}o._=">",o.drift=0,o.is=function(t,n,e){var i=n&&t&&t[_]&&t[_][o._]||e;if(i)return b(i=i[n])?i:-(1/0)},o.lex=function(){return o().toString(36).replace(".","")},o.ify=function(t,n,e,r,u){if(!t||!t[_]){if(!u)return;t=i.soul.ify(t,u);}var a=p(t[_],o._);return c!==n&&n!==_&&(b(e)&&(a[n]=e),c!==r&&(t[n]=r)),t},o.to=function(t,n,e){var r=t[n];return h(r)&&(r=g(r)),o.ify(e,n,o.is(t,n),r,i.soul(t))},function(){function t(t,n){_!==n&&o.ify(this.o,n,this.s);}o.map=function(n,e,i){var r,u=h(u=n||e)?u:null;return n=y(n=n||e)?n:null,u&&!n?(e=b(e)?e:o(),u[_]=u[_]||{},v(u,t,{o:u,s:e}),u):(i=i||h(e)?e:r,e=b(e)?e:o(),function(o,u,a,s){return n?(n.call(i||this||{},o,u,a,s),void(d(a,u)&&r===a[u]||t.call({o:a,s:e},o,u))):(t.call({o:a,s:e},o,u),o)})};}();var c,l=e.obj,p=l.as,d=l.has,h=l.is,v=l.map,g=l.copy,m=e.num,b=m.is,k=e.fn,y=k.is,_=i._;n.exports=o;})(t,"./state"),t(function(n){var o=t("./type"),e=t("./val"),i=t("./node"),r={};!function(){function t(t,o){return t&&o===i.soul(t)&&i.is(t,this.fn,this.as)?void(this.cb&&(n.n=t,n.as=this.as,this.cb.call(n.as,t,o,n))):!0}function n(t){t&&i.is(n.n,t,n.as);}r.is=function(n,o,e,i){return n&&s(n)&&!l(n)?!d(n,t,{cb:o,fn:e,as:i}):!1};}(),function(){function t(t,o){var r;return (r=p(t,o))?r:(o.env=t,o.soul=a,i.ify(o.obj,n,o)&&(o.rel=o.rel||e.rel.ify(i.soul(o.node)),o.obj!==t.shell&&(t.graph[e.rel.is(o.rel)]=o.node)),o)}function n(n,o,r){var a,s,p=this,d=p.env;if(i._===o&&c(n,e.rel._))return r._;if(a=l(n,o,r,p,d)){if(o||(p.node=p.node||r||{},c(n,i._)&&i.soul(n)&&(p.node._=h(n._)),p.node=i.soul.ify(p.node,e.rel.is(p.rel)),p.rel=p.rel||e.rel.ify(i.soul(p.node))),(s=d.map)&&(s.call(d.as||{},n,o,r,p),c(r,o))){if(n=r[o],u===n)return void f(r,o);if(!(a=l(n,o,r,p,d)))return}if(!o)return p.node;if(!0===a)return n;if(s=t(d,{obj:n,path:p.path.concat(o)}),s.node)return s.rel}}function a(t){var n=this,o=e.link.is(n.rel),r=n.env.graph;n.rel=n.rel||e.rel.ify(t),n.rel[e.rel._]=t,n.node&&n.node[i._]&&(n.node[i._][e.rel._]=t),c(r,o)&&(r[t]=r[o],f(r,o));}function l(t,n,i,r,u){var a;return e.is(t)?!0:s(t)?1:(a=u.invalid)?(t=a.call(u.as||{},t,n,i),l(t,n,i,r,u)):(u.err="Invalid value at '"+r.path.concat(n).join(".")+"'!",void(o.list.is(t)&&(u.err+=" Use `.set(item)` instead of an Array.")))}function p(t,n){for(var o,e=t.seen,i=e.length;i--;)if(o=e[i],n.obj===o.obj)return o;e.push(n);}r.ify=function(n,o,i){var r={path:[],obj:n};return o?"string"==typeof o?o={soul:o}:o instanceof Function&&(o.map=o):o={},o.soul&&(r.rel=e.rel.ify(o.soul)),o.shell=(i||{}).shell,o.graph=o.graph||{},o.seen=o.seen||[],o.as=o.as||i,t(o,r),o.root=r.node,o.graph};}(),r.node=function(t){var n=i.soul(t);if(n)return p({},n,t)},function(){function t(t,n){var o,u;if(i._===n){if(l(t,e.rel._))return;return void(this.obj[n]=h(t))}return (o=e.rel.is(t))?(u=this.opt.seen[o])?void(this.obj[n]=u):void(this.obj[n]=this.opt.seen[o]=r.to(this.graph,o,this.opt)):void(this.obj[n]=t)}r.to=function(n,o,e){if(n){var i={};return e=e||{seen:{}},d(n[o],t,{obj:i,graph:n,opt:e}),i}};}();var u,a=(o.fn.is,o.obj),s=a.is,f=a.del,c=a.has,l=a.empty,p=a.put,d=a.map,h=a.copy;n.exports=r;})(t,"./graph"),t(function(n){t("./onto"),n.exports=function(t,n){if(this.on){if(!(t instanceof Function)){if(!t||!n)return;var o=t["#"]||t,e=(this.tag||empty)[o];if(!e)return;return e=this.on(o,n),clearTimeout(e.err),!0}var o=n&&n["#"]||Math.random().toString(36).slice(2);if(!t)return o;var i=this.on(o,t,n);return i.err=i.err||setTimeout(function(){i.next({err:"Error: No ACK received yet.",lack:!0}),i.off();},(this.opt||{}).lack||9e3),o}};})(t,"./ask"),t(function(n){function o(t){var n={s:{}};return t=t||{max:1e3,age:9e3},n.check=function(t){var o;return (o=n.s[t])?o.pass?o.pass=!1:n.track(t):!1},n.track=function(o,r){var u=n.s[o]||(n.s[o]={});return u.was=i(),r&&(u.pass=!0),n.to||(n.to=setTimeout(function(){var o=i();e.obj.map(n.s,function(i,r){t.age>o-i.was||e.obj.del(n.s,r);}),n.to=null;},t.age+9)),u},n}var e=t("./type"),i=e.time.is;n.exports=o;})(t,"./dup"),t(function(n){function i(t){return t instanceof i?(this._={gun:this,$:this}).$:this instanceof i?i.create(this._={gun:this,$:this,opt:t}):new i(t)}i.is=function(t){return t instanceof i||t&&t._&&t===t._.$||!1},i.version=.9,i.chain=i.prototype,i.chain.toJSON=function(){};var r=t("./type");r.obj.to(r,i),i.HAM=t("./HAM"),i.val=t("./val"),i.node=t("./node"),i.state=t("./state"),i.graph=t("./graph"),i.on=t("./onto"),i.ask=t("./ask"),i.dup=t("./dup"),function(){function t(n){var o,e,r=this,a=r.as,s=a.at||a,f=s.$;return (e=n["#"])||(e=n["#"]=c(9)),(o=s.dup).check(e)?void(a.out===n.out&&(n.out=u,r.to.next(n))):(o.track(e),s.ask(n["@"],n)||(n.get&&i.on.get(n,f),n.put&&i.on.put(n,f)),r.to.next(n),void(a.out||(n.out=t,s.on("out",n))))}i.create=function(n){n.root=n.root||n,n.graph=n.graph||{},n.on=n.on||i.on,n.ask=n.ask||i.ask,n.dup=n.dup||i.dup();var o=n.$.opt(n.opt);return n.once||(n.on("in",t,n),n.on("out",t,{at:n,out:t}),i.on("create",n),n.on("create",n)),n.once=1,o};}(),function(){function t(t,n,o,e){var r=this,u=i.state.is(o,n);if(!u)return r.err="Error: No state on '"+n+"' in node '"+e+"'!";var a=r.graph[e]||k,s=i.state.is(a,n,!0),f=a[n],c=i.HAM(r.machine,u,s,t,f);return c.incoming?(r.put[e]=i.state.to(o,n,r.put[e]),(r.diff||(r.diff={}))[e]=i.state.to(o,n,r.diff[e]),void(r.souls[e]=!0)):void(c.defer&&(r.defer=u<(r.defer||1/0)?u:r.defer))}function n(t,n){var i=this,u=i.$._,a=(u.next||k)[n];if(!a){if(!(u.opt||k)["super"])return void(i.souls[n]=!1);a=i.$.get(n)._;}var s=i.map[n]={put:t,get:n,$:a.$},f={ctx:i,msg:s};i.async=!!u.tag.node,i.ack&&(s["@"]=i.ack),v(t,o,f),i.async&&(i.and||u.on("node",function(t){this.to.next(t),t===i.map[t.get]&&(i.souls[t.get]=!1,v(t.put,e,t),v(i.souls,function(t){return t?t:void 0})||i.c||(i.c=1,this.off(),v(i.map,r,i)));}),i.and=!0,u.on("node",s));}function o(t,n){var o=this.ctx,e=o.graph,r=this.msg,u=r.get,a=r.put,s=r.$._;e[u]=i.state.to(a,n,e[u]),o.async||(s.put=i.state.to(a,n,s.put));}function e(t,n){var o=this,e=o.put,r=o.$._;r.put=i.state.to(e,n,r.put);}function r(t){t.$&&(this.cat.stop=this.stop,t.$._.on("in",t),this.cat.stop=null);}i.on.put=function(o,e){var a=e._,s={$:e,graph:a.graph,put:{},map:{},souls:{},machine:i.state(),ack:o["@"],cat:a,stop:{}};return i.graph.is(o.put,null,t,s)||(s.err="Error: Invalid graph!"),s.err?a.on("in",{"@":o["#"],err:i.log(s.err)}):(v(s.put,n,s),s.async||v(s.map,r,s),u!==s.defer&&setTimeout(function(){i.on.put(o,e);},s.defer-s.machine),void(s.diff&&a.on("put",h(o,{put:s.diff}))))},i.on.get=function(t,n){var o,e=n._,r=t.get,u=r[m],a=e.graph[u],s=r[b],f=e.next||(e.next={}),c=f[u];if(d(u,"*")){var l={};i.obj.map(e.graph,function(t,n){i.text.match(n,u)&&(l[n]=i.obj.copy(t));}),i.obj.empty(l)||e.on("in",{"@":t["#"],how:"*",put:l,$:n});}if(!a)return e.on("get",t);if(s){if(!d(a,s))return e.on("get",t);a=i.state.to(a,s);}else a=i.obj.copy(a);a=i.graph.node(a),o=(c||k).ack,e.on("in",{"@":t["#"],how:"mem",put:a,$:n}),e.on("get",t);};}(),function(){i.chain.opt=function(t){t=t||{};var n=this,o=n._,e=t.peers||t;return p(t)||(t={}),p(o.opt)||(o.opt=t),f(e)&&(e=[e]),a(e)&&(e=v(e,function(t,n,o){o(t,{url:t});}),p(o.opt.peers)||(o.opt.peers={}),o.opt.peers=h(e,o.opt.peers)),o.opt.peers=o.opt.peers||{},h(t,o.opt),i.on("opt",o),o.opt.uuid=o.opt.uuid||function(){return g()+c(12)},n};}();var u,a=i.list.is,s=i.text,f=s.is,c=s.random,l=i.obj,p=l.is,d=l.has,h=l.to,v=l.map,g=(l.copy,i.state.lex),m=i.val.rel._,b=".",k=(i.node._,i.val.link.is,{});o.debug=function(t,n){return o.debug.i&&t===o.debug.i&&o.debug.i++&&(o.log.apply(o,arguments)||n)},i.log=function(){return !i.log.off&&o.log.apply(o,arguments),[].slice.call(arguments).join(" ")},i.log.once=function(t,n,o){return (o=i.log.once)[t]=o[t]||0,o[t]++||i.log(n)},i.log.once("welcome","Hello wonderful person! :) Thanks for using GUN, feel free to ask for help on https://gitter.im/amark/gun and ask StackOverflow questions tagged with 'gun'!"),"undefined"!=typeof window&&((window.Gun=i).window=window);try{"undefined"!=typeof e&&(e.exports=i);}catch(y){}n.exports=i;})(t,"./root"),t(function(){var n=t("./root");n.chain.back=function(t,i){var r;if(t=t||1,-1===t||1/0===t)return this._.root.$;if(1===t)return (this._.back||this._).$;var u=this,a=u._;if("string"==typeof t&&(t=t.split(".")),!(t instanceof Array)){if(t instanceof Function){for(var s,r={back:a};(r=r.back)&&o===(s=t(r,i)););return s}return n.num.is(t)?(a.back||a).$.back(t-1):this}var f=0,c=t.length,r=a;for(f;c>f;f++)r=(r||e)[t[f]];return o!==r?i?u:r:(r=a.back)?r.$.back(t,i):void 0};var o,e={};})(t,"./back"),t(function(){function n(t){var n,o,e,i=this.as,r=i.back,u=i.root;if(t.I||(t.I=i.$),t.$||(t.$=i.$),this.to.next(t),o=t.get){if(o["#"]||i.soul){if(o["#"]=o["#"]||i.soul,t["#"]||(t["#"]=b(9)),r=u.$.get(o["#"])._,o=o["."]){if(h(r.put,o)&&(n=r.$.get(o)._,(e=n.ack)||(n.ack=-1),r.on("in",{$:r.$,put:c.state.to(r.put,o),get:r.get}),e))return}else{if(e=r.ack,e||(r.ack=-1),h(r,"put")&&r.on("in",r),e)return;t.$=r.$;}return u.ask(f,t),u.on("in",t)}if(u.now&&(u.now[i.id]=u.now[i.id]||!0,i.pass={}),o["."])return i.get?(t={get:{".":i.get},$:i.$},r.ask||(r.ask={}),r.ask[i.get]=t.$._,r.on("out",t)):(t={get:{},$:i.$},r.on("out",t));if(i.ack=i.ack||-1,i.get)return t.$=i.$,o["."]=i.get,(r.ask||(r.ask={}))[i.get]=t.$._,r.on("out",t)}return r.on("out",t)}function o(t){var n,o,r=this,s=r.as,f=s.root,d=t.$,b=(d||p)._||p,k=t.put;if(s.get&&t.get!==s.get&&(t=g(t,{get:s.get})),s.has&&b!==s&&(t=g(t,{$:s.$}),b.ack&&(s.ack=b.ack)),l===k){if(o=b.put,r.to.next(t),s.soul)return;if(l===o&&l!==b.put)return;return i(s,t,r),s.has&&a(s,t),v(b.echo,s.id),void v(s.map,b.id)}if(s.soul)return r.to.next(t),i(s,t,r),void(s.next&&m(k,u,{msg:t,cat:s}));if(!(n=c.val.link.is(k)))return c.val.is(k)?(s.has||s.soul?a(s,t):(b.has||b.soul)&&((b.echo||(b.echo={}))[s.id]=b.echo[b.id]||s,(s.map||(s.map={}))[b.id]=s.map[b.id]||{at:b}),r.to.next(t),void i(s,t,r)):(s.has&&b!==s&&h(b,"put")&&(s.put=b.put),(n=c.node.soul(k))&&b.has&&(b.put=s.root.$.get(n)._.put),o=(f.stop||{})[b.id],r.to.next(t),e(s,t,b,n),i(s,t,r),void(s.next&&m(k,u,{msg:t,cat:s})));f.stop;o=f.stop||{},o=o[b.id]||(o[b.id]={}),o.is=o.is||b.put,o[s.id]=b.put||!0,r.to.next(t),e(s,t,b,n),i(s,t,r);}function e(t,n,o,i){if(i&&k!==t.get){var r=t.root.$.get(i)._;t.has?o=r:o.has&&e(o,n,o,i),o!==t&&(o.$||(o={}),(o.echo||(o.echo={}))[t.id]=o.echo[t.id]||t,t.has&&!(t.map||p)[o.id]&&a(t,n),r=o.id?(t.map||(t.map={}))[o.id]=t.map[o.id]||{at:o}:{},(i!==r.link||r.pass||t.pass)&&(t.pass&&(c.obj.map(t.map,function(t){t.pass=!0;}),v(t,"pass")),r.pass&&v(r,"pass"),t.has&&(t.link=i),s(t,r.link=i)));}}function i(t,n){t.echo&&m(t.echo,r,n);}function r(t){t&&t.on&&t.on("in",this);}function u(t,n){var o,e,i,r=this.cat,u=r.next||p,a=this.msg;(k!==n||u[n])&&(e=u[n])&&(e.has?(l!==e.put&&c.val.link.is(t)||(e.put=t),o=e.$):(i=a.$)&&(i=(o=a.$.get(n))._,l!==i.put&&c.val.link.is(t)||(i.put=t)),e.on("in",{put:t,get:n,$:o,via:a}));}function a(t,n){if(t.has||t.soul){{var o=t.map;t.root;}t.map=null,t.has&&(t.link=null),(t.pass||n["@"]||null!==o)&&(l===o&&c.val.link.is(t.put)||(m(o,function(n){(n=n.at)&&v(n.echo,t.id);}),o=t.put,m(t.next,function(n,e){return l===o&&l!==t.put?!0:(n.put=l,n.ack&&(n.ack=-1),void n.on("in",{get:e,$:n.$,put:l}))})));}}function s(t,n){var o=t.root.$.get(n)._;(!t.ack||(o.on("out",{get:{"#":n}}),t.ask))&&(o=t.ask,c.obj.del(t,"ask"),m(o||t.next,function(t,o){t.on("out",{get:{"#":n,".":o}});}),c.obj.del(t,"ask"));}function f(t){var n=this.as,o=n.get||p,e=n.$._,i=(t.put||p)[o["#"]];if(e.ack&&(e.ack=e.ack+1||1),!t.put||o["."]&&!h(i,e.get)){if(e.put!==l)return;return void e.on("in",{get:e.get,put:e.put=l,$:e.$,"@":t["@"]})}return k==o["."]?void e.on("in",{get:e.get,put:c.val.link.ify(o["#"]),$:e.$,"@":t["@"]}):(t.$=e.root.$,void c.on.put(t,e.root.$))}var c=t("./root");c.chain.chain=function(t){var e,i=this,r=i._,u=new(t||i).constructor(i),a=u._;return a.root=e=r.root,a.id=++e.once,a.back=i._,a.on=c.on,a.on("in",o,a),a.on("out",n,a),u};var l,p={},d=c.obj,h=d.has,v=(d.put,d.del),g=d.to,m=d.map,b=c.text.random,k=(c.val.rel._,c.node._);})(t,"./chain"),t(function(){function n(t,n){var o=n._,e=o.next,i=n.chain(),r=i._;return e||(e=o.next={}),e[r.get=t]=r,n===o.root.$?r.soul=t:(o.soul||o.has)&&(r.has=t),r}function o(t,n,o,e){var i,r=t._;return (i=r.soul)?(n(i,e,r),t):(i=r.link)?(n(i,e,r),t):(t.get(function(t,o){o.rid(t);var r=(r=t.$)&&r._||{};i=r.link||r.soul||c.is(t.put)||l(t.put),n(i,e,t,o);},{out:{get:{".":!0}}}),t)}function e(t){var n,o=this,e=o.as,i=e.at,r=i.root,a=t.$,f=(a||{})._||{},l=t.put||f.put;if((n=r.now)&&o!==n[e.now])return o.to.next(t);if(o.seen&&f.id&&o.seen[f.id])return o.to.next(t);if((n=l)&&n[c._]&&(n=c.is(n))&&(n=(t.$$=f.root.gun.get(n))._,u!==n.put&&(t=s(t,{put:l=n.put}))),(n=r.mum)&&f.id){if(n[f.id])return;u===l||c.is(l)||(n[f.id]=!0);}return e.use(t,o),o.stun?void(o.stun=null):void o.to.next(t)}function i(t){var n=this.on;if(!t||n.soul||n.has)return this.off();if(t=(t=(t=t.$||t)._||t).id){{var o,e;n.map;}return (o=(e=this.seen||(this.seen={}))[t])?!0:void(e[t]=!0)}}var r=t("./root");r.chain.get=function(t,u,a){var s,l;if("string"!=typeof t){if(t instanceof Function){if(!0===u)return o(this,t,u,a);s=this;var d,h=s._,v=h.root,l=v.now;a=u||{},a.at=h,a.use=t,a.out=a.out||{},a.out.get=a.out.get||{},(d=h.on("in",e,a)).rid=i,(v.now={$:1})[a.now=h.id]=d;var g=v.mum;return v.mum={},h.on("out",a.out),v.mum=g,v.now=l,s}return f(t)?this.get(""+t,u,a):(l=c.is(t))?this.get(l,u,a):((a=this.chain())._.err={err:r.log("Invalid get request!",t)},u&&u.call(a,a._.err),a)}var m=this,b=m._,k=b.next||p;return (s=k[t])||(s=n(t,m)),s=s.$,(l=b.stun)&&(s._.stun=s._.stun||l),u&&u instanceof Function&&s.get(u,a),s};var u,a=r.obj,s=(a.has,r.obj.to),f=r.num.is,c=r.val.link,l=r.node.soul,p=(r.node._,{});})(t,"./get"),t(function(){function n(t){t.batch=i;var n=t.opt||{},o=t.env=c.state.map(u,n.state);return o.soul=t.soul,t.graph=c.graph.ify(t.data,o,t),o.err?((t.ack||m).call(t,t.out={err:c.log(o.err)}),void(t.res&&t.res())):void t.batch()}function e(t){return void(t&&t())}function i(){var t=this;t.graph&&!v(t.stun,r)&&(t.res=t.res||function(t){t&&t();},t.res(function(){var n=t.$.back(-1)._,o=n.ask(function(o){n.root.on("ack",o),o.err&&c.log(o),o.lack||this.off(),t.ack&&t.ack(o,this);},t.opt),e=n.root.now;p.del(n.root,"now");var i=n.root.mum;n.root.mum={},t.ref._.on("out",{$:t.ref,put:t.out=t.env.graph,opt:t.opt,"#":o}),n.root.mum=i?p.to(i,n.root.mum):i,n.root.now=e;},t),t.res&&t.res());}function r(t){return t?!0:void 0}function u(t,n,o,e){var i=this,r=c.is(t);!n&&e.path.length&&(i.res||b)(function(){var n=e.path,o=i.ref,u=(i.opt,0),s=n.length;for(u;s>u;u++)o=o.get(n[u]);r&&(o=t);var f=o._.dub;return f||(f=c.node.soul(e.obj))?(o.back(-1).get(f),void e.soul(f)):((i.stun=i.stun||{})[n]=!0,void o.get(a,!0,{as:{at:e,as:i,p:n}}))},{as:i,at:e});}function a(t,n,o,e){var n=n.as,i=n.at;n=n.as;var r=((o||{}).$||{})._||{};return t=r.dub=r.dub||t||c.node.soul(i.obj)||c.node.soul(o.put||r.put)||c.val.rel.is(o.put||r.put)||(n.via.back("opt.uuid")||c.text.random)(),e&&(e.stun=!0),t?void s(r,r.dub=t,i,n):void r.via.back("opt.uuid")(function(t,o){return t?c.log(t):void s(r,r.dub=r.dub||o,i,n)})}function s(t,n,o,e){t.$.back(-1).get(n),o.soul(n),e.stun[o.path]=!1,e.batch();}function f(t,n,e,i){if(n=n.as,e.$&&e.$._){if(e.err)return void o.log("Please report this as an issue! Put.any.err");var r,u=e.$._,a=u.put,s=n.opt||{};if(!(r=n.ref)||!r._.now){if(i&&(i.stun=!0),n.ref!==n.$){if(r=n.$._.get||u.get,!r)return void o.log("Please report this as an issue! Put.no.get");n.data=h({},r,n.data),r=null;}if(l===a){if(!u.get)return;t||(r=u.$.back(function(t){return t.link||t.soul?t.link||t.soul:void(n.data=h({},t.get,n.data))})),r=r||u.get,u=u.root.$.get(r)._,n.soul=r,a=n.data;}return n.not||(n.soul=n.soul||t)||(n.path&&d(n.data)?n.soul=(s.uuid||n.via.back("opt.uuid")||c.text.random)():(k==u.get&&(n.soul=(u.put||g)["#"]||u.dub),n.soul=n.soul||u.soul||u.soul||(s.uuid||n.via.back("opt.uuid")||c.text.random)()),n.soul)?void n.ref.put(n.data,n.soul,n):void n.via.back("opt.uuid")(function(t,o){return t?c.log(t):void n.ref.put(n.data,n.soul=o,n)})}}}var c=t("./root");c.chain.put=function(t,o,i){var r,u=this,a=u._,s=a.root.$;return i=i||{},i.data=t,i.via=i.$=i.via||i.$||u,"string"==typeof o?i.soul=o:i.ack=i.ack||o,a.soul&&(i.soul=a.soul),i.soul||s===u?d(i.data)?(i.soul=i.soul||(i.not=c.node.soul(i.data)||(i.via.back("opt.uuid")||c.text.random)()),i.soul?(i.$=u=s.get(i.soul),i.ref=i.$,n(i),u):(i.via.back("opt.uuid")(function(t,n){return t?c.log(t):void(i.ref||i.$).put(i.data,i.soul=n,i)}),u)):((i.ack||m).call(i,i.out={err:c.log("Data saved to the root level of the graph must be a node (an object), not a",typeof i.data,'of "'+i.data+'"!')}),i.res&&i.res(),u):c.is(t)?(t.get(function(t,n,e){return !t&&c.val.is(e.put)?c.log("The reference you are saving is a",typeof e.put,'"'+e.put+'", not a node (object)!'):void u.put(c.val.rel.ify(t),o,i)},!0),u):(i.ref=i.ref||s._===(r=a.back)?u:r.$,i.ref._.soul&&c.val.is(i.data)&&a.get?(i.data=h({},a.get,i.data),i.ref.put(i.data,i.soul,i),u):(i.ref.get(f,!0,{as:i}),i.out||(i.res=i.res||e,i.$._.stun=i.ref._.stun),u))};var l,p=c.obj,d=p.is,h=p.put,v=p.map,g={},m=function(){},b=function(t,n){t.call(n||g);},k=c.node._;})(t,"./put"),t(function(n){var o=t("./root");t("./chain"),t("./back"),t("./put"),t("./get"),n.exports=o;})(t,"./index"),t(function(){function n(t,n){{var o,e=this,r=t.$,u=(r||{})._||{},a=u.put||t.put;e.at;}if(i!==a){if(o=t.$$){if(o=t.$$._,i===o.put)return;a=o.put;}e.change&&(a=t.put),e.as?e.ok.call(e.as,t,n):e.ok.call(r,a,t.get,t,n);}}function o(t,n,e){var r,a,s=this.as,f=(s.at,t.$),c=f._,l=c.put||t.put;if(a=t.$$){if(r=a=t.$$._,i===a.put)return;l=a.put;}return (a=n.wait)&&(a=a[c.id])&&clearTimeout(a),!e&&(i===l||c.soul||c.link||r&&!(0<r.ack))||i===l&&(a=(u(c.root.opt.peers,function(t,n,o){o(n);})||[]).length)&&(r||c).ack<=a?void(a=(n.wait={})[c.id]=setTimeout(function(){o.call({as:s},t,n,a||1);},s.wait||99)):(n.rid(t),void s.ok.call(f||s.$,l,t.get))}var e=t("./index");e.chain.on=function(t,o,e,i){var r,u=this,a=u._;if("string"==typeof t)return o?(r=a.on(t,o,e||a,i),e&&e.$&&(e.subs||(e.subs=[])).push(r),u):a.on(t);var s=o;return s=!0===s?{change:!0}:s||{},s.at=a,s.ok=t,u.get(n,s),u},e.chain.val=function(t,n){return e.log.once("onceval","Future Breaking API Change: .val -> .once, apologies unexpected."),this.once(t,n)},e.chain.once=function(t,n){var r=this,u=r._,a=u.put;if(0<u.ack&&i!==a)return (t||s).call(r,a,u.get),r;if(!t){e.log.once("valonce","Chainable val is experimental, its behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");var f=r.chain();return f._.nix=r.once(function(){f._.on("in",r._);}),f}return (n=n||{}).ok=t,n.at=u,n.out={"#":e.text.random(9)},r.get(o,{as:n}),n.async=!0,r},e.chain.off=function(){var t,n=this,o=n._,e=o.back;return e?((t=e.next)&&t[o.get]&&a(t,o.get),(t=e.ask)&&a(t,o.get),(t=e.put)&&a(t,o.get),(t=o.soul)&&a(e.root.graph,t),(t=o.map)&&u(t,function(t){t.link&&e.root.$.get(t.link).off();}),(t=o.next)&&u(t,function(t){t.$.off();}),o.on("off",{}),n):void 0};var i,r=e.obj,u=r.map,a=(r.has,r.del),s=(r.to,e.val.link,function(){});})(t,"./on"),t(function(){function n(t){return !t.put||e.val.is(t.put)?this.to.next(t):(this.as.nix&&this.off(),r(t.put,o,{at:this.as,msg:t}),void this.to.next(t))}function o(t,n){if(a!==n){var o=this.msg,e=o.$,i=this.at,r=e.get(n)._;(r.echo||(r.echo={}))[i.id]=r.echo[i.id]||i;}}var e=t("./index");e.chain.map=function(t){var o,r=this,a=r._;return t?(e.log.once("mapfn","Map functions are experimental, their behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it."),o=r.chain(),r.map().on(function(n,r,a,s){var f=(t||u).call(this,n,r,a,s);if(i!==f)return n===f?o._.on("in",a):e.is(f)?o._.on("in",f._):void o._.on("in",{get:r,put:f})}),o):(o=a.each)?o:(a.each=o=r.chain(),o._.nix=r.back("nix"),r.on("in",n,o._),o)};var i,r=e.obj.map,u=function(){},a=e.node._;})(t,"./map"),t(function(){var n=t("./index");n.chain.set=function(t,o,e){var i,r=this;if(o=o||function(){},e=e||{},e.item=e.item||t,i=n.node.soul(t))return r.set(r.back(-1).get(i),o,e);if(!n.is(t)){var u=r.back("opt.uuid")();return u&&n.obj.is(t)?r.set(r._.root.$.put(t,u),o,e):r.get(n.state.lex()+n.text.random(7)).put(t,o,e)}return t.get(function(t,i,u){return t?void r.put(n.obj.put({},t,n.val.link.ify(t)),o,e):o.call(r,{err:n.log('Only a node can be linked! Not "'+u.put+'"!')})},!0),t};})(t,"./set"),t(function(){if("undefined"!=typeof Gun){var t,n=function(){};"undefined"!=typeof window&&(t=window);var o=t.localStorage||{setItem:n,removeItem:n,getItem:n};Gun.on("create",function(t){function n(t){if(!t.err&&t.ok){var n=t["@"];setTimeout(function(){Gun.obj.map(a,function(t,o){Gun.obj.map(t,function(o,e){n===o&&delete t[e];}),s(t)&&delete a[o];}),p();},i.wait||1);}}var e=this.to,i=t.opt;if(t.once)return e.next(t);i.prefix=i.file||"gun/";var r,u,a=Gun.obj.ify(o.getItem("gap/"+i.prefix))||{},s=Gun.obj.empty;if(!s(a)){var f=Gun.obj.ify(o.getItem(i.prefix))||{},c={};Gun.obj.map(a,function(t,n){Gun.obj.map(t,function(t,o){c[n]=Gun.state.to(f[n],o,c[n]);});}),setTimeout(function(){t.on("out",{put:c,"#":t.ask(n),I:t.$});},1);}t.on("out",function(t){t.lS||(t.I&&t.put&&!t["@"]&&!s(i.peers)&&(r=t["#"],Gun.graph.is(t.put,null,l),u||(u=setTimeout(p,i.wait||1))),this.to.next(t));}),t.on("ack",n),e.next(t);var l=function(t,n,o,e){(a[e]||(a[e]={}))[n]=r;},p=function(){clearTimeout(u),u=!1;try{o.setItem("gap/"+i.prefix,JSON.stringify(a));}catch(t){Gun.log(err=t||"localStorage failure");}};}),Gun.on("create",function(t){this.to.next(t);var n=t.opt;if(!t.once&&!1!==n.localStorage){n.prefix=n.file||"gun/";var e,i=(t.graph,{}),r=0,u=Gun.obj.ify(o.getItem(n.prefix))||{};t.on("localStorage",u),t.on("put",function(t){return this.to.next(t),Gun.graph.is(t.put,null,a),t["@"]||(i[t["#"]]=!0),r+=1,r>=(n.batch||1e3)?s():void(e||(e=setTimeout(s,n.wait||1)))}),t.on("get",function(o){function e(){if(s&&(i=s["#"])){var e=s["."];r=u[i]||a,r&&e&&(r=Gun.state.to(r,e)),(r||Gun.obj.empty(n.peers))&&t.on("in",{"@":o["#"],put:Gun.graph.node(r),how:"lS",lS:o.I});}}this.to.next(o);var i,r,a,s=o.get;Gun.debug?setTimeout(e,1):e();});var a=function(t,n,o,e){u[e]=Gun.state.to(o,n,u[e]);},s=function(a){var f;r=0,clearTimeout(e),e=!1;var c=i;i={},a&&(u=a);try{o.setItem(n.prefix,JSON.stringify(u));}catch(l){Gun.log(f=l||"localStorage failure"),t.on("localStorage:error",{err:f,file:n.prefix,flush:u,retry:s});}(f||Gun.obj.empty(n.peers))&&Gun.obj.map(c,function(n,o){t.on("in",{"@":o,err:f,ok:0});});};}});}})(t,"./adapters/localStorage"),t(function(n){function e(t){var n=function(){},a=t.opt;return n.out=function(o){var e;return this.to&&this.to.next(o),(e=o["@"])&&(e=t.dup.s[e])&&(e=e.it)&&e.mesh?(n.say(o,e.mesh.via,1),void(e["##"]=o["##"])):void n.say(o)},t.on("create",function(o){o.opt.pid=o.opt.pid||i.text.random(9),this.to.next(o),t.on("out",n.out);}),n.hear=function(e,r){if(e){var u,a,s,f=t.dup,c=e[0];try{s=JSON.parse(e);}catch(l){o.log("DAM JSON parse error",l);}if("{"===c){if(!s)return;if(f.check(u=s["#"]))return;if(f.track(u,!0).it=s,(c=s["@"])&&s.put&&(a=s["##"]||(s["##"]=n.hash(s)),(c+=a)!=u)){if(f.check(c))return;(c=f.s)[a]=c[u];}return (s.mesh=function(){}).via=r,(c=s["><"])&&(s.mesh.to=i.obj.map(c.split(","),function(t,n,o){o(t,!0);})),s.dam?void((c=n.hear[s.dam])&&c(s,r,t)):void t.on("in",s)}if("["!==c);else{if(!s)return;for(var p,d=0;p=s[d++];)n.hear(p,r);}}},function(){function o(t,n){var o=n.wire;try{o.send?o.send(t):n.say&&n.say(t);}catch(e){(n.queue=n.queue||[]).push(t);}}n.say=function(e,r,s){if(!r)return void i.obj.map(a.peers,function(t){n.say(e,t);});var f,c,l,p=r.wire||a.wire&&a.wire(r);if(p&&(c=e.mesh||u,r!==c.via&&((l=c.raw)||(l=n.raw(e)),!((f=e["@"])&&(f=t.dup.s[f])&&(f=f.it)&&f.get&&f["##"]&&f["##"]===e["##"]||(f=c.to)&&(f[r.url]||f[r.id])&&!s)))){if(r.batch)return void r.batch.push(l);r.batch=[],setTimeout(function(){var t=r.batch;t&&(r.batch=null,t.length&&o(JSON.stringify(t),r));},a.gap||a.wait||1),o(l,r);}};}(),function(){function o(t,n){var o;return n instanceof Object?(i.obj.map(Object.keys(n).sort(),u,{to:o={},on:n}),o):n}function u(t){this.to[t]=this.on[t];}n.raw=function(e){if(!e)return "";var u,c,l,p=t.dup,d=e.mesh||{};if(l=d.raw)return l;if("string"==typeof e)return e;e["@"]&&(l=e.put)&&((c=e["##"])||(u=s(l,o)||"",c=n.hash(e,u),e["##"]=c),(l=p.s)[c=e["@"]+c]=l[e["#"]],e["#"]=c||e["#"],u&&((e=i.obj.to(e)).put=f));var h=0,v=[];i.obj.map(a.peers,function(t){return v.push(t.url||t.id),++h>9?!0:void 0}),e["><"]=v.join();var g=s(e);return r!==u&&(l=g.indexOf(f,g.indexOf("put")),g=g.slice(0,l-1)+u+g.slice(l+f.length+1)),d&&(d.raw=g),g},n.hash=function(t,n){return e.hash(n||s(t.put,o)||"")||t["#"]||i.text.random(9)};var s=JSON.stringify,f=":])([:";}(),n.hi=function(o){var e=o.wire||{};o.id||o.url?(a.peers[o.url||o.id]=o,i.obj.del(a.peers,e.id)):(e=e.id=e.id||i.text.random(9),n.say({dam:"?"},a.peers[e]=o)),e.hied||t.on(e.hied="hi",o),e=o.queue,o.queue=[],i.obj.map(e,function(t){n.say(t,o);});},n.bye=function(n){i.obj.del(a.peers,n.id),t.on("bye",n);},n.hear["?"]=function(t,o){return t.pid?(o.id=o.id||t.pid,void n.hi(o)):n.say({dam:"?",pid:a.pid,"@":t["#"]},o)},n}var i=t("../type");e.hash=function(t){if("string"!=typeof t)return {err:1};var n=0;if(!t.length)return n;for(var o,e=0,i=t.length;i>e;++e)o=t.charCodeAt(e),n=(n<<5)-n+o,n|=0;return n};var r,u={};Object.keys=Object.keys||function(t){return map(t,function(t,n,o){o(n);})};try{n.exports=e;}catch(a){}})(t,"./adapters/mesh"),t(function(){var n=t("../index");n.Mesh=t("./mesh"),n.on("opt",function(t){function o(t){try{if(!t||!t.url)return o&&o(t);var n=t.url.replace("http","ws"),o=t.wire=new i.WebSocket(n);return o.onclose=function(){i.mesh.bye(t),e(t);},o.onerror=function(n){e(t),n&&"ECONNREFUSED"===n.code;},o.onopen=function(){i.mesh.hi(t);},o.onmessage=function(n){
+	n&&i.mesh.hear(n.data||n,t);},o}catch(r){}}function e(t){clearTimeout(t.defer),t.defer=setTimeout(function(){o(t);},2e3);}this.to.next(t);var i=t.opt;if(!t.once&&!1!==i.WebSocket){var r;"undefined"!=typeof window&&(r=window),"undefined"!=typeof commonjsGlobal&&(r=commonjsGlobal),r=r||{};var u=i.WebSocket||r.WebSocket||r.webkitWebSocket||r.mozWebSocket;if(u){i.WebSocket=u;{i.mesh=i.mesh||n.Mesh(t),i.wire;}i.wire=o;}}});})(t,"./adapters/websocket");}();
 	});
 
-	var empty$2 = {};
+	var sea = createCommonjsModule(function (module) {
+	(function(){
 
-	var empty$3 = /*#__PURE__*/Object.freeze({
-		default: empty$2
+	  /* UNBUILD */
+	  var root;
+	  if(typeof window !== "undefined"){ root = window; }
+	  if(typeof commonjsGlobal !== "undefined"){ root = commonjsGlobal; }
+	  root = root || {};
+	  var console = root.console || {log: function(){}};
+	  function USE(arg, req){
+	    return req? commonjsRequire(arg) : arg.slice? USE[R(arg)] : function(mod, path){
+	      arg(mod = {exports: {}});
+	      USE[R(path)] = mod.exports;
+	    }
+	    function R(p){
+	      return p.split('/').slice(-1).toString().replace('.js','');
+	    }
+	  }
+	  { var common = module; }
+	USE(function(module){
+	    // Security, Encryption, and Authorization: SEA.js
+	    // MANDATORY READING: https://gun.eco/explainers/data/security.html
+	    // IT IS IMPLEMENTED IN A POLYFILL/SHIM APPROACH.
+	    // THIS IS AN EARLY ALPHA!
+
+	    if(typeof window !== "undefined"){ module.window = window; }
+
+	    var tmp = module.window || module;
+	    var SEA = tmp.SEA || function(){};
+
+	    if(SEA.window = module.window){ try{
+	      SEA.window.SEA = SEA;
+	      tmp = document.createEvent('CustomEvent');
+	      tmp.initCustomEvent('extension', false, false, {type: "SEA"});
+	      (window.dispatchEvent || window.fireEvent)(tmp);
+	      window.postMessage({type: "SEA"}, '*');
+	    } catch(e){} }
+
+	    try{ if(typeof common !== "undefined"){ common.exports = SEA; } }catch(e){}
+	    module.exports = SEA;
+	  })(USE, './root');
+	USE(function(module){
+	    var SEA = USE('./root');
+	    if(SEA.window){
+	      if(location.protocol.indexOf('s') < 0
+	      && location.host.indexOf('localhost') < 0
+	      && location.protocol.indexOf('file:') < 0){
+	        location.protocol = 'https:'; // WebCrypto does NOT work without HTTPS!
+	      }
+	    }
+	  })(USE, './https');
+	USE(function(module){
+	    // This is Array extended to have .toString(['utf8'|'hex'|'base64'])
+	    function SeaArray() {}
+	    Object.assign(SeaArray, { from: Array.from });
+	    SeaArray.prototype = Object.create(Array.prototype);
+	    SeaArray.prototype.toString = function(enc, start, end) { enc = enc || 'utf8'; start = start || 0;
+	      const length = this.length;
+	      if (enc === 'hex') {
+	        const buf = new Uint8Array(this);
+	        return [ ...Array(((end && (end + 1)) || length) - start).keys()]
+	        .map((i) => buf[ i + start ].toString(16).padStart(2, '0')).join('')
+	      }
+	      if (enc === 'utf8') {
+	        return Array.from(
+	          { length: (end || length) - start },
+	          (_, i) => String.fromCharCode(this[ i + start])
+	        ).join('')
+	      }
+	      if (enc === 'base64') {
+	        return btoa(this)
+	      }
+	    };
+	    module.exports = SeaArray;
+	  })(USE, './array');
+	USE(function(module){
+	    // This is Buffer implementation used in SEA. Functionality is mostly
+	    // compatible with NodeJS 'safe-buffer' and is used for encoding conversions
+	    // between binary and 'hex' | 'utf8' | 'base64'
+	    // See documentation and validation for safe implementation in:
+	    // https://github.com/feross/safe-buffer#update
+	    var SeaArray = USE('./array');
+	    function SafeBuffer(...props) {
+	      console.warn('new SafeBuffer() is depreciated, please use SafeBuffer.from()');
+	      return SafeBuffer.from(...props)
+	    }
+	    SafeBuffer.prototype = Object.create(Array.prototype);
+	    Object.assign(SafeBuffer, {
+	      // (data, enc) where typeof data === 'string' then enc === 'utf8'|'hex'|'base64'
+	      from() {
+	        if (!Object.keys(arguments).length) {
+	          throw new TypeError('First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object.')
+	        }
+	        const input = arguments[0];
+	        let buf;
+	        if (typeof input === 'string') {
+	          const enc = arguments[1] || 'utf8';
+	          if (enc === 'hex') {
+	            const bytes = input.match(/([\da-fA-F]{2})/g)
+	            .map((byte) => parseInt(byte, 16));
+	            if (!bytes || !bytes.length) {
+	              throw new TypeError('Invalid first argument for type \'hex\'.')
+	            }
+	            buf = SeaArray.from(bytes);
+	          } else if (enc === 'utf8') {
+	            const length = input.length;
+	            const words = new Uint16Array(length);
+	            buf = SeaArray.from(words);
+	          } else if (enc === 'base64') {
+	            const dec = atob(input);
+	            const length = dec.length;
+	            const bytes = new Uint8Array(length);
+	            buf = SeaArray.from(bytes);
+	          } else if (enc === 'binary') {
+	            buf = SeaArray.from(input);
+	          } else {
+	            console.info('SafeBuffer.from unknown encoding: '+enc);
+	          }
+	          return buf
+	        }
+	        const byteLength = input.byteLength;
+	        const length = input.byteLength ? input.byteLength : input.length;
+	        if (length) {
+	          let buf;
+	          if (input instanceof ArrayBuffer) {
+	            buf = new Uint8Array(input);
+	          }
+	          return SeaArray.from(buf || input)
+	        }
+	      },
+	      // This is 'safe-buffer.alloc' sans encoding support
+	      alloc(length, fill = 0 /*, enc*/ ) {
+	        return SeaArray.from(new Uint8Array(Array.from({ length: length }, () => fill)))
+	      },
+	      // This is normal UNSAFE 'buffer.alloc' or 'new Buffer(length)' - don't use!
+	      allocUnsafe(length) {
+	        return SeaArray.from(new Uint8Array(Array.from({ length : length })))
+	      },
+	      // This puts together array of array like members
+	      concat(arr) { // octet array
+	        if (!Array.isArray(arr)) {
+	          throw new TypeError('First argument must be Array containing ArrayBuffer or Uint8Array instances.')
+	        }
+	        return SeaArray.from(arr.reduce((ret, item) => ret.concat(Array.from(item)), []))
+	      }
+	    });
+	    SafeBuffer.prototype.from = SafeBuffer.from;
+	    SafeBuffer.prototype.toString = SeaArray.prototype.toString;
+
+	    module.exports = SafeBuffer;
+	  })(USE, './buffer');
+	USE(function(module){
+	    const Buffer$$1 = USE('./buffer');
+	    const api = {Buffer: Buffer$$1};
+
+	    if (typeof window !== 'undefined' && (window.crypto || window.msCrypto)) {
+	      var crypto = window.crypto || window.msCrypto;
+	      var subtle = crypto.subtle || crypto.webkitSubtle;
+	      const TextEncoder = window.TextEncoder;
+	      const TextDecoder = window.TextDecoder;
+	      Object.assign(api, {
+	        crypto,
+	        subtle,
+	        TextEncoder,
+	        TextDecoder,
+	        random: (len) => Buffer$$1.from(crypto.getRandomValues(new Uint8Array(Buffer$$1.alloc(len))))
+	      });
+	    } else {
+	      try{
+	        var crypto = USE('crypto', 1);
+	        const { subtle } = USE('@trust/webcrypto', 1);             // All but ECDH
+	        const { TextEncoder, TextDecoder } = USE('text-encoding', 1);
+	        Object.assign(api, {
+	          crypto,
+	          subtle,
+	          TextEncoder,
+	          TextDecoder,
+	          random: (len) => Buffer$$1.from(crypto.randomBytes(len))
+	        });
+	        //try{
+	          const WebCrypto = USE('node-webcrypto-ossl', 1);
+	          api.ossl = new WebCrypto({directory: 'ossl'}).subtle; // ECDH
+	        //}catch(e){
+	          //console.log("node-webcrypto-ossl is optionally needed for ECDH, please install if needed.");
+	        //}
+	      }catch(e){
+	        console.log("@trust/webcrypto and text-encoding are not included by default, you must add it to your package.json!");
+	        console.log("node-webcrypto-ossl is temporarily needed for ECDSA signature verification, and optionally needed for ECDH, please install if needed (currently necessary so add them to your package.json for now).");
+	      }
+	    }
+
+	    module.exports = api;
+	  })(USE, './shim');
+	USE(function(module){
+	    const SEA = USE('./root');
+	    const Buffer$$1 = USE('./buffer');
+	    const settings = {};
+	    // Encryption parameters
+	    const pbkdf2 = { hash: 'SHA-256', iter: 100000, ks: 64 };
+
+	    const ecdsaSignProps = { name: 'ECDSA', hash: { name: 'SHA-256' } };
+	    const ecdsaKeyProps = { name: 'ECDSA', namedCurve: 'P-256' };
+	    const ecdhKeyProps = { name: 'ECDH', namedCurve: 'P-256' };
+
+	    const _initial_authsettings = {
+	      validity: 12 * 60 * 60, // internally in seconds : 12 hours
+	      hook: (props) => props  // { iat, exp, alias, remember }
+	      // or return new Promise((resolve, reject) => resolve(props)
+	    };
+	    // These are used to persist user's authentication "session"
+	    const authsettings = Object.assign({}, _initial_authsettings);
+	    // This creates Web Cryptography API compliant JWK for sign/verify purposes
+	    const keysToEcdsaJwk = (pub, d) => {  // d === priv
+	      //const [ x, y ] = Buffer.from(pub, 'base64').toString('utf8').split(':') // old
+	      const [ x, y ] = pub.split('.'); // new
+	      var jwk = { kty: "EC", crv: "P-256", x: x, y: y, ext: true };
+	      jwk.key_ops = d ? ['sign'] : ['verify'];
+	      if(d){ jwk.d = d; }
+	      return jwk;
+	    };
+
+	    Object.assign(settings, {
+	      pbkdf2: pbkdf2,
+	      ecdsa: {
+	        pair: ecdsaKeyProps,
+	        sign: ecdsaSignProps
+	      },
+	      ecdh: ecdhKeyProps,
+	      jwk: keysToEcdsaJwk,
+	      recall: authsettings
+	    });
+	    SEA.opt = settings;
+	    module.exports = settings;
+	  })(USE, './settings');
+	USE(function(module){
+	    module.exports = (props) => {
+	      try {
+	        if(props.slice && 'SEA{' === props.slice(0,4)){
+	          props = props.slice(3);
+	        }
+	        return props.slice ? JSON.parse(props) : props
+	      } catch (e) {}  //eslint-disable-line no-empty
+	      return props
+	    };
+	  })(USE, './parse');
+	USE(function(module){
+	    const shim = USE('./shim');
+	    const Buffer$$1 = USE('./buffer');
+	    const parse = USE('./parse');
+	    const { pbkdf2 } = USE('./settings');
+	    // This internal func returns SHA-256 hashed data for signing
+	    const sha256hash = async (mm) => {
+	      const m = parse(mm);
+	      const hash = await shim.subtle.digest({name: pbkdf2.hash}, new shim.TextEncoder().encode(m));
+	      return Buffer$$1.from(hash)
+	    };
+	    module.exports = sha256hash;
+	  })(USE, './sha256');
+	USE(function(module){
+	    // This internal func returns SHA-1 hashed data for KeyID generation
+	    const __shim = USE('./shim');
+	    const subtle = __shim.subtle;
+	    const ossl = __shim.ossl ? __shim.__ossl : subtle;
+	    const sha1hash = (b) => ossl.digest({name: 'SHA-1'}, new ArrayBuffer(b));
+	    module.exports = sha1hash;
+	  })(USE, './sha1');
+	USE(function(module){
+	    var SEA = USE('./root');
+	    var shim = USE('./shim');
+	    var S = USE('./settings');
+	    var sha = USE('./sha256');
+	    var u;
+
+	    SEA.work = SEA.work || (async (data, pair, cb, opt) => { try { // used to be named `proof`
+	      var salt = (pair||{}).epub || pair; // epub not recommended, salt should be random!
+	      var opt = opt || {};
+	      if(salt instanceof Function){
+	        cb = salt;
+	        salt = u;
+	      }
+	      salt = salt || shim.random(9);
+	      if('SHA-256' === opt.name){
+	        var rsha = shim.Buffer.from(await sha(data), 'binary').toString('utf8');
+	        if(cb){ try{ cb(rsha); }catch(e){console.log(e);} }
+	        return rsha;
+	      }
+	      const key = await (shim.ossl || shim.subtle).importKey(
+	        'raw', new shim.TextEncoder().encode(data), { name: opt.name || 'PBKDF2' }, false, ['deriveBits']
+	      );
+	      const result = await (shim.ossl || shim.subtle).deriveBits({
+	        name: opt.name || 'PBKDF2',
+	        iterations: opt.iterations || S.pbkdf2.iter,
+	        salt: new shim.TextEncoder().encode(opt.salt || salt),
+	        hash: opt.hash || S.pbkdf2.hash,
+	      }, key, opt.length || (S.pbkdf2.ks * 8));
+	      data = shim.random(data.length);  // Erase data in case of passphrase
+	      const r = shim.Buffer.from(result, 'binary').toString('utf8');
+	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
+	      return r;
+	    } catch(e) { 
+	      SEA.err = e;
+	      if(cb){ cb(); }
+	      return;
+	    }});
+
+	    module.exports = SEA.work;
+	  })(USE, './work');
+	USE(function(module){
+	    var SEA = USE('./root');
+	    var shim = USE('./shim');
+	    var S = USE('./settings');
+	    var Buff = (typeof Buffer !== 'undefined')? Buffer : shim.Buffer;
+
+	    //SEA.pair = async (data, proof, cb) => { try {
+	    SEA.pair = SEA.pair || (async (cb) => { try {
+
+	      const ecdhSubtle = shim.ossl || shim.subtle;
+	      // First: ECDSA keys for signing/verifying...
+	      var sa = await shim.subtle.generateKey(S.ecdsa.pair, true, [ 'sign', 'verify' ])
+	      .then(async (keys) => {
+	        // privateKey scope doesn't leak out from here!
+	        //const { d: priv } = await shim.subtle.exportKey('jwk', keys.privateKey)
+	        const key = {};
+	        key.priv = (await shim.subtle.exportKey('jwk', keys.privateKey)).d;
+	        const pub = await shim.subtle.exportKey('jwk', keys.publicKey);
+	        //const pub = Buff.from([ x, y ].join(':')).toString('base64') // old
+	        key.pub = pub.x+'.'+pub.y; // new
+	        // x and y are already base64
+	        // pub is UTF8 but filename/URL safe (https://www.ietf.org/rfc/rfc3986.txt)
+	        // but split on a non-base64 letter.
+	        return key;
+	      });
+	      
+	      // To include PGPv4 kind of keyId:
+	      // const pubId = await SEA.keyid(keys.pub)
+	      // Next: ECDH keys for encryption/decryption...
+
+	      try{
+	      var dh = await ecdhSubtle.generateKey(S.ecdh, true, ['deriveKey'])
+	      .then(async (keys) => {
+	        // privateKey scope doesn't leak out from here!
+	        const key = {};
+	        key.epriv = (await ecdhSubtle.exportKey('jwk', keys.privateKey)).d;
+	        const pub = await ecdhSubtle.exportKey('jwk', keys.publicKey);
+	        //const epub = Buff.from([ ex, ey ].join(':')).toString('base64') // old
+	        key.epub = pub.x+'.'+pub.y; // new
+	        // ex and ey are already base64
+	        // epub is UTF8 but filename/URL safe (https://www.ietf.org/rfc/rfc3986.txt)
+	        // but split on a non-base64 letter.
+	        return key;
+	      });
+	      }catch(e){
+	        if(SEA.window){ throw e }
+	        if(e == 'Error: ECDH is not a supported algorithm'){ console.log('Ignoring ECDH...'); }
+	        else { throw e }
+	      } dh = dh || {};
+
+	      const r = { pub: sa.pub, priv: sa.priv, /* pubId, */ epub: dh.epub, epriv: dh.epriv };
+	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
+	      return r;
+	    } catch(e) {
+	      console.log(e);
+	      SEA.err = e;
+	      if(cb){ cb(); }
+	      return;
+	    }});
+
+	    module.exports = SEA.pair;
+	  })(USE, './pair');
+	USE(function(module){
+	    var SEA = USE('./root');
+	    var shim = USE('./shim');
+	    var S = USE('./settings');
+	    var sha256hash = USE('./sha256');
+
+	    SEA.sign = SEA.sign || (async (data, pair, cb) => { try {
+	      if(data && data.slice
+	      && 'SEA{' === data.slice(0,4)
+	      && '"m":' === data.slice(4,8)){
+	        // TODO: This would prevent pair2 signing pair1's signature.
+	        // So we may want to change this in the future.
+	        // but for now, we want to prevent duplicate double signature.
+	        if(cb){ try{ cb(data); }catch(e){console.log(e);} }
+	        return data;
+	      }
+	      const pub = pair.pub;
+	      const priv = pair.priv;
+	      const jwk = S.jwk(pub, priv);
+	      const msg = JSON.stringify(data);
+	      const hash = await sha256hash(msg);
+	      const sig = await (shim.ossl || shim.subtle).importKey('jwk', jwk, S.ecdsa.pair, false, ['sign'])
+	      .then((key) => (shim.ossl || shim.subtle).sign(S.ecdsa.sign, key, new Uint8Array(hash))); // privateKey scope doesn't leak out from here!
+	      const r = 'SEA'+JSON.stringify({m: msg, s: shim.Buffer.from(sig, 'binary').toString('utf8')});
+
+	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
+	      return r;
+	    } catch(e) {
+	      console.log(e);
+	      SEA.err = e;
+	      if(cb){ cb(); }
+	      return;
+	    }});
+
+	    module.exports = SEA.sign;
+	  })(USE, './sign');
+	USE(function(module){
+	    var SEA = USE('./root');
+	    var shim = USE('./shim');
+	    var S = USE('./settings');
+	    var sha256hash = USE('./sha256');
+	    var parse = USE('./parse');
+	    var u;
+
+	    SEA.verify = SEA.verify || (async (data, pair, cb) => { try {
+	      const json = parse(data);
+	      if(false === pair){ // don't verify!
+	        const raw = (json !== data)? 
+	          (json.s && json.m)? parse(json.m) : data
+	        : json;
+	        if(cb){ try{ cb(raw); }catch(e){console.log(e);} }
+	        return raw;
+	      }
+	      const pub = pair.pub || pair;
+	      const jwk = S.jwk(pub);
+	      const key = await (shim.ossl || shim.subtle).importKey('jwk', jwk, S.ecdsa.pair, false, ['verify']);
+	      const hash = await sha256hash(json.m);
+	      const sig = new Uint8Array(shim.Buffer.from(json.s, 'utf8'));
+	      const check = await (shim.ossl || shim.subtle).verify(S.ecdsa.sign, key, sig, new Uint8Array(hash));
+	      if(!check){ throw "Signature did not match." }
+	      const r = check? parse(json.m) : u;
+
+	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
+	      return r;
+	    } catch(e) {
+	      console.log(e);
+	      SEA.err = e;
+	      if(cb){ cb(); }
+	      return;
+	    }});
+
+	    module.exports = SEA.verify;
+	  })(USE, './verify');
+	USE(function(module){
+	    var shim = USE('./shim');
+	    var sha256hash = USE('./sha256');
+
+	    const importGen = async (key, salt, opt) => {
+	      //const combo = shim.Buffer.concat([shim.Buffer.from(key, 'utf8'), salt || shim.random(8)]).toString('utf8') // old
+	      var opt = opt || {};
+	      const combo = key + (salt || shim.random(8)).toString('utf8'); // new
+	      const hash = shim.Buffer.from(await sha256hash(combo), 'binary');
+	      return await shim.subtle.importKey('raw', new Uint8Array(hash), opt.name || 'AES-GCM', false, ['encrypt', 'decrypt'])
+	    };
+	    module.exports = importGen;
+	  })(USE, './aeskey');
+	USE(function(module){
+	    var SEA = USE('./root');
+	    var shim = USE('./shim');
+	    var S = USE('./settings');
+	    var aeskey = USE('./aeskey');
+
+	    SEA.encrypt = SEA.encrypt || (async (data, pair, cb, opt) => { try {
+	      var opt = opt || {};
+	      const key = pair.epriv || pair;
+	      const msg = JSON.stringify(data);
+	      const rand = {s: shim.random(8), iv: shim.random(16)};
+	      const ct = await aeskey(key, rand.s, opt)
+	      .then((aes) => (/*shim.ossl ||*/ shim.subtle).encrypt({ // Keeping the AES key scope as private as possible...
+	        name: opt.name || 'AES-GCM', iv: new Uint8Array(rand.iv)
+	      }, aes, new shim.TextEncoder().encode(msg)));
+	      const r = 'SEA'+JSON.stringify({
+	        ct: shim.Buffer.from(ct, 'binary').toString('utf8'),
+	        iv: rand.iv.toString('utf8'),
+	        s: rand.s.toString('utf8')
+	      });
+
+	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
+	      return r;
+	    } catch(e) { 
+	      SEA.err = e;
+	      if(cb){ cb(); }
+	      return;
+	    }});
+
+	    module.exports = SEA.encrypt;
+	  })(USE, './encrypt');
+	USE(function(module){
+	    var SEA = USE('./root');
+	    var shim = USE('./shim');
+	    var S = USE('./settings');
+	    var aeskey = USE('./aeskey');
+	    var parse = USE('./parse');
+
+	    SEA.decrypt = SEA.decrypt || (async (data, pair, cb, opt) => { try {
+	      var opt = opt || {};
+	      const key = pair.epriv || pair;
+	      const json = parse(data);
+	      const ct = await aeskey(key, shim.Buffer.from(json.s, 'utf8'), opt)
+	      .then((aes) => (/*shim.ossl ||*/ shim.subtle).decrypt({  // Keeping aesKey scope as private as possible...
+	        name: opt.name || 'AES-GCM', iv: new Uint8Array(shim.Buffer.from(json.iv, 'utf8'))
+	      }, aes, new Uint8Array(shim.Buffer.from(json.ct, 'utf8'))));
+	      const r = parse(new shim.TextDecoder('utf8').decode(ct));
+	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
+	      return r;
+	    } catch(e) { 
+	      SEA.err = e;
+	      if(cb){ cb(); }
+	      return;
+	    }});
+
+	    module.exports = SEA.decrypt;
+	  })(USE, './decrypt');
+	USE(function(module){
+	    var SEA = USE('./root');
+	    var shim = USE('./shim');
+	    var S = USE('./settings');
+	    // Derive shared secret from other's pub and my epub/epriv
+	    SEA.secret = SEA.secret || (async (key, pair, cb) => { try {
+	      const pub = key.epub || key;
+	      const epub = pair.epub;
+	      const epriv = pair.epriv;
+	      const ecdhSubtle = shim.ossl || shim.subtle;
+	      const pubKeyData = keysToEcdhJwk(pub);
+	      const props = Object.assign(
+	        S.ecdh,
+	        { public: await ecdhSubtle.importKey(...pubKeyData, true, []) }
+	      );
+	      const privKeyData = keysToEcdhJwk(epub, epriv);
+	      const derived = await ecdhSubtle.importKey(...privKeyData, false, ['deriveKey'])
+	      .then(async (privKey) => {
+	        // privateKey scope doesn't leak out from here!
+	        const derivedKey = await ecdhSubtle.deriveKey(props, privKey, { name: 'AES-GCM', length: 256 }, true, [ 'encrypt', 'decrypt' ]);
+	        return ecdhSubtle.exportKey('jwk', derivedKey).then(({ k }) => k)
+	      });
+	      const r = derived;
+	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
+	      return r;
+	    } catch(e) { 
+	      SEA.err = e;
+	      if(cb){ cb(); }
+	      return;
+	    }});
+
+	    const keysToEcdhJwk = (pub, d) => { // d === priv
+	      //const [ x, y ] = Buffer.from(pub, 'base64').toString('utf8').split(':') // old
+	      const [ x, y ] = pub.split('.'); // new
+	      const jwk = d ? { d: d } : {};
+	      return [  // Use with spread returned value...
+	        'jwk',
+	        Object.assign(
+	          jwk,
+	          { x: x, y: y, kty: 'EC', crv: 'P-256', ext: true }
+	        ), // ??? refactor
+	        S.ecdh
+	      ]
+	    };
+
+	    module.exports = SEA.secret;
+	  })(USE, './secret');
+	USE(function(module){
+	    // Old Code...
+	    const __gky10 = USE('./shim');
+	    const crypto = __gky10.crypto;
+	    const subtle = __gky10.subtle;
+	    const ossl = __gky10.ossl;
+	    const TextEncoder = __gky10.TextEncoder;
+	    const TextDecoder = __gky10.TextDecoder;
+	    const getRandomBytes = __gky10.random;
+	    const EasyIndexedDB = USE('./indexed');
+	    const Buffer$$1 = USE('./buffer');
+	    var settings = USE('./settings');
+	    const __gky11 = USE('./settings');
+	    const pbKdf2 = __gky11.pbkdf2;
+	    const ecdsaKeyProps = __gky11.ecdsa.pair;
+	    const ecdsaSignProps = __gky11.ecdsa.sign;
+	    const ecdhKeyProps = __gky11.ecdh;
+	    const keysToEcdsaJwk = __gky11.jwk;
+	    const sha1hash = USE('./sha1');
+	    const sha256hash = USE('./sha256');
+	    const recallCryptoKey = USE('./remember');
+	    const parseProps = USE('./parse');
+
+	    // Practical examples about usage found from ./test/common.js
+	    const SEA = USE('./root');
+	    SEA.work = USE('./work');
+	    SEA.sign = USE('./sign');
+	    SEA.verify = USE('./verify');
+	    SEA.encrypt = USE('./encrypt');
+	    SEA.decrypt = USE('./decrypt');
+
+	    SEA.random = SEA.random || getRandomBytes;
+
+	    // This is easy way to use IndexedDB, all methods are Promises
+	    // Note: Not all SEA interfaces have to support this.
+	    SEA.EasyIndexedDB = EasyIndexedDB;
+
+	    // This is Buffer used in SEA and usable from Gun/SEA application also.
+	    // For documentation see https://nodejs.org/api/buffer.html
+	    SEA.Buffer = SEA.Buffer || Buffer$$1;
+
+	    // These SEA functions support now ony Promises or
+	    // async/await (compatible) code, use those like Promises.
+	    //
+	    // Creates a wrapper library around Web Crypto API
+	    // for various AES, ECDSA, PBKDF2 functions we called above.
+	    // Calculate public key KeyID aka PGPv4 (result: 8 bytes as hex string)
+	    SEA.keyid = SEA.keyid || (async (pub) => {
+	      try {
+	        // base64('base64(x):base64(y)') => Buffer(xy)
+	        const pb = Buffer$$1.concat(
+	          Buffer$$1.from(pub, 'base64').toString('utf8').split(':')
+	          .map((t) => Buffer$$1.from(t, 'base64'))
+	        );
+	        // id is PGPv4 compliant raw key
+	        const id = Buffer$$1.concat([
+	          Buffer$$1.from([0x99, pb.length / 0x100, pb.length % 0x100]), pb
+	        ]);
+	        const sha1 = await sha1hash(id);
+	        const hash = Buffer$$1.from(sha1, 'binary');
+	        return hash.toString('hex', hash.length - 8)  // 16-bit ID as hex
+	      } catch (e) {
+	        console.log(e);
+	        throw e
+	      }
+	    });
+	    // all done!
+	    // Obviously it is missing MANY necessary features. This is only an alpha release.
+	    // Please experiment with it, audit what I've done so far, and complain about what needs to be added.
+	    // SEA should be a full suite that is easy and seamless to use.
+	    // Again, scroll naer the top, where I provide an EXAMPLE of how to create a user and sign in.
+	    // Once logged in, the rest of the code you just read handled automatically signing/validating data.
+	    // But all other behavior needs to be equally easy, like opinionated ways of
+	    // Adding friends (trusted public keys), sending private messages, etc.
+	    // Cheers! Tell me what you think.
+	    var Gun = (SEA.window||{}).Gun || USE('./gun', 1);
+	    Gun.SEA = SEA;
+	    SEA.Gun = Gun;
+
+	    module.exports = SEA;
+	  })(USE, './sea');
+	USE(function(module){
+	    var SEA = USE('./sea');
+	    var Gun = SEA.Gun;
+	    // This is internal func queries public key(s) for alias.
+	    const queryGunAliases = (alias, gunRoot) => new Promise((resolve, reject) => {
+	      // load all public keys associated with the username alias we want to log in with.
+	      gunRoot.get('~@'+alias).once((data, key) => {
+	        //rev.off();
+	        if (!data) {
+	          // if no user, don't do anything.
+	          const err = 'No user!';
+	          Gun.log(err);
+	          return reject({ err })
+	        }
+	        // then figuring out all possible candidates having matching username
+	        const aliases = [];
+	        let c = 0;
+	        // TODO: how about having real chainable map without callback ?
+	        Gun.obj.map(data, (at, pub) => {
+	          if (!pub.slice || '~' !== pub.slice(0, 1)) {
+	            // TODO: ... this would then be .filter((at, pub))
+	            return
+	          }
+	          ++c;
+	          // grab the account associated with this public key.
+	          gunRoot.get(pub).once(data => {
+	            pub = pub.slice(1);
+	            --c;
+	            if (data){
+	              aliases.push({ pub, put: data });
+	            }
+	            if (!c && (c = -1)) {
+	              resolve(aliases);
+	            }
+	          });
+	        });
+	        if (!c) {
+	          reject({ err: 'Public key does not exist!' });
+	        }
+	      });
+	    });
+	    module.exports = queryGunAliases;
+	  })(USE, './query');
+	USE(function(module){
+	    var SEA = USE('./sea');
+	    var Gun = SEA.Gun;
+	    const queryGunAliases = USE('./query');
+	    const parseProps = USE('./parse');
+	    // This is internal User authentication func.
+	    const authenticate = async (alias, pass, gunRoot) => {
+	      // load all public keys associated with the username alias we want to log in with.
+	      const aliases = (await queryGunAliases(alias, gunRoot))
+	      .filter(a => !!a.pub && !!a.put);
+	      // Got any?
+	      if (!aliases.length) {
+	        throw { err: 'Public key does not exist!' }
+	      }
+	      let err;
+	      // then attempt to log into each one until we find ours!
+	      // (if two users have the same username AND the same password... that would be bad)
+	      const users = await Promise.all(aliases.map(async (a, i) => {
+	        // attempt to PBKDF2 extend the password with the salt. (Verifying the signature gives us the plain text salt.)
+	        const auth = parseProps(a.put.auth);
+	      // NOTE: aliasquery uses `gun.get` which internally SEA.read verifies the data for us, so we do not need to re-verify it here.
+	      // SEA.verify(at.put.auth, pub).then(function(auth){
+	        try {
+	          const proof = await SEA.work(pass, auth.s);
+	          //const props = { pub: pub, proof: proof, at: at }
+	          // the proof of work is evidence that we've spent some time/effort trying to log in, this slows brute force.
+	          /*
+	          MARK TO @mhelander : pub vs epub!???
+	          */
+	          const salt = auth.salt;
+	          const sea = await SEA.decrypt(auth.ek, proof);
+	          if (!sea) {
+	            err = 'Failed to decrypt secret! ' + (i+1) +'/'+aliases.length;
+	            return
+	          }
+	          // now we have AES decrypted the private key, from when we encrypted it with the proof at registration.
+	          // if we were successful, then that meanswe're logged in!
+	          const priv = sea.priv;
+	          const epriv = sea.epriv;
+	          const epub = a.put.epub;
+	          // TODO: 'salt' needed?
+	          err = null;
+	          if(SEA.window){
+	            var tmp = SEA.window.sessionStorage;
+	            if(tmp && gunRoot._.opt.remember){
+	              SEA.window.sessionStorage.alias = alias;
+	              SEA.window.sessionStorage.tmp = pass;
+	            }
+	          }
+	          return {priv: priv, pub: a.put.pub, salt: salt, epub: epub, epriv: epriv };
+	        } catch (e) {
+	          err = 'Failed to decrypt secret!';
+	          throw { err }
+	        }
+	      }));
+	      var user = Gun.list.map(users, function(acc){ if(acc){ return acc } });
+	      if (!user) {
+	        throw { err: err || 'Public key does not exist!' }
+	      }
+	      return user
+	    };
+	    module.exports = authenticate;
+	  })(USE, './authenticate');
+	USE(function(module){
+	    const authsettings = USE('./settings');
+	    const SEA = USE('./sea');
+	    const Gun = SEA.Gun;
+	    //const { scope: seaIndexedDb } = USE('./indexed')
+	    // This updates sessionStorage & IndexedDB to persist authenticated "session"
+	    const updateStorage = (proof, key, pin) => async (props) => {
+	      if (!Gun.obj.has(props, 'alias')) {
+	        return  // No 'alias' - we're done.
+	      }
+	      if (authsettings.validity && proof && Gun.obj.has(props, 'iat')) {
+	        props.proof = proof;
+	        delete props.remember;   // Not stored if present
+
+	        const alias = props.alias;
+	        const id = props.alias;
+	        const remember = { alias: alias, pin: pin };
+
+	        try {
+	          const signed = await SEA.sign(JSON.stringify(remember), key);
+
+	          sessionStorage.setItem('user', alias);
+	          sessionStorage.setItem('remember', signed);
+
+	          const encrypted = await SEA.encrypt(props, pin);
+
+	          if (encrypted) {
+	            const auth = await SEA.sign(encrypted, key);
+	            await seaIndexedDb.wipe(); // NO! Do not do this. It ruins other people's sessionStorage code. This is bad/wrong, commenting it out.
+	            await seaIndexedDb.put(id, { auth: auth });
+	          }
+
+	          return props
+	        } catch (err) {
+	          throw { err: 'Session persisting failed!' }
+	        }
+	      }
+
+	      // Wiping IndexedDB completely when using random PIN
+	      await seaIndexedDb.wipe(); // NO! Do not do this. It ruins other people's sessionStorage code. This is bad/wrong, commenting it out.
+	      // And remove sessionStorage data
+	      sessionStorage.removeItem('user');
+	      sessionStorage.removeItem('remember');
+
+	      return props
+	    };
+	    module.exports = updateStorage;
+	  })(USE, './update');
+	USE(function(module){
+	    const SEA = USE('./sea');
+	    const Gun = SEA.Gun;
+	    const Buffer$$1 = USE('./buffer');
+	    const authsettings = USE('./settings');
+	    const updateStorage = USE('./update');
+	    // This internal func persists User authentication if so configured
+	    const authPersist = async (user, proof, opts) => {
+	      // opts = { pin: 'string' }
+	      // no opts.pin then uses random PIN
+	      // How this works:
+	      // called when app bootstraps, with wanted options
+	      // IF authsettings.validity === 0 THEN no remember-me, ever
+	      // IF PIN then signed 'remember' to window.sessionStorage and 'auth' to IndexedDB
+	      const pin = Buffer$$1.from(
+	        (Gun.obj.has(opts, 'pin') && opts.pin) || Gun.text.random(10),
+	        'utf8'
+	      ).toString('base64');
+
+	      const alias = user.alias;
+	      const exp = authsettings.validity;      // seconds // @mhelander what is `exp`???
+
+	      if (proof && alias && exp) {
+	        const iat = Math.ceil(Date.now() / 1000);  // seconds
+	        const remember = Gun.obj.has(opts, 'pin') || undefined;  // for hook - not stored
+	        const props = authsettings.hook({ alias: alias, iat: iat, exp: exp, remember: remember });
+	        const pub = user.pub;
+	        const epub = user.epub;
+	        const priv = user.sea.priv;
+	        const epriv = user.sea.epriv;
+	        const key = { pub: pub, priv: priv, epub: epub, epriv: epriv };
+	        if (props instanceof Promise) {
+	          const asyncProps = await props.then();
+	          return await updateStorage(proof, key, pin)(asyncProps)
+	        }
+	        return await updateStorage(proof, key, pin)(props)
+	      }
+	      return await updateStorage()({ alias: 'delete' })
+	    };
+	    module.exports = authPersist;
+	  })(USE, './persist');
+	USE(function(module){
+	    const authPersist = USE('./persist');
+	    // This internal func finalizes User authentication
+	    const finalizeLogin = async (alias, key, gunRoot, opts) => {
+	      const user = gunRoot._.user;
+	      // add our credentials in-memory only to our root gun instance
+	      var tmp = user._.tag;
+	      var opt = user._.opt;
+	      user._ = gunRoot.get('~'+key.pub)._;
+	      user._.opt = opt;
+	      var tags = user._.tag;
+	      /*Object.values && Object.values(tmp).forEach(function(tag){
+	        // TODO: This is ugly & buggy code, it needs to be refactored & tested into a event "merge" utility.
+	        var t = tags[tag.tag];
+	        console.log("hm??", tag, t);
+	        if(!t){
+	          tags[tag.tag] = tag;
+	          return;
+	        }
+	        if(tag.last){
+	          tag.last.to = t.to;
+	          t.last = tag.last = t.last || tag.last;
+	        }
+	        t.to = tag.to;
+	      })*/
+	      //user._.tag = tmp || user._.tag;
+	      // so that way we can use the credentials to encrypt/decrypt data
+	      // that is input/output through gun (see below)
+	      const pub = key.pub;
+	      const priv = key.priv;
+	      const epub = key.epub;
+	      const epriv = key.epriv;
+	      user._.is = user.is = {alias: alias, pub: pub};
+	      Object.assign(user._, { alias: alias, pub: pub, epub: epub, sea: { pub: pub, priv: priv, epub: epub, epriv: epriv } });
+	      //console.log("authorized", user._);
+	      // persist authentication
+	      //await authPersist(user._, key.proof, opts) // temporarily disabled
+	      // emit an auth event, useful for page redirects and stuff.  
+	      try {
+	        gunRoot._.on('auth', user._); // TODO: Deprecate this, emit on user instead! Update docs when you do.
+	        //user._.on('auth', user._) // Arrgh, this doesn't work without event "merge" code, but "merge" code causes stack overflow and crashes after logging in & trying to write data.
+	      } catch (e) {
+	        console.log('Your \'auth\' callback crashed with:', e);
+	      }
+	      // returns success with the user data credentials.
+	      return user._
+	    };
+	    module.exports = finalizeLogin;
+	  })(USE, './login');
+	USE(function(module){
+	    const Buffer$$1 = USE('./buffer');
+	    const authsettings = USE('./settings');
+	    //const { scope: seaIndexedDb } = USE('./indexed')
+	    const queryGunAliases = USE('./query');
+	    const parseProps = USE('./parse');
+	    const updateStorage = USE('./update');
+	    const SEA = USE('./sea');
+	    const Gun = SEA.Gun;
+	    const finalizeLogin = USE('./login');
+
+	    // This internal func recalls persisted User authentication if so configured
+	    const authRecall = async (gunRoot, authprops) => {
+	      // window.sessionStorage only holds signed { alias, pin } !!!
+	      const remember = authprops || sessionStorage.getItem('remember');
+	      const { alias = sessionStorage.getItem('user'), pin: pIn } = authprops || {}; // @mhelander what is pIn?
+	      const pin = pIn && Buffer$$1.from(pIn, 'utf8').toString('base64');
+	      // Checks for existing proof, matching alias and expiration:
+	      const checkRememberData = async ({ proof, alias: aLias, iat, exp, remember }) => {
+	        if (!!proof && alias === aLias) {
+	          const checkNotExpired = (args) => {
+	            if (Math.floor(Date.now() / 1000) < (iat + args.exp)) {
+	              // No way hook to update 'iat'
+	              return Object.assign(args, { iat: iat, proof: proof })
+	            } else {
+	              Gun.log('Authentication expired!');
+	            }
+	          };
+	          // We're not gonna give proof to hook!
+	          const hooked = authsettings.hook({ alias: alias, iat: iat, exp: exp, remember: remember });
+	          return ((hooked instanceof Promise)
+	          && await hooked.then(checkNotExpired)) || checkNotExpired(hooked)
+	        }
+	      };
+	      const readAndDecrypt = async (data, pub, key) =>
+	        parseProps(await SEA.decrypt(await SEA.verify(data, pub), key));
+
+	      // Already authenticated?
+	      if (gunRoot._.user
+	      && Gun.obj.has(gunRoot._.user._, 'pub')
+	      && Gun.obj.has(gunRoot._.user._, 'sea')) {
+	        return gunRoot._.user._  // Yes, we're done here.
+	      }
+	      // No, got persisted 'alias'?
+	      if (!alias) {
+	        throw { err: 'No authentication session found!' }
+	      }
+	      // Yes, got persisted 'remember'?
+	      if (!remember) {
+	        throw {  // And return proof if for matching alias
+	          err: (await seaIndexedDb.get(alias, 'auth') && authsettings.validity
+	          && 'Missing PIN and alias!') || 'No authentication session found!'
+	        }
+	      }
+	      // Yes, let's get (all?) matching aliases
+	      const aliases = (await queryGunAliases(alias, gunRoot))
+	      .filter(({ pub } = {}) => !!pub);
+	      // Got any?
+	      if (!aliases.length) {
+	        throw { err: 'Public key does not exist!' }
+	      }
+	      let err;
+	      // Yes, then attempt to log into each one until we find ours!
+	      // (if two users have the same username AND the same password... that would be bad)
+	      const [ { key, at, proof, pin: newPin } = {} ] = await Promise
+	      .all(aliases.filter(({ at: { put } = {} }) => !!put)
+	      .map(async ({ at: at, pub: pub }) => {
+	        const readStorageData = async (args) => {
+	          const props = args || parseProps(await SEA.verify(remember, pub, true));
+	          let pin = props.pin;
+	          let aLias = props.alias;
+
+	          const data = (!pin && alias === aLias)
+	          // No PIN, let's try short-term proof if for matching alias
+	          ? await checkRememberData(props)
+	          // Got PIN so get IndexedDB secret if signature is ok
+	          : await checkRememberData(await readAndDecrypt(await seaIndexedDb.get(alias, 'auth'), pub, pin));
+	          pin = pin || data.pin;
+	          delete data.pin;
+	          return { pin: pin, data: data }
+	        };
+	        // got pub, try auth with pin & alias :: or unwrap Storage data...
+	        const __gky20 = await readStorageData(pin && { pin, alias });
+	        const data = __gky20.data;
+	        const newPin = __gky20.pin;
+	        const proof = data.proof;
+
+	        if (!proof) {
+	          if (!data) {
+	            err = 'No valid authentication session found!';
+	            return
+	          }
+	          try { // Wipes IndexedDB silently
+	            await updateStorage()(data);
+	          } catch (e) {}  //eslint-disable-line no-empty
+	          err = 'Expired session!';
+	          return
+	        }
+
+	        try { // auth parsing or decryption fails or returns empty - silently done
+	          const auth= at.put.auth.auth;
+	          const sea = await SEA.decrypt(auth, proof);
+	          if (!sea) {
+	            err = 'Failed to decrypt private key!';
+	            return
+	          }
+	          const priv = sea.priv;
+	          const epriv = sea.epriv;
+	          const epub = at.put.epub;
+	          // Success! we've found our private data!
+	          err = null;
+	          return { proof: proof, at: at, pin: newPin, key: { pub: pub, priv: priv, epriv: epriv, epub: epub } }
+	        } catch (e) {
+	          err = 'Failed to decrypt private key!';
+	          return
+	        }
+	      }).filter((props) => !!props));
+
+	      if (!key) {
+	        throw { err: err || 'Public key does not exist!' }
+	      }
+
+	      // now we have AES decrypted the private key,
+	      // if we were successful, then that means we're logged in!
+	      try {
+	        await updateStorage(proof, key, newPin || pin)(key);
+
+	        const user = Object.assign(key, { at: at, proof: proof });
+	        const pIN = newPin || pin;
+
+	        const pinProp = pIN && { pin: Buffer$$1.from(pIN, 'base64').toString('utf8') };
+
+	        return await finalizeLogin(alias, user, gunRoot, pinProp)
+	      } catch (e) { // TODO: right log message ?
+	        Gun.log('Failed to finalize login with new password!');
+	        const { err = '' } = e || {};
+	        throw { err: 'Finalizing new password login failed! Reason: '+err }
+	      }
+	    };
+	    module.exports = authRecall;
+	  })(USE, './recall');
+	USE(function(module){
+	    const authPersist = USE('./persist');
+	    const authsettings = USE('./settings');
+	    //const { scope: seaIndexedDb } = USE('./indexed')
+	    // This internal func executes logout actions
+	    const authLeave = async (gunRoot, alias = gunRoot._.user._.alias) => {
+	      var user = gunRoot._.user._ || {};
+	      [ 'get', 'soul', 'ack', 'put', 'is', 'alias', 'pub', 'epub', 'sea' ].map((key) => delete user[key]);
+	      if(user.$){
+	        delete user.$.is;
+	      }
+	      // Let's use default
+	      gunRoot.user();
+	      // Removes persisted authentication & CryptoKeys
+	      try {
+	        await authPersist({ alias: alias });
+	      } catch (e) {}  //eslint-disable-line no-empty
+	      return { ok: 0 }
+	    };
+	    module.exports = authLeave;
+	  })(USE, './leave');
+	USE(function(module){
+	    var Gun = USE('./sea').Gun;
+	    Gun.chain.then = function(cb){
+	      var gun = this, p = (new Promise(function(res, rej){
+	        gun.once(res);
+	      }));
+	      return cb? p.then(cb) : p;
+	    };
+	  })(USE, './then');
+	USE(function(module){
+	    var SEA = USE('./sea');
+	    var Gun = SEA.Gun;
+	    var then = USE('./then');
+
+	    function User(root){ 
+	      this._ = {$: this};
+	    }
+	    User.prototype = (function(){ function F(){} F.prototype = Gun.chain; return new F() }()); // Object.create polyfill
+	    User.prototype.constructor = User;
+
+	    // let's extend the gun chain with a `user` function.
+	    // only one user can be logged in at a time, per gun instance.
+	    Gun.chain.user = function(pub){
+	      var gun = this, root = gun.back(-1), user;
+	      if(pub){ return root.get('~'+pub) }
+	      if(user = root.back('user')){ return user }
+	      var root = (root._), at = root, uuid = at.opt.uuid || Gun.state.lex;
+	      (at = (user = at.user = gun.chain(new User))._).opt = {};
+	      at.opt.uuid = function(cb){
+	        var id = uuid(), pub = root.user;
+	        if(!pub || !(pub = (pub._).sea) || !(pub = pub.pub)){ return id }
+	        id = id + '~' + pub + '.';
+	        if(cb && cb.call){ cb(null, id); }
+	        return id;
+	      };
+	      return user;
+	    };
+	    Gun.User = User;
+	    module.exports = User;
+	  })(USE, './user');
+	USE(function(module){
+	    // TODO: This needs to be split into all separate functions.
+	    // Not just everything thrown into 'create'.
+
+	    const SEA = USE('./sea');
+	    const User = USE('./user');
+	    const authRecall = USE('./recall');
+	    const authsettings = USE('./settings');
+	    const authenticate = USE('./authenticate');
+	    const finalizeLogin = USE('./login');
+	    const authLeave = USE('./leave');
+	    const _initial_authsettings = USE('./settings').recall;
+	    const Gun = SEA.Gun;
+
+	    var u;
+	    // Well first we have to actually create a user. That is what this function does.
+	    User.prototype.create = function(username, pass, cb, opt){
+	      // TODO: Needs to be cleaned up!!!
+	      const gunRoot = this.back(-1);
+	      var gun = this, cat = (gun._);
+	      cb = cb || function(){};
+	      if(cat.ing){
+	        cb({err: Gun.log("User is already being created or authenticated!"), wait: true});
+	        return gun;
+	      }
+	      cat.ing = true;
+	      opt = opt || {};
+	      var resolve = function(){}, reject = resolve;
+	      // Because more than 1 user might have the same username, we treat the alias as a list of those users.
+	      if(cb){ resolve = reject = cb; }
+	      gunRoot.get('~@'+username).get(async (at, ev) => {
+	        ev.off();
+	        if (at.put && !opt.already) {
+	          // If we can enforce that a user name is already taken, it might be nice to try, but this is not guaranteed.
+	          const err = 'User already created!';
+	          Gun.log(err);
+	          cat.ing = false;
+	          gun.leave();
+	          return reject({ err: err })
+	        }
+	        const salt = Gun.text.random(64);
+	        // pseudo-randomly create a salt, then use CryptoJS's PBKDF2 function to extend the password with it.
+	        try {
+	          const proof = await SEA.work(pass, salt);
+	          // this will take some short amount of time to produce a proof, which slows brute force attacks.
+	          const pairs = await SEA.pair();
+	          // now we have generated a brand new ECDSA key pair for the user account.
+	          const pub = pairs.pub;
+	          const priv = pairs.priv;
+	          const epriv = pairs.epriv;
+	          // the user's public key doesn't need to be signed. But everything else needs to be signed with it!
+	          const alias = await SEA.sign(username, pairs);
+	          if(u === alias){ throw SEA.err }
+	          const epub = await SEA.sign(pairs.epub, pairs);
+	          if(u === epub){ throw SEA.err }
+	          // to keep the private key safe, we AES encrypt it with the proof of work!
+	          const auth = await SEA.encrypt({ priv: priv, epriv: epriv }, proof)
+	          .then((auth) => // TODO: So signedsalt isn't needed?
+	          // SEA.sign(salt, pairs).then((signedsalt) =>
+	            SEA.sign({ek: auth, s: salt}, pairs)
+	          // )
+	          ).catch((e) => { Gun.log('SEA.en or SEA.write calls failed!'); cat.ing = false; gun.leave(); reject(e); });
+	          const user = { alias: alias, pub: pub, epub: epub, auth: auth };
+	          const tmp = '~'+pairs.pub;
+	          // awesome, now we can actually save the user with their public key as their ID.
+	          try{
+
+	          gunRoot.get(tmp).put(user);
+	        }catch(e){console.log(e);}
+	          // next up, we want to associate the alias with the public key. So we add it to the alias list.
+	          gunRoot.get('~@'+username).put(Gun.obj.put({}, tmp, Gun.val.link.ify(tmp)));
+	          // callback that the user has been created. (Note: ok = 0 because we didn't wait for disk to ack)
+	          setTimeout(() => { cat.ing = false; resolve({ ok: 0, pub: pairs.pub}); }, 10); // TODO: BUG! If `.auth` happens synchronously after `create` finishes, auth won't work. This setTimeout is a temporary hack until we can properly fix it.
+	        } catch (e) {
+	          Gun.log('SEA.create failed!');
+	          cat.ing = false;
+	          gun.leave();
+	          reject(e);
+	        }
+	      });
+	      return gun;  // gun chain commands must return gun chains!
+	    };
+	    // now that we have created a user, we want to authenticate them!
+	    User.prototype.auth = function(alias, pass, cb, opt){
+	      // TODO: Needs to be cleaned up!!!!
+	      const opts = opt || (typeof cb !== 'function' && cb);
+	      let pin = opts && opts.pin;
+	      let newpass = opts && opts.newpass;
+	      const gunRoot = this.back(-1);
+	      cb = typeof cb === 'function' ? cb : () => {};
+	      newpass = newpass || (opts||{}).change;
+	      var gun = this, cat = (gun._);
+	      if(cat.ing){
+	        cb({err: "User is already being created or authenticated!", wait: true});
+	        return gun;
+	      }
+	      cat.ing = true;
+
+	      if (!pass && pin) { (async function(){
+	        try {
+	          var r = await authRecall(gunRoot, { alias: alias, pin: pin });
+	          return cat.ing = false, cb(r), gun;
+	        } catch (e) {
+	          var err = { err: 'Auth attempt failed! Reason: No session data for alias & PIN' };
+	          return cat.ing = false, gun.leave(), cb(err), gun;
+	        }}());
+	        return gun;
+	      }
+
+	      const putErr = (msg) => (e) => {
+	        const { message, err = message || '' } = e;
+	        Gun.log(msg);
+	        var error = { err: msg+' Reason: '+err };
+	        return cat.ing = false, gun.leave(), cb(error), gun;
+	      };
+
+	      (async function(){ try {
+	        const keys = await authenticate(alias, pass, gunRoot);
+	        if (!keys) {
+	          return putErr('Auth attempt failed!')({ message: 'No keys' })
+	        }
+	        const pub = keys.pub;
+	        const priv = keys.priv;
+	        const epub = keys.epub;
+	        const epriv = keys.epriv;
+	        // we're logged in!
+	        if (newpass) {
+	          // password update so encrypt private key using new pwd + salt
+	          try {
+	            const salt = Gun.text.random(64);
+	            const encSigAuth = await SEA.work(newpass, salt)
+	            .then((key) =>
+	              SEA.encrypt({ priv: priv, epriv: epriv }, key)
+	              .then((auth) => SEA.sign({ek: auth, s: salt}, keys))
+	            );
+	            const signedEpub = await SEA.sign(epub, keys);
+	            const signedAlias = await SEA.sign(alias, keys);
+	            const user = {
+	              pub: pub,
+	              alias: signedAlias,
+	              auth: encSigAuth,
+	              epub: signedEpub
+	            };
+	            // awesome, now we can update the user using public key ID.
+	            gunRoot.get('~'+user.pub).put(user);
+	            // then we're done
+	            const login = finalizeLogin(alias, keys, gunRoot, { pin });
+	            login.catch(putErr('Failed to finalize login with new password!'));
+	            return cat.ing = false, cb(await login), gun
+	          } catch (e) {
+	            return putErr('Password set attempt failed!')(e)
+	          }
+	        } else {
+	          const login = finalizeLogin(alias, keys, gunRoot, { pin: pin });
+	          login.catch(putErr('Finalizing login failed!'));
+	          return cat.ing = false, cb(await login), gun;
+	        }
+	      } catch (e) {
+	        return putErr('Auth attempt failed!')(e)
+	      } }());
+	      return gun;
+	    };
+	    User.prototype.pair = function(){
+	      var user = this;
+	      if(!user.is){ return false }
+	      return user._.sea;
+	    };
+	    User.prototype.leave = async function(){
+	      var gun = this, user = (gun.back(-1)._).user;
+	      if(user){
+	        delete user.is;
+	        delete user._.is;
+	        delete user._.sea;
+	      }
+	      if(typeof window !== 'undefined'){
+	        var tmp = window.sessionStorage;
+	        delete tmp.alias;
+	        delete tmp.tmp;
+	      }
+	      return await authLeave(this.back(-1))
+	    };
+	    // If authenticated user wants to delete his/her account, let's support it!
+	    User.prototype.delete = async function(alias, pass){
+	      const gunRoot = this.back(-1);
+	      try {
+	        const __gky40 = await authenticate(alias, pass, gunRoot);
+	        const pub = __gky40.pub;
+	        await authLeave(gunRoot, alias);
+	        // Delete user data
+	        gunRoot.get('~'+pub).put(null);
+	        // Wipe user data from memory
+	        const { user = { _: {} } } = gunRoot._;
+	        // TODO: is this correct way to 'logout' user from Gun.User ?
+	        [ 'alias', 'sea', 'pub' ].map((key) => delete user._[key]);
+	        user._.is = user.is = {};
+	        gunRoot.user();
+	        return { ok: 0 }  // TODO: proper return codes???
+	      } catch (e) {
+	        Gun.log('User.delete failed! Error:', e);
+	        throw e // TODO: proper error codes???
+	      }
+	    };
+	    // If authentication is to be remembered over reloads or browser closing,
+	    // set validity time in minutes.
+	    User.prototype.recall = function(setvalidity, options){
+	      var gun = this;
+	      const gunRoot = this.back(-1);
+
+	      let validity;
+	      let opts;
+	      
+	      var o = setvalidity;
+	      if(o && o.sessionStorage){
+	        if(typeof window !== 'undefined'){
+	          var tmp = window.sessionStorage;
+	          if(tmp){
+	            gunRoot._.opt.remember = true;
+	            if(tmp.alias && tmp.tmp){
+	              gunRoot.user().auth(tmp.alias, tmp.tmp);
+	            }
+	          }
+	        }
+	        return gun;
+	      }
+
+	      if (!Gun.val.is(setvalidity)) {
+	        opts = setvalidity;
+	        validity = _initial_authsettings.validity;
+	      } else {
+	        opts = options;
+	        validity = setvalidity * 60; // minutes to seconds
+	      }
+
+	      try {
+	        // opts = { hook: function({ iat, exp, alias, proof }) }
+	        // iat == Date.now() when issued, exp == seconds to expire from iat
+	        // How this works:
+	        // called when app bootstraps, with wanted options
+	        // IF authsettings.validity === 0 THEN no remember-me, ever
+	        // IF PIN then signed 'remember' to window.sessionStorage and 'auth' to IndexedDB
+	        authsettings.validity = typeof validity !== 'undefined'
+	        ? validity : _initial_authsettings.validity;
+	        authsettings.hook = (Gun.obj.has(opts, 'hook') && typeof opts.hook === 'function')
+	        ? opts.hook : _initial_authsettings.hook
+	        // All is good. Should we do something more with actual recalled data?
+	        (async function(){ await authRecall(gunRoot); }());
+	        return gun;
+	      } catch (e) {
+	        const err = 'No session!';
+	        Gun.log(err);
+	        // NOTE! It's fine to resolve recall with reason why not successful
+	        // instead of rejecting...
+	        //return { err: (e && e.err) || err }
+	        return gun;
+	      }
+	    };
+	    User.prototype.alive = async function(){
+	      const gunRoot = this.back(-1);
+	      try {
+	        // All is good. Should we do something more with actual recalled data?
+	        await authRecall(gunRoot);
+	        return gunRoot._.user._
+	      } catch (e) {
+	        const err = 'No session!';
+	        Gun.log(err);
+	        throw { err }
+	      }
+	    };
+	    User.prototype.trust = async function(user){
+	      // TODO: BUG!!! SEA `node` read listener needs to be async, which means core needs to be async too.
+	      //gun.get('alice').get('age').trust(bob);
+	      if (Gun.is(user)) {
+	        user.get('pub').get((ctx, ev) => {
+	          console.log(ctx, ev);
+	        });
+	      }
+	    };
+	    User.prototype.grant = function(to, cb){
+	      console.log("`.grant` API MAY BE DELETED OR CHANGED OR RENAMED, DO NOT USE!");
+	      var gun = this, user = gun.back(-1).user(), pair = user.pair(), path = '';
+	      gun.back(function(at){ if(at.pub){ return } path += (at.get||''); });
+	      (async function(){
+	      var enc, sec = await user.get('trust').get(pair.pub).get(path).then();
+	      sec = await SEA.decrypt(sec, pair);
+	      if(!sec){
+	        sec = SEA.random(16).toString();
+	        enc = await SEA.encrypt(sec, pair);
+	        user.get('trust').get(pair.pub).get(path).put(enc);
+	      }
+	      var pub = to.get('pub').then();
+	      var epub = to.get('epub').then();
+	      pub = await pub; epub = await epub;
+	      var dh = await SEA.secret(epub, pair);
+	      enc = await SEA.encrypt(sec, dh);
+	      user.get('trust').get(pub).get(path).put(enc, cb);
+	      }());
+	      return gun;
+	    };
+	    User.prototype.secret = function(data, cb){
+	      console.log("`.secret` API MAY BE DELETED OR CHANGED OR RENAMED, DO NOT USE!");
+	      var gun = this, user = gun.back(-1).user(), pair = user.pair(), path = '';
+	      gun.back(function(at){ if(at.pub){ return } path += (at.get||''); });
+	      (async function(){
+	      var enc, sec = await user.get('trust').get(pair.pub).get(path).then();
+	      sec = await SEA.decrypt(sec, pair);
+	      if(!sec){
+	        sec = SEA.random(16).toString();
+	        enc = await SEA.encrypt(sec, pair);
+	        user.get('trust').get(pair.pub).get(path).put(enc);
+	      }
+	      enc = await SEA.encrypt(data, sec);
+	      gun.put(enc, cb);
+	      }());
+	      return gun;
+	    };
+	    module.exports = User;
+	  })(USE, './create');
+	USE(function(module){
+	    const SEA = USE('./sea');
+	    const Gun = SEA.Gun;
+	    // After we have a GUN extension to make user registration/login easy, we then need to handle everything else.
+
+	    // We do this with a GUN adapter, we first listen to when a gun instance is created (and when its options change)
+	    Gun.on('opt', function(at){
+	      if(!at.sea){ // only add SEA once per instance, on the "at" context.
+	        at.sea = {own: {}};
+	        at.on('in', security, at); // now listen to all input data, acting as a firewall.
+	        at.on('out', signature, at); // and output listeners, to encrypt outgoing data.
+	        at.on('node', each, at);
+	      }
+	      this.to.next(at); // make sure to call the "next" middleware adapter.
+	    });
+
+	    // Alright, this next adapter gets run at the per node level in the graph database.
+	    // This will let us verify that every property on a node has a value signed by a public key we trust.
+	    // If the signature does not match, the data is just `undefined` so it doesn't get passed on.
+	    // If it does match, then we transform the in-memory "view" of the data into its plain value (without the signature).
+	    // Now NOTE! Some data is "system" data, not user data. Example: List of public keys, aliases, etc.
+	    // This data is self-enforced (the value can only match its ID), but that is handled in the `security` function.
+	    // From the self-enforced data, we can see all the edges in the graph that belong to a public key.
+	    // Example: ~ASDF is the ID of a node with ASDF as its public key, signed alias and salt, and
+	    // its encrypted private key, but it might also have other signed values on it like `profile = <ID>` edge.
+	    // Using that directed edge's ID, we can then track (in memory) which IDs belong to which keys.
+	    // Here is a problem: Multiple public keys can "claim" any node's ID, so this is dangerous!
+	    // This means we should ONLY trust our "friends" (our key ring) public keys, not any ones.
+	    // I have not yet added that to SEA yet in this alpha release. That is coming soon, but beware in the meanwhile!
+	    function each(msg){ // TODO: Warning: Need to switch to `gun.on('node')`! Do not use `Gun.on('node'` in your apps!
+	      // NOTE: THE SECURITY FUNCTION HAS ALREADY VERIFIED THE DATA!!!
+	      // WE DO NOT NEED TO RE-VERIFY AGAIN, JUST TRANSFORM IT TO PLAINTEXT.
+	      var to = this.to, vertex = (msg.$._).put, c = 0, d;
+	      Gun.node.is(msg.put, function(val, key, node){ c++; // for each property on the node
+	        // TODO: consider async/await use here...
+	        SEA.verify(val, false, function(data){ c--; // false just extracts the plain data.
+	          node[key] = val = data; // transform to plain value.
+	          if(d && !c && (c = -1)){ to.next(msg); }
+	        });
+	      });
+	      d = true;
+	      if(d && !c){ to.next(msg); }
+	      return;
+	    }
+
+	    // signature handles data output, it is a proxy to the security function.
+	    function signature(msg){
+	      if(msg.user){
+	        return this.to.next(msg);
+	      }
+	      var ctx = this.as;
+	      msg.user = ctx.user;
+	      security.call(this, msg);
+	    }
+
+	    // okay! The security function handles all the heavy lifting.
+	    // It needs to deal read and write of input and output of system data, account/public key data, and regular data.
+	    // This is broken down into some pretty clear edge cases, let's go over them:
+	    function security(msg){
+	      var at = this.as, sea = at.sea, to = this.to;
+	      if(msg.get){
+	        // if there is a request to read data from us, then...
+	        var soul = msg.get['#'];
+	        if(soul){ // for now, only allow direct IDs to be read.
+	          if(soul !== 'string'){ return to.next(msg) } // do not handle lexical cursors.
+	          if('alias' === soul){ // Allow reading the list of usernames/aliases in the system?
+	            return to.next(msg); // yes.
+	          } else
+	          if('~@' === soul.slice(0,2)){ // Allow reading the list of public keys associated with an alias?
+	            return to.next(msg); // yes.
+	          } else { // Allow reading everything?
+	            return to.next(msg); // yes // TODO: No! Make this a callback/event that people can filter on.
+	          }
+	        }
+	      }
+	      if(msg.put){
+	        // potentially parallel async operations!!!
+	        var check = {}, each = {}, u;
+	        each.node = function(node, soul){
+	          if(Gun.obj.empty(node, '_')){ return check['node'+soul] = 0 } // ignore empty updates, don't reject them.
+	          Gun.obj.map(node, each.way, {soul: soul, node: node});
+	        };
+	        each.way = function(val, key){
+	          var soul = this.soul, node = this.node, tmp;
+	          if('_' === key){ return } // ignore meta data
+	          if('~@' === soul){  // special case for shared system data, the list of aliases.
+	            each.alias(val, key, node, soul); return;
+	          }
+	          if('~@' === soul.slice(0,2)){ // special case for shared system data, the list of public keys for an alias.
+	            each.pubs(val, key, node, soul); return;
+	          }
+	          if('~' === soul.slice(0,1) && 2 === (tmp = soul.slice(1)).split('.').length){ // special case, account data for a public key.
+	            each.pub(val, key, node, soul, tmp, msg.user); return;
+	          }
+	          each.any(val, key, node, soul, msg.user); return;
+	          return each.end({err: "No other data allowed!"});
+	        };
+	        each.alias = function(val, key, node, soul){ // Example: {_:#~@, ~@alice: {#~@alice}}
+	          if(!val){ return each.end({err: "Data must exist!"}) } // data MUST exist
+	          if('~@'+key === Gun.val.link.is(val)){ return check['alias'+key] = 0 } // in fact, it must be EXACTLY equal to itself
+	          each.end({err: "Mismatching alias."}); // if it isn't, reject.
+	        };
+	        each.pubs = function(val, key, node, soul){ // Example: {_:#~@alice, ~asdf: {#~asdf}}
+	          if(!val){ return each.end({err: "Alias must exist!"}) } // data MUST exist
+	          if(key === Gun.val.link.is(val)){ return check['pubs'+soul+key] = 0 } // and the ID must be EXACTLY equal to its property
+	          each.end({err: "Alias must match!"}); // that way nobody can tamper with the list of public keys.
+	        };
+	        each.pub = function(val, key, node, soul, pub, user){ // Example: {_:#~asdf, hello:SEA{'world',fdsa}}
+	          if('pub' === key){
+	            if(val === pub){ return (check['pub'+soul+key] = 0) } // the account MUST match `pub` property that equals the ID of the public key.
+	            return each.end({err: "Account must match!"});
+	          }
+	          check['user'+soul+key] = 1;
+	          if(user && (user = user._) && user.sea && pub === user.pub){
+	            //var id = Gun.text.random(3);
+	            SEA.sign(val, user.sea, function(data){ var rel;
+	              if(u === data){ return each.end({err: SEA.err || 'Pub signature fail.'}) }
+	              if(rel = Gun.val.link.is(val)){
+	                (at.sea.own[rel] = at.sea.own[rel] || {})[pub] = true;
+	              }
+	              node[key] = data;
+	              check['user'+soul+key] = 0;
+	              each.end({ok: 1});
+	            });
+	            // TODO: Handle error!!!!
+	            return;
+	          }
+	          SEA.verify(val, pub, function(data){ var rel;
+	            if(u === data){ // make sure the signature matches the account it claims to be on.
+	              return each.end({err: "Unverified data."}); // reject any updates that are signed with a mismatched account.
+	            }
+	            if((rel = Gun.val.link.is(data)) && pub === relpub(rel)){
+	              (at.sea.own[rel] = at.sea.own[rel] || {})[pub] = true;
+	            }
+	            check['user'+soul+key] = 0;
+	            each.end({ok: 1});
+	          });
+	        };
+	        function relpub(s){
+	          if(!s){ return }
+	          s = s.split('~');
+	          if(!s || !(s = s[1])){ return }
+	          s = s.split('.');
+	          if(!s || 2 > s.length){ return }
+	          s = s.slice(0,2).join('.');
+	          return s;
+	        }
+	        each.any = function(val, key, node, soul, user){ var tmp, pub;
+	          if(!user || !(user = user._) || !(user = user.sea)){
+	            if(tmp = relpub(soul)){
+	              check['any'+soul+key] = 1;
+	              SEA.verify(val, pub = tmp, function(data){ var rel;
+	                if(u === data){ return each.end({err: "Mismatched owner on '" + key + "'."}) } // thanks @rogowski !
+	                if((rel = Gun.val.link.is(data)) && pub === relpub(rel)){
+	                  (at.sea.own[rel] = at.sea.own[rel] || {})[pub] = true;
+	                }
+	                check['any'+soul+key] = 0;
+	                each.end({ok: 1});
+	              });
+	              return;
+	            }
+	            check['any'+soul+key] = 1;
+	            at.on('secure', function(msg){ this.off();
+	              check['any'+soul+key] = 0;
+	              if(at.opt.secure){ msg = null; }
+	              each.end(msg || {err: "Data cannot be modified."});
+	            }).on.on('secure', msg);
+	            //each.end({err: "Data cannot be modified."});
+	            return;
+	          }
+	          if(!(tmp = relpub(soul))){
+	            if(at.opt.secure){
+	              each.end({err: "Soul is missing public key at '" + key + "'."});
+	              return;
+	            }
+	            if(val && val.slice && 'SEA{' === (val).slice(0,4)){
+	              check['any'+soul+key] = 0;
+	              each.end({ok: 1});
+	              return;
+	            }
+	            //check['any'+soul+key] = 1;
+	            //SEA.sign(val, user, function(data){
+	             // if(u === data){ return each.end({err: 'Any signature failed.'}) }
+	            //  node[key] = data;
+	              check['any'+soul+key] = 0;
+	              each.end({ok: 1});
+	            //});
+	            return;
+	          }
+	          var pub = tmp;
+	          if(pub !== user.pub){
+	            each.any(val, key, node, soul);
+	            return;
+	          }
+	          /*var other = Gun.obj.map(at.sea.own[soul], function(v, p){
+	            if(user.pub !== p){ return p }
+	          });
+	          if(other){
+	            each.any(val, key, node, soul);
+	            return;
+	          }*/
+	          check['any'+soul+key] = 1;
+	          SEA.sign(val, user, function(data){
+	            if(u === data){ return each.end({err: 'My signature fail.'}) }
+	            node[key] = data;
+	            check['any'+soul+key] = 0;
+	            each.end({ok: 1});
+	          });
+	        };
+	        each.end = function(ctx){ // TODO: Can't you just switch this to each.end = cb?
+	          if(each.err){ return }
+	          if((each.err = ctx.err) || ctx.no){
+	            console.log('NO!', each.err, msg.put);
+	            return;
+	          }
+	          if(!each.end.ed){ return }
+	          if(Gun.obj.map(check, function(no){
+	            if(no){ return true }
+	          })){ return }
+	          to.next(msg);
+	        };
+	        Gun.obj.map(msg.put, each.node);
+	        each.end({end: each.end.ed = true});
+	        return; // need to manually call next after async.
+	      }
+	      to.next(msg); // pass forward any data we do not know how to handle or process (this allows custom security protocols).
+	    }
+
+	  })(USE, './index');
+	}());
 	});
 
-	var webcrypto = {};
+	var myKey = void 0;
 
-	var webcrypto$1 = /*#__PURE__*/Object.freeze({
-		default: webcrypto
+	/**
+	* Key management utils
+	*/
+
+	var Key = function () {
+	  function Key() {
+	    _classCallCheck(this, Key);
+	  }
+
+	  /**
+	  * Load default key from datadir/private.key on node.js or from local storage 'identifi.myKey' in browser.
+	  *
+	  * If default key does not exist, it is generated.
+	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
+	  * @returns {Object} Key object
+	  */
+	  Key.getDefault = async function getDefault() {
+	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
+
+	    if (myKey) {
+	      return myKey;
+	    }
+	    if (util$1.isNode) {
+	      var fs = require('fs');
+	      var privKeyFile = datadir + '/private.key';
+	      if (fs.existsSync(privKeyFile)) {
+	        var f = fs.readFileSync(privKeyFile, 'utf8');
+	        myKey = Key.fromJwk(f);
+	      } else {
+	        myKey = await Key.generate();
+	        fs.writeFileSync(privKeyFile, Key.toJwk(myKey));
+	        fs.chmodSync(privKeyFile, 400);
+	      }
+	      if (!myKey) {
+	        throw new Error('loading default key failed - check ' + datadir + '/private.key');
+	      }
+	    } else {
+	      var jwk = window.localStorage.getItem('identifi.myKey');
+	      if (jwk) {
+	        myKey = Key.fromJwk(jwk);
+	      } else {
+	        myKey = await Key.generate();
+	        window.localStorage.setItem('identifi.myKey', Key.toJwk(myKey));
+	      }
+	      if (!myKey) {
+	        throw new Error('loading default key failed - check localStorage identifi.myKey');
+	      }
+	    }
+	    return myKey;
+	  };
+
+	  /**
+	  * Serialize key as JSON Web key
+	  * @returns {String} JSON Web Key string
+	  */
+
+
+	  Key.toJwk = function toJwk(key) {
+	    return _JSON$stringify(key);
+	  };
+
+	  Key.getId = function getId(key) {
+	    return util$1.getHash(key.pub);
+	  };
+
+	  /**
+	  * Get a Key from a JSON Web Key object.
+	  * @param {Object} jwk JSON Web Key
+	  * @returns {String}
+	  */
+
+
+	  Key.fromJwk = function fromJwk(jwk) {
+	    return JSON.parse(jwk);
+	  };
+
+	  /**
+	  * Generate a new key
+	  * @returns {Object} Gun.SEA private key object
+	  */
+
+
+	  Key.generate = function generate() {
+	    return (gun_min.SEA || window.Gun.SEA).pair();
+	  };
+
+	  Key.sign = async function sign(msg, pair) {
+	    var sig = await (gun_min.SEA || window.Gun.SEA).sign(msg, pair);
+	    return 'a' + sig;
+	  };
+
+	  Key.verify = function verify(msg, pubKey) {
+	    return (gun_min.SEA || window.Gun.SEA).verify(msg.slice(1), pubKey);
+	  };
+
+	  return Key;
+	}();
+
+	var errorMsg = 'Invalid Identifi message:';
+
+	var ValidationError = function (_Error) {
+	  _inherits(ValidationError, _Error);
+
+	  function ValidationError() {
+	    _classCallCheck(this, ValidationError);
+
+	    return _possibleConstructorReturn(this, _Error.apply(this, arguments));
+	  }
+
+	  return ValidationError;
+	}(Error);
+
+	/**
+	* Identifi message: an object that has an author, recipient, signer, type, timestamp, context and optionally other fields.
+	*
+	* On Identifi, signer and author can be different entities. This enables the crawling of content
+	* from existing datasets. That makes Identifi an useful search tool even with no initial userbase.
+	*
+	* Messages are serialized as JSON Web Signatures.
+	*/
+
+
+	var Message = function () {
+	  /**
+	  * Creates a message from the param object that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
+	  * @param signedData
+	  */
+	  function Message(obj) {
+	    _classCallCheck(this, Message);
+
+	    if (obj.signedData) {
+	      this.signedData = obj.signedData;
+	    }
+	    if (obj.pubKey) {
+	      this.pubKey = obj.pubKey;
+	    }
+	    if (obj.sig) {
+	      if (typeof obj.sig !== 'string') {
+	        throw new ValidationError('Message signature must be a string');
+	      }
+	      this.sig = obj.sig;
+	      this.getHash();
+	    }
+	    this._validate();
+	  }
+
+	  /**
+	  * @returns {string} Message signer keyID, i.e. base64 hash of public key
+	  */
+
+
+	  Message.prototype.getSignerKeyID = function getSignerKeyID() {
+	    return util$1.getHash(this.pubKey);
+	  };
+
+	  Message.prototype._validate = function _validate() {
+	    if (!this.signedData) {
+	      throw new ValidationError(errorMsg + ' Missing signedData');
+	    }
+	    if (typeof this.signedData !== 'object') {
+	      throw new ValidationError(errorMsg + ' signedData must be an object');
+	    }
+	    var d = this.signedData;
+
+	    if (!d.type) {
+	      throw new ValidationError(errorMsg + ' Missing type definition');
+	    }
+	    if (!d.author) {
+	      throw new ValidationError(errorMsg + ' Missing author');
+	    }
+	    if (!d.author.length) {
+	      throw new ValidationError(errorMsg + ' Author empty');
+	    }
+	    var i = void 0;
+	    var authorKeyID = void 0;
+	    if (this.pubKey) {
+	      this.signerKeyHash = this.getSignerKeyID();
+	    }
+	    for (i = 0; i < d.author.length; i++) {
+	      if (d.author[i].length !== 2) {
+	        throw new ValidationError(errorMsg + ' Invalid author: ' + d.author[i].toString());
+	      }
+	      if (d.author[i][0] === 'keyID') {
+	        if (authorKeyID) {
+	          throw new ValidationError(errorMsg + ' Author may have only one keyID');
+	        } else {
+	          authorKeyID = d.author[i][1];
+	        }
+	        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {
+	          throw new ValidationError(errorMsg + ' If message has a keyID author, it must be signed by the same key');
+	        }
+	      }
+	    }
+	    if (!d.recipient) {
+	      throw new ValidationError(errorMsg + ' Missing recipient');
+	    }
+	    if (!d.recipient.length) {
+	      throw new ValidationError(errorMsg + ' Author empty');
+	    }
+	    for (i = 0; i < d.recipient.length; i++) {
+	      if (d.recipient[i].length !== 2) {
+	        throw new ValidationError(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
+	      }
+	    }
+	    if (!d.timestamp) {
+	      throw new ValidationError(errorMsg + ' Missing timestamp');
+	    }
+
+	    if (!Date.parse(d.timestamp)) {
+	      throw new ValidationError(errorMsg + ' Invalid timestamp');
+	    }
+
+	    if (d.type === 'rating') {
+	      if (isNaN(d.rating)) {
+	        throw new ValidationError(errorMsg + ' Invalid rating');
+	      }
+	      if (isNaN(d.maxRating)) {
+	        throw new ValidationError(errorMsg + ' Invalid maxRating');
+	      }
+	      if (isNaN(d.minRating)) {
+	        throw new ValidationError(errorMsg + ' Invalid minRating');
+	      }
+	      if (d.rating > d.maxRating) {
+	        throw new ValidationError(errorMsg + ' Rating is above maxRating');
+	      }
+	      if (d.rating < d.minRating) {
+	        throw new ValidationError(errorMsg + ' Rating is below minRating');
+	      }
+	      if (typeof d.context !== 'string' || !d.context.length) {
+	        throw new ValidationError(errorMsg + ' Rating messages must have a context field');
+	      }
+	    }
+
+	    if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
+	      if (d.recipient.length < 2) {
+	        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
+	      }
+	    }
+
+	    return true;
+	  };
+
+	  /**
+	  * @returns {boolean} true if message has a positive rating
+	  */
+
+
+	  Message.prototype.isPositive = function isPositive() {
+	    return this.signedData.type === 'rating' && this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
+	  };
+
+	  /**
+	  * @returns {boolean} true if message has a negative rating
+	  */
+
+
+	  Message.prototype.isNegative = function isNegative() {
+	    return this.signedData.type === 'rating' && this.signedData.rating < (this.signedData.maxRating + this.signedData.minRating) / 2;
+	  };
+
+	  /**
+	  * @returns {boolean} true if message has a neutral rating
+	  */
+
+
+	  Message.prototype.isNeutral = function isNeutral() {
+	    return this.signedData.type === 'rating' && this.signedData.rating === (this.signedData.maxRating + this.signedData.minRating) / 2;
+	  };
+
+	  /**
+	  * @param {Object} key Gun.SEA keypair to sign the message with
+	  */
+
+
+	  Message.prototype.sign = async function sign(key) {
+	    this.sig = await Key.sign(this.signedData, key);
+	    this.pubKey = key.pub;
+	    this.getHash();
+	    return true;
+	  };
+
+	  /**
+	  * Create an identifi message. Message timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+	  * @param {Object} signedData message data object including author, recipient and other possible attributes
+	  * @param {Object} signingKey optionally, you can set the key to sign the message with
+	  * @returns {Message} Identifi message
+	  */
+
+
+	  Message.create = async function create(signedData, signingKey) {
+	    if (!signedData.author && signingKey) {
+	      signedData.author = [['keyID', Key.getId(signingKey)]];
+	    }
+	    signedData.timestamp = signedData.timestamp || new Date().toISOString();
+	    signedData.context = signedData.context || 'identifi';
+	    var m = new Message({ signedData: signedData });
+	    if (signingKey) {
+	      await m.sign(signingKey);
+	    }
+	    return m;
+	  };
+
+	  /**
+	  * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+	  */
+
+
+	  Message.createVerification = function createVerification(signedData, signingKey) {
+	    signedData.type = 'verification';
+	    return Message.create(signedData, signingKey);
+	  };
+
+	  /**
+	  * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.
+	  */
+
+
+	  Message.createRating = function createRating(signedData, signingKey) {
+	    signedData.type = 'rating';
+	    signedData.maxRating = signedData.maxRating || 10;
+	    signedData.minRating = signedData.minRating || -10;
+	    return Message.create(signedData, signingKey);
+	  };
+
+	  /**
+	  * @param {Index} index index to look up the message author from
+	  * @returns {Promise(Identity)} message author identity
+	  */
+
+
+	  Message.prototype.getAuthor = function getAuthor(index) {
+	    for (var i = 0; i < this.signedData.author.length; i++) {
+	      var a = this.signedData.author[i];
+	      if (Attribute.isUniqueType(a[0])) {
+	        return index.get(a[1], a[0]);
+	      }
+	    }
+	  };
+
+	  /**
+	  * @param {Index} index index to look up the message recipient from
+	  * @returns {Promise(Identity)} message recipient identity
+	  */
+
+
+	  Message.prototype.getRecipient = function getRecipient(index) {
+	    for (var i = 0; i < this.signedData.recipient.length; i++) {
+	      var a = this.signedData.recipient[i];
+	      if (Attribute.isUniqueType(a[0])) {
+	        return index.get(a[1], a[0]);
+	      }
+	    }
+	  };
+
+	  /**
+	  * @returns {string} base64 hash of message
+	  */
+
+
+	  Message.prototype.getHash = function getHash() {
+	    if (this.sig && !this.hash) {
+	      this.hash = util$1.getHash(this.sig);
+	    }
+	    return this.hash;
+	  };
+
+	  Message.fromSig = async function fromSig(obj) {
+	    var signedData = await Key.verify(obj.sig, obj.pubKey);
+	    return new Message({ signedData: signedData, sig: obj.sig, pubKey: obj.pubKey });
+	  };
+
+	  /**
+	  * @return {boolean} true if message signature is valid. Otherwise throws ValidationError.
+	  */
+
+
+	  Message.prototype.verify = async function verify() {
+	    if (!this.pubKey) {
+	      throw new ValidationError(errorMsg + ' Message has no .pubKey');
+	    }
+	    if (!this.sig) {
+	      throw new ValidationError(errorMsg + ' Message has no .sig');
+	    }
+	    this.signedData = await Key.verify(this.sig, this.pubKey);
+	    if (!this.signedData) {
+	      throw new ValidationError(errorMsg + ' Invalid signature');
+	    }
+	    if (this.hash) {
+	      if (this.hash !== util$1.getHash(this.sig)) {
+	        throw new ValidationError(errorMsg + ' Invalid message hash');
+	      }
+	    } else {
+	      this.getHash();
+	    }
+	    return true;
+	  };
+
+	  return Message;
+	}();
+
+	var pnglib = createCommonjsModule(function (module) {
+	/**
+	* A handy class to calculate color values.
+	*
+	* @version 1.0
+	* @author Robert Eisele <robert@xarg.org>
+	* @copyright Copyright (c) 2010, Robert Eisele
+	* @link http://www.xarg.org/2010/03/generate-client-side-png-files-using-javascript/
+	* @license http://www.opensource.org/licenses/bsd-license.php BSD License
+	*
+	*/
+
+	(function() {
+
+		// helper functions for that ctx
+		function write(buffer, offs) {
+			for (var i = 2; i < arguments.length; i++) {
+				for (var j = 0; j < arguments[i].length; j++) {
+					buffer[offs++] = arguments[i].charAt(j);
+				}
+			}
+		}
+
+		function byte2(w) {
+			return String.fromCharCode((w >> 8) & 255, w & 255);
+		}
+
+		function byte4(w) {
+			return String.fromCharCode((w >> 24) & 255, (w >> 16) & 255, (w >> 8) & 255, w & 255);
+		}
+
+		function byte2lsb(w) {
+			return String.fromCharCode(w & 255, (w >> 8) & 255);
+		}
+
+		// modified from original source to support NPM
+		var PNGlib = function(width,height,depth) {
+
+			this.width   = width;
+			this.height  = height;
+			this.depth   = depth;
+
+			// pixel data and row filter identifier size
+			this.pix_size = height * (width + 1);
+
+			// deflate header, pix_size, block headers, adler32 checksum
+			this.data_size = 2 + this.pix_size + 5 * Math.floor((0xfffe + this.pix_size) / 0xffff) + 4;
+
+			// offsets and sizes of Png chunks
+			this.ihdr_offs = 0;									// IHDR offset and size
+			this.ihdr_size = 4 + 4 + 13 + 4;
+			this.plte_offs = this.ihdr_offs + this.ihdr_size;	// PLTE offset and size
+			this.plte_size = 4 + 4 + 3 * depth + 4;
+			this.trns_offs = this.plte_offs + this.plte_size;	// tRNS offset and size
+			this.trns_size = 4 + 4 + depth + 4;
+			this.idat_offs = this.trns_offs + this.trns_size;	// IDAT offset and size
+			this.idat_size = 4 + 4 + this.data_size + 4;
+			this.iend_offs = this.idat_offs + this.idat_size;	// IEND offset and size
+			this.iend_size = 4 + 4 + 4;
+			this.buffer_size  = this.iend_offs + this.iend_size;	// total PNG size
+
+			this.buffer  = new Array();
+			this.palette = new Object();
+			this.pindex  = 0;
+
+			var _crc32 = new Array();
+
+			// initialize buffer with zero bytes
+			for (var i = 0; i < this.buffer_size; i++) {
+				this.buffer[i] = "\x00";
+			}
+
+			// initialize non-zero elements
+			write(this.buffer, this.ihdr_offs, byte4(this.ihdr_size - 12), 'IHDR', byte4(width), byte4(height), "\x08\x03");
+			write(this.buffer, this.plte_offs, byte4(this.plte_size - 12), 'PLTE');
+			write(this.buffer, this.trns_offs, byte4(this.trns_size - 12), 'tRNS');
+			write(this.buffer, this.idat_offs, byte4(this.idat_size - 12), 'IDAT');
+			write(this.buffer, this.iend_offs, byte4(this.iend_size - 12), 'IEND');
+
+			// initialize deflate header
+			var header = ((8 + (7 << 4)) << 8) | (3 << 6);
+			header+= 31 - (header % 31);
+
+			write(this.buffer, this.idat_offs + 8, byte2(header));
+
+			// initialize deflate block headers
+			for (var i = 0; (i << 16) - 1 < this.pix_size; i++) {
+				var size, bits;
+				if (i + 0xffff < this.pix_size) {
+					size = 0xffff;
+					bits = "\x00";
+				} else {
+					size = this.pix_size - (i << 16) - i;
+					bits = "\x01";
+				}
+				write(this.buffer, this.idat_offs + 8 + 2 + (i << 16) + (i << 2), bits, byte2lsb(size), byte2lsb(~size));
+			}
+
+			/* Create crc32 lookup table */
+			for (var i = 0; i < 256; i++) {
+				var c = i;
+				for (var j = 0; j < 8; j++) {
+					if (c & 1) {
+						c = -306674912 ^ ((c >> 1) & 0x7fffffff);
+					} else {
+						c = (c >> 1) & 0x7fffffff;
+					}
+				}
+				_crc32[i] = c;
+			}
+
+			// compute the index into a png for a given pixel
+			this.index = function(x,y) {
+				var i = y * (this.width + 1) + x + 1;
+				var j = this.idat_offs + 8 + 2 + 5 * Math.floor((i / 0xffff) + 1) + i;
+				return j;
+			};
+
+			// convert a color and build up the palette
+			this.color = function(red, green, blue, alpha) {
+
+				alpha = alpha >= 0 ? alpha : 255;
+				var color = (((((alpha << 8) | red) << 8) | green) << 8) | blue;
+
+				if (typeof this.palette[color] == "undefined") {
+					if (this.pindex == this.depth) return "\x00";
+
+					var ndx = this.plte_offs + 8 + 3 * this.pindex;
+
+					this.buffer[ndx + 0] = String.fromCharCode(red);
+					this.buffer[ndx + 1] = String.fromCharCode(green);
+					this.buffer[ndx + 2] = String.fromCharCode(blue);
+					this.buffer[this.trns_offs+8+this.pindex] = String.fromCharCode(alpha);
+
+					this.palette[color] = String.fromCharCode(this.pindex++);
+				}
+				return this.palette[color];
+			};
+
+			// output a PNG string, Base64 encoded
+			this.getBase64 = function() {
+
+				var s = this.getDump();
+
+				var ch = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+				var c1, c2, c3, e1, e2, e3, e4;
+				var l = s.length;
+				var i = 0;
+				var r = "";
+
+				do {
+					c1 = s.charCodeAt(i);
+					e1 = c1 >> 2;
+					c2 = s.charCodeAt(i+1);
+					e2 = ((c1 & 3) << 4) | (c2 >> 4);
+					c3 = s.charCodeAt(i+2);
+					if (l < i+2) { e3 = 64; } else { e3 = ((c2 & 0xf) << 2) | (c3 >> 6); }
+					if (l < i+3) { e4 = 64; } else { e4 = c3 & 0x3f; }
+					r+= ch.charAt(e1) + ch.charAt(e2) + ch.charAt(e3) + ch.charAt(e4);
+				} while ((i+= 3) < l);
+				return r;
+			};
+
+			// output a PNG string
+			this.getDump = function() {
+
+				// compute adler32 of output pixels + row filter bytes
+				var BASE = 65521; /* largest prime smaller than 65536 */
+				var NMAX = 5552;  /* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
+				var s1 = 1;
+				var s2 = 0;
+				var n = NMAX;
+
+				for (var y = 0; y < this.height; y++) {
+					for (var x = -1; x < this.width; x++) {
+						s1+= this.buffer[this.index(x, y)].charCodeAt(0);
+						s2+= s1;
+						if ((n-= 1) == 0) {
+							s1%= BASE;
+							s2%= BASE;
+							n = NMAX;
+						}
+					}
+				}
+				s1%= BASE;
+				s2%= BASE;
+				write(this.buffer, this.idat_offs + this.idat_size - 8, byte4((s2 << 16) | s1));
+
+				// compute crc32 of the PNG chunks
+				function crc32(png, offs, size) {
+					var crc = -1;
+					for (var i = 4; i < size-4; i += 1) {
+						crc = _crc32[(crc ^ png[offs+i].charCodeAt(0)) & 0xff] ^ ((crc >> 8) & 0x00ffffff);
+					}
+					write(png, offs+size-4, byte4(crc ^ -1));
+				}
+
+				crc32(this.buffer, this.ihdr_offs, this.ihdr_size);
+				crc32(this.buffer, this.plte_offs, this.plte_size);
+				crc32(this.buffer, this.trns_offs, this.trns_size);
+				crc32(this.buffer, this.idat_offs, this.idat_size);
+				crc32(this.buffer, this.iend_offs, this.iend_size);
+
+				// convert PNG to string
+				return "\x89PNG\r\n\x1a\n"+this.buffer.join('');
+			};
+		};
+
+		// modified from original source to support NPM
+		{
+			module.exports = PNGlib;
+		}
+	})();
 	});
 
-	var textEncoding = {};
+	var identicon = createCommonjsModule(function (module) {
+	/**
+	 * Identicon.js 2.3.2
+	 * http://github.com/stewartlord/identicon.js
+	 *
+	 * PNGLib required for PNG output
+	 * http://www.xarg.org/download/pnglib.js
+	 *
+	 * Copyright 2018, Stewart Lord
+	 * Released under the BSD license
+	 * http://www.opensource.org/licenses/bsd-license.php
+	 */
 
-	var textEncoding$1 = /*#__PURE__*/Object.freeze({
-		default: textEncoding
+	(function() {
+	    var PNGlib;
+	    {
+	        PNGlib = pnglib;
+	    }
+
+	    var Identicon = function(hash, options){
+	        if (typeof(hash) !== 'string' || hash.length < 15) {
+	            throw 'A hash of at least 15 characters is required.';
+	        }
+
+	        this.defaults = {
+	            background: [240, 240, 240, 255],
+	            margin:     0.08,
+	            size:       64,
+	            saturation: 0.7,
+	            brightness: 0.5,
+	            format:     'png'
+	        };
+
+	        this.options = typeof(options) === 'object' ? options : this.defaults;
+
+	        // backward compatibility with old constructor (hash, size, margin)
+	        if (typeof(arguments[1]) === 'number') { this.options.size   = arguments[1]; }
+	        if (arguments[2])                      { this.options.margin = arguments[2]; }
+
+	        this.hash        = hash;
+	        this.background  = this.options.background || this.defaults.background;
+	        this.size        = this.options.size       || this.defaults.size;
+	        this.format      = this.options.format     || this.defaults.format;
+	        this.margin      = this.options.margin !== undefined ? this.options.margin : this.defaults.margin;
+
+	        // foreground defaults to last 7 chars as hue at 70% saturation, 50% brightness
+	        var hue          = parseInt(this.hash.substr(-7), 16) / 0xfffffff;
+	        var saturation   = this.options.saturation || this.defaults.saturation;
+	        var brightness   = this.options.brightness || this.defaults.brightness;
+	        this.foreground  = this.options.foreground || this.hsl2rgb(hue, saturation, brightness);
+	    };
+
+	    Identicon.prototype = {
+	        background: null,
+	        foreground: null,
+	        hash:       null,
+	        margin:     null,
+	        size:       null,
+	        format:     null,
+
+	        image: function(){
+	            return this.isSvg()
+	                ? new Svg(this.size, this.foreground, this.background)
+	                : new PNGlib(this.size, this.size, 256);
+	        },
+
+	        render: function(){
+	            var image      = this.image(),
+	                size       = this.size,
+	                baseMargin = Math.floor(size * this.margin),
+	                cell       = Math.floor((size - (baseMargin * 2)) / 5),
+	                margin     = Math.floor((size - cell * 5) / 2),
+	                bg         = image.color.apply(image, this.background),
+	                fg         = image.color.apply(image, this.foreground);
+
+	            // the first 15 characters of the hash control the pixels (even/odd)
+	            // they are drawn down the middle first, then mirrored outwards
+	            var i, color;
+	            for (i = 0; i < 15; i++) {
+	                color = parseInt(this.hash.charAt(i), 16) % 2 ? bg : fg;
+	                if (i < 5) {
+	                    this.rectangle(2 * cell + margin, i * cell + margin, cell, cell, color, image);
+	                } else if (i < 10) {
+	                    this.rectangle(1 * cell + margin, (i - 5) * cell + margin, cell, cell, color, image);
+	                    this.rectangle(3 * cell + margin, (i - 5) * cell + margin, cell, cell, color, image);
+	                } else if (i < 15) {
+	                    this.rectangle(0 * cell + margin, (i - 10) * cell + margin, cell, cell, color, image);
+	                    this.rectangle(4 * cell + margin, (i - 10) * cell + margin, cell, cell, color, image);
+	                }
+	            }
+
+	            return image;
+	        },
+
+	        rectangle: function(x, y, w, h, color, image){
+	            if (this.isSvg()) {
+	                image.rectangles.push({x: x, y: y, w: w, h: h, color: color});
+	            } else {
+	                var i, j;
+	                for (i = x; i < x + w; i++) {
+	                    for (j = y; j < y + h; j++) {
+	                        image.buffer[image.index(i, j)] = color;
+	                    }
+	                }
+	            }
+	        },
+
+	        // adapted from: https://gist.github.com/aemkei/1325937
+	        hsl2rgb: function(h, s, b){
+	            h *= 6;
+	            s = [
+	                b += s *= b < .5 ? b : 1 - b,
+	                b - h % 1 * s * 2,
+	                b -= s *= 2,
+	                b,
+	                b + h % 1 * s,
+	                b + s
+	            ];
+
+	            return [
+	                s[ ~~h    % 6 ] * 255, // red
+	                s[ (h|16) % 6 ] * 255, // green
+	                s[ (h|8)  % 6 ] * 255  // blue
+	            ];
+	        },
+
+	        toString: function(raw){
+	            // backward compatibility with old toString, default to base64
+	            if (raw) {
+	                return this.render().getDump();
+	            } else {
+	                return this.render().getBase64();
+	            }
+	        },
+
+	        isSvg: function(){
+	            return this.format.match(/svg/i)
+	        }
+	    };
+
+	    var Svg = function(size, foreground, background){
+	        this.size       = size;
+	        this.foreground = this.color.apply(this, foreground);
+	        this.background = this.color.apply(this, background);
+	        this.rectangles = [];
+	    };
+
+	    Svg.prototype = {
+	        size:       null,
+	        foreground: null,
+	        background: null,
+	        rectangles: null,
+
+	        color: function(r, g, b, a){
+	            var values = [r, g, b].map(Math.round);
+	            values.push((a >= 0) && (a <= 255) ? a/255 : 1);
+	            return 'rgba(' + values.join(',') + ')';
+	        },
+
+	        getDump: function(){
+	          var i,
+	                xml,
+	                rect,
+	                fg     = this.foreground,
+	                bg     = this.background,
+	                stroke = this.size * 0.005;
+
+	            xml = "<svg xmlns='http://www.w3.org/2000/svg'"
+	                + " width='" + this.size + "' height='" + this.size + "'"
+	                + " style='background-color:" + bg + ";'>"
+	                + "<g style='fill:" + fg + "; stroke:" + fg + "; stroke-width:" + stroke + ";'>";
+
+	            for (i = 0; i < this.rectangles.length; i++) {
+	                rect = this.rectangles[i];
+	                if (rect.color == bg) continue;
+	                xml += "<rect "
+	                    + " x='"      + rect.x + "'"
+	                    + " y='"      + rect.y + "'"
+	                    + " width='"  + rect.w + "'"
+	                    + " height='" + rect.h + "'"
+	                    + "/>";
+	            }
+	            xml += "</g></svg>";
+
+	            return xml;
+	        },
+
+	        getBase64: function(){
+	            if (btoa) {
+	                return btoa(this.getDump());
+	            } else if (Buffer) {
+	                return new Buffer(this.getDump(), 'binary').toString('base64');
+	            } else {
+	                throw 'Cannot generate base64 output';
+	            }
+	        }
+	    };
+
+	    {
+	        module.exports = Identicon;
+	    }
+	})();
 	});
 
-	var nodeWebcryptoOssl = {};
+	/**
+	* An Identifi identity profile. Usually you don't create them yourself, but get them
+	* from Index methods such as search().
+	*/
 
-	var nodeWebcryptoOssl$1 = /*#__PURE__*/Object.freeze({
-		default: nodeWebcryptoOssl
+	var Identity = function () {
+	  function Identity(gun) {
+	    _classCallCheck(this, Identity);
+
+	    this.gun = gun;
+	  }
+
+	  Identity.create = function create(gunRoot, data) {
+	    data.receivedNegative |= data.receivedNegative || 0;
+	    data.receivedPositive |= data.receivedPositive || 0;
+	    data.receivedNeutral = data.receivedNeutral || 0;
+	    data.sentNegative = data.sentNegative || 0;
+	    data.sentPositive = data.sentPositive || 0;
+	    data.sentNeutral = data.sentNeutral || 0;
+	    data.trustDistance = data.hasOwnProperty('trustDistance') ? data.trustDistance : 99;
+	    data.attrs = data.attrs || {};
+	    if (Array.isArray(data.attrs)) {
+	      var attrs = {};
+	      while (data.attrs.length) {
+	        var a = data.attrs.pop();
+	        attrs[encodeURIComponent(a.name) + ':' + encodeURIComponent(a.val)] = a;
+	      }
+	      data.attrs = attrs;
+	    }
+	    data.mostVerifiedAttributes = Identity.getMostVerifiedAttributes(data.attrs);
+	    var bestVerificationScore = -1;
+	    _Object$keys(data.mostVerifiedAttributes).forEach(function (k) {
+	      var v = data.mostVerifiedAttributes[k];
+	      if (Attribute.isUniqueType(k) && v.verificationScore > bestVerificationScore) {
+	        data.linkTo = { name: k, val: v.attribute.val };
+	        bestVerificationScore = v.verificationScore;
+	      }
+	    });
+	    if (!data.linkTo) {
+	      data.linkTo = data.attrs[_Object$keys(data.attrs)[0]];
+	    }
+	    if (data.linkTo.name !== 'keyID' && data.mostVerifiedAttributes.keyID) {
+	      data.linkTo = data.mostVerifiedAttributes.keyID.attribute;
+	    }
+	    return new Identity(gunRoot.set(data));
+	  };
+
+	  Identity.getMostVerifiedAttributes = function getMostVerifiedAttributes(attrs) {
+	    var mostVerifiedAttributes = {};
+	    _Object$keys(attrs).forEach(function (k) {
+	      var a = attrs[k];
+	      var keyExists = _Object$keys(mostVerifiedAttributes).indexOf(a.name) > -1;
+	      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.name].verificationScore)) {
+	        mostVerifiedAttributes[a.name] = {
+	          attribute: a,
+	          verificationScore: a.conf - a.ref
+	        };
+	      }
+	    });
+	    return mostVerifiedAttributes;
+	  };
+
+	  /**
+	  * @param {string} attribute attribute type
+	  * @returns {string} most verified value of the param type
+	  */
+
+
+	  Identity.prototype.verified = async function verified(attribute) {
+	    var attrs = await this.gun.get('attrs').then();
+	    var mva = Identity.getMostVerifiedAttributes(attrs);
+	    return mva.hasOwnProperty(attribute) ? mva[attribute].attribute.val : undefined;
+	  };
+
+	  /**
+	  * @param {Object} ipfs (optional) an IPFS instance that is used to fetch images
+	  * @returns {HTMLElement} profile card html element describing the identity
+	  */
+
+
+	  Identity.prototype.profileCard = function profileCard(ipfs) {
+	    var _this = this;
+
+	    var card = document.createElement('div');
+	    card.className = 'identifi-card';
+
+	    var identicon$$1 = this.identicon(60, null, null, ipfs);
+	    identicon$$1.style.order = 1;
+	    identicon$$1.style.flexShrink = 0;
+	    identicon$$1.style.marginRight = '15px';
+
+	    var details = document.createElement('div');
+	    details.style.padding = '5px';
+	    details.style.order = 2;
+	    details.style.flexGrow = 1;
+
+	    var linkEl = document.createElement('span');
+	    var links = document.createElement('small');
+	    card.appendChild(identicon$$1);
+	    card.appendChild(details);
+	    details.appendChild(linkEl);
+	    details.appendChild(links);
+
+	    this.gun.on(async function (data) {
+	      if (!data) {
+	        return;
+	      }
+	      var attrs = await new _Promise(function (resolve) {
+	        _this.gun.get('attrs').load(function (r) {
+	          return resolve(r);
+	        });
+	      });
+	      var linkTo = await _this.gun.get('linkTo').then();
+	      var link = 'https://identi.fi/#/identities/' + linkTo.name + '/' + linkTo.val;
+	      var mva = Identity.getMostVerifiedAttributes(attrs);
+	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.name && mva.name.attribute.val || mva.nickname && mva.nickname.attribute.val || linkTo.name + ':' + linkTo.val) + '</a><br>';
+	      linkEl.innerHTML += '<small>Received: <span class="identifi-pos">+' + (data.receivedPositive || 0) + '</span> / <span class="identifi-neg">-' + (data.receivedNegative || 0) + '</span></small><br>';
+	      links.innerHTML = '';
+	      _Object$keys(attrs).forEach(function (k) {
+	        var a = attrs[k];
+	        if (a.link) {
+	          links.innerHTML += a.name + ': <a href="' + a.link + '">' + a.val + '</a> ';
+	        }
+	      });
+	    });
+
+	    /*
+	    const template = ```
+	    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
+	      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
+	      <td>
+	        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>
+	        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>
+	        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>
+	        <small ng-if="!result.name" class="list-group-item-text">
+	          <span ng-bind-html="result[0][0]|highlight:query.term"></span>
+	        </small><br>
+	        <small>
+	          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>
+	          <span ng-if="result.email" class="mar-right10">
+	            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>
+	          </span>
+	          <span ng-if="result.facebook" class="mar-right10">
+	            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>
+	          </span>
+	          <span ng-if="result.twitter" class="mar-right10">
+	            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>
+	          </span>
+	          <span ng-if="result.googlePlus" class="mar-right10">
+	            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>
+	          </span>
+	          <span ng-if="result.bitcoin" class="mar-right10">
+	            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>
+	          </span>
+	        </small>
+	      </td>
+	    </tr>
+	    ```;*/
+	    return card;
+	  };
+
+	  /**
+	  * Appends a search widget to the given HTMLElement
+	  * @param {HTMLElement} parentElement element where the search widget is added and event listener attached
+	  * @param {Index} index index root to use for search
+	  */
+
+
+	  Identity.appendSearchWidget = function appendSearchWidget(parentElement, index) {
+	    var form = document.createElement('form');
+
+	    var input = document.createElement('input');
+	    input.type = 'text';
+	    input.placeholder = 'Search';
+	    input.id = 'identifiSearchInput';
+	    form.innerHTML += '<div id="identifiSearchResults"></div>';
+
+	    var searchResults = document.createElement('div');
+
+	    parentElement.appendChild(form);
+	    form.appendChild(input);
+	    form.appendChild(searchResults);
+	    input.addEventListener('keyup', async function () {
+	      var r = await index.search(input.value);
+	      searchResults.innerHTML = '';
+	      r.sort(function (a, b) {
+	        return a.trustDistance - b.trustDistance;
+	      });
+	      r.forEach(function (i) {
+	        searchResults.appendChild(i.profileCard());
+	      });
+	    });
+	  };
+
+	  Identity._ordinal = function _ordinal(n) {
+	    var s = ['th', 'st', 'nd', 'rd'];
+	    var v = n % 100;
+	    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+	  };
+
+	  Identity._injectCss = function _injectCss() {
+	    var elementId = 'identifiStyle';
+	    if (document.getElementById(elementId)) {
+	      return;
+	    }
+	    var sheet = document.createElement('style');
+	    sheet.id = elementId;
+	    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .identifi-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .identifi-card a:hover, .identifi-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .identifi-pos {\n        color: #3c763d;\n      }\n\n      .identifi-neg {\n        color: #a94442;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
+	    document.body.appendChild(sheet);
+	  };
+
+	  /**
+	  * @param {number} width of the identicon
+	  * @param {number} border identicon border (aura) width
+	  * @param {boolean} showDistance whether to show web of trust distance ordinal
+	  * @param {Object} ipfs (optional) an IPFS instance that is used to fetch images
+	  * @returns {HTMLElement} identicon element that can be appended to DOM
+	  */
+
+
+	  Identity.prototype.identicon = function identicon$$1(width) {
+	    var border = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
+	    var showDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+	    var ipfs = arguments[3];
+
+	    Identity._injectCss(); // some other way that is not called on each identicon generation?
+	    var identicon$$1 = document.createElement('div');
+	    identicon$$1.className = 'identifi-identicon';
+	    identicon$$1.style.width = width + 'px';
+	    identicon$$1.style.height = width + 'px';
+
+	    var pie = document.createElement('div');
+	    pie.className = 'identifi-pie';
+	    pie.style.width = width + 'px';
+
+	    var img = document.createElement('img');
+	    img.alt = '';
+	    img.width = width;
+	    img.height = width;
+	    img.style.borderWidth = border + 'px';
+
+	    var distance = void 0;
+	    if (showDistance) {
+	      distance = document.createElement('span');
+	      distance.className = 'identifi-distance';
+	      distance.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
+	      identicon$$1.appendChild(distance);
+	    }
+	    identicon$$1.appendChild(pie);
+	    identicon$$1.appendChild(img);
+
+	    this.gun.on(function (data) {
+	      if (!data) {
+	        return;
+	      }
+	      // Define colors etc
+	      var bgColor = 'rgba(0,0,0,0.2)';
+	      var bgImage = 'none';
+	      var transform = '';
+	      var boxShadow = '0px 0px 0px 0px #82FF84';
+	      if (data.receivedPositive > data.receivedNegative * 20) {
+	        boxShadow = '0px 0px ' + border * data.receivedPositive / 50 + 'px 0px #82FF84';
+	      } else if (data.receivedPositive < data.receivedNegative * 3) {
+	        boxShadow = '0px 0px ' + border * data.receivedNegative / 10 + 'px 0px #BF0400';
+	      }
+	      if (data.receivedPositive + data.receivedNegative > 0) {
+	        if (data.receivedPositive > data.receivedNegative) {
+	          transform = 'rotate(' + (-data.receivedPositive / (data.receivedPositive + data.receivedNegative) * 360 - 180) / 2 + 'deg)';
+	          bgColor = '#A94442';
+	          bgImage = 'linear-gradient(' + data.receivedPositive / (data.receivedPositive + data.receivedNegative) * 360 + 'deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)';
+	        } else {
+	          transform = 'rotate(' + ((-data.receivedNegative / (data.receivedPositive + data.receivedNegative) * 360 - 180) / 2 + 180) + 'deg)';
+	          bgColor = '#3C763D';
+	          bgImage = 'linear-gradient(' + data.receivedNegative / (data.receivedPositive + data.receivedNegative) * 360 + 'deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)';
+	        }
+	      }
+
+	      pie.style.backgroundColor = bgColor;
+	      pie.style.backgroundImage = bgImage;
+	      pie.style.boxShadow = boxShadow;
+	      pie.style.transform = transform;
+	      pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
+
+	      var hash = util$1.getHash(_JSON$stringify(data.linkTo), 'hex');
+	      var identiconImg = new identicon(hash, { width: width, format: 'svg' });
+
+	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
+
+	      if (showDistance) {
+	        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : '\u2013';
+	      }
+	    });
+
+	    if (ipfs) {
+	      this.gun.get('attrs').open(function (attrs) {
+	        var mva = Identity.getMostVerifiedAttributes(attrs);
+	        if (mva.profilePhoto) {
+	          var timeout = ipfs.isOnline() ? 0 : 5000;
+	          setTimeout(function () {
+	            ipfs.files.cat(mva.profilePhoto.attribute.val).then(function (file) {
+	              var f = ipfs.types.Buffer.from(file).toString('base64');
+	              img.src = 'data:image;base64,' + f;
+	            });
+	          }, timeout);
+	        }
+	      });
+	    }
+
+	    return identicon$$1;
+	  };
+
+	  return Identity;
+	}();
+
+	// 19.1.2.1 Object.assign(target, source, ...)
+
+
+
+
+
+	var $assign = Object.assign;
+
+	// should work with symbols and should have deterministic property order (V8 bug)
+	var _objectAssign = !$assign || _fails(function () {
+	  var A = {};
+	  var B = {};
+	  // eslint-disable-next-line no-undef
+	  var S = Symbol();
+	  var K = 'abcdefghijklmnopqrst';
+	  A[S] = 7;
+	  K.split('').forEach(function (k) { B[k] = k; });
+	  return $assign({}, A)[S] != 7 || Object.keys($assign({}, B)).join('') != K;
+	}) ? function assign(target, source) { // eslint-disable-line no-unused-vars
+	  var T = _toObject(target);
+	  var aLen = arguments.length;
+	  var index = 1;
+	  var getSymbols = _objectGops.f;
+	  var isEnum = _objectPie.f;
+	  while (aLen > index) {
+	    var S = _iobject(arguments[index++]);
+	    var keys = getSymbols ? _objectKeys(S).concat(getSymbols(S)) : _objectKeys(S);
+	    var length = keys.length;
+	    var j = 0;
+	    var key;
+	    while (length > j) if (isEnum.call(S, key = keys[j++])) T[key] = S[key];
+	  } return T;
+	} : $assign;
+
+	// 19.1.3.1 Object.assign(target, source)
+
+
+	_export(_export.S + _export.F, 'Object', { assign: _objectAssign });
+
+	var assign = _core.Object.assign;
+
+	var assign$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": assign, __esModule: true };
 	});
+
+	var _Object$assign = unwrapExports(assign$1);
+
+	var isEnum$1 = _objectPie.f;
+	var _objectToArray = function (isEntries) {
+	  return function (it) {
+	    var O = _toIobject(it);
+	    var keys = _objectKeys(O);
+	    var length = keys.length;
+	    var i = 0;
+	    var result = [];
+	    var key;
+	    while (length > i) if (isEnum$1.call(O, key = keys[i++])) {
+	      result.push(isEntries ? [key, O[key]] : O[key]);
+	    } return result;
+	  };
+	};
+
+	// https://github.com/tc39/proposal-object-values-entries
+
+	var $values = _objectToArray(false);
+
+	_export(_export.S, 'Object', {
+	  values: function values(it) {
+	    return $values(it);
+	  }
+	});
+
+	var values = _core.Object.values;
+
+	var values$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": values, __esModule: true };
+	});
+
+	var _Object$values = unwrapExports(values$1);
+
+	// 20.1.2.4 Number.isNaN(number)
+
+
+	_export(_export.S, 'Number', {
+	  isNaN: function isNaN(number) {
+	    // eslint-disable-next-line no-self-compare
+	    return number != number;
+	  }
+	});
+
+	var isNan = _core.Number.isNaN;
+
+	var isNan$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": isNan, __esModule: true };
+	});
+
+	var _Number$isNaN = unwrapExports(isNan$1);
 
 	var gun = createCommonjsModule(function (module) {
 	(function(){
 
-		/* UNBUILD */
-		var root;
-		if(typeof window !== "undefined"){ root = window; }
-		if(typeof commonjsGlobal !== "undefined"){ root = commonjsGlobal; }
-		root = root || {};
-		var console = root.console || {log: function(){}};
-		function USE(arg){
-			return arg.slice? USE[R(arg)] : function(mod, path){
-				arg(mod = {exports: {}});
-				USE[R(path)] = mod.exports;
-			}
-			function R(p){
-				return p.split('/').slice(-1).toString().replace('.js','');
-			}
-		}
-		{ var common = module; }
+	  /* UNBUILD */
+	  var root;
+	  if(typeof window !== "undefined"){ root = window; }
+	  if(typeof commonjsGlobal !== "undefined"){ root = commonjsGlobal; }
+	  root = root || {};
+	  var console = root.console || {log: function(){}};
+	  function USE(arg, req){
+	    return req? commonjsRequire(arg) : arg.slice? USE[R(arg)] : function(mod, path){
+	      arg(mod = {exports: {}});
+	      USE[R(path)] = mod.exports;
+	    }
+	    function R(p){
+	      return p.split('/').slice(-1).toString().replace('.js','');
+	    }
+	  }
+	  { var common = module; }
 	USE(function(module){
 			// Generic javascript utilities.
 			var Type = {};
@@ -10136,7 +12984,8 @@
 					data = tmp.put;
 				}
 				if((tmp = eve.wait) && (tmp = tmp[at.id])){ clearTimeout(tmp); }
-				if(!to && (u === data || at.soul || at.link || (link && !(0 < link.ack)))){
+				if((!to && (u === data || at.soul || at.link || (link && !(0 < link.ack))))
+				|| (u === data && (tmp = (obj_map(at.root.opt.peers, function(v,k,t){t(k);})||[]).length) && (link||at).ack <= tmp)){
 					tmp = (eve.wait = {})[at.id] = setTimeout(function(){
 						val.call({as:opt}, msg, eve, tmp || 1);
 					}, opt.wait || 99);
@@ -10626,7 +13475,7 @@
 
 				var wire = opt.wire;
 				opt.wire = open;
-				function open(peer){
+				function open(peer){ try{
 					if(!peer || !peer.url){ return wire && wire(peer) }
 					var url = peer.url.replace('http', 'ws');
 					var wire = peer.wire = new opt.WebSocket(url);
@@ -10647,7 +13496,7 @@
 						opt.mesh.hear(msg.data || msg, peer);
 					};
 					return wire;
-				}
+				}catch(e){}}
 
 				function reconnect(peer){
 					clearTimeout(peer.defer);
@@ -10660,2859 +13509,6 @@
 
 	}());
 	});
-
-	var require$$0 = ( empty$3 && empty$2 ) || empty$3;
-
-	var require$$1$1 = ( webcrypto$1 && webcrypto ) || webcrypto$1;
-
-	var require$$2 = ( textEncoding$1 && textEncoding ) || textEncoding$1;
-
-	var require$$3 = ( nodeWebcryptoOssl$1 && nodeWebcryptoOssl ) || nodeWebcryptoOssl$1;
-
-	var sea = createCommonjsModule(function (module) {
-	(function(){
-
-	  /* UNBUILD */
-	  var root;
-	  if(typeof window !== "undefined"){ root = window; }
-	  if(typeof commonjsGlobal !== "undefined"){ root = commonjsGlobal; }
-	  root = root || {};
-	  var console = root.console || {log: function(){}};
-	  function USE(arg){
-	    return arg.slice? USE[R(arg)] : function(mod, path){
-	      arg(mod = {exports: {}});
-	      USE[R(path)] = mod.exports;
-	    }
-	    function R(p){
-	      return p.split('/').slice(-1).toString().replace('.js','');
-	    }
-	  }
-	USE(function(module){
-	    // Security, Encryption, and Authorization: SEA.js
-	    // MANDATORY READING: http://gun.js.org/explainers/data/security.html
-	    // THIS IS AN EARLY ALPHA!
-
-	    function SEA(){}
-	    if(typeof window !== "undefined"){ (SEA.window = window).SEA = SEA; }
-
-	    module.exports = SEA;
-	  })(USE, './root');
-	USE(function(module){
-	    var SEA = USE('./root');
-	    if(SEA.window){
-	      if(location.protocol.indexOf('s') < 0
-	      && location.host.indexOf('localhost') < 0
-	      && location.protocol.indexOf('file:') < 0){
-	        location.protocol = 'https:'; // WebCrypto does NOT work without HTTPS!
-	      }
-	    }
-	  })(USE, './https');
-	USE(function(module){
-	    // This is Array extended to have .toString(['utf8'|'hex'|'base64'])
-	    function SeaArray() {}
-	    Object.assign(SeaArray, { from: Array.from });
-	    SeaArray.prototype = Object.create(Array.prototype);
-	    SeaArray.prototype.toString = function(enc, start, end) { enc = enc || 'utf8'; start = start || 0;
-	      const length = this.length;
-	      if (enc === 'hex') {
-	        const buf = new Uint8Array(this);
-	        return [ ...Array(((end && (end + 1)) || length) - start).keys()]
-	        .map((i) => buf[ i + start ].toString(16).padStart(2, '0')).join('')
-	      }
-	      if (enc === 'utf8') {
-	        return Array.from(
-	          { length: (end || length) - start },
-	          (_, i) => String.fromCharCode(this[ i + start])
-	        ).join('')
-	      }
-	      if (enc === 'base64') {
-	        return btoa(this)
-	      }
-	    };
-	    module.exports = SeaArray;
-	  })(USE, './array');
-	USE(function(module){
-	    // This is Buffer implementation used in SEA. Functionality is mostly
-	    // compatible with NodeJS 'safe-buffer' and is used for encoding conversions
-	    // between binary and 'hex' | 'utf8' | 'base64'
-	    // See documentation and validation for safe implementation in:
-	    // https://github.com/feross/safe-buffer#update
-	    var SeaArray = USE('./array');
-	    function SafeBuffer(...props) {
-	      console.warn('new SafeBuffer() is depreciated, please use SafeBuffer.from()');
-	      return SafeBuffer.from(...props)
-	    }
-	    SafeBuffer.prototype = Object.create(Array.prototype);
-	    Object.assign(SafeBuffer, {
-	      // (data, enc) where typeof data === 'string' then enc === 'utf8'|'hex'|'base64'
-	      from() {
-	        if (!Object.keys(arguments).length) {
-	          throw new TypeError('First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object.')
-	        }
-	        const input = arguments[0];
-	        let buf;
-	        if (typeof input === 'string') {
-	          const enc = arguments[1] || 'utf8';
-	          if (enc === 'hex') {
-	            const bytes = input.match(/([\da-fA-F]{2})/g)
-	            .map((byte) => parseInt(byte, 16));
-	            if (!bytes || !bytes.length) {
-	              throw new TypeError('Invalid first argument for type \'hex\'.')
-	            }
-	            buf = SeaArray.from(bytes);
-	          } else if (enc === 'utf8') {
-	            const length = input.length;
-	            const words = new Uint16Array(length);
-	            buf = SeaArray.from(words);
-	          } else if (enc === 'base64') {
-	            const dec = atob(input);
-	            const length = dec.length;
-	            const bytes = new Uint8Array(length);
-	            buf = SeaArray.from(bytes);
-	          } else if (enc === 'binary') {
-	            buf = SeaArray.from(input);
-	          } else {
-	            console.info('SafeBuffer.from unknown encoding: '+enc);
-	          }
-	          return buf
-	        }
-	        const byteLength = input.byteLength;
-	        const length = input.byteLength ? input.byteLength : input.length;
-	        if (length) {
-	          let buf;
-	          if (input instanceof ArrayBuffer) {
-	            buf = new Uint8Array(input);
-	          }
-	          return SeaArray.from(buf || input)
-	        }
-	      },
-	      // This is 'safe-buffer.alloc' sans encoding support
-	      alloc(length, fill = 0 /*, enc*/ ) {
-	        return SeaArray.from(new Uint8Array(Array.from({ length: length }, () => fill)))
-	      },
-	      // This is normal UNSAFE 'buffer.alloc' or 'new Buffer(length)' - don't use!
-	      allocUnsafe(length) {
-	        return SeaArray.from(new Uint8Array(Array.from({ length : length })))
-	      },
-	      // This puts together array of array like members
-	      concat(arr) { // octet array
-	        if (!Array.isArray(arr)) {
-	          throw new TypeError('First argument must be Array containing ArrayBuffer or Uint8Array instances.')
-	        }
-	        return SeaArray.from(arr.reduce((ret, item) => ret.concat(Array.from(item)), []))
-	      }
-	    });
-	    SafeBuffer.prototype.from = SafeBuffer.from;
-	    SafeBuffer.prototype.toString = SeaArray.prototype.toString;
-
-	    module.exports = SafeBuffer;
-	  })(USE, './buffer');
-	USE(function(module){
-	    const Buffer$$1 = USE('./buffer');
-	    const api = {Buffer: Buffer$$1};
-
-	    if (typeof __webpack_require__ === 'function' || (typeof window !== 'undefined' && window.crypto)) {
-	      var crypto = window.crypto || window.msCrypto;
-	      var subtle = crypto.subtle || crypto.webkitSubtle;
-	      const TextEncoder = window.TextEncoder;
-	      const TextDecoder = window.TextDecoder;
-	      Object.assign(api, {
-	        crypto,
-	        subtle,
-	        TextEncoder,
-	        TextDecoder,
-	        random: (len) => Buffer$$1.from(crypto.getRandomValues(new Uint8Array(Buffer$$1.alloc(len))))
-	      });
-	    } else {
-	      try{
-	        var crypto = require$$0;
-	        const { subtle } = require$$1$1;             // All but ECDH
-	        const { TextEncoder, TextDecoder } = require$$2;
-	        Object.assign(api, {
-	          crypto,
-	          subtle,
-	          TextEncoder,
-	          TextDecoder,
-	          random: (len) => Buffer$$1.from(crypto.randomBytes(len))
-	        });
-	        //try{
-	          const WebCrypto = require$$3;
-	          api.ossl = new WebCrypto({directory: 'ossl'}).subtle; // ECDH
-	        //}catch(e){
-	          //console.log("node-webcrypto-ossl is optionally needed for ECDH, please install if needed.");
-	        //}
-	      }catch(e){
-	        console.log("@trust/webcrypto and text-encoding are not included by default, you must add it to your package.json!");
-	        console.log("node-webcrypto-ossl is temporarily needed for ECDSA signature verification, and optionally needed for ECDH, please install if needed (currently necessary so add them to your package.json for now).");
-	      }
-	    }
-
-	    module.exports = api;
-	  })(USE, './shim');
-	USE(function(module){
-	    const Buffer$$1 = USE('./buffer');
-	    const settings = {};
-	    // Encryption parameters
-	    const pbkdf2 = { hash: 'SHA-256', iter: 100000, ks: 64 };
-
-	    const ecdsaSignProps = { name: 'ECDSA', hash: { name: 'SHA-256' } };
-	    const ecdsaKeyProps = { name: 'ECDSA', namedCurve: 'P-256' };
-	    const ecdhKeyProps = { name: 'ECDH', namedCurve: 'P-256' };
-
-	    const _initial_authsettings = {
-	      validity: 12 * 60 * 60, // internally in seconds : 12 hours
-	      hook: (props) => props  // { iat, exp, alias, remember }
-	      // or return new Promise((resolve, reject) => resolve(props)
-	    };
-	    // These are used to persist user's authentication "session"
-	    const authsettings = Object.assign({}, _initial_authsettings);
-	    // This creates Web Cryptography API compliant JWK for sign/verify purposes
-	    const keysToEcdsaJwk = (pub, d) => {  // d === priv
-	      //const [ x, y ] = Buffer.from(pub, 'base64').toString('utf8').split(':') // old
-	      const [ x, y ] = pub.split('.'); // new
-	      var jwk = { kty: "EC", crv: "P-256", x: x, y: y, ext: true };
-	      jwk.key_ops = d ? ['sign'] : ['verify'];
-	      if(d){ jwk.d = d; }
-	      return jwk;
-	    };
-
-	    Object.assign(settings, {
-	      pbkdf2: pbkdf2,
-	      ecdsa: {
-	        pair: ecdsaKeyProps,
-	        sign: ecdsaSignProps
-	      },
-	      ecdh: ecdhKeyProps,
-	      jwk: keysToEcdsaJwk,
-	      recall: authsettings
-	    });
-	    module.exports = settings;
-	  })(USE, './settings');
-	USE(function(module){
-	    module.exports = (props) => {
-	      try {
-	        if(props.slice && 'SEA{' === props.slice(0,4)){
-	          props = props.slice(3);
-	        }
-	        return props.slice ? JSON.parse(props) : props
-	      } catch (e) {}  //eslint-disable-line no-empty
-	      return props
-	    };
-	  })(USE, './parse');
-	USE(function(module){
-	    const shim = USE('./shim');
-	    const Buffer$$1 = USE('./buffer');
-	    const parse = USE('./parse');
-	    const { pbkdf2 } = USE('./settings');
-	    // This internal func returns SHA-256 hashed data for signing
-	    const sha256hash = async (mm) => {
-	      const m = parse(mm);
-	      const hash = await shim.subtle.digest({name: pbkdf2.hash}, new shim.TextEncoder().encode(m));
-	      return Buffer$$1.from(hash)
-	    };
-	    module.exports = sha256hash;
-	  })(USE, './sha256');
-	USE(function(module){
-	    // This internal func returns SHA-1 hashed data for KeyID generation
-	    const __shim = USE('./shim');
-	    const subtle = __shim.subtle;
-	    const ossl = __shim.ossl ? __shim.__ossl : subtle;
-	    const sha1hash = (b) => ossl.digest({name: 'SHA-1'}, new ArrayBuffer(b));
-	    module.exports = sha1hash;
-	  })(USE, './sha1');
-	USE(function(module){
-	    var SEA = USE('./root');
-	    var shim = USE('./shim');
-	    var S = USE('./settings');
-	    var u;
-
-	    SEA.work = async (data, pair, cb) => { try { // used to be named `proof`
-	      var salt = pair.epub || pair; // epub not recommended, salt should be random!
-	      if(salt instanceof Function){
-	        cb = salt;
-	        salt = u;
-	      }
-	      salt = salt || shim.random(9);
-	      if (SEA.window) {
-	        // For browser subtle works fine
-	        const key = await shim.subtle.importKey(
-	          'raw', new shim.TextEncoder().encode(data), { name: 'PBKDF2' }, false, ['deriveBits']
-	        );
-	        const result = await shim.subtle.deriveBits({
-	          name: 'PBKDF2',
-	          iterations: S.pbkdf2.iter,
-	          salt: new shim.TextEncoder().encode(salt),
-	          hash: S.pbkdf2.hash,
-	        }, key, S.pbkdf2.ks * 8);
-	        data = shim.random(data.length);  // Erase data in case of passphrase
-	        const r = shim.Buffer.from(result, 'binary').toString('utf8');
-	        if(cb){ try{ cb(r); }catch(e){console.log(e);} }
-	        return r;
-	      }
-	      // For NodeJS crypto.pkdf2 rocks
-	      const crypto = shim.crypto;
-	      const hash = crypto.pbkdf2Sync(
-	        data,
-	        new shim.TextEncoder().encode(salt),
-	        S.pbkdf2.iter,
-	        S.pbkdf2.ks,
-	        S.pbkdf2.hash.replace('-', '').toLowerCase()
-	      );
-	      data = shim.random(data.length);  // Erase passphrase for app
-	      const r = hash && hash.toString('utf8');
-	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
-	      return r;
-	    } catch(e) { 
-	      SEA.err = e;
-	      if(cb){ cb(); }
-	      return;
-	    }};
-
-	    module.exports = SEA.work;
-	  })(USE, './work');
-	USE(function(module){
-	    var SEA = USE('./root');
-	    var shim = USE('./shim');
-	    var S = USE('./settings');
-	    var Buff = (typeof Buffer !== 'undefined')? Buffer : shim.Buffer;
-
-	    //SEA.pair = async (data, proof, cb) => { try {
-	    SEA.pair = async (cb) => { try {
-
-	      const ecdhSubtle = shim.ossl || shim.subtle;
-	      // First: ECDSA keys for signing/verifying...
-	      var sa = await shim.subtle.generateKey(S.ecdsa.pair, true, [ 'sign', 'verify' ])
-	      .then(async (keys) => {
-	        // privateKey scope doesn't leak out from here!
-	        //const { d: priv } = await shim.subtle.exportKey('jwk', keys.privateKey)
-	        const key = {};
-	        key.priv = (await shim.subtle.exportKey('jwk', keys.privateKey)).d;
-	        const pub = await shim.subtle.exportKey('jwk', keys.publicKey);
-	        //const pub = Buff.from([ x, y ].join(':')).toString('base64') // old
-	        key.pub = pub.x+'.'+pub.y; // new
-	        // x and y are already base64
-	        // pub is UTF8 but filename/URL safe (https://www.ietf.org/rfc/rfc3986.txt)
-	        // but split on a non-base64 letter.
-	        return key;
-	      });
-	      
-	      // To include PGPv4 kind of keyId:
-	      // const pubId = await SEA.keyid(keys.pub)
-	      // Next: ECDH keys for encryption/decryption...
-
-	      try{
-	      var dh = await ecdhSubtle.generateKey(S.ecdh, true, ['deriveKey'])
-	      .then(async (keys) => {
-	        // privateKey scope doesn't leak out from here!
-	        const key = {};
-	        key.epriv = (await ecdhSubtle.exportKey('jwk', keys.privateKey)).d;
-	        const pub = await ecdhSubtle.exportKey('jwk', keys.publicKey);
-	        //const epub = Buff.from([ ex, ey ].join(':')).toString('base64') // old
-	        key.epub = pub.x+'.'+pub.y; // new
-	        // ex and ey are already base64
-	        // epub is UTF8 but filename/URL safe (https://www.ietf.org/rfc/rfc3986.txt)
-	        // but split on a non-base64 letter.
-	        return key;
-	      });
-	      }catch(e){
-	        if(SEA.window){ throw e }
-	        if(e == 'Error: ECDH is not a supported algorithm'){ console.log('Ignoring ECDH...'); }
-	        else { throw e }
-	      } dh = dh || {};
-
-	      const r = { pub: sa.pub, priv: sa.priv, /* pubId, */ epub: dh.epub, epriv: dh.epriv };
-	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
-	      return r;
-	    } catch(e) {
-	      console.log(e);
-	      SEA.err = e;
-	      if(cb){ cb(); }
-	      return;
-	    }};
-
-	    module.exports = SEA.pair;
-	  })(USE, './pair');
-	USE(function(module){
-	    var SEA = USE('./root');
-	    var shim = USE('./shim');
-	    var S = USE('./settings');
-	    var sha256hash = USE('./sha256');
-
-	    SEA.sign = async (data, pair, cb) => { try {
-	      if(data && data.slice
-	      && 'SEA{' === data.slice(0,4)
-	      && '"m":' === data.slice(4,8)){
-	        // TODO: This would prevent pair2 signing pair1's signature.
-	        // So we may want to change this in the future.
-	        // but for now, we want to prevent duplicate double signature.
-	        if(cb){ try{ cb(data); }catch(e){console.log(e);} }
-	        return data;
-	      }
-	      const pub = pair.pub;
-	      const priv = pair.priv;
-	      const jwk = S.jwk(pub, priv);
-	      const msg = JSON.stringify(data);
-	      const hash = await sha256hash(msg);
-	      const sig = await (shim.ossl || shim.subtle).importKey('jwk', jwk, S.ecdsa.pair, false, ['sign'])
-	      .then((key) => (shim.ossl || shim.subtle).sign(S.ecdsa.sign, key, new Uint8Array(hash))); // privateKey scope doesn't leak out from here!
-	      const r = 'SEA'+JSON.stringify({m: msg, s: shim.Buffer.from(sig, 'binary').toString('utf8')});
-
-	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
-	      return r;
-	    } catch(e) {
-	      console.log(e);
-	      SEA.err = e;
-	      if(cb){ cb(); }
-	      return;
-	    }};
-
-	    module.exports = SEA.sign;
-	  })(USE, './sign');
-	USE(function(module){
-	    var SEA = USE('./root');
-	    var shim = USE('./shim');
-	    var S = USE('./settings');
-	    var sha256hash = USE('./sha256');
-	    var parse = USE('./parse');
-	    var u;
-
-	    SEA.verify = async (data, pair, cb) => { try {
-	      const json = parse(data);
-	      if(false === pair){ // don't verify!
-	        const raw = (json !== data)? 
-	          (json.s && json.m)? parse(json.m) : data
-	        : json;
-	        if(cb){ try{ cb(raw); }catch(e){console.log(e);} }
-	        return raw;
-	      }
-	      const pub = pair.pub || pair;
-	      const jwk = S.jwk(pub);
-	      const key = await (shim.ossl || shim.subtle).importKey('jwk', jwk, S.ecdsa.pair, false, ['verify']);
-	      const hash = await sha256hash(json.m);
-	      const sig = new Uint8Array(shim.Buffer.from(json.s, 'utf8'));
-	      const check = await (shim.ossl || shim.subtle).verify(S.ecdsa.sign, key, sig, new Uint8Array(hash));
-	      if(!check){ throw "Signature did not match." }
-	      const r = check? parse(json.m) : u;
-
-	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
-	      return r;
-	    } catch(e) {
-	      console.log(e);
-	      SEA.err = e;
-	      if(cb){ cb(); }
-	      return;
-	    }};
-
-	    module.exports = SEA.verify;
-	  })(USE, './verify');
-	USE(function(module){
-	    var shim = USE('./shim');
-	    var sha256hash = USE('./sha256');
-
-	    const importGen = async (key, salt, opt) => {
-	      //const combo = shim.Buffer.concat([shim.Buffer.from(key, 'utf8'), salt || shim.random(8)]).toString('utf8') // old
-	      var opt = opt || {};
-	      const combo = key + (salt || shim.random(8)).toString('utf8'); // new
-	      const hash = shim.Buffer.from(await sha256hash(combo), 'binary');
-	      return await shim.subtle.importKey('raw', new Uint8Array(hash), opt.name || 'AES-GCM', false, ['encrypt', 'decrypt'])
-	    };
-	    module.exports = importGen;
-	  })(USE, './aeskey');
-	USE(function(module){
-	    var SEA = USE('./root');
-	    var shim = USE('./shim');
-	    var S = USE('./settings');
-	    var aeskey = USE('./aeskey');
-
-	    SEA.encrypt = async (data, pair, cb, opt) => { try {
-	      var opt = opt || {};
-	      const key = pair.epriv || pair;
-	      const msg = JSON.stringify(data);
-	      const rand = {s: shim.random(8), iv: shim.random(16)};
-	      const ct = await aeskey(key, rand.s, opt)
-	      .then((aes) => shim.subtle.encrypt({ // Keeping the AES key scope as private as possible...
-	        name: opt.name || 'AES-GCM', iv: new Uint8Array(rand.iv)
-	      }, aes, new shim.TextEncoder().encode(msg)));
-	      const r = 'SEA'+JSON.stringify({
-	        ct: shim.Buffer.from(ct, 'binary').toString('utf8'),
-	        iv: rand.iv.toString('utf8'),
-	        s: rand.s.toString('utf8')
-	      });
-
-	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
-	      return r;
-	    } catch(e) { 
-	      SEA.err = e;
-	      if(cb){ cb(); }
-	      return;
-	    }};
-
-	    module.exports = SEA.encrypt;
-	  })(USE, './encrypt');
-	USE(function(module){
-	    var SEA = USE('./root');
-	    var shim = USE('./shim');
-	    var S = USE('./settings');
-	    var aeskey = USE('./aeskey');
-	    var parse = USE('./parse');
-
-	    SEA.decrypt = async (data, pair, cb, opt) => { try {
-	      var opt = opt || {};
-	      const key = pair.epriv || pair;
-	      const json = parse(data);
-	      const ct = await aeskey(key, shim.Buffer.from(json.s, 'utf8'), opt)
-	      .then((aes) => shim.subtle.decrypt({  // Keeping aesKey scope as private as possible...
-	        name: opt.name || 'AES-GCM', iv: new Uint8Array(shim.Buffer.from(json.iv, 'utf8'))
-	      }, aes, new Uint8Array(shim.Buffer.from(json.ct, 'utf8'))));
-	      const r = parse(new shim.TextDecoder('utf8').decode(ct));
-	      
-	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
-	      return r;
-	    } catch(e) { 
-	      SEA.err = e;
-	      if(cb){ cb(); }
-	      return;
-	    }};
-
-	    module.exports = SEA.decrypt;
-	  })(USE, './decrypt');
-	USE(function(module){
-	    var SEA = USE('./root');
-	    var shim = USE('./shim');
-	    var S = USE('./settings');
-	    // Derive shared secret from other's pub and my epub/epriv
-	    SEA.secret = async (key, pair, cb) => { try {
-	      const pub = key.epub || key;
-	      const epub = pair.epub;
-	      const epriv = pair.epriv;
-	      const ecdhSubtle = shim.ossl || shim.subtle;
-	      const pubKeyData = keysToEcdhJwk(pub);
-	      const props = Object.assign(
-	        S.ecdh,
-	        { public: await ecdhSubtle.importKey(...pubKeyData, true, []) }
-	      );
-	      const privKeyData = keysToEcdhJwk(epub, epriv);
-	      const derived = await ecdhSubtle.importKey(...privKeyData, false, ['deriveKey'])
-	      .then(async (privKey) => {
-	        // privateKey scope doesn't leak out from here!
-	        const derivedKey = await ecdhSubtle.deriveKey(props, privKey, { name: 'AES-GCM', length: 256 }, true, [ 'encrypt', 'decrypt' ]);
-	        return ecdhSubtle.exportKey('jwk', derivedKey).then(({ k }) => k)
-	      });
-	      const r = derived;
-	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
-	      return r;
-	    } catch(e) { 
-	      SEA.err = e;
-	      if(cb){ cb(); }
-	      return;
-	    }};
-
-	    const keysToEcdhJwk = (pub, d) => { // d === priv
-	      //const [ x, y ] = Buffer.from(pub, 'base64').toString('utf8').split(':') // old
-	      const [ x, y ] = pub.split('.'); // new
-	      const jwk = d ? { d: d } : {};
-	      return [  // Use with spread returned value...
-	        'jwk',
-	        Object.assign(
-	          jwk,
-	          { x: x, y: y, kty: 'EC', crv: 'P-256', ext: true }
-	        ), // ??? refactor
-	        S.ecdh
-	      ]
-	    };
-
-	    module.exports = SEA.secret;
-	  })(USE, './secret');
-	USE(function(module){
-	    // Old Code...
-	    const __gky10 = USE('./shim');
-	    const crypto = __gky10.crypto;
-	    const subtle = __gky10.subtle;
-	    const ossl = __gky10.ossl;
-	    const TextEncoder = __gky10.TextEncoder;
-	    const TextDecoder = __gky10.TextDecoder;
-	    const getRandomBytes = __gky10.random;
-	    const EasyIndexedDB = USE('./indexed');
-	    const Buffer$$1 = USE('./buffer');
-	    var settings = USE('./settings');
-	    const __gky11 = USE('./settings');
-	    const pbKdf2 = __gky11.pbkdf2;
-	    const ecdsaKeyProps = __gky11.ecdsa.pair;
-	    const ecdsaSignProps = __gky11.ecdsa.sign;
-	    const ecdhKeyProps = __gky11.ecdh;
-	    const keysToEcdsaJwk = __gky11.jwk;
-	    const sha1hash = USE('./sha1');
-	    const sha256hash = USE('./sha256');
-	    const recallCryptoKey = USE('./remember');
-	    const parseProps = USE('./parse');
-
-	    // Practical examples about usage found from ./test/common.js
-	    const SEA = USE('./root');
-	    SEA.work = USE('./work');
-	    SEA.sign = USE('./sign');
-	    SEA.verify = USE('./verify');
-	    SEA.encrypt = USE('./encrypt');
-	    SEA.decrypt = USE('./decrypt');
-
-	    SEA.random = getRandomBytes;
-
-	    // This is easy way to use IndexedDB, all methods are Promises
-	    // Note: Not all SEA interfaces have to support this.
-	    SEA.EasyIndexedDB = EasyIndexedDB;
-
-	    // This is Buffer used in SEA and usable from Gun/SEA application also.
-	    // For documentation see https://nodejs.org/api/buffer.html
-	    SEA.Buffer = Buffer$$1;
-
-	    // These SEA functions support now ony Promises or
-	    // async/await (compatible) code, use those like Promises.
-	    //
-	    // Creates a wrapper library around Web Crypto API
-	    // for various AES, ECDSA, PBKDF2 functions we called above.
-	    // Calculate public key KeyID aka PGPv4 (result: 8 bytes as hex string)
-	    SEA.keyid = async (pub) => {
-	      try {
-	        // base64('base64(x):base64(y)') => Buffer(xy)
-	        const pb = Buffer$$1.concat(
-	          Buffer$$1.from(pub, 'base64').toString('utf8').split(':')
-	          .map((t) => Buffer$$1.from(t, 'base64'))
-	        );
-	        // id is PGPv4 compliant raw key
-	        const id = Buffer$$1.concat([
-	          Buffer$$1.from([0x99, pb.length / 0x100, pb.length % 0x100]), pb
-	        ]);
-	        const sha1 = await sha1hash(id);
-	        const hash = Buffer$$1.from(sha1, 'binary');
-	        return hash.toString('hex', hash.length - 8)  // 16-bit ID as hex
-	      } catch (e) {
-	        console.log(e);
-	        throw e
-	      }
-	    };
-	    // all done!
-	    // Obviously it is missing MANY necessary features. This is only an alpha release.
-	    // Please experiment with it, audit what I've done so far, and complain about what needs to be added.
-	    // SEA should be a full suite that is easy and seamless to use.
-	    // Again, scroll naer the top, where I provide an EXAMPLE of how to create a user and sign in.
-	    // Once logged in, the rest of the code you just read handled automatically signing/validating data.
-	    // But all other behavior needs to be equally easy, like opinionated ways of
-	    // Adding friends (trusted public keys), sending private messages, etc.
-	    // Cheers! Tell me what you think.
-	    var Gun = (SEA.window||{}).Gun || gun;
-	    Gun.SEA = SEA;
-	    SEA.Gun = Gun;
-
-	    module.exports = SEA;
-	  })(USE, './sea');
-	USE(function(module){
-	    var SEA = USE('./sea');
-	    var Gun = SEA.Gun;
-	    // This is internal func queries public key(s) for alias.
-	    const queryGunAliases = (alias, gunRoot) => new Promise((resolve, reject) => {
-	      // load all public keys associated with the username alias we want to log in with.
-	      gunRoot.get('~@'+alias).get((rat, rev) => {
-	        rev.off();
-	        if (!rat.put) {
-	          // if no user, don't do anything.
-	          const err = 'No user!';
-	          Gun.log(err);
-	          return reject({ err })
-	        }
-	        // then figuring out all possible candidates having matching username
-	        const aliases = [];
-	        let c = 0;
-	        // TODO: how about having real chainable map without callback ?
-	        Gun.obj.map(rat.put, (at, pub) => {
-	          if (!pub.slice || '~' !== pub.slice(0, 1)) {
-	            // TODO: ... this would then be .filter((at, pub))
-	            return
-	          }
-	          ++c;
-	          // grab the account associated with this public key.
-	          gunRoot.get(pub).get((at, ev) => {
-	            pub = pub.slice(1);
-	            ev.off();
-	            --c;
-	            if (at.put){
-	              aliases.push({ pub, at });
-	            }
-	            if (!c && (c = -1)) {
-	              resolve(aliases);
-	            }
-	          });
-	        });
-	        if (!c) {
-	          reject({ err: 'Public key does not exist!' });
-	        }
-	      });
-	    });
-	    module.exports = queryGunAliases;
-	  })(USE, './query');
-	USE(function(module){
-	    var SEA = USE('./sea');
-	    var Gun = SEA.Gun;
-	    const queryGunAliases = USE('./query');
-	    const parseProps = USE('./parse');
-	    // This is internal User authentication func.
-	    const authenticate = async (alias, pass, gunRoot) => {
-	      // load all public keys associated with the username alias we want to log in with.
-	      const aliases = (await queryGunAliases(alias, gunRoot))
-	      .filter(({ pub, at: { put } = {} } = {}) => !!pub && !!put);
-	      // Got any?
-	      if (!aliases.length) {
-	        throw { err: 'Public key does not exist!' }
-	      }
-	      let err;
-	      // then attempt to log into each one until we find ours!
-	      // (if two users have the same username AND the same password... that would be bad)
-	      const users = await Promise.all(aliases.map(async ({ at: at, pub: pub }, i) => {
-	        // attempt to PBKDF2 extend the password with the salt. (Verifying the signature gives us the plain text salt.)
-	        const auth = parseProps(at.put.auth);
-	      // NOTE: aliasquery uses `gun.get` which internally SEA.read verifies the data for us, so we do not need to re-verify it here.
-	      // SEA.verify(at.put.auth, pub).then(function(auth){
-	        try {
-	          const proof = await SEA.work(pass, auth.s);
-	          const props = { pub: pub, proof: proof, at: at };
-	          // the proof of work is evidence that we've spent some time/effort trying to log in, this slows brute force.
-	          /*
-	          MARK TO @mhelander : pub vs epub!???
-	          */
-	          const salt = auth.salt;
-	          const sea = await SEA.decrypt(auth.ek, proof);
-	          if (!sea) {
-	            err = 'Failed to decrypt secret! ' + i +'/'+aliases.length;
-	            return
-	          }
-	          // now we have AES decrypted the private key, from when we encrypted it with the proof at registration.
-	          // if we were successful, then that meanswe're logged in!
-	          const priv = sea.priv;
-	          const epriv = sea.epriv;
-	          const epub = at.put.epub;
-	          // TODO: 'salt' needed?
-	          err = null;
-	          if(typeof window !== 'undefined'){
-	            var tmp = window.sessionStorage;
-	            if(tmp && gunRoot._.opt.remember){
-	              window.sessionStorage.alias = alias;
-	              window.sessionStorage.tmp = pass;
-	            }
-	          }
-	          return Object.assign(props, { priv: priv, salt: salt, epub: epub, epriv: epriv })
-	        } catch (e) {
-	          err = 'Failed to decrypt secret!';
-	          throw { err }
-	        }
-	      }));
-	      var user = Gun.list.map(users, function(acc){ if(acc){ return acc } });
-	      if (!user) {
-	        throw { err: err || 'Public key does not exist!' }
-	      }
-	      return user
-	    };
-	    module.exports = authenticate;
-	  })(USE, './authenticate');
-	USE(function(module){
-	    const authsettings = USE('./settings');
-	    const SEA = USE('./sea');
-	    const Gun = SEA.Gun;
-	    //const { scope: seaIndexedDb } = USE('./indexed')
-	    // This updates sessionStorage & IndexedDB to persist authenticated "session"
-	    const updateStorage = (proof, key, pin) => async (props) => {
-	      if (!Gun.obj.has(props, 'alias')) {
-	        return  // No 'alias' - we're done.
-	      }
-	      if (authsettings.validity && proof && Gun.obj.has(props, 'iat')) {
-	        props.proof = proof;
-	        delete props.remember;   // Not stored if present
-
-	        const alias = props.alias;
-	        const id = props.alias;
-	        const remember = { alias: alias, pin: pin };
-
-	        try {
-	          const signed = await SEA.sign(JSON.stringify(remember), key);
-
-	          sessionStorage.setItem('user', alias);
-	          sessionStorage.setItem('remember', signed);
-
-	          const encrypted = await SEA.encrypt(props, pin);
-
-	          if (encrypted) {
-	            const auth = await SEA.sign(encrypted, key);
-	            await seaIndexedDb.wipe(); // NO! Do not do this. It ruins other people's sessionStorage code. This is bad/wrong, commenting it out.
-	            await seaIndexedDb.put(id, { auth: auth });
-	          }
-
-	          return props
-	        } catch (err) {
-	          throw { err: 'Session persisting failed!' }
-	        }
-	      }
-
-	      // Wiping IndexedDB completely when using random PIN
-	      await seaIndexedDb.wipe(); // NO! Do not do this. It ruins other people's sessionStorage code. This is bad/wrong, commenting it out.
-	      // And remove sessionStorage data
-	      sessionStorage.removeItem('user');
-	      sessionStorage.removeItem('remember');
-
-	      return props
-	    };
-	    module.exports = updateStorage;
-	  })(USE, './update');
-	USE(function(module){
-	    const SEA = USE('./sea');
-	    const Gun = SEA.Gun;
-	    const Buffer$$1 = USE('./buffer');
-	    const authsettings = USE('./settings');
-	    const updateStorage = USE('./update');
-	    // This internal func persists User authentication if so configured
-	    const authPersist = async (user, proof, opts) => {
-	      // opts = { pin: 'string' }
-	      // no opts.pin then uses random PIN
-	      // How this works:
-	      // called when app bootstraps, with wanted options
-	      // IF authsettings.validity === 0 THEN no remember-me, ever
-	      // IF PIN then signed 'remember' to window.sessionStorage and 'auth' to IndexedDB
-	      const pin = Buffer$$1.from(
-	        (Gun.obj.has(opts, 'pin') && opts.pin) || Gun.text.random(10),
-	        'utf8'
-	      ).toString('base64');
-
-	      const alias = user.alias;
-	      const exp = authsettings.validity;      // seconds // @mhelander what is `exp`???
-
-	      if (proof && alias && exp) {
-	        const iat = Math.ceil(Date.now() / 1000);  // seconds
-	        const remember = Gun.obj.has(opts, 'pin') || undefined;  // for hook - not stored
-	        const props = authsettings.hook({ alias: alias, iat: iat, exp: exp, remember: remember });
-	        const pub = user.pub;
-	        const epub = user.epub;
-	        const priv = user.sea.priv;
-	        const epriv = user.sea.epriv;
-	        const key = { pub: pub, priv: priv, epub: epub, epriv: epriv };
-	        if (props instanceof Promise) {
-	          const asyncProps = await props.then();
-	          return await updateStorage(proof, key, pin)(asyncProps)
-	        }
-	        return await updateStorage(proof, key, pin)(props)
-	      }
-	      return await updateStorage()({ alias: 'delete' })
-	    };
-	    module.exports = authPersist;
-	  })(USE, './persist');
-	USE(function(module){
-	    const authPersist = USE('./persist');
-	    // This internal func finalizes User authentication
-	    const finalizeLogin = async (alias, key, gunRoot, opts) => {
-	      const user = gunRoot._.user;
-	      // add our credentials in-memory only to our root gun instance
-	      //var tmp = user._.tag;
-	      var opt = user._.opt;
-	      user._ = key.at.$._;
-	      user._.opt = opt;
-	      //user._.tag = tmp || user._.tag;
-	      // so that way we can use the credentials to encrypt/decrypt data
-	      // that is input/output through gun (see below)
-	      const pub = key.pub;
-	      const priv = key.priv;
-	      const epub = key.epub;
-	      const epriv = key.epriv;
-	      user._.is = user.is = {alias: alias, pub: pub};
-	      Object.assign(user._, { alias: alias, pub: pub, epub: epub, sea: { pub: pub, priv: priv, epub: epub, epriv: epriv } });
-	      //console.log("authorized", user._);
-	      // persist authentication
-	      //await authPersist(user._, key.proof, opts) // temporarily disabled
-	      // emit an auth event, useful for page redirects and stuff.  
-	      try {
-	        gunRoot._.on('auth', user._);
-	      } catch (e) {
-	        console.log('Your \'auth\' callback crashed with:', e);
-	      }
-	      // returns success with the user data credentials.
-	      return user._
-	    };
-	    module.exports = finalizeLogin;
-	  })(USE, './login');
-	USE(function(module){
-	    const Buffer$$1 = USE('./buffer');
-	    const authsettings = USE('./settings');
-	    //const { scope: seaIndexedDb } = USE('./indexed')
-	    const queryGunAliases = USE('./query');
-	    const parseProps = USE('./parse');
-	    const updateStorage = USE('./update');
-	    const SEA = USE('./sea');
-	    const Gun = SEA.Gun;
-	    const finalizeLogin = USE('./login');
-
-	    // This internal func recalls persisted User authentication if so configured
-	    const authRecall = async (gunRoot, authprops) => {
-	      // window.sessionStorage only holds signed { alias, pin } !!!
-	      const remember = authprops || sessionStorage.getItem('remember');
-	      const { alias = sessionStorage.getItem('user'), pin: pIn } = authprops || {}; // @mhelander what is pIn?
-	      const pin = pIn && Buffer$$1.from(pIn, 'utf8').toString('base64');
-	      // Checks for existing proof, matching alias and expiration:
-	      const checkRememberData = async ({ proof, alias: aLias, iat, exp, remember }) => {
-	        if (!!proof && alias === aLias) {
-	          const checkNotExpired = (args) => {
-	            if (Math.floor(Date.now() / 1000) < (iat + args.exp)) {
-	              // No way hook to update 'iat'
-	              return Object.assign(args, { iat: iat, proof: proof })
-	            } else {
-	              Gun.log('Authentication expired!');
-	            }
-	          };
-	          // We're not gonna give proof to hook!
-	          const hooked = authsettings.hook({ alias: alias, iat: iat, exp: exp, remember: remember });
-	          return ((hooked instanceof Promise)
-	          && await hooked.then(checkNotExpired)) || checkNotExpired(hooked)
-	        }
-	      };
-	      const readAndDecrypt = async (data, pub, key) =>
-	        parseProps(await SEA.decrypt(await SEA.verify(data, pub), key));
-
-	      // Already authenticated?
-	      if (gunRoot._.user
-	      && Gun.obj.has(gunRoot._.user._, 'pub')
-	      && Gun.obj.has(gunRoot._.user._, 'sea')) {
-	        return gunRoot._.user._  // Yes, we're done here.
-	      }
-	      // No, got persisted 'alias'?
-	      if (!alias) {
-	        throw { err: 'No authentication session found!' }
-	      }
-	      // Yes, got persisted 'remember'?
-	      if (!remember) {
-	        throw {  // And return proof if for matching alias
-	          err: (await seaIndexedDb.get(alias, 'auth') && authsettings.validity
-	          && 'Missing PIN and alias!') || 'No authentication session found!'
-	        }
-	      }
-	      // Yes, let's get (all?) matching aliases
-	      const aliases = (await queryGunAliases(alias, gunRoot))
-	      .filter(({ pub } = {}) => !!pub);
-	      // Got any?
-	      if (!aliases.length) {
-	        throw { err: 'Public key does not exist!' }
-	      }
-	      let err;
-	      // Yes, then attempt to log into each one until we find ours!
-	      // (if two users have the same username AND the same password... that would be bad)
-	      const [ { key, at, proof, pin: newPin } = {} ] = await Promise
-	      .all(aliases.filter(({ at: { put } = {} }) => !!put)
-	      .map(async ({ at: at, pub: pub }) => {
-	        const readStorageData = async (args) => {
-	          const props = args || parseProps(await SEA.verify(remember, pub, true));
-	          let pin = props.pin;
-	          let aLias = props.alias;
-
-	          const data = (!pin && alias === aLias)
-	          // No PIN, let's try short-term proof if for matching alias
-	          ? await checkRememberData(props)
-	          // Got PIN so get IndexedDB secret if signature is ok
-	          : await checkRememberData(await readAndDecrypt(await seaIndexedDb.get(alias, 'auth'), pub, pin));
-	          pin = pin || data.pin;
-	          delete data.pin;
-	          return { pin: pin, data: data }
-	        };
-	        // got pub, try auth with pin & alias :: or unwrap Storage data...
-	        const __gky20 = await readStorageData(pin && { pin, alias });
-	        const data = __gky20.data;
-	        const newPin = __gky20.pin;
-	        const proof = data.proof;
-
-	        if (!proof) {
-	          if (!data) {
-	            err = 'No valid authentication session found!';
-	            return
-	          }
-	          try { // Wipes IndexedDB silently
-	            await updateStorage()(data);
-	          } catch (e) {}  //eslint-disable-line no-empty
-	          err = 'Expired session!';
-	          return
-	        }
-
-	        try { // auth parsing or decryption fails or returns empty - silently done
-	          const auth= at.put.auth.auth;
-	          const sea = await SEA.decrypt(auth, proof);
-	          if (!sea) {
-	            err = 'Failed to decrypt private key!';
-	            return
-	          }
-	          const priv = sea.priv;
-	          const epriv = sea.epriv;
-	          const epub = at.put.epub;
-	          // Success! we've found our private data!
-	          err = null;
-	          return { proof: proof, at: at, pin: newPin, key: { pub: pub, priv: priv, epriv: epriv, epub: epub } }
-	        } catch (e) {
-	          err = 'Failed to decrypt private key!';
-	          return
-	        }
-	      }).filter((props) => !!props));
-
-	      if (!key) {
-	        throw { err: err || 'Public key does not exist!' }
-	      }
-
-	      // now we have AES decrypted the private key,
-	      // if we were successful, then that means we're logged in!
-	      try {
-	        await updateStorage(proof, key, newPin || pin)(key);
-
-	        const user = Object.assign(key, { at: at, proof: proof });
-	        const pIN = newPin || pin;
-
-	        const pinProp = pIN && { pin: Buffer$$1.from(pIN, 'base64').toString('utf8') };
-
-	        return await finalizeLogin(alias, user, gunRoot, pinProp)
-	      } catch (e) { // TODO: right log message ?
-	        Gun.log('Failed to finalize login with new password!');
-	        const { err = '' } = e || {};
-	        throw { err: 'Finalizing new password login failed! Reason: '+err }
-	      }
-	    };
-	    module.exports = authRecall;
-	  })(USE, './recall');
-	USE(function(module){
-	    const authPersist = USE('./persist');
-	    const authsettings = USE('./settings');
-	    //const { scope: seaIndexedDb } = USE('./indexed')
-	    // This internal func executes logout actions
-	    const authLeave = async (gunRoot, alias = gunRoot._.user._.alias) => {
-	      var user = gunRoot._.user._ || {};
-	      [ 'get', 'soul', 'ack', 'put', 'is', 'alias', 'pub', 'epub', 'sea' ].map((key) => delete user[key]);
-	      if(user.$){
-	        delete user.$.is;
-	      }
-	      // Let's use default
-	      gunRoot.user();
-	      // Removes persisted authentication & CryptoKeys
-	      try {
-	        await authPersist({ alias: alias });
-	      } catch (e) {}  //eslint-disable-line no-empty
-	      return { ok: 0 }
-	    };
-	    module.exports = authLeave;
-	  })(USE, './leave');
-	USE(function(module){
-	    var Gun = USE('./sea').Gun;
-	    Gun.chain.then = function(cb){
-	      var gun$$1 = this, p = (new Promise(function(res, rej){
-	        gun$$1.once(res);
-	      }));
-	      return cb? p.then(cb) : p;
-	    };
-	  })(USE, './then');
-	USE(function(module){
-	    var SEA = USE('./sea');
-	    var Gun = SEA.Gun;
-	    var then = USE('./then');
-
-	    function User(root){ 
-	      this._ = {$: this};
-	    }
-	    User.prototype = (function(){ function F(){} F.prototype = Gun.chain; return new F() }()); // Object.create polyfill
-	    User.prototype.constructor = User;
-
-	    // let's extend the gun chain with a `user` function.
-	    // only one user can be logged in at a time, per gun instance.
-	    Gun.chain.user = function(pub){
-	      var gun$$1 = this, root = gun$$1.back(-1), user;
-	      if(pub){ return root.get('~'+pub) }
-	      if(user = root.back('user')){ return user }
-	      var root = (root._), at = root, uuid = at.opt.uuid || Gun.state.lex;
-	      (at = (user = at.user = gun$$1.chain(new User))._).opt = {};
-	      at.opt.uuid = function(cb){
-	        var id = uuid(), pub = root.user;
-	        if(!pub || !(pub = (pub._).sea) || !(pub = pub.pub)){ return id }
-	        id = id + '~' + pub + '.';
-	        if(cb && cb.call){ cb(null, id); }
-	        return id;
-	      };
-	      return user;
-	    };
-	    Gun.User = User;
-	    module.exports = User;
-	  })(USE, './user');
-	USE(function(module){
-	    // TODO: This needs to be split into all separate functions.
-	    // Not just everything thrown into 'create'.
-
-	    const SEA = USE('./sea');
-	    const User = USE('./user');
-	    const authRecall = USE('./recall');
-	    const authsettings = USE('./settings');
-	    const authenticate = USE('./authenticate');
-	    const finalizeLogin = USE('./login');
-	    const authLeave = USE('./leave');
-	    const _initial_authsettings = USE('./settings').recall;
-	    const Gun = SEA.Gun;
-
-	    var u;
-	    // Well first we have to actually create a user. That is what this function does.
-	    User.prototype.create = function(username, pass, cb, opt){
-	      // TODO: Needs to be cleaned up!!!
-	      const gunRoot = this.back(-1);
-	      var gun$$1 = this, cat = (gun$$1._);
-	      cb = cb || function(){};
-	      if(cat.ing){
-	        cb({err: Gun.log("User is already being created or authenticated!"), wait: true});
-	        return gun$$1;
-	      }
-	      cat.ing = true;
-	      opt = opt || {};
-	      var resolve = function(){}, reject = resolve;
-	      // Because more than 1 user might have the same username, we treat the alias as a list of those users.
-	      if(cb){ resolve = reject = cb; }
-	      gunRoot.get('~@'+username).get(async (at, ev) => {
-	        ev.off();
-	        if (at.put && !opt.already) {
-	          // If we can enforce that a user name is already taken, it might be nice to try, but this is not guaranteed.
-	          const err = 'User already created!';
-	          Gun.log(err);
-	          cat.ing = false;
-	          gun$$1.leave();
-	          return reject({ err: err })
-	        }
-	        const salt = Gun.text.random(64);
-	        // pseudo-randomly create a salt, then use CryptoJS's PBKDF2 function to extend the password with it.
-	        try {
-	          const proof = await SEA.work(pass, salt);
-	          // this will take some short amount of time to produce a proof, which slows brute force attacks.
-	          const pairs = await SEA.pair();
-	          // now we have generated a brand new ECDSA key pair for the user account.
-	          const pub = pairs.pub;
-	          const priv = pairs.priv;
-	          const epriv = pairs.epriv;
-	          // the user's public key doesn't need to be signed. But everything else needs to be signed with it!
-	          const alias = await SEA.sign(username, pairs);
-	          if(u === alias){ throw SEA.err }
-	          const epub = await SEA.sign(pairs.epub, pairs);
-	          if(u === epub){ throw SEA.err }
-	          // to keep the private key safe, we AES encrypt it with the proof of work!
-	          const auth = await SEA.encrypt({ priv: priv, epriv: epriv }, proof)
-	          .then((auth) => // TODO: So signedsalt isn't needed?
-	          // SEA.sign(salt, pairs).then((signedsalt) =>
-	            SEA.sign({ek: auth, s: salt}, pairs)
-	          // )
-	          ).catch((e) => { Gun.log('SEA.en or SEA.write calls failed!'); cat.ing = false; gun$$1.leave(); reject(e); });
-	          const user = { alias: alias, pub: pub, epub: epub, auth: auth };
-	          const tmp = '~'+pairs.pub;
-	          // awesome, now we can actually save the user with their public key as their ID.
-	          try{
-
-	          gunRoot.get(tmp).put(user);
-	        }catch(e){console.log(e);}
-	          // next up, we want to associate the alias with the public key. So we add it to the alias list.
-	          gunRoot.get('~@'+username).put(Gun.obj.put({}, tmp, Gun.val.link.ify(tmp)));
-	          // callback that the user has been created. (Note: ok = 0 because we didn't wait for disk to ack)
-	          setTimeout(() => { cat.ing = false; resolve({ ok: 0, pub: pairs.pub}); }, 10); // TODO: BUG! If `.auth` happens synchronously after `create` finishes, auth won't work. This setTimeout is a temporary hack until we can properly fix it.
-	        } catch (e) {
-	          Gun.log('SEA.create failed!');
-	          cat.ing = false;
-	          gun$$1.leave();
-	          reject(e);
-	        }
-	      });
-	      return gun$$1;  // gun chain commands must return gun chains!
-	    };
-	    // now that we have created a user, we want to authenticate them!
-	    User.prototype.auth = function(alias, pass, cb, opt){
-	      // TODO: Needs to be cleaned up!!!!
-	      const opts = opt || (typeof cb !== 'function' && cb);
-	      let pin = opts && opts.pin;
-	      let newpass = opts && opts.newpass;
-	      const gunRoot = this.back(-1);
-	      cb = typeof cb === 'function' ? cb : () => {};
-	      newpass = newpass || (opts||{}).change;
-	      var gun$$1 = this, cat = (gun$$1._);
-	      if(cat.ing){
-	        cb({err: "User is already being created or authenticated!", wait: true});
-	        return gun$$1;
-	      }
-	      cat.ing = true;
-
-	      if (!pass && pin) { (async function(){
-	        try {
-	          var r = await authRecall(gunRoot, { alias: alias, pin: pin });
-	          return cat.ing = false, cb(r), gun$$1;
-	        } catch (e) {
-	          var err = { err: 'Auth attempt failed! Reason: No session data for alias & PIN' };
-	          return cat.ing = false, gun$$1.leave(), cb(err), gun$$1;
-	        }}());
-	        return gun$$1;
-	      }
-
-	      const putErr = (msg) => (e) => {
-	        const { message, err = message || '' } = e;
-	        Gun.log(msg);
-	        var error = { err: msg+' Reason: '+err };
-	        return cat.ing = false, gun$$1.leave(), cb(error), gun$$1;
-	      };
-
-	      (async function(){ try {
-	        const keys = await authenticate(alias, pass, gunRoot);
-	        if (!keys) {
-	          return putErr('Auth attempt failed!')({ message: 'No keys' })
-	        }
-	        const pub = keys.pub;
-	        const priv = keys.priv;
-	        const epub = keys.epub;
-	        const epriv = keys.epriv;
-	        // we're logged in!
-	        if (newpass) {
-	          // password update so encrypt private key using new pwd + salt
-	          try {
-	            const salt = Gun.text.random(64);
-	            const encSigAuth = await SEA.work(newpass, salt)
-	            .then((key) =>
-	              SEA.encrypt({ priv: priv, epriv: epriv }, key)
-	              .then((auth) => SEA.sign({ek: auth, s: salt}, keys))
-	            );
-	            const signedEpub = await SEA.sign(epub, keys);
-	            const signedAlias = await SEA.sign(alias, keys);
-	            const user = {
-	              pub: pub,
-	              alias: signedAlias,
-	              auth: encSigAuth,
-	              epub: signedEpub
-	            };
-	            // awesome, now we can update the user using public key ID.
-	            gunRoot.get('~'+user.pub).put(user);
-	            // then we're done
-	            const login = finalizeLogin(alias, keys, gunRoot, { pin });
-	            login.catch(putErr('Failed to finalize login with new password!'));
-	            return cat.ing = false, cb(await login), gun$$1
-	          } catch (e) {
-	            return putErr('Password set attempt failed!')(e)
-	          }
-	        } else {
-	          const login = finalizeLogin(alias, keys, gunRoot, { pin: pin });
-	          login.catch(putErr('Finalizing login failed!'));
-	          return cat.ing = false, cb(await login), gun$$1;
-	        }
-	      } catch (e) {
-	        return putErr('Auth attempt failed!')(e)
-	      } }());
-	      return gun$$1;
-	    };
-	    User.prototype.pair = function(){
-	      var user = this;
-	      if(!user.is){ return false }
-	      return user._.sea;
-	    };
-	    User.prototype.leave = async function(){
-	      var gun$$1 = this, user = (gun$$1.back(-1)._).user;
-	      if(user){
-	        delete user.is;
-	        delete user._.is;
-	        delete user._.sea;
-	      }
-	      if(typeof window !== 'undefined'){
-	        var tmp = window.sessionStorage;
-	        delete tmp.alias;
-	        delete tmp.tmp;
-	      }
-	      return await authLeave(this.back(-1))
-	    };
-	    // If authenticated user wants to delete his/her account, let's support it!
-	    User.prototype.delete = async function(alias, pass){
-	      const gunRoot = this.back(-1);
-	      try {
-	        const __gky40 = await authenticate(alias, pass, gunRoot);
-	        const pub = __gky40.pub;
-	        await authLeave(gunRoot, alias);
-	        // Delete user data
-	        gunRoot.get('~'+pub).put(null);
-	        // Wipe user data from memory
-	        const { user = { _: {} } } = gunRoot._;
-	        // TODO: is this correct way to 'logout' user from Gun.User ?
-	        [ 'alias', 'sea', 'pub' ].map((key) => delete user._[key]);
-	        user._.is = user.is = {};
-	        gunRoot.user();
-	        return { ok: 0 }  // TODO: proper return codes???
-	      } catch (e) {
-	        Gun.log('User.delete failed! Error:', e);
-	        throw e // TODO: proper error codes???
-	      }
-	    };
-	    // If authentication is to be remembered over reloads or browser closing,
-	    // set validity time in minutes.
-	    User.prototype.recall = async function(setvalidity, options){ 
-	      const gunRoot = this.back(-1);
-
-	      let validity;
-	      let opts;
-	      
-	      var o = setvalidity;
-	      if(o && o.sessionStorage){
-	        if(typeof window !== 'undefined'){
-	          var tmp = window.sessionStorage;
-	          if(tmp){
-	            gunRoot._.opt.remember = true;
-	            if(tmp.alias && tmp.tmp){
-	              gunRoot.user().auth(tmp.alias, tmp.tmp);
-	            }
-	          }
-	        }
-	        return this;
-	      }
-
-	      if (!Gun.val.is(setvalidity)) {
-	        opts = setvalidity;
-	        validity = _initial_authsettings.validity;
-	      } else {
-	        opts = options;
-	        validity = setvalidity * 60; // minutes to seconds
-	      }
-
-	      try {
-	        // opts = { hook: function({ iat, exp, alias, proof }) }
-	        // iat == Date.now() when issued, exp == seconds to expire from iat
-	        // How this works:
-	        // called when app bootstraps, with wanted options
-	        // IF authsettings.validity === 0 THEN no remember-me, ever
-	        // IF PIN then signed 'remember' to window.sessionStorage and 'auth' to IndexedDB
-	        authsettings.validity = typeof validity !== 'undefined'
-	        ? validity : _initial_authsettings.validity;
-	        authsettings.hook = (Gun.obj.has(opts, 'hook') && typeof opts.hook === 'function')
-	        ? opts.hook : _initial_authsettings.hook;
-	        // All is good. Should we do something more with actual recalled data?
-	        return await authRecall(gunRoot)
-	      } catch (e) {
-	        const err = 'No session!';
-	        Gun.log(err);
-	        // NOTE! It's fine to resolve recall with reason why not successful
-	        // instead of rejecting...
-	        return { err: (e && e.err) || err }
-	      }
-	    };
-	    User.prototype.alive = async function(){
-	      const gunRoot = this.back(-1);
-	      try {
-	        // All is good. Should we do something more with actual recalled data?
-	        await authRecall(gunRoot);
-	        return gunRoot._.user._
-	      } catch (e) {
-	        const err = 'No session!';
-	        Gun.log(err);
-	        throw { err }
-	      }
-	    };
-	    User.prototype.trust = async function(user){
-	      // TODO: BUG!!! SEA `node` read listener needs to be async, which means core needs to be async too.
-	      //gun.get('alice').get('age').trust(bob);
-	      if (Gun.is(user)) {
-	        user.get('pub').get((ctx, ev) => {
-	          console.log(ctx, ev);
-	        });
-	      }
-	    };
-	    User.prototype.grant = function(to, cb){
-	      console.log("`.grant` API MAY BE DELETED OR CHANGED OR RENAMED, DO NOT USE!");
-	      var gun$$1 = this, user = gun$$1.back(-1).user(), pair = user.pair(), path = '';
-	      gun$$1.back(function(at){ if(at.pub){ return } path += (at.get||''); });
-	      (async function(){
-	      var enc, sec = await user.get('trust').get(pair.pub).get(path).then();
-	      sec = await SEA.decrypt(sec, pair);
-	      if(!sec){
-	        sec = SEA.random(16).toString();
-	        enc = await SEA.encrypt(sec, pair);
-	        user.get('trust').get(pair.pub).get(path).put(enc);
-	      }
-	      var pub = to.get('pub').then();
-	      var epub = to.get('epub').then();
-	      pub = await pub; epub = await epub;
-	      var dh = await SEA.secret(epub, pair);
-	      enc = await SEA.encrypt(sec, dh);
-	      user.get('trust').get(pub).get(path).put(enc, cb);
-	      }());
-	      return gun$$1;
-	    };
-	    User.prototype.secret = function(data, cb){
-	      console.log("`.secret` API MAY BE DELETED OR CHANGED OR RENAMED, DO NOT USE!");
-	      var gun$$1 = this, user = gun$$1.back(-1).user(), pair = user.pair(), path = '';
-	      gun$$1.back(function(at){ if(at.pub){ return } path += (at.get||''); });
-	      (async function(){
-	      var enc, sec = await user.get('trust').get(pair.pub).get(path).then();
-	      sec = await SEA.decrypt(sec, pair);
-	      if(!sec){
-	        sec = SEA.random(16).toString();
-	        enc = await SEA.encrypt(sec, pair);
-	        user.get('trust').get(pair.pub).get(path).put(enc);
-	      }
-	      enc = await SEA.encrypt(data, sec);
-	      gun$$1.put(enc, cb);
-	      }());
-	      return gun$$1;
-	    };
-	    module.exports = User;
-	  })(USE, './create');
-	USE(function(module){
-	    const SEA = USE('./sea');
-	    const Gun = SEA.Gun;
-	    // After we have a GUN extension to make user registration/login easy, we then need to handle everything else.
-
-	    // We do this with a GUN adapter, we first listen to when a gun instance is created (and when its options change)
-	    Gun.on('opt', function(at){
-	      if(!at.sea){ // only add SEA once per instance, on the "at" context.
-	        at.sea = {own: {}};
-	        at.on('in', security, at); // now listen to all input data, acting as a firewall.
-	        at.on('out', signature, at); // and output listeners, to encrypt outgoing data.
-	        at.on('node', each, at);
-	      }
-	      this.to.next(at); // make sure to call the "next" middleware adapter.
-	    });
-
-	    // Alright, this next adapter gets run at the per node level in the graph database.
-	    // This will let us verify that every property on a node has a value signed by a public key we trust.
-	    // If the signature does not match, the data is just `undefined` so it doesn't get passed on.
-	    // If it does match, then we transform the in-memory "view" of the data into its plain value (without the signature).
-	    // Now NOTE! Some data is "system" data, not user data. Example: List of public keys, aliases, etc.
-	    // This data is self-enforced (the value can only match its ID), but that is handled in the `security` function.
-	    // From the self-enforced data, we can see all the edges in the graph that belong to a public key.
-	    // Example: ~ASDF is the ID of a node with ASDF as its public key, signed alias and salt, and
-	    // its encrypted private key, but it might also have other signed values on it like `profile = <ID>` edge.
-	    // Using that directed edge's ID, we can then track (in memory) which IDs belong to which keys.
-	    // Here is a problem: Multiple public keys can "claim" any node's ID, so this is dangerous!
-	    // This means we should ONLY trust our "friends" (our key ring) public keys, not any ones.
-	    // I have not yet added that to SEA yet in this alpha release. That is coming soon, but beware in the meanwhile!
-	    function each(msg){ // TODO: Warning: Need to switch to `gun.on('node')`! Do not use `Gun.on('node'` in your apps!
-	      // NOTE: THE SECURITY FUNCTION HAS ALREADY VERIFIED THE DATA!!!
-	      // WE DO NOT NEED TO RE-VERIFY AGAIN, JUST TRANSFORM IT TO PLAINTEXT.
-	      var to = this.to, vertex = (msg.$._).put, c = 0, d;
-	      Gun.node.is(msg.put, function(val, key, node){ c++; // for each property on the node
-	        // TODO: consider async/await use here...
-	        SEA.verify(val, false, function(data){ c--; // false just extracts the plain data.
-	          node[key] = val = data; // transform to plain value.
-	          if(d && !c && (c = -1)){ to.next(msg); }
-	        });
-	      });
-	      d = true;
-	      if(d && !c){ to.next(msg); }
-	      return;
-	    }
-
-	    // signature handles data output, it is a proxy to the security function.
-	    function signature(msg){
-	      if(msg.user){
-	        return this.to.next(msg);
-	      }
-	      var ctx = this.as;
-	      msg.user = ctx.user;
-	      security.call(this, msg);
-	    }
-
-	    // okay! The security function handles all the heavy lifting.
-	    // It needs to deal read and write of input and output of system data, account/public key data, and regular data.
-	    // This is broken down into some pretty clear edge cases, let's go over them:
-	    function security(msg){
-	      var at = this.as, sea = at.sea, to = this.to;
-	      if(msg.get){
-	        // if there is a request to read data from us, then...
-	        var soul = msg.get['#'];
-	        if(soul){ // for now, only allow direct IDs to be read.
-	          if(soul !== 'string'){ return to.next(msg) } // do not handle lexical cursors.
-	          if('alias' === soul){ // Allow reading the list of usernames/aliases in the system?
-	            return to.next(msg); // yes.
-	          } else
-	          if('~@' === soul.slice(0,2)){ // Allow reading the list of public keys associated with an alias?
-	            return to.next(msg); // yes.
-	          } else { // Allow reading everything?
-	            return to.next(msg); // yes // TODO: No! Make this a callback/event that people can filter on.
-	          }
-	        }
-	      }
-	      if(msg.put){
-	        // potentially parallel async operations!!!
-	        var check = {}, each = {}, u;
-	        each.node = function(node, soul){
-	          if(Gun.obj.empty(node, '_')){ return check['node'+soul] = 0 } // ignore empty updates, don't reject them.
-	          Gun.obj.map(node, each.way, {soul: soul, node: node});
-	        };
-	        each.way = function(val, key){
-	          var soul = this.soul, node = this.node, tmp;
-	          if('_' === key){ return } // ignore meta data
-	          if('~@' === soul){  // special case for shared system data, the list of aliases.
-	            each.alias(val, key, node, soul); return;
-	          }
-	          if('~@' === soul.slice(0,2)){ // special case for shared system data, the list of public keys for an alias.
-	            each.pubs(val, key, node, soul); return;
-	          }
-	          if('~' === soul.slice(0,1) && 2 === (tmp = soul.slice(1)).split('.').length){ // special case, account data for a public key.
-	            each.pub(val, key, node, soul, tmp, msg.user); return;
-	          }
-	          each.any(val, key, node, soul, msg.user); return;
-	          return each.end({err: "No other data allowed!"});
-	        };
-	        each.alias = function(val, key, node, soul){ // Example: {_:#~@, ~@alice: {#~@alice}}
-	          if(!val){ return each.end({err: "Data must exist!"}) } // data MUST exist
-	          if('~@'+key === Gun.val.link.is(val)){ return check['alias'+key] = 0 } // in fact, it must be EXACTLY equal to itself
-	          each.end({err: "Mismatching alias."}); // if it isn't, reject.
-	        };
-	        each.pubs = function(val, key, node, soul){ // Example: {_:#~@alice, ~asdf: {#~asdf}}
-	          if(!val){ return each.end({err: "Alias must exist!"}) } // data MUST exist
-	          if(key === Gun.val.link.is(val)){ return check['pubs'+soul+key] = 0 } // and the ID must be EXACTLY equal to its property
-	          each.end({err: "Alias must match!"}); // that way nobody can tamper with the list of public keys.
-	        };
-	        each.pub = function(val, key, node, soul, pub, user){ // Example: {_:#~asdf, hello:SEA{'world',fdsa}}
-	          if('pub' === key){
-	            if(val === pub){ return (check['pub'+soul+key] = 0) } // the account MUST match `pub` property that equals the ID of the public key.
-	            return each.end({err: "Account must match!"});
-	          }
-	          check['user'+soul+key] = 1;
-	          if(user && (user = user._) && user.sea && pub === user.pub){
-	            //var id = Gun.text.random(3);
-	            SEA.sign(val, user.sea, function(data){ var rel;
-	              if(u === data){ return each.end({err: SEA.err || 'Pub signature fail.'}) }
-	              if(rel = Gun.val.link.is(val)){
-	                (at.sea.own[rel] = at.sea.own[rel] || {})[pub] = true;
-	              }
-	              node[key] = data;
-	              check['user'+soul+key] = 0;
-	              each.end({ok: 1});
-	            });
-	            // TODO: Handle error!!!!
-	            return;
-	          }
-	          SEA.verify(val, pub, function(data){ var rel;
-	            if(u === data){ // make sure the signature matches the account it claims to be on.
-	              return each.end({err: "Unverified data."}); // reject any updates that are signed with a mismatched account.
-	            }
-	            if((rel = Gun.val.link.is(data)) && pub === relpub(rel)){
-	              (at.sea.own[rel] = at.sea.own[rel] || {})[pub] = true;
-	            }
-	            check['user'+soul+key] = 0;
-	            each.end({ok: 1});
-	          });
-	        };
-	        function relpub(s){
-	          if(!s){ return }
-	          s = s.split('~');
-	          if(!s || !(s = s[1])){ return }
-	          s = s.split('.');
-	          if(!s || 2 > s.length){ return }
-	          s = s.slice(0,2).join('.');
-	          return s;
-	        }
-	        each.any = function(val, key, node, soul, user){ var tmp, pub;
-	          if(!user || !(user = user._) || !(user = user.sea)){
-	            if(tmp = relpub(soul)){
-	              check['any'+soul+key] = 1;
-	              SEA.verify(val, pub = tmp, function(data){ var rel;
-	                if(!data){ return each.end({err: "Mismatched owner on '" + key + "'."}) }
-	                if((rel = Gun.val.link.is(data)) && pub === relpub(rel)){
-	                  (at.sea.own[rel] = at.sea.own[rel] || {})[pub] = true;
-	                }
-	                check['any'+soul+key] = 0;
-	                each.end({ok: 1});
-	              });
-	              return;
-	            }
-	            check['any'+soul+key] = 1;
-	            at.on('secure', function(msg){ this.off();
-	              check['any'+soul+key] = 0;
-	              if(at.opt.secure){ msg = null; }
-	              each.end(msg || {err: "Data cannot be modified."});
-	            }).on.on('secure', msg);
-	            //each.end({err: "Data cannot be modified."});
-	            return;
-	          }
-	          if(!(tmp = relpub(soul))){
-	            if(at.opt.secure){
-	              each.end({err: "Soul is missing public key at '" + key + "'."});
-	              return;
-	            }
-	            if(val && val.slice && 'SEA{' === (val).slice(0,4)){
-	              check['any'+soul+key] = 0;
-	              each.end({ok: 1});
-	              return;
-	            }
-	            //check['any'+soul+key] = 1;
-	            //SEA.sign(val, user, function(data){
-	             // if(u === data){ return each.end({err: 'Any signature failed.'}) }
-	            //  node[key] = data;
-	              check['any'+soul+key] = 0;
-	              each.end({ok: 1});
-	            //});
-	            return;
-	          }
-	          var pub = tmp;
-	          if(pub !== user.pub){
-	            each.any(val, key, node, soul);
-	            return;
-	          }
-	          /*var other = Gun.obj.map(at.sea.own[soul], function(v, p){
-	            if(user.pub !== p){ return p }
-	          });
-	          if(other){
-	            each.any(val, key, node, soul);
-	            return;
-	          }*/
-	          check['any'+soul+key] = 1;
-	          SEA.sign(val, user, function(data){
-	            if(u === data){ return each.end({err: 'My signature fail.'}) }
-	            node[key] = data;
-	            check['any'+soul+key] = 0;
-	            each.end({ok: 1});
-	          });
-	        };
-	        each.end = function(ctx){ // TODO: Can't you just switch this to each.end = cb?
-	          if(each.err){ return }
-	          if((each.err = ctx.err) || ctx.no){
-	            console.log('NO!', each.err, msg.put);
-	            return;
-	          }
-	          if(!each.end.ed){ return }
-	          if(Gun.obj.map(check, function(no){
-	            if(no){ return true }
-	          })){ return }
-	          to.next(msg);
-	        };
-	        Gun.obj.map(msg.put, each.node);
-	        each.end({end: each.end.ed = true});
-	        return; // need to manually call next after async.
-	      }
-	      to.next(msg); // pass forward any data we do not know how to handle or process (this allows custom security protocols).
-	    }
-
-	  })(USE, './index');
-	}());
-	});
-
-	var myKey = void 0;
-
-	/**
-	* Key management utils
-	*/
-
-	var Key = function () {
-	  function Key() {
-	    _classCallCheck(this, Key);
-	  }
-
-	  /**
-	  * Load default key from datadir/private.key on node.js or from local storage 'identifi.myKey' in browser.
-	  *
-	  * If default key does not exist, it is generated.
-	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
-	  * @returns {Object} Key object
-	  */
-	  Key.getDefault = async function getDefault() {
-	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
-
-	    if (myKey) {
-	      return myKey;
-	    }
-	    if (util$1.isNode) {
-	      var fs = require('fs');
-	      var privKeyFile = datadir + '/private.key';
-	      if (fs.existsSync(privKeyFile)) {
-	        var f = fs.readFileSync(privKeyFile, 'utf8');
-	        myKey = Key.fromJwk(f);
-	      } else {
-	        myKey = await Key.generate();
-	        fs.writeFileSync(privKeyFile, Key.toJwk(myKey));
-	        fs.chmodSync(privKeyFile, 400);
-	      }
-	      if (!myKey) {
-	        throw new Error('loading default key failed - check ' + datadir + '/private.key');
-	      }
-	    } else {
-	      var jwk = window.localStorage.getItem('identifi.myKey');
-	      if (jwk) {
-	        myKey = Key.fromJwk(jwk);
-	      } else {
-	        myKey = await Key.generate();
-	        window.localStorage.setItem('identifi.myKey', Key.toJwk(myKey));
-	      }
-	      if (!myKey) {
-	        throw new Error('loading default key failed - check localStorage identifi.myKey');
-	      }
-	    }
-	    return myKey;
-	  };
-
-	  /**
-	  * Serialize key as JSON Web key
-	  * @returns {String} JSON Web Key string
-	  */
-
-
-	  Key.toJwk = function toJwk(key) {
-	    return _JSON$stringify(key);
-	  };
-
-	  Key.getId = function getId(key) {
-	    return util$1.getHash(key.pub);
-	  };
-
-	  /**
-	  * Get a Key from a JSON Web Key object.
-	  * @param {Object} jwk JSON Web Key
-	  * @returns {String}
-	  */
-
-
-	  Key.fromJwk = function fromJwk(jwk) {
-	    return JSON.parse(jwk);
-	  };
-
-	  /**
-	  * Generate a new key
-	  * @returns {Object} Gun.SEA private key object
-	  */
-
-
-	  Key.generate = function generate() {
-	    return (gun_min.SEA || window.Gun.SEA).pair();
-	  };
-
-	  Key.sign = async function sign(msg, pair) {
-	    var sig = await (gun_min.SEA || window.Gun.SEA).sign(msg, pair);
-	    return 'a' + sig;
-	  };
-
-	  Key.verify = function verify(msg, pubKey) {
-	    return (gun_min.SEA || window.Gun.SEA).verify(msg.slice(1), pubKey);
-	  };
-
-	  return Key;
-	}();
-
-	var errorMsg = 'Invalid Identifi message:';
-
-	var ValidationError = function (_Error) {
-	  _inherits(ValidationError, _Error);
-
-	  function ValidationError() {
-	    _classCallCheck(this, ValidationError);
-
-	    return _possibleConstructorReturn(this, _Error.apply(this, arguments));
-	  }
-
-	  return ValidationError;
-	}(Error);
-
-	/**
-	* Identifi message: an object that has an author, recipient, signer, type, timestamp, context and optionally other fields.
-	*
-	* On Identifi, signer and author can be different entities. This enables the crawling of content
-	* from existing datasets. That makes Identifi an useful search tool even with no initial userbase.
-	*
-	* Messages are serialized as JSON Web Signatures.
-	*/
-
-
-	var Message = function () {
-	  /**
-	  * Creates a message from the param object that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
-	  * @param signedData
-	  */
-	  function Message(obj) {
-	    _classCallCheck(this, Message);
-
-	    if (obj.signedData) {
-	      this.signedData = obj.signedData;
-	    }
-	    if (obj.pubKey) {
-	      this.pubKey = obj.pubKey;
-	    }
-	    if (obj.sig) {
-	      if (typeof obj.sig !== 'string') {
-	        throw new ValidationError('Message signature must be a string');
-	      }
-	      this.sig = obj.sig;
-	      this.getHash();
-	    }
-	    this._validate();
-	  }
-
-	  /**
-	  * @returns {string} Message signer keyID, i.e. base64 hash of public key
-	  */
-
-
-	  Message.prototype.getSignerKeyID = function getSignerKeyID() {
-	    return util$1.getHash(this.pubKey);
-	  };
-
-	  Message.prototype._validate = function _validate() {
-	    if (!this.signedData) {
-	      throw new ValidationError(errorMsg + ' Missing signedData');
-	    }
-	    if (typeof this.signedData !== 'object') {
-	      throw new ValidationError(errorMsg + ' signedData must be an object');
-	    }
-	    var d = this.signedData;
-
-	    if (!d.type) {
-	      throw new ValidationError(errorMsg + ' Missing type definition');
-	    }
-	    if (!d.author) {
-	      throw new ValidationError(errorMsg + ' Missing author');
-	    }
-	    if (!d.author.length) {
-	      throw new ValidationError(errorMsg + ' Author empty');
-	    }
-	    var i = void 0;
-	    var authorKeyID = void 0;
-	    if (this.pubKey) {
-	      this.signerKeyHash = this.getSignerKeyID();
-	    }
-	    for (i = 0; i < d.author.length; i++) {
-	      if (d.author[i].length !== 2) {
-	        throw new ValidationError(errorMsg + ' Invalid author: ' + d.author[i].toString());
-	      }
-	      if (d.author[i][0] === 'keyID') {
-	        if (authorKeyID) {
-	          throw new ValidationError(errorMsg + ' Author may have only one keyID');
-	        } else {
-	          authorKeyID = d.author[i][1];
-	        }
-	        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {
-	          throw new ValidationError(errorMsg + ' If message has a keyID author, it must be signed by the same key');
-	        }
-	      }
-	    }
-	    if (!d.recipient) {
-	      throw new ValidationError(errorMsg + ' Missing recipient');
-	    }
-	    if (!d.recipient.length) {
-	      throw new ValidationError(errorMsg + ' Author empty');
-	    }
-	    for (i = 0; i < d.recipient.length; i++) {
-	      if (d.recipient[i].length !== 2) {
-	        throw new ValidationError(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
-	      }
-	    }
-	    if (!d.timestamp) {
-	      throw new ValidationError(errorMsg + ' Missing timestamp');
-	    }
-
-	    if (!Date.parse(d.timestamp)) {
-	      throw new ValidationError(errorMsg + ' Invalid timestamp');
-	    }
-
-	    if (d.type === 'rating') {
-	      if (isNaN(d.rating)) {
-	        throw new ValidationError(errorMsg + ' Invalid rating');
-	      }
-	      if (isNaN(d.maxRating)) {
-	        throw new ValidationError(errorMsg + ' Invalid maxRating');
-	      }
-	      if (isNaN(d.minRating)) {
-	        throw new ValidationError(errorMsg + ' Invalid minRating');
-	      }
-	      if (d.rating > d.maxRating) {
-	        throw new ValidationError(errorMsg + ' Rating is above maxRating');
-	      }
-	      if (d.rating < d.minRating) {
-	        throw new ValidationError(errorMsg + ' Rating is below minRating');
-	      }
-	      if (typeof d.context !== 'string' || !d.context.length) {
-	        throw new ValidationError(errorMsg + ' Rating messages must have a context field');
-	      }
-	    }
-
-	    if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
-	      if (d.recipient.length < 2) {
-	        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
-	      }
-	    }
-
-	    return true;
-	  };
-
-	  /**
-	  * @returns {boolean} true if message has a positive rating
-	  */
-
-
-	  Message.prototype.isPositive = function isPositive() {
-	    return this.signedData.type === 'rating' && this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
-	  };
-
-	  /**
-	  * @returns {boolean} true if message has a negative rating
-	  */
-
-
-	  Message.prototype.isNegative = function isNegative() {
-	    return this.signedData.type === 'rating' && this.signedData.rating < (this.signedData.maxRating + this.signedData.minRating) / 2;
-	  };
-
-	  /**
-	  * @returns {boolean} true if message has a neutral rating
-	  */
-
-
-	  Message.prototype.isNeutral = function isNeutral() {
-	    return this.signedData.type === 'rating' && this.signedData.rating === (this.signedData.maxRating + this.signedData.minRating) / 2;
-	  };
-
-	  /**
-	  * @param {Object} key Gun.SEA keypair to sign the message with
-	  */
-
-
-	  Message.prototype.sign = async function sign(key) {
-	    this.sig = await Key.sign(this.signedData, key);
-	    this.pubKey = key.pub;
-	    this.getHash();
-	    return true;
-	  };
-
-	  /**
-	  * Create an identifi message. Message timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
-	  * @param {Object} signedData message data object including author, recipient and other possible attributes
-	  * @param {Object} signingKey optionally, you can set the key to sign the message with
-	  * @returns {Message} Identifi message
-	  */
-
-
-	  Message.create = async function create(signedData, signingKey) {
-	    if (!signedData.author && signingKey) {
-	      signedData.author = [['keyID', Key.getId(signingKey)]];
-	    }
-	    signedData.timestamp = signedData.timestamp || new Date().toISOString();
-	    signedData.context = signedData.context || 'identifi';
-	    var m = new Message({ signedData: signedData });
-	    if (signingKey) {
-	      await m.sign(signingKey);
-	    }
-	    return m;
-	  };
-
-	  /**
-	  * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
-	  */
-
-
-	  Message.createVerification = function createVerification(signedData, signingKey) {
-	    signedData.type = 'verification';
-	    return Message.create(signedData, signingKey);
-	  };
-
-	  /**
-	  * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.
-	  */
-
-
-	  Message.createRating = function createRating(signedData, signingKey) {
-	    signedData.type = 'rating';
-	    signedData.maxRating = signedData.maxRating || 10;
-	    signedData.minRating = signedData.minRating || -10;
-	    return Message.create(signedData, signingKey);
-	  };
-
-	  /**
-	  * @param {Index} index index to look up the message author from
-	  * @returns {Promise(Identity)} message author identity
-	  */
-
-
-	  Message.prototype.getAuthor = function getAuthor(index) {
-	    for (var i = 0; i < this.signedData.author.length; i++) {
-	      var a = this.signedData.author[i];
-	      if (Attribute.isUniqueType(a[0])) {
-	        return index.get(a[1], a[0]);
-	      }
-	    }
-	  };
-
-	  /**
-	  * @param {Index} index index to look up the message recipient from
-	  * @returns {Promise(Identity)} message recipient identity
-	  */
-
-
-	  Message.prototype.getRecipient = function getRecipient(index) {
-	    for (var i = 0; i < this.signedData.recipient.length; i++) {
-	      var a = this.signedData.recipient[i];
-	      if (Attribute.isUniqueType(a[0])) {
-	        return index.get(a[1], a[0]);
-	      }
-	    }
-	  };
-
-	  /**
-	  * @returns {string} base64 hash of message
-	  */
-
-
-	  Message.prototype.getHash = function getHash() {
-	    if (this.sig && !this.hash) {
-	      this.hash = util$1.getHash(this.sig);
-	    }
-	    return this.hash;
-	  };
-
-	  Message.fromSig = async function fromSig(obj) {
-	    var signedData = await Key.verify(obj.sig, obj.pubKey);
-	    return new Message({ signedData: signedData, sig: obj.sig, pubKey: obj.pubKey });
-	  };
-
-	  /**
-	  * @return {boolean} true if message signature is valid. Otherwise throws ValidationError.
-	  */
-
-
-	  Message.prototype.verify = async function verify() {
-	    if (!this.pubKey) {
-	      throw new ValidationError(errorMsg + ' Message has no .pubKey');
-	    }
-	    if (!this.sig) {
-	      throw new ValidationError(errorMsg + ' Message has no .sig');
-	    }
-	    this.signedData = await Key.verify(this.sig, this.pubKey);
-	    if (!this.signedData) {
-	      throw new ValidationError(errorMsg + ' Invalid signature');
-	    }
-	    if (this.hash) {
-	      if (this.hash !== util$1.getHash(this.sig)) {
-	        throw new ValidationError(errorMsg + ' Invalid message hash');
-	      }
-	    } else {
-	      this.getHash();
-	    }
-	    return true;
-	  };
-
-	  return Message;
-	}();
-
-	var pnglib = createCommonjsModule(function (module) {
-	/**
-	* A handy class to calculate color values.
-	*
-	* @version 1.0
-	* @author Robert Eisele <robert@xarg.org>
-	* @copyright Copyright (c) 2010, Robert Eisele
-	* @link http://www.xarg.org/2010/03/generate-client-side-png-files-using-javascript/
-	* @license http://www.opensource.org/licenses/bsd-license.php BSD License
-	*
-	*/
-
-	(function() {
-
-		// helper functions for that ctx
-		function write(buffer, offs) {
-			for (var i = 2; i < arguments.length; i++) {
-				for (var j = 0; j < arguments[i].length; j++) {
-					buffer[offs++] = arguments[i].charAt(j);
-				}
-			}
-		}
-
-		function byte2(w) {
-			return String.fromCharCode((w >> 8) & 255, w & 255);
-		}
-
-		function byte4(w) {
-			return String.fromCharCode((w >> 24) & 255, (w >> 16) & 255, (w >> 8) & 255, w & 255);
-		}
-
-		function byte2lsb(w) {
-			return String.fromCharCode(w & 255, (w >> 8) & 255);
-		}
-
-		// modified from original source to support NPM
-		var PNGlib = function(width,height,depth) {
-
-			this.width   = width;
-			this.height  = height;
-			this.depth   = depth;
-
-			// pixel data and row filter identifier size
-			this.pix_size = height * (width + 1);
-
-			// deflate header, pix_size, block headers, adler32 checksum
-			this.data_size = 2 + this.pix_size + 5 * Math.floor((0xfffe + this.pix_size) / 0xffff) + 4;
-
-			// offsets and sizes of Png chunks
-			this.ihdr_offs = 0;									// IHDR offset and size
-			this.ihdr_size = 4 + 4 + 13 + 4;
-			this.plte_offs = this.ihdr_offs + this.ihdr_size;	// PLTE offset and size
-			this.plte_size = 4 + 4 + 3 * depth + 4;
-			this.trns_offs = this.plte_offs + this.plte_size;	// tRNS offset and size
-			this.trns_size = 4 + 4 + depth + 4;
-			this.idat_offs = this.trns_offs + this.trns_size;	// IDAT offset and size
-			this.idat_size = 4 + 4 + this.data_size + 4;
-			this.iend_offs = this.idat_offs + this.idat_size;	// IEND offset and size
-			this.iend_size = 4 + 4 + 4;
-			this.buffer_size  = this.iend_offs + this.iend_size;	// total PNG size
-
-			this.buffer  = new Array();
-			this.palette = new Object();
-			this.pindex  = 0;
-
-			var _crc32 = new Array();
-
-			// initialize buffer with zero bytes
-			for (var i = 0; i < this.buffer_size; i++) {
-				this.buffer[i] = "\x00";
-			}
-
-			// initialize non-zero elements
-			write(this.buffer, this.ihdr_offs, byte4(this.ihdr_size - 12), 'IHDR', byte4(width), byte4(height), "\x08\x03");
-			write(this.buffer, this.plte_offs, byte4(this.plte_size - 12), 'PLTE');
-			write(this.buffer, this.trns_offs, byte4(this.trns_size - 12), 'tRNS');
-			write(this.buffer, this.idat_offs, byte4(this.idat_size - 12), 'IDAT');
-			write(this.buffer, this.iend_offs, byte4(this.iend_size - 12), 'IEND');
-
-			// initialize deflate header
-			var header = ((8 + (7 << 4)) << 8) | (3 << 6);
-			header+= 31 - (header % 31);
-
-			write(this.buffer, this.idat_offs + 8, byte2(header));
-
-			// initialize deflate block headers
-			for (var i = 0; (i << 16) - 1 < this.pix_size; i++) {
-				var size, bits;
-				if (i + 0xffff < this.pix_size) {
-					size = 0xffff;
-					bits = "\x00";
-				} else {
-					size = this.pix_size - (i << 16) - i;
-					bits = "\x01";
-				}
-				write(this.buffer, this.idat_offs + 8 + 2 + (i << 16) + (i << 2), bits, byte2lsb(size), byte2lsb(~size));
-			}
-
-			/* Create crc32 lookup table */
-			for (var i = 0; i < 256; i++) {
-				var c = i;
-				for (var j = 0; j < 8; j++) {
-					if (c & 1) {
-						c = -306674912 ^ ((c >> 1) & 0x7fffffff);
-					} else {
-						c = (c >> 1) & 0x7fffffff;
-					}
-				}
-				_crc32[i] = c;
-			}
-
-			// compute the index into a png for a given pixel
-			this.index = function(x,y) {
-				var i = y * (this.width + 1) + x + 1;
-				var j = this.idat_offs + 8 + 2 + 5 * Math.floor((i / 0xffff) + 1) + i;
-				return j;
-			};
-
-			// convert a color and build up the palette
-			this.color = function(red, green, blue, alpha) {
-
-				alpha = alpha >= 0 ? alpha : 255;
-				var color = (((((alpha << 8) | red) << 8) | green) << 8) | blue;
-
-				if (typeof this.palette[color] == "undefined") {
-					if (this.pindex == this.depth) return "\x00";
-
-					var ndx = this.plte_offs + 8 + 3 * this.pindex;
-
-					this.buffer[ndx + 0] = String.fromCharCode(red);
-					this.buffer[ndx + 1] = String.fromCharCode(green);
-					this.buffer[ndx + 2] = String.fromCharCode(blue);
-					this.buffer[this.trns_offs+8+this.pindex] = String.fromCharCode(alpha);
-
-					this.palette[color] = String.fromCharCode(this.pindex++);
-				}
-				return this.palette[color];
-			};
-
-			// output a PNG string, Base64 encoded
-			this.getBase64 = function() {
-
-				var s = this.getDump();
-
-				var ch = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-				var c1, c2, c3, e1, e2, e3, e4;
-				var l = s.length;
-				var i = 0;
-				var r = "";
-
-				do {
-					c1 = s.charCodeAt(i);
-					e1 = c1 >> 2;
-					c2 = s.charCodeAt(i+1);
-					e2 = ((c1 & 3) << 4) | (c2 >> 4);
-					c3 = s.charCodeAt(i+2);
-					if (l < i+2) { e3 = 64; } else { e3 = ((c2 & 0xf) << 2) | (c3 >> 6); }
-					if (l < i+3) { e4 = 64; } else { e4 = c3 & 0x3f; }
-					r+= ch.charAt(e1) + ch.charAt(e2) + ch.charAt(e3) + ch.charAt(e4);
-				} while ((i+= 3) < l);
-				return r;
-			};
-
-			// output a PNG string
-			this.getDump = function() {
-
-				// compute adler32 of output pixels + row filter bytes
-				var BASE = 65521; /* largest prime smaller than 65536 */
-				var NMAX = 5552;  /* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
-				var s1 = 1;
-				var s2 = 0;
-				var n = NMAX;
-
-				for (var y = 0; y < this.height; y++) {
-					for (var x = -1; x < this.width; x++) {
-						s1+= this.buffer[this.index(x, y)].charCodeAt(0);
-						s2+= s1;
-						if ((n-= 1) == 0) {
-							s1%= BASE;
-							s2%= BASE;
-							n = NMAX;
-						}
-					}
-				}
-				s1%= BASE;
-				s2%= BASE;
-				write(this.buffer, this.idat_offs + this.idat_size - 8, byte4((s2 << 16) | s1));
-
-				// compute crc32 of the PNG chunks
-				function crc32(png, offs, size) {
-					var crc = -1;
-					for (var i = 4; i < size-4; i += 1) {
-						crc = _crc32[(crc ^ png[offs+i].charCodeAt(0)) & 0xff] ^ ((crc >> 8) & 0x00ffffff);
-					}
-					write(png, offs+size-4, byte4(crc ^ -1));
-				}
-
-				crc32(this.buffer, this.ihdr_offs, this.ihdr_size);
-				crc32(this.buffer, this.plte_offs, this.plte_size);
-				crc32(this.buffer, this.trns_offs, this.trns_size);
-				crc32(this.buffer, this.idat_offs, this.idat_size);
-				crc32(this.buffer, this.iend_offs, this.iend_size);
-
-				// convert PNG to string
-				return "\x89PNG\r\n\x1a\n"+this.buffer.join('');
-			};
-		};
-
-		// modified from original source to support NPM
-		{
-			module.exports = PNGlib;
-		}
-	})();
-	});
-
-	var identicon = createCommonjsModule(function (module) {
-	/**
-	 * Identicon.js 2.3.2
-	 * http://github.com/stewartlord/identicon.js
-	 *
-	 * PNGLib required for PNG output
-	 * http://www.xarg.org/download/pnglib.js
-	 *
-	 * Copyright 2018, Stewart Lord
-	 * Released under the BSD license
-	 * http://www.opensource.org/licenses/bsd-license.php
-	 */
-
-	(function() {
-	    var PNGlib;
-	    {
-	        PNGlib = pnglib;
-	    }
-
-	    var Identicon = function(hash, options){
-	        if (typeof(hash) !== 'string' || hash.length < 15) {
-	            throw 'A hash of at least 15 characters is required.';
-	        }
-
-	        this.defaults = {
-	            background: [240, 240, 240, 255],
-	            margin:     0.08,
-	            size:       64,
-	            saturation: 0.7,
-	            brightness: 0.5,
-	            format:     'png'
-	        };
-
-	        this.options = typeof(options) === 'object' ? options : this.defaults;
-
-	        // backward compatibility with old constructor (hash, size, margin)
-	        if (typeof(arguments[1]) === 'number') { this.options.size   = arguments[1]; }
-	        if (arguments[2])                      { this.options.margin = arguments[2]; }
-
-	        this.hash        = hash;
-	        this.background  = this.options.background || this.defaults.background;
-	        this.size        = this.options.size       || this.defaults.size;
-	        this.format      = this.options.format     || this.defaults.format;
-	        this.margin      = this.options.margin !== undefined ? this.options.margin : this.defaults.margin;
-
-	        // foreground defaults to last 7 chars as hue at 70% saturation, 50% brightness
-	        var hue          = parseInt(this.hash.substr(-7), 16) / 0xfffffff;
-	        var saturation   = this.options.saturation || this.defaults.saturation;
-	        var brightness   = this.options.brightness || this.defaults.brightness;
-	        this.foreground  = this.options.foreground || this.hsl2rgb(hue, saturation, brightness);
-	    };
-
-	    Identicon.prototype = {
-	        background: null,
-	        foreground: null,
-	        hash:       null,
-	        margin:     null,
-	        size:       null,
-	        format:     null,
-
-	        image: function(){
-	            return this.isSvg()
-	                ? new Svg(this.size, this.foreground, this.background)
-	                : new PNGlib(this.size, this.size, 256);
-	        },
-
-	        render: function(){
-	            var image      = this.image(),
-	                size       = this.size,
-	                baseMargin = Math.floor(size * this.margin),
-	                cell       = Math.floor((size - (baseMargin * 2)) / 5),
-	                margin     = Math.floor((size - cell * 5) / 2),
-	                bg         = image.color.apply(image, this.background),
-	                fg         = image.color.apply(image, this.foreground);
-
-	            // the first 15 characters of the hash control the pixels (even/odd)
-	            // they are drawn down the middle first, then mirrored outwards
-	            var i, color;
-	            for (i = 0; i < 15; i++) {
-	                color = parseInt(this.hash.charAt(i), 16) % 2 ? bg : fg;
-	                if (i < 5) {
-	                    this.rectangle(2 * cell + margin, i * cell + margin, cell, cell, color, image);
-	                } else if (i < 10) {
-	                    this.rectangle(1 * cell + margin, (i - 5) * cell + margin, cell, cell, color, image);
-	                    this.rectangle(3 * cell + margin, (i - 5) * cell + margin, cell, cell, color, image);
-	                } else if (i < 15) {
-	                    this.rectangle(0 * cell + margin, (i - 10) * cell + margin, cell, cell, color, image);
-	                    this.rectangle(4 * cell + margin, (i - 10) * cell + margin, cell, cell, color, image);
-	                }
-	            }
-
-	            return image;
-	        },
-
-	        rectangle: function(x, y, w, h, color, image){
-	            if (this.isSvg()) {
-	                image.rectangles.push({x: x, y: y, w: w, h: h, color: color});
-	            } else {
-	                var i, j;
-	                for (i = x; i < x + w; i++) {
-	                    for (j = y; j < y + h; j++) {
-	                        image.buffer[image.index(i, j)] = color;
-	                    }
-	                }
-	            }
-	        },
-
-	        // adapted from: https://gist.github.com/aemkei/1325937
-	        hsl2rgb: function(h, s, b){
-	            h *= 6;
-	            s = [
-	                b += s *= b < .5 ? b : 1 - b,
-	                b - h % 1 * s * 2,
-	                b -= s *= 2,
-	                b,
-	                b + h % 1 * s,
-	                b + s
-	            ];
-
-	            return [
-	                s[ ~~h    % 6 ] * 255, // red
-	                s[ (h|16) % 6 ] * 255, // green
-	                s[ (h|8)  % 6 ] * 255  // blue
-	            ];
-	        },
-
-	        toString: function(raw){
-	            // backward compatibility with old toString, default to base64
-	            if (raw) {
-	                return this.render().getDump();
-	            } else {
-	                return this.render().getBase64();
-	            }
-	        },
-
-	        isSvg: function(){
-	            return this.format.match(/svg/i)
-	        }
-	    };
-
-	    var Svg = function(size, foreground, background){
-	        this.size       = size;
-	        this.foreground = this.color.apply(this, foreground);
-	        this.background = this.color.apply(this, background);
-	        this.rectangles = [];
-	    };
-
-	    Svg.prototype = {
-	        size:       null,
-	        foreground: null,
-	        background: null,
-	        rectangles: null,
-
-	        color: function(r, g, b, a){
-	            var values = [r, g, b].map(Math.round);
-	            values.push((a >= 0) && (a <= 255) ? a/255 : 1);
-	            return 'rgba(' + values.join(',') + ')';
-	        },
-
-	        getDump: function(){
-	          var i,
-	                xml,
-	                rect,
-	                fg     = this.foreground,
-	                bg     = this.background,
-	                stroke = this.size * 0.005;
-
-	            xml = "<svg xmlns='http://www.w3.org/2000/svg'"
-	                + " width='" + this.size + "' height='" + this.size + "'"
-	                + " style='background-color:" + bg + ";'>"
-	                + "<g style='fill:" + fg + "; stroke:" + fg + "; stroke-width:" + stroke + ";'>";
-
-	            for (i = 0; i < this.rectangles.length; i++) {
-	                rect = this.rectangles[i];
-	                if (rect.color == bg) continue;
-	                xml += "<rect "
-	                    + " x='"      + rect.x + "'"
-	                    + " y='"      + rect.y + "'"
-	                    + " width='"  + rect.w + "'"
-	                    + " height='" + rect.h + "'"
-	                    + "/>";
-	            }
-	            xml += "</g></svg>";
-
-	            return xml;
-	        },
-
-	        getBase64: function(){
-	            if (btoa) {
-	                return btoa(this.getDump());
-	            } else if (Buffer) {
-	                return new Buffer(this.getDump(), 'binary').toString('base64');
-	            } else {
-	                throw 'Cannot generate base64 output';
-	            }
-	        }
-	    };
-
-	    {
-	        module.exports = Identicon;
-	    }
-	})();
-	});
-
-	/**
-	* An Identifi identity profile. Usually you don't create them yourself, but get them
-	* from Index methods such as search().
-	*/
-
-	var Identity = function () {
-	  function Identity(gun) {
-	    _classCallCheck(this, Identity);
-
-	    this.gun = gun;
-	  }
-
-	  Identity.create = function create(gunRoot, data) {
-	    data.receivedNegative |= data.receivedNegative || 0;
-	    data.receivedPositive |= data.receivedPositive || 0;
-	    data.receivedNeutral = data.receivedNeutral || 0;
-	    data.sentNegative = data.sentNegative || 0;
-	    data.sentPositive = data.sentPositive || 0;
-	    data.sentNeutral = data.sentNeutral || 0;
-	    data.trustDistance = data.hasOwnProperty('trustDistance') ? data.trustDistance : 99;
-	    data.attrs = data.attrs || {};
-	    if (Array.isArray(data.attrs)) {
-	      var attrs = {};
-	      while (data.attrs.length) {
-	        var a = data.attrs.pop();
-	        attrs[encodeURIComponent(a.name) + ':' + encodeURIComponent(a.val)] = a;
-	      }
-	      data.attrs = attrs;
-	    }
-	    data.mostVerifiedAttributes = Identity.getMostVerifiedAttributes(data.attrs);
-	    var bestVerificationScore = -1;
-	    _Object$keys(data.mostVerifiedAttributes).forEach(function (k) {
-	      var v = data.mostVerifiedAttributes[k];
-	      if (Attribute.isUniqueType(k) && v.verificationScore > bestVerificationScore) {
-	        data.linkTo = { name: k, val: v.attribute.val };
-	        bestVerificationScore = v.verificationScore;
-	      }
-	    });
-	    if (!data.linkTo) {
-	      data.linkTo = data.attrs[_Object$keys(data.attrs)[0]];
-	    }
-	    if (data.linkTo.name !== 'keyID' && data.mostVerifiedAttributes.keyID) {
-	      data.linkTo = data.mostVerifiedAttributes.keyID.attribute;
-	    }
-	    return new Identity(gunRoot.set(data));
-	  };
-
-	  Identity.getMostVerifiedAttributes = function getMostVerifiedAttributes(attrs) {
-	    var mostVerifiedAttributes = {};
-	    _Object$keys(attrs).forEach(function (k) {
-	      var a = attrs[k];
-	      var keyExists = _Object$keys(mostVerifiedAttributes).indexOf(a.name) > -1;
-	      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.name].verificationScore)) {
-	        mostVerifiedAttributes[a.name] = {
-	          attribute: a,
-	          verificationScore: a.conf - a.ref
-	        };
-	      }
-	    });
-	    return mostVerifiedAttributes;
-	  };
-
-	  /**
-	  * @param {string} attribute attribute type
-	  * @returns {string} most verified value of the param type
-	  */
-
-
-	  Identity.prototype.verified = async function verified(attribute) {
-	    var attrs = await this.gun.get('attrs').then();
-	    var mva = Identity.getMostVerifiedAttributes(attrs);
-	    return mva.hasOwnProperty(attribute) ? mva[attribute].attribute.val : undefined;
-	  };
-
-	  /**
-	  * @param {Object} ipfs (optional) an IPFS instance that is used to fetch images
-	  * @returns {HTMLElement} profile card html element describing the identity
-	  */
-
-
-	  Identity.prototype.profileCard = function profileCard(ipfs) {
-	    var _this = this;
-
-	    var card = document.createElement('div');
-	    card.className = 'identifi-card';
-
-	    var identicon$$1 = this.identicon(60, null, null, ipfs);
-	    identicon$$1.style.order = 1;
-	    identicon$$1.style.flexShrink = 0;
-	    identicon$$1.style.marginRight = '15px';
-
-	    var details = document.createElement('div');
-	    details.style.padding = '5px';
-	    details.style.order = 2;
-	    details.style.flexGrow = 1;
-
-	    var linkEl = document.createElement('span');
-	    var links = document.createElement('small');
-	    card.appendChild(identicon$$1);
-	    card.appendChild(details);
-	    details.appendChild(linkEl);
-	    details.appendChild(links);
-
-	    this.gun.on(async function (data) {
-	      if (!data) {
-	        return;
-	      }
-	      var attrs = await new _Promise(function (resolve) {
-	        _this.gun.get('attrs').load(function (r) {
-	          return resolve(r);
-	        });
-	      });
-	      var linkTo = await _this.gun.get('linkTo').then();
-	      var link = 'https://identi.fi/#/identities/' + linkTo.name + '/' + linkTo.val;
-	      var mva = Identity.getMostVerifiedAttributes(attrs);
-	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.name && mva.name.attribute.val || mva.nickname && mva.nickname.attribute.val || linkTo.name + ':' + linkTo.val) + '</a><br>';
-	      linkEl.innerHTML += '<small>Received: <span class="identifi-pos">+' + (data.receivedPositive || 0) + '</span> / <span class="identifi-neg">-' + (data.receivedNegative || 0) + '</span></small><br>';
-	      links.innerHTML = '';
-	      _Object$keys(attrs).forEach(function (k) {
-	        var a = attrs[k];
-	        if (a.link) {
-	          links.innerHTML += a.name + ': <a href="' + a.link + '">' + a.val + '</a> ';
-	        }
-	      });
-	    });
-
-	    /*
-	    const template = ```
-	    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
-	      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
-	      <td>
-	        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>
-	        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>
-	        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>
-	        <small ng-if="!result.name" class="list-group-item-text">
-	          <span ng-bind-html="result[0][0]|highlight:query.term"></span>
-	        </small><br>
-	        <small>
-	          <span ng-if="result.nickname && result.name != result.nickname" ng-bind-html="result.nickname|highlight:query.term" class="mar-right10"></span>
-	          <span ng-if="result.email" class="mar-right10">
-	            <span class="glyphicon glyphicon-envelope"></span> <span ng-bind-html="result.email|highlight:query.term"></span>
-	          </span>
-	          <span ng-if="result.facebook" class="mar-right10">
-	            <span class="fa fa-facebook"></span> <span ng-bind-html="result.facebook|highlight:query.term"></span>
-	          </span>
-	          <span ng-if="result.twitter" class="mar-right10">
-	            <span class="fa fa-twitter"></span> <span ng-bind-html="result.twitter|highlight:query.term"></span>
-	          </span>
-	          <span ng-if="result.googlePlus" class="mar-right10">
-	            <span class="fa fa-google-plus"></span> <span ng-bind-html="result.googlePlus|highlight:query.term"></span>
-	          </span>
-	          <span ng-if="result.bitcoin" class="mar-right10">
-	            <span class="fa fa-bitcoin"></span> <span ng-bind-html="result.bitcoin|highlight:query.term"></span>
-	          </span>
-	        </small>
-	      </td>
-	    </tr>
-	    ```;*/
-	    return card;
-	  };
-
-	  /**
-	  * Appends a search widget to the given HTMLElement
-	  * @param {HTMLElement} parentElement element where the search widget is added and event listener attached
-	  * @param {Index} index index root to use for search
-	  */
-
-
-	  Identity.appendSearchWidget = function appendSearchWidget(parentElement, index) {
-	    var form = document.createElement('form');
-
-	    var input = document.createElement('input');
-	    input.type = 'text';
-	    input.placeholder = 'Search';
-	    input.id = 'identifiSearchInput';
-	    form.innerHTML += '<div id="identifiSearchResults"></div>';
-
-	    var searchResults = document.createElement('div');
-
-	    parentElement.appendChild(form);
-	    form.appendChild(input);
-	    form.appendChild(searchResults);
-	    input.addEventListener('keyup', async function () {
-	      var r = await index.search(input.value);
-	      searchResults.innerHTML = '';
-	      r.sort(function (a, b) {
-	        return a.trustDistance - b.trustDistance;
-	      });
-	      r.forEach(function (i) {
-	        searchResults.appendChild(i.profileCard());
-	      });
-	    });
-	  };
-
-	  Identity._ordinal = function _ordinal(n) {
-	    var s = ['th', 'st', 'nd', 'rd'];
-	    var v = n % 100;
-	    return n + (s[(v - 20) % 10] || s[v] || s[0]);
-	  };
-
-	  Identity._injectCss = function _injectCss() {
-	    var elementId = 'identifiStyle';
-	    if (document.getElementById(elementId)) {
-	      return;
-	    }
-	    var sheet = document.createElement('style');
-	    sheet.id = elementId;
-	    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .identifi-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .identifi-card a:hover, .identifi-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .identifi-pos {\n        color: #3c763d;\n      }\n\n      .identifi-neg {\n        color: #a94442;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
-	    document.body.appendChild(sheet);
-	  };
-
-	  /**
-	  * @param {number} width of the identicon
-	  * @param {number} border identicon border (aura) width
-	  * @param {boolean} showDistance whether to show web of trust distance ordinal
-	  * @param {Object} ipfs (optional) an IPFS instance that is used to fetch images
-	  * @returns {HTMLElement} identicon element that can be appended to DOM
-	  */
-
-
-	  Identity.prototype.identicon = function identicon$$1(width) {
-	    var border = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
-	    var showDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
-	    var ipfs = arguments[3];
-
-	    Identity._injectCss(); // some other way that is not called on each identicon generation?
-	    var identicon$$1 = document.createElement('div');
-	    identicon$$1.className = 'identifi-identicon';
-	    identicon$$1.style.width = width + 'px';
-	    identicon$$1.style.height = width + 'px';
-
-	    var pie = document.createElement('div');
-	    pie.className = 'identifi-pie';
-	    pie.style.width = width + 'px';
-
-	    var img = document.createElement('img');
-	    img.alt = '';
-	    img.width = width;
-	    img.height = width;
-	    img.style.borderWidth = border + 'px';
-
-	    var distance = void 0;
-	    if (showDistance) {
-	      distance = document.createElement('span');
-	      distance.className = 'identifi-distance';
-	      distance.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
-	      identicon$$1.appendChild(distance);
-	    }
-	    identicon$$1.appendChild(pie);
-	    identicon$$1.appendChild(img);
-
-	    this.gun.on(function (data) {
-	      if (!data) {
-	        return;
-	      }
-	      // Define colors etc
-	      var bgColor = 'rgba(0,0,0,0.2)';
-	      var bgImage = 'none';
-	      var transform = '';
-	      var boxShadow = '0px 0px 0px 0px #82FF84';
-	      if (data.receivedPositive > data.receivedNegative * 20) {
-	        boxShadow = '0px 0px ' + border * data.receivedPositive / 50 + 'px 0px #82FF84';
-	      } else if (data.receivedPositive < data.receivedNegative * 3) {
-	        boxShadow = '0px 0px ' + border * data.receivedNegative / 10 + 'px 0px #BF0400';
-	      }
-	      if (data.receivedPositive + data.receivedNegative > 0) {
-	        if (data.receivedPositive > data.receivedNegative) {
-	          transform = 'rotate(' + (-data.receivedPositive / (data.receivedPositive + data.receivedNegative) * 360 - 180) / 2 + 'deg)';
-	          bgColor = '#A94442';
-	          bgImage = 'linear-gradient(' + data.receivedPositive / (data.receivedPositive + data.receivedNegative) * 360 + 'deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)';
-	        } else {
-	          transform = 'rotate(' + ((-data.receivedNegative / (data.receivedPositive + data.receivedNegative) * 360 - 180) / 2 + 180) + 'deg)';
-	          bgColor = '#3C763D';
-	          bgImage = 'linear-gradient(' + data.receivedNegative / (data.receivedPositive + data.receivedNegative) * 360 + 'deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)';
-	        }
-	      }
-
-	      pie.style.backgroundColor = bgColor;
-	      pie.style.backgroundImage = bgImage;
-	      pie.style.boxShadow = boxShadow;
-	      pie.style.transform = transform;
-	      pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
-
-	      var hash = util$1.getHash(_JSON$stringify(data.linkTo), 'hex');
-	      var identiconImg = new identicon(hash, { width: width, format: 'svg' });
-
-	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
-
-	      if (showDistance) {
-	        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : '\u2013';
-	      }
-	    });
-
-	    if (ipfs) {
-	      this.gun.get('attrs').open(function (attrs) {
-	        var mva = Identity.getMostVerifiedAttributes(attrs);
-	        if (mva.profilePhoto) {
-	          var timeout = ipfs.isOnline() ? 0 : 5000;
-	          setTimeout(function () {
-	            ipfs.files.cat(mva.profilePhoto.attribute.val).then(function (file) {
-	              var f = ipfs.types.Buffer.from(file).toString('base64');
-	              img.src = 'data:image;base64,' + f;
-	            });
-	          }, timeout);
-	        }
-	      });
-	    }
-
-	    return identicon$$1;
-	  };
-
-	  return Identity;
-	}();
-
-	// 19.1.2.1 Object.assign(target, source, ...)
-
-
-
-
-
-	var $assign = Object.assign;
-
-	// should work with symbols and should have deterministic property order (V8 bug)
-	var _objectAssign = !$assign || _fails(function () {
-	  var A = {};
-	  var B = {};
-	  // eslint-disable-next-line no-undef
-	  var S = Symbol();
-	  var K = 'abcdefghijklmnopqrst';
-	  A[S] = 7;
-	  K.split('').forEach(function (k) { B[k] = k; });
-	  return $assign({}, A)[S] != 7 || Object.keys($assign({}, B)).join('') != K;
-	}) ? function assign(target, source) { // eslint-disable-line no-unused-vars
-	  var T = _toObject(target);
-	  var aLen = arguments.length;
-	  var index = 1;
-	  var getSymbols = _objectGops.f;
-	  var isEnum = _objectPie.f;
-	  while (aLen > index) {
-	    var S = _iobject(arguments[index++]);
-	    var keys = getSymbols ? _objectKeys(S).concat(getSymbols(S)) : _objectKeys(S);
-	    var length = keys.length;
-	    var j = 0;
-	    var key;
-	    while (length > j) if (isEnum.call(S, key = keys[j++])) T[key] = S[key];
-	  } return T;
-	} : $assign;
-
-	// 19.1.3.1 Object.assign(target, source)
-
-
-	_export(_export.S + _export.F, 'Object', { assign: _objectAssign });
-
-	var assign = _core.Object.assign;
-
-	var assign$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": assign, __esModule: true };
-	});
-
-	var _Object$assign = unwrapExports(assign$1);
-
-	var isEnum$1 = _objectPie.f;
-	var _objectToArray = function (isEntries) {
-	  return function (it) {
-	    var O = _toIobject(it);
-	    var keys = _objectKeys(O);
-	    var length = keys.length;
-	    var i = 0;
-	    var result = [];
-	    var key;
-	    while (length > i) if (isEnum$1.call(O, key = keys[i++])) {
-	      result.push(isEntries ? [key, O[key]] : O[key]);
-	    } return result;
-	  };
-	};
-
-	// https://github.com/tc39/proposal-object-values-entries
-
-	var $values = _objectToArray(false);
-
-	_export(_export.S, 'Object', {
-	  values: function values(it) {
-	    return $values(it);
-	  }
-	});
-
-	var values = _core.Object.values;
-
-	var values$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": values, __esModule: true };
-	});
-
-	var _Object$values = unwrapExports(values$1);
-
-	// 20.1.2.4 Number.isNaN(number)
-
-
-	_export(_export.S, 'Number', {
-	  isNaN: function isNaN(number) {
-	    // eslint-disable-next-line no-self-compare
-	    return number != number;
-	  }
-	});
-
-	var isNan = _core.Number.isNaN;
-
-	var isNan$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": isNan, __esModule: true };
-	});
-
-	var _Number$isNaN = unwrapExports(isNan$1);
 
 	var Gun$1 = (typeof window !== "undefined")? window.Gun : gun;
 
@@ -13593,36 +13589,135 @@
 		return this.open(cb, opt, at);
 	};
 
+	(function(){
+		var Gun = (typeof window !== "undefined")? window.Gun : gun;
+		var ify = Gun.node.ify, empty = {}, u;
+		console.log("Index space is beta, API may change!");
+		Gun.chain.space = function(key, data, opt){
+			if(data instanceof Function){
+				return travel(key, data, opt, this);
+			}
+			var gun$$1 = this;
+			if(Gun.is(data)){
+				data.get(function(soul){
+					if(!soul){
+						return cb && cb({err: "Indexspace cannot link `undefined`!"});
+					}
+					gun$$1.space(key, Gun.val.link.ify(soul), opt);
+				}, true);
+				return gun$$1;
+			}
+			var cb = (opt instanceof Function && opt), rank = (opt||empty).rank || opt, root = gun$$1.back(-1);
+			gun$$1.get(function(soul){
+				if(!soul){
+					soul = (gun$$1.back('opt.uuid') || Gun.text.random)(9);
+				}
+	      /*var space = ify({}, soul), sub = space, l = 0, tmp;
+	      var atom = Gun.text.ify({get: key, put: data});
+	      Gun.list.map(index(0, key.length), function(i){
+	          sub[(tmp = key.slice(l, i))+'"'] = atom;
+	          sub = sub[tmp] = ify({}, soul+'"'+key.slice(0,i));
+	          l = i;
+	      });
+	      tmp = {}; tmp[key] = atom.put; tmp = ify(tmp, soul+'"');
+	      sub[key.slice(l, key.length)] = tmp;
+	      console.log('????', space);*/
+				var shell = {}, l = 0, tmp;
+				var atom = Gun.text.ify({get: key, put: data});
+				tmp = {}; tmp[key] = data;
+				shell.$ = ify(tmp, soul);
+				tmp = {}; tmp[key.slice(0,l = 1)] = atom;
+				shell[0] = ify(tmp, soul+'"');
+				Gun.list.map(index(1, key.length), function(i){
+					tmp = {}; tmp[key.slice(l,i)] = atom;
+					shell[i] = ify(tmp, soul+'"'+key.slice(0,l));
+					l = i;
+				});
+				tmp = {}; tmp[key.slice(l, key.length)] = atom;
+				shell[l+1] = ify(tmp, soul+'"'+key.slice(0,l));
+				//tmp = {}; tmp[key.slice(l, key.length)] = Gun.val.link.ify(soul); shell[l+1] = ify(tmp, soul+'"'+key.slice(0,l));
+				//console.log('???', shell);
+				gun$$1.put(shell, cb, {soul: soul, shell: shell});
+			},true);
+			return gun$$1;
+		};
+		function travel(key, cb, opt, ref){
+			var root = ref.back(-1);
+			opt = opt || {};
+			opt.ack = opt.ack || {};
+			ref.get(function(soul){
+				ref.get(key).get(function(msg, eve){
+					eve.off();
+					opt.exact = true;
+					opt.ack.key = key;
+					opt.ack.data = msg.put;
+					if(opt.match){ cb(opt.ack, key, msg, eve); }
+				});
+				//if(u !== msg.put){
+				//	cb(msg.put, msg.get, msg, eve);
+				//	return;
+				//}
+				opt.soul = soul;
+				opt.start = soul+'"';
+				opt.key = key;
+				opt.top = index(0, opt.find);
+				opt.low = opt.top.reverse();
+				find(opt, cb, root);
+			}, true);
+		}
+		function find(o, cb, root){
+			var id = o.start+o.key.slice(0,o.low[0]);
+			root.get(id).get(function(msg, eve){
+				eve.off();
+				o.ack.tree = {};
+				if(u === msg.put){
+					if(!o.exact){ return o.match = true }
+					cb(o.ack, id, msg, eve);
+					return;
+					o.low = o.low.slice(1);
+					if(!o.low.length){
+						cb(u, o.key, msg, eve);
+						return;
+					}
+					find(o, cb, root);
+					return;
+				}
+				Gun.node.is(msg.put, function(v,k){
+					if(!(k = Gun.obj.ify(v) || empty).get){ return }
+					o.ack.tree[k.get] = k.put;
+				});
+				if(!o.exact){ return o.match = true }
+				cb(o.ack, id, msg, eve);
+			});
+		}
+		function index(n, m, l, k){
+			l = l || [];
+			if(!m){ return l }
+		  k = Math.ceil((n||1) / 10);
+		  if((n+k) >= m){ return l }
+		  l.push(n + k);
+		  return index(n + k, m, l);
+		}
+	}());
+
 	// temp method for GUN search
 	async function searchText(node, query, limit, cursor) {
-	  return new _Promise(function (resolve) {
-	    var r = [];
-	    function sortAndResolve() {
-	      r.sort(function (a, b) {
-	        if (a.key < b.key) {
-	          return -1;
-	        }
-	        if (a.key > b.key) {
-	          return 1;
-	        }
-	        return 0;
-	      });
-	      resolve(r);
+	  var reply = await node.space(query);
+	  var keys = _Object$keys(reply.tree);
+	  var r = [];
+	  for (var i = 0; i < keys.length; i++) {
+	    r.push({ key: keys[i], val: reply.tree[keys[i]] });
+	  }
+	  r.sort(function (a, b) {
+	    if (a.key < b.key) {
+	      return -1;
 	    }
-	    node.map(function (value, key) {
-	      if ((!cursor || key > cursor) && key.indexOf(query) === 0) {
-	        if (value) {
-	          r.push({ value: value, key: key });
-	        }
-	        if (r.length >= limit) {
-	          sortAndResolve();
-	        }
-	      }
-	    });
-	    setTimeout(function () {
-	      /* console.log(`r`, r);*/sortAndResolve();
-	    }, 100);
+	    if (a.key > b.key) {
+	      return 1;
+	    }
+	    return 0;
 	  });
+	  return r;
 	}
 
 	// TODO: make the whole thing use GUN for indexing and flush onto IPFS
@@ -13709,14 +13804,11 @@
 
 
 	  Index.prototype.getViewpoint = async function getViewpoint() {
-	    var _this = this;
-
-	    var k = await new _Promise(function (resolve) {
-	      return _this.gun.get('identitiesByTrustDistance').map(function (v, k) {
-	        return k.indexOf('00') === 0 ? resolve(k) : 0;
-	      });
-	    });
-	    return new Identity(this.gun.get('identitiesByTrustDistance').get(k));
+	    var r = await this.gun.get('identitiesByTrustDistance').space('00');
+	    var keys = _Object$keys(r.tree);
+	    if (keys.length) {
+	      return new Identity(this.gun.get('identitiesByTrustDistance').get(r.tree[keys[0]]));
+	    }
 	  };
 
 	  /**
@@ -13743,10 +13835,11 @@
 	  };
 
 	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, limit, cursor) {
-	    var rawMsgs = await searchText(msgIndex, '', limit, cursor, true);
+	    var rawMsgs = await msgIndex.space('');
 	    var msgs = [];
-	    for (var i = 0; i < rawMsgs.length; i++) {
-	      var msg = await Message.fromSig(rawMsgs[i].value);
+	    var keys = _Object$keys(rawMsgs);
+	    for (var i = 0; i < keys.length; i++) {
+	      var msg = await Message.fromSig(rawMsgs[keys[i]].value);
 	      msgs.push(msg);
 	    }
 	    return msgs;
@@ -13757,9 +13850,10 @@
 	    var indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(0, 6));
 	    for (var i = 0; i < indexKeys.length; i++) {
 	      var key = indexKeys[i];
-	      console.log('adding key ' + key);
-	      await this.gun.get('identitiesByTrustDistance').get(key).put(id).then();
-	      await this.gun.get('identitiesBySearchKey').get(key.substr(key.indexOf(':') + 1)).put(id).then();
+	      this.gun.get('identitiesByTrustDistance').put({}); // have to do this first, gun/lib/space weirdness
+	      this.gun.get('identitiesBySearchKey').put({});
+	      this.gun.get('identitiesByTrustDistance').space(key, id);
+	      this.gun.get('identitiesBySearchKey').space(key.substr(key.indexOf(':') + 1), id);
 	    }
 	  };
 
@@ -13859,13 +13953,13 @@
 	        await recipient.get('receivedNeutral').put(id.receivedNeutral + 1);
 	      }
 	    }
-	    await recipient.get('received').get(msgIndexKey).put({ sig: msg.sig, pubKey: msg.pubKey }).then();
+	    await recipient.get('received').space(msgIndexKey, { sig: msg.sig, pubKey: msg.pubKey });
 	    var identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
 	    for (var j = 0; j < identityIndexKeysBefore.length; j++) {
 	      var k = identityIndexKeysBefore[j];
 	      if (identityIndexKeysAfter.indexOf(k) === -1) {
-	        await this.gun.get('identitiesByTrustDistance').get(k).put(null);
-	        await this.gun.get('identitiesBySearchKey').get(k.substr(k.indexOf(':') + 1)).put(null);
+	        await this.gun.get('identitiesByTrustDistance').space(k, null);
+	        await this.gun.get('identitiesBySearchKey').space(k.substr(k.indexOf(':') + 1), null);
 	      }
 	    }
 	  };
@@ -13881,7 +13975,7 @@
 	        await author.get('sentNeutral').put(id.sentNeutral + 1);
 	      }
 	    }
-	    return author.get('sent').get(msgIndexKey).put({ sig: msg.sig, pubKey: msg.pubKey }).then();
+	    return author.get('sent').space(msgIndexKey, { sig: msg.sig, pubKey: msg.pubKey });
 	  };
 
 	  Index.prototype._updateIdentityProfilesByMsg = async function _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
@@ -14027,17 +14121,17 @@
 
 
 	  Index.prototype.search = async function search(value) {
-	    var _this2 = this;
+	    var _this = this;
 
 	    // TODO: param 'exact', type param
 	    var r = {};
 	    return new _Promise(function (resolve) {
-	      _this2.gun.get('identitiesByTrustDistance').map(function (id, key) {
+	      _this.gun.get('identitiesByTrustDistance').map(function (id, key) {
 	        if (key.indexOf(encodeURIComponent(value)) === -1) {
 	          return;
 	        }
 	        if (!r.hasOwnProperty(gun_min.node.soul(id))) {
-	          r[gun_min.node.soul(id)] = new Identity(_this2.gun.get('identitiesByTrustDistance').get(key));
+	          r[gun_min.node.soul(id)] = new Identity(_this.gun.get('identitiesByTrustDistance').get(key));
 	        }
 	      });
 	      setTimeout(function () {

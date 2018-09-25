@@ -8,27 +8,7 @@ import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 import space from 'gun/lib/space'; // eslint-disable-line no-unused-vars
 
-// temp method for GUN search
-async function searchText(node, query, limit, cursor) {
-  const reply = await node.space(query);
-  const keys = Object.keys(reply.tree);
-  const r = [];
-  for (let i = 0;i < keys.length;i ++) {
-    r.push({key:keys[i], val:reply.tree[keys[i]]});
-  }
-  r.sort((a, b) => {
-    if (a.key < b.key) {
-      return - 1;
-    }
-    if (a.key > b.key) {
-      return 1;
-    }
-    return 0;
-  });
-  return r;
-}
-
-// TODO: make the whole thing use GUN for indexing and flush onto IPFS
+// TODO: flush onto IPFS
 /**
 * Identifi index root. Contains four indexes: identitiesBySearchKey, gun.get(`identitiesByTrustDistance`),
 * messagesByTimestamp, messagesByDistance.
@@ -45,7 +25,6 @@ class Index {
       viewpoint = {name: `keyID`, val: Key.getId(defaultKey), conf: 1, ref: 0};
     }
     await i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
-    console.log(viewpoint, new Attribute(viewpoint));
     const vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});
     await i._addIdentityToIndexes(vp.gun);
     return i;
@@ -106,11 +85,14 @@ class Index {
   * @returns {Identity} viewpoint identity of the index
   */
   async getViewpoint() {
-    const r = await this.gun.get(`identitiesByTrustDistance`).space(`00`);
-    console.log(`r`, r);
-    const keys = Object.keys(r.tree);
+    const r = await new Promise(resolve => {
+      this.gun.get(`identitiesByTrustDistance`).space(`00`, res => {
+        resolve(res.tree);
+      });
+    });
+    const keys = Object.keys(r);
     if (keys.length) {
-      return new Identity(this.gun.get(`identitiesByTrustDistance`).get(r.tree[keys[0]]));
+      return new Identity(this.gun.get(`identitiesByTrustDistance`).get(r[keys[0]]));
     }
   }
 
@@ -136,7 +118,12 @@ class Index {
   }
 
   async _getMsgs(msgIndex, limit, cursor) {
-    const rawMsgs = await msgIndex.space(``);
+    const rawMsgs = await new Promise(resolve => {
+      msgIndex.space(``, r => {
+        console.log(`_getMsgs`, r);
+        resolve(Object.keys(r.tree));
+      });
+    });
     const msgs = [];
     const keys = Object.keys(rawMsgs);
     for (let i = 0;i < keys.length;i ++) {
@@ -240,13 +227,14 @@ class Index {
         await recipient.get(`receivedNeutral`).put(id.receivedNeutral + 1);
       }
     }
-    await recipient.get(`received`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
+    const m = this.gun.get(`messagesByTimestamp`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey});
+    await recipient.get(`received`).space(msgIndexKey, m);
     const identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     for (let j = 0;j < identityIndexKeysBefore.length;j ++) {
       const k = identityIndexKeysBefore[j];
       if (identityIndexKeysAfter.indexOf(k) === - 1) {
-        await this.gun.get(`identitiesByTrustDistance`).get(k).put(null);
-        await this.gun.get(`identitiesBySearchKey`).get(k.substr(k.indexOf(`:`) + 1)).put(null);
+        await this.gun.get(`identitiesByTrustDistance`).space(k, null);
+        await this.gun.get(`identitiesBySearchKey`).space(k.substr(k.indexOf(`:`) + 1), null);
       }
     }
   }
@@ -262,7 +250,8 @@ class Index {
         await author.get(`sentNeutral`).put(id.sentNeutral + 1);
       }
     }
-    return author.get(`sent`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
+    const m = this.gun.get(`messagesByTimestamp`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey});
+    return author.get(`sent`).space(msgIndexKey, m);
   }
 
   async _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
@@ -345,9 +334,13 @@ class Index {
       return;
     }
     let initialMsgCount, msgCountAfterwards;
-    const index = this.gun.get(`identitiesBySearchKey`);
     do {
-      const knownIdentities = await searchText(index, ``);
+      const knownIdentities = await new Promise(resolve => {
+        this.gun.get(`identitiesBySearchKey`).space(``, r => {
+          console.log(22222,r);
+          resolve(Object.values(r.tree));
+        });
+      });
       let i = 0;
       let author = msgAuthors[i];
       let knownIdentity = knownIdentities.shift();
