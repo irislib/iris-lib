@@ -22,7 +22,7 @@ class Index {
     const i = new Index(gun);
     if (!viewpoint) {
       const defaultKey = await Key.getDefault();
-      viewpoint = {name: `keyID`, val: Key.getId(defaultKey), conf: 1, ref: 0};
+      viewpoint = {name: `keyID`, val: await Key.getId(defaultKey), conf: 1, ref: 0};
     }
     await i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
     const vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});
@@ -117,7 +117,7 @@ class Index {
     return new Identity(this.gun.get(`identitiesBySearchKey`).get(key));
   }
 
-  async _getMsgs(msgIndex, limit, cursor) {
+  async _getMsgs(msgIndex, limit, cursor) {  // eslint-disable-line no-unused-vars
     const rawMsgs = await new Promise(resolve => {
       msgIndex.space(``, r => {
         console.log(`_getMsgs`, r);
@@ -175,7 +175,7 @@ class Index {
   */
   async getMsgTrustDistance(msg) {
     let shortestDistance = Infinity;
-    const signer = await this.get(msg.getSignerKeyID(), `keyID`);
+    const signer = await this.get(await msg.getSignerKeyID(), `keyID`);
     if (!signer) {
       return;
     }
@@ -338,7 +338,7 @@ class Index {
     do {
       const knownIdentities = await new Promise(resolve => {
         this.gun.get(`identitiesBySearchKey`).space(``, r => {
-          console.log(22222,r);
+          console.log(22222, r);
           resolve(Object.values(r.tree));
         });
       });

@@ -1,7 +1,7 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 import Gun from 'gun';
-import sea from 'gun/sea';
+import sea from 'gun/sea';  // eslint-disable-line no-unused-vars
 
 let isNode = false;
 try {
@@ -15,7 +15,7 @@ export default {
     if (!str) {
       return undefined;
     }
-    const hash = await this.sea.work(str, null, null, {name: 'SHA-256'});
+    const hash = await this.sea.work(str, null, null, {name: `SHA-256`});
     return Buffer.from(hash).toString(format);
   },
 

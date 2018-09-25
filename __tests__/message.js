@@ -35,7 +35,7 @@ describe('Message', async () => {
         comment: 'Good guy'
       }, defaultKey);
       expect(msg).toHaveProperty('signedData.author');
-      expect(JSON.stringify(msg.signedData.author)).toEqual('[["keyID","' + Key.getId(defaultKey) + '"]]');
+      expect(JSON.stringify(msg.signedData.author)).toEqual('[["keyID","' + await Key.getId(defaultKey) + '"]]');
     });
   });
   describe('createVerification method', async () => {

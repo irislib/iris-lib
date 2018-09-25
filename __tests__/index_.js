@@ -167,7 +167,7 @@ describe('local index', async () => {
   });
   test('get viewpoint identity by searching the default keyID', async () => {
     const defaultKey = await identifi.Key.getDefault();
-    p = await i.get(identifi.Key.getId(defaultKey), 'keyID');
+    p = await i.get(await identifi.Key.getId(defaultKey), 'keyID');
     const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(data.trustDistance).toBe(0);

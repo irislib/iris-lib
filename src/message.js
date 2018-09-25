@@ -56,7 +56,9 @@ class Message {
     let i;
     let authorKeyID;
     if (this.pubKey) {
-      this.signerKeyHash = this.getSignerKeyID();
+      this.getSignerKeyID().then(hash => {
+        this.signerKeyHash = hash;
+      });
     }
     for (i = 0;i < d.author.length;i ++) {
       if (d.author[i].length !== 2) {throw new ValidationError(`${errorMsg} Invalid author: ${d.author[i].toString()}`);}
@@ -118,7 +120,7 @@ class Message {
   async sign(key: Object) {
     this.sig = await Key.sign(this.signedData, key);
     this.pubKey = key.pub;
-    this.getHash();
+    await this.getHash();
     return true;
   }
 
@@ -130,7 +132,7 @@ class Message {
   */
   static async create(signedData: Object, signingKey: Object) {
     if (!signedData.author && signingKey) {
-      signedData.author = [[`keyID`, Key.getId(signingKey)]];
+      signedData.author = [[`keyID`, await Key.getId(signingKey)]];
     }
     signedData.timestamp = signedData.timestamp || (new Date()).toISOString();
     signedData.context = signedData.context || `identifi`;
@@ -215,11 +217,11 @@ class Message {
       throw new ValidationError(`${errorMsg} Invalid signature`);
     }
     if (this.hash) {
-      if (this.hash !== util.getHash(this.sig)) {
+      if (this.hash !== await util.getHash(this.sig)) {
         throw new ValidationError(`${errorMsg} Invalid message hash`);
       }
     } else {
-      this.getHash();
+      await this.getHash();
     }
     return true;
   }
