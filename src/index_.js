@@ -151,11 +151,11 @@ class Index {
     const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(0, 6));
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
-      console.log(`adding key ${key}, id ${JSON.stringify(id)}`, id);
-      await this.gun.get(`identitiesByTrustDistance`).space('tuuuuut', id).then();
-      await this.gun.get(`identitiesBySearchKey`).space(key.substr(key.indexOf(`:`) + 1), id).then();
+      this.gun.get(`identitiesByTrustDistance`).put({}); // have to do this first, gun/lib/space weirdness
+      this.gun.get(`identitiesBySearchKey`).put({});
+      this.gun.get(`identitiesByTrustDistance`).space(key, id);
+      this.gun.get(`identitiesBySearchKey`).space(key.substr(key.indexOf(`:`) + 1), id);
     }
-    this.gun.get(`identitiesByTrustDistance`).space(`tuu`, r => console.log(6666,r));
   }
 
   /**
