@@ -75,7 +75,6 @@
   },
   "dependencies": {
     "@trust/webcrypto": "^0.9.2",
-    "create-hash": "^1.2.0",
     "gun": "^0.9.99993",
     "identicon.js": "^2.3.2",
     "node-webcrypto-ossl": "^1.0.37",

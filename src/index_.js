@@ -320,7 +320,8 @@ class Index {
         for (let j = 0;j < msgs[i].signedData.author.length;j ++) {
           const id = msgs[i].signedData.author[j];
           if (Attribute.isUniqueType(id[0])) {
-            const key = `${encodeURIComponent(id[1])}:${encodeURIComponent(id[0])}:${msgs[i].getHash()}`;
+            const hash = await msgs[i].getHash();
+            const key = `${encodeURIComponent(id[1])}:${encodeURIComponent(id[0])}:${hash}`;
             msgsByAuthor[key] = msgs[i];
           }
         }

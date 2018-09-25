@@ -188,9 +188,9 @@ class Message {
   /**
   * @returns {string} base64 hash of message
   */
-  getHash() {
+  async getHash() {
     if (this.sig && !this.hash) {
-      this.hash = util.getHash(this.sig);
+      this.hash = await util.getHash(this.sig);
     }
     return this.hash;
   }

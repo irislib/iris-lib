@@ -1,6 +1,7 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
-import createHash from 'create-hash';
+import Gun from 'gun';
+import sea from 'gun/sea';
 
 let isNode = false;
 try {
@@ -8,13 +9,14 @@ try {
 } catch (e) { null; }
 
 export default {
-  getHash: function(str, format = `base64`) {
+  sea: (Gun.SEA || window.Gun.SEA),
+
+  async getHash(str, format = `base64`) {
     if (!str) {
       return undefined;
     }
-    const hash = createHash(`sha256`);
-    hash.update(str);
-    return hash.digest(format);
+    const hash = await this.sea.work(str, null, null, {name: 'SHA-256'});
+    return Buffer.from(hash).toString(format);
   },
 
   timeoutPromise(promise, timeout) {
