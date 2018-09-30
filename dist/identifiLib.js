@@ -5738,6 +5738,8 @@
 	  };
 
 	  Message.prototype._validate = function _validate() {
+	    var _this2 = this;
+
 	    if (!this.signedData) {
 	      throw new ValidationError(errorMsg + ' Missing signedData');
 	    }
@@ -5758,7 +5760,9 @@
 	    var i = void 0;
 	    var authorKeyID = void 0;
 	    if (this.pubKey) {
-	      this.signerKeyHash = this.getSignerKeyID();
+	      this.getSignerKeyID().then(function (hash) {
+	        _this2.signerKeyHash = hash;
+	      });
 	    }
 	    for (i = 0; i < d.author.length; i++) {
 	      if (d.author[i].length !== 2) {
@@ -5859,7 +5863,7 @@
 	  Message.prototype.sign = async function sign(key) {
 	    this.sig = await Key.sign(this.signedData, key);
 	    this.pubKey = key.pub;
-	    this.getHash();
+	    await this.getHash();
 	    return true;
 	  };
 
@@ -5873,7 +5877,7 @@
 
 	  Message.create = async function create(signedData, signingKey) {
 	    if (!signedData.author && signingKey) {
-	      signedData.author = [['keyID', Key.getId(signingKey)]];
+	      signedData.author = [['keyID', await Key.getId(signingKey)]];
 	    }
 	    signedData.timestamp = signedData.timestamp || new Date().toISOString();
 	    signedData.context = signedData.context || 'identifi';
@@ -5970,11 +5974,11 @@
 	      throw new ValidationError(errorMsg + ' Invalid signature');
 	    }
 	    if (this.hash) {
-	      if (this.hash !== util.getHash(this.sig)) {
+	      if (this.hash !== (await util.getHash(this.sig))) {
 	        throw new ValidationError(errorMsg + ' Invalid message hash');
 	      }
 	    } else {
-	      this.getHash();
+	      await this.getHash();
 	    }
 	    return true;
 	  };
@@ -6686,10 +6690,10 @@
 	      pie.style.transform = transform;
 	      pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
 
-	      var hash = util.getHash(_JSON$stringify(data.linkTo), 'hex');
-	      var identiconImg = new identicon(hash, { width: width, format: 'svg' });
-
-	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
+	      util.getHash(_JSON$stringify(data.linkTo), 'hex').then(function (hash) {
+	        var identiconImg = new identicon(hash, { width: width, format: 'svg' });
+	        img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
+	      });
 
 	      if (showDistance) {
 	        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : '\u2013';
@@ -9186,7 +9190,7 @@
 	    var i = new Index(gun);
 	    if (!viewpoint) {
 	      var defaultKey = await Key.getDefault();
-	      viewpoint = { name: 'keyID', val: Key.getId(defaultKey), conf: 1, ref: 0 };
+	      viewpoint = { name: 'keyID', val: await Key.getId(defaultKey), conf: 1, ref: 0 };
 	    }
 	    await i.gun.get('viewpoint').put(new Attribute(viewpoint));
 	    var vp = Identity.create(i.gun.get('identities'), { attrs: [viewpoint], trustDistance: 0 });
@@ -9290,6 +9294,7 @@
 	  };
 
 	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, limit, cursor) {
+	    // eslint-disable-line no-unused-vars
 	    var rawMsgs = await new _Promise(function (resolve) {
 	      msgIndex.space('', function (r) {
 	        console.log('_getMsgs', r);
@@ -9357,7 +9362,7 @@
 
 	  Index.prototype.getMsgTrustDistance = async function getMsgTrustDistance(msg) {
 	    var shortestDistance = Infinity;
-	    var signer = await this.get(msg.getSignerKeyID(), 'keyID');
+	    var signer = await this.get((await msg.getSignerKeyID()), 'keyID');
 	    if (!signer) {
 	      return;
 	    }

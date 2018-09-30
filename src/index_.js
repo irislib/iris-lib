@@ -395,15 +395,19 @@ class Index {
   async search(value) { // TODO: param 'exact', type param
     const r = {};
     return new Promise(resolve => {
-      this.gun.get(`identitiesByTrustDistance`).map((id, key) => {
-        if (key.indexOf(encodeURIComponent(value)) === - 1) {
-          return;
-        }
-        if (!r.hasOwnProperty(Gun.node.soul(id))) {
-          r[Gun.node.soul(id)] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
-        }
-      });
-      setTimeout(() => { resolve(Object.values(r)); }, 200);
+      for (i = 0;i < 5;i ++) {
+        const key = `0${i}:${encodeURIComponent(value)}`;
+        this.gun.get(`identitiesByTrustDistance`).space(key, res => {
+          const keys = Object.keys(res.tree);
+          for (j = 0;j < keys.length;j ++) {
+            const id = res.tree[keys[j]];
+            if (!r.hasOwnProperty(Gun.node.soul(id))) {
+              r[Gun.node.soul(id)] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
+            }
+          }
+        });
+      }
+      resolve(Object.values(r));
     });
   }
 }
