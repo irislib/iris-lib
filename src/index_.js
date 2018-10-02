@@ -86,7 +86,7 @@ class Index {
   */
   async getViewpoint() {
     const r = await new Promise(resolve => {
-      this.gun.get(`identitiesByTrustDistance`).space(`00`, res => {
+      this.gun.get(`identitiesByTrustDistance`).space(`a00`, res => {
         resolve(res.tree);
       });
     });
@@ -119,7 +119,7 @@ class Index {
 
   async _getMsgs(msgIndex, limit, cursor) {  // eslint-disable-line no-unused-vars
     const rawMsgs = await new Promise(resolve => {
-      msgIndex.space(``, r => {
+      msgIndex.space(`a`, r => {
         console.log(`_getMsgs`, r);
         resolve(Object.keys(r.tree));
       });
@@ -140,8 +140,8 @@ class Index {
       const key = indexKeys[i];
       this.gun.get(`identitiesByTrustDistance`).put({}); // have to do this first, gun/lib/space weirdness
       this.gun.get(`identitiesBySearchKey`).put({});
-      this.gun.get(`identitiesByTrustDistance`).space(key, id);
-      this.gun.get(`identitiesBySearchKey`).space(key.substr(key.indexOf(`:`) + 1), id);
+      this.gun.get(`identitiesByTrustDistance`).space(`a${key}`, id);
+      this.gun.get(`identitiesBySearchKey`).space(`a${key.substr(key.indexOf(`:`) + 1)}`, id);
     }
   }
 
@@ -228,13 +228,13 @@ class Index {
       }
     }
     const m = this.gun.get(`messagesByTimestamp`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey});
-    await recipient.get(`received`).space(msgIndexKey, m);
+    await recipient.get(`received`).space(`a${msgIndexKey}`, m);
     const identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     for (let j = 0;j < identityIndexKeysBefore.length;j ++) {
       const k = identityIndexKeysBefore[j];
       if (identityIndexKeysAfter.indexOf(k) === - 1) {
-        await this.gun.get(`identitiesByTrustDistance`).space(k, null);
-        await this.gun.get(`identitiesBySearchKey`).space(k.substr(k.indexOf(`:`) + 1), null);
+        await this.gun.get(`identitiesByTrustDistance`).space(`a${k}`, null);
+        await this.gun.get(`identitiesBySearchKey`).space(`a${k.substr(k.indexOf(`:`) + 1)}`, null);
       }
     }
   }
@@ -251,7 +251,7 @@ class Index {
       }
     }
     const m = this.gun.get(`messagesByTimestamp`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey});
-    return author.get(`sent`).space(msgIndexKey, m);
+    return author.get(`sent`).space(`a${msgIndexKey}`, m);
   }
 
   async _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
@@ -337,7 +337,7 @@ class Index {
     let initialMsgCount, msgCountAfterwards;
     do {
       const knownIdentities = await new Promise(resolve => {
-        this.gun.get(`identitiesBySearchKey`).space(``, r => {
+        this.gun.get(`identitiesBySearchKey`).space(`a`, r => {
           console.log(22222, r);
           resolve(Object.values(r.tree));
         });
@@ -395,11 +395,11 @@ class Index {
   async search(value) { // TODO: param 'exact', type param
     const r = {};
     return new Promise(resolve => {
-      for (i = 0;i < 5;i ++) {
+      for (let i = 0;i < 5;i ++) {
         const key = `0${i}:${encodeURIComponent(value)}`;
-        this.gun.get(`identitiesByTrustDistance`).space(key, res => {
+        this.gun.get(`identitiesByTrustDistance`).space(`a${key}`, res => {
           const keys = Object.keys(res.tree);
-          for (j = 0;j < keys.length;j ++) {
+          for (let j = 0;j < keys.length;j ++) {
             const id = res.tree[keys[j]];
             if (!r.hasOwnProperty(Gun.node.soul(id))) {
               r[Gun.node.soul(id)] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
