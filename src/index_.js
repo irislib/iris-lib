@@ -110,11 +110,11 @@ class Index {
       type = Attribute.guessTypeOf(value);
     }
     const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
-    const found = await this.gun.get(`identitiesBySearchKey`).get(key).then();
+    const found = await this.gun.get(`identitiesBySearchKey`).get(`a${key}`).then();
     if (!found) {
       return undefined;
     }
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(key));
+    return new Identity(this.gun.get(`identitiesBySearchKey`).get(`a${key}`));
   }
 
   async _getMsgs(msgIndex, limit, cursor) {  // eslint-disable-line no-unused-vars
@@ -175,13 +175,17 @@ class Index {
   */
   async getMsgTrustDistance(msg) {
     let shortestDistance = Infinity;
+    console.log('getting signer', await msg.getSignerKeyID());
     const signer = await this.get(await msg.getSignerKeyID(), `keyID`);
+    console.log('got', signer);
     if (!signer) {
       return;
     }
     const vp = await this.gun.get(`viewpoint`).then();
+    console.log('viewpoint', vp);
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = new Attribute(msg.signedData.author[i]);
+      console.log(a, vp, Attribute.equals(a, vp));
       if (Attribute.equals(a, vp)) {
         return 0;
       } else {
@@ -338,7 +342,6 @@ class Index {
     do {
       const knownIdentities = await new Promise(resolve => {
         this.gun.get(`identitiesBySearchKey`).space(`a`, r => {
-          console.log(22222, r);
           resolve(Object.values(r.tree));
         });
       });
@@ -402,7 +405,7 @@ class Index {
           for (let j = 0;j < keys.length;j ++) {
             const id = res.tree[keys[j]];
             if (!r.hasOwnProperty(Gun.node.soul(id))) {
-              r[Gun.node.soul(id)] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
+              r[Gun.node.soul(id)] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(`a${key}`));
             }
           }
         });
