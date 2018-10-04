@@ -141,11 +141,13 @@ describe('local index', async () => {
       let viewpoint = await i.getViewpoint();
       expect(viewpoint).toBeInstanceOf(identifi.Identity);
       const recipient = [['name', 'Alice']];
-      console.log(11111);
+      console.log(11111, viewpoint.gun);
+      const attrs = await viewpoint.gun.get('attrs').then();
+      console.log(2222, attrs);
       await new Promise(resolve => {
-        viewpoint.gun.open(r => {
-          Object.keys(r.attrs).forEach(key => {
-            recipient.push([r.attrs[key].name, r.attrs[key].val]);
+        viewpoint.gun.get('attrs').load(attrs => {
+          Object.keys(attrs).forEach(key => {
+            recipient.push([attrs[key].name, attrs[key].val]);
           });
           resolve();
         });

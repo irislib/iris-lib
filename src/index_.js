@@ -92,7 +92,7 @@ class Index {
     });
     const keys = Object.keys(r);
     if (keys.length) {
-      return new Identity(this.gun.get(`identitiesByTrustDistance`).get(r[keys[0]]));
+      return new Identity(this.gun.get(`identitiesByTrustDistance`).get(keys[0]));
     }
   }
 
@@ -120,7 +120,6 @@ class Index {
   async _getMsgs(msgIndex, limit, cursor) {  // eslint-disable-line no-unused-vars
     const rawMsgs = await new Promise(resolve => {
       msgIndex.space(`a`, r => {
-        console.log(`_getMsgs`, r);
         resolve(Object.keys(r.tree));
       });
     });
@@ -149,7 +148,6 @@ class Index {
   * @returns {Array} list of messages sent by param identity
   */
   async getSentMsgs(identity: Identity, limit, cursor = ``) {
-    console.log(`getSentMsgs`);
     return this._getMsgs(identity.gun.get(`sent`), limit, cursor);
   }
 
@@ -157,7 +155,6 @@ class Index {
   * @returns {Array} list of messages received by param identity
   */
   async getReceivedMsgs(identity, limit, cursor = ``) {
-    console.log(`getReceivedMsgs`);
     return this._getMsgs(identity.gun.get(`received`), limit, cursor);
   }
 
@@ -175,17 +172,13 @@ class Index {
   */
   async getMsgTrustDistance(msg) {
     let shortestDistance = Infinity;
-    console.log('getting signer', await msg.getSignerKeyID());
     const signer = await this.get(await msg.getSignerKeyID(), `keyID`);
-    console.log('got', signer);
     if (!signer) {
       return;
     }
     const vp = await this.gun.get(`viewpoint`).then();
-    console.log('viewpoint', vp);
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = new Attribute(msg.signedData.author[i]);
-      console.log(a, vp, Attribute.equals(a, vp));
       if (Attribute.equals(a, vp)) {
         return 0;
       } else {
@@ -404,8 +397,9 @@ class Index {
           const keys = Object.keys(res.tree);
           for (let j = 0;j < keys.length;j ++) {
             const id = res.tree[keys[j]];
-            if (!r.hasOwnProperty(Gun.node.soul(id))) {
-              r[Gun.node.soul(id)] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(`a${key}`));
+            console.log(5555, res, id, id['#']);
+            if (!r.hasOwnProperty(id['#'])) {
+              r[id['#']] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(keys[j]));
             }
           }
         });
