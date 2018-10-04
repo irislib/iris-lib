@@ -118,15 +118,15 @@ class Index {
   }
 
   async _getMsgs(msgIndex, limit, cursor) {  // eslint-disable-line no-unused-vars
-    const rawMsgs = await new Promise(resolve => {
+    const keys = await new Promise(resolve => {
       msgIndex.space(`a`, r => {
         resolve(Object.keys(r.tree));
       });
     });
     const msgs = [];
-    const keys = Object.keys(rawMsgs);
     for (let i = 0;i < keys.length;i ++) {
-      const msg = await Message.fromSig(rawMsgs[keys[i]].value);
+      const rawMsg = await msgIndex.get(keys[i]).then();
+      const msg = await Message.fromSig(rawMsg);
       msgs.push(msg);
     }
     return msgs;
@@ -397,7 +397,6 @@ class Index {
           const keys = Object.keys(res.tree);
           for (let j = 0;j < keys.length;j ++) {
             const id = res.tree[keys[j]];
-            console.log(5555, res, id, id['#']);
             if (!r.hasOwnProperty(id['#'])) {
               r[id['#']] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(keys[j]));
             }

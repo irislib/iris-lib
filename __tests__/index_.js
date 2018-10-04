@@ -141,9 +141,7 @@ describe('local index', async () => {
       let viewpoint = await i.getViewpoint();
       expect(viewpoint).toBeInstanceOf(identifi.Identity);
       const recipient = [['name', 'Alice']];
-      console.log(11111, viewpoint.gun);
       const attrs = await viewpoint.gun.get('attrs').then();
-      console.log(2222, attrs);
       await new Promise(resolve => {
         viewpoint.gun.get('attrs').load(attrs => {
           Object.keys(attrs).forEach(key => {
@@ -152,19 +150,14 @@ describe('local index', async () => {
           resolve();
         });
       });
-      console.log(232323);
       const msg = await identifi.Message.createVerification({recipient}, key);
-      console.log(32323);
       const r = await i.addMessage(msg);
-      console.log(3434343);
       viewpoint = await i.getViewpoint();
-      console.log(53535);
       const data = await new Promise(resolve => {
         viewpoint.gun.load(r => {
           resolve(r);
         });
       });
-      console.log(5555555);
       expect(Object.keys(data.attrs).length).toBe(2);
       expect(data.mostVerifiedAttributes.name.attribute.val).toBe('Alice');
     });
