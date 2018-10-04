@@ -318,7 +318,7 @@ class Index {
           const id = msgs[i].signedData.author[j];
           if (Attribute.isUniqueType(id[0])) {
             const hash = await msgs[i].getHash();
-            const key = `${encodeURIComponent(id[1])}:${encodeURIComponent(id[0])}:${hash}`;
+            const key = `${encodeURIComponent(id[1])}:${encodeURIComponent(id[0])}:${hash.substr(0, 9)}`;
             msgsByAuthor[key] = msgs[i];
           }
         }
@@ -335,7 +335,7 @@ class Index {
     do {
       const knownIdentities = await new Promise(resolve => {
         this.gun.get(`identitiesBySearchKey`).space(`a`, r => {
-          resolve(Object.keys(r.tree));
+          resolve(Object.keys(r.tree).sort());
         });
       });
       let i = 0;
@@ -344,7 +344,6 @@ class Index {
       initialMsgCount = msgAuthors.length;
       // sort-merge join identitiesBySearchKey and msgsByAuthor
       while (author && key) {
-        console.log(author, key);
         if (author.indexOf(key) === 0) {
           try {
             await util.timeoutPromise(this.addMessage(msgsByAuthor[author]), 10000);
