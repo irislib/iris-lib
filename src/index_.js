@@ -335,16 +335,17 @@ class Index {
     do {
       const knownIdentities = await new Promise(resolve => {
         this.gun.get(`identitiesBySearchKey`).space(`a`, r => {
-          resolve(Object.values(r.tree));
+          resolve(Object.keys(r.tree));
         });
       });
       let i = 0;
       let author = msgAuthors[i];
-      let knownIdentity = knownIdentities.shift();
+      let key = knownIdentities.shift().substring(1);
       initialMsgCount = msgAuthors.length;
       // sort-merge join identitiesBySearchKey and msgsByAuthor
-      while (author && knownIdentity) {
-        if (author.indexOf(knownIdentity.key) === 0) {
+      while (author && key) {
+        console.log(author, key);
+        if (author.indexOf(key) === 0) {
           try {
             await util.timeoutPromise(this.addMessage(msgsByAuthor[author]), 10000);
           } catch (e) {
@@ -353,10 +354,10 @@ class Index {
           msgAuthors.splice(i, 1);
           author = i < msgAuthors.length ? msgAuthors[i] : undefined;
           //knownIdentity = knownIdentities.shift();
-        } else if (author < knownIdentity.key) {
+        } else if (author < key) {
           author = i < msgAuthors.length ? msgAuthors[++ i] : undefined;
         } else {
-          knownIdentity = knownIdentities.shift();
+          key = knownIdentities.shift().substring(1);
         }
       }
       msgCountAfterwards = msgAuthors.length;
