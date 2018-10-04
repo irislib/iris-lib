@@ -397,8 +397,8 @@ class Index {
           const keys = Object.keys(res.tree);
           for (let j = 0;j < keys.length;j ++) {
             const id = res.tree[keys[j]];
-            if (!r.hasOwnProperty(id['#'])) {
-              r[id['#']] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(keys[j]));
+            if (!r.hasOwnProperty(id[`#`])) {
+              r[id[`#`]] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(keys[j]));
             }
           }
         });
