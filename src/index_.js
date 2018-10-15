@@ -386,19 +386,24 @@ class Index {
   /**
   * @param {string} value search string
   * @param {string} type (optional) type of searched value
+  * @param {string} limit (optional) result count limit
   * @returns {Array} list of matching identities
   */
-  async search(value) { // TODO: param 'exact', type param
+  async search(value, type, limit) { // TODO: param 'exact', type param
     const r = {};
     return new Promise(resolve => {
       for (let i = 0;i < 5;i ++) {
         const key = `0${i}:${encodeURIComponent(value)}`;
         this.gun.get(`identitiesByTrustDistance`).space(`a${key}`, res => {
           const keys = Object.keys(res.tree);
+          console.log('search results', res);
           for (let j = 0;j < keys.length;j ++) {
             const id = res.tree[keys[j]];
             if (!r.hasOwnProperty(id[`#`])) {
               r[id[`#`]] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(keys[j]));
+            }
+            if (limit && Object.keys(r).length >= limit) {
+              return resolve(Object.values(r));
             }
           }
         });

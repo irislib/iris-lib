@@ -110,6 +110,27 @@ describe('local index', async () => {
       p = await i.get('chris@example.com');
       expect(p).toBeUndefined();
     });
+    test('search should find similar keys properly', async () => {
+      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'antero@example.com']], rating:10}, key);
+      await i.addMessage(msg);
+      msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'antti@example.com']], rating:10}, key);
+      msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'anttila@example.com']], rating:10}, key);
+      await i.addMessage(msg);
+      msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'antura@example.com']], rating:10}, key);
+      await i.addMessage(msg);
+      msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'anton@example.com']], rating:10}, key);
+      await i.addMessage(msg);
+      msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'anthony@example.com']], rating:10}, key);
+      await i.addMessage(msg);
+      let r = await i.search('antt');
+      expect(r.length).toBe(2);
+      r = await i.search('an');
+      expect(r.length).toBe(6);
+    });
+    test('search results limit', async () => {
+      const r = await i.search('an', undefined, 1);
+      expect(r.length).toBe(1);
+    })
   });
   describe ('untrusted key', async () => {
     let u;
