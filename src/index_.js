@@ -8,6 +8,27 @@ import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 import space from 'gun/lib/space'; // eslint-disable-line no-unused-vars
 
+function spaceSearch(node, key, limit) {
+  let results = [];
+  return new Promise(resolve => {
+    node.space(`a${key}`, async (r) => {
+      if (key.indexOf('ant') >= 0) {
+        console.log('rrr', r);
+      }
+      if (r.data) {
+        results.push(r.data);
+      } else {
+        const keys = Object.keys(r.tree);
+        for (let i = 0;i < keys.length;i ++) {
+          const res = await spaceSearch(node, keys[i].slice(1, key.length + 2));
+          results = results.concat(res);
+        }
+      }
+      resolve(results);
+    });
+  });
+}
+
 // TODO: flush onto IPFS
 /**
 * Identifi index root. Contains four indexes: identitiesBySearchKey, gun.get(`identitiesByTrustDistance`),
@@ -391,22 +412,22 @@ class Index {
   */
   async search(value, type, limit) { // TODO: param 'exact', type param
     const r = {};
-    return new Promise(resolve => {
+    return new Promise(async (resolve) => {
       for (let i = 0;i < 5;i ++) {
         const key = `0${i}:${encodeURIComponent(value)}`;
-        this.gun.get(`identitiesByTrustDistance`).space(`a${key}`, res => {
-          const keys = Object.keys(res.tree);
+        const res = await spaceSearch(this.gun.get(`identitiesByTrustDistance`), key, limit);
+        if (key.indexOf('ant') >= 0) {
           console.log('search results', res);
-          for (let j = 0;j < keys.length;j ++) {
-            const id = res.tree[keys[j]];
-            if (!r.hasOwnProperty(id[`#`])) {
-              r[id[`#`]] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(keys[j]));
-            }
-            if (limit && Object.keys(r).length >= limit) {
-              return resolve(Object.values(r));
-            }
+        }
+        for (let j = 0;j < res.length;j ++) {
+          const id = res[j];
+          if (!r.hasOwnProperty(id[`#`])) {
+            r[id[`#`]] = new Identity(id);
           }
-        });
+          if (limit && Object.keys(r).length >= limit) {
+            return resolve(Object.values(r));
+          }
+        }
       }
       resolve(Object.values(r));
     });

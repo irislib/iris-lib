@@ -114,6 +114,7 @@ describe('local index', async () => {
       let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'antero@example.com']], rating:10}, key);
       await i.addMessage(msg);
       msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'antti@example.com']], rating:10}, key);
+      await i.addMessage(msg);
       msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'anttila@example.com']], rating:10}, key);
       await i.addMessage(msg);
       msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'antura@example.com']], rating:10}, key);
