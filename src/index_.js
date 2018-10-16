@@ -13,7 +13,7 @@ function spaceSearch(node, key, limit) {
   return new Promise(resolve => {
     node.space(`a${key}`, async (r) => {
       if (key.indexOf('ant') >= 0) {
-        console.log('rrr', r);
+        console.log(r);
       }
       if (r.data) {
         results.push(r.data);
