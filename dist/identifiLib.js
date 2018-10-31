@@ -10811,7 +10811,7 @@
 	    const Buffer$$1 = USE('./buffer');
 	    const api = {Buffer: Buffer$$1};
 
-	    if (typeof __webpack_require__ === 'function' || (typeof window !== 'undefined' && window.crypto)) {
+	    if (typeof __webpack_require__ === 'function' || (typeof window !== 'undefined' && (window.crypto || window.msCrypto))) {
 	      var crypto = window.crypto || window.msCrypto;
 	      var subtle = crypto.subtle || crypto.webkitSubtle;
 	      const TextEncoder = window.TextEncoder;
@@ -10962,7 +10962,7 @@
 	      const r = hash && hash.toString('utf8');
 	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
 	      return r;
-	    } catch(e) { 
+	    } catch(e) {
 	      SEA.err = e;
 	      if(cb){ cb(); }
 	      return;
@@ -10995,7 +10995,7 @@
 	        // but split on a non-base64 letter.
 	        return key;
 	      });
-	      
+
 	      // To include PGPv4 kind of keyId:
 	      // const pubId = await SEA.keyid(keys.pub)
 	      // Next: ECDH keys for encryption/decryption...
@@ -11079,7 +11079,7 @@
 	    SEA.verify = async (data, pair, cb) => { try {
 	      const json = parse(data);
 	      if(false === pair){ // don't verify!
-	        const raw = (json !== data)? 
+	        const raw = (json !== data)?
 	          (json.s && json.m)? parse(json.m) : data
 	        : json;
 	        if(cb){ try{ cb(raw); }catch(e){console.log(e);} }
@@ -11141,7 +11141,7 @@
 
 	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
 	      return r;
-	    } catch(e) { 
+	    } catch(e) {
 	      SEA.err = e;
 	      if(cb){ cb(); }
 	      return;
@@ -11165,10 +11165,10 @@
 	        name: opt.name || 'AES-GCM', iv: new Uint8Array(shim.Buffer.from(json.iv, 'utf8'))
 	      }, aes, new Uint8Array(shim.Buffer.from(json.ct, 'utf8'))));
 	      const r = parse(new shim.TextDecoder('utf8').decode(ct));
-	      
+
 	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
 	      return r;
-	    } catch(e) { 
+	    } catch(e) {
 	      SEA.err = e;
 	      if(cb){ cb(); }
 	      return;
@@ -11201,7 +11201,7 @@
 	      const r = derived;
 	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
 	      return r;
-	    } catch(e) { 
+	    } catch(e) {
 	      SEA.err = e;
 	      if(cb){ cb(); }
 	      return;
@@ -11522,7 +11522,7 @@
 	      //console.log("authorized", user._);
 	      // persist authentication
 	      //await authPersist(user._, key.proof, opts) // temporarily disabled
-	      // emit an auth event, useful for page redirects and stuff.  
+	      // emit an auth event, useful for page redirects and stuff.
 	      try {
 	        gunRoot._.on('auth', user._);
 	      } catch (e) {
@@ -11709,7 +11709,7 @@
 	    var Gun = SEA.Gun;
 	    var then = USE('./then');
 
-	    function User(root){ 
+	    function User(root){
 	      this._ = {$: this};
 	    }
 	    User.prototype = (function(){ function F(){} F.prototype = Gun.chain; return new F() }()); // Object.create polyfill
@@ -11939,12 +11939,12 @@
 	    };
 	    // If authentication is to be remembered over reloads or browser closing,
 	    // set validity time in minutes.
-	    User.prototype.recall = async function(setvalidity, options){ 
+	    User.prototype.recall = async function(setvalidity, options){
 	      const gunRoot = this.back(-1);
 
 	      let validity;
 	      let opts;
-	      
+
 	      var o = setvalidity;
 	      if(o && o.sessionStorage){
 	        if(typeof window !== 'undefined'){
@@ -13385,14 +13385,15 @@
 	      pie.style.transform = transform;
 	      pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
 
-	      var hash = util$1.getHash(_JSON$stringify(data.linkTo), 'hex');
-	      var identiconImg = new identicon(hash, { width: width, format: 'svg' });
-
-	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
-
 	      if (showDistance) {
 	        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : '\u2013';
 	      }
+	    });
+
+	    this.gun.get('linkTo').on(function (data) {
+	      var hash = util$1.getHash(encodeURIComponent(data.name) + ':' + encodeURIComponent(data.val), 'hex');
+	      var identiconImg = new identicon(hash, { width: width, format: 'svg' });
+	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
 	    });
 
 	    if (ipfs) {
