@@ -10811,7 +10811,7 @@
 	    const Buffer$$1 = USE('./buffer');
 	    const api = {Buffer: Buffer$$1};
 
-	    if (typeof __webpack_require__ === 'function' || (typeof window !== 'undefined' && (window.crypto || window.msCrypto))) {
+	    if (typeof __webpack_require__ === 'function' || (typeof window !== 'undefined' && window.crypto)) {
 	      var crypto = window.crypto || window.msCrypto;
 	      var subtle = crypto.subtle || crypto.webkitSubtle;
 	      const TextEncoder = window.TextEncoder;
@@ -13123,6 +13123,7 @@
 	    data.sentNeutral = data.sentNeutral || 0;
 	    data.trustDistance = data.hasOwnProperty('trustDistance') ? data.trustDistance : 99;
 	    data.attrs = data.attrs || {};
+	    data.scores = data.scores || { identifi: { score: 'todo', ratings: 0 } };
 	    if (Array.isArray(data.attrs)) {
 	      var attrs = {};
 	      while (data.attrs.length) {
@@ -13835,6 +13836,7 @@
 	      msg.signedData.recipient.forEach(function (a1) {
 	        var hasAttr = false;
 	        _Object$keys(attrs).forEach(function (k) {
+	          // TODO: if author is self, mark as self verified
 	          if (Attribute.equals(a1, attrs[k])) {
 	            attrs[k].conf = (attrs[k].conf || 0) + 1;
 	            hasAttr = true;
@@ -13842,6 +13844,9 @@
 	        });
 	        if (!hasAttr) {
 	          attrs[encodeURIComponent(a1[0]) + ':' + encodeURIComponent(a1[1])] = { name: a1[0], val: a1[1], conf: 1, ref: 0 };
+	        }
+	        if (msg.goodVerification) {
+	          attrs[encodeURIComponent(a1[0]) + ':' + encodeURIComponent(a1[1])].verified = true;
 	        }
 	      });
 	      await recipient.get('mostVerifiedAttributes').put(Identity.getMostVerifiedAttributes(attrs));
@@ -13858,6 +13863,17 @@
 	        await recipient.get('receivedNegative').put(id.receivedNegative + 1);
 	      } else {
 	        await recipient.get('receivedNeutral').put(id.receivedNeutral + 1);
+	      }
+	      if (msg.signedData.context === 'verifier') {
+	        if (msg.distance === 0) {
+	          if (msg.isPositive) {
+	            recipient.get('scores').get(msg.signedData.context).get('score').put(10);
+	          } else if (msg.isNegative()) {
+	            recipient.get('scores').get(msg.signedData.context).get('score').put(0);
+	          } else {
+	            recipient.get('scores').get(msg.signedData.context).get('score').put(-10);
+	          }
+	        }
 	      }
 	    }
 	    await recipient.get('received').get(msgIndexKey).put({ sig: msg.sig, pubKey: msg.pubKey }).then();
@@ -13907,6 +13923,10 @@
 	    for (var i = 0; i < msg.signedData.author.length; i++) {
 	      var a = msg.signedData.author[i];
 	      var id = await this.get(a[1], a[0]);
+	      var scores = await id.gun.get('scores').then();
+	      if (scores.verifier && msg.signedData.type === 'verification') {
+	        msg.goodVerification = true;
+	      }
 	      if (id) {
 	        authorIdentities[id.gun['_'].link] = id;
 	      }
