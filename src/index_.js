@@ -218,6 +218,7 @@ class Index {
       msg.signedData.recipient.forEach(a1 => {
         let hasAttr = false;
         Object.keys(attrs).forEach(k => {
+          // TODO: if author is self, mark as self verified
           if (Attribute.equals(a1, attrs[k])) {
             attrs[k].conf = (attrs[k].conf || 0) + 1;
             hasAttr = true;
@@ -225,6 +226,9 @@ class Index {
         });
         if (!hasAttr) {
           attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0};
+        }
+        if (msg.goodVerification) {
+          attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`].verified = true;
         }
       });
       await recipient.get(`mostVerifiedAttributes`).put(Identity.getMostVerifiedAttributes(attrs));
@@ -241,6 +245,19 @@ class Index {
         await recipient.get(`receivedNegative`).put(id.receivedNegative + 1);
       } else {
         await recipient.get(`receivedNeutral`).put(id.receivedNeutral + 1);
+      }
+      if (msg.signedData.context === `verifier`) {
+        if (msg.distance === 0) {
+          if (msg.isPositive) {
+            recipient.get(`scores`).get(msg.signedData.context).get(`score`).put(10);
+          } else if (msg.isNegative()) {
+            recipient.get(`scores`).get(msg.signedData.context).get(`score`).put(0);
+          } else {
+            recipient.get(`scores`).get(msg.signedData.context).get(`score`).put(-10);
+          }
+        }
+      } else {
+        // TODO: generic context-dependent score calculation
       }
     }
     await recipient.get(`received`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
@@ -289,6 +306,10 @@ class Index {
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = await this.get(a[1], a[0]);
+      const scores = await id.gun.get(`scores`).then();
+      if (scores.verifier && msg.signedData.type === `verification`) {
+        msg.goodVerification = true;
+      }
       if (id) {
         authorIdentities[id.gun[`_`].link] = id;
       }

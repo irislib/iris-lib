@@ -170,7 +170,7 @@ describe('local index', async () => {
     test('create verifier', async () => {
       verifierKey = await identifi.Key.generate();
       const verifierKeyID = identifi.Key.getId(verifierKey);
-      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['keyID', verifierKeyID]], rating:10, context: 'verifier'}, key);
+      let msg = await identifi.Message.createRating({recipient: [['keyID', verifierKeyID]], rating:10, context: 'verifier'}, key);
       await i.addMessage(msg);
       const verifier = await i.get(verifierKeyID, 'keyID');
       const scores = await new Promise(resolve => {
@@ -178,10 +178,10 @@ describe('local index', async () => {
           resolve(r);
         });
       });
-      expect(scores.verifier.toBe(10));
+      expect(scores.verifier.score).toBe(10);
     });
     test('create trusted verification', async () => {
-      msg = await identifi.Message.createVerification({recipient: [['email', 'david@example.com'], ['name', 'David Attenborough']]}, verifierKey);
+      let msg = await identifi.Message.createVerification({recipient: [['email', 'david@example.com'], ['name', 'David Attenborough']]}, verifierKey);
       await i.addMessage(msg);
       p = await i.get('david@example.com');
       const attrs = await new Promise(resolve => {
@@ -200,7 +200,7 @@ describe('local index', async () => {
     const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(data.trustDistance).toBe(0);
-    expect(data.sentPositive).toBe(1);
+    expect(data.sentPositive).toBe(2);
   });
   describe('save & load', async () => {
     test('load saved index', async () => {
