@@ -213,6 +213,7 @@ class Index {
     const hash = `todo`;
     const identityIndexKeysBefore = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     const attrs = await new Promise(resolve => { recipient.get(`attrs`).load(r => resolve(r)); });
+    const scores = await new Promise(resolve => { recipient.get(`scores`).load(r => resolve(r)); });
     if (msg.signedData.type === `verification`) {
       msg.signedData.recipient.forEach(a1 => {
         let hasAttr = false;

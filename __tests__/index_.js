@@ -165,6 +165,35 @@ describe('local index', async () => {
       expect(r.length).toEqual(c);
     });
   });
+  describe('trusted verifier', async () => {
+    let verifierKey;
+    test('create verifier', async () => {
+      verifierKey = await identifi.Key.generate();
+      const verifierKeyID = identifi.Key.getId(verifierKey);
+      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['keyID', verifierKeyID]], rating:10, context: 'verifier'}, key);
+      await i.addMessage(msg);
+      const verifier = await i.get(verifierKeyID, 'keyID');
+      const scores = await new Promise(resolve => {
+        verifier.gun.get('scores').load(r => {
+          resolve(r);
+        });
+      });
+      expect(scores.verifier.toBe(10));
+    });
+    test('create trusted verification', async () => {
+      msg = await identifi.Message.createVerification({recipient: [['email', 'david@example.com'], ['name', 'David Attenborough']]}, verifierKey);
+      await i.addMessage(msg);
+      p = await i.get('david@example.com');
+      const attrs = await new Promise(resolve => {
+        p.gun.get('attrs').load(r => {
+          resolve(r);
+        });
+      });
+      Object.keys(attrs).forEach(key => {
+        expect(attrs[key].verified).toBe(true);
+      });
+    });
+  });
   test('get viewpoint identity by searching the default keyID', async () => {
     const defaultKey = await identifi.Key.getDefault();
     p = await i.get(identifi.Key.getId(defaultKey), 'keyID');

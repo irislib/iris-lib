@@ -20,6 +20,7 @@ class Identity {
     data.sentNeutral = data.sentNeutral || 0;
     data.trustDistance = data.hasOwnProperty(`trustDistance`) ? data.trustDistance : 99;
     data.attrs = data.attrs || {};
+    data.scores = data.scores || {};
     if (Array.isArray(data.attrs)) {
       const attrs = {};
       while (data.attrs.length) {
