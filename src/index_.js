@@ -305,12 +305,12 @@ class Index {
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = await this.get(a[1], a[0]);
-      const scores = await id.gun.get(`scores`).then();
-      if (scores.verifier && msg.signedData.type === `verification`) {
-        msg.goodVerification = true;
-      }
       if (id) {
         authorIdentities[id.gun[`_`].link] = id;
+        const scores = await id.gun.get(`scores`).then();
+        if (scores && scores.verifier && msg.signedData.type === `verification`) {
+          msg.goodVerification = true;
+        }
       }
     }
     if (!Object.keys(authorIdentities).length) {

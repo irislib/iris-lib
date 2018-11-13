@@ -13646,7 +13646,7 @@
 	      var defaultKey = await Key.getDefault();
 	      viewpoint = { name: 'keyID', val: Key.getId(defaultKey), conf: 1, ref: 0 };
 	    }
-	    await i.gun.get('viewpoint').put(new Attribute(viewpoint));
+	    i.gun.get('viewpoint').put(new Attribute(viewpoint));
 	    var vp = Identity.create(i.gun.get('identities'), { attrs: [viewpoint], trustDistance: 0 });
 	    await i._addIdentityToIndexes(vp.gun);
 	    return i;
@@ -13760,8 +13760,8 @@
 	    for (var i = 0; i < indexKeys.length; i++) {
 	      var key = indexKeys[i];
 	      console.log('adding key ' + key);
-	      await this.gun.get('identitiesByTrustDistance').get(key).put(id).then();
-	      await this.gun.get('identitiesBySearchKey').get(key.substr(key.indexOf(':') + 1)).put(id).then();
+	      this.gun.get('identitiesByTrustDistance').get(key).put(id);
+	      this.gun.get('identitiesBySearchKey').get(key.substr(key.indexOf(':') + 1)).put(id);
 	    }
 	  };
 
@@ -13849,8 +13849,8 @@
 	          attrs[encodeURIComponent(a1[0]) + ':' + encodeURIComponent(a1[1])].verified = true;
 	        }
 	      });
-	      await recipient.get('mostVerifiedAttributes').put(Identity.getMostVerifiedAttributes(attrs));
-	      await recipient.get('attrs').put(attrs);
+	      recipient.get('mostVerifiedAttributes').put(Identity.getMostVerifiedAttributes(attrs));
+	      recipient.get('attrs').put(attrs);
 	    }
 	    if (msg.signedData.type === 'rating') {
 	      var id = await recipient.then();
@@ -13858,11 +13858,11 @@
 	        if (msg.distance + 1 < id.trustDistance) {
 	          recipient.get('trustDistance').put(msg.distance + 1);
 	        }
-	        await recipient.get('receivedPositive').put(id.receivedPositive + 1);
+	        recipient.get('receivedPositive').put(id.receivedPositive + 1);
 	      } else if (msg.isNegative()) {
-	        await recipient.get('receivedNegative').put(id.receivedNegative + 1);
+	        recipient.get('receivedNegative').put(id.receivedNegative + 1);
 	      } else {
-	        await recipient.get('receivedNeutral').put(id.receivedNeutral + 1);
+	        recipient.get('receivedNeutral').put(id.receivedNeutral + 1);
 	      }
 	      if (msg.signedData.context === 'verifier') {
 	        if (msg.distance === 0) {
@@ -13876,13 +13876,13 @@
 	        }
 	      }
 	    }
-	    await recipient.get('received').get(msgIndexKey).put({ sig: msg.sig, pubKey: msg.pubKey }).then();
+	    recipient.get('received').get(msgIndexKey).put({ sig: msg.sig, pubKey: msg.pubKey });
 	    var identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
 	    for (var j = 0; j < identityIndexKeysBefore.length; j++) {
 	      var k = identityIndexKeysBefore[j];
 	      if (identityIndexKeysAfter.indexOf(k) === -1) {
-	        await this.gun.get('identitiesByTrustDistance').get(k).put(null);
-	        await this.gun.get('identitiesBySearchKey').get(k.substr(k.indexOf(':') + 1)).put(null);
+	        this.gun.get('identitiesByTrustDistance').get(k).put(null);
+	        this.gun.get('identitiesBySearchKey').get(k.substr(k.indexOf(':') + 1)).put(null);
 	      }
 	    }
 	  };
@@ -13891,11 +13891,11 @@
 	    if (msg.signedData.type === 'rating') {
 	      var id = await author.then();
 	      if (msg.isPositive()) {
-	        await author.get('sentPositive').put(id.sentPositive + 1);
+	        author.get('sentPositive').put(id.sentPositive + 1);
 	      } else if (msg.isNegative()) {
-	        await author.get('sentNegative').put(id.sentNegative + 1);
+	        author.get('sentNegative').put(id.sentNegative + 1);
 	      } else {
-	        await author.get('sentNeutral').put(id.sentNeutral + 1);
+	        author.get('sentNeutral').put(id.sentNeutral + 1);
 	      }
 	    }
 	    return author.get('sent').get(msgIndexKey).put({ sig: msg.sig, pubKey: msg.pubKey }).then();
@@ -13923,12 +13923,12 @@
 	    for (var i = 0; i < msg.signedData.author.length; i++) {
 	      var a = msg.signedData.author[i];
 	      var id = await this.get(a[1], a[0]);
-	      var scores = await id.gun.get('scores').then();
-	      if (scores.verifier && msg.signedData.type === 'verification') {
-	        msg.goodVerification = true;
-	      }
 	      if (id) {
 	        authorIdentities[id.gun['_'].link] = id;
+	        var scores = await id.gun.get('scores').then();
+	        if (scores && scores.verifier && msg.signedData.type === 'verification') {
+	          msg.goodVerification = true;
+	        }
 	      }
 	    }
 	    if (!_Object$keys(authorIdentities).length) {
@@ -14033,9 +14033,9 @@
 	      return false; // do not save messages from untrusted author
 	    }
 	    var indexKey = Index.getMsgIndexKey(msg);
-	    await this.gun.get('messagesByDistance').get(indexKey).put({ sig: msg.sig, pubKey: msg.pubKey }).then();
+	    this.gun.get('messagesByDistance').get(indexKey).put({ sig: msg.sig, pubKey: msg.pubKey });
 	    indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
-	    await this.gun.get('messagesByTimestamp').get(indexKey).put({ sig: msg.sig, pubKey: msg.pubKey }).then();
+	    this.gun.get('messagesByTimestamp').get(indexKey).put({ sig: msg.sig, pubKey: msg.pubKey });
 	    await this._updateIdentityIndexesByMsg(msg);
 	    return true;
 	  };
