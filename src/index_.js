@@ -54,8 +54,11 @@ class Index {
       viewpoint = {name: `keyID`, val: Key.getId(defaultKey), conf: 1, ref: 0};
     }
     i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
-    const vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});
-    await i._addIdentityToIndexes(vp.gun);
+    let vp = await util.timeoutPromise(i.getViewpoint(), 2000);
+    if (!vp) {
+      vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});
+      await i._addIdentityToIndexes(vp.gun);
+    }
     return i;
   }
 

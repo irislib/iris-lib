@@ -57,6 +57,9 @@ class Identity {
           attribute: a,
           verificationScore: a.conf - a.ref
         };
+        if (a.verified) {
+          mostVerifiedAttributes[a.name].verified = true;
+        }
       }
     });
     return mostVerifiedAttributes;

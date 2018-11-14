@@ -13160,6 +13160,9 @@
 	          attribute: a,
 	          verificationScore: a.conf - a.ref
 	        };
+	        if (a.verified) {
+	          mostVerifiedAttributes[a.name].verified = true;
+	        }
 	      }
 	    });
 	    return mostVerifiedAttributes;
@@ -13647,8 +13650,11 @@
 	      viewpoint = { name: 'keyID', val: Key.getId(defaultKey), conf: 1, ref: 0 };
 	    }
 	    i.gun.get('viewpoint').put(new Attribute(viewpoint));
-	    var vp = Identity.create(i.gun.get('identities'), { attrs: [viewpoint], trustDistance: 0 });
-	    await i._addIdentityToIndexes(vp.gun);
+	    var vp = await util$1.timeoutPromise(i.getViewpoint(), 2000);
+	    if (!vp) {
+	      vp = Identity.create(i.gun.get('identities'), { attrs: [viewpoint], trustDistance: 0 });
+	      await i._addIdentityToIndexes(vp.gun);
+	    }
 	    return i;
 	  };
 
