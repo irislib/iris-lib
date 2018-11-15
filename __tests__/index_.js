@@ -2,6 +2,7 @@ const identifi = require('../cjs/index.js');
 const fs = require('fs');
 const GUN = require('gun');
 const load = require('gun/lib/load');
+const then = require('gun/lib/then');
 
 let key;
 //let ipfsNode = new IPFS({repo: './ipfs_repo'});
@@ -164,13 +165,38 @@ describe('local index', async () => {
       const r = await i.search('');
       expect(r.length).toEqual(c);
     });
+    test('there should be only one identity with distance 0', async () => {
+      const r = await i.search('');
+      let viewpoints = 0;
+      for (let j = 0; j < r.length; j++) {
+        const id = await r[j].gun.then();
+        if (id && id.trustDistance === 0) {
+          console.log(r[j]);
+          viewpoints++;
+        }
+      }
+      expect(viewpoints).toEqual(1);
+    });
   });
   describe('trusted verifier', async () => {
-    let verifierKey;
+    let verifierKey, verifierKeyID;
     test('create verifier', async () => {
       verifierKey = await identifi.Key.generate();
-      const verifierKeyID = identifi.Key.getId(verifierKey);
+      verifierKeyID = identifi.Key.getId(verifierKey);
       let msg = await identifi.Message.createRating({recipient: [['keyID', verifierKeyID]], rating:10, context: 'verifier'}, key);
+      await i.addMessage(msg);
+      const verifier = await i.get(verifierKeyID, 'keyID');
+      const scores = await new Promise(resolve => {
+        verifier.gun.get('scores').load(r => {
+          resolve(r);
+        });
+      });
+      expect(scores.verifier.score).toBe(10);
+    });
+    test('verifier status should not disappear when the identity is changed', async () => {
+      msg = await identifi.Message.createRating({recipient: [['keyID', verifierKeyID]], rating:10, context: 'identifi'}, key);
+      await i.addMessage(msg);
+      let msg = await identifi.Message.createVerification({recipient: [['keyID', verifierKeyID], ['name','VerifyBot'], ['email','VerifyBot@example.com']]}, key);
       await i.addMessage(msg);
       const verifier = await i.get(verifierKeyID, 'keyID');
       const scores = await new Promise(resolve => {
@@ -200,7 +226,7 @@ describe('local index', async () => {
     const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(data.trustDistance).toBe(0);
-    expect(data.sentPositive).toBe(2);
+    expect(data.sentPositive).toBe(3);
   });
   describe('save & load', async () => {
     test('load saved index', async () => {
