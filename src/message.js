@@ -28,6 +28,9 @@ class Message {
     if (obj.pubKey) {
       this.pubKey = obj.pubKey;
     }
+    if (obj.ipfsUri) {
+      this.ipfsUri = obj.ipfsUri;
+    }
     if (obj.sig) {
       if (typeof obj.sig !== `string`) {
         throw new ValidationError(`Message signature must be a string`);
@@ -197,7 +200,8 @@ class Message {
 
   static async fromSig(obj) {
     const signedData = await Key.verify(obj.sig, obj.pubKey);
-    return new Message({signedData, sig: obj.sig, pubKey: obj.pubKey});
+    const o = {signedData, sig: obj.sig, pubKey: obj.pubKey};
+    return new Message(o);
   }
 
   /**
@@ -222,6 +226,29 @@ class Message {
       this.getHash();
     }
     return true;
+  }
+
+  async saveToIpfs(ipfs) {
+    const s = this.toString();
+    const r = await ipfs.files.add(ipfs.types.Buffer.from(s));
+    if (r.length) {
+      this.ipfsUri = r[0].hash;
+    }
+    return this.ipfsUri;
+  }
+
+  static async loadFromIpfs(ipfs, uri) {
+    const f = await ipfs.files.cat(uri);
+    const s = ipfs.types.Buffer.from(f).toString(`utf8`);
+    return Message.fromString(s);
+  }
+
+  toString() {
+    return JSON.stringify({sig: this.sig, pubKey: this.pubKey});
+  }
+
+  static fromString(s) {
+    return Message.fromSig(JSON.parse(s));
   }
 }
 

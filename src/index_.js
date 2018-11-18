@@ -147,6 +147,9 @@ class Index {
     const msgs = [];
     for (let i = 0;i < rawMsgs.length;i ++) {
       const msg = await Message.fromSig(rawMsgs[i].value);
+      if (rawMsgs[i].value && rawMsgs[i].value.ipfsUri) {
+        msg.ipfsUri = rawMsgs[i].value.ipfsUri;
+      }
       msgs.push(msg);
     }
     return msgs;
@@ -262,7 +265,11 @@ class Index {
         // TODO: generic context-dependent score calculation
       }
     }
-    recipient.get(`received`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey});
+    const obj = {sig: msg.sig, pubKey: msg.pubKey};
+    if (msg.ipfsUri) {
+      obj.ipfsUri = msg.ipfsUri;
+    }
+    recipient.get(`received`).get(msgIndexKey).put(obj);
     const identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     for (let j = 0;j < identityIndexKeysBefore.length;j ++) {
       const k = identityIndexKeysBefore[j];
@@ -284,7 +291,11 @@ class Index {
         author.get(`sentNeutral`).put(id.sentNeutral + 1);
       }
     }
-    return author.get(`sent`).get(msgIndexKey).put({sig: msg.sig, pubKey: msg.pubKey}).then();
+    const obj = {sig: msg.sig, pubKey: msg.pubKey};
+    if (msg.ipfsUri) {
+      obj.ipfsUri = msg.ipfsUri;
+    }
+    return author.get(`sent`).get(msgIndexKey).put(obj).then();
   }
 
   async _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
@@ -347,9 +358,10 @@ class Index {
   * [new msgs authors], until all messages from within the WoT have been added.
   *
   * @param {Array} msgs an array of messages.
+  * @param {Object} ipfs (optional) ipfs instance where the messages are saved
   * @returns {boolean} true on success
   */
-  async addMessages(msgs) {
+  async addMessages(msgs, ipfs) {
     const msgsByAuthor = {};
     if (Array.isArray(msgs)) {
       console.log(`sorting ${msgs.length} messages onto a search tree...`);
@@ -382,7 +394,7 @@ class Index {
       while (author && knownIdentity) {
         if (author.indexOf(knownIdentity.key) === 0) {
           try {
-            await util.timeoutPromise(this.addMessage(msgsByAuthor[author]), 10000);
+            await util.timeoutPromise(this.addMessage(msgsByAuthor[author], ipfs), 10000);
           } catch (e) {
             console.log(`adding failed:`, e, JSON.stringify(msgsByAuthor[author], null, 2));
           }
@@ -402,8 +414,9 @@ class Index {
 
   /**
   * @param msg Message to add to the index
+  * @param ipfs (optional) ipfs instance where the message is additionally saved
   */
-  async addMessage(msg: Message) {
+  async addMessage(msg: Message, ipfs) {
     if (msg.constructor.name !== `Message`) {
       throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
     }
@@ -412,9 +425,14 @@ class Index {
       return false; // do not save messages from untrusted author
     }
     let indexKey = Index.getMsgIndexKey(msg);
-    this.gun.get(`messagesByDistance`).get(indexKey).put({sig: msg.sig, pubKey: msg.pubKey});
+    const obj = {sig: msg.sig, pubKey: msg.pubKey};
+    if (ipfs) {
+      const ipfsUri = await msg.saveToIpfs(ipfs);
+      obj.ipfsUri = ipfsUri;
+    }
+    this.gun.get(`messagesByDistance`).get(indexKey).put(obj);
     indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
-    this.gun.get(`messagesByTimestamp`).get(indexKey).put({sig: msg.sig, pubKey: msg.pubKey});
+    this.gun.get(`messagesByTimestamp`).get(indexKey).put(obj);
     await this._updateIdentityIndexesByMsg(msg);
     return true;
   }
