@@ -54,7 +54,7 @@ class Index {
       viewpoint = {name: `keyID`, val: Key.getId(defaultKey), conf: 1, ref: 0};
     }
     i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
-    let vp = await util.timeoutPromise(i.getViewpoint(), 2000);
+    let vp = await util.timeoutPromise(i.getViewpoint(), 5000);
     if (!vp) {
       vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});
       await i._addIdentityToIndexes(vp.gun);
@@ -135,10 +135,6 @@ class Index {
       type = Attribute.guessTypeOf(value);
     }
     const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
-    const found = await this.gun.get(`identitiesBySearchKey`).get(key).then();
-    if (!found) {
-      return undefined;
-    }
     return new Identity(this.gun.get(`identitiesBySearchKey`).get(key));
   }
 

@@ -13677,7 +13677,7 @@
 	      viewpoint = { name: 'keyID', val: Key.getId(defaultKey), conf: 1, ref: 0 };
 	    }
 	    i.gun.get('viewpoint').put(new Attribute(viewpoint));
-	    var vp = await util$1.timeoutPromise(i.getViewpoint(), 2000);
+	    var vp = await util$1.timeoutPromise(i.getViewpoint(), 5000);
 	    if (!vp) {
 	      vp = Identity.create(i.gun.get('identities'), { attrs: [viewpoint], trustDistance: 0 });
 	      await i._addIdentityToIndexes(vp.gun);
@@ -13770,10 +13770,6 @@
 	      type = Attribute.guessTypeOf(value);
 	    }
 	    var key = encodeURIComponent(value) + ':' + encodeURIComponent(type);
-	    var found = await this.gun.get('identitiesBySearchKey').get(key).then();
-	    if (!found) {
-	      return undefined;
-	    }
 	    return new Identity(this.gun.get('identitiesBySearchKey').get(key));
 	  };
 
