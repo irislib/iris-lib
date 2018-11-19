@@ -228,6 +228,10 @@ describe('local index', async () => {
     expect(data.trustDistance).toBe(0);
     expect(data.sentPositive).toBe(3);
   });
+  test('get messages by timestamp', async () => {
+    const r = await i.getMessagesByTimestamp();
+    expect(r.length).toBeGreaterThan(5);
+  });
   describe('save & load', async () => {
     test('load saved index', async () => {
       console.log('loading', h);
@@ -236,59 +240,6 @@ describe('local index', async () => {
     });
   });
 });
-
-/*
-describe('remote index via ipfs gateway', async () => {
-  let i, p;
-  test('load default Index from default remote', async () => {
-    i = await identifi.Index.load();
-    expect(i).toBeInstanceOf(identifi.Index);
-  });
-  test('initialize index and get identity', async () => {
-    p = await i.get('martti@moni.com');
-    expect(p).toBeInstanceOf(identifi.Identity);
-  });
-  test('get a verified attribute', async () => {
-    const r = await p.verified('name');
-    expect(typeof r).toBe('string');
-    expect(r.length).toBeGreaterThan(0);
-  });
-  test('get messages sent by identity', async () => {
-    const r = await i.getSentMsgs(p);
-    expect(r).toBeInstanceOf(Array);
-    expect(r.length).toBeGreaterThan(0);
-    expect(r[0]).toBeInstanceOf(identifi.Message);
-  });
-  test('get messages received by identity', async () => {
-    const r = await i.getReceivedMsgs(p);
-    expect(r).toBeInstanceOf(Array);
-    expect(r.length).toBeGreaterThan(0);
-    expect(r[0]).toBeInstanceOf(identifi.Message);
-  });
-  test('search identities', async () => {
-    const r = await i.search('ma');
-    expect(typeof r).toBe('object');
-    expect(r.length).toBeGreaterThan(1);
-  });
-  test('search identities "a"', async () => {
-    const r = await i.search('a');
-    expect(typeof r).toBe('object');
-    expect(r.length).toBeGreaterThan(1);
-  });
-  test('publish message', async () => {
-    const m = identifi.Message.createVerification({
-      author: [['name', 'Alice'], ['email', 'alice@example.com']],
-      recipient: [['name', 'Bob Marley'], ['email', 'bob@example.com']]
-    });
-    const key = identifi.util.generateKey();
-    m.sign(key);
-    m.verify(m);
-    const r = await i.publishMessage(m);
-    expect(typeof r).toBe('object');
-    expect(r.hash).toBeDefined();
-  });
-});
-*/
 
 /*
 afterAll(() => {

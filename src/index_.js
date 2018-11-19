@@ -456,6 +456,13 @@ class Index {
       setTimeout(() => { resolve(Object.values(r)); }, 200);
     });
   }
+
+  /**
+  * @returns {Array} list of messages
+  */
+  async getMessagesByTimestamp(limit, cursor = ``) {
+    return this._getMsgs(this.gun.get(`messagesByTimestamp`), limit, cursor);
+  }
 }
 
 export default Index;
