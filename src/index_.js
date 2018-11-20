@@ -127,7 +127,7 @@ class Index {
   * @param type (optional) identifier type to search by. If omitted, tries to guess it
   * @returns {Identity} identity that is connected to the identifier param
   */
-  async get(value: String, type: String) {
+  get(value: String, type: String) {
     if (typeof value === `undefined`) {
       throw `Value is undefined`;
     }
@@ -135,7 +135,7 @@ class Index {
       type = Attribute.guessTypeOf(value);
     }
     const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(key));
+    return new Identity(this.gun.get(`identitiesBySearchKey`).get(key), new Attribute([type, value]));
   }
 
   async _getMsgs(msgIndex, limit, cursor) {
@@ -182,8 +182,12 @@ class Index {
     if (!Attribute.isUniqueType(a.name)) {
       return;
     }
-    const id = await this.get(a.val, a.name);
-    return id && id.gun.get(`trustDistance`).then();
+    const id = this.get(a.val, a.name);
+    let d = await id.gun.get(`trustDistance`).then();
+    if (isNaN(d)) {
+      d = Infinity;
+    }
+    return d;
   }
 
   /**
@@ -192,8 +196,9 @@ class Index {
   */
   async getMsgTrustDistance(msg) {
     let shortestDistance = Infinity;
-    const signer = await this.get(msg.getSignerKeyID(), `keyID`);
-    if (!signer) {
+    const signer = this.get(msg.getSignerKeyID(), `keyID`);
+    const d = await signer.gun.get(`trustDistance`).then();
+    if (isNaN(d)) {
       return;
     }
     const vp = await this.gun.get(`viewpoint`).then();
@@ -314,8 +319,9 @@ class Index {
     const authorIdentities = {};
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
-      const id = await this.get(a[1], a[0]);
-      if (id) {
+      const id = this.get(a[1], a[0]);
+      const td = await id.gun.get(`trustDistance`).then();
+      if (!isNaN(td)) {
         authorIdentities[id.gun[`_`].link] = id;
         const scores = await id.gun.get(`scores`).then();
         if (scores && scores.verifier && msg.signedData.type === `verification`) {
@@ -328,8 +334,9 @@ class Index {
     }
     for (let i = 0;i < msg.signedData.recipient.length;i ++) {
       const a = msg.signedData.recipient[i];
-      const id = await this.get(a[1], a[0]);
-      if (id) {
+      const id = this.get(a[1], a[0]);
+      const td = await id.gun.get(`trustDistance`).then();
+      if (!isNaN(td)) {
         recipientIdentities[id.gun[`_`].link] = id;
       }
     }
@@ -417,6 +424,7 @@ class Index {
       throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
     }
     msg.distance = await this.getMsgTrustDistance(msg);
+
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
     }

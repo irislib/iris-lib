@@ -10811,7 +10811,7 @@
 	    const Buffer$$1 = USE('./buffer');
 	    const api = {Buffer: Buffer$$1};
 
-	    if (typeof __webpack_require__ === 'function' || (typeof window !== 'undefined' && window.crypto)) {
+	    if (typeof __webpack_require__ === 'function' || (typeof window !== 'undefined' && (window.crypto || window.msCrypto))) {
 	      var crypto = window.crypto || window.msCrypto;
 	      var subtle = crypto.subtle || crypto.webkitSubtle;
 	      const TextEncoder = window.TextEncoder;
@@ -12612,7 +12612,7 @@
 
 	  /**
 	  * @param {Index} index index to look up the message author from
-	  * @returns {Promise(Identity)} message author identity
+	  * @returns {Identity} message author identity
 	  */
 
 
@@ -12627,7 +12627,7 @@
 
 	  /**
 	  * @param {Index} index index to look up the message recipient from
-	  * @returns {Promise(Identity)} message recipient identity
+	  * @returns {Identity} message recipient identity
 	  */
 
 
@@ -13135,10 +13135,13 @@
 	*/
 
 	var Identity = function () {
-	  function Identity(gun) {
+	  function Identity(gun, pointer) {
 	    _classCallCheck(this, Identity);
 
 	    this.gun = gun;
+	    if (pointer) {
+	      this.pointer = new Attribute(pointer);
+	    }
 	  }
 
 	  Identity.create = function create(gunRoot, data) {
@@ -13421,11 +13424,17 @@
 	      }
 	    });
 
-	    this.gun.get('linkTo').on(function (data) {
+	    function setIdenticon(data) {
 	      var hash = util$1.getHash(encodeURIComponent(data.name) + ':' + encodeURIComponent(data.val), 'hex');
 	      var identiconImg = new identicon(hash, { width: width, format: 'svg' });
 	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
-	    });
+	    }
+
+	    if (this.pointer) {
+	      setIdenticon(this.pointer);
+	    }
+
+	    this.gun.get('linkTo').on(setIdenticon);
 
 	    if (ipfs) {
 	      this.gun.get('attrs').open(function (attrs) {
@@ -13762,7 +13771,7 @@
 	  */
 
 
-	  Index.prototype.get = async function get(value, type) {
+	  Index.prototype.get = function get(value, type) {
 	    if (typeof value === 'undefined') {
 	      throw 'Value is undefined';
 	    }
@@ -13770,7 +13779,7 @@
 	      type = Attribute.guessTypeOf(value);
 	    }
 	    var key = encodeURIComponent(value) + ':' + encodeURIComponent(type);
-	    return new Identity(this.gun.get('identitiesBySearchKey').get(key));
+	    return new Identity(this.gun.get('identitiesBySearchKey').get(key), new Attribute([type, value]));
 	  };
 
 	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, limit, cursor) {
@@ -13825,8 +13834,12 @@
 	    if (!Attribute.isUniqueType(a.name)) {
 	      return;
 	    }
-	    var id = await this.get(a.val, a.name);
-	    return id && id.gun.get('trustDistance').then();
+	    var id = this.get(a.val, a.name);
+	    var d = await id.gun.get('trustDistance').then();
+	    if (isNaN(d)) {
+	      d = Infinity;
+	    }
+	    return d;
 	  };
 
 	  /**
@@ -13837,8 +13850,9 @@
 
 	  Index.prototype.getMsgTrustDistance = async function getMsgTrustDistance(msg) {
 	    var shortestDistance = Infinity;
-	    var signer = await this.get(msg.getSignerKeyID(), 'keyID');
-	    if (!signer) {
+	    var signer = this.get(msg.getSignerKeyID(), 'keyID');
+	    var d = await signer.gun.get('trustDistance').then();
+	    if (isNaN(d)) {
 	      return;
 	    }
 	    var vp = await this.gun.get('viewpoint').then();
@@ -13847,9 +13861,9 @@
 	      if (Attribute.equals(a, vp)) {
 	        return 0;
 	      } else {
-	        var d = await this._getAttributeTrustDistance(a);
-	        if (d < shortestDistance) {
-	          shortestDistance = d;
+	        var _d = await this._getAttributeTrustDistance(a);
+	        if (_d < shortestDistance) {
+	          shortestDistance = _d;
 	        }
 	      }
 	    }
@@ -13962,8 +13976,9 @@
 	    var authorIdentities = {};
 	    for (var i = 0; i < msg.signedData.author.length; i++) {
 	      var a = msg.signedData.author[i];
-	      var id = await this.get(a[1], a[0]);
-	      if (id) {
+	      var id = this.get(a[1], a[0]);
+	      var td = await id.gun.get('trustDistance').then();
+	      if (!isNaN(td)) {
 	        authorIdentities[id.gun['_'].link] = id;
 	        var scores = await id.gun.get('scores').then();
 	        if (scores && scores.verifier && msg.signedData.type === 'verification') {
@@ -13976,8 +13991,9 @@
 	    }
 	    for (var _i = 0; _i < msg.signedData.recipient.length; _i++) {
 	      var _a = msg.signedData.recipient[_i];
-	      var _id = await this.get(_a[1], _a[0]);
-	      if (_id) {
+	      var _id = this.get(_a[1], _a[0]);
+	      var _td = await _id.gun.get('trustDistance').then();
+	      if (!isNaN(_td)) {
 	        recipientIdentities[_id.gun['_'].link] = _id;
 	      }
 	    }
@@ -14071,6 +14087,7 @@
 	      throw new Error('addMessage failed: param must be a Message, received ' + msg.constructor.name);
 	    }
 	    msg.distance = await this.getMsgTrustDistance(msg);
+
 	    if (msg.distance === undefined) {
 	      return false; // do not save messages from untrusted author
 	    }

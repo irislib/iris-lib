@@ -164,7 +164,7 @@ class Message {
 
   /**
   * @param {Index} index index to look up the message author from
-  * @returns {Promise(Identity)} message author identity
+  * @returns {Identity} message author identity
   */
   getAuthor(index) {
     for (let i = 0;i < this.signedData.author.length;i ++) {
@@ -177,7 +177,7 @@ class Message {
 
   /**
   * @param {Index} index index to look up the message recipient from
-  * @returns {Promise(Identity)} message recipient identity
+  * @returns {Identity} message recipient identity
   */
   getRecipient(index) {
     for (let i = 0;i < this.signedData.recipient.length;i ++) {

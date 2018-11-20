@@ -7,8 +7,11 @@ import util from './util';
 * from Index methods such as search().
 */
 class Identity {
-  constructor(gun: Object) {
+  constructor(gun: Object, linkTo) {
     this.gun = gun;
+    if (linkTo) {
+      this.linkTo = new Attribute(linkTo);
+    }
   }
 
   static create(gunRoot: Object, data: Object) {
@@ -352,11 +355,17 @@ class Identity {
       }
     });
 
-    this.gun.get(`linkTo`).on(data => {
+    function setIdenticon(data) {
       const hash = util.getHash(`${encodeURIComponent(data.name)}:${encodeURIComponent(data.val)}`, `hex`);
       const identiconImg = new Identicon(hash, {width, format: `svg`});
       img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;
-    });
+    }
+
+    if (this.linkTo) {
+      setIdenticon(this.linkTo);
+    }
+
+    this.gun.get(`linkTo`).on(setIdenticon);
 
     if (ipfs) {
       this.gun.get(`attrs`).open(attrs => {

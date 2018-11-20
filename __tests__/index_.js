@@ -59,7 +59,7 @@ describe('local index', async () => {
       expect(r).toBe(true);
     });
     test('get added identity', async () => {
-      p = await i.get('bob@example.com');
+      p = i.get('bob@example.com');
       const data = await p.gun.once().then();
       //expect(q).toBeInstanceOf(identifi.Identity);
       expect(data.trustDistance).toBe(1);
@@ -88,7 +88,7 @@ describe('local index', async () => {
       await i.addMessage(msg);
       msg = await identifi.Message.createRating({author: [['email', 'carl@example.com']], recipient: [['email', 'david@example.com']], rating:10}, key);
       await i.addMessage(msg);
-      p = await i.get('david@example.com');
+      p = i.get('david@example.com');
       const data = await p.gun.once().then();
       expect(data.trustDistance).toBe(3);
     });
@@ -103,12 +103,12 @@ describe('local index', async () => {
       msg = await identifi.Message.createRating({author: [['email', 'bert@example.com']], recipient: [['email', 'chris@example.com']], rating:10}, key);
       msgs.push(msg);
       await i.addMessages(shuffle(msgs));
-      p = await i.get('bob4@example.com');
+      p = i.get('bob4@example.com');
       expect(p).toBeDefined();
       const trustDistance = p.gun.get(`trustDistance`);
-      p = await i.get('bert@example.com');
+      p = await i.get('bert@example.com').gun.then();
       expect(p).toBeUndefined();
-      p = await i.get('chris@example.com');
+      p = await i.get('chris@example.com').gun.then();
       expect(p).toBeUndefined();
     });
   });
@@ -118,15 +118,15 @@ describe('local index', async () => {
       u = await identifi.Key.generate();
       let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'angus@example.com']], rating:10}, u);
       await i.addMessage(msg);
-      p = await i.get('angus@example.com');
+      p = await i.get('angus@example.com').gun.then();
       expect(p).toBeUndefined();
     });
     test('should not affect scores', async () => {
-      p = await i.get('david@example.com');
+      p = i.get('david@example.com');
       const pos = await p.gun.get(`receivedPositive`).once().then();
       let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'david@example.com']], rating:10}, u);
       await i.addMessage(msg);
-      p = await i.get('david@example.com');
+      p = i.get('david@example.com');
       const pos2 = await p.gun.get(`receivedPositive`).once().then();
       expect(pos2).toEqual(pos);
     });
@@ -185,7 +185,7 @@ describe('local index', async () => {
       verifierKeyID = identifi.Key.getId(verifierKey);
       let msg = await identifi.Message.createRating({recipient: [['keyID', verifierKeyID]], rating:10, context: 'verifier'}, key);
       await i.addMessage(msg);
-      const verifier = await i.get(verifierKeyID, 'keyID');
+      const verifier = i.get(verifierKeyID, 'keyID');
       const scores = await new Promise(resolve => {
         verifier.gun.get('scores').load(r => {
           resolve(r);
@@ -198,7 +198,7 @@ describe('local index', async () => {
       await i.addMessage(msg);
       let msg = await identifi.Message.createVerification({recipient: [['keyID', verifierKeyID], ['name','VerifyBot'], ['email','VerifyBot@example.com']]}, key);
       await i.addMessage(msg);
-      const verifier = await i.get(verifierKeyID, 'keyID');
+      const verifier = i.get(verifierKeyID, 'keyID');
       const scores = await new Promise(resolve => {
         verifier.gun.get('scores').load(r => {
           resolve(r);
@@ -209,7 +209,7 @@ describe('local index', async () => {
     test('create trusted verification', async () => {
       let msg = await identifi.Message.createVerification({recipient: [['email', 'david@example.com'], ['name', 'David Attenborough']]}, verifierKey);
       await i.addMessage(msg);
-      p = await i.get('david@example.com');
+      p = i.get('david@example.com');
       const attrs = await new Promise(resolve => {
         p.gun.get('attrs').load(r => {
           resolve(r);
@@ -222,7 +222,7 @@ describe('local index', async () => {
   });
   test('get viewpoint identity by searching the default keyID', async () => {
     const defaultKey = await identifi.Key.getDefault();
-    p = await i.get(identifi.Key.getId(defaultKey), 'keyID');
+    p = i.get(identifi.Key.getId(defaultKey), 'keyID');
     const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(data.trustDistance).toBe(0);
