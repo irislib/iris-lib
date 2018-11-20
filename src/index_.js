@@ -135,7 +135,7 @@ class Index {
       type = Attribute.guessTypeOf(value);
     }
     const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(key), new Attribute([type, value]));
+    return new Identity(this.gun.get(`identitiesBySearchKey`).get(key), {linkTo: {name: type, val: value}});
   }
 
   async _getMsgs(msgIndex, limit, cursor) {
@@ -466,6 +466,13 @@ class Index {
   */
   async getMessagesByTimestamp(limit, cursor = ``) {
     return this._getMsgs(this.gun.get(`messagesByTimestamp`), limit, cursor);
+  }
+
+  /**
+  * @returns {Array} list of messages
+  */
+  async getMessagesByDistance(limit, cursor = ``) {
+    return this._getMsgs(this.gun.get(`messagesByDistance`), limit, cursor);
   }
 }
 

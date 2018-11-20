@@ -7,10 +7,20 @@ import util from './util';
 * from Index methods such as search().
 */
 class Identity {
-  constructor(gun: Object, linkTo) {
+  /**
+  * @param {Object} gun node where the Identity data lives
+  * @param {Object} tempData temporary data to present before data from gun is received
+  */
+  constructor(gun: Object, tempData) {
     this.gun = gun;
-    if (linkTo) {
-      this.linkTo = new Attribute(linkTo);
+    if (tempData) {
+      this.tempData = tempData;
+      this.gun.on(data => {
+        if (data) {
+          //this.gun.off();
+          this.tempData = null;  
+        }
+      });
     }
   }
 
@@ -318,7 +328,7 @@ class Identity {
     identicon.appendChild(pie);
     identicon.appendChild(img);
 
-    this.gun.on(data => {
+    function setPie(data) {
       if (!data) {
         return;
       }
@@ -353,19 +363,23 @@ class Identity {
       if (showDistance) {
         distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : `–`;
       }
-    });
+    }
 
-    function setIdenticon(data) {
+    function setIdenticonImg(data) {
       const hash = util.getHash(`${encodeURIComponent(data.name)}:${encodeURIComponent(data.val)}`, `hex`);
       const identiconImg = new Identicon(hash, {width, format: `svg`});
       img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;
     }
 
-    if (this.linkTo) {
-      setIdenticon(this.linkTo);
+    if (this.tempData) {
+      setPie(this.tempData);
+      if (this.tempData.linkTo) {
+        setIdenticonImg(this.tempData.linkTo);
+      }
     }
 
-    this.gun.get(`linkTo`).on(setIdenticon);
+    this.gun.on(setPie);
+    this.gun.get(`linkTo`).on(setIdenticonImg);
 
     if (ipfs) {
       this.gun.get(`attrs`).open(attrs => {

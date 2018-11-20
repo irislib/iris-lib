@@ -13135,12 +13135,16 @@
 	*/
 
 	var Identity = function () {
-	  function Identity(gun, pointer) {
+	  /**
+	  * @param {Object} gun node where the Identity data lives
+	  * @param {Object} tempData temporary data to present before data from gun is received
+	  */
+	  function Identity(gun, tempData) {
 	    _classCallCheck(this, Identity);
 
 	    this.gun = gun;
-	    if (pointer) {
-	      this.pointer = new Attribute(pointer);
+	    if (tempData) {
+	      this.tempData = tempData;
 	    }
 	  }
 
@@ -13387,7 +13391,7 @@
 	    identicon$$1.appendChild(pie);
 	    identicon$$1.appendChild(img);
 
-	    this.gun.on(function (data) {
+	    function setPie(data) {
 	      if (!data) {
 	        return;
 	      }
@@ -13422,19 +13426,23 @@
 	      if (showDistance) {
 	        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : '\u2013';
 	      }
-	    });
+	    }
 
-	    function setIdenticon(data) {
+	    function setIdenticonImg(data) {
 	      var hash = util$1.getHash(encodeURIComponent(data.name) + ':' + encodeURIComponent(data.val), 'hex');
 	      var identiconImg = new identicon(hash, { width: width, format: 'svg' });
 	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
 	    }
 
-	    if (this.pointer) {
-	      setIdenticon(this.pointer);
+	    if (this.tempData) {
+	      setPie(this.tempData);
+	      if (this.tempData.linkTo) {
+	        setIdenticonImg(this.tempData.linkTo);
+	      }
 	    }
 
-	    this.gun.get('linkTo').on(setIdenticon);
+	    this.gun.on(setPie);
+	    this.gun.get('linkTo').on(setIdenticonImg);
 
 	    if (ipfs) {
 	      this.gun.get('attrs').open(function (attrs) {
@@ -13779,7 +13787,7 @@
 	      type = Attribute.guessTypeOf(value);
 	    }
 	    var key = encodeURIComponent(value) + ':' + encodeURIComponent(type);
-	    return new Identity(this.gun.get('identitiesBySearchKey').get(key), new Attribute([type, value]));
+	    return new Identity(this.gun.get('identitiesBySearchKey').get(key), { linkTo: { name: type, val: value } });
 	  };
 
 	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, limit, cursor) {
