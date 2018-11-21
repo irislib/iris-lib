@@ -98,6 +98,10 @@ class Attribute {
   equals(a: Attribute) {
     return this.name === a.name && this.val === a.val;
   }
+
+  uri() {
+    return `${encodeURIComponent(this.val)}:${encodeURIComponent(this.name)}`;
+  }
 }
 
 export default Attribute;

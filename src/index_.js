@@ -43,23 +43,26 @@ async function searchText(node, query, limit, cursor) {
 * messagesByTimestamp, messagesByDistance.
 */
 class Index {
-  constructor(gun: Object) {
+  constructor(gun: Object, viewpoint) {
     this.gun = gun || new Gun();
-  }
-
-  static async create(gun: Object, viewpoint: Attribute) {
-    const i = new Index(gun);
-    if (!viewpoint) {
-      const defaultKey = await Key.getDefault();
-      viewpoint = {name: `keyID`, val: Key.getId(defaultKey), conf: 1, ref: 0};
+    const setViewpoint = vp => {
+      this.viewpoint = new Attribute(vp);
+      const uri = this.viewpoint.uri();
+      const g = this.gun.get(`identitiesBySearchKey`).get(uri);
+      const vpId = new Identity(g,
+        {
+          trustDistance: 0,
+          linkTo: this.viewpoint
+        }, true);
+      this._addIdentityToIndexes(vpId.gun);
+    };
+    if (viewpoint) {
+      setViewpoint(viewpoint);
+    } else {
+      Key.getDefault().then(defaultKey => {
+        setViewpoint({name: `keyID`, val: Key.getId(defaultKey)});
+      });
     }
-    i.gun.get(`viewpoint`).put(new Attribute(viewpoint));
-    let vp = await util.timeoutPromise(i.getViewpoint(), 5000);
-    if (!vp) {
-      vp = Identity.create(i.gun.get(`identities`), {attrs: [viewpoint], trustDistance: 0});
-      await i._addIdentityToIndexes(vp.gun);
-    }
-    return i;
   }
 
   static getMsgIndexKey(msg) {
@@ -72,7 +75,9 @@ class Index {
 
   static async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
+    console.log(161616);
     const d = await identity.get(`trustDistance`).then();
+    console.log(171717);
     await identity.get(`attrs`).map().once(a => {
       if (!a) { // TODO: this sometimes returns undefined
         return;
@@ -134,8 +139,8 @@ class Index {
     if (typeof type === `undefined`) {
       type = Attribute.guessTypeOf(value);
     }
-    const key = `${encodeURIComponent(value)}:${encodeURIComponent(type)}`;
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(key), {linkTo: {name: type, val: value}});
+    const a = new Attribute([type, value]);
+    return new Identity(this.gun.get(`identitiesBySearchKey`).get(a.uri()), {linkTo: a});
   }
 
   async _getMsgs(msgIndex, limit, cursor) {
@@ -166,7 +171,6 @@ class Index {
   * @returns {Array} list of messages sent by param identity
   */
   async getSentMsgs(identity: Identity, limit, cursor = ``) {
-    console.log(`getSentMsgs`);
     return this._getMsgs(identity.gun.get(`sent`), limit, cursor);
   }
 
@@ -174,7 +178,6 @@ class Index {
   * @returns {Array} list of messages received by param identity
   */
   async getReceivedMsgs(identity, limit, cursor = ``) {
-    console.log(`getReceivedMsgs`);
     return this._getMsgs(identity.gun.get(`received`), limit, cursor);
   }
 
@@ -182,8 +185,13 @@ class Index {
     if (!Attribute.isUniqueType(a.name)) {
       return;
     }
+    if (this.viewpoint.equals(a)) {
+      return 0;
+    }
     const id = this.get(a.val, a.name);
+    console.log('getting td');
     let d = await id.gun.get(`trustDistance`).then();
+    console.log('got td', d);
     if (isNaN(d)) {
       d = Infinity;
     }
@@ -196,21 +204,18 @@ class Index {
   */
   async getMsgTrustDistance(msg) {
     let shortestDistance = Infinity;
-    const signer = this.get(msg.getSignerKeyID(), `keyID`);
-    const d = await signer.gun.get(`trustDistance`).then();
-    if (isNaN(d)) {
-      return;
+    const signerAttr = new Attribute([`keyID`, msg.getSignerKeyID()]);
+    if (!signerAttr.equals(this.viewpoint)) {
+      const signer = this.get(signerAttr.val, signerAttr.name);
+      const d = await signer.gun.get(`trustDistance`).then();
+      if (isNaN(d)) {
+        return;
+      }
     }
-    const vp = await this.gun.get(`viewpoint`).then();
     for (let i = 0;i < msg.signedData.author.length;i ++) {
-      const a = new Attribute(msg.signedData.author[i]);
-      if (Attribute.equals(a, vp)) {
-        return 0;
-      } else {
-        const d = await this._getAttributeTrustDistance(a);
-        if (d < shortestDistance) {
-          shortestDistance = d;
-        }
+      const d = await this._getAttributeTrustDistance(new Attribute(msg.signedData.author[i]));
+      if (d < shortestDistance) {
+        shortestDistance = d;
       }
     }
     return shortestDistance < Infinity ? shortestDistance : undefined;
@@ -246,11 +251,11 @@ class Index {
         if (msg.distance + 1 < id.trustDistance) {
           recipient.get(`trustDistance`).put(msg.distance + 1);
         }
-        recipient.get(`receivedPositive`).put(id.receivedPositive + 1);
+        recipient.get(`receivedPositive`).put((id.receivedPositive || 0) + 1);
       } else if (msg.isNegative()) {
-        recipient.get(`receivedNegative`).put(id.receivedNegative + 1);
+        recipient.get(`receivedNegative`).put((id.receivedNegative || 0) + 1);
       } else {
-        recipient.get(`receivedNeutral`).put(id.receivedNeutral + 1);
+        recipient.get(`receivedNeutral`).put((id.receivedNeutral || 0) + 1);
       }
       if (msg.signedData.context === `verifier`) {
         if (msg.distance === 0) {
@@ -285,11 +290,11 @@ class Index {
     if (msg.signedData.type === `rating`) {
       const id = await author.then();
       if (msg.isPositive()) {
-        author.get(`sentPositive`).put(id.sentPositive + 1);
+        author.get(`sentPositive`).put((id.sentPositive || 0) + 1);
       } else if (msg.isNegative()) {
-        author.get(`sentNegative`).put(id.sentNegative + 1);
+        author.get(`sentNegative`).put((id.sentNegative || 0) + 1);
       } else {
-        author.get(`sentNeutral`).put(id.sentNeutral + 1);
+        author.get(`sentNeutral`).put((id.sentNeutral || 0) + 1);
       }
     }
     const obj = {sig: msg.sig, pubKey: msg.pubKey};
@@ -300,6 +305,7 @@ class Index {
   }
 
   async _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
+    console.log(888);
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
@@ -307,16 +313,21 @@ class Index {
       if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
       }
+      console.log(999);
       if (authorIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
       }
+      console.log(101010);
+      console.log(await ids[i].gun.load().then());
       await this._addIdentityToIndexes(ids[i].gun);
+      console.log(111111);
     }
   }
 
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = {};
     const authorIdentities = {};
+    console.log(444);
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = this.get(a[1], a[0]);
@@ -332,6 +343,7 @@ class Index {
     if (!Object.keys(authorIdentities).length) {
       return; // unknown author, do nothing
     }
+    console.log(555);
     for (let i = 0;i < msg.signedData.recipient.length;i ++) {
       const a = msg.signedData.recipient[i];
       const id = this.get(a[1], a[0]);
@@ -340,15 +352,19 @@ class Index {
         recipientIdentities[id.gun[`_`].link] = id;
       }
     }
+    console.log(666);
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
-      const attrs = [];
+      const attrs = {};
       msg.signedData.recipient.forEach(a => {
-        attrs.push({name: a[0], val: a[1], conf: 1, ref: 0});
+        const attr = new Attribute([a[0], a[1]]);
+        attrs[attr.uri()] = attr;
       });
-      const id = Identity.create(this.gun.get(`identities`), {attrs});
+      const id = new Identity(this.gun.get(`identities`).set({}), {attrs}, true);
+
       // TODO: take msg author trust into account
       recipientIdentities[id.gun[`_`].link] = id;
     }
+    console.log(777);
     return this._updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities);
   }
 
@@ -420,10 +436,12 @@ class Index {
   * @param ipfs (optional) ipfs instance where the message is additionally saved
   */
   async addMessage(msg: Message, ipfs) {
+    console.log(11);
     if (msg.constructor.name !== `Message`) {
       throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
     }
     msg.distance = await this.getMsgTrustDistance(msg);
+    console.log(22);
 
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
@@ -434,10 +452,14 @@ class Index {
       const ipfsUri = await msg.saveToIpfs(ipfs);
       obj.ipfsUri = ipfsUri;
     }
+    console.log(33);
+
     this.gun.get(`messagesByDistance`).get(indexKey).put(obj);
     indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
     this.gun.get(`messagesByTimestamp`).get(indexKey).put(obj);
     await this._updateIdentityIndexesByMsg(msg);
+    console.log(44);
+
     return true;
   }
 

@@ -48,7 +48,7 @@ describe('local index', async () => {
   let i, h;
   test('create new Index', async () => {
     key = await identifi.Key.getDefault();
-    i = await identifi.Index.create(gun.get(`identifi`));
+    i = new identifi.Index(gun.get(`identifi`));
     expect(i).toBeInstanceOf(identifi.Index);
   });
   let p;
@@ -231,13 +231,6 @@ describe('local index', async () => {
   test('get messages by timestamp', async () => {
     const r = await i.getMessagesByTimestamp();
     expect(r.length).toBeGreaterThan(5);
-  });
-  describe('save & load', async () => {
-    test('load saved index', async () => {
-      console.log('loading', h);
-      //i = await identifi.Index.load(h); TODO: test load
-      //expect(i).toBeInstanceOf(identifi.Index);
-    });
   });
 });
 

@@ -13140,11 +13140,19 @@
 	  * @param {Object} tempData temporary data to present before data from gun is received
 	  */
 	  function Identity(gun, tempData) {
+	    var _this = this;
+
 	    _classCallCheck(this, Identity);
 
 	    this.gun = gun;
 	    if (tempData) {
 	      this.tempData = tempData;
+	      this.gun.on(function (data) {
+	        if (data) {
+	          //this.gun.off();
+	          _this.tempData = null;
+	        }
+	      });
 	    }
 	  }
 
@@ -13221,7 +13229,7 @@
 
 
 	  Identity.prototype.profileCard = function profileCard(ipfs) {
-	    var _this = this;
+	    var _this2 = this;
 
 	    var card = document.createElement('div');
 	    card.className = 'identifi-card';
@@ -13248,11 +13256,11 @@
 	        return;
 	      }
 	      var attrs = await new _Promise(function (resolve) {
-	        _this.gun.get('attrs').load(function (r) {
+	        _this2.gun.get('attrs').load(function (r) {
 	          return resolve(r);
 	        });
 	      });
-	      var linkTo = await _this.gun.get('linkTo').then();
+	      var linkTo = await _this2.gun.get('linkTo').then();
 	      var link = 'https://identi.fi/#/identities/' + linkTo.name + '/' + linkTo.val;
 	      var mva = Identity.getMostVerifiedAttributes(attrs);
 	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.name && mva.name.attribute.val || mva.nickname && mva.nickname.attribute.val || linkTo.name + ':' + linkTo.val) + '</a><br>';
@@ -14091,10 +14099,12 @@
 
 
 	  Index.prototype.addMessage = async function addMessage(msg, ipfs) {
+	    console.log(11);
 	    if (msg.constructor.name !== 'Message') {
 	      throw new Error('addMessage failed: param must be a Message, received ' + msg.constructor.name);
 	    }
 	    msg.distance = await this.getMsgTrustDistance(msg);
+	    console.log(22);
 
 	    if (msg.distance === undefined) {
 	      return false; // do not save messages from untrusted author
@@ -14105,10 +14115,14 @@
 	      var ipfsUri = await msg.saveToIpfs(ipfs);
 	      obj.ipfsUri = ipfsUri;
 	    }
+	    console.log(33);
+
 	    this.gun.get('messagesByDistance').get(indexKey).put(obj);
 	    indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
 	    this.gun.get('messagesByTimestamp').get(indexKey).put(obj);
 	    await this._updateIdentityIndexesByMsg(msg);
+	    console.log(44);
+
 	    return true;
 	  };
 
@@ -14148,6 +14162,17 @@
 	    var cursor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
 
 	    return this._getMsgs(this.gun.get('messagesByTimestamp'), limit, cursor);
+	  };
+
+	  /**
+	  * @returns {Array} list of messages
+	  */
+
+
+	  Index.prototype.getMessagesByDistance = async function getMessagesByDistance(limit) {
+	    var cursor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+
+	    return this._getMsgs(this.gun.get('messagesByDistance'), limit, cursor);
 	  };
 
 	  return Index;

@@ -10,54 +10,39 @@ class Identity {
   /**
   * @param {Object} gun node where the Identity data lives
   * @param {Object} tempData temporary data to present before data from gun is received
+  * @param {Boolean} save whether to save identity data to the given gun node
   */
-  constructor(gun: Object, tempData) {
+  constructor(gun: Object, tempData, save) {
     this.gun = gun;
-    if (tempData) {
+    if (save) {
+      if (tempData.linkTo) {
+        const linkTo = new Attribute(tempData.linkTo);
+        tempData.attrs = tempData.attrs || {};
+        if (!tempData.attrs.hasOwnProperty(linkTo.uri())) {
+          tempData.attrs[linkTo.uri()] = linkTo;
+        }
+      } else {
+        const mva = Identity.getMostVerifiedAttributes(tempData.attrs);
+        const keys = Object.keys(mva);
+        for (let i = 0;i < keys.length;i ++) {
+          if (keys[i] === `keyID`) {
+            tempData.linkTo = mva[keys[i]];
+            break;
+          } else if (Attribute.isUniqueType(keys[i])) {
+            tempData.linkTo = mva[keys[i]];
+          }
+        }
+      }
+      this.gun.put(tempData);
+    } else {
       this.tempData = tempData;
       this.gun.on(data => {
         if (data) {
           //this.gun.off();
-          this.tempData = null;  
+          this.tempData = null;
         }
       });
     }
-  }
-
-  static create(gunRoot: Object, data: Object) {
-    data.receivedNegative |= data.receivedNegative || 0;
-    data.receivedPositive |= data.receivedPositive || 0;
-    data.receivedNeutral = data.receivedNeutral || 0;
-    data.sentNegative = data.sentNegative || 0;
-    data.sentPositive = data.sentPositive || 0;
-    data.sentNeutral = data.sentNeutral || 0;
-    data.trustDistance = data.hasOwnProperty(`trustDistance`) ? data.trustDistance : 99;
-    data.attrs = data.attrs || {};
-    data.scores = data.scores || {identifi: {score: `todo`, ratings: 0}};
-    if (Array.isArray(data.attrs)) {
-      const attrs = {};
-      while (data.attrs.length) {
-        const a = data.attrs.pop();
-        attrs[`${encodeURIComponent(a.name)}:${encodeURIComponent(a.val)}`] = a;
-      }
-      data.attrs = attrs;
-    }
-    data.mostVerifiedAttributes = Identity.getMostVerifiedAttributes(data.attrs);
-    let bestVerificationScore = - 1;
-    Object.keys(data.mostVerifiedAttributes).forEach(k => {
-      const v = data.mostVerifiedAttributes[k];
-      if (Attribute.isUniqueType(k) && v.verificationScore > bestVerificationScore) {
-        data.linkTo = {name: k, val: v.attribute.val};
-        bestVerificationScore = v.verificationScore;
-      }
-    });
-    if (!data.linkTo) {
-      data.linkTo = data.attrs[Object.keys(data.attrs)[0]];
-    }
-    if (data.linkTo.name !== `keyID` && data.mostVerifiedAttributes.keyID) {
-      data.linkTo = data.mostVerifiedAttributes.keyID.attribute;
-    }
-    return new Identity(gunRoot.set(data));
   }
 
   static getMostVerifiedAttributes(attrs) {
