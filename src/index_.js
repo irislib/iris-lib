@@ -37,24 +37,36 @@ async function searchText(node, query, limit, cursor) {
   });
 }
 
-// TODO: make the whole thing use GUN for indexing and flush onto IPFS
+// TODO: flush onto IPFS
 /**
-* Identifi index root. Contains four indexes: identitiesBySearchKey, gun.get(`identitiesByTrustDistance`),
+* Identifi index root. Contains four indexes: identitiesBySearchKey, identitiesByTrustDistance,
 * messagesByTimestamp, messagesByDistance.
 */
 class Index {
-  constructor(gun: Object, viewpoint) {
+  /**
+  * When you use someone else's index, initialise it with this constructor
+  */
+  constructor(gun: Object) {
     this.gun = gun || new Gun();
+  }
+
+  /**
+  * Use this to load an index that you can write to
+  * @returns {Index}
+  */
+  static create(gun: Object, viewpoint) {
+    const i = new Index(gun);
     const setViewpoint = vp => {
-      this.viewpoint = new Attribute(vp);
-      const uri = this.viewpoint.uri();
-      const g = this.gun.get(`identitiesBySearchKey`).get(uri);
+      i.viewpoint = new Attribute(vp);
+      i.gun.get(`viewpoint`).put(i.viewpoint);
+      const uri = i.viewpoint.uri();
+      const g = i.gun.get(`identitiesBySearchKey`).get(uri);
       const vpId = new Identity(g,
         {
           trustDistance: 0,
-          linkTo: this.viewpoint
+          linkTo: i.viewpoint
         }, true);
-      this._addIdentityToIndexes(vpId.gun);
+      i._addIdentityToIndexes(vpId.gun);
     };
     if (viewpoint) {
       setViewpoint(viewpoint);
@@ -63,6 +75,7 @@ class Index {
         setViewpoint({name: `keyID`, val: Key.getId(defaultKey)});
       });
     }
+    return i;
   }
 
   static getMsgIndexKey(msg) {
@@ -120,8 +133,13 @@ class Index {
   * @returns {Identity} viewpoint identity of the index
   */
   async getViewpoint() {
-    const k = await new Promise(resolve => this.gun.get(`identitiesByTrustDistance`).map((v, k) => k.indexOf(`00`) === 0 ? resolve(k) : 0));
-    return new Identity(this.gun.get(`identitiesByTrustDistance`).get(k));
+    let vpAttr;
+    if (this.viewpoint) {
+      vpAttr = this.viewpoint;
+    } else {
+      vpAttr = new Attribute(await this.gun.get(`viewpoint`).then());
+    }
+    return new Identity(this.gun.get(`identitiesBySearchKey`).get(vpAttr.uri()));
   }
 
   /**

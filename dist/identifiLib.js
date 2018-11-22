@@ -13421,7 +13421,7 @@
 	      pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
 
 	      if (showDistance) {
-	        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : '\u2013';
+	        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : '\u2715';
 	      }
 	    }
 
@@ -13671,28 +13671,40 @@
 	  });
 	}
 
-	// TODO: make the whole thing use GUN for indexing and flush onto IPFS
+	// TODO: flush onto IPFS
 	/**
-	* Identifi index root. Contains four indexes: identitiesBySearchKey, gun.get(`identitiesByTrustDistance`),
+	* Identifi index root. Contains four indexes: identitiesBySearchKey, identitiesByTrustDistance,
 	* messagesByTimestamp, messagesByDistance.
 	*/
 
 	var Index = function () {
-	  function Index(gun, viewpoint) {
-	    var _this = this;
-
+	  /**
+	  * When you use someone else's index, initialise it with this constructor
+	  */
+	  function Index(gun) {
 	    _classCallCheck(this, Index);
 
 	    this.gun = gun || new gun_min();
+	  }
+
+	  /**
+	  * Use this to load an index that you can write to
+	  * @returns {Index}
+	  */
+
+
+	  Index.create = function create(gun, viewpoint) {
+	    var i = new Index(gun);
 	    var setViewpoint = function setViewpoint(vp) {
-	      _this.viewpoint = new Attribute(vp);
-	      var uri = _this.viewpoint.uri();
-	      var g = _this.gun.get('identitiesBySearchKey').get(uri);
+	      i.viewpoint = new Attribute(vp);
+	      i.gun.get('viewpoint').put(i.viewpoint);
+	      var uri = i.viewpoint.uri();
+	      var g = i.gun.get('identitiesBySearchKey').get(uri);
 	      var vpId = new Identity(g, {
 	        trustDistance: 0,
-	        linkTo: _this.viewpoint
+	        linkTo: i.viewpoint
 	      }, true);
-	      _this._addIdentityToIndexes(vpId.gun);
+	      i._addIdentityToIndexes(vpId.gun);
 	    };
 	    if (viewpoint) {
 	      setViewpoint(viewpoint);
@@ -13701,7 +13713,8 @@
 	        setViewpoint({ name: 'keyID', val: Key.getId(defaultKey) });
 	      });
 	    }
-	  }
+	    return i;
+	  };
 
 	  Index.getMsgIndexKey = function getMsgIndexKey(msg) {
 	    var distance = parseInt(msg.distance);
@@ -13762,14 +13775,13 @@
 
 
 	  Index.prototype.getViewpoint = async function getViewpoint() {
-	    var _this2 = this;
-
-	    var k = await new _Promise(function (resolve) {
-	      return _this2.gun.get('identitiesByTrustDistance').map(function (v, k) {
-	        return k.indexOf('00') === 0 ? resolve(k) : 0;
-	      });
-	    });
-	    return new Identity(this.gun.get('identitiesByTrustDistance').get(k));
+	    var vpAttr = void 0;
+	    if (this.viewpoint) {
+	      vpAttr = this.viewpoint;
+	    } else {
+	      vpAttr = new Attribute((await this.gun.get('viewpoint').then()));
+	    }
+	    return new Identity(this.gun.get('identitiesBySearchKey').get(vpAttr.uri()));
 	  };
 
 	  /**
@@ -14133,17 +14145,17 @@
 
 
 	  Index.prototype.search = async function search(value) {
-	    var _this3 = this;
+	    var _this = this;
 
 	    // TODO: param 'exact', type param
 	    var r = {};
 	    return new _Promise(function (resolve) {
-	      _this3.gun.get('identitiesByTrustDistance').map(function (id, key) {
+	      _this.gun.get('identitiesByTrustDistance').map(function (id, key) {
 	        if (key.indexOf(encodeURIComponent(value)) === -1) {
 	          return;
 	        }
 	        if (!r.hasOwnProperty(gun_min.node.soul(id))) {
-	          r[gun_min.node.soul(id)] = new Identity(_this3.gun.get('identitiesByTrustDistance').get(key));
+	          r[gun_min.node.soul(id)] = new Identity(_this.gun.get('identitiesByTrustDistance').get(key));
 	        }
 	      });
 	      setTimeout(function () {

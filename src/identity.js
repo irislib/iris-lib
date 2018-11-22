@@ -346,7 +346,7 @@ class Identity {
       pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
 
       if (showDistance) {
-        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : `–`;
+        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : `✕`;
       }
     }
 
