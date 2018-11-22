@@ -61,6 +61,7 @@ describe('local index', async () => {
     test('get added identity', async () => {
       p = i.get('bob@example.com');
       const data = await p.gun.once().then();
+      console.log('data', data);
       //expect(q).toBeInstanceOf(identifi.Identity);
       expect(data.trustDistance).toBe(1);
       expect(data.receivedPositive).toBe(1);

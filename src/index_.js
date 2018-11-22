@@ -75,9 +75,7 @@ class Index {
 
   static async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
-    console.log(161616);
     const d = await identity.get(`trustDistance`).then();
-    console.log(171717);
     await identity.get(`attrs`).map().once(a => {
       if (!a) { // TODO: this sometimes returns undefined
         return;
@@ -189,9 +187,7 @@ class Index {
       return 0;
     }
     const id = this.get(a.val, a.name);
-    console.log('getting td');
     let d = await id.gun.get(`trustDistance`).then();
-    console.log('got td', d);
     if (isNaN(d)) {
       d = Infinity;
     }
@@ -236,10 +232,10 @@ class Index {
           }
         });
         if (!hasAttr) {
-          attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0};
+          attrs[`${encodeURIComponent(a1[1])}:${encodeURIComponent(a1[0])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0};
         }
         if (msg.goodVerification) {
-          attrs[`${encodeURIComponent(a1[0])}:${encodeURIComponent(a1[1])}`].verified = true;
+          attrs[`${encodeURIComponent(a1[1])}:${encodeURIComponent(a1[0])}`].verified = true;
         }
       });
       recipient.get(`mostVerifiedAttributes`).put(Identity.getMostVerifiedAttributes(attrs));
@@ -247,16 +243,22 @@ class Index {
     }
     if (msg.signedData.type === `rating`) {
       const id = await recipient.then();
+      id.receivedPositive = (id.receivedPositive || 0);
+      id.receivedNegative = (id.receivedNegative || 0);
+      id.receivedNeutral = (id.receivedNeutral || 0);
       if (msg.isPositive()) {
         if (msg.distance + 1 < id.trustDistance) {
           recipient.get(`trustDistance`).put(msg.distance + 1);
         }
-        recipient.get(`receivedPositive`).put((id.receivedPositive || 0) + 1);
+        id.receivedPositive ++;
       } else if (msg.isNegative()) {
-        recipient.get(`receivedNegative`).put((id.receivedNegative || 0) + 1);
+        id.receivedNegative ++;
       } else {
-        recipient.get(`receivedNeutral`).put((id.receivedNeutral || 0) + 1);
+        id.receivedNeutral ++;
       }
+      recipient.get(`receivedPositive`).put(id.receivedPositive);
+      recipient.get(`receivedNegative`).put(id.receivedNegative);
+      recipient.get(`receivedNeutral`).put(id.receivedNeutral);
       if (msg.signedData.context === `verifier`) {
         if (msg.distance === 0) {
           if (msg.isPositive) {
@@ -289,13 +291,19 @@ class Index {
   async _updateMsgAuthorIdentity(msg, msgIndexKey, author) {
     if (msg.signedData.type === `rating`) {
       const id = await author.then();
+      id.sentPositive = (id.sentPositive || 0);
+      id.sentNegative = (id.sentNegative || 0);
+      id.sentNeutral = (id.sentNeutral || 0);
       if (msg.isPositive()) {
-        author.get(`sentPositive`).put((id.sentPositive || 0) + 1);
+        id.sentPositive ++;
       } else if (msg.isNegative()) {
-        author.get(`sentNegative`).put((id.sentNegative || 0) + 1);
+        id.sentNegative ++;
       } else {
-        author.get(`sentNeutral`).put((id.sentNeutral || 0) + 1);
+        id.sentNeutral ++;
       }
+      author.get(`sentPositive`).put(id.sentPositive);
+      author.get(`sentNegative`).put(id.sentNegative);
+      author.get(`sentNeutral`).put(id.sentNeutral);
     }
     const obj = {sig: msg.sig, pubKey: msg.pubKey};
     if (msg.ipfsUri) {
@@ -305,7 +313,6 @@ class Index {
   }
 
   async _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
-    console.log(888);
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
@@ -313,21 +320,16 @@ class Index {
       if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
       }
-      console.log(999);
       if (authorIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
       }
-      console.log(101010);
-      console.log(await ids[i].gun.load().then());
       await this._addIdentityToIndexes(ids[i].gun);
-      console.log(111111);
     }
   }
 
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = {};
     const authorIdentities = {};
-    console.log(444);
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = this.get(a[1], a[0]);
@@ -343,7 +345,6 @@ class Index {
     if (!Object.keys(authorIdentities).length) {
       return; // unknown author, do nothing
     }
-    console.log(555);
     for (let i = 0;i < msg.signedData.recipient.length;i ++) {
       const a = msg.signedData.recipient[i];
       const id = this.get(a[1], a[0]);
@@ -352,19 +353,17 @@ class Index {
         recipientIdentities[id.gun[`_`].link] = id;
       }
     }
-    console.log(666);
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
       const attrs = {};
       msg.signedData.recipient.forEach(a => {
         const attr = new Attribute([a[0], a[1]]);
         attrs[attr.uri()] = attr;
       });
-      const id = new Identity(this.gun.get(`identities`).set({}), {attrs}, true);
+      const id = new Identity(this.gun.get(`identities`).set({}), {attrs, trustDistance: msg.distance + 1}, true);
 
       // TODO: take msg author trust into account
       recipientIdentities[id.gun[`_`].link] = id;
     }
-    console.log(777);
     return this._updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities);
   }
 
@@ -436,12 +435,10 @@ class Index {
   * @param ipfs (optional) ipfs instance where the message is additionally saved
   */
   async addMessage(msg: Message, ipfs) {
-    console.log(11);
     if (msg.constructor.name !== `Message`) {
       throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
     }
     msg.distance = await this.getMsgTrustDistance(msg);
-    console.log(22);
 
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
@@ -452,14 +449,10 @@ class Index {
       const ipfsUri = await msg.saveToIpfs(ipfs);
       obj.ipfsUri = ipfsUri;
     }
-    console.log(33);
-
     this.gun.get(`messagesByDistance`).get(indexKey).put(obj);
     indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
     this.gun.get(`messagesByTimestamp`).get(indexKey).put(obj);
     await this._updateIdentityIndexesByMsg(msg);
-    console.log(44);
-
     return true;
   }
 

@@ -8466,6 +8466,10 @@
 	    return this.name === a.name && this.val === a.val;
 	  };
 
+	  Attribute.prototype.uri = function uri() {
+	    return encodeURIComponent(this.val) + ":" + encodeURIComponent(this.name);
+	  };
+
 	  return Attribute;
 	}();
 
@@ -13138,14 +13142,35 @@
 	  /**
 	  * @param {Object} gun node where the Identity data lives
 	  * @param {Object} tempData temporary data to present before data from gun is received
+	  * @param {Boolean} save whether to save identity data to the given gun node
 	  */
-	  function Identity(gun, tempData) {
+	  function Identity(gun, tempData, save) {
 	    var _this = this;
 
 	    _classCallCheck(this, Identity);
 
 	    this.gun = gun;
-	    if (tempData) {
+	    if (save) {
+	      if (tempData.linkTo) {
+	        var linkTo = new Attribute(tempData.linkTo);
+	        tempData.attrs = tempData.attrs || {};
+	        if (!tempData.attrs.hasOwnProperty(linkTo.uri())) {
+	          tempData.attrs[linkTo.uri()] = linkTo;
+	        }
+	      } else {
+	        var mva = Identity.getMostVerifiedAttributes(tempData.attrs);
+	        var keys = _Object$keys(mva);
+	        for (var i = 0; i < keys.length; i++) {
+	          if (keys[i] === 'keyID') {
+	            tempData.linkTo = mva[keys[i]];
+	            break;
+	          } else if (Attribute.isUniqueType(keys[i])) {
+	            tempData.linkTo = mva[keys[i]];
+	          }
+	        }
+	      }
+	      this.gun.put(tempData);
+	    } else {
 	      this.tempData = tempData;
 	      this.gun.on(function (data) {
 	        if (data) {
@@ -13155,42 +13180,6 @@
 	      });
 	    }
 	  }
-
-	  Identity.create = function create(gunRoot, data) {
-	    data.receivedNegative |= data.receivedNegative || 0;
-	    data.receivedPositive |= data.receivedPositive || 0;
-	    data.receivedNeutral = data.receivedNeutral || 0;
-	    data.sentNegative = data.sentNegative || 0;
-	    data.sentPositive = data.sentPositive || 0;
-	    data.sentNeutral = data.sentNeutral || 0;
-	    data.trustDistance = data.hasOwnProperty('trustDistance') ? data.trustDistance : 99;
-	    data.attrs = data.attrs || {};
-	    data.scores = data.scores || { identifi: { score: 'todo', ratings: 0 } };
-	    if (Array.isArray(data.attrs)) {
-	      var attrs = {};
-	      while (data.attrs.length) {
-	        var a = data.attrs.pop();
-	        attrs[encodeURIComponent(a.name) + ':' + encodeURIComponent(a.val)] = a;
-	      }
-	      data.attrs = attrs;
-	    }
-	    data.mostVerifiedAttributes = Identity.getMostVerifiedAttributes(data.attrs);
-	    var bestVerificationScore = -1;
-	    _Object$keys(data.mostVerifiedAttributes).forEach(function (k) {
-	      var v = data.mostVerifiedAttributes[k];
-	      if (Attribute.isUniqueType(k) && v.verificationScore > bestVerificationScore) {
-	        data.linkTo = { name: k, val: v.attribute.val };
-	        bestVerificationScore = v.verificationScore;
-	      }
-	    });
-	    if (!data.linkTo) {
-	      data.linkTo = data.attrs[_Object$keys(data.attrs)[0]];
-	    }
-	    if (data.linkTo.name !== 'keyID' && data.mostVerifiedAttributes.keyID) {
-	      data.linkTo = data.mostVerifiedAttributes.keyID.attribute;
-	    }
-	    return new Identity(gunRoot.set(data));
-	  };
 
 	  Identity.getMostVerifiedAttributes = function getMostVerifiedAttributes(attrs) {
 	    var mostVerifiedAttributes = {};
@@ -13689,26 +13678,30 @@
 	*/
 
 	var Index = function () {
-	  function Index(gun) {
+	  function Index(gun, viewpoint) {
+	    var _this = this;
+
 	    _classCallCheck(this, Index);
 
 	    this.gun = gun || new gun_min();
+	    var setViewpoint = function setViewpoint(vp) {
+	      _this.viewpoint = new Attribute(vp);
+	      var uri = _this.viewpoint.uri();
+	      var g = _this.gun.get('identitiesBySearchKey').get(uri);
+	      var vpId = new Identity(g, {
+	        trustDistance: 0,
+	        linkTo: _this.viewpoint
+	      }, true);
+	      _this._addIdentityToIndexes(vpId.gun);
+	    };
+	    if (viewpoint) {
+	      setViewpoint(viewpoint);
+	    } else {
+	      Key.getDefault().then(function (defaultKey) {
+	        setViewpoint({ name: 'keyID', val: Key.getId(defaultKey) });
+	      });
+	    }
 	  }
-
-	  Index.create = async function create(gun, viewpoint) {
-	    var i = new Index(gun);
-	    if (!viewpoint) {
-	      var defaultKey = await Key.getDefault();
-	      viewpoint = { name: 'keyID', val: Key.getId(defaultKey), conf: 1, ref: 0 };
-	    }
-	    i.gun.get('viewpoint').put(new Attribute(viewpoint));
-	    var vp = await util$1.timeoutPromise(i.getViewpoint(), 5000);
-	    if (!vp) {
-	      vp = Identity.create(i.gun.get('identities'), { attrs: [viewpoint], trustDistance: 0 });
-	      await i._addIdentityToIndexes(vp.gun);
-	    }
-	    return i;
-	  };
 
 	  Index.getMsgIndexKey = function getMsgIndexKey(msg) {
 	    var distance = parseInt(msg.distance);
@@ -13769,10 +13762,10 @@
 
 
 	  Index.prototype.getViewpoint = async function getViewpoint() {
-	    var _this = this;
+	    var _this2 = this;
 
 	    var k = await new _Promise(function (resolve) {
-	      return _this.gun.get('identitiesByTrustDistance').map(function (v, k) {
+	      return _this2.gun.get('identitiesByTrustDistance').map(function (v, k) {
 	        return k.indexOf('00') === 0 ? resolve(k) : 0;
 	      });
 	    });
@@ -13794,8 +13787,8 @@
 	    if (typeof type === 'undefined') {
 	      type = Attribute.guessTypeOf(value);
 	    }
-	    var key = encodeURIComponent(value) + ':' + encodeURIComponent(type);
-	    return new Identity(this.gun.get('identitiesBySearchKey').get(key), { linkTo: { name: type, val: value } });
+	    var a = new Attribute([type, value]);
+	    return new Identity(this.gun.get('identitiesBySearchKey').get(a.uri()), { linkTo: a });
 	  };
 
 	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, limit, cursor) {
@@ -13830,7 +13823,6 @@
 	  Index.prototype.getSentMsgs = async function getSentMsgs(identity, limit) {
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    console.log('getSentMsgs');
 	    return this._getMsgs(identity.gun.get('sent'), limit, cursor);
 	  };
 
@@ -13842,13 +13834,15 @@
 	  Index.prototype.getReceivedMsgs = async function getReceivedMsgs(identity, limit) {
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    console.log('getReceivedMsgs');
 	    return this._getMsgs(identity.gun.get('received'), limit, cursor);
 	  };
 
 	  Index.prototype._getAttributeTrustDistance = async function _getAttributeTrustDistance(a) {
 	    if (!Attribute.isUniqueType(a.name)) {
 	      return;
+	    }
+	    if (this.viewpoint.equals(a)) {
+	      return 0;
 	    }
 	    var id = this.get(a.val, a.name);
 	    var d = await id.gun.get('trustDistance').then();
@@ -13866,21 +13860,18 @@
 
 	  Index.prototype.getMsgTrustDistance = async function getMsgTrustDistance(msg) {
 	    var shortestDistance = Infinity;
-	    var signer = this.get(msg.getSignerKeyID(), 'keyID');
-	    var d = await signer.gun.get('trustDistance').then();
-	    if (isNaN(d)) {
-	      return;
+	    var signerAttr = new Attribute(['keyID', msg.getSignerKeyID()]);
+	    if (!signerAttr.equals(this.viewpoint)) {
+	      var signer = this.get(signerAttr.val, signerAttr.name);
+	      var d = await signer.gun.get('trustDistance').then();
+	      if (isNaN(d)) {
+	        return;
+	      }
 	    }
-	    var vp = await this.gun.get('viewpoint').then();
 	    for (var i = 0; i < msg.signedData.author.length; i++) {
-	      var a = new Attribute(msg.signedData.author[i]);
-	      if (Attribute.equals(a, vp)) {
-	        return 0;
-	      } else {
-	        var _d = await this._getAttributeTrustDistance(a);
-	        if (_d < shortestDistance) {
-	          shortestDistance = _d;
-	        }
+	      var _d = await this._getAttributeTrustDistance(new Attribute(msg.signedData.author[i]));
+	      if (_d < shortestDistance) {
+	        shortestDistance = _d;
 	      }
 	    }
 	    return shortestDistance < Infinity ? shortestDistance : undefined;
@@ -13905,10 +13896,10 @@
 	          }
 	        });
 	        if (!hasAttr) {
-	          attrs[encodeURIComponent(a1[0]) + ':' + encodeURIComponent(a1[1])] = { name: a1[0], val: a1[1], conf: 1, ref: 0 };
+	          attrs[encodeURIComponent(a1[1]) + ':' + encodeURIComponent(a1[0])] = { name: a1[0], val: a1[1], conf: 1, ref: 0 };
 	        }
 	        if (msg.goodVerification) {
-	          attrs[encodeURIComponent(a1[0]) + ':' + encodeURIComponent(a1[1])].verified = true;
+	          attrs[encodeURIComponent(a1[1]) + ':' + encodeURIComponent(a1[0])].verified = true;
 	        }
 	      });
 	      recipient.get('mostVerifiedAttributes').put(Identity.getMostVerifiedAttributes(attrs));
@@ -13916,16 +13907,22 @@
 	    }
 	    if (msg.signedData.type === 'rating') {
 	      var id = await recipient.then();
+	      id.receivedPositive = id.receivedPositive || 0;
+	      id.receivedNegative = id.receivedNegative || 0;
+	      id.receivedNeutral = id.receivedNeutral || 0;
 	      if (msg.isPositive()) {
 	        if (msg.distance + 1 < id.trustDistance) {
 	          recipient.get('trustDistance').put(msg.distance + 1);
 	        }
-	        recipient.get('receivedPositive').put(id.receivedPositive + 1);
+	        id.receivedPositive++;
 	      } else if (msg.isNegative()) {
-	        recipient.get('receivedNegative').put(id.receivedNegative + 1);
+	        id.receivedNegative++;
 	      } else {
-	        recipient.get('receivedNeutral').put(id.receivedNeutral + 1);
+	        id.receivedNeutral++;
 	      }
+	      recipient.get('receivedPositive').put(id.receivedPositive);
+	      recipient.get('receivedNegative').put(id.receivedNegative);
+	      recipient.get('receivedNeutral').put(id.receivedNeutral);
 	      if (msg.signedData.context === 'verifier') {
 	        if (msg.distance === 0) {
 	          if (msg.isPositive) {
@@ -13956,13 +13953,19 @@
 	  Index.prototype._updateMsgAuthorIdentity = async function _updateMsgAuthorIdentity(msg, msgIndexKey, author) {
 	    if (msg.signedData.type === 'rating') {
 	      var id = await author.then();
+	      id.sentPositive = id.sentPositive || 0;
+	      id.sentNegative = id.sentNegative || 0;
+	      id.sentNeutral = id.sentNeutral || 0;
 	      if (msg.isPositive()) {
-	        author.get('sentPositive').put(id.sentPositive + 1);
+	        id.sentPositive++;
 	      } else if (msg.isNegative()) {
-	        author.get('sentNegative').put(id.sentNegative + 1);
+	        id.sentNegative++;
 	      } else {
-	        author.get('sentNeutral').put(id.sentNeutral + 1);
+	        id.sentNeutral++;
 	      }
+	      author.get('sentPositive').put(id.sentPositive);
+	      author.get('sentNegative').put(id.sentNegative);
+	      author.get('sentNeutral').put(id.sentNeutral);
 	    }
 	    var obj = { sig: msg.sig, pubKey: msg.pubKey };
 	    if (msg.ipfsUri) {
@@ -14015,11 +14018,13 @@
 	    }
 	    if (!_Object$keys(recipientIdentities).length) {
 	      // recipient is previously unknown
-	      var attrs = [];
+	      var attrs = {};
 	      msg.signedData.recipient.forEach(function (a) {
-	        attrs.push({ name: a[0], val: a[1], conf: 1, ref: 0 });
+	        var attr = new Attribute([a[0], a[1]]);
+	        attrs[attr.uri()] = attr;
 	      });
-	      var _id2 = Identity.create(this.gun.get('identities'), { attrs: attrs });
+	      var _id2 = new Identity(this.gun.get('identities').set({}), { attrs: attrs, trustDistance: msg.distance + 1 }, true);
+
 	      // TODO: take msg author trust into account
 	      recipientIdentities[_id2.gun['_'].link] = _id2;
 	    }
@@ -14099,12 +14104,10 @@
 
 
 	  Index.prototype.addMessage = async function addMessage(msg, ipfs) {
-	    console.log(11);
 	    if (msg.constructor.name !== 'Message') {
 	      throw new Error('addMessage failed: param must be a Message, received ' + msg.constructor.name);
 	    }
 	    msg.distance = await this.getMsgTrustDistance(msg);
-	    console.log(22);
 
 	    if (msg.distance === undefined) {
 	      return false; // do not save messages from untrusted author
@@ -14115,14 +14118,10 @@
 	      var ipfsUri = await msg.saveToIpfs(ipfs);
 	      obj.ipfsUri = ipfsUri;
 	    }
-	    console.log(33);
-
 	    this.gun.get('messagesByDistance').get(indexKey).put(obj);
 	    indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
 	    this.gun.get('messagesByTimestamp').get(indexKey).put(obj);
 	    await this._updateIdentityIndexesByMsg(msg);
-	    console.log(44);
-
 	    return true;
 	  };
 
@@ -14134,17 +14133,17 @@
 
 
 	  Index.prototype.search = async function search(value) {
-	    var _this2 = this;
+	    var _this3 = this;
 
 	    // TODO: param 'exact', type param
 	    var r = {};
 	    return new _Promise(function (resolve) {
-	      _this2.gun.get('identitiesByTrustDistance').map(function (id, key) {
+	      _this3.gun.get('identitiesByTrustDistance').map(function (id, key) {
 	        if (key.indexOf(encodeURIComponent(value)) === -1) {
 	          return;
 	        }
 	        if (!r.hasOwnProperty(gun_min.node.soul(id))) {
-	          r[gun_min.node.soul(id)] = new Identity(_this2.gun.get('identitiesByTrustDistance').get(key));
+	          r[gun_min.node.soul(id)] = new Identity(_this3.gun.get('identitiesByTrustDistance').get(key));
 	        }
 	      });
 	      setTimeout(function () {
