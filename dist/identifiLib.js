@@ -13445,13 +13445,13 @@
 	      this.gun.get('attrs').open(function (attrs) {
 	        var mva = Identity.getMostVerifiedAttributes(attrs);
 	        if (mva.profilePhoto) {
-	          var timeout = ipfs.isOnline() ? 0 : 5000;
-	          setTimeout(function () {
+	          var go = function go() {
 	            ipfs.files.cat(mva.profilePhoto.attribute.val).then(function (file) {
 	              var f = ipfs.types.Buffer.from(file).toString('base64');
 	              img.src = 'data:image;base64,' + f;
 	            });
-	          }, timeout);
+	          };
+	          ipfs.isOnline() ? go() : ipfs.on('ready', go);
 	        }
 	      });
 	    }

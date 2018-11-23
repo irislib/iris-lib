@@ -370,13 +370,13 @@ class Identity {
       this.gun.get(`attrs`).open(attrs => {
         const mva = Identity.getMostVerifiedAttributes(attrs);
         if (mva.profilePhoto) {
-          const timeout = ipfs.isOnline() ? 0 : 5000;
-          setTimeout(() => {
+          const go = () => {
             ipfs.files.cat(mva.profilePhoto.attribute.val).then(file => {
               const f = ipfs.types.Buffer.from(file).toString(`base64`);
               img.src = `data:image;base64,${f}`;
             });
-          }, timeout);
+          };
+          ipfs.isOnline() ? go() : ipfs.on(`ready`, go);
         }
       });
     }
