@@ -13151,23 +13151,15 @@
 
 	    this.gun = gun;
 	    if (save) {
-	      if (tempData.linkTo) {
+	      if (tempData.linkTo && !tempData.attrs) {
 	        var linkTo = new Attribute(tempData.linkTo);
 	        tempData.attrs = tempData.attrs || {};
 	        if (!tempData.attrs.hasOwnProperty(linkTo.uri())) {
 	          tempData.attrs[linkTo.uri()] = linkTo;
 	        }
 	      } else {
-	        var mva = Identity.getMostVerifiedAttributes(tempData.attrs);
-	        var keys = _Object$keys(mva);
-	        for (var i = 0; i < keys.length; i++) {
-	          if (keys[i] === 'keyID') {
-	            tempData.linkTo = mva[keys[i]];
-	            break;
-	          } else if (Attribute.isUniqueType(keys[i])) {
-	            tempData.linkTo = mva[keys[i]];
-	          }
-	        }
+	        tempData.linkTo = Identity.getLinkTo(tempData.attrs);
+	        console.log('tempData.linkTo', tempData.linkTo);
 	      }
 	      this.gun.put(tempData);
 	    } else {
@@ -13181,11 +13173,28 @@
 	    }
 	  }
 
+	  Identity.getLinkTo = function getLinkTo(attrs) {
+	    var mva = Identity.getMostVerifiedAttributes(attrs);
+	    var keys = _Object$keys(mva);
+	    var linkTo = void 0;
+	    for (var i = 0; i < keys.length; i++) {
+	      if (keys[i] === 'keyID') {
+	        linkTo = mva[keys[i]].attribute;
+	        break;
+	      } else if (Attribute.isUniqueType(keys[i])) {
+	        linkTo = mva[keys[i]].attribute;
+	      }
+	    }
+	    return linkTo;
+	  };
+
 	  Identity.getMostVerifiedAttributes = function getMostVerifiedAttributes(attrs) {
 	    var mostVerifiedAttributes = {};
 	    _Object$keys(attrs).forEach(function (k) {
 	      var a = attrs[k];
 	      var keyExists = _Object$keys(mostVerifiedAttributes).indexOf(a.name) > -1;
+	      a.conf = isNaN(a.conf) ? 1 : a.conf;
+	      a.ref = isNaN(a.ref) ? 0 : a.ref;
 	      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.name].verificationScore)) {
 	        mostVerifiedAttributes[a.name] = {
 	          attribute: a,
@@ -13998,7 +14007,7 @@
 	      if (authorIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
 	        await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
 	      }
-	      await this._addIdentityToIndexes(ids[i].gun);
+	      await this._addIdentityToIndexes(ids[i].gun); // TODO: broblem. ids[i].gun may have become null
 	    }
 	  };
 
@@ -14035,7 +14044,8 @@
 	        var attr = new Attribute([a[0], a[1]]);
 	        attrs[attr.uri()] = attr;
 	      });
-	      var _id2 = new Identity(this.gun.get('identities').set({}), { attrs: attrs, trustDistance: msg.distance + 1 }, true);
+	      var linkTo = Identity.getLinkTo(attrs);
+	      var _id2 = new Identity(this.gun.get('identities').set({}), { attrs: attrs, linkTo: linkTo, trustDistance: 99 }, true);
 
 	      // TODO: take msg author trust into account
 	      recipientIdentities[_id2.gun['_'].link] = _id2;

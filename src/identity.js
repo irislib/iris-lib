@@ -15,23 +15,15 @@ class Identity {
   constructor(gun: Object, tempData, save) {
     this.gun = gun;
     if (save) {
-      if (tempData.linkTo) {
+      if (tempData.linkTo && !tempData.attrs) {
         const linkTo = new Attribute(tempData.linkTo);
         tempData.attrs = tempData.attrs || {};
         if (!tempData.attrs.hasOwnProperty(linkTo.uri())) {
           tempData.attrs[linkTo.uri()] = linkTo;
         }
       } else {
-        const mva = Identity.getMostVerifiedAttributes(tempData.attrs);
-        const keys = Object.keys(mva);
-        for (let i = 0;i < keys.length;i ++) {
-          if (keys[i] === `keyID`) {
-            tempData.linkTo = mva[keys[i]];
-            break;
-          } else if (Attribute.isUniqueType(keys[i])) {
-            tempData.linkTo = mva[keys[i]];
-          }
-        }
+        tempData.linkTo = Identity.getLinkTo(tempData.attrs);
+        console.log(`tempData.linkTo`, tempData.linkTo);
       }
       this.gun.put(tempData);
     } else {
@@ -45,11 +37,28 @@ class Identity {
     }
   }
 
+  static getLinkTo(attrs) {
+    const mva = Identity.getMostVerifiedAttributes(attrs);
+    const keys = Object.keys(mva);
+    let linkTo;
+    for (let i = 0;i < keys.length;i ++) {
+      if (keys[i] === `keyID`) {
+        linkTo = mva[keys[i]].attribute;
+        break;
+      } else if (Attribute.isUniqueType(keys[i])) {
+        linkTo = mva[keys[i]].attribute;
+      }
+    }
+    return linkTo;
+  }
+
   static getMostVerifiedAttributes(attrs) {
     const mostVerifiedAttributes = {};
     Object.keys(attrs).forEach(k => {
       const a = attrs[k];
       const keyExists = Object.keys(mostVerifiedAttributes).indexOf(a.name) > - 1;
+      a.conf = isNaN(a.conf) ? 1 : a.conf;
+      a.ref = isNaN(a.ref) ? 0 : a.ref;
       if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.name].verificationScore)) {
         mostVerifiedAttributes[a.name] = {
           attribute: a,

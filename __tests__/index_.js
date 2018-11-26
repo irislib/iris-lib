@@ -61,7 +61,6 @@ describe('local index', async () => {
     test('get added identity', async () => {
       p = i.get('bob@example.com');
       const data = await p.gun.once().then();
-      console.log('data', data);
       //expect(q).toBeInstanceOf(identifi.Identity);
       expect(data.trustDistance).toBe(1);
       expect(data.receivedPositive).toBe(1);
@@ -82,6 +81,19 @@ describe('local index', async () => {
       const r = await i.getSentMsgs(viewpoint);
       expect(r.length).toBe(1);
     });
+  });
+  test('verify first, then rate', async () => {
+    let msg = await identifi.Message.createVerification({recipient:[['name', 'Fabio'], ['email', 'fabio@example.com']]}, key);
+    let r = await i.addMessage(msg);
+    expect(r).toBe(true);
+    p = i.get('fabio@example.com');
+    let data = await p.gun.once().then();
+    expect(data.trustDistance).toBe(99);
+    msg = await identifi.Message.createRating({recipient:[['email', 'fabio@example.com']], rating:10}, key);
+    r = await i.addMessage(msg);
+    p = i.get('fabio@example.com');
+    data = await p.gun.once().then();
+    expect(data.trustDistance).toBe(1);
   });
   describe('add more identities', async () => {
     test('bob -> carl', async () => {
@@ -227,7 +239,7 @@ describe('local index', async () => {
     const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(data.trustDistance).toBe(0);
-    expect(data.sentPositive).toBe(3);
+    expect(data.sentPositive).toBe(4);
   });
   test('get messages by timestamp', async () => {
     const r = await i.getMessagesByTimestamp();

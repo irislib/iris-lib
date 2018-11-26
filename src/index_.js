@@ -341,7 +341,7 @@ class Index {
       if (authorIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
       }
-      await this._addIdentityToIndexes(ids[i].gun);
+      await this._addIdentityToIndexes(ids[i].gun); // TODO: broblem. ids[i].gun may have become null
     }
   }
 
@@ -377,7 +377,8 @@ class Index {
         const attr = new Attribute([a[0], a[1]]);
         attrs[attr.uri()] = attr;
       });
-      const id = new Identity(this.gun.get(`identities`).set({}), {attrs, trustDistance: msg.distance + 1}, true);
+      const linkTo = Identity.getLinkTo(attrs);
+      const id = new Identity(this.gun.get(`identities`).set({}), {attrs, linkTo, trustDistance: 99}, true);
 
       // TODO: take msg author trust into account
       recipientIdentities[id.gun[`_`].link] = id;
