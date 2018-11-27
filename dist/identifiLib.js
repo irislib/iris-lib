@@ -13648,6 +13648,8 @@
 		return this.open(cb, opt, at);
 	};
 
+	var GUN_TIMEOUT = 100;
+
 	// temp method for GUN search
 	async function searchText(node, query, limit, cursor) {
 	  return new _Promise(function (resolve) {
@@ -13735,7 +13737,7 @@
 
 	  Index.getIdentityIndexKeys = async function getIdentityIndexKeys(identity, hash) {
 	    var indexKeys = [];
-	    var d = await identity.get('trustDistance').then();
+	    var d = await util$1.timeoutPromise(identity.get('trustDistance').then(), GUN_TIMEOUT);
 	    await identity.get('attrs').map().once(function (a) {
 	      if (!a) {
 	        // TODO: this sometimes returns undefined
@@ -14017,7 +14019,7 @@
 	    for (var i = 0; i < msg.signedData.author.length; i++) {
 	      var a = msg.signedData.author[i];
 	      var id = this.get(a[1], a[0]);
-	      var td = await id.gun.get('trustDistance').then();
+	      var td = await util$1.timeoutPromise(id.gun.get('trustDistance').then(), GUN_TIMEOUT);
 	      if (!isNaN(td)) {
 	        authorIdentities[id.gun['_'].link] = id;
 	        var scores = await id.gun.get('scores').then();
@@ -14032,7 +14034,8 @@
 	    for (var _i = 0; _i < msg.signedData.recipient.length; _i++) {
 	      var _a = msg.signedData.recipient[_i];
 	      var _id = this.get(_a[1], _a[0]);
-	      var _td = await _id.gun.get('trustDistance').then();
+	      var _td = await util$1.timeoutPromise(_id.gun.get('trustDistance').then(), GUN_TIMEOUT);
+
 	      if (!isNaN(_td)) {
 	        recipientIdentities[_id.gun['_'].link] = _id;
 	      }
@@ -14050,6 +14053,7 @@
 	      // TODO: take msg author trust into account
 	      recipientIdentities[_id2.gun['_'].link] = _id2;
 	    }
+
 	    return this._updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities);
 	  };
 
@@ -14130,7 +14134,6 @@
 	      throw new Error('addMessage failed: param must be a Message, received ' + msg.constructor.name);
 	    }
 	    msg.distance = await this.getMsgTrustDistance(msg);
-
 	    if (msg.distance === undefined) {
 	      return false; // do not save messages from untrusted author
 	    }

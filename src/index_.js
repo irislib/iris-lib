@@ -7,6 +7,8 @@ import Gun from 'gun'; // eslint-disable-line no-unused-vars
 import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 
+const GUN_TIMEOUT = 100;
+
 // temp method for GUN search
 async function searchText(node, query, limit, cursor) {
   return new Promise(resolve => {
@@ -88,7 +90,7 @@ class Index {
 
   static async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
-    const d = await identity.get(`trustDistance`).then();
+    const d = await util.timeoutPromise(identity.get(`trustDistance`).then(), GUN_TIMEOUT);
     await identity.get(`attrs`).map().once(a => {
       if (!a) { // TODO: this sometimes returns undefined
         return;
@@ -351,7 +353,7 @@ class Index {
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = this.get(a[1], a[0]);
-      const td = await id.gun.get(`trustDistance`).then();
+      const td = await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT);
       if (!isNaN(td)) {
         authorIdentities[id.gun[`_`].link] = id;
         const scores = await id.gun.get(`scores`).then();
@@ -366,7 +368,8 @@ class Index {
     for (let i = 0;i < msg.signedData.recipient.length;i ++) {
       const a = msg.signedData.recipient[i];
       const id = this.get(a[1], a[0]);
-      const td = await id.gun.get(`trustDistance`).then();
+      const td = await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT);
+
       if (!isNaN(td)) {
         recipientIdentities[id.gun[`_`].link] = id;
       }
@@ -383,6 +386,7 @@ class Index {
       // TODO: take msg author trust into account
       recipientIdentities[id.gun[`_`].link] = id;
     }
+
     return this._updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities);
   }
 
@@ -458,7 +462,6 @@ class Index {
       throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
     }
     msg.distance = await this.getMsgTrustDistance(msg);
-
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
     }
