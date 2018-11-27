@@ -487,8 +487,9 @@ class Index {
         if (key.indexOf(encodeURIComponent(value)) === - 1) {
           return;
         }
-        if (!r.hasOwnProperty(Gun.node.soul(id))) {
-          r[Gun.node.soul(id)] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
+        const soul = Gun.node.soul(id);
+        if (soul && !r.hasOwnProperty(soul)) {
+          r[soul] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
         }
       });
       setTimeout(() => { resolve(Object.values(r)); }, 200);

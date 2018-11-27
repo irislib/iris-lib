@@ -14164,8 +14164,9 @@
 	        if (key.indexOf(encodeURIComponent(value)) === -1) {
 	          return;
 	        }
-	        if (!r.hasOwnProperty(gun_min.node.soul(id))) {
-	          r[gun_min.node.soul(id)] = new Identity(_this.gun.get('identitiesByTrustDistance').get(key));
+	        var soul = gun_min.node.soul(id);
+	        if (soul && !r.hasOwnProperty(soul)) {
+	          r[soul] = new Identity(_this.gun.get('identitiesByTrustDistance').get(key));
 	        }
 	      });
 	      setTimeout(function () {
