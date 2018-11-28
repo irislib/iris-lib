@@ -337,13 +337,14 @@ class Index {
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
+      const relocated = this.gun.get(`identities`).set(await ids[i].gun.then()); // this may screw up real time updates?
       if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
       }
       if (authorIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
       }
-      await this._addIdentityToIndexes(ids[i].gun); // TODO: broblem. ids[i].gun may have become null
+      await this._addIdentityToIndexes(relocated);
     }
   }
 

@@ -14003,13 +14003,14 @@
 	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
 	    for (var i = 0; i < ids.length; i++) {
 	      // add new identifiers to identity
+	      var relocated = this.gun.get('identities').set((await ids[i].gun.then()));
 	      if (recipientIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
 	        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
 	      }
 	      if (authorIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
 	        await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
 	      }
-	      await this._addIdentityToIndexes(ids[i].gun); // TODO: broblem. ids[i].gun may have become null
+	      await this._addIdentityToIndexes(relocated); // TODO: broblem. ids[i].gun may have become null
 	    }
 	  };
 
