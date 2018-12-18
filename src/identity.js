@@ -23,7 +23,6 @@ class Identity {
         }
       } else {
         tempData.linkTo = Identity.getLinkTo(tempData.attrs);
-        console.log(`tempData.linkTo`, tempData.linkTo);
       }
       this.gun.put(tempData);
     } else {

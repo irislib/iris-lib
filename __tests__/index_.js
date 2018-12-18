@@ -233,6 +233,26 @@ describe('local index', async () => {
       });
     });
   });
+  describe('trusted indexes', async () => {
+    let i2, k2;
+    test('create a new index that is linked to the previous', async () => {
+      k2 = await identifi.Key.generate();
+      const keyID = identifi.Key.getId(k2);
+      console.log('keyID', keyID);
+      i2 = identifi.Index.create(gun.get(keyID).get('identifi'), ['keyID', keyID]);
+      let m = await identifi.Message.createRating({recipient:[['keyID', 'identifi']], rating: 10}, k2);
+      await i2.addMessage(m);
+    });
+    test('get identity from linked index', async () => {
+      p = i2.get('bob@example.com');
+      const data = await p.gun.once().then();
+      //expect(q).toBeInstanceOf(identifi.Identity);
+      expect(data.trustDistance).toBe(1);
+      expect(data.receivedPositive).toBe(1);
+      expect(data.receivedNeutral).toBe(0);
+      expect(data.receivedNegative).toBe(0);
+    });
+  });
   test('get viewpoint identity by searching the default keyID', async () => {
     const defaultKey = await identifi.Key.getDefault();
     p = i.get(identifi.Key.getId(defaultKey), 'keyID');

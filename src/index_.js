@@ -337,7 +337,7 @@ class Index {
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
-      const relocated = this.gun.get(`identities`).set(await ids[i].gun.then()); // this may screw up real time updates?
+      const relocated = this.gun.get(`identities`).set(await ids[i].gun.then()); // this may screw up real time updates? and create unnecessary `identities` entries
       if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
       }
@@ -351,6 +351,7 @@ class Index {
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = {};
     const authorIdentities = {};
+    let selfAuthored = false;
     for (let i = 0;i < msg.signedData.author.length;i ++) {
       const a = msg.signedData.author[i];
       const id = this.get(a[1], a[0]);
@@ -360,6 +361,9 @@ class Index {
         const scores = await id.gun.get(`scores`).then();
         if (scores && scores.verifier && msg.signedData.type === `verification`) {
           msg.goodVerification = true;
+        }
+        if (td === 0) {
+          selfAuthored = true;
         }
       }
     }
@@ -373,6 +377,9 @@ class Index {
 
       if (!isNaN(td)) {
         recipientIdentities[id.gun[`_`].link] = id;
+      }
+      if (selfAuthored && a[0] === 'keyID' && msg.isPositive()) {
+        this.gun.get('trustedIndexes').get(a[1]).put(true);
       }
     }
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
@@ -494,6 +501,22 @@ class Index {
         const soul = Gun.node.soul(id);
         if (soul && !r.hasOwnProperty(soul)) {
           r[soul] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
+        }
+      });
+      this.gun.get(`trustedIndexes`).map((val, key) => {
+        if (val) {
+          console.log(`search stuff from`, key);
+
+          this.gun.back().get(key).get(`identitiesByTrustDistance`).map((id, k) => {
+            if (k.indexOf(encodeURIComponent(value)) === - 1) {
+              return;
+            }
+            const soul = Gun.node.soul(id);
+            if (soul && !r.hasOwnProperty(soul)) {
+              r[soul] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(k));
+            }
+          });
+
         }
       });
       setTimeout(() => { resolve(Object.values(r)); }, 200);
