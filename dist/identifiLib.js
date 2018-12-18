@@ -13159,7 +13159,6 @@
 	        }
 	      } else {
 	        tempData.linkTo = Identity.getLinkTo(tempData.attrs);
-	        console.log('tempData.linkTo', tempData.linkTo);
 	      }
 	      this.gun.put(tempData);
 	    } else {
@@ -13470,6 +13469,57 @@
 
 	  return Identity;
 	}();
+
+	var _stringWs = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
+	  '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
+
+	var space = '[' + _stringWs + ']';
+	var non = '\u200b\u0085';
+	var ltrim = RegExp('^' + space + space + '*');
+	var rtrim = RegExp(space + space + '*$');
+
+	var exporter = function (KEY, exec, ALIAS) {
+	  var exp = {};
+	  var FORCE = _fails(function () {
+	    return !!_stringWs[KEY]() || non[KEY]() != non;
+	  });
+	  var fn = exp[KEY] = FORCE ? exec(trim) : _stringWs[KEY];
+	  if (ALIAS) exp[ALIAS] = fn;
+	  _export(_export.P + _export.F * FORCE, 'String', exp);
+	};
+
+	// 1 -> String#trimLeft
+	// 2 -> String#trimRight
+	// 3 -> String#trim
+	var trim = exporter.trim = function (string, TYPE) {
+	  string = String(_defined(string));
+	  if (TYPE & 1) string = string.replace(ltrim, '');
+	  if (TYPE & 2) string = string.replace(rtrim, '');
+	  return string;
+	};
+
+	var _stringTrim = exporter;
+
+	var $parseInt = _global.parseInt;
+	var $trim = _stringTrim.trim;
+
+	var hex = /^[-+]?0[xX]/;
+
+	var _parseInt = $parseInt(_stringWs + '08') !== 8 || $parseInt(_stringWs + '0x16') !== 22 ? function parseInt(str, radix) {
+	  var string = $trim(String(str), 3);
+	  return $parseInt(string, (radix >>> 0) || (hex.test(string) ? 16 : 10));
+	} : $parseInt;
+
+	// 20.1.2.13 Number.parseInt(string, radix)
+	_export(_export.S + _export.F * (Number.parseInt != _parseInt), 'Number', { parseInt: _parseInt });
+
+	var _parseInt$1 = _core.Number.parseInt;
+
+	var _parseInt$2 = createCommonjsModule(function (module) {
+	module.exports = { "default": _parseInt$1, __esModule: true };
+	});
+
+	var _Number$parseInt = unwrapExports(_parseInt$2);
 
 	// 19.1.2.1 Object.assign(target, source, ...)
 
@@ -14003,20 +14053,50 @@
 	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
 	    for (var i = 0; i < ids.length; i++) {
 	      // add new identifiers to identity
-	      var relocated = this.gun.get('identities').set((await ids[i].gun.then()));
+	      var relocated = this.gun.get('identities').set((await ids[i].gun.then())); // this may screw up real time updates? and create unnecessary `identities` entries
 	      if (recipientIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
 	        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
 	      }
 	      if (authorIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
 	        await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
 	      }
-	      await this._addIdentityToIndexes(relocated); // TODO: broblem. ids[i].gun may have become null
+	      await this._addIdentityToIndexes(relocated);
 	    }
+	  };
+
+	  Index.prototype.addTrustedIndex = async function addTrustedIndex(gunUri) {
+	    var _this = this;
+
+	    var maxMsgsToCrawl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 500;
+	    var maxCrawlDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
+
+	    if (gunUri === this.viewpoint.val) {
+	      return;
+	    }
+	    console.log('addTrustedIndex', gunUri);
+	    this.gun.get('trustedIndexes').get(gunUri).put(true);
+	    var msgs = [];
+	    await util$1.timeoutPromise(new _Promise(function (resolve) {
+	      _this.gun.back(-1).get(gunUri).get('messagesByDistance').map(function (val, key) {
+	        var d = _Number$parseInt(key.split(':')[0]);
+	        if (!isNaN(d) && d <= maxCrawlDistance) {
+	          Message.fromSig(val).then(function (msg) {
+	            msgs.push(msg);
+	            if (msgs.length >= maxMsgsToCrawl) {
+	              resolve();
+	            }
+	          });
+	        }
+	      });
+	    }), 10000);
+	    console.log('adding', msgs.length, 'msgs');
+	    this.addMessages(msgs);
 	  };
 
 	  Index.prototype._updateIdentityIndexesByMsg = async function _updateIdentityIndexesByMsg(msg) {
 	    var recipientIdentities = {};
 	    var authorIdentities = {};
+	    var selfAuthored = false;
 	    for (var i = 0; i < msg.signedData.author.length; i++) {
 	      var a = msg.signedData.author[i];
 	      var id = this.get(a[1], a[0]);
@@ -14026,6 +14106,9 @@
 	        var scores = await id.gun.get('scores').then();
 	        if (scores && scores.verifier && msg.signedData.type === 'verification') {
 	          msg.goodVerification = true;
+	        }
+	        if (td === 0) {
+	          selfAuthored = true;
 	        }
 	      }
 	    }
@@ -14039,6 +14122,10 @@
 
 	      if (!isNaN(_td)) {
 	        recipientIdentities[_id.gun['_'].link] = _id;
+	      }
+	      if (selfAuthored && _a[0] === 'keyID' && _a[1] !== this.viewpoint.val && msg.isPositive()) {
+	        // TODO: not if already added - causes infinite loop
+	        this.addTrustedIndex(_a[1]);
 	      }
 	    }
 	    if (!_Object$keys(recipientIdentities).length) {
@@ -14159,18 +14246,35 @@
 
 
 	  Index.prototype.search = async function search(value) {
-	    var _this = this;
+	    var _this2 = this;
 
 	    // TODO: param 'exact', type param
 	    var r = {};
 	    return new _Promise(function (resolve) {
-	      _this.gun.get('identitiesByTrustDistance').map(function (id, key) {
+	      _this2.gun.get('identitiesByTrustDistance').map(function (id, key) {
 	        if (key.indexOf(encodeURIComponent(value)) === -1) {
 	          return;
 	        }
 	        var soul = gun_min.node.soul(id);
 	        if (soul && !r.hasOwnProperty(soul)) {
-	          r[soul] = new Identity(_this.gun.get('identitiesByTrustDistance').get(key));
+	          r[soul] = new Identity(_this2.gun.get('identitiesByTrustDistance').get(key));
+	        }
+	      });
+	      _this2.gun.get('trustedIndexes').map(function (val, key) {
+	        if (val) {
+	          console.log('search stuff from trusted index', key);
+
+	          _this2.gun.back(-1).get(key).get('identitiesByTrustDistance').map(function (id, k) {
+	            // TODO: where should this actually be searched from?
+	            if (k.indexOf(encodeURIComponent(value)) === -1) {
+	              return;
+	            }
+	            console.log('found search result from trusted index', key, ':', k);
+	            var soul = gun_min.node.soul(id);
+	            if (soul && !r.hasOwnProperty(soul)) {
+	              r[soul] = new Identity(_this2.gun.get('identitiesByTrustDistance').get(k));
+	            }
+	          });
 	        }
 	      });
 	      setTimeout(function () {

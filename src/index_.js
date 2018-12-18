@@ -348,6 +348,30 @@ class Index {
     }
   }
 
+  async addTrustedIndex(gunUri, maxMsgsToCrawl = 500, maxCrawlDistance = 2) {
+    if (gunUri === this.viewpoint.val) {
+      return;
+    }
+    console.log(`addTrustedIndex`, gunUri);
+    this.gun.get(`trustedIndexes`).get(gunUri).put(true);
+    const msgs = [];
+    await util.timeoutPromise(new Promise(resolve => {
+      this.gun.back(-1).get(gunUri).get(`messagesByDistance`).map((val, key) => {
+        const d = Number.parseInt(key.split(`:`)[0]);
+        if (!isNaN(d) && d <= maxCrawlDistance) {
+          Message.fromSig(val).then(msg => {
+            msgs.push(msg);
+            if (msgs.length >= maxMsgsToCrawl) {
+              resolve();
+            }
+          });
+        }
+      });
+    }), 10000);
+    console.log('adding', msgs.length, 'msgs');
+    this.addMessages(msgs);
+  }
+
   async _updateIdentityIndexesByMsg(msg) {
     const recipientIdentities = {};
     const authorIdentities = {};
@@ -378,8 +402,8 @@ class Index {
       if (!isNaN(td)) {
         recipientIdentities[id.gun[`_`].link] = id;
       }
-      if (selfAuthored && a[0] === 'keyID' && msg.isPositive()) {
-        this.gun.get('trustedIndexes').get(a[1]).put(true);
+      if (selfAuthored && a[0] === 'keyID' && a[1] !== this.viewpoint.val && msg.isPositive()) { // TODO: not if already added - causes infinite loop
+        this.addTrustedIndex(a[1]);
       }
     }
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
@@ -505,12 +529,13 @@ class Index {
       });
       this.gun.get(`trustedIndexes`).map((val, key) => {
         if (val) {
-          console.log(`search stuff from`, key);
+          console.log(`search stuff from trusted index`, key);
 
-          this.gun.back().get(key).get(`identitiesByTrustDistance`).map((id, k) => {
+          this.gun.back(-1).get(key).get(`identitiesByTrustDistance`).map((id, k) => { // TODO: where should this actually be searched from?
             if (k.indexOf(encodeURIComponent(value)) === - 1) {
               return;
             }
+            console.log('found search result from trusted index', key, ':', k);
             const soul = Gun.node.soul(id);
             if (soul && !r.hasOwnProperty(soul)) {
               r[soul] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(k));
