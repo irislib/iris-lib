@@ -45,7 +45,8 @@ class Message {
   * @returns {string} Message signer keyID, i.e. base64 hash of public key
   */
   getSignerKeyID() {
-    return util.getHash(this.pubKey);
+    return this.pubKey; // hack until gun supports keyID lookups
+    //return util.getHash(this.pubKey);
   }
 
   _validate() {

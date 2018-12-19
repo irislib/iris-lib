@@ -12349,7 +12349,11 @@
 	  };
 
 	  Key.getId = function getId(key) {
-	    return util$1.getHash(key.pub);
+	    if (!(key && key.pub)) {
+	      throw new Error('missing param');
+	    }
+	    return key.pub; // hack until GUN supports lookups by keyID
+	    //return util.getHash(key.pub);
 	  };
 
 	  /**
@@ -12442,7 +12446,8 @@
 
 
 	  Message.prototype.getSignerKeyID = function getSignerKeyID() {
-	    return util$1.getHash(this.pubKey);
+	    return this.pubKey; // hack until gun supports keyID lookups
+	    //return util.getHash(this.pubKey);
 	  };
 
 	  Message.prototype._validate = function _validate() {
