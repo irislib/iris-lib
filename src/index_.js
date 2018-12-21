@@ -61,27 +61,23 @@ class Index {
   * Use this to load an index that you can write to
   * @returns {Index}
   */
-  static create(gun: Object, viewpoint) {
-    const i = new Index(gun);
-    const setViewpoint = vp => {
-      i.viewpoint = new Attribute(vp);
-      i.gun.get(`viewpoint`).put(i.viewpoint);
-      const uri = i.viewpoint.uri();
-      const g = i.gun.get(`identitiesBySearchKey`).get(uri);
-      const vpId = new Identity(g,
-        {
-          trustDistance: 0,
-          linkTo: i.viewpoint
-        }, true);
-      i._addIdentityToIndexes(vpId.gun);
-    };
-    if (viewpoint) {
-      setViewpoint(viewpoint);
-    } else {
-      Key.getDefault().then(defaultKey => {
-        setViewpoint({name: `keyID`, val: Key.getId(defaultKey)});
-      });
+  static async create(gun: Object, keypair) {
+    if (!keypair) {
+      keypair = await Key.getDefault();
     }
+    const user = gun.user();
+    user.auth(keypair);
+    const i = new Index(user.get(`identifi`));
+    i.viewpoint = new Attribute({name:`keyID`, val: Key.getId(keypair)});
+    i.gun.get(`viewpoint`).put(i.viewpoint);
+    const uri = i.viewpoint.uri();
+    const g = i.gun.get(`identitiesBySearchKey`).get(uri);
+    const kpId = new Identity(g,
+      {
+        trustDistance: 0,
+        linkTo: i.viewpoint
+      }, true);
+    i._addIdentityToIndexes(kpId.gun);
     return i;
   }
 
@@ -362,7 +358,7 @@ class Index {
     const msgs = [];
     if (this.options.importFromTrustedIndexes) {
       await util.timeoutPromise(new Promise(resolve => {
-        this.gun.back(-1).get(gunUri).get(`messagesByDistance`).map((val, key) => {
+        this.gun.user(gunUri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
           const d = Number.parseInt(key.split(`:`)[0]);
           if (!isNaN(d) && d <= maxCrawlDistance) {
             Message.fromSig(val).then(msg => {
@@ -539,7 +535,7 @@ class Index {
           if (val) {
             console.log(`search stuff from trusted index`, key);
 
-            this.gun.back(-1).get(key).get(`identitiesByTrustDistance`).map((id, k) => { // TODO: where should this actually be searched from?
+            this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).map((id, k) => { // TODO: where should this actually be searched from?
               if (k.indexOf(encodeURIComponent(value)) === - 1) {
                 return;
               }

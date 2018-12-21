@@ -48,7 +48,7 @@ describe('local index', async () => {
   let i, h;
   test('create new Index', async () => {
     key = await identifi.Key.getDefault();
-    i = identifi.Index.create(gun.get(`identifi`));
+    i = await identifi.Index.create(gun);
     expect(i).toBeInstanceOf(identifi.Index);
   });
   let p;
@@ -239,7 +239,7 @@ describe('local index', async () => {
       k2 = await identifi.Key.generate();
       const keyID = identifi.Key.getId(k2);
       console.log('keyID', keyID);
-      i2 = identifi.Index.create(gun.get(keyID).get('identifi'), ['keyID', keyID]);
+      i2 = await identifi.Index.create(gun, k2);
       let m = await identifi.Message.createRating({recipient:[['keyID', 'identifi']], rating: 10}, k2);
       await i2.addMessage(m);
     });
