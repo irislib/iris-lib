@@ -6,6 +6,10 @@
 
 	var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
+	function commonjsRequire () {
+		throw new Error('Dynamic requires are not currently supported by rollup-plugin-commonjs');
+	}
+
 	function unwrapExports (x) {
 		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 	}
@@ -8474,2204 +8478,9 @@
 	}();
 
 	var gun_min = createCommonjsModule(function (module) {
-	!function(){function t(n){function o(t){return t.split("/").slice(-1).toString().replace(".js","")}return n.slice?t[o(n)]:function(e,i){n(e={exports:{}}),t[o(i)]=e.exports;}}var n;"undefined"!=typeof window&&(n=window),"undefined"!=typeof commonjsGlobal&&(n=commonjsGlobal),n=n||{};var o=n.console||{log:function(){}};var e=module;t(function(t){var n={};n.fn={is:function(t){return !!t&&"function"==typeof t}},n.bi={is:function(t){return t instanceof Boolean||"boolean"==typeof t}},n.num={is:function(t){return !e(t)&&(t-parseFloat(t)+1>=0||1/0===t||-(1/0)===t)}},n.text={is:function(t){return "string"==typeof t}},n.text.ify=function(t){return n.text.is(t)?t:"undefined"!=typeof JSON?JSON.stringify(t):t&&t.toString?t.toString():t},n.text.random=function(t,n){var o="";for(t=t||24,n=n||"0123456789ABCDEFGHIJKLMNOPQRSTUVWXZabcdefghijklmnopqrstuvwxyz";t>0;)o+=n.charAt(Math.floor(Math.random()*n.length)),t--;return o},n.text.match=function(t,o){function e(t,n){for(var o,e=-1,i=0;o=n[i++];)if(!~(e=t.indexOf(o,e+1)))return !1;return !0}var i=!1;if(t=t||"",o=n.text.is(o)?{"=":o}:o||{},n.obj.has(o,"~")&&(t=t.toLowerCase(),o["="]=(o["="]||o["~"]).toLowerCase()),n.obj.has(o,"="))return t===o["="];if(n.obj.has(o,"*")){if(t.slice(0,o["*"].length)!==o["*"])return !1;i=!0,t=t.slice(o["*"].length);}if(n.obj.has(o,"!")){if(t.slice(-o["!"].length)!==o["!"])return !1;i=!0;}if(n.obj.has(o,"+")&&n.list.map(n.list.is(o["+"])?o["+"]:[o["+"]],function(n){return t.indexOf(n)>=0?void(i=!0):!0}))return !1;if(n.obj.has(o,"-")&&n.list.map(n.list.is(o["-"])?o["-"]:[o["-"]],function(n){return t.indexOf(n)<0?void(i=!0):!0}))return !1;if(n.obj.has(o,">")){if(!(t>o[">"]))return !1;i=!0;}if(n.obj.has(o,"<")){if(!(t<o["<"]))return !1;i=!0;}if(n.obj.has(o,"?")){if(!e(t,o["?"]))return !1;i=!0;}return i},n.list={is:function(t){return t instanceof Array}},n.list.slit=Array.prototype.slice,n.list.sort=function(t){return function(n,o){return n&&o?(n=n[t],o=o[t],o>n?-1:n>o?1:0):0}},n.list.map=function(t,n,o){return a(t,n,o)},n.list.index=1,n.obj={is:function(t){return t?t instanceof Object&&t.constructor===Object||"Object"===Object.prototype.toString.call(t).match(/^\[object (\w+)\]$/)[1]:!1}},n.obj.put=function(t,n,o){return (t||{})[n]=o,t},n.obj.has=function(t,n){return t&&Object.prototype.hasOwnProperty.call(t,n)},n.obj.del=function(t,n){return t?(t[n]=null,delete t[n],t):void 0},n.obj.as=function(t,n,o,e){return t[n]=t[n]||(e===o?{}:o)},n.obj.ify=function(t){if(r(t))return t;try{t=JSON.parse(t);}catch(n){t={};}return t},function(){function t(t,n){u(this,n)&&o!==this[n]||(this[n]=t);}var o;n.obj.to=function(n,o){return o=o||{},a(n,t,o),o};}(),n.obj.copy=function(t){return t?JSON.parse(JSON.stringify(t)):t},function(){function t(t,n){var o=this.n;if(!o||!(n===o||r(o)&&u(o,n)))return n?!0:void 0}n.obj.empty=function(n,o){return n&&a(n,t,{n:o})?!1:!0};}(),function(){function t(n,o){return 2===arguments.length?(t.r=t.r||{},void(t.r[n]=o)):(t.r=t.r||[],void t.r.push(n))}var i=Object.keys;n.obj.map=function(a,s,f){var c,l,p,d,h,v=0,g=o(s);if(t.r=null,i&&r(a)&&(d=i(a),h=!0),e(a)||d)for(l=(d||a).length;l>v;v++){var m=v+n.list.index;if(g){if(p=h?s.call(f||this,a[d[v]],d[v],t):s.call(f||this,a[v],m,t),p!==c)return p}else if(s===a[h?d[v]:v])return d?d[v]:m}else for(v in a)if(g){if(u(a,v)&&(p=f?s.call(f,a[v],v,t):s(a[v],v,t),p!==c))return p}else if(s===a[v])return v;return g?t.r:n.list.index?0:-1};}(),n.time={},n.time.is=function(t){return t?t instanceof Date:+(new Date).getTime()};var o=n.fn.is,e=n.list.is,i=n.obj,r=i.is,u=i.has,a=i.map;t.exports=n;})(t,"./type"),t(function(t){t.exports=function n(t,o,e){if(!t)return {to:n};var i,t=(this.tag||(this.tag={}))[t]||(this.tag[t]={tag:t,to:n._={next:function(t){var n;(n=this.to)&&n.next(t);}}});if(o instanceof Function){var r={off:n.off||(n.off=function(){return this.next===n._.next?!0:(this===this.the.last&&(this.the.last=this.back),this.to.back=this.back,this.next=n._.next,this.back.to=this.to,void(this.the.last===this.the&&delete this.on.tag[this.the.tag]))}),to:n._,next:o,the:t,on:this,as:e};return (r.back=t.last||t).to=r,t.last=r}return (t=t.to)&&i!==o&&t.next(o),t};})(t,"./onto"),t(function(t){function n(t,n,e,i,r){if(n>t)return {defer:!0};if(e>n)return {historical:!0};if(n>e)return {converge:!0,incoming:!0};if(n===e){if(i=o(i)||"",r=o(r)||"",i===r)return {state:!0};if(r>i)return {converge:!0,current:!0};if(i>r)return {converge:!0,incoming:!0}}return {err:"Invalid CRDT Data: "+i+" to "+r+" at "+n+" to "+e+"!"}}if("undefined"==typeof JSON)throw new Error("JSON is not included in this browser. Please load it first: ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js");var o=JSON.stringify;t.exports=n;})(t,"./HAM"),t(function(n){var o=t("./type"),e={};e.is=function(t){return t===i?!1:null===t?!0:t===1/0?!1:s(t)||u(t)||a(t)?!0:e.rel.is(t)||!1},e.link=e.rel={_:"#"},function(){function t(t,n){var o=this;return o.id?o.id=!1:n==r&&s(t)?void(o.id=t):o.id=!1}e.rel.is=function(n){if(n&&n[r]&&!n._&&c(n)){var o={};if(p(n,t,o),o.id)return o.id}return !1};}(),e.rel.ify=function(t){return l({},r,t)},o.obj.has._=".";var i,r=e.link._,u=o.bi.is,a=o.num.is,s=o.text.is,f=o.obj,c=f.is,l=f.put,p=f.map;n.exports=e;})(t,"./val"),t(function(n){var o=t("./type"),e=t("./val"),i={_:"_"};i.soul=function(t,n){return t&&t._&&t._[n||p]},i.soul.ify=function(t,n){return n="string"==typeof n?{soul:n}:n||{},t=t||{},t._=t._||{},t._[p]=n.soul||t._[p]||l(),t},i.soul._=e.link._,function(){function t(t,n){return n!==i._?e.is(t)?void(this.cb&&this.cb.call(this.as,t,n,this.n,this.s)):!0:void 0}i.is=function(n,o,e){var r;return a(n)&&(r=i.soul(n))?!f(n,t,{as:e,cb:o,s:r,n:n}):!1};}(),function(){function t(t,n){var o,i,r=this.o;return r.map?(o=r.map.call(this.as,t,""+n,r.node),void(i===o?s(r.node,n):r.node&&(r.node[n]=o))):void(e.is(t)&&(r.node[n]=t))}i.ify=function(n,o,e){return o?"string"==typeof o?o={soul:o}:o instanceof Function&&(o={map:o}):o={},o.map&&(o.node=o.map.call(e,n,r,o.node||{})),(o.node=i.soul.ify(o.node||{},o))&&f(n,t,{o:o,as:e}),o.node};}();var r,u=o.obj,a=u.is,s=u.del,f=u.map,c=o.text,l=c.random,p=i.soul._;n.exports=i;})(t,"./node"),t(function(n){function o(){var t;return t=r(),t>u?(a=0,u=t+o.drift):u=t+(a+=1)/s+o.drift}{var e=t("./type"),i=t("./node"),r=e.time.is,u=-(1/0),a=0,s=1e3,f="undefined"!=typeof performance?performance.timing&&performance:!1;f&&f.timing&&f.timing.navigationStart||(f=!1);}o._=">",o.drift=0,o.is=function(t,n,e){var i=n&&t&&t[_]&&t[_][o._]||e;if(i)return b(i=i[n])?i:-(1/0)},o.lex=function(){return o().toString(36).replace(".","")},o.ify=function(t,n,e,r,u){if(!t||!t[_]){if(!u)return;t=i.soul.ify(t,u);}var a=p(t[_],o._);return c!==n&&n!==_&&(b(e)&&(a[n]=e),c!==r&&(t[n]=r)),t},o.to=function(t,n,e){var r=t[n];return h(r)&&(r=g(r)),o.ify(e,n,o.is(t,n),r,i.soul(t))},function(){function t(t,n){_!==n&&o.ify(this.o,n,this.s);}o.map=function(n,e,i){var r,u=h(u=n||e)?u:null;return n=y(n=n||e)?n:null,u&&!n?(e=b(e)?e:o(),u[_]=u[_]||{},v(u,t,{o:u,s:e}),u):(i=i||h(e)?e:r,e=b(e)?e:o(),function(o,u,a,s){return n?(n.call(i||this||{},o,u,a,s),void(d(a,u)&&r===a[u]||t.call({o:a,s:e},o,u))):(t.call({o:a,s:e},o,u),o)})};}();var c,l=e.obj,p=l.as,d=l.has,h=l.is,v=l.map,g=l.copy,m=e.num,b=m.is,k=e.fn,y=k.is,_=i._;n.exports=o;})(t,"./state"),t(function(n){var o=t("./type"),e=t("./val"),i=t("./node"),r={};!function(){function t(t,o){return t&&o===i.soul(t)&&i.is(t,this.fn,this.as)?void(this.cb&&(n.n=t,n.as=this.as,this.cb.call(n.as,t,o,n))):!0}function n(t){t&&i.is(n.n,t,n.as);}r.is=function(n,o,e,i){return n&&s(n)&&!l(n)?!d(n,t,{cb:o,fn:e,as:i}):!1};}(),function(){function t(t,o){var r;return (r=p(t,o))?r:(o.env=t,o.soul=a,i.ify(o.obj,n,o)&&(o.rel=o.rel||e.rel.ify(i.soul(o.node)),o.obj!==t.shell&&(t.graph[e.rel.is(o.rel)]=o.node)),o)}function n(n,o,r){var a,s,p=this,d=p.env;if(i._===o&&c(n,e.rel._))return r._;if(a=l(n,o,r,p,d)){if(o||(p.node=p.node||r||{},c(n,i._)&&i.soul(n)&&(p.node._=h(n._)),p.node=i.soul.ify(p.node,e.rel.is(p.rel)),p.rel=p.rel||e.rel.ify(i.soul(p.node))),(s=d.map)&&(s.call(d.as||{},n,o,r,p),c(r,o))){if(n=r[o],u===n)return void f(r,o);if(!(a=l(n,o,r,p,d)))return}if(!o)return p.node;if(!0===a)return n;if(s=t(d,{obj:n,path:p.path.concat(o)}),s.node)return s.rel}}function a(t){var n=this,o=e.link.is(n.rel),r=n.env.graph;n.rel=n.rel||e.rel.ify(t),n.rel[e.rel._]=t,n.node&&n.node[i._]&&(n.node[i._][e.rel._]=t),c(r,o)&&(r[t]=r[o],f(r,o));}function l(t,n,i,r,u){var a;return e.is(t)?!0:s(t)?1:(a=u.invalid)?(t=a.call(u.as||{},t,n,i),l(t,n,i,r,u)):(u.err="Invalid value at '"+r.path.concat(n).join(".")+"'!",void(o.list.is(t)&&(u.err+=" Use `.set(item)` instead of an Array.")))}function p(t,n){for(var o,e=t.seen,i=e.length;i--;)if(o=e[i],n.obj===o.obj)return o;e.push(n);}r.ify=function(n,o,i){var r={path:[],obj:n};return o?"string"==typeof o?o={soul:o}:o instanceof Function&&(o.map=o):o={},o.soul&&(r.rel=e.rel.ify(o.soul)),o.shell=(i||{}).shell,o.graph=o.graph||{},o.seen=o.seen||[],o.as=o.as||i,t(o,r),o.root=r.node,o.graph};}(),r.node=function(t){var n=i.soul(t);if(n)return p({},n,t)},function(){function t(t,n){var o,u;if(i._===n){if(l(t,e.rel._))return;return void(this.obj[n]=h(t))}return (o=e.rel.is(t))?(u=this.opt.seen[o])?void(this.obj[n]=u):void(this.obj[n]=this.opt.seen[o]=r.to(this.graph,o,this.opt)):void(this.obj[n]=t)}r.to=function(n,o,e){if(n){var i={};return e=e||{seen:{}},d(n[o],t,{obj:i,graph:n,opt:e}),i}};}();var u,a=(o.fn.is,o.obj),s=a.is,f=a.del,c=a.has,l=a.empty,p=a.put,d=a.map,h=a.copy;n.exports=r;})(t,"./graph"),t(function(n){t("./onto"),n.exports=function(t,n){if(this.on){if(!(t instanceof Function)){if(!t||!n)return;var o=t["#"]||t,e=(this.tag||empty)[o];if(!e)return;return e=this.on(o,n),clearTimeout(e.err),!0}var o=n&&n["#"]||Math.random().toString(36).slice(2);if(!t)return o;var i=this.on(o,t,n);return i.err=i.err||setTimeout(function(){i.next({err:"Error: No ACK received yet.",lack:!0}),i.off();},(this.opt||{}).lack||9e3),o}};})(t,"./ask"),t(function(n){function o(t){var n={s:{}};return t=t||{max:1e3,age:9e3},n.check=function(t){var o;return (o=n.s[t])?o.pass?o.pass=!1:n.track(t):!1},n.track=function(o,r){var u=n.s[o]||(n.s[o]={});return u.was=i(),r&&(u.pass=!0),n.to||(n.to=setTimeout(function(){var o=i();e.obj.map(n.s,function(i,r){t.age>o-i.was||e.obj.del(n.s,r);}),n.to=null;},t.age+9)),u},n}var e=t("./type"),i=e.time.is;n.exports=o;})(t,"./dup"),t(function(n){function i(t){return t instanceof i?(this._={gun:this,$:this}).$:this instanceof i?i.create(this._={gun:this,$:this,opt:t}):new i(t)}i.is=function(t){return t instanceof i||t&&t._&&t===t._.$||!1},i.version=.9,i.chain=i.prototype,i.chain.toJSON=function(){};var r=t("./type");r.obj.to(r,i),i.HAM=t("./HAM"),i.val=t("./val"),i.node=t("./node"),i.state=t("./state"),i.graph=t("./graph"),i.on=t("./onto"),i.ask=t("./ask"),i.dup=t("./dup"),function(){function t(n){var o,e,r=this,a=r.as,s=a.at||a,f=s.$;return (e=n["#"])||(e=n["#"]=c(9)),(o=s.dup).check(e)?void(a.out===n.out&&(n.out=u,r.to.next(n))):(o.track(e),s.ask(n["@"],n)||(n.get&&i.on.get(n,f),n.put&&i.on.put(n,f)),r.to.next(n),void(a.out||(n.out=t,s.on("out",n))))}i.create=function(n){n.root=n.root||n,n.graph=n.graph||{},n.on=n.on||i.on,n.ask=n.ask||i.ask,n.dup=n.dup||i.dup();var o=n.$.opt(n.opt);return n.once||(n.on("in",t,n),n.on("out",t,{at:n,out:t}),i.on("create",n),n.on("create",n)),n.once=1,o};}(),function(){function t(t,n,o,e){var r=this,u=i.state.is(o,n);if(!u)return r.err="Error: No state on '"+n+"' in node '"+e+"'!";var a=r.graph[e]||k,s=i.state.is(a,n,!0),f=a[n],c=i.HAM(r.machine,u,s,t,f);return c.incoming?(r.put[e]=i.state.to(o,n,r.put[e]),(r.diff||(r.diff={}))[e]=i.state.to(o,n,r.diff[e]),void(r.souls[e]=!0)):void(c.defer&&(r.defer=u<(r.defer||1/0)?u:r.defer))}function n(t,n){var i=this,u=i.$._,a=(u.next||k)[n];if(!a){if(!(u.opt||k)["super"])return void(i.souls[n]=!1);a=i.$.get(n)._;}var s=i.map[n]={put:t,get:n,$:a.$},f={ctx:i,msg:s};i.async=!!u.tag.node,i.ack&&(s["@"]=i.ack),v(t,o,f),i.async&&(i.and||u.on("node",function(t){this.to.next(t),t===i.map[t.get]&&(i.souls[t.get]=!1,v(t.put,e,t),v(i.souls,function(t){return t?t:void 0})||i.c||(i.c=1,this.off(),v(i.map,r,i)));}),i.and=!0,u.on("node",s));}function o(t,n){var o=this.ctx,e=o.graph,r=this.msg,u=r.get,a=r.put,s=r.$._;e[u]=i.state.to(a,n,e[u]),o.async||(s.put=i.state.to(a,n,s.put));}function e(t,n){var o=this,e=o.put,r=o.$._;r.put=i.state.to(e,n,r.put);}function r(t){t.$&&(this.cat.stop=this.stop,t.$._.on("in",t),this.cat.stop=null);}i.on.put=function(o,e){var a=e._,s={$:e,graph:a.graph,put:{},map:{},souls:{},machine:i.state(),ack:o["@"],cat:a,stop:{}};return i.graph.is(o.put,null,t,s)||(s.err="Error: Invalid graph!"),s.err?a.on("in",{"@":o["#"],err:i.log(s.err)}):(v(s.put,n,s),s.async||v(s.map,r,s),u!==s.defer&&setTimeout(function(){i.on.put(o,e);},s.defer-s.machine),void(s.diff&&a.on("put",h(o,{put:s.diff}))))},i.on.get=function(t,n){var o,e=n._,r=t.get,u=r[m],a=e.graph[u],s=r[b],f=e.next||(e.next={}),c=f[u];if(d(u,"*")){var l={};i.obj.map(e.graph,function(t,n){i.text.match(n,u)&&(l[n]=i.obj.copy(t));}),i.obj.empty(l)||e.on("in",{"@":t["#"],how:"*",put:l,$:n});}if(!a)return e.on("get",t);if(s){if(!d(a,s))return e.on("get",t);a=i.state.to(a,s);}else a=i.obj.copy(a);a=i.graph.node(a),o=(c||k).ack,e.on("in",{"@":t["#"],how:"mem",put:a,$:n}),e.on("get",t);};}(),function(){i.chain.opt=function(t){t=t||{};var n=this,o=n._,e=t.peers||t;return p(t)||(t={}),p(o.opt)||(o.opt=t),f(e)&&(e=[e]),a(e)&&(e=v(e,function(t,n,o){o(t,{url:t});}),p(o.opt.peers)||(o.opt.peers={}),o.opt.peers=h(e,o.opt.peers)),o.opt.peers=o.opt.peers||{},h(t,o.opt),i.on("opt",o),o.opt.uuid=o.opt.uuid||function(){return g()+c(12)},n};}();var u,a=i.list.is,s=i.text,f=s.is,c=s.random,l=i.obj,p=l.is,d=l.has,h=l.to,v=l.map,g=(l.copy,i.state.lex),m=i.val.rel._,b=".",k=(i.node._,i.val.link.is,{});o.debug=function(t,n){return o.debug.i&&t===o.debug.i&&o.debug.i++&&(o.log.apply(o,arguments)||n)},i.log=function(){return !i.log.off&&o.log.apply(o,arguments),[].slice.call(arguments).join(" ")},i.log.once=function(t,n,o){return (o=i.log.once)[t]=o[t]||0,o[t]++||i.log(n)},i.log.once("welcome","Hello wonderful person! :) Thanks for using GUN, feel free to ask for help on https://gitter.im/amark/gun and ask StackOverflow questions tagged with 'gun'!"),"undefined"!=typeof window&&((window.Gun=i).window=window);try{"undefined"!=typeof e&&(e.exports=i);}catch(y){}n.exports=i;})(t,"./root"),t(function(){var n=t("./root");n.chain.back=function(t,i){var r;if(t=t||1,-1===t||1/0===t)return this._.root.$;if(1===t)return (this._.back||this._).$;var u=this,a=u._;if("string"==typeof t&&(t=t.split(".")),!(t instanceof Array)){if(t instanceof Function){for(var s,r={back:a};(r=r.back)&&o===(s=t(r,i)););return s}return n.num.is(t)?(a.back||a).$.back(t-1):this}var f=0,c=t.length,r=a;for(f;c>f;f++)r=(r||e)[t[f]];return o!==r?i?u:r:(r=a.back)?r.$.back(t,i):void 0};var o,e={};})(t,"./back"),t(function(){function n(t){var n,o,e,i=this.as,r=i.back,u=i.root;if(t.I||(t.I=i.$),t.$||(t.$=i.$),this.to.next(t),o=t.get){if(o["#"]||i.soul){if(o["#"]=o["#"]||i.soul,t["#"]||(t["#"]=b(9)),r=u.$.get(o["#"])._,o=o["."]){if(h(r.put,o)&&(n=r.$.get(o)._,(e=n.ack)||(n.ack=-1),r.on("in",{$:r.$,put:c.state.to(r.put,o),get:r.get}),e))return}else{if(e=r.ack,e||(r.ack=-1),h(r,"put")&&r.on("in",r),e)return;t.$=r.$;}return u.ask(f,t),u.on("in",t)}if(u.now&&(u.now[i.id]=u.now[i.id]||!0,i.pass={}),o["."])return i.get?(t={get:{".":i.get},$:i.$},r.ask||(r.ask={}),r.ask[i.get]=t.$._,r.on("out",t)):(t={get:{},$:i.$},r.on("out",t));if(i.ack=i.ack||-1,i.get)return t.$=i.$,o["."]=i.get,(r.ask||(r.ask={}))[i.get]=t.$._,r.on("out",t)}return r.on("out",t)}function o(t){var n,o,r=this,s=r.as,f=s.root,d=t.$,b=(d||p)._||p,k=t.put;if(s.get&&t.get!==s.get&&(t=g(t,{get:s.get})),s.has&&b!==s&&(t=g(t,{$:s.$}),b.ack&&(s.ack=b.ack)),l===k){if(o=b.put,r.to.next(t),s.soul)return;if(l===o&&l!==b.put)return;return i(s,t,r),s.has&&a(s,t),v(b.echo,s.id),void v(s.map,b.id)}if(s.soul)return r.to.next(t),i(s,t,r),void(s.next&&m(k,u,{msg:t,cat:s}));if(!(n=c.val.link.is(k)))return c.val.is(k)?(s.has||s.soul?a(s,t):(b.has||b.soul)&&((b.echo||(b.echo={}))[s.id]=b.echo[b.id]||s,(s.map||(s.map={}))[b.id]=s.map[b.id]||{at:b}),r.to.next(t),void i(s,t,r)):(s.has&&b!==s&&h(b,"put")&&(s.put=b.put),(n=c.node.soul(k))&&b.has&&(b.put=s.root.$.get(n)._.put),o=(f.stop||{})[b.id],r.to.next(t),e(s,t,b,n),i(s,t,r),void(s.next&&m(k,u,{msg:t,cat:s})));f.stop;o=f.stop||{},o=o[b.id]||(o[b.id]={}),o.is=o.is||b.put,o[s.id]=b.put||!0,r.to.next(t),e(s,t,b,n),i(s,t,r);}function e(t,n,o,i){if(i&&k!==t.get){var r=t.root.$.get(i)._;t.has?o=r:o.has&&e(o,n,o,i),o!==t&&(o.$||(o={}),(o.echo||(o.echo={}))[t.id]=o.echo[t.id]||t,t.has&&!(t.map||p)[o.id]&&a(t,n),r=o.id?(t.map||(t.map={}))[o.id]=t.map[o.id]||{at:o}:{},(i!==r.link||r.pass||t.pass)&&(t.pass&&(c.obj.map(t.map,function(t){t.pass=!0;}),v(t,"pass")),r.pass&&v(r,"pass"),t.has&&(t.link=i),s(t,r.link=i)));}}function i(t,n){t.echo&&m(t.echo,r,n);}function r(t){t&&t.on&&t.on("in",this);}function u(t,n){var o,e,i,r=this.cat,u=r.next||p,a=this.msg;(k!==n||u[n])&&(e=u[n])&&(e.has?(l!==e.put&&c.val.link.is(t)||(e.put=t),o=e.$):(i=a.$)&&(i=(o=a.$.get(n))._,l!==i.put&&c.val.link.is(t)||(i.put=t)),e.on("in",{put:t,get:n,$:o,via:a}));}function a(t,n){if(t.has||t.soul){{var o=t.map;t.root;}t.map=null,t.has&&(t.link=null),(t.pass||n["@"]||null!==o)&&(l===o&&c.val.link.is(t.put)||(m(o,function(n){(n=n.at)&&v(n.echo,t.id);}),o=t.put,m(t.next,function(n,e){return l===o&&l!==t.put?!0:(n.put=l,n.ack&&(n.ack=-1),void n.on("in",{get:e,$:n.$,put:l}))})));}}function s(t,n){var o=t.root.$.get(n)._;(!t.ack||(o.on("out",{get:{"#":n}}),t.ask))&&(o=t.ask,c.obj.del(t,"ask"),m(o||t.next,function(t,o){t.on("out",{get:{"#":n,".":o}});}),c.obj.del(t,"ask"));}function f(t){var n=this.as,o=n.get||p,e=n.$._,i=(t.put||p)[o["#"]];if(e.ack&&(e.ack=e.ack+1||1),!t.put||o["."]&&!h(i,e.get)){if(e.put!==l)return;return void e.on("in",{get:e.get,put:e.put=l,$:e.$,"@":t["@"]})}return k==o["."]?void e.on("in",{get:e.get,put:c.val.link.ify(o["#"]),$:e.$,"@":t["@"]}):(t.$=e.root.$,void c.on.put(t,e.root.$))}var c=t("./root");c.chain.chain=function(t){var e,i=this,r=i._,u=new(t||i).constructor(i),a=u._;return a.root=e=r.root,a.id=++e.once,a.back=i._,a.on=c.on,a.on("in",o,a),a.on("out",n,a),u};var l,p={},d=c.obj,h=d.has,v=(d.put,d.del),g=d.to,m=d.map,b=c.text.random,k=(c.val.rel._,c.node._);})(t,"./chain"),t(function(){function n(t,n){var o=n._,e=o.next,i=n.chain(),r=i._;return e||(e=o.next={}),e[r.get=t]=r,n===o.root.$?r.soul=t:(o.soul||o.has)&&(r.has=t),r}function o(t,n,o,e){var i,r=t._;return (i=r.soul)?(n(i,e,r),t):(i=r.link)?(n(i,e,r),t):(t.get(function(t,o){o.rid(t);var r=(r=t.$)&&r._||{};i=r.link||r.soul||c.is(t.put)||l(t.put),n(i,e,t,o);},{out:{get:{".":!0}}}),t)}function e(t){var n,o=this,e=o.as,i=e.at,r=i.root,a=t.$,f=(a||{})._||{},l=t.put||f.put;if((n=r.now)&&o!==n[e.now])return o.to.next(t);if(o.seen&&f.id&&o.seen[f.id])return o.to.next(t);if((n=l)&&n[c._]&&(n=c.is(n))&&(n=(t.$$=f.root.gun.get(n))._,u!==n.put&&(t=s(t,{put:l=n.put}))),(n=r.mum)&&f.id){if(n[f.id])return;u===l||c.is(l)||(n[f.id]=!0);}return e.use(t,o),o.stun?void(o.stun=null):void o.to.next(t)}function i(t){var n=this.on;if(!t||n.soul||n.has)return this.off();if(t=(t=(t=t.$||t)._||t).id){{var o,e;n.map;}return (o=(e=this.seen||(this.seen={}))[t])?!0:void(e[t]=!0)}}var r=t("./root");r.chain.get=function(t,u,a){var s,l;if("string"!=typeof t){if(t instanceof Function){if(!0===u)return o(this,t,u,a);s=this;var d,h=s._,v=h.root,l=v.now;a=u||{},a.at=h,a.use=t,a.out=a.out||{},a.out.get=a.out.get||{},(d=h.on("in",e,a)).rid=i,(v.now={$:1})[a.now=h.id]=d;var g=v.mum;return v.mum={},h.on("out",a.out),v.mum=g,v.now=l,s}return f(t)?this.get(""+t,u,a):(l=c.is(t))?this.get(l,u,a):((a=this.chain())._.err={err:r.log("Invalid get request!",t)},u&&u.call(a,a._.err),a)}var m=this,b=m._,k=b.next||p;return (s=k[t])||(s=n(t,m)),s=s.$,(l=b.stun)&&(s._.stun=s._.stun||l),u&&u instanceof Function&&s.get(u,a),s};var u,a=r.obj,s=(a.has,r.obj.to),f=r.num.is,c=r.val.link,l=r.node.soul,p=(r.node._,{});})(t,"./get"),t(function(){function n(t){t.batch=i;var n=t.opt||{},o=t.env=c.state.map(u,n.state);return o.soul=t.soul,t.graph=c.graph.ify(t.data,o,t),o.err?((t.ack||m).call(t,t.out={err:c.log(o.err)}),void(t.res&&t.res())):void t.batch()}function e(t){return void(t&&t())}function i(){var t=this;t.graph&&!v(t.stun,r)&&(t.res=t.res||function(t){t&&t();},t.res(function(){var n=t.$.back(-1)._,o=n.ask(function(o){n.root.on("ack",o),o.err&&c.log(o),o.lack||this.off(),t.ack&&t.ack(o,this);},t.opt),e=n.root.now;p.del(n.root,"now");var i=n.root.mum;n.root.mum={},t.ref._.on("out",{$:t.ref,put:t.out=t.env.graph,opt:t.opt,"#":o}),n.root.mum=i?p.to(i,n.root.mum):i,n.root.now=e;},t),t.res&&t.res());}function r(t){return t?!0:void 0}function u(t,n,o,e){var i=this,r=c.is(t);!n&&e.path.length&&(i.res||b)(function(){var n=e.path,o=i.ref,u=(i.opt,0),s=n.length;for(u;s>u;u++)o=o.get(n[u]);r&&(o=t);var f=o._.dub;return f||(f=c.node.soul(e.obj))?(o.back(-1).get(f),void e.soul(f)):((i.stun=i.stun||{})[n]=!0,void o.get(a,!0,{as:{at:e,as:i,p:n}}))},{as:i,at:e});}function a(t,n,o,e){var n=n.as,i=n.at;n=n.as;var r=((o||{}).$||{})._||{};return t=r.dub=r.dub||t||c.node.soul(i.obj)||c.node.soul(o.put||r.put)||c.val.rel.is(o.put||r.put)||(n.via.back("opt.uuid")||c.text.random)(),e&&(e.stun=!0),t?void s(r,r.dub=t,i,n):void r.via.back("opt.uuid")(function(t,o){return t?c.log(t):void s(r,r.dub=r.dub||o,i,n)})}function s(t,n,o,e){t.$.back(-1).get(n),o.soul(n),e.stun[o.path]=!1,e.batch();}function f(t,n,e,i){if(n=n.as,e.$&&e.$._){if(e.err)return void o.log("Please report this as an issue! Put.any.err");var r,u=e.$._,a=u.put,s=n.opt||{};if(!(r=n.ref)||!r._.now){if(i&&(i.stun=!0),n.ref!==n.$){if(r=n.$._.get||u.get,!r)return void o.log("Please report this as an issue! Put.no.get");n.data=h({},r,n.data),r=null;}if(l===a){if(!u.get)return;t||(r=u.$.back(function(t){return t.link||t.soul?t.link||t.soul:void(n.data=h({},t.get,n.data))})),r=r||u.get,u=u.root.$.get(r)._,n.soul=r,a=n.data;}return n.not||(n.soul=n.soul||t)||(n.path&&d(n.data)?n.soul=(s.uuid||n.via.back("opt.uuid")||c.text.random)():(k==u.get&&(n.soul=(u.put||g)["#"]||u.dub),n.soul=n.soul||u.soul||u.soul||(s.uuid||n.via.back("opt.uuid")||c.text.random)()),n.soul)?void n.ref.put(n.data,n.soul,n):void n.via.back("opt.uuid")(function(t,o){return t?c.log(t):void n.ref.put(n.data,n.soul=o,n)})}}}var c=t("./root");c.chain.put=function(t,o,i){var r,u=this,a=u._,s=a.root.$;return i=i||{},i.data=t,i.via=i.$=i.via||i.$||u,"string"==typeof o?i.soul=o:i.ack=i.ack||o,a.soul&&(i.soul=a.soul),i.soul||s===u?d(i.data)?(i.soul=i.soul||(i.not=c.node.soul(i.data)||(i.via.back("opt.uuid")||c.text.random)()),i.soul?(i.$=u=s.get(i.soul),i.ref=i.$,n(i),u):(i.via.back("opt.uuid")(function(t,n){return t?c.log(t):void(i.ref||i.$).put(i.data,i.soul=n,i)}),u)):((i.ack||m).call(i,i.out={err:c.log("Data saved to the root level of the graph must be a node (an object), not a",typeof i.data,'of "'+i.data+'"!')}),i.res&&i.res(),u):c.is(t)?(t.get(function(t,n,e){return !t&&c.val.is(e.put)?c.log("The reference you are saving is a",typeof e.put,'"'+e.put+'", not a node (object)!'):void u.put(c.val.rel.ify(t),o,i)},!0),u):(i.ref=i.ref||s._===(r=a.back)?u:r.$,i.ref._.soul&&c.val.is(i.data)&&a.get?(i.data=h({},a.get,i.data),i.ref.put(i.data,i.soul,i),u):(i.ref.get(f,!0,{as:i}),i.out||(i.res=i.res||e,i.$._.stun=i.ref._.stun),u))};var l,p=c.obj,d=p.is,h=p.put,v=p.map,g={},m=function(){},b=function(t,n){t.call(n||g);},k=c.node._;})(t,"./put"),t(function(n){var o=t("./root");t("./chain"),t("./back"),t("./put"),t("./get"),n.exports=o;})(t,"./index"),t(function(){function n(t,n){{var o,e=this,r=t.$,u=(r||{})._||{},a=u.put||t.put;e.at;}if(i!==a){if(o=t.$$){if(o=t.$$._,i===o.put)return;a=o.put;}e.change&&(a=t.put),e.as?e.ok.call(e.as,t,n):e.ok.call(r,a,t.get,t,n);}}function o(t,n,e){var r,u,a=this.as,s=(a.at,t.$),f=s._,c=f.put||t.put;if(u=t.$$){if(r=u=t.$$._,i===u.put)return;c=u.put;}return (u=n.wait)&&(u=u[f.id])&&clearTimeout(u),e||i!==c&&!f.soul&&!f.link&&(!r||0<r.ack)?(n.rid(t),void a.ok.call(s||a.$,c,t.get)):void(u=(n.wait={})[f.id]=setTimeout(function(){o.call({as:a},t,n,u||1);},a.wait||99))}var e=t("./index");e.chain.on=function(t,o,e,i){var r,u=this,a=u._;if("string"==typeof t)return o?(r=a.on(t,o,e||a,i),e&&e.$&&(e.subs||(e.subs=[])).push(r),u):a.on(t);var s=o;return s=!0===s?{change:!0}:s||{},s.at=a,s.ok=t,u.get(n,s),u},e.chain.val=function(t,n){return e.log.once("onceval","Future Breaking API Change: .val -> .once, apologies unexpected."),this.once(t,n)},e.chain.once=function(t,n){var r=this,u=r._,a=u.put;if(0<u.ack&&i!==a)return (t||s).call(r,a,u.get),r;if(!t){e.log.once("valonce","Chainable val is experimental, its behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");var f=r.chain();return f._.nix=r.once(function(){f._.on("in",r._);}),f}return (n=n||{}).ok=t,n.at=u,n.out={"#":e.text.random(9)},r.get(o,{as:n}),n.async=!0,r},e.chain.off=function(){var t,n=this,o=n._,e=o.back;return e?((t=e.next)&&t[o.get]&&a(t,o.get),(t=e.ask)&&a(t,o.get),(t=e.put)&&a(t,o.get),(t=o.soul)&&a(e.root.graph,t),(t=o.map)&&u(t,function(t){t.link&&e.root.$.get(t.link).off();}),(t=o.next)&&u(t,function(t){t.$.off();}),o.on("off",{}),n):void 0};var i,r=e.obj,u=r.map,a=(r.has,r.del),s=(r.to,e.val.link,function(){});})(t,"./on"),t(function(){function n(t){return !t.put||e.val.is(t.put)?this.to.next(t):(this.as.nix&&this.off(),r(t.put,o,{at:this.as,msg:t}),void this.to.next(t))}function o(t,n){if(a!==n){var o=this.msg,e=o.$,i=this.at,r=e.get(n)._;(r.echo||(r.echo={}))[i.id]=r.echo[i.id]||i;}}var e=t("./index");e.chain.map=function(t){var o,r=this,a=r._;return t?(e.log.once("mapfn","Map functions are experimental, their behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it."),o=r.chain(),r.map().on(function(n,r,a,s){var f=(t||u).call(this,n,r,a,s);if(i!==f)return n===f?o._.on("in",a):e.is(f)?o._.on("in",f._):void o._.on("in",{get:r,put:f})}),o):(o=a.each)?o:(a.each=o=r.chain(),o._.nix=r.back("nix"),r.on("in",n,o._),o)};var i,r=e.obj.map,u=function(){},a=e.node._;})(t,"./map"),t(function(){var n=t("./index");n.chain.set=function(t,o,e){var i,r=this;if(o=o||function(){},e=e||{},e.item=e.item||t,i=n.node.soul(t))return r.set(r.back(-1).get(i),o,e);if(!n.is(t)){var u=r.back("opt.uuid")();return u&&n.obj.is(t)?r.set(r._.root.$.put(t,u),o,e):r.get(n.state.lex()+n.text.random(7)).put(t,o,e)}return t.get(function(t,i,u){return t?void r.put(n.obj.put({},t,n.val.link.ify(t)),o,e):o.call(r,{err:n.log('Only a node can be linked! Not "'+u.put+'"!')})},!0),t};})(t,"./set"),t(function(){if("undefined"!=typeof Gun){var t,n=function(){};"undefined"!=typeof window&&(t=window);var o=t.localStorage||{setItem:n,removeItem:n,getItem:n};Gun.on("create",function(t){function n(t){if(!t.err&&t.ok){var n=t["@"];setTimeout(function(){Gun.obj.map(a,function(t,o){Gun.obj.map(t,function(o,e){n===o&&delete t[e];}),s(t)&&delete a[o];}),p();},i.wait||1);}}var e=this.to,i=t.opt;if(t.once)return e.next(t);i.prefix=i.file||"gun/";var r,u,a=Gun.obj.ify(o.getItem("gap/"+i.prefix))||{},s=Gun.obj.empty;if(!s(a)){var f=Gun.obj.ify(o.getItem(i.prefix))||{},c={};Gun.obj.map(a,function(t,n){Gun.obj.map(t,function(t,o){c[n]=Gun.state.to(f[n],o,c[n]);});}),setTimeout(function(){t.on("out",{put:c,"#":t.ask(n),I:t.$});},1);}t.on("out",function(t){t.lS||(t.I&&t.put&&!t["@"]&&!s(i.peers)&&(r=t["#"],Gun.graph.is(t.put,null,l),u||(u=setTimeout(p,i.wait||1))),this.to.next(t));}),t.on("ack",n),e.next(t);var l=function(t,n,o,e){(a[e]||(a[e]={}))[n]=r;},p=function(){clearTimeout(u),u=!1;try{o.setItem("gap/"+i.prefix,JSON.stringify(a));}catch(t){Gun.log(err=t||"localStorage failure");}};}),Gun.on("create",function(t){this.to.next(t);var n=t.opt;if(!t.once&&!1!==n.localStorage){n.prefix=n.file||"gun/";var e,i=(t.graph,{}),r=0,u=Gun.obj.ify(o.getItem(n.prefix))||{};t.on("localStorage",u),t.on("put",function(t){return this.to.next(t),Gun.graph.is(t.put,null,a),t["@"]||(i[t["#"]]=!0),r+=1,r>=(n.batch||1e3)?s():void(e||(e=setTimeout(s,n.wait||1)))}),t.on("get",function(o){function e(){if(s&&(i=s["#"])){var e=s["."];r=u[i]||a,r&&e&&(r=Gun.state.to(r,e)),(r||Gun.obj.empty(n.peers))&&t.on("in",{"@":o["#"],put:Gun.graph.node(r),how:"lS",lS:o.I});}}this.to.next(o);var i,r,a,s=o.get;Gun.debug?setTimeout(e,1):e();});var a=function(t,n,o,e){u[e]=Gun.state.to(o,n,u[e]);},s=function(a){var f;r=0,clearTimeout(e),e=!1;var c=i;i={},a&&(u=a);try{o.setItem(n.prefix,JSON.stringify(u));}catch(l){Gun.log(f=l||"localStorage failure"),t.on("localStorage:error",{err:f,file:n.prefix,flush:u,retry:s});}(f||Gun.obj.empty(n.peers))&&Gun.obj.map(c,function(n,o){t.on("in",{"@":o,err:f,ok:0});});};}});}})(t,"./adapters/localStorage"),t(function(n){function e(t){var n=function(){},a=t.opt;return n.out=function(o){var e;return this.to&&this.to.next(o),(e=o["@"])&&(e=t.dup.s[e])&&(e=e.it)&&e.mesh?(n.say(o,e.mesh.via,1),void(e["##"]=o["##"])):void n.say(o)},t.on("create",function(o){o.opt.pid=o.opt.pid||i.text.random(9),this.to.next(o),t.on("out",n.out);}),n.hear=function(e,r){if(e){var u,a,s,f=t.dup,c=e[0];try{s=JSON.parse(e);}catch(l){o.log("DAM JSON parse error",l);}if("{"===c){if(!s)return;if(f.check(u=s["#"]))return;if(f.track(u,!0).it=s,(c=s["@"])&&s.put&&(a=s["##"]||(s["##"]=n.hash(s)),(c+=a)!=u)){if(f.check(c))return;(c=f.s)[a]=c[u];}return (s.mesh=function(){}).via=r,(c=s["><"])&&(s.mesh.to=i.obj.map(c.split(","),function(t,n,o){o(t,!0);})),s.dam?void((c=n.hear[s.dam])&&c(s,r,t)):void t.on("in",s)}if("["!==c);else{if(!s)return;for(var p,d=0;p=s[d++];)n.hear(p,r);}}},function(){function o(t,n){var o=n.wire;try{o.send?o.send(t):n.say&&n.say(t);}catch(e){(n.queue=n.queue||[]).push(t);}}n.say=function(e,r,s){if(!r)return void i.obj.map(a.peers,function(t){n.say(e,t);});var f,c,l,p=r.wire||a.wire&&a.wire(r);if(p&&(c=e.mesh||u,r!==c.via&&((l=c.raw)||(l=n.raw(e)),!((f=e["@"])&&(f=t.dup.s[f])&&(f=f.it)&&f.get&&f["##"]&&f["##"]===e["##"]||(f=c.to)&&(f[r.url]||f[r.id])&&!s)))){if(r.batch)return void r.batch.push(l);r.batch=[],setTimeout(function(){var t=r.batch;t&&(r.batch=null,t.length&&o(JSON.stringify(t),r));},a.gap||a.wait||1),o(l,r);}};}(),function(){function o(t,n){var o;return n instanceof Object?(i.obj.map(Object.keys(n).sort(),u,{to:o={},on:n}),o):n}function u(t){this.to[t]=this.on[t];}n.raw=function(e){if(!e)return "";var u,c,l,p=t.dup,d=e.mesh||{};if(l=d.raw)return l;if("string"==typeof e)return e;e["@"]&&(l=e.put)&&((c=e["##"])||(u=s(l,o)||"",c=n.hash(e,u),e["##"]=c),(l=p.s)[c=e["@"]+c]=l[e["#"]],e["#"]=c||e["#"],u&&((e=i.obj.to(e)).put=f));var h=0,v=[];i.obj.map(a.peers,function(t){return v.push(t.url||t.id),++h>9?!0:void 0}),e["><"]=v.join();var g=s(e);return r!==u&&(l=g.indexOf(f,g.indexOf("put")),g=g.slice(0,l-1)+u+g.slice(l+f.length+1)),d&&(d.raw=g),g},n.hash=function(t,n){return e.hash(n||s(t.put,o)||"")||t["#"]||i.text.random(9)};var s=JSON.stringify,f=":])([:";}(),n.hi=function(o){var e=o.wire||{};o.id||o.url?(a.peers[o.url||o.id]=o,i.obj.del(a.peers,e.id)):(e=e.id=e.id||i.text.random(9),n.say({dam:"?"},a.peers[e]=o)),e.hied||t.on(e.hied="hi",o),e=o.queue,o.queue=[],i.obj.map(e,function(t){n.say(t,o);});},n.bye=function(n){i.obj.del(a.peers,n.id),t.on("bye",n);},n.hear["?"]=function(t,o){return t.pid?(o.id=o.id||t.pid,void n.hi(o)):n.say({dam:"?",pid:a.pid,"@":t["#"]},o)},n}var i=t("../type");e.hash=function(t){if("string"!=typeof t)return {err:1};var n=0;if(!t.length)return n;for(var o,e=0,i=t.length;i>e;++e)o=t.charCodeAt(e),n=(n<<5)-n+o,n|=0;return n};var r,u={};Object.keys=Object.keys||function(t){return map(t,function(t,n,o){o(n);})};try{n.exports=e;}catch(a){}})(t,"./adapters/mesh"),t(function(){var n=t("../index");n.Mesh=t("./mesh"),n.on("opt",function(t){function o(t){if(!t||!t.url)return o&&o(t);var n=t.url.replace("http","ws"),o=t.wire=new i.WebSocket(n);return o.onclose=function(){i.mesh.bye(t),e(t);},o.onerror=function(n){e(t),n&&"ECONNREFUSED"===n.code;},o.onopen=function(){i.mesh.hi(t);},o.onmessage=function(n){n&&i.mesh.hear(n.data||n,t);},o}function e(t){clearTimeout(t.defer),t.defer=setTimeout(function(){
-	o(t);},2e3);}this.to.next(t);var i=t.opt;if(!t.once&&!1!==i.WebSocket){var r;"undefined"!=typeof window&&(r=window),"undefined"!=typeof commonjsGlobal&&(r=commonjsGlobal),r=r||{};var u=i.WebSocket||r.WebSocket||r.webkitWebSocket||r.mozWebSocket;if(u){i.WebSocket=u;{i.mesh=i.mesh||n.Mesh(t),i.wire;}i.wire=o;}}});})(t,"./adapters/websocket");}();
+	!function(){function t(n,o){function e(t){return t.split("/").slice(-1).toString().replace(".js","")}return o?commonjsRequire(n):n.slice?t[e(n)]:function(o,i){n(o={exports:{}}),t[e(i)]=o.exports;}}var n;"undefined"!=typeof window&&(n=window),"undefined"!=typeof commonjsGlobal&&(n=commonjsGlobal),n=n||{};var o=n.console||{log:function(){}};var e=module;t(function(t){var n={};n.fn={is:function(t){return !!t&&"function"==typeof t}},n.bi={is:function(t){return t instanceof Boolean||"boolean"==typeof t}},n.num={is:function(t){return !e(t)&&(t-parseFloat(t)+1>=0||1/0===t||-(1/0)===t)}},n.text={is:function(t){return "string"==typeof t}},n.text.ify=function(t){return n.text.is(t)?t:"undefined"!=typeof JSON?JSON.stringify(t):t&&t.toString?t.toString():t},n.text.random=function(t,n){var o="";for(t=t||24,n=n||"0123456789ABCDEFGHIJKLMNOPQRSTUVWXZabcdefghijklmnopqrstuvwxyz";t>0;)o+=n.charAt(Math.floor(Math.random()*n.length)),t--;return o},n.text.match=function(t,o){function e(t,n){for(var o,e=-1,i=0;o=n[i++];)if(!~(e=t.indexOf(o,e+1)))return !1;return !0}var i=!1;if(t=t||"",o=n.text.is(o)?{"=":o}:o||{},n.obj.has(o,"~")&&(t=t.toLowerCase(),o["="]=(o["="]||o["~"]).toLowerCase()),n.obj.has(o,"="))return t===o["="];if(n.obj.has(o,"*")){if(t.slice(0,o["*"].length)!==o["*"])return !1;i=!0,t=t.slice(o["*"].length);}if(n.obj.has(o,"!")){if(t.slice(-o["!"].length)!==o["!"])return !1;i=!0;}if(n.obj.has(o,"+")&&n.list.map(n.list.is(o["+"])?o["+"]:[o["+"]],function(n){return t.indexOf(n)>=0?void(i=!0):!0}))return !1;if(n.obj.has(o,"-")&&n.list.map(n.list.is(o["-"])?o["-"]:[o["-"]],function(n){return t.indexOf(n)<0?void(i=!0):!0}))return !1;if(n.obj.has(o,">")){if(!(t>o[">"]))return !1;i=!0;}if(n.obj.has(o,"<")){if(!(t<o["<"]))return !1;i=!0;}if(n.obj.has(o,"?")){if(!e(t,o["?"]))return !1;i=!0;}return i},n.list={is:function(t){return t instanceof Array}},n.list.slit=Array.prototype.slice,n.list.sort=function(t){return function(n,o){return n&&o?(n=n[t],o=o[t],o>n?-1:n>o?1:0):0}},n.list.map=function(t,n,o){return u(t,n,o)},n.list.index=1,n.obj={is:function(t){return t?t instanceof Object&&t.constructor===Object||"Object"===Object.prototype.toString.call(t).match(/^\[object (\w+)\]$/)[1]:!1}},n.obj.put=function(t,n,o){return (t||{})[n]=o,t},n.obj.has=function(t,n){return t&&Object.prototype.hasOwnProperty.call(t,n)},n.obj.del=function(t,n){return t?(t[n]=null,delete t[n],t):void 0},n.obj.as=function(t,n,o,e){return t[n]=t[n]||(e===o?{}:o)},n.obj.ify=function(t){if(r(t))return t;try{t=JSON.parse(t);}catch(n){t={};}return t},function(){function t(t,n){a(this,n)&&o!==this[n]||(this[n]=t);}var o;n.obj.to=function(n,o){return o=o||{},u(n,t,o),o};}(),n.obj.copy=function(t){return t?JSON.parse(JSON.stringify(t)):t},function(){function t(t,n){var o=this.n;if(!o||!(n===o||r(o)&&a(o,n)))return n?!0:void 0}n.obj.empty=function(n,o){return n&&u(n,t,{n:o})?!1:!0};}(),function(){function t(n,o){return 2===arguments.length?(t.r=t.r||{},void(t.r[n]=o)):(t.r=t.r||[],void t.r.push(n))}var i=Object.keys;n.obj.map=function(u,s,f){var c,l,p,d,h,v=0,g=o(s);if(t.r=null,i&&r(u)&&(d=i(u),h=!0),e(u)||d)for(l=(d||u).length;l>v;v++){var m=v+n.list.index;if(g){if(p=h?s.call(f||this,u[d[v]],d[v],t):s.call(f||this,u[v],m,t),p!==c)return p}else if(s===u[h?d[v]:v])return d?d[v]:m}else for(v in u)if(g){if(a(u,v)&&(p=f?s.call(f,u[v],v,t):s(u[v],v,t),p!==c))return p}else if(s===u[v])return v;return g?t.r:n.list.index?0:-1};}(),n.time={},n.time.is=function(t){return t?t instanceof Date:+(new Date).getTime()};var o=n.fn.is,e=n.list.is,i=n.obj,r=i.is,a=i.has,u=i.map;t.exports=n;})(t,"./type"),t(function(t){t.exports=function n(t,o,e){if(!t)return {to:n};var i,t=(this.tag||(this.tag={}))[t]||(this.tag[t]={tag:t,to:n._={next:function(t){var n;(n=this.to)&&n.next(t);}}});if(o instanceof Function){var r={off:n.off||(n.off=function(){return this.next===n._.next?!0:(this===this.the.last&&(this.the.last=this.back),this.to.back=this.back,this.next=n._.next,this.back.to=this.to,void(this.the.last===this.the&&delete this.on.tag[this.the.tag]))}),to:n._,next:o,the:t,on:this,as:e};return (r.back=t.last||t).to=r,t.last=r}return (t=t.to)&&i!==o&&t.next(o),t};})(t,"./onto"),t(function(t){function n(t,n,e,i,r){if(n>t)return {defer:!0};if(e>n)return {historical:!0};if(n>e)return {converge:!0,incoming:!0};if(n===e){if(i=o(i)||"",r=o(r)||"",i===r)return {state:!0};if(r>i)return {converge:!0,current:!0};if(i>r)return {converge:!0,incoming:!0}}return {err:"Invalid CRDT Data: "+i+" to "+r+" at "+n+" to "+e+"!"}}if("undefined"==typeof JSON)throw new Error("JSON is not included in this browser. Please load it first: ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js");var o=JSON.stringify;t.exports=n;})(t,"./HAM"),t(function(n){var o=t("./type"),e={};e.is=function(t){return t===i?!1:null===t?!0:t===1/0?!1:s(t)||a(t)||u(t)?!0:e.rel.is(t)||!1},e.link=e.rel={_:"#"},function(){function t(t,n){var o=this;return o.id?o.id=!1:n==r&&s(t)?void(o.id=t):o.id=!1}e.rel.is=function(n){if(n&&n[r]&&!n._&&c(n)){var o={};if(p(n,t,o),o.id)return o.id}return !1};}(),e.rel.ify=function(t){return l({},r,t)},o.obj.has._=".";var i,r=e.link._,a=o.bi.is,u=o.num.is,s=o.text.is,f=o.obj,c=f.is,l=f.put,p=f.map;n.exports=e;})(t,"./val"),t(function(n){var o=t("./type"),e=t("./val"),i={_:"_"};i.soul=function(t,n){return t&&t._&&t._[n||p]},i.soul.ify=function(t,n){return n="string"==typeof n?{soul:n}:n||{},t=t||{},t._=t._||{},t._[p]=n.soul||t._[p]||l(),t},i.soul._=e.link._,function(){function t(t,n){return n!==i._?e.is(t)?void(this.cb&&this.cb.call(this.as,t,n,this.n,this.s)):!0:void 0}i.is=function(n,o,e){var r;return u(n)&&(r=i.soul(n))?!f(n,t,{as:e,cb:o,s:r,n:n}):!1};}(),function(){function t(t,n){var o,i,r=this.o;return r.map?(o=r.map.call(this.as,t,""+n,r.node),void(i===o?s(r.node,n):r.node&&(r.node[n]=o))):void(e.is(t)&&(r.node[n]=t))}i.ify=function(n,o,e){return o?"string"==typeof o?o={soul:o}:o instanceof Function&&(o={map:o}):o={},o.map&&(o.node=o.map.call(e,n,r,o.node||{})),(o.node=i.soul.ify(o.node||{},o))&&f(n,t,{o:o,as:e}),o.node};}();var r,a=o.obj,u=a.is,s=a.del,f=a.map,c=o.text,l=c.random,p=i.soul._;n.exports=i;})(t,"./node"),t(function(n){function o(){var t;return t=r(),t>a?(u=0,a=t+o.drift):a=t+(u+=1)/s+o.drift}{var e=t("./type"),i=t("./node"),r=e.time.is,a=-(1/0),u=0,s=1e3,f="undefined"!=typeof performance?performance.timing&&performance:!1;f&&f.timing&&f.timing.navigationStart||(f=!1);}o._=">",o.drift=0,o.is=function(t,n,e){var i=n&&t&&t[x]&&t[x][o._]||e;if(i)return b(i=i[n])?i:-(1/0)},o.lex=function(){return o().toString(36).replace(".","")},o.ify=function(t,n,e,r,a){if(!t||!t[x]){if(!a)return;t=i.soul.ify(t,a);}var u=p(t[x],o._);return c!==n&&n!==x&&(b(e)&&(u[n]=e),c!==r&&(t[n]=r)),t},o.to=function(t,n,e){var r=(t||{})[n];return h(r)&&(r=g(r)),o.ify(e,n,o.is(t,n),r,i.soul(t))},function(){function t(t,n){x!==n&&o.ify(this.o,n,this.s);}o.map=function(n,e,i){var r,a=h(a=n||e)?a:null;return n=y(n=n||e)?n:null,a&&!n?(e=b(e)?e:o(),a[x]=a[x]||{},v(a,t,{o:a,s:e}),a):(i=i||h(e)?e:r,e=b(e)?e:o(),function(o,a,u,s){return n?(n.call(i||this||{},o,a,u,s),void(d(u,a)&&r===u[a]||t.call({o:u,s:e},o,a))):(t.call({o:u,s:e},o,a),o)})};}();var c,l=e.obj,p=l.as,d=l.has,h=l.is,v=l.map,g=l.copy,m=e.num,b=m.is,k=e.fn,y=k.is,x=i._;n.exports=o;})(t,"./state"),t(function(n){var o=t("./type"),e=t("./val"),i=t("./node"),r={};!function(){function t(t,o){return t&&o===i.soul(t)&&i.is(t,this.fn,this.as)?void(this.cb&&(n.n=t,n.as=this.as,this.cb.call(n.as,t,o,n))):!0}function n(t){t&&i.is(n.n,t,n.as);}r.is=function(n,o,e,i){return n&&s(n)&&!l(n)?!d(n,t,{cb:o,fn:e,as:i}):!1};}(),function(){function t(t,o){var r;return (r=p(t,o))?r:(o.env=t,o.soul=u,i.ify(o.obj,n,o)&&(o.rel=o.rel||e.rel.ify(i.soul(o.node)),o.obj!==t.shell&&(t.graph[e.rel.is(o.rel)]=o.node)),o)}function n(n,o,r){var u,s,p=this,d=p.env;if(i._===o&&c(n,e.rel._))return r._;if(u=l(n,o,r,p,d)){if(o||(p.node=p.node||r||{},c(n,i._)&&i.soul(n)&&(p.node._=h(n._)),p.node=i.soul.ify(p.node,e.rel.is(p.rel)),p.rel=p.rel||e.rel.ify(i.soul(p.node))),(s=d.map)&&(s.call(d.as||{},n,o,r,p),c(r,o))){if(n=r[o],a===n)return void f(r,o);if(!(u=l(n,o,r,p,d)))return}if(!o)return p.node;if(!0===u)return n;if(s=t(d,{obj:n,path:p.path.concat(o)}),s.node)return s.rel}}function u(t){var n=this,o=e.link.is(n.rel),r=n.env.graph;n.rel=n.rel||e.rel.ify(t),n.rel[e.rel._]=t,n.node&&n.node[i._]&&(n.node[i._][e.rel._]=t),c(r,o)&&(r[t]=r[o],f(r,o));}function l(t,n,i,r,a){var u;return e.is(t)?!0:s(t)?1:(u=a.invalid)?(t=u.call(a.as||{},t,n,i),l(t,n,i,r,a)):(a.err="Invalid value at '"+r.path.concat(n).join(".")+"'!",void(o.list.is(t)&&(a.err+=" Use `.set(item)` instead of an Array.")))}function p(t,n){for(var o,e=t.seen,i=e.length;i--;)if(o=e[i],n.obj===o.obj)return o;e.push(n);}r.ify=function(n,o,i){var r={path:[],obj:n};return o?"string"==typeof o?o={soul:o}:o instanceof Function&&(o.map=o):o={},o.soul&&(r.rel=e.rel.ify(o.soul)),o.shell=(i||{}).shell,o.graph=o.graph||{},o.seen=o.seen||[],o.as=o.as||i,t(o,r),o.root=r.node,o.graph};}(),r.node=function(t){var n=i.soul(t);if(n)return p({},n,t)},function(){function t(t,n){var o,a;if(i._===n){if(l(t,e.rel._))return;return void(this.obj[n]=h(t))}return (o=e.rel.is(t))?(a=this.opt.seen[o])?void(this.obj[n]=a):void(this.obj[n]=this.opt.seen[o]=r.to(this.graph,o,this.opt)):void(this.obj[n]=t)}r.to=function(n,o,e){if(n){var i={};return e=e||{seen:{}},d(n[o],t,{obj:i,graph:n,opt:e}),i}};}();var a,u=(o.fn.is,o.obj),s=u.is,f=u.del,c=u.has,l=u.empty,p=u.put,d=u.map,h=u.copy;n.exports=r;})(t,"./graph"),t(function(n){t("./onto"),n.exports=function(t,n){if(this.on){if(!(t instanceof Function)){if(!t||!n)return;var o=t["#"]||t,e=(this.tag||empty)[o];if(!e)return;return e=this.on(o,n),clearTimeout(e.err),!0}var o=n&&n["#"]||Math.random().toString(36).slice(2);if(!t)return o;var i=this.on(o,t,n);return i.err=i.err||setTimeout(function(){i.next({err:"Error: No ACK received yet.",lack:!0}),i.off();},(this.opt||{}).lack||9e3),o}};})(t,"./ask"),t(function(n){function o(t){var n={s:{}};return t=t||{max:1e3,age:9e3},n.check=function(t){var o;return (o=n.s[t])?o.pass?o.pass=!1:n.track(t):!1},n.track=function(o,r){var a=n.s[o]||(n.s[o]={});return a.was=i(),r&&(a.pass=!0),n.to||(n.to=setTimeout(function(){var o=i();e.obj.map(n.s,function(i,r){i&&t.age>o-i.was||e.obj.del(n.s,r);}),n.to=null;},t.age+9)),a},n}var e=t("./type"),i=e.time.is;n.exports=o;})(t,"./dup"),t(function(n){function i(t){return t instanceof i?(this._={gun:this,$:this}).$:this instanceof i?i.create(this._={gun:this,$:this,opt:t}):new i(t)}i.is=function(t){return t instanceof i||t&&t._&&t===t._.$||!1},i.version=.9,i.chain=i.prototype,i.chain.toJSON=function(){};var r=t("./type");r.obj.to(r,i),i.HAM=t("./HAM"),i.val=t("./val"),i.node=t("./node"),i.state=t("./state"),i.graph=t("./graph"),i.on=t("./onto"),i.ask=t("./ask"),i.dup=t("./dup"),function(){function t(n){var o,e,r=this,u=r.as,s=u.at||u,f=s.$;return (e=n["#"])||(e=n["#"]=c(9)),(o=s.dup).check(e)?void(u.out===n.out&&(n.out=a,r.to.next(n))):(o.track(e),s.ask(n["@"],n)||(n.get&&i.on.get(n,f),n.put&&i.on.put(n,f)),r.to.next(n),void(u.out||(n.out=t,s.on("out",n))))}i.create=function(n){n.root=n.root||n,n.graph=n.graph||{},n.on=n.on||i.on,n.ask=n.ask||i.ask,n.dup=n.dup||i.dup();var o=n.$.opt(n.opt);return n.once||(n.on("in",t,n),n.on("out",t,{at:n,out:t}),i.on("create",n),n.on("create",n)),n.once=1,o};}(),function(){function t(t,n,o,e){var r=this,a=i.state.is(o,n);if(!a)return r.err="Error: No state on '"+n+"' in node '"+e+"'!";var u=r.graph[e]||k,s=i.state.is(u,n,!0),f=u[n],c=i.HAM(r.machine,a,s,t,f);return c.incoming?(r.put[e]=i.state.to(o,n,r.put[e]),(r.diff||(r.diff={}))[e]=i.state.to(o,n,r.diff[e]),void(r.souls[e]=!0)):void(c.defer&&(r.defer=a<(r.defer||1/0)?a:r.defer))}function n(t,n){var i=this,a=i.$._,u=(a.next||k)[n];if(!u){if(!(a.opt||k)["super"])return void(i.souls[n]=!1);u=i.$.get(n)._;}var s=i.map[n]={put:t,get:n,$:u.$},f={ctx:i,msg:s};i.async=!!a.tag.node,i.ack&&(s["@"]=i.ack),v(t,o,f),i.async&&(i.and||a.on("node",function(t){this.to.next(t),t===i.map[t.get]&&(i.souls[t.get]=!1,v(t.put,e,t),v(i.souls,function(t){return t?t:void 0})||i.c||(i.c=1,this.off(),v(i.map,r,i)));}),i.and=!0,a.on("node",s));}function o(t,n){var o=this.ctx,e=o.graph,r=this.msg,a=r.get,u=r.put,s=r.$._;e[a]=i.state.to(u,n,e[a]),o.async||(s.put=i.state.to(u,n,s.put));}function e(t,n){var o=this,e=o.put,r=o.$._;r.put=i.state.to(e,n,r.put);}function r(t){t.$&&(this.cat.stop=this.stop,t.$._.on("in",t),this.cat.stop=null);}i.on.put=function(o,e){var u=e._,s={$:e,graph:u.graph,put:{},map:{},souls:{},machine:i.state(),ack:o["@"],cat:u,stop:{}};return i.graph.is(o.put,null,t,s)||(s.err="Error: Invalid graph!"),s.err?u.on("in",{"@":o["#"],err:i.log(s.err)}):(v(s.put,n,s),s.async||v(s.map,r,s),a!==s.defer&&setTimeout(function(){i.on.put(o,e);},s.defer-s.machine),void(s.diff&&u.on("put",h(o,{put:s.diff}))))},i.on.get=function(t,n){var o,e=n._,r=t.get,a=r[m],u=e.graph[a],s=r[b],f=e.next||(e.next={}),c=f[a];if(d(a,"*")){var l={};i.obj.map(e.graph,function(t,n){i.text.match(n,a)&&(l[n]=i.obj.copy(t));}),i.obj.empty(l)||e.on("in",{"@":t["#"],how:"*",put:l,$:n});}if(!u)return e.on("get",t);if(s){if(!d(u,s))return e.on("get",t);u=i.state.to(u,s);}else u=i.obj.copy(u);u=i.graph.node(u),o=(c||k).ack,e.on("in",{"@":t["#"],how:"mem",put:u,$:n}),e.on("get",t);};}(),function(){i.chain.opt=function(t){t=t||{};var n=this,o=n._,e=t.peers||t;return p(t)||(t={}),p(o.opt)||(o.opt=t),f(e)&&(e=[e]),u(e)&&(e=v(e,function(t,n,o){o(t,{url:t});}),p(o.opt.peers)||(o.opt.peers={}),o.opt.peers=h(e,o.opt.peers)),o.opt.peers=o.opt.peers||{},h(t,o.opt),i.on("opt",o),o.opt.uuid=o.opt.uuid||function(){return g()+c(12)},n};}();var a,u=i.list.is,s=i.text,f=s.is,c=s.random,l=i.obj,p=l.is,d=l.has,h=l.to,v=l.map,g=(l.copy,i.state.lex),m=i.val.rel._,b=".",k=(i.node._,i.val.link.is,{});o.debug=function(t,n){return o.debug.i&&t===o.debug.i&&o.debug.i++&&(o.log.apply(o,arguments)||n)},i.log=function(){return !i.log.off&&o.log.apply(o,arguments),[].slice.call(arguments).join(" ")},i.log.once=function(t,n,o){return (o=i.log.once)[t]=o[t]||0,o[t]++||i.log(n)},i.log.once("welcome","Hello wonderful person! :) Thanks for using GUN, feel free to ask for help on https://gitter.im/amark/gun and ask StackOverflow questions tagged with 'gun'!"),"undefined"!=typeof window&&((window.GUN=window.Gun=i).window=window);try{"undefined"!=typeof e&&(e.exports=i);}catch(y){}n.exports=i;})(t,"./root"),t(function(){var n=t("./root");n.chain.back=function(t,i){var r;if(t=t||1,-1===t||1/0===t)return this._.root.$;if(1===t)return (this._.back||this._).$;var a=this,u=a._;if("string"==typeof t&&(t=t.split(".")),!(t instanceof Array)){if(t instanceof Function){for(var s,r={back:u};(r=r.back)&&o===(s=t(r,i)););return s}return n.num.is(t)?(u.back||u).$.back(t-1):this}var f=0,c=t.length,r=u;for(f;c>f;f++)r=(r||e)[t[f]];return o!==r?i?a:r:(r=u.back)?r.$.back(t,i):void 0};var o,e={};})(t,"./back"),t(function(){function n(t){var n,o,e,i=this.as,r=i.back,a=i.root;if(t.I||(t.I=i.$),t.$||(t.$=i.$),this.to.next(t),o=t.get){if(o["#"]||i.soul){if(o["#"]=o["#"]||i.soul,t["#"]||(t["#"]=b(9)),r=a.$.get(o["#"])._,o=o["."]){if(h(r.put,o)&&(n=r.$.get(o)._,(e=n.ack)||(n.ack=-1),r.on("in",{$:r.$,put:c.state.to(r.put,o),get:r.get}),e))return}else{if(e=r.ack,e||(r.ack=-1),h(r,"put")&&r.on("in",r),e)return;t.$=r.$;}return a.ask(f,t),a.on("in",t)}if(a.now&&(a.now[i.id]=a.now[i.id]||!0,i.pass={}),o["."])return i.get?(t={get:{".":i.get},$:i.$},r.ask||(r.ask={}),r.ask[i.get]=t.$._,r.on("out",t)):(t={get:{},$:i.$},r.on("out",t));if(i.ack=i.ack||-1,i.get)return t.$=i.$,o["."]=i.get,(r.ask||(r.ask={}))[i.get]=t.$._,r.on("out",t)}return r.on("out",t)}function o(t){var n,o,r=this,s=r.as,f=s.root,d=t.$,b=(d||p)._||p,k=t.put;if(s.get&&t.get!==s.get&&(t=g(t,{get:s.get})),s.has&&b!==s&&(t=g(t,{$:s.$}),b.ack&&(s.ack=b.ack)),l===k){if(o=b.put,r.to.next(t),s.soul)return;if(l===o&&l!==b.put)return;return i(s,t,r),s.has&&u(s,t),v(b.echo,s.id),void v(s.map,b.id)}if(s.soul)return r.to.next(t),i(s,t,r),void(s.next&&m(k,a,{msg:t,cat:s}));if(!(n=c.val.link.is(k)))return c.val.is(k)?(s.has||s.soul?u(s,t):(b.has||b.soul)&&((b.echo||(b.echo={}))[s.id]=b.echo[b.id]||s,(s.map||(s.map={}))[b.id]=s.map[b.id]||{at:b}),r.to.next(t),void i(s,t,r)):(s.has&&b!==s&&h(b,"put")&&(s.put=b.put),(n=c.node.soul(k))&&b.has&&(b.put=s.root.$.get(n)._.put),o=(f.stop||{})[b.id],r.to.next(t),e(s,t,b,n),i(s,t,r),void(s.next&&m(k,a,{msg:t,cat:s})));f.stop;o=f.stop||{},o=o[b.id]||(o[b.id]={}),o.is=o.is||b.put,o[s.id]=b.put||!0,r.to.next(t),e(s,t,b,n),i(s,t,r);}function e(t,n,o,i){if(i&&k!==t.get){var r=t.root.$.get(i)._;t.has?o=r:o.has&&e(o,n,o,i),o!==t&&(o.$||(o={}),(o.echo||(o.echo={}))[t.id]=o.echo[t.id]||t,t.has&&!(t.map||p)[o.id]&&u(t,n),r=o.id?(t.map||(t.map={}))[o.id]=t.map[o.id]||{at:o}:{},(i!==r.link||r.pass||t.pass)&&(t.pass&&(c.obj.map(t.map,function(t){t.pass=!0;}),v(t,"pass")),r.pass&&v(r,"pass"),t.has&&(t.link=i),s(t,r.link=i)));}}function i(t,n){t.echo&&m(t.echo,r,n);}function r(t){t&&t.on&&t.on("in",this);}function a(t,n){var o,e,i,r=this.cat,a=r.next||p,u=this.msg;(k!==n||a[n])&&(e=a[n])&&(e.has?(l!==e.put&&c.val.link.is(t)||(e.put=t),o=e.$):(i=u.$)&&(i=(o=u.$.get(n))._,l!==i.put&&c.val.link.is(t)||(i.put=t)),e.on("in",{put:t,get:n,$:o,via:u}));}function u(t,n){if(t.has||t.soul){{var o=t.map;t.root;}t.map=null,t.has&&(t.link=null),(t.pass||n["@"]||null!==o)&&(l===o&&c.val.link.is(t.put)||(m(o,function(n){(n=n.at)&&v(n.echo,t.id);}),o=t.put,m(t.next,function(n,e){return l===o&&l!==t.put?!0:(n.put=l,n.ack&&(n.ack=-1),void n.on("in",{get:e,$:n.$,put:l}))})));}}function s(t,n){var o=t.root.$.get(n)._;(!t.ack||(o.on("out",{get:{"#":n}}),t.ask))&&(o=t.ask,c.obj.del(t,"ask"),m(o||t.next,function(t,o){t.on("out",{get:{"#":n,".":o}});}),c.obj.del(t,"ask"));}function f(t){var n=this.as,o=n.get||p,e=n.$._,i=(t.put||p)[o["#"]];if(e.ack&&(e.ack=e.ack+1||1),!t.put||o["."]&&!h(i,e.get)){if(e.put!==l)return;return void e.on("in",{get:e.get,put:e.put=l,$:e.$,"@":t["@"]})}return k==o["."]?void e.on("in",{get:e.get,put:c.val.link.ify(o["#"]),$:e.$,"@":t["@"]}):(t.$=e.root.$,void c.on.put(t,e.root.$))}var c=t("./root");c.chain.chain=function(t){var e,i=this,r=i._,a=new(t||i).constructor(i),u=a._;return u.root=e=r.root,u.id=++e.once,u.back=i._,u.on=c.on,u.on("in",o,u),u.on("out",n,u),a};var l,p={},d=c.obj,h=d.has,v=(d.put,d.del),g=d.to,m=d.map,b=c.text.random,k=(c.val.rel._,c.node._);})(t,"./chain"),t(function(){function n(t,n){var o=n._,e=o.next,i=n.chain(),r=i._;return e||(e=o.next={}),e[r.get=t]=r,n===o.root.$?r.soul=t:(o.soul||o.has)&&(r.has=t),r}function o(t,n,o,e){var i,r=t._,u=0;return (i=r.soul)?(n(i,e,r),t):(i=r.link)?(n(i,e,r),t):(t.get(function(t,o){if(!(a===t.put&&(i=(s(r.root.opt.peers,function(t,n,o){o(n);})||[]).length)&&u++<=i)){o.rid(t);var f=(f=t.$)&&f._||{};i=f.link||f.soul||l.is(t.put)||p(t.put)||f.dub,n(i,e,t,o);}},{out:{get:{".":!0}}}),t)}function e(t){var n,o=this,e=o.as,i=e.at,u=i.root,s=t.$,c=(s||{})._||{},p=t.put||c.put;if((n=u.now)&&o!==n[e.now])return o.to.next(t);if(o.seen&&c.id&&o.seen[c.id])return o.to.next(t);if((n=p)&&n[l._]&&(n=l.is(n))&&(n=(t.$$=c.root.gun.get(n))._,a!==n.put&&(t=f(t,{put:p=n.put}))),(n=u.mum)&&c.id){var d=c.id+(o.id||(o.id=r.text.random(9)));if(n[d])return;a===p||l.is(p)||(n[d]=!0);}return e.use(t,o),o.stun?void(o.stun=null):void o.to.next(t)}function i(t){var n=this.on;if(!t||n.soul||n.has)return this.off();if(t=(t=(t=t.$||t)._||t).id){{var o,e;n.map;}return (o=(e=this.seen||(this.seen={}))[t])?!0:void(e[t]=!0)}}var r=t("./root");r.chain.get=function(t,a,u){var s,f;if("string"!=typeof t){if(t instanceof Function){if(!0===a)return o(this,t,a,u);s=this;var p,h=s._,v=h.root,f=v.now;u=a||{},u.at=h,u.use=t,u.out=u.out||{},u.out.get=u.out.get||{},(p=h.on("in",e,u)).rid=i,(v.now={$:1})[u.now=h.id]=p;var g=v.mum;return v.mum={},h.on("out",u.out),v.mum=g,v.now=f,s}return c(t)?this.get(""+t,a,u):(f=l.is(t))?this.get(f,a,u):((u=this.chain())._.err={err:r.log("Invalid get request!",t)},a&&a.call(u,u._.err),u)}var m=this,b=m._,k=b.next||d;return (s=k[t])||(s=n(t,m)),s=s.$,(f=b.stun)&&(s._.stun=s._.stun||f),a&&a instanceof Function&&s.get(a,u),s};var a,u=r.obj,s=u.map,f=(u.has,r.obj.to),c=r.num.is,l=r.val.link,p=r.node.soul,d=(r.node._,{});})(t,"./get"),t(function(){function n(t){t.batch=i;var n=t.opt||{},o=t.env=c.state.map(a,n.state);return o.soul=t.soul,t.graph=c.graph.ify(t.data,o,t),o.err?((t.ack||m).call(t,t.out={err:c.log(o.err)}),void(t.res&&t.res())):void t.batch()}function e(t){return void(t&&t())}function i(){var t=this;t.graph&&!v(t.stun,r)&&(t.res=t.res||function(t){t&&t();},t.res(function(){var n=t.$.back(-1)._,o=n.ask(function(o){n.root.on("ack",o),o.err&&c.log(o),o.lack||this.off(),t.ack&&t.ack(o,this);},t.opt),e=n.root.now;p.del(n.root,"now");var i=n.root.mum;n.root.mum={},t.ref._.on("out",{$:t.ref,put:t.out=t.env.graph,opt:t.opt,"#":o}),n.root.mum=i?p.to(i,n.root.mum):i,n.root.now=e;},t),t.res&&t.res());}function r(t){return t?!0:void 0}function a(t,n,o,e){var i=this,r=c.is(t);!n&&e.path.length&&(i.res||b)(function(){var n=e.path,o=i.ref,a=(i.opt,0),s=n.length;for(a;s>a;a++)o=o.get(n[a]);r&&(o=t);var f=o._.dub;return f||(f=c.node.soul(e.obj))?(o.back(-1).get(f),void e.soul(f)):((i.stun=i.stun||{})[n]=!0,void o.get(u,!0,{as:{at:e,as:i,p:n}}))},{as:i,at:e});}function u(t,n,o,e){var n=n.as,i=n.at;n=n.as;var r=((o||{}).$||{})._||{};return t=r.dub=r.dub||t||c.node.soul(i.obj)||c.node.soul(o.put||r.put)||c.val.rel.is(o.put||r.put)||(n.via.back("opt.uuid")||c.text.random)(),e&&(e.stun=!0),t?void s(r,r.dub=t,i,n):void r.via.back("opt.uuid")(function(t,o){return t?c.log(t):void s(r,r.dub=r.dub||o,i,n)})}function s(t,n,o,e){t.$.back(-1).get(n),o.soul(n),e.stun[o.path]=!1,e.batch();}function f(t,n,e,i){if(n=n.as,e.$&&e.$._){if(e.err)return void o.log("Please report this as an issue! Put.any.err");var r,a=e.$._,u=a.put,s=n.opt||{};if(!(r=n.ref)||!r._.now){if(i&&(i.stun=!0),n.ref!==n.$){if(r=n.$._.get||a.get,!r)return void o.log("Please report this as an issue! Put.no.get");n.data=h({},r,n.data),r=null;}if(l===u){if(!a.get)return;t||(r=a.$.back(function(t){return t.link||t.soul?t.link||t.soul:void(n.data=h({},t.get,n.data))})),r=r||a.soul||a.link||a.dub,a=r?a.root.$.get(r)._:a,n.soul=r,u=n.data;}return n.not||(n.soul=n.soul||t)||(n.path&&d(n.data)?n.soul=(s.uuid||n.via.back("opt.uuid")||c.text.random)():(k==a.get&&(n.soul=(a.put||g)["#"]||a.dub),n.soul=n.soul||a.soul||a.soul||(s.uuid||n.via.back("opt.uuid")||c.text.random)()),n.soul)?void n.ref.put(n.data,n.soul,n):void n.via.back("opt.uuid")(function(t,o){return t?c.log(t):void n.ref.put(n.data,n.soul=o,n)})}}}var c=t("./root");c.chain.put=function(t,o,i){var r,a=this,u=a._,s=u.root.$;return i=i||{},i.data=t,i.via=i.$=i.via||i.$||a,"string"==typeof o?i.soul=o:i.ack=i.ack||o,u.soul&&(i.soul=u.soul),i.soul||s===a?d(i.data)?(i.soul=i.soul||(i.not=c.node.soul(i.data)||(i.via.back("opt.uuid")||c.text.random)()),i.soul?(i.$=s.get(i.soul),i.ref=i.$,n(i),a):(i.via.back("opt.uuid")(function(t,n){return t?c.log(t):void(i.ref||i.$).put(i.data,i.soul=n,i)}),a)):((i.ack||m).call(i,i.out={err:c.log("Data saved to the root level of the graph must be a node (an object), not a",typeof i.data,'of "'+i.data+'"!')}),i.res&&i.res(),a):c.is(t)?(t.get(function(t,n,e){return !t&&c.val.is(e.put)?c.log("The reference you are saving is a",typeof e.put,'"'+e.put+'", not a node (object)!'):void a.put(c.val.rel.ify(t),o,i)},!0),a):(i.ref=i.ref||s._===(r=u.back)?a:r.$,i.ref._.soul&&c.val.is(i.data)&&u.get?(i.data=h({},u.get,i.data),i.ref.put(i.data,i.soul,i),a):(i.ref.get(f,!0,{as:i}),i.out||(i.res=i.res||e,i.$._.stun=i.ref._.stun),a))};var l,p=c.obj,d=p.is,h=p.put,v=p.map,g={},m=function(){},b=function(t,n){t.call(n||g);},k=c.node._;})(t,"./put"),t(function(n){var o=t("./root");t("./chain"),t("./back"),t("./put"),t("./get"),n.exports=o;})(t,"./index"),t(function(){function n(t,n){{var o,e=this,r=t.$,a=(r||{})._||{},u=a.put||t.put;e.at;}if(i!==u){if(o=t.$$){if(o=t.$$._,i===o.put)return;u=o.put;}e.change&&(u=t.put),e.as?e.ok.call(e.as,t,n):e.ok.call(r,u,t.get,t,n);}}function o(t,n,r){var u,f,c=this.as,l=(c.at,t.$),p=l._,d=p.put||t.put;return (f=t.$$)&&(u=f=t.$$._,i!==u.put&&(d=u.put)),(f=n.wait)&&(f=f[p.id])&&clearTimeout(f),!r&&(i===d||p.soul||p.link||u&&!(0<u.ack))||i===d&&(f=(a(p.root.opt.peers,function(t,n,o){o(n);})||[]).length)&&!r&&(u||p).ack<=f?void(f=(n.wait={})[p.id]=setTimeout(function(){o.call({as:c},t,n,f||1);},c.wait||99)):(u&&i===u.put&&(f=s.is(d))&&(d=e.node.ify({},f)),n.rid(t),void c.ok.call(l||c.$,d,t.get))}var e=t("./index");e.chain.on=function(t,o,e,i){var r,a=this,u=a._;if("string"==typeof t)return o?(r=u.on(t,o,e||u,i),e&&e.$&&(e.subs||(e.subs=[])).push(r),a):u.on(t);var s=o;return s=!0===s?{change:!0}:s||{},s.at=u,s.ok=t,a.get(n,s),a},e.chain.val=function(t,n){return e.log.once("onceval","Future Breaking API Change: .val -> .once, apologies unexpected."),this.once(t,n)},e.chain.once=function(t,n){var r=this,a=r._,u=a.put;if(0<a.ack&&i!==u)return (t||f).call(r,u,a.get),r;if(!t){e.log.once("valonce","Chainable val is experimental, its behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");var s=r.chain();return s._.nix=r.once(function(){s._.on("in",r._);}),s}return (n=n||{}).ok=t,n.at=a,n.out={"#":e.text.random(9)},r.get(o,{as:n}),n.async=!0,r},e.chain.off=function(){var t,n=this,o=n._,e=o.back;return e?((t=e.next)&&t[o.get]&&u(t,o.get),(t=e.ask)&&u(t,o.get),(t=e.put)&&u(t,o.get),(t=o.soul)&&u(e.root.graph,t),(t=o.map)&&a(t,function(t){t.link&&e.root.$.get(t.link).off();}),(t=o.next)&&a(t,function(t){t.$.off();}),o.on("off",{}),n):void 0};var i,r=e.obj,a=r.map,u=(r.has,r.del),s=(r.to,e.val.link),f=function(){};})(t,"./on"),t(function(){function n(t){return !t.put||e.val.is(t.put)?this.to.next(t):(this.as.nix&&this.off(),r(t.put,o,{at:this.as,msg:t}),void this.to.next(t))}function o(t,n){if(u!==n){var o=this.msg,e=o.$,i=this.at,r=e.get(n)._;(r.echo||(r.echo={}))[i.id]=r.echo[i.id]||i;}}var e=t("./index");e.chain.map=function(t){var o,r=this,u=r._;return t?(e.log.once("mapfn","Map functions are experimental, their behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it."),o=r.chain(),r.map().on(function(n,r,u,s){var f=(t||a).call(this,n,r,u,s);if(i!==f)return n===f?o._.on("in",u):e.is(f)?o._.on("in",f._):void o._.on("in",{get:r,put:f})}),o):(o=u.each)?o:(u.each=o=r.chain(),o._.nix=r.back("nix"),r.on("in",n,o._),o)};var i,r=e.obj.map,a=function(){},u=e.node._;})(t,"./map"),t(function(){var n=t("./index");n.chain.set=function(t,o,e){var i,r=this;return o=o||function(){},e=e||{},e.item=e.item||t,(i=n.node.soul(t))&&(t=n.obj.put({},i,n.val.link.ify(i))),n.is(t)?(t.get(function(t,i,a){return t?void r.put(n.obj.put({},t,n.val.link.ify(t)),o,e):o.call(r,{err:n.log('Only a node can be linked! Not "'+a.put+'"!')})},!0),t):(n.obj.is(t)&&(t=r.back(-1).get(i=i||n.node.soul(t)||r.back("opt.uuid")()).put(t)),r.get(i||n.state.lex()+n.text.random(7)).put(t,o,e))};})(t,"./set"),t(function(){if("undefined"!=typeof Gun){var t,n=function(){};try{t=(Gun.window||n).localStorage;}catch(e){}t||(o.log("Warning: No localStorage exists to persist data to!"),t={setItem:function(t,n){this[t]=n;},removeItem:function(t){delete this[t];},getItem:function(t){return this[t]}}),Gun.on("create",function(n){function o(t){if(!t.err&&t.ok){var n=t["@"];setTimeout(function(){Gun.obj.map(u,function(t,o){Gun.obj.map(t,function(o,e){n===o&&delete t[e];}),s(t)&&delete u[o];}),p();},i.wait||1);}}var e=this.to,i=n.opt;if(n.once)return e.next(n);i.prefix=i.file||"gun/";var r,a,u=Gun.obj.ify(t.getItem("gap/"+i.prefix))||{},s=Gun.obj.empty;if(!s(u)){var f=Gun.obj.ify(t.getItem(i.prefix))||{},c={};Gun.obj.map(u,function(t,n){Gun.obj.map(t,function(t,o){c[n]=Gun.state.to(f[n],o,c[n]);});}),setTimeout(function(){n.on("out",{put:c,"#":n.ask(o),I:n.$});},1);}n.on("out",function(t){t.lS||(t.I&&t.put&&!t["@"]&&!s(i.peers)&&(r=t["#"],Gun.graph.is(t.put,null,l),a||(a=setTimeout(p,i.wait||1))),this.to.next(t));}),n.on("ack",o),e.next(n);var l=function(t,n,o,e){(u[e]||(u[e]={}))[n]=r;},p=function(){clearTimeout(a),a=!1;try{t.setItem("gap/"+i.prefix,JSON.stringify(u));}catch(n){Gun.log(err=n||"localStorage failure");}};}),Gun.on("create",function(n){this.to.next(n);var o=n.opt;if(!n.once&&!1!==o.localStorage){o.prefix=o.file||"gun/";var e,i=(n.graph,{}),r=0,a=Gun.obj.ify(t.getItem(o.prefix))||{};n.on("localStorage",a),n.on("put",function(t){return this.to.next(t),Gun.graph.is(t.put,null,u),t["@"]||(i[t["#"]]=!0),r+=1,r>=(o.batch||1e3)?s():void(e||(e=setTimeout(s,o.wait||1)))}),n.on("get",function(t){function e(){if(s&&(i=s["#"])){var e=s["."];r=a[i]||u,r&&e&&(r=Gun.state.to(r,e)),(r||Gun.obj.empty(o.peers))&&n.on("in",{"@":t["#"],put:Gun.graph.node(r),how:"lS",lS:t.I});}}this.to.next(t);var i,r,u,s=t.get;Gun.debug?setTimeout(e,1):e();});var u=function(t,n,o,e){a[e]=Gun.state.to(o,n,a[e]);},s=function(u){var f;r=0,clearTimeout(e),e=!1;var c=i;i={},u&&(a=u);try{t.setItem(o.prefix,JSON.stringify(a));}catch(l){Gun.log(f=(l||"localStorage failure")+" Consider using GUN's IndexedDB plugin for RAD for more storage space, temporary example at https://github.com/amark/gun/blob/master/test/tmp/indexedDB.html ."),n.on("localStorage:error",{err:f,file:o.prefix,flush:a,retry:s});}(f||Gun.obj.empty(o.peers))&&Gun.obj.map(c,function(t,o){n.on("in",{"@":o,err:f,ok:0});});};}});}})(t,"./adapters/localStorage"),t(function(n){function e(t){var n=function(){},u=t.opt||{};return u.log=u.log||o.log,u.gap=u.gap||u.wait||1,u.pack=u.pack||.3*(u.memory?1e3*u.memory*1e3:1399e6),n.out=function(o){var e;return this.to&&this.to.next(o),(e=o["@"])&&(e=t.dup.s[e])&&(e=e.it)&&e.mesh?(n.say(o,e.mesh.via,1),void(e["##"]=o["##"])):void n.say(o)},t.on("create",function(o){o.opt.pid=o.opt.pid||i.text.random(9),this.to.next(o),t.on("out",n.out);}),n.hear=function(o,e){if(o){var r,a,s,f=t.dup,c=o[0];if(u.pack<=o.length)return n.say({dam:"!",err:"Message too big!"},e);try{s=JSON.parse(o);}catch(l){u.log("DAM JSON parse error",l);}if("{"===c){if(!s)return;if(f.check(r=s["#"]))return;if(f.track(r,!0).it=s,(c=s["@"])&&s.put&&(a=s["##"]||(s["##"]=n.hash(s)),(c+=a)!=r)){if(f.check(c))return;(c=f.s)[a]=c[r];}return (s.mesh=function(){}).via=e,(c=s["><"])&&(s.mesh.to=i.obj.map(c.split(","),function(t,n,o){o(t,!0);})),s.dam?void((c=n.hear[s.dam])&&c(s,e,t)):void t.on("in",s)}if("["!==c);else{if(!s)return;for(var p,d=0;p=s[d++];)n.hear(p,e);}}},function(){function o(t){var n=t.batch;if(n&&(t.batch=t.tail=null,n.length))try{e(JSON.stringify(n),t);}catch(o){u.log("DAM JSON stringify error",o);}}function e(t,n){var o=n.wire;try{o.send?o.send(t):n.say&&n.say(t);}catch(e){(n.queue=n.queue||[]).push(t);}}n.say=function(r,s,f){if(!s)return void i.obj.map(u.peers,function(t){n.say(r,t);});var c,l,p,d=s.wire||u.wire&&u.wire(s);if(d&&(l=r.mesh||a,s!==l.via&&((p=l.raw)||(p=n.raw(r)),!((c=r["@"])&&(c=t.dup.s[c])&&(c=c.it)&&c.get&&c["##"]&&c["##"]===r["##"]||(c=l.to)&&(c[s.url]||c[s.id])&&!f)))){if(s.batch){if(s.tail=(s.tail||0)+p.length,s.tail<=u.pack)return void s.batch.push(p);o(s);}s.batch=[],setTimeout(function(){o(s);},u.gap),e(p,s);}};}(),function(){function o(t,n){var o;return n instanceof Object?(i.obj.map(Object.keys(n).sort(),a,{to:o={},on:n}),o):n}function a(t){this.to[t]=this.on[t];}n.raw=function(e){if(!e)return "";var a,c,l,p=t.dup,d=e.mesh||{};if(l=d.raw)return l;if("string"==typeof e)return e;e["@"]&&(l=e.put)&&((c=e["##"])||(a=s(l,o)||"",c=n.hash(e,a),e["##"]=c),(l=p.s)[c=e["@"]+c]=l[e["#"]],e["#"]=c||e["#"],a&&((e=i.obj.to(e)).put=f));var h=0,v=[];i.obj.map(u.peers,function(t){return v.push(t.url||t.id),++h>9?!0:void 0}),e["><"]=v.join();var g=s(e);return r!==a&&(l=g.indexOf(f,g.indexOf("put")),g=g.slice(0,l-1)+a+g.slice(l+f.length+1)),d&&(d.raw=g),g},n.hash=function(t,n){return e.hash(n||s(t.put,o)||"")||t["#"]||i.text.random(9)};var s=JSON.stringify,f=":])([:";}(),n.hi=function(o){var e=o.wire||{};o.id||o.url?(u.peers[o.url||o.id]=o,i.obj.del(u.peers,e.id)):(e=e.id=e.id||i.text.random(9),n.say({dam:"?"},u.peers[e]=o)),e.hied||t.on(e.hied="hi",o),e=o.queue,o.queue=[],i.obj.map(e,function(t){n.say(t,o);});},n.bye=function(n){
+	i.obj.del(u.peers,n.id),t.on("bye",n);},n.hear["!"]=function(t){u.log("Error:",t.err);},n.hear["?"]=function(t,o){return t.pid?(o.id=o.id||t.pid,void n.hi(o)):n.say({dam:"?",pid:u.pid,"@":t["#"]},o)},n}var i=t("../type");e.hash=function(t){if("string"!=typeof t)return {err:1};var n=0;if(!t.length)return n;for(var o,e=0,i=t.length;i>e;++e)o=t.charCodeAt(e),n=(n<<5)-n+o,n|=0;return n};var r,a={};Object.keys=Object.keys||function(t){return map(t,function(t,n,o){o(n);})};try{n.exports=e;}catch(u){}})(t,"./adapters/mesh"),t(function(){var n=t("../index");n.Mesh=t("./mesh"),n.on("opt",function(t){function o(t){try{if(!t||!t.url)return o&&o(t);var n=t.url.replace("http","ws"),o=t.wire=new i.WebSocket(n);return o.onclose=function(){i.mesh.bye(t),e(t);},o.onerror=function(n){e(t),n&&"ECONNREFUSED"===n.code;},o.onopen=function(){i.mesh.hi(t);},o.onmessage=function(n){n&&i.mesh.hear(n.data||n,t);},o}catch(r){}}function e(t){clearTimeout(t.defer),t.defer=setTimeout(function(){o(t);},2e3);}this.to.next(t);var i=t.opt;if(!t.once&&!1!==i.WebSocket){var r;"undefined"!=typeof window&&(r=window),"undefined"!=typeof commonjsGlobal&&(r=commonjsGlobal),r=r||{};var a=i.WebSocket||r.WebSocket||r.webkitWebSocket||r.mozWebSocket;if(a){i.WebSocket=a;{i.mesh=i.mesh||n.Mesh(t),i.wire;}i.wire=o;}}});})(t,"./adapters/websocket");}();
 	});
-
-	var empty$2 = {};
-
-	var empty$3 = /*#__PURE__*/Object.freeze({
-		default: empty$2
-	});
-
-	var webcrypto = {};
-
-	var webcrypto$1 = /*#__PURE__*/Object.freeze({
-		default: webcrypto
-	});
-
-	var textEncoding = {};
-
-	var textEncoding$1 = /*#__PURE__*/Object.freeze({
-		default: textEncoding
-	});
-
-	var nodeWebcryptoOssl = {};
-
-	var nodeWebcryptoOssl$1 = /*#__PURE__*/Object.freeze({
-		default: nodeWebcryptoOssl
-	});
-
-	var gun = createCommonjsModule(function (module) {
-	(function(){
-
-		/* UNBUILD */
-		var root;
-		if(typeof window !== "undefined"){ root = window; }
-		if(typeof commonjsGlobal !== "undefined"){ root = commonjsGlobal; }
-		root = root || {};
-		var console = root.console || {log: function(){}};
-		function USE(arg){
-			return arg.slice? USE[R(arg)] : function(mod, path){
-				arg(mod = {exports: {}});
-				USE[R(path)] = mod.exports;
-			}
-			function R(p){
-				return p.split('/').slice(-1).toString().replace('.js','');
-			}
-		}
-		{ var common = module; }
-	USE(function(module){
-			// Generic javascript utilities.
-			var Type = {};
-			//Type.fns = Type.fn = {is: function(fn){ return (!!fn && fn instanceof Function) }}
-			Type.fn = {is: function(fn){ return (!!fn && 'function' == typeof fn) }};
-			Type.bi = {is: function(b){ return (b instanceof Boolean || typeof b == 'boolean') }};
-			Type.num = {is: function(n){ return !list_is(n) && ((n - parseFloat(n) + 1) >= 0 || Infinity === n || -Infinity === n) }};
-			Type.text = {is: function(t){ return (typeof t == 'string') }};
-			Type.text.ify = function(t){
-				if(Type.text.is(t)){ return t }
-				if(typeof JSON !== "undefined"){ return JSON.stringify(t) }
-				return (t && t.toString)? t.toString() : t;
-			};
-			Type.text.random = function(l, c){
-				var s = '';
-				l = l || 24; // you are not going to make a 0 length random number, so no need to check type
-				c = c || '0123456789ABCDEFGHIJKLMNOPQRSTUVWXZabcdefghijklmnopqrstuvwxyz';
-				while(l > 0){ s += c.charAt(Math.floor(Math.random() * c.length)); l--; }
-				return s;
-			};
-			Type.text.match = function(t, o){ var r = false;
-				t = t || '';
-				o = Type.text.is(o)? {'=': o} : o || {}; // {'~', '=', '*', '<', '>', '+', '-', '?', '!'} // ignore case, exactly equal, anything after, lexically larger, lexically lesser, added in, subtacted from, questionable fuzzy match, and ends with.
-				if(Type.obj.has(o,'~')){ t = t.toLowerCase(); o['='] = (o['='] || o['~']).toLowerCase(); }
-				if(Type.obj.has(o,'=')){ return t === o['='] }
-				if(Type.obj.has(o,'*')){ if(t.slice(0, o['*'].length) === o['*']){ r = true; t = t.slice(o['*'].length); } else { return false }}
-				if(Type.obj.has(o,'!')){ if(t.slice(-o['!'].length) === o['!']){ r = true; } else { return false }}
-				if(Type.obj.has(o,'+')){
-					if(Type.list.map(Type.list.is(o['+'])? o['+'] : [o['+']], function(m){
-						if(t.indexOf(m) >= 0){ r = true; } else { return true }
-					})){ return false }
-				}
-				if(Type.obj.has(o,'-')){
-					if(Type.list.map(Type.list.is(o['-'])? o['-'] : [o['-']], function(m){
-						if(t.indexOf(m) < 0){ r = true; } else { return true }
-					})){ return false }
-				}
-				if(Type.obj.has(o,'>')){ if(t > o['>']){ r = true; } else { return false }}
-				if(Type.obj.has(o,'<')){ if(t < o['<']){ r = true; } else { return false }}
-				function fuzzy(t,f){ var n = -1, i = 0, c; for(;c = f[i++];){ if(!~(n = t.indexOf(c, n+1))){ return false }} return true } // via http://stackoverflow.com/questions/9206013/javascript-fuzzy-search
-				if(Type.obj.has(o,'?')){ if(fuzzy(t, o['?'])){ r = true; } else { return false }} // change name!
-				return r;
-			};
-			Type.list = {is: function(l){ return (l instanceof Array) }};
-			Type.list.slit = Array.prototype.slice;
-			Type.list.sort = function(k){ // creates a new sort function based off some key
-				return function(A,B){
-					if(!A || !B){ return 0 } A = A[k]; B = B[k];
-					if(A < B){ return -1 }else if(A > B){ return 1 }
-					else { return 0 }
-				}
-			};
-			Type.list.map = function(l, c, _){ return obj_map(l, c, _) };
-			Type.list.index = 1; // change this to 0 if you want non-logical, non-mathematical, non-matrix, non-convenient array notation
-			Type.obj = {is: function(o){ return o? (o instanceof Object && o.constructor === Object) || Object.prototype.toString.call(o).match(/^\[object (\w+)\]$/)[1] === 'Object' : false }};
-			Type.obj.put = function(o, k, v){ return (o||{})[k] = v, o };
-			Type.obj.has = function(o, k){ return o && Object.prototype.hasOwnProperty.call(o, k) };
-			Type.obj.del = function(o, k){
-				if(!o){ return }
-				o[k] = null;
-				delete o[k];
-				return o;
-			};
-			Type.obj.as = function(o, k, v, u){ return o[k] = o[k] || (u === v? {} : v) };
-			Type.obj.ify = function(o){
-				if(obj_is(o)){ return o }
-				try{o = JSON.parse(o);
-				}catch(e){o={};}			return o;
-			}
-			;(function(){ var u;
-				function map(v,k){
-					if(obj_has(this,k) && u !== this[k]){ return }
-					this[k] = v;
-				}
-				Type.obj.to = function(from, to){
-					to = to || {};
-					obj_map(from, map, to);
-					return to;
-				};
-			}());
-			Type.obj.copy = function(o){ // because http://web.archive.org/web/20140328224025/http://jsperf.com/cloning-an-object/2
-				return !o? o : JSON.parse(JSON.stringify(o)); // is shockingly faster than anything else, and our data has to be a subset of JSON anyways!
-			}
-			;(function(){
-				function empty(v,i){ var n = this.n;
-					if(n && (i === n || (obj_is(n) && obj_has(n, i)))){ return }
-					if(i){ return true }
-				}
-				Type.obj.empty = function(o, n){
-					if(!o){ return true }
-					return obj_map(o,empty,{n:n})? false : true;
-				};
-			}());
-	(function(){
-				function t(k,v){
-					if(2 === arguments.length){
-						t.r = t.r || {};
-						t.r[k] = v;
-						return;
-					} t.r = t.r || [];
-					t.r.push(k);
-				}			var keys = Object.keys;
-				Type.obj.map = function(l, c, _){
-					var u, i = 0, x, r, ll, lle, f = fn_is(c);
-					t.r = null;
-					if(keys && obj_is(l)){
-						ll = keys(l); lle = true;
-					}
-					if(list_is(l) || ll){
-						x = (ll || l).length;
-						for(;i < x; i++){
-							var ii = (i + Type.list.index);
-							if(f){
-								r = lle? c.call(_ || this, l[ll[i]], ll[i], t) : c.call(_ || this, l[i], ii, t);
-								if(r !== u){ return r }
-							} else {
-								//if(Type.test.is(c,l[i])){ return ii } // should implement deep equality testing!
-								if(c === l[lle? ll[i] : i]){ return ll? ll[i] : ii } // use this for now
-							}
-						}
-					} else {
-						for(i in l){
-							if(f){
-								if(obj_has(l,i)){
-									r = _? c.call(_, l[i], i, t) : c(l[i], i, t);
-									if(r !== u){ return r }
-								}
-							} else {
-								//if(a.test.is(c,l[i])){ return i } // should implement deep equality testing!
-								if(c === l[i]){ return i } // use this for now
-							}
-						}
-					}
-					return f? t.r : Type.list.index? 0 : -1;
-				};
-			}());
-			Type.time = {};
-			Type.time.is = function(t){ return t? t instanceof Date : (+new Date().getTime()) };
-
-			var fn_is = Type.fn.is;
-			var list_is = Type.list.is;
-			var obj = Type.obj, obj_is = obj.is, obj_has = obj.has, obj_map = obj.map;
-			module.exports = Type;
-		})(USE, './type');
-	USE(function(module){
-			// On event emitter generic javascript utility.
-			module.exports = function onto(tag, arg, as){
-				if(!tag){ return {to: onto} }
-				var u, tag = (this.tag || (this.tag = {}))[tag] ||
-				(this.tag[tag] = {tag: tag, to: onto._ = {
-					next: function(arg){ var tmp;
-						if((tmp = this.to)){ 
-							tmp.next(arg);
-					}}
-				}});
-				if(arg instanceof Function){
-					var be = {
-						off: onto.off || 
-						(onto.off = function(){
-							if(this.next === onto._.next){ return !0 }
-							if(this === this.the.last){
-								this.the.last = this.back;
-							}
-							this.to.back = this.back;
-							this.next = onto._.next;
-							this.back.to = this.to;
-							if(this.the.last === this.the){
-								delete this.on.tag[this.the.tag];
-							}
-						}),
-						to: onto._,
-						next: arg,
-						the: tag,
-						on: this,
-						as: as,
-					};
-					(be.back = tag.last || tag).to = be;
-					return tag.last = be;
-				}
-				if((tag = tag.to) && u !== arg){ tag.next(arg); }
-				return tag;
-			};
-		})(USE, './onto');
-	USE(function(module){
-			/* Based on the Hypothetical Amnesia Machine thought experiment */
-			function HAM(machineState, incomingState, currentState, incomingValue, currentValue){
-				if(machineState < incomingState){
-					return {defer: true}; // the incoming value is outside the boundary of the machine's state, it must be reprocessed in another state.
-				}
-				if(incomingState < currentState){
-					return {historical: true}; // the incoming value is within the boundary of the machine's state, but not within the range.
-
-				}
-				if(currentState < incomingState){
-					return {converge: true, incoming: true}; // the incoming value is within both the boundary and the range of the machine's state.
-
-				}
-				if(incomingState === currentState){
-					incomingValue = Lexical(incomingValue) || "";
-					currentValue = Lexical(currentValue) || "";
-					if(incomingValue === currentValue){ // Note: while these are practically the same, the deltas could be technically different
-						return {state: true};
-					}
-					/*
-						The following is a naive implementation, but will always work.
-						Never change it unless you have specific needs that absolutely require it.
-						If changed, your data will diverge unless you guarantee every peer's algorithm has also been changed to be the same.
-						As a result, it is highly discouraged to modify despite the fact that it is naive,
-						because convergence (data integrity) is generally more important.
-						Any difference in this algorithm must be given a new and different name.
-					*/
-					if(incomingValue < currentValue){ // Lexical only works on simple value types!
-						return {converge: true, current: true};
-					}
-					if(currentValue < incomingValue){ // Lexical only works on simple value types!
-						return {converge: true, incoming: true};
-					}
-				}
-				return {err: "Invalid CRDT Data: "+ incomingValue +" to "+ currentValue +" at "+ incomingState +" to "+ currentState +"!"};
-			}
-			if(typeof JSON === 'undefined'){
-				throw new Error(
-					'JSON is not included in this browser. Please load it first: ' +
-					'ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js'
-				);
-			}
-			var Lexical = JSON.stringify;
-			module.exports = HAM;
-		})(USE, './HAM');
-	USE(function(module){
-			var Type = USE('./type');
-			var Val = {};
-			Val.is = function(v){ // Valid values are a subset of JSON: null, binary, number (!Infinity), text, or a soul relation. Arrays need special algorithms to handle concurrency, so they are not supported directly. Use an extension that supports them if needed but research their problems first.
-				if(v === u){ return false }
-				if(v === null){ return true } // "deletes", nulling out keys.
-				if(v === Infinity){ return false } // we want this to be, but JSON does not support it, sad face.
-				if(text_is(v) // by "text" we mean strings.
-				|| bi_is(v) // by "binary" we mean boolean.
-				|| num_is(v)){ // by "number" we mean integers or decimals. 
-					return true; // simple values are valid.
-				}
-				return Val.rel.is(v) || false; // is the value a soul relation? Then it is valid and return it. If not, everything else remaining is an invalid data type. Custom extensions can be built on top of these primitives to support other types.
-			};
-			Val.link = Val.rel = {_: '#'};
-	(function(){
-				Val.rel.is = function(v){ // this defines whether an object is a soul relation or not, they look like this: {'#': 'UUID'}
-					if(v && v[rel_] && !v._ && obj_is(v)){ // must be an object.
-						var o = {};
-						obj_map(v, map, o);
-						if(o.id){ // a valid id was found.
-							return o.id; // yay! Return it.
-						}
-					}
-					return false; // the value was not a valid soul relation.
-				};
-				function map(s, k){ var o = this; // map over the object...
-					if(o.id){ return o.id = false } // if ID is already defined AND we're still looping through the object, it is considered invalid.
-					if(k == rel_ && text_is(s)){ // the key should be '#' and have a text value.
-						o.id = s; // we found the soul!
-					} else {
-						return o.id = false; // if there exists anything else on the object that isn't the soul, then it is considered invalid.
-					}
-				}
-			}());
-			Val.rel.ify = function(t){ return obj_put({}, rel_, t) }; // convert a soul into a relation and return it.
-			Type.obj.has._ = '.';
-			var rel_ = Val.link._, u;
-			var bi_is = Type.bi.is;
-			var num_is = Type.num.is;
-			var text_is = Type.text.is;
-			var obj = Type.obj, obj_is = obj.is, obj_put = obj.put, obj_map = obj.map;
-			module.exports = Val;
-		})(USE, './val');
-	USE(function(module){
-			var Type = USE('./type');
-			var Val = USE('./val');
-			var Node = {_: '_'};
-			Node.soul = function(n, o){ return (n && n._ && n._[o || soul_]) }; // convenience function to check to see if there is a soul on a node and return it.
-			Node.soul.ify = function(n, o){ // put a soul on an object.
-				o = (typeof o === 'string')? {soul: o} : o || {};
-				n = n || {}; // make sure it exists.
-				n._ = n._ || {}; // make sure meta exists.
-				n._[soul_] = o.soul || n._[soul_] || text_random(); // put the soul on it.
-				return n;
-			};
-			Node.soul._ = Val.link._;
-	(function(){
-				Node.is = function(n, cb, as){ var s; // checks to see if an object is a valid node.
-					if(!obj_is(n)){ return false } // must be an object.
-					if(s = Node.soul(n)){ // must have a soul on it.
-						return !obj_map(n, map, {as:as,cb:cb,s:s,n:n});
-					}
-					return false; // nope! This was not a valid node.
-				};
-				function map(v, k){ // we invert this because the way we check for this is via a negation.
-					if(k === Node._){ return } // skip over the metadata.
-					if(!Val.is(v)){ return true } // it is true that this is an invalid node.
-					if(this.cb){ this.cb.call(this.as, v, k, this.n, this.s); } // optionally callback each key/value.
-				}
-			}());
-	(function(){
-				Node.ify = function(obj, o, as){ // returns a node from a shallow object.
-					if(!o){ o = {}; }
-					else if(typeof o === 'string'){ o = {soul: o}; }
-					else if(o instanceof Function){ o = {map: o}; }
-					if(o.map){ o.node = o.map.call(as, obj, u, o.node || {}); }
-					if(o.node = Node.soul.ify(o.node || {}, o)){
-						obj_map(obj, map, {o:o,as:as});
-					}
-					return o.node; // This will only be a valid node if the object wasn't already deep!
-				};
-				function map(v, k){ var o = this.o, tmp, u; // iterate over each key/value.
-					if(o.map){
-						tmp = o.map.call(this.as, v, ''+k, o.node);
-						if(u === tmp){
-							obj_del(o.node, k);
-						} else
-						if(o.node){ o.node[k] = tmp; }
-						return;
-					}
-					if(Val.is(v)){
-						o.node[k] = v;
-					}
-				}
-			}());
-			var obj = Type.obj, obj_is = obj.is, obj_del = obj.del, obj_map = obj.map;
-			var text = Type.text, text_random = text.random;
-			var soul_ = Node.soul._;
-			var u;
-			module.exports = Node;
-		})(USE, './node');
-	USE(function(module){
-			var Type = USE('./type');
-			var Node = USE('./node');
-			function State(){
-				var t;
-				/*if(perf){
-					t = start + perf.now(); // Danger: Accuracy decays significantly over time, even if precise.
-				} else {*/
-					t = time();
-				//}
-				if(last < t){
-					return N = 0, last = t + State.drift;
-				}
-				return last = t + ((N += 1) / D) + State.drift;
-			}
-			var time = Type.time.is, last = -Infinity, N = 0, D = 1000; // WARNING! In the future, on machines that are D times faster than 2016AD machines, you will want to increase D by another several orders of magnitude so the processing speed never out paces the decimal resolution (increasing an integer effects the state accuracy).
-			var perf = (typeof performance !== 'undefined')? (performance.timing && performance) : false, start = (perf && perf.timing && perf.timing.navigationStart) || (perf = false);
-			State._ = '>';
-			State.drift = 0;
-			State.is = function(n, k, o){ // convenience function to get the state on a key on a node and return it.
-				var tmp = (k && n && n[N_] && n[N_][State._]) || o;
-				if(!tmp){ return }
-				return num_is(tmp = tmp[k])? tmp : -Infinity;
-			};
-			State.lex = function(){ return State().toString(36).replace('.','') };
-			State.ify = function(n, k, s, v, soul){ // put a key's state on a node.
-				if(!n || !n[N_]){ // reject if it is not node-like.
-					if(!soul){ // unless they passed a soul
-						return; 
-					}
-					n = Node.soul.ify(n, soul); // then make it so!
-				} 
-				var tmp = obj_as(n[N_], State._); // grab the states data.
-				if(u !== k && k !== N_){
-					if(num_is(s)){
-						tmp[k] = s; // add the valid state.
-					}
-					if(u !== v){ // Note: Not its job to check for valid values!
-						n[k] = v;
-					}
-				}
-				return n;
-			};
-			State.to = function(from, k, to){
-				var val = from[k]; // BUGGY!
-				if(obj_is(val)){
-					val = obj_copy(val);
-				}
-				return State.ify(to, k, State.is(from, k), val, Node.soul(from));
-			}
-			;(function(){
-				State.map = function(cb, s, as){ var u; // for use with Node.ify
-					var o = obj_is(o = cb || s)? o : null;
-					cb = fn_is(cb = cb || s)? cb : null;
-					if(o && !cb){
-						s = num_is(s)? s : State();
-						o[N_] = o[N_] || {};
-						obj_map(o, map, {o:o,s:s});
-						return o;
-					}
-					as = as || obj_is(s)? s : u;
-					s = num_is(s)? s : State();
-					return function(v, k, o, opt){
-						if(!cb){
-							map.call({o: o, s: s}, v,k);
-							return v;
-						}
-						cb.call(as || this || {}, v, k, o, opt);
-						if(obj_has(o,k) && u === o[k]){ return }
-						map.call({o: o, s: s}, v,k);
-					}
-				};
-				function map(v,k){
-					if(N_ === k){ return }
-					State.ify(this.o, k, this.s) ;
-				}
-			}());
-			var obj = Type.obj, obj_as = obj.as, obj_has = obj.has, obj_is = obj.is, obj_map = obj.map, obj_copy = obj.copy;
-			var num = Type.num, num_is = num.is;
-			var fn = Type.fn, fn_is = fn.is;
-			var N_ = Node._, u;
-			module.exports = State;
-		})(USE, './state');
-	USE(function(module){
-			var Type = USE('./type');
-			var Val = USE('./val');
-			var Node = USE('./node');
-			var Graph = {};
-	(function(){
-				Graph.is = function(g, cb, fn, as){ // checks to see if an object is a valid graph.
-					if(!g || !obj_is(g) || obj_empty(g)){ return false } // must be an object.
-					return !obj_map(g, map, {cb:cb,fn:fn,as:as}); // makes sure it wasn't an empty object.
-				};
-				function map(n, s){ // we invert this because the way'? we check for this is via a negation.
-					if(!n || s !== Node.soul(n) || !Node.is(n, this.fn, this.as)){ return true } // it is true that this is an invalid graph.
-					if(!this.cb){ return }
-					nf.n = n; nf.as = this.as; // sequential race conditions aren't races.
-					this.cb.call(nf.as, n, s, nf);
-				}
-				function nf(fn){ // optional callback for each node.
-					if(fn){ Node.is(nf.n, fn, nf.as); } // where we then have an optional callback for each key/value.
-				}
-			}());
-	(function(){
-				Graph.ify = function(obj, env, as){
-					var at = {path: [], obj: obj};
-					if(!env){
-						env = {};
-					} else
-					if(typeof env === 'string'){
-						env = {soul: env};
-					} else
-					if(env instanceof Function){
-						env.map = env;
-					}
-					if(env.soul){
-						at.rel = Val.rel.ify(env.soul);
-					}
-					env.shell = (as||{}).shell;
-					env.graph = env.graph || {};
-					env.seen = env.seen || [];
-					env.as = env.as || as;
-					node(env, at);
-					env.root = at.node;
-					return env.graph;
-				};
-				function node(env, at){ var tmp;
-					if(tmp = seen(env, at)){ return tmp }
-					at.env = env;
-					at.soul = soul;
-					if(Node.ify(at.obj, map, at)){
-						at.rel = at.rel || Val.rel.ify(Node.soul(at.node));
-						if(at.obj !== env.shell){
-							env.graph[Val.rel.is(at.rel)] = at.node;
-						}
-					}
-					return at;
-				}
-				function map(v,k,n){
-					var at = this, env = at.env, is, tmp;
-					if(Node._ === k && obj_has(v,Val.rel._)){
-						return n._; // TODO: Bug?
-					}
-					if(!(is = valid(v,k,n, at,env))){ return }
-					if(!k){
-						at.node = at.node || n || {};
-						if(obj_has(v, Node._) && Node.soul(v)){ // ? for safety ?
-							at.node._ = obj_copy(v._);
-						}
-						at.node = Node.soul.ify(at.node, Val.rel.is(at.rel));
-						at.rel = at.rel || Val.rel.ify(Node.soul(at.node));
-					}
-					if(tmp = env.map){
-						tmp.call(env.as || {}, v,k,n, at);
-						if(obj_has(n,k)){
-							v = n[k];
-							if(u === v){
-								obj_del(n, k);
-								return;
-							}
-							if(!(is = valid(v,k,n, at,env))){ return }
-						}
-					}
-					if(!k){ return at.node }
-					if(true === is){
-						return v;
-					}
-					tmp = node(env, {obj: v, path: at.path.concat(k)});
-					if(!tmp.node){ return }
-					return tmp.rel; //{'#': Node.soul(tmp.node)};
-				}
-				function soul(id){ var at = this;
-					var prev = Val.link.is(at.rel), graph = at.env.graph;
-					at.rel = at.rel || Val.rel.ify(id);
-					at.rel[Val.rel._] = id;
-					if(at.node && at.node[Node._]){
-						at.node[Node._][Val.rel._] = id;
-					}
-					if(obj_has(graph, prev)){
-						graph[id] = graph[prev];
-						obj_del(graph, prev);
-					}
-				}
-				function valid(v,k,n, at,env){ var tmp;
-					if(Val.is(v)){ return true }
-					if(obj_is(v)){ return 1 }
-					if(tmp = env.invalid){
-						v = tmp.call(env.as || {}, v,k,n);
-						return valid(v,k,n, at,env);
-					}
-					env.err = "Invalid value at '" + at.path.concat(k).join('.') + "'!";
-					if(Type.list.is(v)){ env.err += " Use `.set(item)` instead of an Array."; }
-				}
-				function seen(env, at){
-					var arr = env.seen, i = arr.length, has;
-					while(i--){ has = arr[i];
-						if(at.obj === has.obj){ return has }
-					}
-					arr.push(at);
-				}
-			}());
-			Graph.node = function(node){
-				var soul = Node.soul(node);
-				if(!soul){ return }
-				return obj_put({}, soul, node);
-			}
-			;(function(){
-				Graph.to = function(graph, root, opt){
-					if(!graph){ return }
-					var obj = {};
-					opt = opt || {seen: {}};
-					obj_map(graph[root], map, {obj:obj, graph: graph, opt: opt});
-					return obj;
-				};
-				function map(v,k){ var tmp, obj;
-					if(Node._ === k){
-						if(obj_empty(v, Val.rel._)){
-							return;
-						}
-						this.obj[k] = obj_copy(v);
-						return;
-					}
-					if(!(tmp = Val.rel.is(v))){
-						this.obj[k] = v;
-						return;
-					}
-					if(obj = this.opt.seen[tmp]){
-						this.obj[k] = obj;
-						return;
-					}
-					this.obj[k] = this.opt.seen[tmp] = Graph.to(this.graph, tmp, this.opt);
-				}
-			}());
-			var fn_is = Type.fn.is;
-			var obj = Type.obj, obj_is = obj.is, obj_del = obj.del, obj_has = obj.has, obj_empty = obj.empty, obj_put = obj.put, obj_map = obj.map, obj_copy = obj.copy;
-			var u;
-			module.exports = Graph;
-		})(USE, './graph');
-	USE(function(module){
-			// request / response module, for asking and acking messages.
-			USE('./onto'); // depends upon onto!
-			module.exports = function ask(cb, as){
-				if(!this.on){ return }
-				if(!(cb instanceof Function)){
-					if(!cb || !as){ return }
-					var id = cb['#'] || cb, tmp = (this.tag||empty)[id];
-					if(!tmp){ return }
-					tmp = this.on(id, as);
-					clearTimeout(tmp.err);
-					return true;
-				}
-				var id = (as && as['#']) || Math.random().toString(36).slice(2);
-				if(!cb){ return id }
-				var to = this.on(id, cb, as);
-				to.err = to.err || setTimeout(function(){
-					to.next({err: "Error: No ACK received yet.", lack: true});
-					to.off();
-				}, (this.opt||{}).lack || 9000);
-				return id;
-			};
-		})(USE, './ask');
-	USE(function(module){
-			var Type = USE('./type');
-			function Dup(opt){
-				var dup = {s:{}};
-				opt = opt || {max: 1000, age: 1000 * 9};//1000 * 60 * 2};
-				dup.check = function(id){ var tmp;
-					if(!(tmp = dup.s[id])){ return false }
-					if(tmp.pass){ return tmp.pass = false }
-					return dup.track(id);
-				};
-				dup.track = function(id, pass){
-					var it = dup.s[id] || (dup.s[id] = {});
-					it.was = time_is();
-					if(pass){ it.pass = true; }
-					if(!dup.to){
-						dup.to = setTimeout(function(){
-							var now = time_is();
-							Type.obj.map(dup.s, function(it, id){
-								if(opt.age > (now - it.was)){ return }
-								Type.obj.del(dup.s, id);
-							});
-							dup.to = null;
-						}, opt.age + 9);
-					}
-					return it;
-				};
-				return dup;
-			}
-			var time_is = Type.time.is;
-			module.exports = Dup;
-		})(USE, './dup');
-	USE(function(module){
-
-			function Gun(o){
-				if(o instanceof Gun){ return (this._ = {gun: this, $: this}).$ }
-				if(!(this instanceof Gun)){ return new Gun(o) }
-				return Gun.create(this._ = {gun: this, $: this, opt: o});
-			}
-
-			Gun.is = function($){ return ($ instanceof Gun) || ($ && $._ && ($ === $._.$)) || false };
-
-			Gun.version = 0.9;
-
-			Gun.chain = Gun.prototype;
-			Gun.chain.toJSON = function(){};
-
-			var Type = USE('./type');
-			Type.obj.to(Type, Gun);
-			Gun.HAM = USE('./HAM');
-			Gun.val = USE('./val');
-			Gun.node = USE('./node');
-			Gun.state = USE('./state');
-			Gun.graph = USE('./graph');
-			Gun.on = USE('./onto');
-			Gun.ask = USE('./ask');
-			Gun.dup = USE('./dup');
-	(function(){
-				Gun.create = function(at){
-					at.root = at.root || at;
-					at.graph = at.graph || {};
-					at.on = at.on || Gun.on;
-					at.ask = at.ask || Gun.ask;
-					at.dup = at.dup || Gun.dup();
-					var gun = at.$.opt(at.opt);
-					if(!at.once){
-						at.on('in', root, at);
-						at.on('out', root, {at: at, out: root});
-						Gun.on('create', at);
-						at.on('create', at);
-					}
-					at.once = 1;
-					return gun;
-				};
-				function root(msg){
-					//add to.next(at); // TODO: MISSING FEATURE!!!
-					var ev = this, as = ev.as, at = as.at || as, gun = at.$, dup, tmp;
-					if(!(tmp = msg['#'])){ tmp = msg['#'] = text_rand(9); }
-					if((dup = at.dup).check(tmp)){
-						if(as.out === msg.out){
-							msg.out = u;
-							ev.to.next(msg);
-						}
-						return;
-					}
-					dup.track(tmp);
-					if(!at.ask(msg['@'], msg)){
-						if(msg.get){
-							Gun.on.get(msg, gun); //at.on('get', get(msg));
-						}
-						if(msg.put){
-							Gun.on.put(msg, gun); //at.on('put', put(msg));
-						}
-					}
-					ev.to.next(msg);
-					if(!as.out){
-						msg.out = root;
-						at.on('out', msg);
-					}
-				}
-			}());
-	(function(){
-				Gun.on.put = function(msg, gun){
-					var at = gun._, ctx = {$: gun, graph: at.graph, put: {}, map: {}, souls: {}, machine: Gun.state(), ack: msg['@'], cat: at, stop: {}};
-					if(!Gun.graph.is(msg.put, null, verify, ctx)){ ctx.err = "Error: Invalid graph!"; }
-					if(ctx.err){ return at.on('in', {'@': msg['#'], err: Gun.log(ctx.err) }) }
-					obj_map(ctx.put, merge, ctx);
-					if(!ctx.async){ obj_map(ctx.map, map, ctx); }
-					if(u !== ctx.defer){
-						setTimeout(function(){
-							Gun.on.put(msg, gun);
-						}, ctx.defer - ctx.machine);
-					}
-					if(!ctx.diff){ return }
-					at.on('put', obj_to(msg, {put: ctx.diff}));
-				};
-				function verify(val, key, node, soul){ var ctx = this;
-					var state = Gun.state.is(node, key);
-					if(!state){ return ctx.err = "Error: No state on '"+key+"' in node '"+soul+"'!" }
-					var vertex = ctx.graph[soul] || empty, was = Gun.state.is(vertex, key, true), known = vertex[key];
-					var HAM = Gun.HAM(ctx.machine, state, was, val, known);
-					if(!HAM.incoming){
-						if(HAM.defer){ // pick the lowest
-							ctx.defer = (state < (ctx.defer || Infinity))? state : ctx.defer;
-						}
-						return;
-					}
-					ctx.put[soul] = Gun.state.to(node, key, ctx.put[soul]);
-					(ctx.diff || (ctx.diff = {}))[soul] = Gun.state.to(node, key, ctx.diff[soul]);
-					ctx.souls[soul] = true;
-				}
-				function merge(node, soul){
-					var ctx = this, cat = ctx.$._, at = (cat.next || empty)[soul];
-					if(!at){
-						if(!(cat.opt||empty).super){
-							ctx.souls[soul] = false;
-							return; 
-						}
-						at = (ctx.$.get(soul)._);
-					}
-					var msg = ctx.map[soul] = {
-						put: node,
-						get: soul,
-						$: at.$
-					}, as = {ctx: ctx, msg: msg};
-					ctx.async = !!cat.tag.node;
-					if(ctx.ack){ msg['@'] = ctx.ack; }
-					obj_map(node, each, as);
-					if(!ctx.async){ return }
-					if(!ctx.and){
-						// If it is async, we only need to setup one listener per context (ctx)
-						cat.on('node', function(m){
-							this.to.next(m); // make sure to call other context's listeners.
-							if(m !== ctx.map[m.get]){ return } // filter out events not from this context!
-							ctx.souls[m.get] = false; // set our many-async flag
-							obj_map(m.put, patch, m); // merge into view
-							if(obj_map(ctx.souls, function(v){ if(v){ return v } })){ return } // if flag still outstanding, keep waiting.
-							if(ctx.c){ return } ctx.c = 1; // failsafe for only being called once per context.
-							this.off();
-							obj_map(ctx.map, map, ctx); // all done, trigger chains.
-						});
-					}
-					ctx.and = true;
-					cat.on('node', msg); // each node on the current context's graph needs to be emitted though.
-				}
-				function each(val, key){
-					var ctx = this.ctx, graph = ctx.graph, msg = this.msg, soul = msg.get, node = msg.put, at = (msg.$._);
-					graph[soul] = Gun.state.to(node, key, graph[soul]);
-					if(ctx.async){ return }
-					at.put = Gun.state.to(node, key, at.put);
-				}
-				function patch(val, key){
-					var msg = this, node = msg.put, at = (msg.$._);
-					at.put = Gun.state.to(node, key, at.put);
-				}
-				function map(msg, soul){
-					if(!msg.$){ return }
-					this.cat.stop = this.stop; // temporary fix till a better solution?
-					(msg.$._).on('in', msg);
-					this.cat.stop = null; // temporary fix till a better solution?
-				}
-
-				Gun.on.get = function(msg, gun){
-					var root = gun._, get = msg.get, soul = get[_soul], node = root.graph[soul], has = get[_has], tmp;
-					var next = root.next || (root.next = {}), at = next[soul];
-					if(obj_has(soul, '*')){ // TEMPORARY HACK FOR MARTTI, TESTING
-						var graph = {};
-						Gun.obj.map(root.graph, function(node, s){
-							if(Gun.text.match(s, soul)){
-								graph[s] = Gun.obj.copy(node);
-							}
-						});
-						if(!Gun.obj.empty(graph)){
-							root.on('in', {
-								'@': msg['#'],
-								how: '*',
-								put: graph,
-								$: gun
-							});
-						}
-					} // TEMPORARY HACK FOR MARTTI, TESTING
-					if(!node){ return root.on('get', msg) }
-					if(has){
-						if(!obj_has(node, has)){ return root.on('get', msg) }
-						node = Gun.state.to(node, has);
-						// If we have a key in-memory, do we really need to fetch?
-						// Maybe... in case the in-memory key we have is a local write
-						// we still need to trigger a pull/merge from peers.
-					} else {
-						node = Gun.obj.copy(node);
-					}
-					node = Gun.graph.node(node);
-					tmp = (at||empty).ack;
-					root.on('in', {
-						'@': msg['#'],
-						how: 'mem',
-						put: node,
-						$: gun
-					});
-					//if(0 < tmp){ return }
-					root.on('get', msg);
-				};
-			}());
-	(function(){
-				Gun.chain.opt = function(opt){
-					opt = opt || {};
-					var gun = this, at = gun._, tmp = opt.peers || opt;
-					if(!obj_is(opt)){ opt = {}; }
-					if(!obj_is(at.opt)){ at.opt = opt; }
-					if(text_is(tmp)){ tmp = [tmp]; }
-					if(list_is(tmp)){
-						tmp = obj_map(tmp, function(url, i, map){
-							map(url, {url: url});
-						});
-						if(!obj_is(at.opt.peers)){ at.opt.peers = {};}
-						at.opt.peers = obj_to(tmp, at.opt.peers);
-					}
-					at.opt.peers = at.opt.peers || {};
-					obj_to(opt, at.opt); // copies options on to `at.opt` only if not already taken.
-					Gun.on('opt', at);
-					at.opt.uuid = at.opt.uuid || function(){ return state_lex() + text_rand(12) };
-					return gun;
-				};
-			}());
-
-			var list_is = Gun.list.is;
-			var text = Gun.text, text_is = text.is, text_rand = text.random;
-			var obj = Gun.obj, obj_is = obj.is, obj_has = obj.has, obj_to = obj.to, obj_map = obj.map, obj_copy = obj.copy;
-			var state_lex = Gun.state.lex, _soul = Gun.val.rel._, _has = '.', node_ = Gun.node._, rel_is = Gun.val.link.is;
-			var empty = {}, u;
-
-			console.debug = function(i, s){ return (console.debug.i && i === console.debug.i && console.debug.i++) && (console.log.apply(console, arguments) || s) };
-
-			Gun.log = function(){ return (!Gun.log.off && console.log.apply(console, arguments)), [].slice.call(arguments).join(' ') };
-			Gun.log.once = function(w,s,o){ return (o = Gun.log.once)[w] = o[w] || 0, o[w]++ || Gun.log(s) }
-
-			;		Gun.log.once("welcome", "Hello wonderful person! :) Thanks for using GUN, feel free to ask for help on https://gitter.im/amark/gun and ask StackOverflow questions tagged with 'gun'!");
-			
-			if(typeof window !== "undefined"){ (window.Gun = Gun).window = window; }
-			try{ if(typeof common !== "undefined"){ common.exports = Gun; } }catch(e){}
-			module.exports = Gun;
-
-			/*Gun.on('opt', function(ctx){ // FOR TESTING PURPOSES
-				this.to.next(ctx);
-				if(ctx.once){ return }
-				ctx.on('node', function(msg){
-					var to = this.to;
-					//Gun.node.is(msg.put, function(v,k){ msg.put[k] = v + v });
-					setTimeout(function(){
-						to.next(msg);
-					},1);
-				});
-			});*/
-		})(USE, './root');
-	USE(function(module){
-			var Gun = USE('./root');
-			Gun.chain.back = function(n, opt){ var tmp;
-				n = n || 1;
-				if(-1 === n || Infinity === n){
-					return this._.root.$;
-				} else
-				if(1 === n){
-					return (this._.back || this._).$;
-				}
-				var gun = this, at = gun._;
-				if(typeof n === 'string'){
-					n = n.split('.');
-				}
-				if(n instanceof Array){
-					var i = 0, l = n.length, tmp = at;
-					for(i; i < l; i++){
-						tmp = (tmp||empty)[n[i]];
-					}
-					if(u !== tmp){
-						return opt? gun : tmp;
-					} else
-					if((tmp = at.back)){
-						return tmp.$.back(n, opt);
-					}
-					return;
-				}
-				if(n instanceof Function){
-					var yes, tmp = {back: at};
-					while((tmp = tmp.back)
-					&& u === (yes = n(tmp, opt))){}
-					return yes;
-				}
-				if(Gun.num.is(n)){
-					return (at.back || at).$.back(n - 1);
-				}
-				return this;
-			};
-			var empty = {}, u;
-		})(USE, './back');
-	USE(function(module){
-			// WARNING: GUN is very simple, but the JavaScript chaining API around GUN
-			// is complicated and was extremely hard to build. If you port GUN to another
-			// language, consider implementing an easier API to build.
-			var Gun = USE('./root');
-			Gun.chain.chain = function(sub){
-				var gun = this, at = gun._, chain = new (sub || gun).constructor(gun), cat = chain._, root;
-				cat.root = root = at.root;
-				cat.id = ++root.once;
-				cat.back = gun._;
-				cat.on = Gun.on;
-				cat.on('in', input, cat); // For 'in' if I add my own listeners to each then I MUST do it before in gets called. If I listen globally for all incoming data instead though, regardless of individual listeners, I can transform the data there and then as well.
-				cat.on('out', output, cat); // However for output, there isn't really the global option. I must listen by adding my own listener individually BEFORE this one is ever called.
-				return chain;
-			};
-
-			function output(msg){
-				var put, get, at = this.as, back = at.back, root = at.root, tmp;
-				if(!msg.I){ msg.I = at.$; }
-				if(!msg.$){ msg.$ = at.$; }
-				this.to.next(msg);
-				if(get = msg.get){
-					/*if(u !== at.put){
-						at.on('in', at);
-						return;
-					}*/
-					if(get['#'] || at.soul){
-						get['#'] = get['#'] || at.soul;
-						msg['#'] || (msg['#'] = text_rand(9));
-						back = (root.$.get(get['#'])._);
-						if(!(get = get['.'])){
-							tmp = back.ack;
-							if(!tmp){ back.ack = -1; }
-							if(obj_has(back, 'put')){
-								back.on('in', back);
-							}
-							if(tmp){ return }
-							msg.$ = back.$;
-						} else
-						if(obj_has(back.put, get)){
-							put = (back.$.get(get)._);
-							if(!(tmp = put.ack)){ put.ack = -1; }
-							back.on('in', {
-								$: back.$,
-								put: Gun.state.to(back.put, get),
-								get: back.get
-							});
-							if(tmp){ return }
-						}
-						root.ask(ack, msg);
-						return root.on('in', msg);
-					}
-					if(root.now){ root.now[at.id] = root.now[at.id] || true; at.pass = {}; }
-					if(get['.']){
-						if(at.get){
-							msg = {get: {'.': at.get}, $: at.$};
-							//if(back.ask || (back.ask = {})[at.get]){ return }
-							(back.ask || (back.ask = {}));
-							back.ask[at.get] = msg.$._; // TODO: PERFORMANCE? More elegant way?
-							return back.on('out', msg);
-						}
-						msg = {get: {}, $: at.$};
-						return back.on('out', msg);
-					}
-					at.ack = at.ack || -1;
-					if(at.get){
-						msg.$ = at.$;
-						get['.'] = at.get;
-						(back.ask || (back.ask = {}))[at.get] = msg.$._; // TODO: PERFORMANCE? More elegant way?
-						return back.on('out', msg);
-					}
-				}
-				return back.on('out', msg);
-			}
-
-			function input(msg){
-				var eve = this, cat = eve.as, root = cat.root, gun = msg.$, at = (gun||empty)._ || empty, change = msg.put, rel, tmp;
-				if(cat.get && msg.get !== cat.get){
-					msg = obj_to(msg, {get: cat.get});
-				}
-				if(cat.has && at !== cat){
-					msg = obj_to(msg, {$: cat.$});
-					if(at.ack){
-						cat.ack = at.ack;
-						//cat.ack = cat.ack || at.ack;
-					}
-				}
-				if(u === change){
-					tmp = at.put;
-					eve.to.next(msg);
-					if(cat.soul){ return } // TODO: BUG, I believee the fresh input refactor caught an edge case that a `gun.get('soul').get('key')` that points to a soul that doesn't exist will not trigger val/get etc.
-					if(u === tmp && u !== at.put){ return }
-					echo(cat, msg, eve);
-					if(cat.has){
-						not(cat, msg);
-					}
-					obj_del(at.echo, cat.id);
-					obj_del(cat.map, at.id);
-					return;
-				}
-				if(cat.soul){
-					eve.to.next(msg);
-					echo(cat, msg, eve);
-					if(cat.next){ obj_map(change, map, {msg: msg, cat: cat}); }
-					return;
-				}
-				if(!(rel = Gun.val.link.is(change))){
-					if(Gun.val.is(change)){
-						if(cat.has || cat.soul){
-							not(cat, msg);
-						} else
-						if(at.has || at.soul){
-							(at.echo || (at.echo = {}))[cat.id] = at.echo[at.id] || cat;
-							(cat.map || (cat.map = {}))[at.id] = cat.map[at.id] || {at: at};
-							//if(u === at.put){ return } // Not necessary but improves performance. If we have it but at does not, that means we got things out of order and at will get it. Once at gets it, it will tell us again.
-						}
-						eve.to.next(msg);
-						echo(cat, msg, eve);
-						return;
-					}
-					if(cat.has && at !== cat && obj_has(at, 'put')){
-						cat.put = at.put;
-					}				if((rel = Gun.node.soul(change)) && at.has){
-						at.put = (cat.root.$.get(rel)._).put;
-					}
-					tmp = (root.stop || {})[at.id];
-					//if(tmp && tmp[cat.id]){ } else {
-						eve.to.next(msg);
-					//}
-					relate(cat, msg, at, rel);
-					echo(cat, msg, eve);
-					if(cat.next){ obj_map(change, map, {msg: msg, cat: cat}); }
-					return;
-				}
-				var was = root.stop;
-				tmp = root.stop || {};
-				tmp = tmp[at.id] || (tmp[at.id] = {});
-				//if(tmp[cat.id]){ return }
-				tmp.is = tmp.is || at.put;
-				tmp[cat.id] = at.put || true;
-				//if(root.stop){ 
-					eve.to.next(msg);
-				//}
-				relate(cat, msg, at, rel);
-				echo(cat, msg, eve);
-			}
-
-			function relate(at, msg, from, rel){
-				if(!rel || node_ === at.get){ return }
-				var tmp = (at.root.$.get(rel)._);
-				if(at.has){
-					from = tmp;
-				} else 
-				if(from.has){
-					relate(from, msg, from, rel);
-				}
-				if(from === at){ return }
-				if(!from.$){ from = {}; }
-				(from.echo || (from.echo = {}))[at.id] = from.echo[at.id] || at;
-				if(at.has && !(at.map||empty)[from.id]){ // if we haven't seen this before.
-					not(at, msg);
-				}
-				tmp = from.id? ((at.map || (at.map = {}))[from.id] = at.map[from.id] || {at: from}) : {};
-				if(rel === tmp.link){
-					if(!(tmp.pass || at.pass)){
-						return;
-					}
-				}
-				if(at.pass){
-					Gun.obj.map(at.map, function(tmp){ tmp.pass = true; });
-					obj_del(at, 'pass');
-				}
-				if(tmp.pass){ obj_del(tmp, 'pass'); }
-				if(at.has){ at.link = rel; }
-				ask(at, tmp.link = rel);
-			}
-			function echo(at, msg, ev){
-				if(!at.echo){ return } // || node_ === at.get ?
-				//if(at.has){ msg = obj_to(msg, {event: ev}) }
-				obj_map(at.echo, reverb, msg);
-			}
-			function reverb(to){
-				if(!to || !to.on){ return }
-				to.on('in', this);
-			}
-			function map(data, key){ // Map over only the changes on every update.
-				var cat = this.cat, next = cat.next || empty, via = this.msg, chain, at, tmp;
-				if(node_ === key && !next[key]){ return }
-				if(!(at = next[key])){
-					return;
-				}
-				//if(data && data[_soul] && (tmp = Gun.val.rel.is(data)) && (tmp = (cat.root.$.get(tmp)._)) && obj_has(tmp, 'put')){
-				//	data = tmp.put;
-				//}
-				if(at.has){
-					//if(!(data && data[_soul] && Gun.val.rel.is(data) === Gun.node.soul(at.put))){
-					if(u === at.put || !Gun.val.link.is(data)){
-						at.put = data;
-					}
-					chain = at.$;
-				} else
-				if(tmp = via.$){
-					tmp = (chain = via.$.get(key))._;
-					if(u === tmp.put || !Gun.val.link.is(data)){
-						tmp.put = data; 
-					}
-				}
-				at.on('in', {
-					put: data,
-					get: key,
-					$: chain,
-					via: via
-				});
-			}
-			function not(at, msg){
-				if(!(at.has || at.soul)){ return }
-				var tmp = at.map, root = at.root;
-				at.map = null;
-				if(at.has){ at.link = null; }
-				//if(!root.now || !root.now[at.id]){
-				if(!at.pass){
-					if((!msg['@']) && null === tmp){ return }
-					//obj_del(at, 'pass');
-				}
-				if(u === tmp && Gun.val.link.is(at.put)){ return } // This prevents the very first call of a thing from triggering a "clean up" call. // TODO: link.is(at.put) || !val.is(at.put) ?
-				obj_map(tmp, function(proxy){
-					if(!(proxy = proxy.at)){ return }
-					obj_del(proxy.echo, at.id);
-				});
-				tmp = at.put;
-				obj_map(at.next, function(neat, key){
-					if(u === tmp && u !== at.put){ return true }
-					neat.put = u;
-					if(neat.ack){
-						neat.ack = -1;
-					}
-					neat.on('in', {
-						get: key,
-						$: neat.$,
-						put: u
-					});
-				});
-			}
-			function ask(at, soul){
-				var tmp = (at.root.$.get(soul)._);
-				if(at.ack){
-					tmp.on('out', {get: {'#': soul}});
-					if(!at.ask){ return } // TODO: PERFORMANCE? More elegant way?
-				}
-				tmp = at.ask; Gun.obj.del(at, 'ask');
-				obj_map(tmp || at.next, function(neat, key){
-					neat.on('out', {get: {'#': soul, '.': key}});
-				});
-				Gun.obj.del(at, 'ask'); // TODO: PERFORMANCE? More elegant way?
-			}
-			function ack(msg, ev){
-				var as = this.as, get = as.get || empty, at = as.$._, tmp = (msg.put||empty)[get['#']];
-				if(at.ack){ at.ack = (at.ack + 1) || 1; }
-				if(!msg.put || (get['.'] && !obj_has(tmp, at.get))){
-					if(at.put !== u){ return }
-					at.on('in', {
-						get: at.get,
-						put: at.put = u,
-						$: at.$,
-						'@': msg['@']
-					});
-					return;
-				}
-				if(node_ == get['.']){ // is this a security concern?
-					at.on('in', {get: at.get, put: Gun.val.link.ify(get['#']), $: at.$, '@': msg['@']});
-					return;
-				}
-				msg.$ = at.root.$;
-				Gun.on.put(msg, at.root.$);
-			}
-			var empty = {}, u;
-			var obj = Gun.obj, obj_has = obj.has, obj_put = obj.put, obj_del = obj.del, obj_to = obj.to, obj_map = obj.map;
-			var text_rand = Gun.text.random;
-			var _soul = Gun.val.rel._, node_ = Gun.node._;
-		})(USE, './chain');
-	USE(function(module){
-			var Gun = USE('./root');
-			Gun.chain.get = function(key, cb, as){
-				var gun, tmp;
-				if(typeof key === 'string'){
-					var back = this, cat = back._;
-					var next = cat.next || empty;
-					if(!(gun = next[key])){
-						gun = cache(key, back);
-					}
-					gun = gun.$;
-				} else
-				if(key instanceof Function){
-					if(true === cb){ return soul(this, key, cb, as) }
-					gun = this;
-					var at = gun._, root = at.root, tmp = root.now, ev;
-					as = cb || {};
-					as.at = at;
-					as.use = key;
-					as.out = as.out || {};
-					as.out.get = as.out.get || {};
-					(ev = at.on('in', use, as)).rid = rid;
-					(root.now = {$:1})[as.now = at.id] = ev;
-					var mum = root.mum; root.mum = {};
-					at.on('out', as.out);
-					root.mum = mum;
-					root.now = tmp;
-					return gun;
-				} else
-				if(num_is(key)){
-					return this.get(''+key, cb, as);
-				} else
-				if(tmp = rel.is(key)){
-					return this.get(tmp, cb, as);
-				} else {
-					(as = this.chain())._.err = {err: Gun.log('Invalid get request!', key)}; // CLEAN UP
-					if(cb){ cb.call(as, as._.err); }
-					return as;
-				}
-				if(tmp = cat.stun){ // TODO: Refactor?
-					gun._.stun = gun._.stun || tmp;
-				}
-				if(cb && cb instanceof Function){
-					gun.get(cb, as);
-				}
-				return gun;
-			};
-			function cache(key, back){
-				var cat = back._, next = cat.next, gun = back.chain(), at = gun._;
-				if(!next){ next = cat.next = {}; }
-				next[at.get = key] = at;
-				if(back === cat.root.$){
-					at.soul = key;
-				} else
-				if(cat.soul || cat.has){
-					at.has = key;
-					//if(obj_has(cat.put, key)){
-						//at.put = cat.put[key];
-					//}
-				}
-				return at;
-			}
-			function soul(gun, cb, opt, as){
-				var cat = gun._, tmp;
-				if(tmp = cat.soul){ return cb(tmp, as, cat), gun }
-				if(tmp = cat.link){ return cb(tmp, as, cat), gun }
-				gun.get(function(msg, ev){
-					ev.rid(msg);
-					var at = ((at = msg.$) && at._) || {};
-					tmp = at.link || at.soul || rel.is(msg.put) || node_soul(msg.put);
-					cb(tmp, as, msg, ev);
-				}, {out: {get: {'.':true}}});
-				return gun;
-			}
-			function use(msg){
-				var eve = this, as = eve.as, cat = as.at, root = cat.root, gun = msg.$, at = (gun||{})._ || {}, data = msg.put || at.put, tmp;
-				if((tmp = root.now) && eve !== tmp[as.now]){ return eve.to.next(msg) }
-				//console.log("USE:", cat.id, cat.soul, cat.has, cat.get, msg, root.mum);
-				//if(at.async && msg.root){ return }
-				//if(at.async === 1 && cat.async !== true){ return }
-				//if(root.stop && root.stop[at.id]){ return } root.stop && (root.stop[at.id] = true);
-				//if(!at.async && !cat.async && at.put && msg.put === at.put){ return }
-				//else if(!cat.async && msg.put !== at.put && root.stop && root.stop[at.id]){ return } root.stop && (root.stop[at.id] = true);
-
-
-				//root.stop && (root.stop.ID = root.stop.ID || Gun.text.random(2));
-				//if((tmp = root.stop) && (tmp = tmp[at.id] || (tmp[at.id] = {})) && tmp[cat.id]){ return } tmp && (tmp[cat.id] = true);
-				if(eve.seen && at.id && eve.seen[at.id]){ return eve.to.next(msg) }	
-				//if((tmp = root.stop)){ if(tmp[at.id]){ return } tmp[at.id] = msg.root; } // temporary fix till a better solution?
-				if((tmp = data) && tmp[rel._] && (tmp = rel.is(tmp))){
-					tmp = ((msg.$$ = at.root.gun.get(tmp))._);
-					if(u !== tmp.put){
-						msg = obj_to(msg, {put: data = tmp.put});
-					}
-				}
-				if((tmp = root.mum) && at.id){
-					if(tmp[at.id]){ return }
-					if(u !== data && !rel.is(data)){ tmp[at.id] = true; }
-				}
-				as.use(msg, eve);
-				if(eve.stun){
-					eve.stun = null;
-					return;
-				}
-				eve.to.next(msg);
-			}
-			function rid(at){
-				var cat = this.on;
-				if(!at || cat.soul || cat.has){ return this.off() }
-				if(!(at = (at = (at = at.$ || at)._ || at).id)){ return }
-				var map = cat.map, tmp, seen;
-				//if(!map || !(tmp = map[at]) || !(tmp = tmp.at)){ return }
-				if(tmp = (seen = this.seen || (this.seen = {}))[at]){ return true }
-				seen[at] = true;
-				return;
-				//tmp.echo[cat.id] = {}; // TODO: Warning: This unsubscribes ALL of this chain's listeners from this link, not just the one callback event.
-				//obj.del(map, at); // TODO: Warning: This unsubscribes ALL of this chain's listeners from this link, not just the one callback event.
-				return;
-			}
-			var obj = Gun.obj, obj_has = obj.has, obj_to = Gun.obj.to;
-			var num_is = Gun.num.is;
-			var rel = Gun.val.link, node_soul = Gun.node.soul, node_ = Gun.node._;
-			var empty = {}, u;
-		})(USE, './get');
-	USE(function(module){
-			var Gun = USE('./root');
-			Gun.chain.put = function(data, cb, as){
-				// #soul.has=value>state
-				// ~who#where.where=what>when@was
-				// TODO: BUG! Put probably cannot handle plural chains!
-				var gun = this, at = (gun._), root = at.root.$, tmp;
-				as = as || {};
-				as.data = data;
-				as.via = as.$ = as.via || as.$ || gun;
-				if(typeof cb === 'string'){
-					as.soul = cb;
-				} else {
-					as.ack = as.ack || cb;
-				}
-				if(at.soul){
-					as.soul = at.soul;
-				}
-				if(as.soul || root === gun){
-					if(!obj_is(as.data)){
-						(as.ack||noop).call(as, as.out = {err: Gun.log("Data saved to the root level of the graph must be a node (an object), not a", (typeof as.data), 'of "' + as.data + '"!')});
-						if(as.res){ as.res(); }
-						return gun;
-					}
-					as.soul = as.soul || (as.not = Gun.node.soul(as.data) || (as.via.back('opt.uuid') || Gun.text.random)());
-					if(!as.soul){ // polyfill async uuid for SEA
-						as.via.back('opt.uuid')(function(err, soul){ // TODO: improve perf without anonymous callback
-							if(err){ return Gun.log(err) } // TODO: Handle error!
-							(as.ref||as.$).put(as.data, as.soul = soul, as);
-						});
-						return gun;
-					}
-					as.$ = gun = root.get(as.soul);
-					as.ref = as.$;
-					ify(as);
-					return gun;
-				}
-				if(Gun.is(data)){
-					data.get(function(soul, o, msg){
-						if(!soul && Gun.val.is(msg.put)){
-							return Gun.log("The reference you are saving is a", typeof msg.put, '"'+ msg.put +'", not a node (object)!');
-						}
-						gun.put(Gun.val.rel.ify(soul), cb, as);
-					}, true);
-					return gun;
-				}
-				as.ref = as.ref || (root._ === (tmp = at.back))? gun : tmp.$;
-				if(as.ref._.soul && Gun.val.is(as.data) && at.get){
-					as.data = obj_put({}, at.get, as.data);
-					as.ref.put(as.data, as.soul, as);
-					return gun;
-				}
-				as.ref.get(any, true, {as: as});
-				if(!as.out){
-					// TODO: Perf idea! Make a global lock, that blocks everything while it is on, but if it is on the lock it does the expensive lookup to see if it is a dependent write or not and if not then it proceeds full speed. Meh? For write heavy async apps that would be terrible.
-					as.res = as.res || stun; // Gun.on.stun(as.ref); // TODO: BUG! Deal with locking?
-					as.$._.stun = as.ref._.stun;
-				}
-				return gun;
-			};
-
-			function ify(as){
-				as.batch = batch;
-				var opt = as.opt||{}, env = as.env = Gun.state.map(map, opt.state);
-				env.soul = as.soul;
-				as.graph = Gun.graph.ify(as.data, env, as);
-				if(env.err){
-					(as.ack||noop).call(as, as.out = {err: Gun.log(env.err)});
-					if(as.res){ as.res(); }
-					return;
-				}
-				as.batch();
-			}
-
-			function stun(cb){
-				if(cb){ cb(); }
-				return;
-				var as = this;
-				if(!as.ref){ return }
-				if(cb){
-					as.after = as.ref._.tag;
-					as.now = as.ref._.tag = {};
-					cb();
-					return;
-				}
-				if(as.after){
-					as.ref._.tag = as.after;
-				}
-			}
-
-			function batch(){ var as = this;
-				if(!as.graph || obj_map(as.stun, no)){ return }
-				as.res = as.res || function(cb){ if(cb){ cb(); } };
-				as.res(function(){
-					var cat = (as.$.back(-1)._), ask = cat.ask(function(ack){
-						cat.root.on('ack', ack);
-						if(ack.err){ Gun.log(ack); }
-						if(!ack.lack){ this.off(); } // One response is good enough for us currently. Later we may want to adjust this.
-						if(!as.ack){ return }
-						as.ack(ack, this);
-					}, as.opt);
-					// NOW is a hack to get synchronous replies to correctly call.
-					// and STOP is a hack to get async behavior to correctly call.
-					// neither of these are ideal, need to be fixed without hacks,
-					// but for now, this works for current tests. :/
-					var tmp = cat.root.now; obj.del(cat.root, 'now');
-					var mum = cat.root.mum; cat.root.mum = {};
-					(as.ref._).on('out', {
-						$: as.ref, put: as.out = as.env.graph, opt: as.opt, '#': ask
-					});
-					cat.root.mum = mum? obj.to(mum, cat.root.mum) : mum;
-					cat.root.now = tmp;
-				}, as);
-				if(as.res){ as.res(); }
-			} function no(v,k){ if(v){ return true } }
-
-			function map(v,k,n, at){ var as = this;
-				var is = Gun.is(v);
-				if(k || !at.path.length){ return }
-				(as.res||iife)(function(){
-					var path = at.path, ref = as.ref, opt = as.opt;
-					var i = 0, l = path.length;
-					for(i; i < l; i++){
-						ref = ref.get(path[i]);
-					}
-					if(is){ ref = v; }
-					var id = (ref._).dub;
-					if(id || (id = Gun.node.soul(at.obj))){
-						ref.back(-1).get(id);
-						at.soul(id);
-						return;
-					}
-					(as.stun = as.stun || {})[path] = true;
-					ref.get(soul, true, {as: {at: at, as: as, p:path}});
-				}, {as: as, at: at});
-				//if(is){ return {} }
-			}
-
-			function soul(id, as, msg, eve){
-				var as = as.as, cat = as.at; as = as.as;
-				var at = ((msg || {}).$ || {})._ || {};
-				id = at.dub = at.dub || id || Gun.node.soul(cat.obj) || Gun.node.soul(msg.put || at.put) || Gun.val.rel.is(msg.put || at.put) || (as.via.back('opt.uuid') || Gun.text.random)(); // TODO: BUG!? Do we really want the soul of the object given to us? Could that be dangerous?
-				if(eve){ eve.stun = true; }
-				if(!id){ // polyfill async uuid for SEA
-					at.via.back('opt.uuid')(function(err, id){ // TODO: improve perf without anonymous callback
-						if(err){ return Gun.log(err) } // TODO: Handle error.
-						solve(at, at.dub = at.dub || id, cat, as);
-					});
-					return;
-				}
-				solve(at, at.dub = id, cat, as);
-			}
-
-			function solve(at, id, cat, as){
-				at.$.back(-1).get(id);
-				cat.soul(id);
-				as.stun[cat.path] = false;
-				as.batch();
-			}
-
-			function any(soul, as, msg, eve){
-				as = as.as;
-				if(!msg.$ || !msg.$._){ return } // TODO: Handle
-				if(msg.err){ // TODO: Handle
-					console.log("Please report this as an issue! Put.any.err");
-					return;
-				}
-				var at = (msg.$._), data = at.put, opt = as.opt||{}, tmp;
-				if((tmp = as.ref) && tmp._.now){ return }
-				if(eve){ eve.stun = true; }
-				if(as.ref !== as.$){
-					tmp = (as.$._).get || at.get;
-					if(!tmp){ // TODO: Handle
-						console.log("Please report this as an issue! Put.no.get"); // TODO: BUG!??
-						return;
-					}
-					as.data = obj_put({}, tmp, as.data);
-					tmp = null;
-				}
-				if(u === data){
-					if(!at.get){ return } // TODO: Handle
-					if(!soul){
-						tmp = at.$.back(function(at){
-							if(at.link || at.soul){ return at.link || at.soul }
-							as.data = obj_put({}, at.get, as.data);
-						});
-					}
-					tmp = tmp || at.get;
-					at = (at.root.$.get(tmp)._);
-					as.soul = tmp;
-					data = as.data;
-				}
-				if(!as.not && !(as.soul = as.soul || soul)){
-					if(as.path && obj_is(as.data)){
-						as.soul = (opt.uuid || as.via.back('opt.uuid') || Gun.text.random)();
-					} else {
-						//as.data = obj_put({}, as.$._.get, as.data);
-						if(node_ == at.get){
-							as.soul = (at.put||empty)['#'] || at.dub;
-						}
-						as.soul = as.soul || at.soul || at.soul || (opt.uuid || as.via.back('opt.uuid') || Gun.text.random)();
-					}
-					if(!as.soul){ // polyfill async uuid for SEA
-						as.via.back('opt.uuid')(function(err, soul){ // TODO: improve perf without anonymous callback
-							if(err){ return Gun.log(err) } // Handle error.
-							as.ref.put(as.data, as.soul = soul, as);
-						});
-						return;
-					}
-				}
-				as.ref.put(as.data, as.soul, as);
-			}
-			var obj = Gun.obj, obj_is = obj.is, obj_put = obj.put, obj_map = obj.map;
-			var u, empty = {}, noop = function(){}, iife = function(fn,as){fn.call(as||empty);};
-			var node_ = Gun.node._;
-		})(USE, './put');
-	USE(function(module){
-			var Gun = USE('./root');
-			USE('./chain');
-			USE('./back');
-			USE('./put');
-			USE('./get');
-			module.exports = Gun;
-		})(USE, './index');
-	USE(function(module){
-			var Gun = USE('./index');
-			Gun.chain.on = function(tag, arg, eas, as){
-				var gun = this, at = gun._, act;
-				if(typeof tag === 'string'){
-					if(!arg){ return at.on(tag) }
-					act = at.on(tag, arg, eas || at, as);
-					if(eas && eas.$){
-						(eas.subs || (eas.subs = [])).push(act);
-					}
-					return gun;
-				}
-				var opt = arg;
-				opt = (true === opt)? {change: true} : opt || {};
-				opt.at = at;
-				opt.ok = tag;
-				//opt.last = {};
-				gun.get(ok, opt); // TODO: PERF! Event listener leak!!!?
-				return gun;
-			};
-
-			function ok(msg, ev){ var opt = this;
-				var gun = msg.$, at = (gun||{})._ || {}, data = at.put || msg.put, cat = opt.at, tmp;
-				if(u === data){
-					return;
-				}
-				if(tmp = msg.$$){
-					tmp = (msg.$$._);
-					if(u === tmp.put){
-						return;
-					}
-					data = tmp.put;
-				}
-				if(opt.change){ // TODO: BUG? Move above the undef checks?
-					data = msg.put;
-				}
-				// DEDUPLICATE // TODO: NEEDS WORK! BAD PROTOTYPE
-				//if(tmp.put === data && tmp.get === id && !Gun.node.soul(data)){ return }
-				//tmp.put = data;
-				//tmp.get = id;
-				// DEDUPLICATE // TODO: NEEDS WORK! BAD PROTOTYPE
-				//at.last = data;
-				if(opt.as){
-					opt.ok.call(opt.as, msg, ev);
-				} else {
-					opt.ok.call(gun, data, msg.get, msg, ev);
-				}
-			}
-
-			Gun.chain.val = function(cb, opt){
-				Gun.log.once("onceval", "Future Breaking API Change: .val -> .once, apologies unexpected.");
-				return this.once(cb, opt);
-			};
-			Gun.chain.once = function(cb, opt){
-				var gun = this, at = gun._, data = at.put;
-				if(0 < at.ack && u !== data){
-					(cb || noop).call(gun, data, at.get);
-					return gun;
-				}
-				if(cb){
-					(opt = opt || {}).ok = cb;
-					opt.at = at;
-					opt.out = {'#': Gun.text.random(9)};
-					gun.get(val, {as: opt});
-					opt.async = true; //opt.async = at.stun? 1 : true;
-				} else {
-					Gun.log.once("valonce", "Chainable val is experimental, its behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");
-					var chain = gun.chain();
-					chain._.nix = gun.once(function(){
-						chain._.on('in', gun._);
-					});
-					return chain;
-				}
-				return gun;
-			};
-
-			function val(msg, eve, to){
-				var opt = this.as, cat = opt.at, gun = msg.$, at = gun._, data = at.put || msg.put, link, tmp;
-				if(tmp = msg.$$){
-					link = tmp = (msg.$$._);
-					if(u === tmp.put){
-						return;
-					}
-					data = tmp.put;
-				}
-				if((tmp = eve.wait) && (tmp = tmp[at.id])){ clearTimeout(tmp); }
-				if(!to && (u === data || at.soul || at.link || (link && !(0 < link.ack)))){
-					tmp = (eve.wait = {})[at.id] = setTimeout(function(){
-						val.call({as:opt}, msg, eve, tmp || 1);
-					}, opt.wait || 99);
-					return;
-				}
-				eve.rid(msg);
-				opt.ok.call(gun || opt.$, data, msg.get);
-			}
-
-			Gun.chain.off = function(){
-				// make off more aggressive. Warning, it might backfire!
-				var gun = this, at = gun._, tmp;
-				var cat = at.back;
-				if(!cat){ return }
-				if(tmp = cat.next){
-					if(tmp[at.get]){
-						obj_del(tmp, at.get);
-					}
-				}
-				if(tmp = cat.ask){
-					obj_del(tmp, at.get);
-				}
-				if(tmp = cat.put){
-					obj_del(tmp, at.get);
-				}
-				if(tmp = at.soul){
-					obj_del(cat.root.graph, tmp);
-				}
-				if(tmp = at.map){
-					obj_map(tmp, function(at){
-						if(at.link){
-							cat.root.$.get(at.link).off();
-						}
-					});
-				}
-				if(tmp = at.next){
-					obj_map(tmp, function(neat){
-						neat.$.off();
-					});
-				}
-				at.on('off', {});
-				return gun;
-			};
-			var obj = Gun.obj, obj_map = obj.map, obj_has = obj.has, obj_del = obj.del, obj_to = obj.to;
-			var rel = Gun.val.link;
-			var noop = function(){}, u;
-		})(USE, './on');
-	USE(function(module){
-			var Gun = USE('./index');
-			Gun.chain.map = function(cb, opt, t){
-				var gun = this, cat = gun._, chain;
-				if(!cb){
-					if(chain = cat.each){ return chain }
-					cat.each = chain = gun.chain();
-					chain._.nix = gun.back('nix');
-					gun.on('in', map, chain._);
-					return chain;
-				}
-				Gun.log.once("mapfn", "Map functions are experimental, their behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");
-				chain = gun.chain();
-				gun.map().on(function(data, key, at, ev){
-					var next = (cb||noop).call(this, data, key, at, ev);
-					if(u === next){ return }
-					if(data === next){ return chain._.on('in', at) }
-					if(Gun.is(next)){ return chain._.on('in', next._) }
-					chain._.on('in', {get: key, put: next});
-				});
-				return chain;
-			};
-			function map(msg){
-				if(!msg.put || Gun.val.is(msg.put)){ return this.to.next(msg) }
-				if(this.as.nix){ this.off(); } // TODO: Ugly hack!
-				obj_map(msg.put, each, {at: this.as, msg: msg});
-				this.to.next(msg);
-			}
-			function each(v,k){
-				if(n_ === k){ return }
-				var msg = this.msg, gun = msg.$, at = this.at, tmp = (gun.get(k)._);
-				(tmp.echo || (tmp.echo = {}))[at.id] = tmp.echo[at.id] || at;
-			}
-			var obj_map = Gun.obj.map, noop = function(){}, n_ = Gun.node._, u;
-		})(USE, './map');
-	USE(function(module){
-			var Gun = USE('./index');
-			Gun.chain.set = function(item, cb, opt){
-				var gun = this, soul;
-				cb = cb || function(){};
-				opt = opt || {}; opt.item = opt.item || item;
-				if(soul = Gun.node.soul(item)){ return gun.set(gun.back(-1).get(soul), cb, opt) }
-				if(!Gun.is(item)){
-					var id = gun.back('opt.uuid')();
-					if(id && Gun.obj.is(item)){
-						return gun.set(gun._.root.$.put(item, id), cb, opt);
-					}
-					return gun.get((Gun.state.lex() + Gun.text.random(7))).put(item, cb, opt);
-				}
-				item.get(function(soul, o, msg){
-					if(!soul){ return cb.call(gun, {err: Gun.log('Only a node can be linked! Not "' + msg.put + '"!')}) }
-					gun.put(Gun.obj.put({}, soul, Gun.val.link.ify(soul)), cb, opt);
-				},true);
-				return item;
-			};
-		})(USE, './set');
-	USE(function(module){
-			if(typeof Gun === 'undefined'){ return } // TODO: localStorage is Browser only. But it would be nice if it could somehow plugin into NodeJS compatible localStorage APIs?
-
-			var root, noop = function(){};
-			if(typeof window !== 'undefined'){ root = window; }
-			var store = root.localStorage || {setItem: noop, removeItem: noop, getItem: noop};
-
-			/*
-				NOTE: Both `lib/file.js` and `lib/memdisk.js` are based on this design!
-				If you update anything here, consider updating the other adapters as well.
-			*/
-
-			Gun.on('create', function(root){
-				// This code is used to queue offline writes for resync.
-				// See the next 'opt' code below for actual saving of data.
-				var ev = this.to, opt = root.opt;
-				if(root.once){ return ev.next(root) }
-				//if(false === opt.localStorage){ return ev.next(root) } // we want offline resynce queue regardless!
-				opt.prefix = opt.file || 'gun/';
-				var gap = Gun.obj.ify(store.getItem('gap/'+opt.prefix)) || {};
-				var empty = Gun.obj.empty, id, to;
-				// add re-sync command.
-				if(!empty(gap)){
-					var disk = Gun.obj.ify(store.getItem(opt.prefix)) || {}, send = {};
-					Gun.obj.map(gap, function(node, soul){
-						Gun.obj.map(node, function(val, key){
-							send[soul] = Gun.state.to(disk[soul], key, send[soul]);
-						});
-					});
-					setTimeout(function(){
-						root.on('out', {put: send, '#': root.ask(ack), I: root.$});
-					},1);
-				}
-
-				root.on('out', function(msg){
-					if(msg.lS){ return }
-					if(msg.I && msg.put && !msg['@'] && !empty(opt.peers)){
-						id = msg['#'];
-						Gun.graph.is(msg.put, null, map);
-						if(!to){ to = setTimeout(flush, opt.wait || 1); }
-					}
-					this.to.next(msg);
-				});
-				root.on('ack', ack);
-
-				function ack(ack){ // TODO: This is experimental, not sure if we should keep this type of event hook.
-					if(ack.err || !ack.ok){ return }
-					var id = ack['@'];
-					setTimeout(function(){
-						Gun.obj.map(gap, function(node, soul){
-							Gun.obj.map(node, function(val, key){
-								if(id !== val){ return }
-								delete node[key];
-							});
-							if(empty(node)){
-								delete gap[soul];
-							}
-						});
-						flush();
-					}, opt.wait || 1);
-				}			ev.next(root);
-
-				var map = function(val, key, node, soul){
-					(gap[soul] || (gap[soul] = {}))[key] = id;
-				};
-				var flush = function(){
-					clearTimeout(to);
-					to = false;
-					try{store.setItem('gap/'+opt.prefix, JSON.stringify(gap));
-					}catch(e){ Gun.log(err = e || "localStorage failure"); }
-				};
-			});
-
-			Gun.on('create', function(root){
-				this.to.next(root);
-				var opt = root.opt;
-				if(root.once){ return }
-				if(false === opt.localStorage){ return }
-				opt.prefix = opt.file || 'gun/';
-				var graph = root.graph, acks = {}, count = 0, to;
-				var disk = Gun.obj.ify(store.getItem(opt.prefix)) || {};
-				root.on('localStorage', disk); // NON-STANDARD EVENT!
-				
-				root.on('put', function(at){
-					this.to.next(at);
-					Gun.graph.is(at.put, null, map);
-					if(!at['@']){ acks[at['#']] = true; } // only ack non-acks.
-					count += 1;
-					if(count >= (opt.batch || 1000)){
-						return flush();
-					}
-					if(to){ return }
-					to = setTimeout(flush, opt.wait || 1);
-				});
-
-				root.on('get', function(msg){
-					this.to.next(msg);
-					var lex = msg.get, soul, data, u;
-					function to(){
-					if(!lex || !(soul = lex['#'])){ return }
-					//if(0 >= msg.cap){ return }
-					var has = lex['.'];
-					data = disk[soul] || u;
-					if(data && has){
-						data = Gun.state.to(data, has);
-					}
-					if(!data && !Gun.obj.empty(opt.peers)){ // if data not found, don't ack if there are peers.
-						return; // Hmm, what if we have peers but we are disconnected?
-					}
-					//console.log("lS get", lex, data);
-					root.on('in', {'@': msg['#'], put: Gun.graph.node(data), how: 'lS', lS: msg.I});
-					}				Gun.debug? setTimeout(to,1) : to();
-				});
-
-				var map = function(val, key, node, soul){
-					disk[soul] = Gun.state.to(node, key, disk[soul]);
-				};
-
-				var flush = function(data){
-					var err;
-					count = 0;
-					clearTimeout(to);
-					to = false;
-					var ack = acks;
-					acks = {};
-					if(data){ disk = data; }
-					try{store.setItem(opt.prefix, JSON.stringify(disk));
-					}catch(e){ 
-						Gun.log(err = e || "localStorage failure");
-						root.on('localStorage:error', {err: err, file: opt.prefix, flush: disk, retry: flush});
-					}
-					if(!err && !Gun.obj.empty(opt.peers)){ return } // only ack if there are no peers.
-					Gun.obj.map(ack, function(yes, id){
-						root.on('in', {
-							'@': id,
-							err: err,
-							ok: 0 // localStorage isn't reliable, so make its `ok` code be a low number.
-						});
-					});
-				};
-			});
-		})(USE, './adapters/localStorage');
-	USE(function(module){
-			var Type = USE('../type');
-
-			function Mesh(ctx){
-				var mesh = function(){};
-				var opt = ctx.opt;
-
-				mesh.out = function(msg){ var tmp;
-					if(this.to){ this.to.next(msg); }
-					//if(mesh.last != msg['#']){ return mesh.last = msg['#'], this.to.next(msg) }
-					if((tmp = msg['@'])
-					&& (tmp = ctx.dup.s[tmp])
-					&& (tmp = tmp.it)
-					&& tmp.mesh){
-						mesh.say(msg, tmp.mesh.via, 1);
-						tmp['##'] = msg['##'];
-						return;
-					}
-					// add hook for AXE?
-					mesh.say(msg);
-				};
-
-				ctx.on('create', function(root){
-					root.opt.pid = root.opt.pid || Type.text.random(9);
-					this.to.next(root);
-					ctx.on('out', mesh.out);
-				});
-
-				mesh.hear = function(raw, peer){
-					if(!raw){ return }
-					var dup = ctx.dup, id, hash, msg, tmp = raw[0];
-					try{msg = JSON.parse(raw);
-					}catch(e){console.log('DAM JSON parse error', e);}
-					if('{' === tmp){
-						if(!msg){ return }
-						if(dup.check(id = msg['#'])){ return }
-						dup.track(id, true).it = msg; // GUN core also dedups, so `true` is needed.
-						if((tmp = msg['@']) && msg.put){
-							hash = msg['##'] || (msg['##'] = mesh.hash(msg));
-							if((tmp = tmp + hash) != id){
-								if(dup.check(tmp)){ return }
-								(tmp = dup.s)[hash] = tmp[id];
-							}
-						}
-						(msg.mesh = function(){}).via = peer;
-						if((tmp = msg['><'])){
-							msg.mesh.to = Type.obj.map(tmp.split(','), function(k,i,m){m(k,true);});
-						}
-						if(msg.dam){
-							if(tmp = mesh.hear[msg.dam]){
-								tmp(msg, peer, ctx);
-							}
-							return;
-						}
-						ctx.on('in', msg);
-						
-						return;
-					} else
-					if('[' === tmp){
-						if(!msg){ return }
-						var i = 0, m;
-						while(m = msg[i++]){
-							mesh.hear(m, peer);
-						}
-
-						return;
-					}
-				}
-
-				;(function(){
-					mesh.say = function(msg, peer, o){
-						/*
-							TODO: Plenty of performance optimizations
-							that can be made just based off of ordering,
-							and reducing function calls for cached writes.
-						*/
-						if(!peer){
-							Type.obj.map(opt.peers, function(peer){
-								mesh.say(msg, peer);
-							});
-							return;
-						}
-						var tmp, wire = peer.wire || ((opt.wire) && opt.wire(peer)), msh, raw;// || open(peer, ctx); // TODO: Reopen!
-						if(!wire){ return }
-						msh = msg.mesh || empty;
-						if(peer === msh.via){ return }
-						if(!(raw = msh.raw)){ raw = mesh.raw(msg); }
-						if((tmp = msg['@'])
-						&& (tmp = ctx.dup.s[tmp])
-						&& (tmp = tmp.it)){
-							if(tmp.get && tmp['##'] && tmp['##'] === msg['##']){ // PERF: move this condition outside say?
-								return; // TODO: this still needs to be tested in the browser!
-							}
-						}
-						if((tmp = msh.to) && (tmp[peer.url] || tmp[peer.id]) && !o){ return } // TODO: still needs to be tested
-						if(peer.batch){
-							peer.batch.push(raw);
-							return;
-						}
-						peer.batch = [];
-						setTimeout(function(){
-							var tmp = peer.batch;
-							if(!tmp){ return }
-							peer.batch = null;
-							if(!tmp.length){ return }
-							send(JSON.stringify(tmp), peer);
-						}, opt.gap || opt.wait || 1);
-						send(raw, peer);
-					};
-
-					function send(raw, peer){
-						var wire = peer.wire;
-						try{
-							if(wire.send){
-								wire.send(raw);
-							} else
-							if(peer.say){
-								peer.say(raw);
-							}
-						}catch(e){
-							(peer.queue = peer.queue || []).push(raw);
-						}
-					}
-
-				}());
-	(function(){
-
-					mesh.raw = function(msg){
-						if(!msg){ return '' }
-						var dup = ctx.dup, msh = msg.mesh || {}, put, hash, tmp;
-						if(tmp = msh.raw){ return tmp }
-						if(typeof msg === 'string'){ return msg }
-						if(msg['@'] && (tmp = msg.put)){
-							if(!(hash = msg['##'])){
-								put = $(tmp, sort) || '';
-								hash = mesh.hash(msg, put);
-								msg['##'] = hash;
-							}
-							(tmp = dup.s)[hash = msg['@']+hash] = tmp[msg['#']];
-							msg['#'] = hash || msg['#'];
-							if(put){ (msg = Type.obj.to(msg)).put = _; }
-						}
-						var i = 0, to = []; Type.obj.map(opt.peers, function(p){
-							to.push(p.url || p.id); if(++i > 9){ return true } // limit server, fast fix, improve later!
-						}); msg['><'] = to.join();
-						var raw = $(msg);
-						if(u !== put){
-							tmp = raw.indexOf(_, raw.indexOf('put'));
-							raw = raw.slice(0, tmp-1) + put + raw.slice(tmp + _.length + 1);
-							//raw = raw.replace('"'+ _ +'"', put); // https://github.com/amark/gun/wiki/@$$ Heisenbug
-						}
-						if(msh){
-							msh.raw = raw;
-						}
-						return raw;
-					};
-
-					mesh.hash = function(msg, hash){
-						return Mesh.hash(hash || $(msg.put, sort) || '') || msg['#'] || Type.text.random(9);
-					};
-
-					function sort(k, v){ var tmp;
-						if(!(v instanceof Object)){ return v }
-						Type.obj.map(Object.keys(v).sort(), map, {to: tmp = {}, on: v});
-						return tmp;
-					}
-
-					function map(k){
-						this.to[k] = this.on[k];
-					}
-					var $ = JSON.stringify, _ = ':])([:';
-
-				}());
-
-				mesh.hi = function(peer){
-					var tmp = peer.wire || {};
-					if(peer.id || peer.url){
-						opt.peers[peer.url || peer.id] = peer;
-						Type.obj.del(opt.peers, tmp.id);
-					} else {
-						tmp = tmp.id = tmp.id || Type.text.random(9);
-						mesh.say({dam: '?'}, opt.peers[tmp] = peer);
-					}
-					if(!tmp.hied){ ctx.on(tmp.hied = 'hi', peer); }
-					tmp = peer.queue; peer.queue = [];
-					Type.obj.map(tmp, function(msg){
-						mesh.say(msg, peer);
-					});
-				};
-				mesh.bye = function(peer){
-					Type.obj.del(opt.peers, peer.id); // assume if peer.url then reconnect
-					ctx.on('bye', peer);
-				};
-
-				mesh.hear['?'] = function(msg, peer){
-					if(!msg.pid){ return mesh.say({dam: '?', pid: opt.pid, '@': msg['#']}, peer) }
-					peer.id = peer.id || msg.pid;
-					mesh.hi(peer);
-				};
-
-				return mesh;
-			}
-
-			Mesh.hash = function(s){ // via SO
-				if(typeof s !== 'string'){ return {err: 1} }
-		    var c = 0;
-		    if(!s.length){ return c }
-		    for(var i=0,l=s.length,n; i<l; ++i){
-		      n = s.charCodeAt(i);
-		      c = ((c<<5)-c)+n;
-		      c |= 0;
-		    }
-		    return c; // Math.abs(c);
-		  };
-
-		  var empty = {}, u;
-		  Object.keys = Object.keys || function(o){ return map(o, function(v,k,t){t(k);}) };
-
-		  try{ module.exports = Mesh; }catch(e){}
-
-		})(USE, './adapters/mesh');
-	USE(function(module){
-			var Gun = USE('../index');
-			Gun.Mesh = USE('./mesh');
-
-			Gun.on('opt', function(root){
-				this.to.next(root);
-				var opt = root.opt;
-				if(root.once){ return }
-				if(false === opt.WebSocket){ return }
-
-				var env;
-				if(typeof window !== "undefined"){ env = window; }
-				if(typeof commonjsGlobal !== "undefined"){ env = commonjsGlobal; }
-				env = env || {};
-
-				var websocket = opt.WebSocket || env.WebSocket || env.webkitWebSocket || env.mozWebSocket;
-				if(!websocket){ return }
-				opt.WebSocket = websocket;
-
-				var mesh = opt.mesh = opt.mesh || Gun.Mesh(root);
-
-				var wire = opt.wire;
-				opt.wire = open;
-				function open(peer){
-					if(!peer || !peer.url){ return wire && wire(peer) }
-					var url = peer.url.replace('http', 'ws');
-					var wire = peer.wire = new opt.WebSocket(url);
-					wire.onclose = function(){
-						opt.mesh.bye(peer);
-						reconnect(peer);
-					};
-					wire.onerror = function(error){
-						reconnect(peer); // placement?
-						if(!error){ return }
-						if(error.code === 'ECONNREFUSED');
-					};
-					wire.onopen = function(){
-						opt.mesh.hi(peer);
-					};
-					wire.onmessage = function(msg){
-						if(!msg){ return }
-						opt.mesh.hear(msg.data || msg, peer);
-					};
-					return wire;
-				}
-
-				function reconnect(peer){
-					clearTimeout(peer.defer);
-					peer.defer = setTimeout(function(){
-						open(peer);
-					}, 2 * 1000);
-				}
-			});
-		})(USE, './adapters/websocket');
-
-	}());
-	});
-
-	var require$$0 = ( empty$3 && empty$2 ) || empty$3;
-
-	var require$$1$1 = ( webcrypto$1 && webcrypto ) || webcrypto$1;
-
-	var require$$2 = ( textEncoding$1 && textEncoding ) || textEncoding$1;
-
-	var require$$3 = ( nodeWebcryptoOssl$1 && nodeWebcryptoOssl ) || nodeWebcryptoOssl$1;
 
 	var sea = createCommonjsModule(function (module) {
 	(function(){
@@ -10682,8 +8491,8 @@
 	  if(typeof commonjsGlobal !== "undefined"){ root = commonjsGlobal; }
 	  root = root || {};
 	  var console = root.console || {log: function(){}};
-	  function USE(arg){
-	    return arg.slice? USE[R(arg)] : function(mod, path){
+	  function USE(arg, req){
+	    return req? commonjsRequire(arg) : arg.slice? USE[R(arg)] : function(mod, path){
 	      arg(mod = {exports: {}});
 	      USE[R(path)] = mod.exports;
 	    }
@@ -10691,25 +8500,32 @@
 	      return p.split('/').slice(-1).toString().replace('.js','');
 	    }
 	  }
+	  { var common = module; }
 	USE(function(module){
 	    // Security, Encryption, and Authorization: SEA.js
-	    // MANDATORY READING: http://gun.js.org/explainers/data/security.html
+	    // MANDATORY READING: https://gun.eco/explainers/data/security.html
+	    // IT IS IMPLEMENTED IN A POLYFILL/SHIM APPROACH.
 	    // THIS IS AN EARLY ALPHA!
 
-	    function SEA(){}
-	    if(typeof window !== "undefined"){ (SEA.window = window).SEA = SEA; }
+	    if(typeof window !== "undefined"){ module.window = window; }
 
+	    var tmp = module.window || module;
+	    var SEA = tmp.SEA || {};
+
+	    if(SEA.window = module.window){ SEA.window.SEA = SEA; }
+
+	    try{ if(typeof common !== "undefined"){ common.exports = SEA; } }catch(e){}
 	    module.exports = SEA;
 	  })(USE, './root');
 	USE(function(module){
 	    var SEA = USE('./root');
-	    if(SEA.window){
+	    try{ if(SEA.window){
 	      if(location.protocol.indexOf('s') < 0
 	      && location.host.indexOf('localhost') < 0
 	      && location.protocol.indexOf('file:') < 0){
 	        location.protocol = 'https:'; // WebCrypto does NOT work without HTTPS!
 	      }
-	    }
+	    } }catch(e){}
 	  })(USE, './https');
 	USE(function(module){
 	    // This is Array extended to have .toString(['utf8'|'hex'|'base64'])
@@ -10780,7 +8596,7 @@
 	          }
 	          return buf
 	        }
-	        const byteLength = input.byteLength;
+	        const byteLength = input.byteLength; // what is going on here? FOR MARTTI
 	        const length = input.byteLength ? input.byteLength : input.length;
 	        if (length) {
 	          let buf;
@@ -10812,48 +8628,44 @@
 	    module.exports = SafeBuffer;
 	  })(USE, './buffer');
 	USE(function(module){
+	    const SEA = USE('./root');
 	    const Buffer$$1 = USE('./buffer');
 	    const api = {Buffer: Buffer$$1};
+	    var o = {};
 
-	    if (typeof __webpack_require__ === 'function' || (typeof window !== 'undefined' && (window.crypto || window.msCrypto))) {
-	      var crypto = window.crypto || window.msCrypto;
-	      var subtle = crypto.subtle || crypto.webkitSubtle;
-	      const TextEncoder = window.TextEncoder;
-	      const TextDecoder = window.TextDecoder;
+	    if(SEA.window){
+	      api.crypto = window.crypto || window.msCrypto;
+	      api.subtle = (api.crypto||o).subtle || (api.crypto||o).webkitSubtle;
+	      api.TextEncoder = window.TextEncoder;
+	      api.TextDecoder = window.TextDecoder;
+	      api.random = (len) => Buffer$$1.from(api.crypto.getRandomValues(new Uint8Array(Buffer$$1.alloc(len))));
+	    }
+	    if(!api.crypto){try{
+	      var crypto = USE('crypto', 1);
+	      const { subtle } = USE('@trust/webcrypto', 1);             // All but ECDH
+	      const { TextEncoder, TextDecoder } = USE('text-encoding', 1);
 	      Object.assign(api, {
 	        crypto,
 	        subtle,
 	        TextEncoder,
 	        TextDecoder,
-	        random: (len) => Buffer$$1.from(crypto.getRandomValues(new Uint8Array(Buffer$$1.alloc(len))))
+	        random: (len) => Buffer$$1.from(crypto.randomBytes(len))
 	      });
-	    } else {
-	      try{
-	        var crypto = require$$0;
-	        const { subtle } = require$$1$1;             // All but ECDH
-	        const { TextEncoder, TextDecoder } = require$$2;
-	        Object.assign(api, {
-	          crypto,
-	          subtle,
-	          TextEncoder,
-	          TextDecoder,
-	          random: (len) => Buffer$$1.from(crypto.randomBytes(len))
-	        });
-	        //try{
-	          const WebCrypto = require$$3;
-	          api.ossl = new WebCrypto({directory: 'ossl'}).subtle; // ECDH
-	        //}catch(e){
-	          //console.log("node-webcrypto-ossl is optionally needed for ECDH, please install if needed.");
-	        //}
-	      }catch(e){
-	        console.log("@trust/webcrypto and text-encoding are not included by default, you must add it to your package.json!");
-	        console.log("node-webcrypto-ossl is temporarily needed for ECDSA signature verification, and optionally needed for ECDH, please install if needed (currently necessary so add them to your package.json for now).");
-	      }
-	    }
+	      //try{
+	        const WebCrypto = USE('node-webcrypto-ossl', 1);
+	        api.ossl = new WebCrypto({directory: 'ossl'}).subtle; // ECDH
+	      //}catch(e){
+	        //console.log("node-webcrypto-ossl is optionally needed for ECDH, please install if needed.");
+	      //}
+	    }catch(e){
+	      console.log("@trust/webcrypto and text-encoding are not included by default, you must add it to your package.json!");
+	      console.log("node-webcrypto-ossl is temporarily needed for ECDSA signature verification, and optionally needed for ECDH, please install if needed (currently necessary so add them to your package.json for now).");
+	    }}
 
 	    module.exports = api;
 	  })(USE, './shim');
 	USE(function(module){
+	    const SEA = USE('./root');
 	    const Buffer$$1 = USE('./buffer');
 	    const settings = {};
 	    // Encryption parameters
@@ -10890,6 +8702,7 @@
 	      jwk: keysToEcdsaJwk,
 	      recall: authsettings
 	    });
+	    SEA.opt = settings;
 	    module.exports = settings;
 	  })(USE, './settings');
 	USE(function(module){
@@ -10920,7 +8733,7 @@
 	    // This internal func returns SHA-1 hashed data for KeyID generation
 	    const __shim = USE('./shim');
 	    const subtle = __shim.subtle;
-	    const ossl = __shim.ossl ? __shim.__ossl : subtle;
+	    const ossl = __shim.ossl ? __shim.ossl : subtle;
 	    const sha1hash = (b) => ossl.digest({name: 'SHA-1'}, new ArrayBuffer(b));
 	    module.exports = sha1hash;
 	  })(USE, './sha1');
@@ -10928,49 +8741,41 @@
 	    var SEA = USE('./root');
 	    var shim = USE('./shim');
 	    var S = USE('./settings');
+	    var sha = USE('./sha256');
 	    var u;
 
-	    SEA.work = async (data, pair, cb) => { try { // used to be named `proof`
-	      var salt = pair.epub || pair; // epub not recommended, salt should be random!
+	    SEA.work = SEA.work || (async (data, pair, cb, opt) => { try { // used to be named `proof`
+	      var salt = (pair||{}).epub || pair; // epub not recommended, salt should be random!
+	      var opt = opt || {};
 	      if(salt instanceof Function){
 	        cb = salt;
 	        salt = u;
 	      }
 	      salt = salt || shim.random(9);
-	      if (SEA.window) {
-	        // For browser subtle works fine
-	        const key = await shim.subtle.importKey(
-	          'raw', new shim.TextEncoder().encode(data), { name: 'PBKDF2' }, false, ['deriveBits']
-	        );
-	        const result = await shim.subtle.deriveBits({
-	          name: 'PBKDF2',
-	          iterations: S.pbkdf2.iter,
-	          salt: new shim.TextEncoder().encode(salt),
-	          hash: S.pbkdf2.hash,
-	        }, key, S.pbkdf2.ks * 8);
-	        data = shim.random(data.length);  // Erase data in case of passphrase
-	        const r = shim.Buffer.from(result, 'binary').toString('utf8');
-	        if(cb){ try{ cb(r); }catch(e){console.log(e);} }
-	        return r;
+	      if('SHA-256' === opt.name){
+	        var rsha = shim.Buffer.from(await sha(data), 'binary').toString(opt.encode || 'base64');
+	        if(cb){ try{ cb(rsha); }catch(e){console.log(e);} }
+	        return rsha;
 	      }
-	      // For NodeJS crypto.pkdf2 rocks
-	      const crypto = shim.crypto;
-	      const hash = crypto.pbkdf2Sync(
-	        data,
-	        new shim.TextEncoder().encode(salt),
-	        S.pbkdf2.iter,
-	        S.pbkdf2.ks,
-	        S.pbkdf2.hash.replace('-', '').toLowerCase()
+	      const key = await (shim.ossl || shim.subtle).importKey(
+	        'raw', new shim.TextEncoder().encode(data), { name: opt.name || 'PBKDF2' }, false, ['deriveBits']
 	      );
-	      data = shim.random(data.length);  // Erase passphrase for app
-	      const r = hash && hash.toString('utf8');
+	      const result = await (shim.ossl || shim.subtle).deriveBits({
+	        name: opt.name || 'PBKDF2',
+	        iterations: opt.iterations || S.pbkdf2.iter,
+	        salt: new shim.TextEncoder().encode(opt.salt || salt),
+	        hash: opt.hash || S.pbkdf2.hash,
+	      }, key, opt.length || (S.pbkdf2.ks * 8));
+	      data = shim.random(data.length);  // Erase data in case of passphrase
+	      const r = shim.Buffer.from(result, 'binary').toString(opt.encode || 'base64');
 	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
 	      return r;
-	    } catch(e) {
+	    } catch(e) { 
 	      SEA.err = e;
+	      if(SEA.throw){ throw e }
 	      if(cb){ cb(); }
 	      return;
-	    }};
+	    }});
 
 	    module.exports = SEA.work;
 	  })(USE, './work');
@@ -10980,8 +8785,19 @@
 	    var S = USE('./settings');
 	    var Buff = (typeof Buffer !== 'undefined')? Buffer : shim.Buffer;
 
+	    SEA.name = SEA.name || (async (cb, opt) => { try {
+	      if(cb){ try{ cb(); }catch(e){console.log(e);} }
+	      return;
+	    } catch(e) {
+	      console.log(e);
+	      SEA.err = e;
+	      if(SEA.throw){ throw e }
+	      if(cb){ cb(); }
+	      return;
+	    }});
+
 	    //SEA.pair = async (data, proof, cb) => { try {
-	    SEA.pair = async (cb) => { try {
+	    SEA.pair = SEA.pair || (async (cb, opt) => { try {
 
 	      const ecdhSubtle = shim.ossl || shim.subtle;
 	      // First: ECDSA keys for signing/verifying...
@@ -10999,7 +8815,7 @@
 	        // but split on a non-base64 letter.
 	        return key;
 	      });
-
+	      
 	      // To include PGPv4 kind of keyId:
 	      // const pubId = await SEA.keyid(keys.pub)
 	      // Next: ECDH keys for encryption/decryption...
@@ -11030,9 +8846,10 @@
 	    } catch(e) {
 	      console.log(e);
 	      SEA.err = e;
+	      if(SEA.throw){ throw e }
 	      if(cb){ cb(); }
 	      return;
-	    }};
+	    }});
 
 	    module.exports = SEA.pair;
 	  })(USE, './pair');
@@ -11042,33 +8859,28 @@
 	    var S = USE('./settings');
 	    var sha256hash = USE('./sha256');
 
-	    SEA.sign = async (data, pair, cb) => { try {
-	      if(data && data.slice
-	      && 'SEA{' === data.slice(0,4)
-	      && '"m":' === data.slice(4,8)){
-	        // TODO: This would prevent pair2 signing pair1's signature.
-	        // So we may want to change this in the future.
-	        // but for now, we want to prevent duplicate double signature.
-	        if(cb){ try{ cb(data); }catch(e){console.log(e);} }
-	        return data;
+	    SEA.sign = SEA.sign || (async (data, pair, cb, opt) => { try {
+	      opt = opt || {};
+	      if(!(pair||opt).priv){
+	        pair = await SEA.I(null, {what: data, how: 'sign', why: opt.why});
 	      }
 	      const pub = pair.pub;
 	      const priv = pair.priv;
 	      const jwk = S.jwk(pub, priv);
-	      const msg = JSON.stringify(data);
-	      const hash = await sha256hash(msg);
+	      const hash = await sha256hash(JSON.stringify(data));
 	      const sig = await (shim.ossl || shim.subtle).importKey('jwk', jwk, S.ecdsa.pair, false, ['sign'])
 	      .then((key) => (shim.ossl || shim.subtle).sign(S.ecdsa.sign, key, new Uint8Array(hash))); // privateKey scope doesn't leak out from here!
-	      const r = 'SEA'+JSON.stringify({m: msg, s: shim.Buffer.from(sig, 'binary').toString('utf8')});
+	      const r = 'SEA'+JSON.stringify({m: data, s: shim.Buffer.from(sig, 'binary').toString(opt.encode || 'base64')});
 
 	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
 	      return r;
 	    } catch(e) {
 	      console.log(e);
 	      SEA.err = e;
+	      if(SEA.throw){ throw e }
 	      if(cb){ cb(); }
 	      return;
-	    }};
+	    }});
 
 	    module.exports = SEA.sign;
 	  })(USE, './sign');
@@ -11080,7 +8892,7 @@
 	    var parse = USE('./parse');
 	    var u;
 
-	    SEA.verify = async (data, pair, cb) => { try {
+	    SEA.verify = SEA.verify || (async (data, pair, cb, opt) => { try {
 	      const json = parse(data);
 	      if(false === pair){ // don't verify!
 	        const raw = (json !== data)?
@@ -11089,23 +8901,35 @@
 	        if(cb){ try{ cb(raw); }catch(e){console.log(e);} }
 	        return raw;
 	      }
+	      opt = opt || {};
+	      // SEA.I // verify is free! Requires no user permission.
+	      if(json === data){ throw "No signature on data." }
 	      const pub = pair.pub || pair;
 	      const jwk = S.jwk(pub);
 	      const key = await (shim.ossl || shim.subtle).importKey('jwk', jwk, S.ecdsa.pair, false, ['verify']);
 	      const hash = await sha256hash(json.m);
-	      const sig = new Uint8Array(shim.Buffer.from(json.s, 'utf8'));
-	      const check = await (shim.ossl || shim.subtle).verify(S.ecdsa.sign, key, sig, new Uint8Array(hash));
-	      if(!check){ throw "Signature did not match." }
+	      var buf; var sig; var check; try{
+	        buf = shim.Buffer.from(json.s, opt.encode || 'base64'); // NEW DEFAULT!
+	        sig = new Uint8Array(buf);
+	        check = await (shim.ossl || shim.subtle).verify(S.ecdsa.sign, key, sig, new Uint8Array(hash));
+	        if(!check){ throw "Signature did not match." }
+	      }catch(e){
+	        buf = shim.Buffer.from(json.s, 'utf8'); // AUTO BACKWARD OLD UTF8 DATA!
+	        sig = new Uint8Array(buf);
+	        check = await (shim.ossl || shim.subtle).verify(S.ecdsa.sign, key, sig, new Uint8Array(hash));
+	        if(!check){ throw "Signature did not match." }
+	      }
 	      const r = check? parse(json.m) : u;
 
 	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
 	      return r;
 	    } catch(e) {
-	      console.log(e);
+	      console.log(e); // mismatched owner FOR MARTTI
 	      SEA.err = e;
+	      if(SEA.throw){ throw e }
 	      if(cb){ cb(); }
 	      return;
-	    }};
+	    }});
 
 	    module.exports = SEA.verify;
 	  })(USE, './verify');
@@ -11128,28 +8952,33 @@
 	    var S = USE('./settings');
 	    var aeskey = USE('./aeskey');
 
-	    SEA.encrypt = async (data, pair, cb, opt) => { try {
-	      var opt = opt || {};
-	      const key = pair.epriv || pair;
+	    SEA.encrypt = SEA.encrypt || (async (data, pair, cb, opt) => { try {
+	      opt = opt || {};
+	      var key = (pair||opt).epriv || pair;
+	      if(!key){
+	        pair = await SEA.I(null, {what: data, how: 'encrypt', why: opt.why});
+	        key = pair.epriv || pair;
+	      }
 	      const msg = JSON.stringify(data);
 	      const rand = {s: shim.random(8), iv: shim.random(16)};
 	      const ct = await aeskey(key, rand.s, opt)
-	      .then((aes) => shim.subtle.encrypt({ // Keeping the AES key scope as private as possible...
+	      .then((aes) => (/*shim.ossl ||*/ shim.subtle).encrypt({ // Keeping the AES key scope as private as possible...
 	        name: opt.name || 'AES-GCM', iv: new Uint8Array(rand.iv)
 	      }, aes, new shim.TextEncoder().encode(msg)));
 	      const r = 'SEA'+JSON.stringify({
-	        ct: shim.Buffer.from(ct, 'binary').toString('utf8'),
-	        iv: rand.iv.toString('utf8'),
-	        s: rand.s.toString('utf8')
+	        ct: shim.Buffer.from(ct, 'binary').toString(opt.encode || 'base64'),
+	        iv: rand.iv.toString(opt.encode || 'base64'),
+	        s: rand.s.toString(opt.encode || 'base64')
 	      });
 
 	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
 	      return r;
-	    } catch(e) {
+	    } catch(e) { 
 	      SEA.err = e;
+	      if(SEA.throw){ throw e }
 	      if(cb){ cb(); }
 	      return;
-	    }};
+	    }});
 
 	    module.exports = SEA.encrypt;
 	  })(USE, './encrypt');
@@ -11160,23 +8989,35 @@
 	    var aeskey = USE('./aeskey');
 	    var parse = USE('./parse');
 
-	    SEA.decrypt = async (data, pair, cb, opt) => { try {
-	      var opt = opt || {};
-	      const key = pair.epriv || pair;
+	    SEA.decrypt = SEA.decrypt || (async (data, pair, cb, opt) => { try {
+	      opt = opt || {};
+	      var key = (pair||opt).epriv || pair;
+	      if(!key){
+	        pair = await SEA.I(null, {what: data, how: 'decrypt', why: opt.why});
+	        key = pair.epriv || pair;
+	      }
 	      const json = parse(data);
-	      const ct = await aeskey(key, shim.Buffer.from(json.s, 'utf8'), opt)
-	      .then((aes) => shim.subtle.decrypt({  // Keeping aesKey scope as private as possible...
-	        name: opt.name || 'AES-GCM', iv: new Uint8Array(shim.Buffer.from(json.iv, 'utf8'))
-	      }, aes, new Uint8Array(shim.Buffer.from(json.ct, 'utf8'))));
-	      const r = parse(new shim.TextDecoder('utf8').decode(ct));
 
+	      var buf; try{buf = shim.Buffer.from(json.s, opt.encode || 'base64'); // NEW DEFAULT!
+	      }catch(e){buf = shim.Buffer.from(json.s, 'utf8');} // AUTO BACKWARD OLD UTF8 DATA!
+	      var bufiv; try{bufiv = shim.Buffer.from(json.iv, opt.encode || 'base64'); // NEW DEFAULT!
+	      }catch(e){bufiv = shim.Buffer.from(json.iv, 'utf8');} // AUTO BACKWARD OLD UTF8 DATA!
+	      var bufct; try{bufct = shim.Buffer.from(json.ct, opt.encode || 'base64'); // NEW DEFAULT!
+	      }catch(e){bufct = shim.Buffer.from(json.ct, 'utf8');} // AUTO BACKWARD OLD UTF8 DATA!
+
+	      const ct = await aeskey(key, buf, opt)
+	      .then((aes) => (/*shim.ossl ||*/ shim.subtle).decrypt({  // Keeping aesKey scope as private as possible...
+	        name: opt.name || 'AES-GCM', iv: new Uint8Array(bufiv)
+	      }, aes, new Uint8Array(bufct)));
+	      const r = parse(new shim.TextDecoder('utf8').decode(ct));
 	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
 	      return r;
-	    } catch(e) {
+	    } catch(e) { 
 	      SEA.err = e;
+	      if(SEA.throw){ throw e }
 	      if(cb){ cb(); }
 	      return;
-	    }};
+	    }});
 
 	    module.exports = SEA.decrypt;
 	  })(USE, './decrypt');
@@ -11184,8 +9025,12 @@
 	    var SEA = USE('./root');
 	    var shim = USE('./shim');
 	    var S = USE('./settings');
-	    // Derive shared secret from other's pub and my epub/epriv
-	    SEA.secret = async (key, pair, cb) => { try {
+	    // Derive shared secret from other's pub and my epub/epriv 
+	    SEA.secret = SEA.secret || (async (key, pair, cb, opt) => { try {
+	      opt = opt || {};
+	      if(!pair || !pair.epriv || !pair.epub){
+	        pair = await SEA.I(null, {what: key, how: 'secret', why: opt.why});
+	      }
 	      const pub = key.epub || key;
 	      const epub = pair.epub;
 	      const epriv = pair.epriv;
@@ -11205,11 +9050,12 @@
 	      const r = derived;
 	      if(cb){ try{ cb(r); }catch(e){console.log(e);} }
 	      return r;
-	    } catch(e) {
+	    } catch(e) { 
 	      SEA.err = e;
+	      if(SEA.throw){ throw e }
 	      if(cb){ cb(); }
 	      return;
-	    }};
+	    }});
 
 	    const keysToEcdhJwk = (pub, d) => { // d === priv
 	      //const [ x, y ] = Buffer.from(pub, 'base64').toString('utf8').split(':') // old
@@ -11228,45 +9074,20 @@
 	    module.exports = SEA.secret;
 	  })(USE, './secret');
 	USE(function(module){
-	    // Old Code...
-	    const __gky10 = USE('./shim');
-	    const crypto = __gky10.crypto;
-	    const subtle = __gky10.subtle;
-	    const ossl = __gky10.ossl;
-	    const TextEncoder = __gky10.TextEncoder;
-	    const TextDecoder = __gky10.TextDecoder;
-	    const getRandomBytes = __gky10.random;
-	    const EasyIndexedDB = USE('./indexed');
-	    const Buffer$$1 = USE('./buffer');
-	    var settings = USE('./settings');
-	    const __gky11 = USE('./settings');
-	    const pbKdf2 = __gky11.pbkdf2;
-	    const ecdsaKeyProps = __gky11.ecdsa.pair;
-	    const ecdsaSignProps = __gky11.ecdsa.sign;
-	    const ecdhKeyProps = __gky11.ecdh;
-	    const keysToEcdsaJwk = __gky11.jwk;
-	    const sha1hash = USE('./sha1');
-	    const sha256hash = USE('./sha256');
-	    const recallCryptoKey = USE('./remember');
-	    const parseProps = USE('./parse');
-
+	    var shim = USE('./shim');
 	    // Practical examples about usage found from ./test/common.js
-	    const SEA = USE('./root');
+	    var SEA = USE('./root');
 	    SEA.work = USE('./work');
 	    SEA.sign = USE('./sign');
 	    SEA.verify = USE('./verify');
 	    SEA.encrypt = USE('./encrypt');
 	    SEA.decrypt = USE('./decrypt');
 
-	    SEA.random = getRandomBytes;
-
-	    // This is easy way to use IndexedDB, all methods are Promises
-	    // Note: Not all SEA interfaces have to support this.
-	    SEA.EasyIndexedDB = EasyIndexedDB;
+	    SEA.random = SEA.random || shim.random;
 
 	    // This is Buffer used in SEA and usable from Gun/SEA application also.
 	    // For documentation see https://nodejs.org/api/buffer.html
-	    SEA.Buffer = Buffer$$1;
+	    SEA.Buffer = SEA.Buffer || USE('./buffer');
 
 	    // These SEA functions support now ony Promises or
 	    // async/await (compatible) code, use those like Promises.
@@ -11274,25 +9095,25 @@
 	    // Creates a wrapper library around Web Crypto API
 	    // for various AES, ECDSA, PBKDF2 functions we called above.
 	    // Calculate public key KeyID aka PGPv4 (result: 8 bytes as hex string)
-	    SEA.keyid = async (pub) => {
+	    SEA.keyid = SEA.keyid || (async (pub) => {
 	      try {
 	        // base64('base64(x):base64(y)') => Buffer(xy)
-	        const pb = Buffer$$1.concat(
-	          Buffer$$1.from(pub, 'base64').toString('utf8').split(':')
-	          .map((t) => Buffer$$1.from(t, 'base64'))
+	        const pb = Buffer.concat(
+	          pub.replace(/-/g, '+').replace(/_/g, '/').split('.')
+	          .map((t) => Buffer.from(t, 'base64'))
 	        );
 	        // id is PGPv4 compliant raw key
-	        const id = Buffer$$1.concat([
-	          Buffer$$1.from([0x99, pb.length / 0x100, pb.length % 0x100]), pb
+	        const id = Buffer.concat([
+	          Buffer.from([0x99, pb.length / 0x100, pb.length % 0x100]), pb
 	        ]);
 	        const sha1 = await sha1hash(id);
-	        const hash = Buffer$$1.from(sha1, 'binary');
+	        const hash = Buffer.from(sha1, 'binary');
 	        return hash.toString('hex', hash.length - 8)  // 16-bit ID as hex
 	      } catch (e) {
 	        console.log(e);
 	        throw e
 	      }
-	    };
+	    });
 	    // all done!
 	    // Obviously it is missing MANY necessary features. This is only an alpha release.
 	    // Please experiment with it, audit what I've done so far, and complain about what needs to be added.
@@ -11302,408 +9123,17 @@
 	    // But all other behavior needs to be equally easy, like opinionated ways of
 	    // Adding friends (trusted public keys), sending private messages, etc.
 	    // Cheers! Tell me what you think.
-	    var Gun = (SEA.window||{}).Gun || gun;
+	    var Gun = (SEA.window||{}).Gun || USE('./gun', 1);
 	    Gun.SEA = SEA;
-	    SEA.Gun = Gun;
+	    SEA.GUN = SEA.Gun = Gun;
 
 	    module.exports = SEA;
 	  })(USE, './sea');
 	USE(function(module){
-	    var SEA = USE('./sea');
-	    var Gun = SEA.Gun;
-	    // This is internal func queries public key(s) for alias.
-	    const queryGunAliases = (alias, gunRoot) => new Promise((resolve, reject) => {
-	      // load all public keys associated with the username alias we want to log in with.
-	      gunRoot.get('~@'+alias).get((rat, rev) => {
-	        rev.off();
-	        if (!rat.put) {
-	          // if no user, don't do anything.
-	          const err = 'No user!';
-	          Gun.log(err);
-	          return reject({ err })
-	        }
-	        // then figuring out all possible candidates having matching username
-	        const aliases = [];
-	        let c = 0;
-	        // TODO: how about having real chainable map without callback ?
-	        Gun.obj.map(rat.put, (at, pub) => {
-	          if (!pub.slice || '~' !== pub.slice(0, 1)) {
-	            // TODO: ... this would then be .filter((at, pub))
-	            return
-	          }
-	          ++c;
-	          // grab the account associated with this public key.
-	          gunRoot.get(pub).get((at, ev) => {
-	            pub = pub.slice(1);
-	            ev.off();
-	            --c;
-	            if (at.put){
-	              aliases.push({ pub, at });
-	            }
-	            if (!c && (c = -1)) {
-	              resolve(aliases);
-	            }
-	          });
-	        });
-	        if (!c) {
-	          reject({ err: 'Public key does not exist!' });
-	        }
-	      });
-	    });
-	    module.exports = queryGunAliases;
-	  })(USE, './query');
-	USE(function(module){
-	    var SEA = USE('./sea');
-	    var Gun = SEA.Gun;
-	    const queryGunAliases = USE('./query');
-	    const parseProps = USE('./parse');
-	    // This is internal User authentication func.
-	    const authenticate = async (alias, pass, gunRoot) => {
-	      // load all public keys associated with the username alias we want to log in with.
-	      const aliases = (await queryGunAliases(alias, gunRoot))
-	      .filter(({ pub, at: { put } = {} } = {}) => !!pub && !!put);
-	      // Got any?
-	      if (!aliases.length) {
-	        throw { err: 'Public key does not exist!' }
-	      }
-	      let err;
-	      // then attempt to log into each one until we find ours!
-	      // (if two users have the same username AND the same password... that would be bad)
-	      const users = await Promise.all(aliases.map(async ({ at: at, pub: pub }, i) => {
-	        // attempt to PBKDF2 extend the password with the salt. (Verifying the signature gives us the plain text salt.)
-	        const auth = parseProps(at.put.auth);
-	      // NOTE: aliasquery uses `gun.get` which internally SEA.read verifies the data for us, so we do not need to re-verify it here.
-	      // SEA.verify(at.put.auth, pub).then(function(auth){
-	        try {
-	          const proof = await SEA.work(pass, auth.s);
-	          const props = { pub: pub, proof: proof, at: at };
-	          // the proof of work is evidence that we've spent some time/effort trying to log in, this slows brute force.
-	          /*
-	          MARK TO @mhelander : pub vs epub!???
-	          */
-	          const salt = auth.salt;
-	          const sea = await SEA.decrypt(auth.ek, proof);
-	          if (!sea) {
-	            err = 'Failed to decrypt secret! ' + i +'/'+aliases.length;
-	            return
-	          }
-	          // now we have AES decrypted the private key, from when we encrypted it with the proof at registration.
-	          // if we were successful, then that meanswe're logged in!
-	          const priv = sea.priv;
-	          const epriv = sea.epriv;
-	          const epub = at.put.epub;
-	          // TODO: 'salt' needed?
-	          err = null;
-	          if(typeof window !== 'undefined'){
-	            var tmp = window.sessionStorage;
-	            if(tmp && gunRoot._.opt.remember){
-	              window.sessionStorage.alias = alias;
-	              window.sessionStorage.tmp = pass;
-	            }
-	          }
-	          return Object.assign(props, { priv: priv, salt: salt, epub: epub, epriv: epriv })
-	        } catch (e) {
-	          err = 'Failed to decrypt secret!';
-	          throw { err }
-	        }
-	      }));
-	      var user = Gun.list.map(users, function(acc){ if(acc){ return acc } });
-	      if (!user) {
-	        throw { err: err || 'Public key does not exist!' }
-	      }
-	      return user
-	    };
-	    module.exports = authenticate;
-	  })(USE, './authenticate');
-	USE(function(module){
-	    const authsettings = USE('./settings');
-	    const SEA = USE('./sea');
-	    const Gun = SEA.Gun;
-	    //const { scope: seaIndexedDb } = USE('./indexed')
-	    // This updates sessionStorage & IndexedDB to persist authenticated "session"
-	    const updateStorage = (proof, key, pin) => async (props) => {
-	      if (!Gun.obj.has(props, 'alias')) {
-	        return  // No 'alias' - we're done.
-	      }
-	      if (authsettings.validity && proof && Gun.obj.has(props, 'iat')) {
-	        props.proof = proof;
-	        delete props.remember;   // Not stored if present
-
-	        const alias = props.alias;
-	        const id = props.alias;
-	        const remember = { alias: alias, pin: pin };
-
-	        try {
-	          const signed = await SEA.sign(JSON.stringify(remember), key);
-
-	          sessionStorage.setItem('user', alias);
-	          sessionStorage.setItem('remember', signed);
-
-	          const encrypted = await SEA.encrypt(props, pin);
-
-	          if (encrypted) {
-	            const auth = await SEA.sign(encrypted, key);
-	            await seaIndexedDb.wipe(); // NO! Do not do this. It ruins other people's sessionStorage code. This is bad/wrong, commenting it out.
-	            await seaIndexedDb.put(id, { auth: auth });
-	          }
-
-	          return props
-	        } catch (err) {
-	          throw { err: 'Session persisting failed!' }
-	        }
-	      }
-
-	      // Wiping IndexedDB completely when using random PIN
-	      await seaIndexedDb.wipe(); // NO! Do not do this. It ruins other people's sessionStorage code. This is bad/wrong, commenting it out.
-	      // And remove sessionStorage data
-	      sessionStorage.removeItem('user');
-	      sessionStorage.removeItem('remember');
-
-	      return props
-	    };
-	    module.exports = updateStorage;
-	  })(USE, './update');
-	USE(function(module){
-	    const SEA = USE('./sea');
-	    const Gun = SEA.Gun;
-	    const Buffer$$1 = USE('./buffer');
-	    const authsettings = USE('./settings');
-	    const updateStorage = USE('./update');
-	    // This internal func persists User authentication if so configured
-	    const authPersist = async (user, proof, opts) => {
-	      // opts = { pin: 'string' }
-	      // no opts.pin then uses random PIN
-	      // How this works:
-	      // called when app bootstraps, with wanted options
-	      // IF authsettings.validity === 0 THEN no remember-me, ever
-	      // IF PIN then signed 'remember' to window.sessionStorage and 'auth' to IndexedDB
-	      const pin = Buffer$$1.from(
-	        (Gun.obj.has(opts, 'pin') && opts.pin) || Gun.text.random(10),
-	        'utf8'
-	      ).toString('base64');
-
-	      const alias = user.alias;
-	      const exp = authsettings.validity;      // seconds // @mhelander what is `exp`???
-
-	      if (proof && alias && exp) {
-	        const iat = Math.ceil(Date.now() / 1000);  // seconds
-	        const remember = Gun.obj.has(opts, 'pin') || undefined;  // for hook - not stored
-	        const props = authsettings.hook({ alias: alias, iat: iat, exp: exp, remember: remember });
-	        const pub = user.pub;
-	        const epub = user.epub;
-	        const priv = user.sea.priv;
-	        const epriv = user.sea.epriv;
-	        const key = { pub: pub, priv: priv, epub: epub, epriv: epriv };
-	        if (props instanceof Promise) {
-	          const asyncProps = await props.then();
-	          return await updateStorage(proof, key, pin)(asyncProps)
-	        }
-	        return await updateStorage(proof, key, pin)(props)
-	      }
-	      return await updateStorage()({ alias: 'delete' })
-	    };
-	    module.exports = authPersist;
-	  })(USE, './persist');
-	USE(function(module){
-	    const authPersist = USE('./persist');
-	    // This internal func finalizes User authentication
-	    const finalizeLogin = async (alias, key, gunRoot, opts) => {
-	      const user = gunRoot._.user;
-	      // add our credentials in-memory only to our root gun instance
-	      //var tmp = user._.tag;
-	      var opt = user._.opt;
-	      user._ = key.at.$._;
-	      user._.opt = opt;
-	      //user._.tag = tmp || user._.tag;
-	      // so that way we can use the credentials to encrypt/decrypt data
-	      // that is input/output through gun (see below)
-	      const pub = key.pub;
-	      const priv = key.priv;
-	      const epub = key.epub;
-	      const epriv = key.epriv;
-	      user._.is = user.is = {alias: alias, pub: pub};
-	      Object.assign(user._, { alias: alias, pub: pub, epub: epub, sea: { pub: pub, priv: priv, epub: epub, epriv: epriv } });
-	      //console.log("authorized", user._);
-	      // persist authentication
-	      //await authPersist(user._, key.proof, opts) // temporarily disabled
-	      // emit an auth event, useful for page redirects and stuff.
-	      try {
-	        gunRoot._.on('auth', user._);
-	      } catch (e) {
-	        console.log('Your \'auth\' callback crashed with:', e);
-	      }
-	      // returns success with the user data credentials.
-	      return user._
-	    };
-	    module.exports = finalizeLogin;
-	  })(USE, './login');
-	USE(function(module){
-	    const Buffer$$1 = USE('./buffer');
-	    const authsettings = USE('./settings');
-	    //const { scope: seaIndexedDb } = USE('./indexed')
-	    const queryGunAliases = USE('./query');
-	    const parseProps = USE('./parse');
-	    const updateStorage = USE('./update');
-	    const SEA = USE('./sea');
-	    const Gun = SEA.Gun;
-	    const finalizeLogin = USE('./login');
-
-	    // This internal func recalls persisted User authentication if so configured
-	    const authRecall = async (gunRoot, authprops) => {
-	      // window.sessionStorage only holds signed { alias, pin } !!!
-	      const remember = authprops || sessionStorage.getItem('remember');
-	      const { alias = sessionStorage.getItem('user'), pin: pIn } = authprops || {}; // @mhelander what is pIn?
-	      const pin = pIn && Buffer$$1.from(pIn, 'utf8').toString('base64');
-	      // Checks for existing proof, matching alias and expiration:
-	      const checkRememberData = async ({ proof, alias: aLias, iat, exp, remember }) => {
-	        if (!!proof && alias === aLias) {
-	          const checkNotExpired = (args) => {
-	            if (Math.floor(Date.now() / 1000) < (iat + args.exp)) {
-	              // No way hook to update 'iat'
-	              return Object.assign(args, { iat: iat, proof: proof })
-	            } else {
-	              Gun.log('Authentication expired!');
-	            }
-	          };
-	          // We're not gonna give proof to hook!
-	          const hooked = authsettings.hook({ alias: alias, iat: iat, exp: exp, remember: remember });
-	          return ((hooked instanceof Promise)
-	          && await hooked.then(checkNotExpired)) || checkNotExpired(hooked)
-	        }
-	      };
-	      const readAndDecrypt = async (data, pub, key) =>
-	        parseProps(await SEA.decrypt(await SEA.verify(data, pub), key));
-
-	      // Already authenticated?
-	      if (gunRoot._.user
-	      && Gun.obj.has(gunRoot._.user._, 'pub')
-	      && Gun.obj.has(gunRoot._.user._, 'sea')) {
-	        return gunRoot._.user._  // Yes, we're done here.
-	      }
-	      // No, got persisted 'alias'?
-	      if (!alias) {
-	        throw { err: 'No authentication session found!' }
-	      }
-	      // Yes, got persisted 'remember'?
-	      if (!remember) {
-	        throw {  // And return proof if for matching alias
-	          err: (await seaIndexedDb.get(alias, 'auth') && authsettings.validity
-	          && 'Missing PIN and alias!') || 'No authentication session found!'
-	        }
-	      }
-	      // Yes, let's get (all?) matching aliases
-	      const aliases = (await queryGunAliases(alias, gunRoot))
-	      .filter(({ pub } = {}) => !!pub);
-	      // Got any?
-	      if (!aliases.length) {
-	        throw { err: 'Public key does not exist!' }
-	      }
-	      let err;
-	      // Yes, then attempt to log into each one until we find ours!
-	      // (if two users have the same username AND the same password... that would be bad)
-	      const [ { key, at, proof, pin: newPin } = {} ] = await Promise
-	      .all(aliases.filter(({ at: { put } = {} }) => !!put)
-	      .map(async ({ at: at, pub: pub }) => {
-	        const readStorageData = async (args) => {
-	          const props = args || parseProps(await SEA.verify(remember, pub, true));
-	          let pin = props.pin;
-	          let aLias = props.alias;
-
-	          const data = (!pin && alias === aLias)
-	          // No PIN, let's try short-term proof if for matching alias
-	          ? await checkRememberData(props)
-	          // Got PIN so get IndexedDB secret if signature is ok
-	          : await checkRememberData(await readAndDecrypt(await seaIndexedDb.get(alias, 'auth'), pub, pin));
-	          pin = pin || data.pin;
-	          delete data.pin;
-	          return { pin: pin, data: data }
-	        };
-	        // got pub, try auth with pin & alias :: or unwrap Storage data...
-	        const __gky20 = await readStorageData(pin && { pin, alias });
-	        const data = __gky20.data;
-	        const newPin = __gky20.pin;
-	        const proof = data.proof;
-
-	        if (!proof) {
-	          if (!data) {
-	            err = 'No valid authentication session found!';
-	            return
-	          }
-	          try { // Wipes IndexedDB silently
-	            await updateStorage()(data);
-	          } catch (e) {}  //eslint-disable-line no-empty
-	          err = 'Expired session!';
-	          return
-	        }
-
-	        try { // auth parsing or decryption fails or returns empty - silently done
-	          const auth= at.put.auth.auth;
-	          const sea = await SEA.decrypt(auth, proof);
-	          if (!sea) {
-	            err = 'Failed to decrypt private key!';
-	            return
-	          }
-	          const priv = sea.priv;
-	          const epriv = sea.epriv;
-	          const epub = at.put.epub;
-	          // Success! we've found our private data!
-	          err = null;
-	          return { proof: proof, at: at, pin: newPin, key: { pub: pub, priv: priv, epriv: epriv, epub: epub } }
-	        } catch (e) {
-	          err = 'Failed to decrypt private key!';
-	          return
-	        }
-	      }).filter((props) => !!props));
-
-	      if (!key) {
-	        throw { err: err || 'Public key does not exist!' }
-	      }
-
-	      // now we have AES decrypted the private key,
-	      // if we were successful, then that means we're logged in!
-	      try {
-	        await updateStorage(proof, key, newPin || pin)(key);
-
-	        const user = Object.assign(key, { at: at, proof: proof });
-	        const pIN = newPin || pin;
-
-	        const pinProp = pIN && { pin: Buffer$$1.from(pIN, 'base64').toString('utf8') };
-
-	        return await finalizeLogin(alias, user, gunRoot, pinProp)
-	      } catch (e) { // TODO: right log message ?
-	        Gun.log('Failed to finalize login with new password!');
-	        const { err = '' } = e || {};
-	        throw { err: 'Finalizing new password login failed! Reason: '+err }
-	      }
-	    };
-	    module.exports = authRecall;
-	  })(USE, './recall');
-	USE(function(module){
-	    const authPersist = USE('./persist');
-	    const authsettings = USE('./settings');
-	    //const { scope: seaIndexedDb } = USE('./indexed')
-	    // This internal func executes logout actions
-	    const authLeave = async (gunRoot, alias = gunRoot._.user._.alias) => {
-	      var user = gunRoot._.user._ || {};
-	      [ 'get', 'soul', 'ack', 'put', 'is', 'alias', 'pub', 'epub', 'sea' ].map((key) => delete user[key]);
-	      if(user.$){
-	        delete user.$.is;
-	      }
-	      // Let's use default
-	      gunRoot.user();
-	      // Removes persisted authentication & CryptoKeys
-	      try {
-	        await authPersist({ alias: alias });
-	      } catch (e) {}  //eslint-disable-line no-empty
-	      return { ok: 0 }
-	    };
-	    module.exports = authLeave;
-	  })(USE, './leave');
-	USE(function(module){
 	    var Gun = USE('./sea').Gun;
 	    Gun.chain.then = function(cb){
-	      var gun$$1 = this, p = (new Promise(function(res, rej){
-	        gun$$1.once(res);
+	      var gun = this, p = (new Promise(function(res, rej){
+	        gun.once(res);
 	      }));
 	      return cb? p.then(cb) : p;
 	    };
@@ -11713,7 +9143,7 @@
 	    var Gun = SEA.Gun;
 	    var then = USE('./then');
 
-	    function User(root){
+	    function User(root){ 
 	      this._ = {$: this};
 	    }
 	    User.prototype = (function(){ function F(){} F.prototype = Gun.chain; return new F() }()); // Object.create polyfill
@@ -11722,14 +9152,14 @@
 	    // let's extend the gun chain with a `user` function.
 	    // only one user can be logged in at a time, per gun instance.
 	    Gun.chain.user = function(pub){
-	      var gun$$1 = this, root = gun$$1.back(-1), user;
+	      var gun = this, root = gun.back(-1), user;
 	      if(pub){ return root.get('~'+pub) }
 	      if(user = root.back('user')){ return user }
 	      var root = (root._), at = root, uuid = at.opt.uuid || Gun.state.lex;
-	      (at = (user = at.user = gun$$1.chain(new User))._).opt = {};
+	      (at = (user = at.user = gun.chain(new User))._).opt = {};
 	      at.opt.uuid = function(cb){
 	        var id = uuid(), pub = root.user;
-	        if(!pub || !(pub = (pub._).sea) || !(pub = pub.pub)){ return id }
+	        if(!pub || !(pub = pub.is) || !(pub = pub.pub)){ return id }
 	        id = id + '~' + pub + '.';
 	        if(cb && cb.call){ cb(null, id); }
 	        return id;
@@ -11743,254 +9173,269 @@
 	    // TODO: This needs to be split into all separate functions.
 	    // Not just everything thrown into 'create'.
 
-	    const SEA = USE('./sea');
-	    const User = USE('./user');
-	    const authRecall = USE('./recall');
-	    const authsettings = USE('./settings');
-	    const authenticate = USE('./authenticate');
-	    const finalizeLogin = USE('./login');
-	    const authLeave = USE('./leave');
-	    const _initial_authsettings = USE('./settings').recall;
-	    const Gun = SEA.Gun;
+	    var SEA = USE('./sea');
+	    var User = USE('./user');
+	    var authsettings = USE('./settings');
+	    var Gun = SEA.Gun;
 
-	    var u;
+	    var noop = function(){};
+
 	    // Well first we have to actually create a user. That is what this function does.
-	    User.prototype.create = function(username, pass, cb, opt){
-	      // TODO: Needs to be cleaned up!!!
-	      const gunRoot = this.back(-1);
-	      var gun$$1 = this, cat = (gun$$1._);
-	      cb = cb || function(){};
+	    User.prototype.create = function(alias, pass, cb, opt){
+	      var gun = this, cat = (gun._), root = gun.back(-1);
+	      cb = cb || noop;
 	      if(cat.ing){
 	        cb({err: Gun.log("User is already being created or authenticated!"), wait: true});
-	        return gun$$1;
+	        return gun;
 	      }
 	      cat.ing = true;
 	      opt = opt || {};
-	      var resolve = function(){}, reject = resolve;
-	      // Because more than 1 user might have the same username, we treat the alias as a list of those users.
-	      if(cb){ resolve = reject = cb; }
-	      gunRoot.get('~@'+username).get(async (at, ev) => {
-	        ev.off();
-	        if (at.put && !opt.already) {
+	      var act = {};
+	      act.a = function(pubs){
+	        act.pubs = pubs;
+	        if(pubs && !opt.already){
 	          // If we can enforce that a user name is already taken, it might be nice to try, but this is not guaranteed.
-	          const err = 'User already created!';
-	          Gun.log(err);
+	          var ack = {err: Gun.log('User already created!')};
 	          cat.ing = false;
-	          gun$$1.leave();
-	          return reject({ err: err })
+	          cb(ack);
+	          gun.leave();
+	          return;
 	        }
-	        const salt = Gun.text.random(64);
-	        // pseudo-randomly create a salt, then use CryptoJS's PBKDF2 function to extend the password with it.
-	        try {
-	          const proof = await SEA.work(pass, salt);
-	          // this will take some short amount of time to produce a proof, which slows brute force attacks.
-	          const pairs = await SEA.pair();
-	          // now we have generated a brand new ECDSA key pair for the user account.
-	          const pub = pairs.pub;
-	          const priv = pairs.priv;
-	          const epriv = pairs.epriv;
-	          // the user's public key doesn't need to be signed. But everything else needs to be signed with it!
-	          const alias = await SEA.sign(username, pairs);
-	          if(u === alias){ throw SEA.err }
-	          const epub = await SEA.sign(pairs.epub, pairs);
-	          if(u === epub){ throw SEA.err }
-	          // to keep the private key safe, we AES encrypt it with the proof of work!
-	          const auth = await SEA.encrypt({ priv: priv, epriv: epriv }, proof)
-	          .then((auth) => // TODO: So signedsalt isn't needed?
-	          // SEA.sign(salt, pairs).then((signedsalt) =>
-	            SEA.sign({ek: auth, s: salt}, pairs)
-	          // )
-	          ).catch((e) => { Gun.log('SEA.en or SEA.write calls failed!'); cat.ing = false; gun$$1.leave(); reject(e); });
-	          const user = { alias: alias, pub: pub, epub: epub, auth: auth };
-	          const tmp = '~'+pairs.pub;
-	          // awesome, now we can actually save the user with their public key as their ID.
-	          try{
-
-	          gunRoot.get(tmp).put(user);
-	        }catch(e){console.log(e);}
-	          // next up, we want to associate the alias with the public key. So we add it to the alias list.
-	          gunRoot.get('~@'+username).put(Gun.obj.put({}, tmp, Gun.val.link.ify(tmp)));
-	          // callback that the user has been created. (Note: ok = 0 because we didn't wait for disk to ack)
-	          setTimeout(() => { cat.ing = false; resolve({ ok: 0, pub: pairs.pub}); }, 10); // TODO: BUG! If `.auth` happens synchronously after `create` finishes, auth won't work. This setTimeout is a temporary hack until we can properly fix it.
-	        } catch (e) {
-	          Gun.log('SEA.create failed!');
-	          cat.ing = false;
-	          gun$$1.leave();
-	          reject(e);
+	        act.salt = Gun.text.random(64); // pseudo-randomly create a salt, then use PBKDF2 function to extend the password with it.
+	        SEA.work(pass, act.salt, act.b); // this will take some short amount of time to produce a proof, which slows brute force attacks.
+	      };
+	      act.b = function(proof){
+	        act.proof = proof;
+	        SEA.pair(act.c); // now we have generated a brand new ECDSA key pair for the user account.
+	      };
+	      act.c = function(pair){ var tmp;
+	        act.pair = pair || {};
+	        if(tmp = cat.root.user){
+	          tmp._.sea = pair;
+	          tmp.is = {pub: pair.pub, epub: pair.epub, alias: alias};
 	        }
-	      });
-	      return gun$$1;  // gun chain commands must return gun chains!
+	        // the user's public key doesn't need to be signed. But everything else needs to be signed with it! // we have now automated it! clean up these extra steps now!
+	        act.data = {pub: pair.pub};
+	        SEA.sign(alias, pair, act.d); 
+	      };
+	      act.d = function(sig){
+	        act.data.alias = alias || sig;
+	        SEA.sign(act.pair.epub, act.pair, act.e);
+	      };
+	      act.e = function(epub){
+	        act.data.epub = act.pair.epub || epub; 
+	        SEA.encrypt({priv: act.pair.priv, epriv: act.pair.epriv}, act.proof, act.f); // to keep the private key safe, we AES encrypt it with the proof of work!
+	      };
+	      act.f = function(auth){
+	        act.data.auth = JSON.stringify({ek: auth, s: act.salt}); 
+	        SEA.sign({ek: auth, s: act.salt}, act.pair, act.g);
+	      };
+	      act.g = function(auth){ var tmp;
+	        act.data.auth = act.data.auth || auth;
+	        root.get(tmp = '~'+act.pair.pub).put(act.data); // awesome, now we can actually save the user with their public key as their ID.
+	        root.get('~@'+alias).put(Gun.obj.put({}, tmp, Gun.val.link.ify(tmp))); // next up, we want to associate the alias with the public key. So we add it to the alias list.
+	        setTimeout(function(){ // we should be able to delete this now, right?
+	        cat.ing = false;
+	        cb({ok: 0, pub: act.pair.pub}); // callback that the user has been created. (Note: ok = 0 because we didn't wait for disk to ack)
+	        if(noop === cb){ gun.auth(alias, pass); } // if no callback is passed, auto-login after signing up.
+	        },10);
+	      };
+	      root.get('~@'+alias).once(act.a);
+	      return gun;
 	    };
 	    // now that we have created a user, we want to authenticate them!
 	    User.prototype.auth = function(alias, pass, cb, opt){
-	      // TODO: Needs to be cleaned up!!!!
-	      const opts = opt || (typeof cb !== 'function' && cb);
-	      let pin = opts && opts.pin;
-	      let newpass = opts && opts.newpass;
-	      const gunRoot = this.back(-1);
-	      cb = typeof cb === 'function' ? cb : () => {};
-	      newpass = newpass || (opts||{}).change;
-	      var gun$$1 = this, cat = (gun$$1._);
+	      var gun = this, cat = (gun._), root = gun.back(-1);
+	      cb = cb || function(){};
 	      if(cat.ing){
-	        cb({err: "User is already being created or authenticated!", wait: true});
-	        return gun$$1;
+	        cb({err: Gun.log("User is already being created or authenticated!"), wait: true});
+	        return gun;
 	      }
 	      cat.ing = true;
-
-	      if (!pass && pin) { (async function(){
-	        try {
-	          var r = await authRecall(gunRoot, { alias: alias, pin: pin });
-	          return cat.ing = false, cb(r), gun$$1;
-	        } catch (e) {
-	          var err = { err: 'Auth attempt failed! Reason: No session data for alias & PIN' };
-	          return cat.ing = false, gun$$1.leave(), cb(err), gun$$1;
-	        }}());
-	        return gun$$1;
-	      }
-
-	      const putErr = (msg) => (e) => {
-	        const { message, err = message || '' } = e;
-	        Gun.log(msg);
-	        var error = { err: msg+' Reason: '+err };
-	        return cat.ing = false, gun$$1.leave(), cb(error), gun$$1;
+	      opt = opt || {};
+	      var pair = (alias && (alias.pub || alias.epub))? alias : (pass && (pass.pub || pass.epub))? pass : null;
+	      var act = {}, u;
+	      act.a = function(data){
+	        if(!data){ return act.b() }
+	        if(!data.pub){
+	          var tmp = [];
+	          Gun.node.is(data, function(v){ tmp.push(v); });
+	          return act.b(tmp);
+	        }
+	        if(act.name){ return act.f(data) }
+	        act.c((act.data = data).auth);
 	      };
-
-	      (async function(){ try {
-	        const keys = await authenticate(alias, pass, gunRoot);
-	        if (!keys) {
-	          return putErr('Auth attempt failed!')({ message: 'No keys' })
+	      act.b = function(list){
+	        var get = (act.list = (act.list||[]).concat(list||[])).shift();
+	        if(u === get){
+	          if(act.name){ return act.err('Your user account is not published for dApps to access, please consider syncing it online, or allowing local access by adding your device as a peer.') }
+	          return act.err('Wrong user or password.') 
 	        }
-	        const pub = keys.pub;
-	        const priv = keys.priv;
-	        const epub = keys.epub;
-	        const epriv = keys.epriv;
-	        // we're logged in!
-	        if (newpass) {
-	          // password update so encrypt private key using new pwd + salt
-	          try {
-	            const salt = Gun.text.random(64);
-	            const encSigAuth = await SEA.work(newpass, salt)
-	            .then((key) =>
-	              SEA.encrypt({ priv: priv, epriv: epriv }, key)
-	              .then((auth) => SEA.sign({ek: auth, s: salt}, keys))
-	            );
-	            const signedEpub = await SEA.sign(epub, keys);
-	            const signedAlias = await SEA.sign(alias, keys);
-	            const user = {
-	              pub: pub,
-	              alias: signedAlias,
-	              auth: encSigAuth,
-	              epub: signedEpub
-	            };
-	            // awesome, now we can update the user using public key ID.
-	            gunRoot.get('~'+user.pub).put(user);
-	            // then we're done
-	            const login = finalizeLogin(alias, keys, gunRoot, { pin });
-	            login.catch(putErr('Failed to finalize login with new password!'));
-	            return cat.ing = false, cb(await login), gun$$1
-	          } catch (e) {
-	            return putErr('Password set attempt failed!')(e)
-	          }
-	        } else {
-	          const login = finalizeLogin(alias, keys, gunRoot, { pin: pin });
-	          login.catch(putErr('Finalizing login failed!'));
-	          return cat.ing = false, cb(await login), gun$$1;
+	        root.get(get).once(act.a);
+	      };
+	      act.c = function(auth){
+	        if(u === auth){ return act.b() }
+	        if(Gun.text.is(auth)){ return act.c(Gun.obj.ify(auth)) } // new format
+	        SEA.work(pass, (act.auth = auth).s, act.d, act.enc); // the proof of work is evidence that we've spent some time/effort trying to log in, this slows brute force.
+	      };
+	      act.d = function(proof){
+	        SEA.decrypt(act.auth.ek, proof, act.e, act.enc);
+	      };
+	      act.e = function(half){
+	        if(u === half){
+	          if(!act.enc){ // try old format
+	            act.enc = {encode: 'utf8'};
+	            return act.c(act.auth);
+	          } act.enc = null; // end backwards
+	          return act.b();
 	        }
-	      } catch (e) {
-	        return putErr('Auth attempt failed!')(e)
-	      } }());
-	      return gun$$1;
+	        act.half = half;
+	        act.f(act.data);
+	      };
+	      act.f = function(data){
+	        if(!data || !data.pub){ return act.b() }
+	        var tmp = act.half || {};
+	        act.g({pub: data.pub, epub: data.epub, priv: tmp.priv, epriv: tmp.epriv});
+	      };
+	      act.g = function(pair){
+	        act.pair = pair;
+	        var user = (root._).user, at = (user._);
+	        var tmp = at.tag;
+	        var upt = at.opt;
+	        at = user._ = root.get('~'+pair.pub)._;
+	        at.opt = upt;
+	        // add our credentials in-memory only to our root user instance
+	        user.is = {pub: pair.pub, epub: pair.epub, alias: alias};
+	        at.sea = act.pair;
+	        cat.ing = false;
+	        if(pass && !Gun.text.is(act.data.auth)){ opt.shuffle = opt.change = pass; } // migrate UTF8 + Shuffle! Test against NAB alias test_sea_shuffle + passw0rd
+	        opt.change? act.z() : cb(at);
+	        if(SEA.window && ((gun.back('user')._).opt||opt).remember){
+	          // TODO: this needs to be modular.
+	          try{var sS = {};
+	          sS = window.sessionStorage;
+	          sS.recall = true;
+	          sS.alias = alias;
+	          sS.tmp = pass;
+	          }catch(e){}
+	        }
+	        try{
+	          (root._).on('auth', at); // TODO: Deprecate this, emit on user instead! Update docs when you do.
+	          //at.on('auth', at) // Arrgh, this doesn't work without event "merge" code, but "merge" code causes stack overflow and crashes after logging in & trying to write data.
+	        }catch(e){
+	          Gun.log("Your 'auth' callback crashed with:", e);
+	        }
+	      };
+	      act.z = function(){
+	        // password update so encrypt private key using new pwd + salt
+	        act.salt = Gun.text.random(64); // pseudo-random
+	        SEA.work(opt.change, act.salt, act.y);
+	      };
+	      act.y = function(proof){
+	        SEA.encrypt({priv: act.pair.priv, epriv: act.pair.epriv}, proof, act.x);
+	      };
+	      act.x = function(auth){
+	        act.w(JSON.stringify({ek: auth, s: act.salt}));
+	        //SEA.sign({ek: auth, s: act.salt}, act.pair, act.w);
+	      };
+	      act.w = function(auth){
+	        if(opt.shuffle){ // delete in future!
+	          var tmp = Gun.obj.to(act.data);
+	          Gun.obj.del(tmp, '_');
+	          tmp.auth = auth;
+	          console.log('migrate core account from UTF8 & shuffle', tmp);
+	          root.get('~'+act.pair.pub).put(tmp);
+	        } // end delete
+	        root.get('~'+act.pair.pub).get('auth').put(auth, cb);
+	      };
+	      act.err = function(e){
+	        var ack = {err: Gun.log(e || 'User cannot be found!')};
+	        cat.ing = false;
+	        cb(ack);
+	      };
+	      act.plugin = function(name){
+	        if(!(act.name = name)){ return act.err() }
+	        var tmp = [name];
+	        if('~' !== name[0]){
+	          tmp[1] = '~'+name;
+	          tmp[2] = '~@'+name;
+	        }
+	        act.b(tmp);
+	      };
+	      if(pair){
+	        act.g(pair);
+	      } else
+	      if(alias){
+	        root.get('~@'+alias).once(act.a);
+	      } else
+	      if(!alias && !pass){
+	        SEA.name(act.plugin);
+	      }
+	      return gun;
 	    };
 	    User.prototype.pair = function(){
+	      console.log("user.pair() IS DEPRECATED AND WILL BE DELETED!!!");
 	      var user = this;
 	      if(!user.is){ return false }
 	      return user._.sea;
 	    };
-	    User.prototype.leave = async function(){
-	      var gun$$1 = this, user = (gun$$1.back(-1)._).user;
+	    User.prototype.leave = function(opt, cb){
+	      var gun = this, user = (gun.back(-1)._).user;
 	      if(user){
 	        delete user.is;
 	        delete user._.is;
 	        delete user._.sea;
 	      }
-	      if(typeof window !== 'undefined'){
-	        var tmp = window.sessionStorage;
-	        delete tmp.alias;
-	        delete tmp.tmp;
-	      }
-	      return await authLeave(this.back(-1))
+	      if(SEA.window){
+	        try{var sS = {};
+	        sS = window.sessionStorage;
+	        delete sS.alias;
+	        delete sS.tmp;
+	        delete sS.recall;
+	        }catch(e){}      }
+	      return gun;
 	    };
 	    // If authenticated user wants to delete his/her account, let's support it!
-	    User.prototype.delete = async function(alias, pass){
-	      const gunRoot = this.back(-1);
+	    User.prototype.delete = async function(alias, pass, cb){
+	      var gun = this, root = gun.back(-1), user = gun.back('user');
 	      try {
-	        const __gky40 = await authenticate(alias, pass, gunRoot);
-	        const pub = __gky40.pub;
-	        await authLeave(gunRoot, alias);
-	        // Delete user data
-	        gunRoot.get('~'+pub).put(null);
-	        // Wipe user data from memory
-	        const { user = { _: {} } } = gunRoot._;
-	        // TODO: is this correct way to 'logout' user from Gun.User ?
-	        [ 'alias', 'sea', 'pub' ].map((key) => delete user._[key]);
-	        user._.is = user.is = {};
-	        gunRoot.user();
-	        return { ok: 0 }  // TODO: proper return codes???
+	        user.auth(alias, pass, function(ack){
+	          var pub = (user.is||{}).pub;
+	          // Delete user data
+	          user.map().once(function(){ this.put(null); });
+	          // Wipe user data from memory
+	          user.leave();
+	          (cb || noop)({ok: 0});
+	        });
 	      } catch (e) {
 	        Gun.log('User.delete failed! Error:', e);
-	        throw e // TODO: proper error codes???
 	      }
+	      return gun;
 	    };
-	    // If authentication is to be remembered over reloads or browser closing,
-	    // set validity time in minutes.
-	    User.prototype.recall = async function(setvalidity, options){
-	      const gunRoot = this.back(-1);
-
-	      let validity;
-	      let opts;
-
-	      var o = setvalidity;
-	      if(o && o.sessionStorage){
-	        if(typeof window !== 'undefined'){
-	          var tmp = window.sessionStorage;
-	          if(tmp){
-	            gunRoot._.opt.remember = true;
-	            if(tmp.alias && tmp.tmp){
-	              gunRoot.user().auth(tmp.alias, tmp.tmp);
+	    User.prototype.recall = function(opt, cb){
+	      var gun = this, root = gun.back(-1);
+	      opt = opt || {};
+	      if(opt && opt.sessionStorage){
+	        if(SEA.window){
+	          try{var sS = {};
+	          sS = window.sessionStorage;
+	          if(sS){
+	            (root._).opt.remember = true;
+	            ((gun.back('user')._).opt||opt).remember = true;
+	            if(sS.recall || (sS.alias && sS.tmp)){
+	              root.user().auth(sS.alias, sS.tmp, cb);
 	            }
 	          }
+	          }catch(e){}
 	        }
-	        return this;
+	        return gun;
 	      }
-
-	      if (!Gun.val.is(setvalidity)) {
-	        opts = setvalidity;
-	        validity = _initial_authsettings.validity;
-	      } else {
-	        opts = options;
-	        validity = setvalidity * 60; // minutes to seconds
-	      }
-
-	      try {
-	        // opts = { hook: function({ iat, exp, alias, proof }) }
-	        // iat == Date.now() when issued, exp == seconds to expire from iat
-	        // How this works:
-	        // called when app bootstraps, with wanted options
-	        // IF authsettings.validity === 0 THEN no remember-me, ever
-	        // IF PIN then signed 'remember' to window.sessionStorage and 'auth' to IndexedDB
-	        authsettings.validity = typeof validity !== 'undefined'
-	        ? validity : _initial_authsettings.validity;
-	        authsettings.hook = (Gun.obj.has(opts, 'hook') && typeof opts.hook === 'function')
-	        ? opts.hook : _initial_authsettings.hook;
-	        // All is good. Should we do something more with actual recalled data?
-	        return await authRecall(gunRoot)
-	      } catch (e) {
-	        const err = 'No session!';
-	        Gun.log(err);
-	        // NOTE! It's fine to resolve recall with reason why not successful
-	        // instead of rejecting...
-	        return { err: (e && e.err) || err }
-	      }
+	      /*
+	        TODO: copy mhelander's expiry code back in.
+	        Although, we should check with community,
+	        should expiry be core or a plugin?
+	      */
+	      return gun;
 	    };
 	    User.prototype.alive = async function(){
 	      const gunRoot = this.back(-1);
@@ -12015,8 +9460,8 @@
 	    };
 	    User.prototype.grant = function(to, cb){
 	      console.log("`.grant` API MAY BE DELETED OR CHANGED OR RENAMED, DO NOT USE!");
-	      var gun$$1 = this, user = gun$$1.back(-1).user(), pair = user.pair(), path = '';
-	      gun$$1.back(function(at){ if(at.pub){ return } path += (at.get||''); });
+	      var gun = this, user = gun.back(-1).user(), pair = user.pair(), path = '';
+	      gun.back(function(at){ if(at.is){ return } path += (at.get||''); });
 	      (async function(){
 	      var enc, sec = await user.get('trust').get(pair.pub).get(path).then();
 	      sec = await SEA.decrypt(sec, pair);
@@ -12032,12 +9477,12 @@
 	      enc = await SEA.encrypt(sec, dh);
 	      user.get('trust').get(pub).get(path).put(enc, cb);
 	      }());
-	      return gun$$1;
+	      return gun;
 	    };
 	    User.prototype.secret = function(data, cb){
 	      console.log("`.secret` API MAY BE DELETED OR CHANGED OR RENAMED, DO NOT USE!");
-	      var gun$$1 = this, user = gun$$1.back(-1).user(), pair = user.pair(), path = '';
-	      gun$$1.back(function(at){ if(at.pub){ return } path += (at.get||''); });
+	      var gun = this, user = gun.back(-1).user(), pair = user.pair(), path = '';
+	      gun.back(function(at){ if(at.is){ return } path += (at.get||''); });
 	      (async function(){
 	      var enc, sec = await user.get('trust').get(pair.pub).get(path).then();
 	      sec = await SEA.decrypt(sec, pair);
@@ -12047,9 +9492,9 @@
 	        user.get('trust').get(pair.pub).get(path).put(enc);
 	      }
 	      enc = await SEA.encrypt(data, sec);
-	      gun$$1.put(enc, cb);
+	      gun.put(enc, cb);
 	      }());
-	      return gun$$1;
+	      return gun;
 	    };
 	    module.exports = User;
 	  })(USE, './create');
@@ -12089,6 +9534,7 @@
 	      Gun.node.is(msg.put, function(val, key, node){ c++; // for each property on the node
 	        // TODO: consider async/await use here...
 	        SEA.verify(val, false, function(data){ c--; // false just extracts the plain data.
+	          data = SEA.opt.unpack(data, key, node);
 	          node[key] = val = data; // transform to plain value.
 	          if(d && !c && (c = -1)){ to.next(msg); }
 	        });
@@ -12117,7 +9563,7 @@
 	        // if there is a request to read data from us, then...
 	        var soul = msg.get['#'];
 	        if(soul){ // for now, only allow direct IDs to be read.
-	          if(soul !== 'string'){ return to.next(msg) } // do not handle lexical cursors.
+	          if(typeof soul !== 'string'){ return to.next(msg) } // do not handle lexical cursors.
 	          if('alias' === soul){ // Allow reading the list of usernames/aliases in the system?
 	            return to.next(msg); // yes.
 	          } else
@@ -12166,9 +9612,9 @@
 	            return each.end({err: "Account must match!"});
 	          }
 	          check['user'+soul+key] = 1;
-	          if(user && (user = user._) && user.sea && pub === user.pub){
+	          if(user && user.is && pub === user.is.pub){
 	            //var id = Gun.text.random(3);
-	            SEA.sign(val, user.sea, function(data){ var rel;
+	            SEA.sign([soul, key, val, Gun.state.is(node, key)], (user._).sea, function(data){ var rel;
 	              if(u === data){ return each.end({err: SEA.err || 'Pub signature fail.'}) }
 	              if(rel = Gun.val.link.is(val)){
 	                (at.sea.own[rel] = at.sea.own[rel] || {})[pub] = true;
@@ -12181,6 +9627,7 @@
 	            return;
 	          }
 	          SEA.verify(val, pub, function(data){ var rel;
+	            data = SEA.opt.unpack(data, key, node);
 	            if(u === data){ // make sure the signature matches the account it claims to be on.
 	              return each.end({err: "Unverified data."}); // reject any updates that are signed with a mismatched account.
 	            }
@@ -12201,11 +9648,12 @@
 	          return s;
 	        }
 	        each.any = function(val, key, node, soul, user){ var tmp, pub;
-	          if(!user || !(user = user._) || !(user = user.sea)){
+	          if(!user || !user.is){
 	            if(tmp = relpub(soul)){
 	              check['any'+soul+key] = 1;
 	              SEA.verify(val, pub = tmp, function(data){ var rel;
-	                if(!data){ return each.end({err: "Mismatched owner on '" + key + "'."}) }
+	                data = SEA.opt.unpack(data, key, node);
+	                if(u === data){ return each.end({err: "Mismatched owner on '" + key + "'."}) } // thanks @rogowski !
 	                if((rel = Gun.val.link.is(data)) && pub === relpub(rel)){
 	                  (at.sea.own[rel] = at.sea.own[rel] || {})[pub] = true;
 	                }
@@ -12242,20 +9690,19 @@
 	            //});
 	            return;
 	          }
-	          var pub = tmp;
-	          if(pub !== user.pub){
+	          if(!msg.I || (pub = tmp) !== (user.is||noop).pub){
 	            each.any(val, key, node, soul);
 	            return;
 	          }
 	          /*var other = Gun.obj.map(at.sea.own[soul], function(v, p){
-	            if(user.pub !== p){ return p }
+	            if((user.is||{}).pub !== p){ return p }
 	          });
 	          if(other){
 	            each.any(val, key, node, soul);
 	            return;
 	          }*/
 	          check['any'+soul+key] = 1;
-	          SEA.sign(val, user, function(data){
+	          SEA.sign([soul, key, val, Gun.state.is(node, key)], (user._).sea, function(data){
 	            if(u === data){ return each.end({err: 'My signature fail.'}) }
 	            node[key] = data;
 	            check['any'+soul+key] = 0;
@@ -12265,7 +9712,7 @@
 	        each.end = function(ctx){ // TODO: Can't you just switch this to each.end = cb?
 	          if(each.err){ return }
 	          if((each.err = ctx.err) || ctx.no){
-	            console.log('NO!', each.err, msg.put);
+	            console.log('NO!', each.err, msg.put); // 451 mistmached data FOR MARTTI
 	            return;
 	          }
 	          if(!each.end.ed){ return }
@@ -12280,6 +9727,18 @@
 	      }
 	      to.next(msg); // pass forward any data we do not know how to handle or process (this allows custom security protocols).
 	    }
+	    SEA.opt.unpack = function(data, key, node){
+	      if(u === data){ return }
+	      var tmp = data, soul = Gun.node.soul(node), s = Gun.state.is(node, key);
+	      if(tmp && 4 === tmp.length && soul === tmp[0] && key === tmp[1] && s === tmp[3]){
+	        return tmp[2];
+	      }
+	      if(s < SEA.opt.shuffle_attack){
+	        return data;
+	      }
+	    };
+	    SEA.opt.shuffle_attack = 1546329600000; // Jan 1, 2019
+	    var noop = {}, u;
 
 	  })(USE, './index');
 	}());
@@ -13526,53 +10985,6 @@
 
 	var _Number$parseInt = unwrapExports(_parseInt$2);
 
-	// 19.1.2.1 Object.assign(target, source, ...)
-
-
-
-
-
-	var $assign = Object.assign;
-
-	// should work with symbols and should have deterministic property order (V8 bug)
-	var _objectAssign = !$assign || _fails(function () {
-	  var A = {};
-	  var B = {};
-	  // eslint-disable-next-line no-undef
-	  var S = Symbol();
-	  var K = 'abcdefghijklmnopqrst';
-	  A[S] = 7;
-	  K.split('').forEach(function (k) { B[k] = k; });
-	  return $assign({}, A)[S] != 7 || Object.keys($assign({}, B)).join('') != K;
-	}) ? function assign(target, source) { // eslint-disable-line no-unused-vars
-	  var T = _toObject(target);
-	  var aLen = arguments.length;
-	  var index = 1;
-	  var getSymbols = _objectGops.f;
-	  var isEnum = _objectPie.f;
-	  while (aLen > index) {
-	    var S = _iobject(arguments[index++]);
-	    var keys = getSymbols ? _objectKeys(S).concat(getSymbols(S)) : _objectKeys(S);
-	    var length = keys.length;
-	    var j = 0;
-	    var key;
-	    while (length > j) if (isEnum.call(S, key = keys[j++])) T[key] = S[key];
-	  } return T;
-	} : $assign;
-
-	// 19.1.3.1 Object.assign(target, source)
-
-
-	_export(_export.S + _export.F, 'Object', { assign: _objectAssign });
-
-	var assign = _core.Object.assign;
-
-	var assign$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": assign, __esModule: true };
-	});
-
-	var _Object$assign = unwrapExports(assign$1);
-
 	var isEnum$1 = _objectPie.f;
 	var _objectToArray = function (isEntries) {
 	  return function (it) {
@@ -13623,6 +11035,2233 @@
 	});
 
 	var _Number$isNaN = unwrapExports(isNan$1);
+
+	// 19.1.2.1 Object.assign(target, source, ...)
+
+
+
+
+
+	var $assign = Object.assign;
+
+	// should work with symbols and should have deterministic property order (V8 bug)
+	var _objectAssign = !$assign || _fails(function () {
+	  var A = {};
+	  var B = {};
+	  // eslint-disable-next-line no-undef
+	  var S = Symbol();
+	  var K = 'abcdefghijklmnopqrst';
+	  A[S] = 7;
+	  K.split('').forEach(function (k) { B[k] = k; });
+	  return $assign({}, A)[S] != 7 || Object.keys($assign({}, B)).join('') != K;
+	}) ? function assign(target, source) { // eslint-disable-line no-unused-vars
+	  var T = _toObject(target);
+	  var aLen = arguments.length;
+	  var index = 1;
+	  var getSymbols = _objectGops.f;
+	  var isEnum = _objectPie.f;
+	  while (aLen > index) {
+	    var S = _iobject(arguments[index++]);
+	    var keys = getSymbols ? _objectKeys(S).concat(getSymbols(S)) : _objectKeys(S);
+	    var length = keys.length;
+	    var j = 0;
+	    var key;
+	    while (length > j) if (isEnum.call(S, key = keys[j++])) T[key] = S[key];
+	  } return T;
+	} : $assign;
+
+	// 19.1.3.1 Object.assign(target, source)
+
+
+	_export(_export.S + _export.F, 'Object', { assign: _objectAssign });
+
+	var assign = _core.Object.assign;
+
+	var assign$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": assign, __esModule: true };
+	});
+
+	var _Object$assign = unwrapExports(assign$1);
+
+	var gun = createCommonjsModule(function (module) {
+	(function(){
+
+	  /* UNBUILD */
+	  var root;
+	  if(typeof window !== "undefined"){ root = window; }
+	  if(typeof commonjsGlobal !== "undefined"){ root = commonjsGlobal; }
+	  root = root || {};
+	  var console = root.console || {log: function(){}};
+	  function USE(arg, req){
+	    return req? commonjsRequire(arg) : arg.slice? USE[R(arg)] : function(mod, path){
+	      arg(mod = {exports: {}});
+	      USE[R(path)] = mod.exports;
+	    }
+	    function R(p){
+	      return p.split('/').slice(-1).toString().replace('.js','');
+	    }
+	  }
+	  { var common = module; }
+	USE(function(module){
+			// Generic javascript utilities.
+			var Type = {};
+			//Type.fns = Type.fn = {is: function(fn){ return (!!fn && fn instanceof Function) }}
+			Type.fn = {is: function(fn){ return (!!fn && 'function' == typeof fn) }};
+			Type.bi = {is: function(b){ return (b instanceof Boolean || typeof b == 'boolean') }};
+			Type.num = {is: function(n){ return !list_is(n) && ((n - parseFloat(n) + 1) >= 0 || Infinity === n || -Infinity === n) }};
+			Type.text = {is: function(t){ return (typeof t == 'string') }};
+			Type.text.ify = function(t){
+				if(Type.text.is(t)){ return t }
+				if(typeof JSON !== "undefined"){ return JSON.stringify(t) }
+				return (t && t.toString)? t.toString() : t;
+			};
+			Type.text.random = function(l, c){
+				var s = '';
+				l = l || 24; // you are not going to make a 0 length random number, so no need to check type
+				c = c || '0123456789ABCDEFGHIJKLMNOPQRSTUVWXZabcdefghijklmnopqrstuvwxyz';
+				while(l > 0){ s += c.charAt(Math.floor(Math.random() * c.length)); l--; }
+				return s;
+			};
+			Type.text.match = function(t, o){ var r = false;
+				t = t || '';
+				o = Type.text.is(o)? {'=': o} : o || {}; // {'~', '=', '*', '<', '>', '+', '-', '?', '!'} // ignore case, exactly equal, anything after, lexically larger, lexically lesser, added in, subtacted from, questionable fuzzy match, and ends with.
+				if(Type.obj.has(o,'~')){ t = t.toLowerCase(); o['='] = (o['='] || o['~']).toLowerCase(); }
+				if(Type.obj.has(o,'=')){ return t === o['='] }
+				if(Type.obj.has(o,'*')){ if(t.slice(0, o['*'].length) === o['*']){ r = true; t = t.slice(o['*'].length); } else { return false }}
+				if(Type.obj.has(o,'!')){ if(t.slice(-o['!'].length) === o['!']){ r = true; } else { return false }}
+				if(Type.obj.has(o,'+')){
+					if(Type.list.map(Type.list.is(o['+'])? o['+'] : [o['+']], function(m){
+						if(t.indexOf(m) >= 0){ r = true; } else { return true }
+					})){ return false }
+				}
+				if(Type.obj.has(o,'-')){
+					if(Type.list.map(Type.list.is(o['-'])? o['-'] : [o['-']], function(m){
+						if(t.indexOf(m) < 0){ r = true; } else { return true }
+					})){ return false }
+				}
+				if(Type.obj.has(o,'>')){ if(t > o['>']){ r = true; } else { return false }}
+				if(Type.obj.has(o,'<')){ if(t < o['<']){ r = true; } else { return false }}
+				function fuzzy(t,f){ var n = -1, i = 0, c; for(;c = f[i++];){ if(!~(n = t.indexOf(c, n+1))){ return false }} return true } // via http://stackoverflow.com/questions/9206013/javascript-fuzzy-search
+				if(Type.obj.has(o,'?')){ if(fuzzy(t, o['?'])){ r = true; } else { return false }} // change name!
+				return r;
+			};
+			Type.list = {is: function(l){ return (l instanceof Array) }};
+			Type.list.slit = Array.prototype.slice;
+			Type.list.sort = function(k){ // creates a new sort function based off some key
+				return function(A,B){
+					if(!A || !B){ return 0 } A = A[k]; B = B[k];
+					if(A < B){ return -1 }else if(A > B){ return 1 }
+					else { return 0 }
+				}
+			};
+			Type.list.map = function(l, c, _){ return obj_map(l, c, _) };
+			Type.list.index = 1; // change this to 0 if you want non-logical, non-mathematical, non-matrix, non-convenient array notation
+			Type.obj = {is: function(o){ return o? (o instanceof Object && o.constructor === Object) || Object.prototype.toString.call(o).match(/^\[object (\w+)\]$/)[1] === 'Object' : false }};
+			Type.obj.put = function(o, k, v){ return (o||{})[k] = v, o };
+			Type.obj.has = function(o, k){ return o && Object.prototype.hasOwnProperty.call(o, k) };
+			Type.obj.del = function(o, k){
+				if(!o){ return }
+				o[k] = null;
+				delete o[k];
+				return o;
+			};
+			Type.obj.as = function(o, k, v, u){ return o[k] = o[k] || (u === v? {} : v) };
+			Type.obj.ify = function(o){
+				if(obj_is(o)){ return o }
+				try{o = JSON.parse(o);
+				}catch(e){o={};}			return o;
+			}
+			;(function(){ var u;
+				function map(v,k){
+					if(obj_has(this,k) && u !== this[k]){ return }
+					this[k] = v;
+				}
+				Type.obj.to = function(from, to){
+					to = to || {};
+					obj_map(from, map, to);
+					return to;
+				};
+			}());
+			Type.obj.copy = function(o){ // because http://web.archive.org/web/20140328224025/http://jsperf.com/cloning-an-object/2
+				return !o? o : JSON.parse(JSON.stringify(o)); // is shockingly faster than anything else, and our data has to be a subset of JSON anyways!
+			}
+			;(function(){
+				function empty(v,i){ var n = this.n;
+					if(n && (i === n || (obj_is(n) && obj_has(n, i)))){ return }
+					if(i){ return true }
+				}
+				Type.obj.empty = function(o, n){
+					if(!o){ return true }
+					return obj_map(o,empty,{n:n})? false : true;
+				};
+			}());
+	(function(){
+				function t(k,v){
+					if(2 === arguments.length){
+						t.r = t.r || {};
+						t.r[k] = v;
+						return;
+					} t.r = t.r || [];
+					t.r.push(k);
+				}			var keys = Object.keys;
+				Type.obj.map = function(l, c, _){
+					var u, i = 0, x, r, ll, lle, f = fn_is(c);
+					t.r = null;
+					if(keys && obj_is(l)){
+						ll = keys(l); lle = true;
+					}
+					if(list_is(l) || ll){
+						x = (ll || l).length;
+						for(;i < x; i++){
+							var ii = (i + Type.list.index);
+							if(f){
+								r = lle? c.call(_ || this, l[ll[i]], ll[i], t) : c.call(_ || this, l[i], ii, t);
+								if(r !== u){ return r }
+							} else {
+								//if(Type.test.is(c,l[i])){ return ii } // should implement deep equality testing!
+								if(c === l[lle? ll[i] : i]){ return ll? ll[i] : ii } // use this for now
+							}
+						}
+					} else {
+						for(i in l){
+							if(f){
+								if(obj_has(l,i)){
+									r = _? c.call(_, l[i], i, t) : c(l[i], i, t);
+									if(r !== u){ return r }
+								}
+							} else {
+								//if(a.test.is(c,l[i])){ return i } // should implement deep equality testing!
+								if(c === l[i]){ return i } // use this for now
+							}
+						}
+					}
+					return f? t.r : Type.list.index? 0 : -1;
+				};
+			}());
+			Type.time = {};
+			Type.time.is = function(t){ return t? t instanceof Date : (+new Date().getTime()) };
+
+			var fn_is = Type.fn.is;
+			var list_is = Type.list.is;
+			var obj = Type.obj, obj_is = obj.is, obj_has = obj.has, obj_map = obj.map;
+			module.exports = Type;
+		})(USE, './type');
+	USE(function(module){
+			// On event emitter generic javascript utility.
+			module.exports = function onto(tag, arg, as){
+				if(!tag){ return {to: onto} }
+				var u, tag = (this.tag || (this.tag = {}))[tag] ||
+				(this.tag[tag] = {tag: tag, to: onto._ = {
+					next: function(arg){ var tmp;
+						if((tmp = this.to)){
+							tmp.next(arg);
+					}}
+				}});
+				if(arg instanceof Function){
+					var be = {
+						off: onto.off ||
+						(onto.off = function(){
+							if(this.next === onto._.next){ return !0 }
+							if(this === this.the.last){
+								this.the.last = this.back;
+							}
+							this.to.back = this.back;
+							this.next = onto._.next;
+							this.back.to = this.to;
+							if(this.the.last === this.the){
+								delete this.on.tag[this.the.tag];
+							}
+						}),
+						to: onto._,
+						next: arg,
+						the: tag,
+						on: this,
+						as: as,
+					};
+					(be.back = tag.last || tag).to = be;
+					return tag.last = be;
+				}
+				if((tag = tag.to) && u !== arg){ tag.next(arg); }
+				return tag;
+			};
+		})(USE, './onto');
+	USE(function(module){
+			/* Based on the Hypothetical Amnesia Machine thought experiment */
+			function HAM(machineState, incomingState, currentState, incomingValue, currentValue){
+				if(machineState < incomingState){
+					return {defer: true}; // the incoming value is outside the boundary of the machine's state, it must be reprocessed in another state.
+				}
+				if(incomingState < currentState){
+					return {historical: true}; // the incoming value is within the boundary of the machine's state, but not within the range.
+
+				}
+				if(currentState < incomingState){
+					return {converge: true, incoming: true}; // the incoming value is within both the boundary and the range of the machine's state.
+
+				}
+				if(incomingState === currentState){
+					incomingValue = Lexical(incomingValue) || "";
+					currentValue = Lexical(currentValue) || "";
+					if(incomingValue === currentValue){ // Note: while these are practically the same, the deltas could be technically different
+						return {state: true};
+					}
+					/*
+						The following is a naive implementation, but will always work.
+						Never change it unless you have specific needs that absolutely require it.
+						If changed, your data will diverge unless you guarantee every peer's algorithm has also been changed to be the same.
+						As a result, it is highly discouraged to modify despite the fact that it is naive,
+						because convergence (data integrity) is generally more important.
+						Any difference in this algorithm must be given a new and different name.
+					*/
+					if(incomingValue < currentValue){ // Lexical only works on simple value types!
+						return {converge: true, current: true};
+					}
+					if(currentValue < incomingValue){ // Lexical only works on simple value types!
+						return {converge: true, incoming: true};
+					}
+				}
+				return {err: "Invalid CRDT Data: "+ incomingValue +" to "+ currentValue +" at "+ incomingState +" to "+ currentState +"!"};
+			}
+			if(typeof JSON === 'undefined'){
+				throw new Error(
+					'JSON is not included in this browser. Please load it first: ' +
+					'ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js'
+				);
+			}
+			var Lexical = JSON.stringify;
+			module.exports = HAM;
+		})(USE, './HAM');
+	USE(function(module){
+			var Type = USE('./type');
+			var Val = {};
+			Val.is = function(v){ // Valid values are a subset of JSON: null, binary, number (!Infinity), text, or a soul relation. Arrays need special algorithms to handle concurrency, so they are not supported directly. Use an extension that supports them if needed but research their problems first.
+				if(v === u){ return false }
+				if(v === null){ return true } // "deletes", nulling out keys.
+				if(v === Infinity){ return false } // we want this to be, but JSON does not support it, sad face.
+				if(text_is(v) // by "text" we mean strings.
+				|| bi_is(v) // by "binary" we mean boolean.
+				|| num_is(v)){ // by "number" we mean integers or decimals.
+					return true; // simple values are valid.
+				}
+				return Val.rel.is(v) || false; // is the value a soul relation? Then it is valid and return it. If not, everything else remaining is an invalid data type. Custom extensions can be built on top of these primitives to support other types.
+			};
+			Val.link = Val.rel = {_: '#'};
+	(function(){
+				Val.rel.is = function(v){ // this defines whether an object is a soul relation or not, they look like this: {'#': 'UUID'}
+					if(v && v[rel_] && !v._ && obj_is(v)){ // must be an object.
+						var o = {};
+						obj_map(v, map, o);
+						if(o.id){ // a valid id was found.
+							return o.id; // yay! Return it.
+						}
+					}
+					return false; // the value was not a valid soul relation.
+				};
+				function map(s, k){ var o = this; // map over the object...
+					if(o.id){ return o.id = false } // if ID is already defined AND we're still looping through the object, it is considered invalid.
+					if(k == rel_ && text_is(s)){ // the key should be '#' and have a text value.
+						o.id = s; // we found the soul!
+					} else {
+						return o.id = false; // if there exists anything else on the object that isn't the soul, then it is considered invalid.
+					}
+				}
+			}());
+			Val.rel.ify = function(t){ return obj_put({}, rel_, t) }; // convert a soul into a relation and return it.
+			Type.obj.has._ = '.';
+			var rel_ = Val.link._, u;
+			var bi_is = Type.bi.is;
+			var num_is = Type.num.is;
+			var text_is = Type.text.is;
+			var obj = Type.obj, obj_is = obj.is, obj_put = obj.put, obj_map = obj.map;
+			module.exports = Val;
+		})(USE, './val');
+	USE(function(module){
+			var Type = USE('./type');
+			var Val = USE('./val');
+			var Node = {_: '_'};
+			Node.soul = function(n, o){ return (n && n._ && n._[o || soul_]) }; // convenience function to check to see if there is a soul on a node and return it.
+			Node.soul.ify = function(n, o){ // put a soul on an object.
+				o = (typeof o === 'string')? {soul: o} : o || {};
+				n = n || {}; // make sure it exists.
+				n._ = n._ || {}; // make sure meta exists.
+				n._[soul_] = o.soul || n._[soul_] || text_random(); // put the soul on it.
+				return n;
+			};
+			Node.soul._ = Val.link._;
+	(function(){
+				Node.is = function(n, cb, as){ var s; // checks to see if an object is a valid node.
+					if(!obj_is(n)){ return false } // must be an object.
+					if(s = Node.soul(n)){ // must have a soul on it.
+						return !obj_map(n, map, {as:as,cb:cb,s:s,n:n});
+					}
+					return false; // nope! This was not a valid node.
+				};
+				function map(v, k){ // we invert this because the way we check for this is via a negation.
+					if(k === Node._){ return } // skip over the metadata.
+					if(!Val.is(v)){ return true } // it is true that this is an invalid node.
+					if(this.cb){ this.cb.call(this.as, v, k, this.n, this.s); } // optionally callback each key/value.
+				}
+			}());
+	(function(){
+				Node.ify = function(obj, o, as){ // returns a node from a shallow object.
+					if(!o){ o = {}; }
+					else if(typeof o === 'string'){ o = {soul: o}; }
+					else if(o instanceof Function){ o = {map: o}; }
+					if(o.map){ o.node = o.map.call(as, obj, u, o.node || {}); }
+					if(o.node = Node.soul.ify(o.node || {}, o)){
+						obj_map(obj, map, {o:o,as:as});
+					}
+					return o.node; // This will only be a valid node if the object wasn't already deep!
+				};
+				function map(v, k){ var o = this.o, tmp, u; // iterate over each key/value.
+					if(o.map){
+						tmp = o.map.call(this.as, v, ''+k, o.node);
+						if(u === tmp){
+							obj_del(o.node, k);
+						} else
+						if(o.node){ o.node[k] = tmp; }
+						return;
+					}
+					if(Val.is(v)){
+						o.node[k] = v;
+					}
+				}
+			}());
+			var obj = Type.obj, obj_is = obj.is, obj_del = obj.del, obj_map = obj.map;
+			var text = Type.text, text_random = text.random;
+			var soul_ = Node.soul._;
+			var u;
+			module.exports = Node;
+		})(USE, './node');
+	USE(function(module){
+			var Type = USE('./type');
+			var Node = USE('./node');
+			function State(){
+				var t;
+				/*if(perf){
+					t = start + perf.now(); // Danger: Accuracy decays significantly over time, even if precise.
+				} else {*/
+					t = time();
+				//}
+				if(last < t){
+					return N = 0, last = t + State.drift;
+				}
+				return last = t + ((N += 1) / D) + State.drift;
+			}
+			var time = Type.time.is, last = -Infinity, N = 0, D = 1000; // WARNING! In the future, on machines that are D times faster than 2016AD machines, you will want to increase D by another several orders of magnitude so the processing speed never out paces the decimal resolution (increasing an integer effects the state accuracy).
+			var perf = (typeof performance !== 'undefined')? (performance.timing && performance) : false, start = (perf && perf.timing && perf.timing.navigationStart) || (perf = false);
+			State._ = '>';
+			State.drift = 0;
+			State.is = function(n, k, o){ // convenience function to get the state on a key on a node and return it.
+				var tmp = (k && n && n[N_] && n[N_][State._]) || o;
+				if(!tmp){ return }
+				return num_is(tmp = tmp[k])? tmp : -Infinity;
+			};
+			State.lex = function(){ return State().toString(36).replace('.','') };
+			State.ify = function(n, k, s, v, soul){ // put a key's state on a node.
+				if(!n || !n[N_]){ // reject if it is not node-like.
+					if(!soul){ // unless they passed a soul
+						return;
+					}
+					n = Node.soul.ify(n, soul); // then make it so!
+				}
+				var tmp = obj_as(n[N_], State._); // grab the states data.
+				if(u !== k && k !== N_){
+					if(num_is(s)){
+						tmp[k] = s; // add the valid state.
+					}
+					if(u !== v){ // Note: Not its job to check for valid values!
+						n[k] = v;
+					}
+				}
+				return n;
+			};
+			State.to = function(from, k, to){
+				var val = (from||{})[k];
+				if(obj_is(val)){
+					val = obj_copy(val);
+				}
+				return State.ify(to, k, State.is(from, k), val, Node.soul(from));
+			}
+			;(function(){
+				State.map = function(cb, s, as){ var u; // for use with Node.ify
+					var o = obj_is(o = cb || s)? o : null;
+					cb = fn_is(cb = cb || s)? cb : null;
+					if(o && !cb){
+						s = num_is(s)? s : State();
+						o[N_] = o[N_] || {};
+						obj_map(o, map, {o:o,s:s});
+						return o;
+					}
+					as = as || obj_is(s)? s : u;
+					s = num_is(s)? s : State();
+					return function(v, k, o, opt){
+						if(!cb){
+							map.call({o: o, s: s}, v,k);
+							return v;
+						}
+						cb.call(as || this || {}, v, k, o, opt);
+						if(obj_has(o,k) && u === o[k]){ return }
+						map.call({o: o, s: s}, v,k);
+					}
+				};
+				function map(v,k){
+					if(N_ === k){ return }
+					State.ify(this.o, k, this.s) ;
+				}
+			}());
+			var obj = Type.obj, obj_as = obj.as, obj_has = obj.has, obj_is = obj.is, obj_map = obj.map, obj_copy = obj.copy;
+			var num = Type.num, num_is = num.is;
+			var fn = Type.fn, fn_is = fn.is;
+			var N_ = Node._, u;
+			module.exports = State;
+		})(USE, './state');
+	USE(function(module){
+			var Type = USE('./type');
+			var Val = USE('./val');
+			var Node = USE('./node');
+			var Graph = {};
+	(function(){
+				Graph.is = function(g, cb, fn, as){ // checks to see if an object is a valid graph.
+					if(!g || !obj_is(g) || obj_empty(g)){ return false } // must be an object.
+					return !obj_map(g, map, {cb:cb,fn:fn,as:as}); // makes sure it wasn't an empty object.
+				};
+				function map(n, s){ // we invert this because the way'? we check for this is via a negation.
+					if(!n || s !== Node.soul(n) || !Node.is(n, this.fn, this.as)){ return true } // it is true that this is an invalid graph.
+					if(!this.cb){ return }
+					nf.n = n; nf.as = this.as; // sequential race conditions aren't races.
+					this.cb.call(nf.as, n, s, nf);
+				}
+				function nf(fn){ // optional callback for each node.
+					if(fn){ Node.is(nf.n, fn, nf.as); } // where we then have an optional callback for each key/value.
+				}
+			}());
+	(function(){
+				Graph.ify = function(obj, env, as){
+					var at = {path: [], obj: obj};
+					if(!env){
+						env = {};
+					} else
+					if(typeof env === 'string'){
+						env = {soul: env};
+					} else
+					if(env instanceof Function){
+						env.map = env;
+					}
+					if(env.soul){
+						at.rel = Val.rel.ify(env.soul);
+					}
+					env.shell = (as||{}).shell;
+					env.graph = env.graph || {};
+					env.seen = env.seen || [];
+					env.as = env.as || as;
+					node(env, at);
+					env.root = at.node;
+					return env.graph;
+				};
+				function node(env, at){ var tmp;
+					if(tmp = seen(env, at)){ return tmp }
+					at.env = env;
+					at.soul = soul;
+					if(Node.ify(at.obj, map, at)){
+						at.rel = at.rel || Val.rel.ify(Node.soul(at.node));
+						if(at.obj !== env.shell){
+							env.graph[Val.rel.is(at.rel)] = at.node;
+						}
+					}
+					return at;
+				}
+				function map(v,k,n){
+					var at = this, env = at.env, is, tmp;
+					if(Node._ === k && obj_has(v,Val.rel._)){
+						return n._; // TODO: Bug?
+					}
+					if(!(is = valid(v,k,n, at,env))){ return }
+					if(!k){
+						at.node = at.node || n || {};
+						if(obj_has(v, Node._) && Node.soul(v)){ // ? for safety ?
+							at.node._ = obj_copy(v._);
+						}
+						at.node = Node.soul.ify(at.node, Val.rel.is(at.rel));
+						at.rel = at.rel || Val.rel.ify(Node.soul(at.node));
+					}
+					if(tmp = env.map){
+						tmp.call(env.as || {}, v,k,n, at);
+						if(obj_has(n,k)){
+							v = n[k];
+							if(u === v){
+								obj_del(n, k);
+								return;
+							}
+							if(!(is = valid(v,k,n, at,env))){ return }
+						}
+					}
+					if(!k){ return at.node }
+					if(true === is){
+						return v;
+					}
+					tmp = node(env, {obj: v, path: at.path.concat(k)});
+					if(!tmp.node){ return }
+					return tmp.rel; //{'#': Node.soul(tmp.node)};
+				}
+				function soul(id){ var at = this;
+					var prev = Val.link.is(at.rel), graph = at.env.graph;
+					at.rel = at.rel || Val.rel.ify(id);
+					at.rel[Val.rel._] = id;
+					if(at.node && at.node[Node._]){
+						at.node[Node._][Val.rel._] = id;
+					}
+					if(obj_has(graph, prev)){
+						graph[id] = graph[prev];
+						obj_del(graph, prev);
+					}
+				}
+				function valid(v,k,n, at,env){ var tmp;
+					if(Val.is(v)){ return true }
+					if(obj_is(v)){ return 1 }
+					if(tmp = env.invalid){
+						v = tmp.call(env.as || {}, v,k,n);
+						return valid(v,k,n, at,env);
+					}
+					env.err = "Invalid value at '" + at.path.concat(k).join('.') + "'!";
+					if(Type.list.is(v)){ env.err += " Use `.set(item)` instead of an Array."; }
+				}
+				function seen(env, at){
+					var arr = env.seen, i = arr.length, has;
+					while(i--){ has = arr[i];
+						if(at.obj === has.obj){ return has }
+					}
+					arr.push(at);
+				}
+			}());
+			Graph.node = function(node){
+				var soul = Node.soul(node);
+				if(!soul){ return }
+				return obj_put({}, soul, node);
+			}
+			;(function(){
+				Graph.to = function(graph, root, opt){
+					if(!graph){ return }
+					var obj = {};
+					opt = opt || {seen: {}};
+					obj_map(graph[root], map, {obj:obj, graph: graph, opt: opt});
+					return obj;
+				};
+				function map(v,k){ var tmp, obj;
+					if(Node._ === k){
+						if(obj_empty(v, Val.rel._)){
+							return;
+						}
+						this.obj[k] = obj_copy(v);
+						return;
+					}
+					if(!(tmp = Val.rel.is(v))){
+						this.obj[k] = v;
+						return;
+					}
+					if(obj = this.opt.seen[tmp]){
+						this.obj[k] = obj;
+						return;
+					}
+					this.obj[k] = this.opt.seen[tmp] = Graph.to(this.graph, tmp, this.opt);
+				}
+			}());
+			var fn_is = Type.fn.is;
+			var obj = Type.obj, obj_is = obj.is, obj_del = obj.del, obj_has = obj.has, obj_empty = obj.empty, obj_put = obj.put, obj_map = obj.map, obj_copy = obj.copy;
+			var u;
+			module.exports = Graph;
+		})(USE, './graph');
+	USE(function(module){
+			// request / response module, for asking and acking messages.
+			USE('./onto'); // depends upon onto!
+			module.exports = function ask(cb, as){
+				if(!this.on){ return }
+				if(!(cb instanceof Function)){
+					if(!cb || !as){ return }
+					var id = cb['#'] || cb, tmp = (this.tag||empty)[id];
+					if(!tmp){ return }
+					tmp = this.on(id, as);
+					clearTimeout(tmp.err);
+					return true;
+				}
+				var id = (as && as['#']) || Math.random().toString(36).slice(2);
+				if(!cb){ return id }
+				var to = this.on(id, cb, as);
+				to.err = to.err || setTimeout(function(){
+					to.next({err: "Error: No ACK received yet.", lack: true});
+					to.off();
+				}, (this.opt||{}).lack || 9000);
+				return id;
+			};
+		})(USE, './ask');
+	USE(function(module){
+			var Type = USE('./type');
+			function Dup(opt){
+				var dup = {s:{}};
+				opt = opt || {max: 1000, age: 1000 * 9};//1000 * 60 * 2};
+				dup.check = function(id){ var tmp;
+					if(!(tmp = dup.s[id])){ return false }
+					if(tmp.pass){ return tmp.pass = false }
+					return dup.track(id);
+				};
+				dup.track = function(id, pass){
+					var it = dup.s[id] || (dup.s[id] = {});
+					it.was = time_is();
+					if(pass){ it.pass = true; }
+					if(!dup.to){
+						dup.to = setTimeout(function(){
+							var now = time_is();
+							Type.obj.map(dup.s, function(it, id){
+								if(it && opt.age > (now - it.was)){ return }
+								Type.obj.del(dup.s, id);
+							});
+							dup.to = null;
+						}, opt.age + 9);
+					}
+					return it;
+				};
+				return dup;
+			}
+			var time_is = Type.time.is;
+			module.exports = Dup;
+		})(USE, './dup');
+	USE(function(module){
+
+			function Gun(o){
+				if(o instanceof Gun){ return (this._ = {gun: this, $: this}).$ }
+				if(!(this instanceof Gun)){ return new Gun(o) }
+				return Gun.create(this._ = {gun: this, $: this, opt: o});
+			}
+
+			Gun.is = function($){ return ($ instanceof Gun) || ($ && $._ && ($ === $._.$)) || false };
+
+			Gun.version = 0.9;
+
+			Gun.chain = Gun.prototype;
+			Gun.chain.toJSON = function(){};
+
+			var Type = USE('./type');
+			Type.obj.to(Type, Gun);
+			Gun.HAM = USE('./HAM');
+			Gun.val = USE('./val');
+			Gun.node = USE('./node');
+			Gun.state = USE('./state');
+			Gun.graph = USE('./graph');
+			Gun.on = USE('./onto');
+			Gun.ask = USE('./ask');
+			Gun.dup = USE('./dup');
+	(function(){
+				Gun.create = function(at){
+					at.root = at.root || at;
+					at.graph = at.graph || {};
+					at.on = at.on || Gun.on;
+					at.ask = at.ask || Gun.ask;
+					at.dup = at.dup || Gun.dup();
+					var gun = at.$.opt(at.opt);
+					if(!at.once){
+						at.on('in', root, at);
+						at.on('out', root, {at: at, out: root});
+						Gun.on('create', at);
+						at.on('create', at);
+					}
+					at.once = 1;
+					return gun;
+				};
+				function root(msg){
+					//add to.next(at); // TODO: MISSING FEATURE!!!
+					var ev = this, as = ev.as, at = as.at || as, gun = at.$, dup, tmp;
+					if(!(tmp = msg['#'])){ tmp = msg['#'] = text_rand(9); }
+					if((dup = at.dup).check(tmp)){
+						if(as.out === msg.out){
+							msg.out = u;
+							ev.to.next(msg);
+						}
+						return;
+					}
+					dup.track(tmp);
+					if(!at.ask(msg['@'], msg)){
+						if(msg.get){
+							Gun.on.get(msg, gun); //at.on('get', get(msg));
+						}
+						if(msg.put){
+							Gun.on.put(msg, gun); //at.on('put', put(msg));
+						}
+					}
+					ev.to.next(msg);
+					if(!as.out){
+						msg.out = root;
+						at.on('out', msg);
+					}
+				}
+			}());
+	(function(){
+				Gun.on.put = function(msg, gun){
+					var at = gun._, ctx = {$: gun, graph: at.graph, put: {}, map: {}, souls: {}, machine: Gun.state(), ack: msg['@'], cat: at, stop: {}};
+					if(!Gun.graph.is(msg.put, null, verify, ctx)){ ctx.err = "Error: Invalid graph!"; }
+					if(ctx.err){ return at.on('in', {'@': msg['#'], err: Gun.log(ctx.err) }) }
+					obj_map(ctx.put, merge, ctx);
+					if(!ctx.async){ obj_map(ctx.map, map, ctx); }
+					if(u !== ctx.defer){
+						setTimeout(function(){
+							Gun.on.put(msg, gun);
+						}, ctx.defer - ctx.machine);
+					}
+					if(!ctx.diff){ return }
+					at.on('put', obj_to(msg, {put: ctx.diff}));
+				};
+				function verify(val, key, node, soul){ var ctx = this;
+					var state = Gun.state.is(node, key);
+					if(!state){ return ctx.err = "Error: No state on '"+key+"' in node '"+soul+"'!" }
+					var vertex = ctx.graph[soul] || empty, was = Gun.state.is(vertex, key, true), known = vertex[key];
+					var HAM = Gun.HAM(ctx.machine, state, was, val, known);
+					if(!HAM.incoming){
+						if(HAM.defer){ // pick the lowest
+							ctx.defer = (state < (ctx.defer || Infinity))? state : ctx.defer;
+						}
+						return;
+					}
+					ctx.put[soul] = Gun.state.to(node, key, ctx.put[soul]);
+					(ctx.diff || (ctx.diff = {}))[soul] = Gun.state.to(node, key, ctx.diff[soul]);
+					ctx.souls[soul] = true;
+				}
+				function merge(node, soul){
+					var ctx = this, cat = ctx.$._, at = (cat.next || empty)[soul];
+					if(!at){
+						if(!(cat.opt||empty).super){
+							ctx.souls[soul] = false;
+							return;
+						}
+						at = (ctx.$.get(soul)._);
+					}
+					var msg = ctx.map[soul] = {
+						put: node,
+						get: soul,
+						$: at.$
+					}, as = {ctx: ctx, msg: msg};
+					ctx.async = !!cat.tag.node;
+					if(ctx.ack){ msg['@'] = ctx.ack; }
+					obj_map(node, each, as);
+					if(!ctx.async){ return }
+					if(!ctx.and){
+						// If it is async, we only need to setup one listener per context (ctx)
+						cat.on('node', function(m){
+							this.to.next(m); // make sure to call other context's listeners.
+							if(m !== ctx.map[m.get]){ return } // filter out events not from this context!
+							ctx.souls[m.get] = false; // set our many-async flag
+							obj_map(m.put, patch, m); // merge into view
+							if(obj_map(ctx.souls, function(v){ if(v){ return v } })){ return } // if flag still outstanding, keep waiting.
+							if(ctx.c){ return } ctx.c = 1; // failsafe for only being called once per context.
+							this.off();
+							obj_map(ctx.map, map, ctx); // all done, trigger chains.
+						});
+					}
+					ctx.and = true;
+					cat.on('node', msg); // each node on the current context's graph needs to be emitted though.
+				}
+				function each(val, key){
+					var ctx = this.ctx, graph = ctx.graph, msg = this.msg, soul = msg.get, node = msg.put, at = (msg.$._);
+					graph[soul] = Gun.state.to(node, key, graph[soul]);
+					if(ctx.async){ return }
+					at.put = Gun.state.to(node, key, at.put);
+				}
+				function patch(val, key){
+					var msg = this, node = msg.put, at = (msg.$._);
+					at.put = Gun.state.to(node, key, at.put);
+				}
+				function map(msg, soul){
+					if(!msg.$){ return }
+					this.cat.stop = this.stop; // temporary fix till a better solution?
+					(msg.$._).on('in', msg);
+					this.cat.stop = null; // temporary fix till a better solution?
+				}
+
+				Gun.on.get = function(msg, gun){
+					var root = gun._, get = msg.get, soul = get[_soul], node = root.graph[soul], has = get[_has], tmp;
+					var next = root.next || (root.next = {}), at = next[soul];
+					if(obj_has(soul, '*')){ // TEMPORARY HACK FOR MARTTI, TESTING
+						var graph = {};
+						Gun.obj.map(root.graph, function(node, s){
+							if(Gun.text.match(s, soul)){
+								graph[s] = Gun.obj.copy(node);
+							}
+						});
+						if(!Gun.obj.empty(graph)){
+							root.on('in', {
+								'@': msg['#'],
+								how: '*',
+								put: graph,
+								$: gun
+							});
+						}
+					} // TEMPORARY HACK FOR MARTTI, TESTING
+					if(!node){ return root.on('get', msg) }
+					if(has){
+						if(!obj_has(node, has)){ return root.on('get', msg) }
+						node = Gun.state.to(node, has);
+						// If we have a key in-memory, do we really need to fetch?
+						// Maybe... in case the in-memory key we have is a local write
+						// we still need to trigger a pull/merge from peers.
+					} else {
+						node = Gun.obj.copy(node);
+					}
+					node = Gun.graph.node(node);
+					tmp = (at||empty).ack;
+					root.on('in', {
+						'@': msg['#'],
+						how: 'mem',
+						put: node,
+						$: gun
+					});
+					//if(0 < tmp){ return }
+					root.on('get', msg);
+				};
+			}());
+	(function(){
+				Gun.chain.opt = function(opt){
+					opt = opt || {};
+					var gun = this, at = gun._, tmp = opt.peers || opt;
+					if(!obj_is(opt)){ opt = {}; }
+					if(!obj_is(at.opt)){ at.opt = opt; }
+					if(text_is(tmp)){ tmp = [tmp]; }
+					if(list_is(tmp)){
+						tmp = obj_map(tmp, function(url, i, map){
+							map(url, {url: url});
+						});
+						if(!obj_is(at.opt.peers)){ at.opt.peers = {};}
+						at.opt.peers = obj_to(tmp, at.opt.peers);
+					}
+					at.opt.peers = at.opt.peers || {};
+					obj_to(opt, at.opt); // copies options on to `at.opt` only if not already taken.
+					Gun.on('opt', at);
+					at.opt.uuid = at.opt.uuid || function(){ return state_lex() + text_rand(12) };
+					return gun;
+				};
+			}());
+
+			var list_is = Gun.list.is;
+			var text = Gun.text, text_is = text.is, text_rand = text.random;
+			var obj = Gun.obj, obj_is = obj.is, obj_has = obj.has, obj_to = obj.to, obj_map = obj.map, obj_copy = obj.copy;
+			var state_lex = Gun.state.lex, _soul = Gun.val.rel._, _has = '.', node_ = Gun.node._, rel_is = Gun.val.link.is;
+			var empty = {}, u;
+
+			console.debug = function(i, s){ return (console.debug.i && i === console.debug.i && console.debug.i++) && (console.log.apply(console, arguments) || s) };
+
+			Gun.log = function(){ return (!Gun.log.off && console.log.apply(console, arguments)), [].slice.call(arguments).join(' ') };
+			Gun.log.once = function(w,s,o){ return (o = Gun.log.once)[w] = o[w] || 0, o[w]++ || Gun.log(s) }
+
+			;		Gun.log.once("welcome", "Hello wonderful person! :) Thanks for using GUN, feel free to ask for help on https://gitter.im/amark/gun and ask StackOverflow questions tagged with 'gun'!");
+
+			if(typeof window !== "undefined"){ (window.GUN = window.Gun = Gun).window = window; }
+			try{ if(typeof common !== "undefined"){ common.exports = Gun; } }catch(e){}
+			module.exports = Gun;
+
+			/*Gun.on('opt', function(ctx){ // FOR TESTING PURPOSES
+				this.to.next(ctx);
+				if(ctx.once){ return }
+				ctx.on('node', function(msg){
+					var to = this.to;
+					//Gun.node.is(msg.put, function(v,k){ msg.put[k] = v + v });
+					setTimeout(function(){
+						to.next(msg);
+					},1);
+				});
+			});*/
+		})(USE, './root');
+	USE(function(module){
+			var Gun = USE('./root');
+			Gun.chain.back = function(n, opt){ var tmp;
+				n = n || 1;
+				if(-1 === n || Infinity === n){
+					return this._.root.$;
+				} else
+				if(1 === n){
+					return (this._.back || this._).$;
+				}
+				var gun = this, at = gun._;
+				if(typeof n === 'string'){
+					n = n.split('.');
+				}
+				if(n instanceof Array){
+					var i = 0, l = n.length, tmp = at;
+					for(i; i < l; i++){
+						tmp = (tmp||empty)[n[i]];
+					}
+					if(u !== tmp){
+						return opt? gun : tmp;
+					} else
+					if((tmp = at.back)){
+						return tmp.$.back(n, opt);
+					}
+					return;
+				}
+				if(n instanceof Function){
+					var yes, tmp = {back: at};
+					while((tmp = tmp.back)
+					&& u === (yes = n(tmp, opt))){}
+					return yes;
+				}
+				if(Gun.num.is(n)){
+					return (at.back || at).$.back(n - 1);
+				}
+				return this;
+			};
+			var empty = {}, u;
+		})(USE, './back');
+	USE(function(module){
+			// WARNING: GUN is very simple, but the JavaScript chaining API around GUN
+			// is complicated and was extremely hard to build. If you port GUN to another
+			// language, consider implementing an easier API to build.
+			var Gun = USE('./root');
+			Gun.chain.chain = function(sub){
+				var gun = this, at = gun._, chain = new (sub || gun).constructor(gun), cat = chain._, root;
+				cat.root = root = at.root;
+				cat.id = ++root.once;
+				cat.back = gun._;
+				cat.on = Gun.on;
+				cat.on('in', input, cat); // For 'in' if I add my own listeners to each then I MUST do it before in gets called. If I listen globally for all incoming data instead though, regardless of individual listeners, I can transform the data there and then as well.
+				cat.on('out', output, cat); // However for output, there isn't really the global option. I must listen by adding my own listener individually BEFORE this one is ever called.
+				return chain;
+			};
+
+			function output(msg){
+				var put, get, at = this.as, back = at.back, root = at.root, tmp;
+				if(!msg.I){ msg.I = at.$; }
+				if(!msg.$){ msg.$ = at.$; }
+				this.to.next(msg);
+				if(get = msg.get){
+					/*if(u !== at.put){
+						at.on('in', at);
+						return;
+					}*/
+					if(get['#'] || at.soul){
+						get['#'] = get['#'] || at.soul;
+						msg['#'] || (msg['#'] = text_rand(9));
+						back = (root.$.get(get['#'])._);
+						if(!(get = get['.'])){
+							tmp = back.ack;
+							if(!tmp){ back.ack = -1; }
+							if(obj_has(back, 'put')){
+								back.on('in', back);
+							}
+							if(tmp){ return }
+							msg.$ = back.$;
+						} else
+						if(obj_has(back.put, get)){
+							put = (back.$.get(get)._);
+							if(!(tmp = put.ack)){ put.ack = -1; }
+							back.on('in', {
+								$: back.$,
+								put: Gun.state.to(back.put, get),
+								get: back.get
+							});
+							if(tmp){ return }
+						}
+						root.ask(ack, msg);
+						return root.on('in', msg);
+					}
+					if(root.now){ root.now[at.id] = root.now[at.id] || true; at.pass = {}; }
+					if(get['.']){
+						if(at.get){
+							msg = {get: {'.': at.get}, $: at.$};
+							//if(back.ask || (back.ask = {})[at.get]){ return }
+							(back.ask || (back.ask = {}));
+							back.ask[at.get] = msg.$._; // TODO: PERFORMANCE? More elegant way?
+							return back.on('out', msg);
+						}
+						msg = {get: {}, $: at.$};
+						return back.on('out', msg);
+					}
+					at.ack = at.ack || -1;
+					if(at.get){
+						msg.$ = at.$;
+						get['.'] = at.get;
+						(back.ask || (back.ask = {}))[at.get] = msg.$._; // TODO: PERFORMANCE? More elegant way?
+						return back.on('out', msg);
+					}
+				}
+				return back.on('out', msg);
+			}
+
+			function input(msg){
+				var eve = this, cat = eve.as, root = cat.root, gun = msg.$, at = (gun||empty)._ || empty, change = msg.put, rel, tmp;
+				if(cat.get && msg.get !== cat.get){
+					msg = obj_to(msg, {get: cat.get});
+				}
+				if(cat.has && at !== cat){
+					msg = obj_to(msg, {$: cat.$});
+					if(at.ack){
+						cat.ack = at.ack;
+						//cat.ack = cat.ack || at.ack;
+					}
+				}
+				if(u === change){
+					tmp = at.put;
+					eve.to.next(msg);
+					if(cat.soul){ return } // TODO: BUG, I believee the fresh input refactor caught an edge case that a `gun.get('soul').get('key')` that points to a soul that doesn't exist will not trigger val/get etc.
+					if(u === tmp && u !== at.put){ return }
+					echo(cat, msg, eve);
+					if(cat.has){
+						not(cat, msg);
+					}
+					obj_del(at.echo, cat.id);
+					obj_del(cat.map, at.id);
+					return;
+				}
+				if(cat.soul){
+					eve.to.next(msg);
+					echo(cat, msg, eve);
+					if(cat.next){ obj_map(change, map, {msg: msg, cat: cat}); }
+					return;
+				}
+				if(!(rel = Gun.val.link.is(change))){
+					if(Gun.val.is(change)){
+						if(cat.has || cat.soul){
+							not(cat, msg);
+						} else
+						if(at.has || at.soul){
+							(at.echo || (at.echo = {}))[cat.id] = at.echo[at.id] || cat;
+							(cat.map || (cat.map = {}))[at.id] = cat.map[at.id] || {at: at};
+							//if(u === at.put){ return } // Not necessary but improves performance. If we have it but at does not, that means we got things out of order and at will get it. Once at gets it, it will tell us again.
+						}
+						eve.to.next(msg);
+						echo(cat, msg, eve);
+						return;
+					}
+					if(cat.has && at !== cat && obj_has(at, 'put')){
+						cat.put = at.put;
+					}				if((rel = Gun.node.soul(change)) && at.has){
+						at.put = (cat.root.$.get(rel)._).put;
+					}
+					tmp = (root.stop || {})[at.id];
+					//if(tmp && tmp[cat.id]){ } else {
+						eve.to.next(msg);
+					//}
+					relate(cat, msg, at, rel);
+					echo(cat, msg, eve);
+					if(cat.next){ obj_map(change, map, {msg: msg, cat: cat}); }
+					return;
+				}
+				var was = root.stop;
+				tmp = root.stop || {};
+				tmp = tmp[at.id] || (tmp[at.id] = {});
+				//if(tmp[cat.id]){ return }
+				tmp.is = tmp.is || at.put;
+				tmp[cat.id] = at.put || true;
+				//if(root.stop){
+					eve.to.next(msg);
+				//}
+				relate(cat, msg, at, rel);
+				echo(cat, msg, eve);
+			}
+
+			function relate(at, msg, from, rel){
+				if(!rel || node_ === at.get){ return }
+				var tmp = (at.root.$.get(rel)._);
+				if(at.has){
+					from = tmp;
+				} else
+				if(from.has){
+					relate(from, msg, from, rel);
+				}
+				if(from === at){ return }
+				if(!from.$){ from = {}; }
+				(from.echo || (from.echo = {}))[at.id] = from.echo[at.id] || at;
+				if(at.has && !(at.map||empty)[from.id]){ // if we haven't seen this before.
+					not(at, msg);
+				}
+				tmp = from.id? ((at.map || (at.map = {}))[from.id] = at.map[from.id] || {at: from}) : {};
+				if(rel === tmp.link){
+					if(!(tmp.pass || at.pass)){
+						return;
+					}
+				}
+				if(at.pass){
+					Gun.obj.map(at.map, function(tmp){ tmp.pass = true; });
+					obj_del(at, 'pass');
+				}
+				if(tmp.pass){ obj_del(tmp, 'pass'); }
+				if(at.has){ at.link = rel; }
+				ask(at, tmp.link = rel);
+			}
+			function echo(at, msg, ev){
+				if(!at.echo){ return } // || node_ === at.get ?
+				//if(at.has){ msg = obj_to(msg, {event: ev}) }
+				obj_map(at.echo, reverb, msg);
+			}
+			function reverb(to){
+				if(!to || !to.on){ return }
+				to.on('in', this);
+			}
+			function map(data, key){ // Map over only the changes on every update.
+				var cat = this.cat, next = cat.next || empty, via = this.msg, chain, at, tmp;
+				if(node_ === key && !next[key]){ return }
+				if(!(at = next[key])){
+					return;
+				}
+				//if(data && data[_soul] && (tmp = Gun.val.rel.is(data)) && (tmp = (cat.root.$.get(tmp)._)) && obj_has(tmp, 'put')){
+				//	data = tmp.put;
+				//}
+				if(at.has){
+					//if(!(data && data[_soul] && Gun.val.rel.is(data) === Gun.node.soul(at.put))){
+					if(u === at.put || !Gun.val.link.is(data)){
+						at.put = data;
+					}
+					chain = at.$;
+				} else
+				if(tmp = via.$){
+					tmp = (chain = via.$.get(key))._;
+					if(u === tmp.put || !Gun.val.link.is(data)){
+						tmp.put = data;
+					}
+				}
+				at.on('in', {
+					put: data,
+					get: key,
+					$: chain,
+					via: via
+				});
+			}
+			function not(at, msg){
+				if(!(at.has || at.soul)){ return }
+				var tmp = at.map, root = at.root;
+				at.map = null;
+				if(at.has){ at.link = null; }
+				//if(!root.now || !root.now[at.id]){
+				if(!at.pass){
+					if((!msg['@']) && null === tmp){ return }
+					//obj_del(at, 'pass');
+				}
+				if(u === tmp && Gun.val.link.is(at.put)){ return } // This prevents the very first call of a thing from triggering a "clean up" call. // TODO: link.is(at.put) || !val.is(at.put) ?
+				obj_map(tmp, function(proxy){
+					if(!(proxy = proxy.at)){ return }
+					obj_del(proxy.echo, at.id);
+				});
+				tmp = at.put;
+				obj_map(at.next, function(neat, key){
+					if(u === tmp && u !== at.put){ return true }
+					neat.put = u;
+					if(neat.ack){
+						neat.ack = -1;
+					}
+					neat.on('in', {
+						get: key,
+						$: neat.$,
+						put: u
+					});
+				});
+			}
+			function ask(at, soul){
+				var tmp = (at.root.$.get(soul)._);
+				if(at.ack){
+					tmp.on('out', {get: {'#': soul}});
+					if(!at.ask){ return } // TODO: PERFORMANCE? More elegant way?
+				}
+				tmp = at.ask; Gun.obj.del(at, 'ask');
+				obj_map(tmp || at.next, function(neat, key){
+					neat.on('out', {get: {'#': soul, '.': key}});
+				});
+				Gun.obj.del(at, 'ask'); // TODO: PERFORMANCE? More elegant way?
+			}
+			function ack(msg, ev){
+				var as = this.as, get = as.get || empty, at = as.$._, tmp = (msg.put||empty)[get['#']];
+				if(at.ack){ at.ack = (at.ack + 1) || 1; }
+				if(!msg.put || (get['.'] && !obj_has(tmp, at.get))){
+					if(at.put !== u){ return }
+					at.on('in', {
+						get: at.get,
+						put: at.put = u,
+						$: at.$,
+						'@': msg['@']
+					});
+					return;
+				}
+				if(node_ == get['.']){ // is this a security concern?
+					at.on('in', {get: at.get, put: Gun.val.link.ify(get['#']), $: at.$, '@': msg['@']});
+					return;
+				}
+				msg.$ = at.root.$;
+				Gun.on.put(msg, at.root.$);
+			}
+			var empty = {}, u;
+			var obj = Gun.obj, obj_has = obj.has, obj_put = obj.put, obj_del = obj.del, obj_to = obj.to, obj_map = obj.map;
+			var text_rand = Gun.text.random;
+			var _soul = Gun.val.rel._, node_ = Gun.node._;
+		})(USE, './chain');
+	USE(function(module){
+			var Gun = USE('./root');
+			Gun.chain.get = function(key, cb, as){
+				var gun, tmp;
+				if(typeof key === 'string'){
+					var back = this, cat = back._;
+					var next = cat.next || empty;
+					if(!(gun = next[key])){
+						gun = cache(key, back);
+					}
+					gun = gun.$;
+				} else
+				if(key instanceof Function){
+					if(true === cb){ return soul(this, key, cb, as) }
+					gun = this;
+					var at = gun._, root = at.root, tmp = root.now, ev;
+					as = cb || {};
+					as.at = at;
+					as.use = key;
+					as.out = as.out || {};
+					as.out.get = as.out.get || {};
+					(ev = at.on('in', use, as)).rid = rid;
+					(root.now = {$:1})[as.now = at.id] = ev;
+					var mum = root.mum; root.mum = {};
+					at.on('out', as.out);
+					root.mum = mum;
+					root.now = tmp;
+					return gun;
+				} else
+				if(num_is(key)){
+					return this.get(''+key, cb, as);
+				} else
+				if(tmp = rel.is(key)){
+					return this.get(tmp, cb, as);
+				} else {
+					(as = this.chain())._.err = {err: Gun.log('Invalid get request!', key)}; // CLEAN UP
+					if(cb){ cb.call(as, as._.err); }
+					return as;
+				}
+				if(tmp = cat.stun){ // TODO: Refactor?
+					gun._.stun = gun._.stun || tmp;
+				}
+				if(cb && cb instanceof Function){
+					gun.get(cb, as);
+				}
+				return gun;
+			};
+			function cache(key, back){
+				var cat = back._, next = cat.next, gun = back.chain(), at = gun._;
+				if(!next){ next = cat.next = {}; }
+				next[at.get = key] = at;
+				if(back === cat.root.$){
+					at.soul = key;
+				} else
+				if(cat.soul || cat.has){
+					at.has = key;
+					//if(obj_has(cat.put, key)){
+						//at.put = cat.put[key];
+					//}
+				}
+				return at;
+			}
+			function soul(gun, cb, opt, as){
+				var cat = gun._, acks = 0, tmp;
+				if(tmp = cat.soul){ return cb(tmp, as, cat), gun }
+				if(tmp = cat.link){ return cb(tmp, as, cat), gun }
+				gun.get(function(msg, ev){
+					if(u === msg.put && (tmp = (obj_map(cat.root.opt.peers, function(v,k,t){t(k);})||[]).length) && acks++ <= tmp){
+						return;
+					}
+					ev.rid(msg);
+					var at = ((at = msg.$) && at._) || {};
+					tmp = at.link || at.soul || rel.is(msg.put) || node_soul(msg.put) || at.dub;
+					cb(tmp, as, msg, ev);
+				}, {out: {get: {'.':true}}});
+				return gun;
+			}
+			function use(msg){
+				var eve = this, as = eve.as, cat = as.at, root = cat.root, gun = msg.$, at = (gun||{})._ || {}, data = msg.put || at.put, tmp;
+				if((tmp = root.now) && eve !== tmp[as.now]){ return eve.to.next(msg) }
+				//console.log("USE:", cat.id, cat.soul, cat.has, cat.get, msg, root.mum);
+				//if(at.async && msg.root){ return }
+				//if(at.async === 1 && cat.async !== true){ return }
+				//if(root.stop && root.stop[at.id]){ return } root.stop && (root.stop[at.id] = true);
+				//if(!at.async && !cat.async && at.put && msg.put === at.put){ return }
+				//else if(!cat.async && msg.put !== at.put && root.stop && root.stop[at.id]){ return } root.stop && (root.stop[at.id] = true);
+
+
+				//root.stop && (root.stop.ID = root.stop.ID || Gun.text.random(2));
+				//if((tmp = root.stop) && (tmp = tmp[at.id] || (tmp[at.id] = {})) && tmp[cat.id]){ return } tmp && (tmp[cat.id] = true);
+				if(eve.seen && at.id && eve.seen[at.id]){ return eve.to.next(msg) }
+				//if((tmp = root.stop)){ if(tmp[at.id]){ return } tmp[at.id] = msg.root; } // temporary fix till a better solution?
+				if((tmp = data) && tmp[rel._] && (tmp = rel.is(tmp))){
+					tmp = ((msg.$$ = at.root.gun.get(tmp))._);
+					if(u !== tmp.put){
+						msg = obj_to(msg, {put: data = tmp.put});
+					}
+				}
+				if((tmp = root.mum) && at.id){ // TODO: can we delete mum entirely now?
+					var id = at.id + (eve.id || (eve.id = Gun.text.random(9)));
+					if(tmp[id]){ return }
+					if(u !== data && !rel.is(data)){ tmp[id] = true; }
+				}
+				as.use(msg, eve);
+				if(eve.stun){
+					eve.stun = null;
+					return;
+				}
+				eve.to.next(msg);
+			}
+			function rid(at){
+				var cat = this.on;
+				if(!at || cat.soul || cat.has){ return this.off() }
+				if(!(at = (at = (at = at.$ || at)._ || at).id)){ return }
+				var map = cat.map, tmp, seen;
+				//if(!map || !(tmp = map[at]) || !(tmp = tmp.at)){ return }
+				if(tmp = (seen = this.seen || (this.seen = {}))[at]){ return true }
+				seen[at] = true;
+				return;
+				//tmp.echo[cat.id] = {}; // TODO: Warning: This unsubscribes ALL of this chain's listeners from this link, not just the one callback event.
+				//obj.del(map, at); // TODO: Warning: This unsubscribes ALL of this chain's listeners from this link, not just the one callback event.
+				return;
+			}
+			var obj = Gun.obj, obj_map = obj.map, obj_has = obj.has, obj_to = Gun.obj.to;
+			var num_is = Gun.num.is;
+			var rel = Gun.val.link, node_soul = Gun.node.soul, node_ = Gun.node._;
+			var empty = {}, u;
+		})(USE, './get');
+	USE(function(module){
+			var Gun = USE('./root');
+			Gun.chain.put = function(data, cb, as){
+				// #soul.has=value>state
+				// ~who#where.where=what>when@was
+				// TODO: BUG! Put probably cannot handle plural chains!
+				var gun = this, at = (gun._), root = at.root.$, tmp;
+				as = as || {};
+				as.data = data;
+				as.via = as.$ = as.via || as.$ || gun;
+				if(typeof cb === 'string'){
+					as.soul = cb;
+				} else {
+					as.ack = as.ack || cb;
+				}
+				if(at.soul){
+					as.soul = at.soul;
+				}
+				if(as.soul || root === gun){
+					if(!obj_is(as.data)){
+						(as.ack||noop).call(as, as.out = {err: Gun.log("Data saved to the root level of the graph must be a node (an object), not a", (typeof as.data), 'of "' + as.data + '"!')});
+						if(as.res){ as.res(); }
+						return gun;
+					}
+					as.soul = as.soul || (as.not = Gun.node.soul(as.data) || (as.via.back('opt.uuid') || Gun.text.random)());
+					if(!as.soul){ // polyfill async uuid for SEA
+						as.via.back('opt.uuid')(function(err, soul){ // TODO: improve perf without anonymous callback
+							if(err){ return Gun.log(err) } // TODO: Handle error!
+							(as.ref||as.$).put(as.data, as.soul = soul, as);
+						});
+						return gun;
+					}
+					as.$ = root.get(as.soul);
+					as.ref = as.$;
+					ify(as);
+					return gun;
+				}
+				if(Gun.is(data)){
+					data.get(function(soul, o, msg){
+						if(!soul && Gun.val.is(msg.put)){
+							return Gun.log("The reference you are saving is a", typeof msg.put, '"'+ msg.put +'", not a node (object)!');
+						}
+						gun.put(Gun.val.rel.ify(soul), cb, as);
+					}, true);
+					return gun;
+				}
+				as.ref = as.ref || (root._ === (tmp = at.back))? gun : tmp.$;
+				if(as.ref._.soul && Gun.val.is(as.data) && at.get){
+					as.data = obj_put({}, at.get, as.data);
+					as.ref.put(as.data, as.soul, as);
+					return gun;
+				}
+				as.ref.get(any, true, {as: as});
+				if(!as.out){
+					// TODO: Perf idea! Make a global lock, that blocks everything while it is on, but if it is on the lock it does the expensive lookup to see if it is a dependent write or not and if not then it proceeds full speed. Meh? For write heavy async apps that would be terrible.
+					as.res = as.res || stun; // Gun.on.stun(as.ref); // TODO: BUG! Deal with locking?
+					as.$._.stun = as.ref._.stun;
+				}
+				return gun;
+			};
+
+			function ify(as){
+				as.batch = batch;
+				var opt = as.opt||{}, env = as.env = Gun.state.map(map, opt.state);
+				env.soul = as.soul;
+				as.graph = Gun.graph.ify(as.data, env, as);
+				if(env.err){
+					(as.ack||noop).call(as, as.out = {err: Gun.log(env.err)});
+					if(as.res){ as.res(); }
+					return;
+				}
+				as.batch();
+			}
+
+			function stun(cb){
+				if(cb){ cb(); }
+				return;
+				var as = this;
+				if(!as.ref){ return }
+				if(cb){
+					as.after = as.ref._.tag;
+					as.now = as.ref._.tag = {};
+					cb();
+					return;
+				}
+				if(as.after){
+					as.ref._.tag = as.after;
+				}
+			}
+
+			function batch(){ var as = this;
+				if(!as.graph || obj_map(as.stun, no)){ return }
+				as.res = as.res || function(cb){ if(cb){ cb(); } };
+				as.res(function(){
+					var cat = (as.$.back(-1)._), ask = cat.ask(function(ack){
+						cat.root.on('ack', ack);
+						if(ack.err){ Gun.log(ack); }
+						if(!ack.lack){ this.off(); } // One response is good enough for us currently. Later we may want to adjust this.
+						if(!as.ack){ return }
+						as.ack(ack, this);
+					}, as.opt);
+					// NOW is a hack to get synchronous replies to correctly call.
+					// and STOP is a hack to get async behavior to correctly call.
+					// neither of these are ideal, need to be fixed without hacks,
+					// but for now, this works for current tests. :/
+					var tmp = cat.root.now; obj.del(cat.root, 'now');
+					var mum = cat.root.mum; cat.root.mum = {};
+					(as.ref._).on('out', {
+						$: as.ref, put: as.out = as.env.graph, opt: as.opt, '#': ask
+					});
+					cat.root.mum = mum? obj.to(mum, cat.root.mum) : mum;
+					cat.root.now = tmp;
+				}, as);
+				if(as.res){ as.res(); }
+			} function no(v,k){ if(v){ return true } }
+
+			function map(v,k,n, at){ var as = this;
+				var is = Gun.is(v);
+				if(k || !at.path.length){ return }
+				(as.res||iife)(function(){
+					var path = at.path, ref = as.ref, opt = as.opt;
+					var i = 0, l = path.length;
+					for(i; i < l; i++){
+						ref = ref.get(path[i]);
+					}
+					if(is){ ref = v; }
+					var id = (ref._).dub;
+					if(id || (id = Gun.node.soul(at.obj))){
+						ref.back(-1).get(id);
+						at.soul(id);
+						return;
+					}
+					(as.stun = as.stun || {})[path] = true;
+					ref.get(soul, true, {as: {at: at, as: as, p:path}});
+				}, {as: as, at: at});
+				//if(is){ return {} }
+			}
+
+			function soul(id, as, msg, eve){
+				var as = as.as, cat = as.at; as = as.as;
+				var at = ((msg || {}).$ || {})._ || {};
+				id = at.dub = at.dub || id || Gun.node.soul(cat.obj) || Gun.node.soul(msg.put || at.put) || Gun.val.rel.is(msg.put || at.put) || (as.via.back('opt.uuid') || Gun.text.random)(); // TODO: BUG!? Do we really want the soul of the object given to us? Could that be dangerous?
+				if(eve){ eve.stun = true; }
+				if(!id){ // polyfill async uuid for SEA
+					at.via.back('opt.uuid')(function(err, id){ // TODO: improve perf without anonymous callback
+						if(err){ return Gun.log(err) } // TODO: Handle error.
+						solve(at, at.dub = at.dub || id, cat, as);
+					});
+					return;
+				}
+				solve(at, at.dub = id, cat, as);
+			}
+
+			function solve(at, id, cat, as){
+				at.$.back(-1).get(id);
+				cat.soul(id);
+				as.stun[cat.path] = false;
+				as.batch();
+			}
+
+			function any(soul, as, msg, eve){
+				as = as.as;
+				if(!msg.$ || !msg.$._){ return } // TODO: Handle
+				if(msg.err){ // TODO: Handle
+					console.log("Please report this as an issue! Put.any.err");
+					return;
+				}
+				var at = (msg.$._), data = at.put, opt = as.opt||{}, tmp;
+				if((tmp = as.ref) && tmp._.now){ return }
+				if(eve){ eve.stun = true; }
+				if(as.ref !== as.$){
+					tmp = (as.$._).get || at.get;
+					if(!tmp){ // TODO: Handle
+						console.log("Please report this as an issue! Put.no.get"); // TODO: BUG!??
+						return;
+					}
+					as.data = obj_put({}, tmp, as.data);
+					tmp = null;
+				}
+				if(u === data){
+					if(!at.get){ return } // TODO: Handle
+					if(!soul){
+						tmp = at.$.back(function(at){
+							if(at.link || at.soul){ return at.link || at.soul }
+							as.data = obj_put({}, at.get, as.data);
+						});
+					}
+					tmp = tmp || at.soul || at.link || at.dub;// || at.get;
+					at = tmp? (at.root.$.get(tmp)._) : at;
+					as.soul = tmp;
+					data = as.data;
+				}
+				if(!as.not && !(as.soul = as.soul || soul)){
+					if(as.path && obj_is(as.data)){
+						as.soul = (opt.uuid || as.via.back('opt.uuid') || Gun.text.random)();
+					} else {
+						//as.data = obj_put({}, as.$._.get, as.data);
+						if(node_ == at.get){
+							as.soul = (at.put||empty)['#'] || at.dub;
+						}
+						as.soul = as.soul || at.soul || at.soul || (opt.uuid || as.via.back('opt.uuid') || Gun.text.random)();
+					}
+					if(!as.soul){ // polyfill async uuid for SEA
+						as.via.back('opt.uuid')(function(err, soul){ // TODO: improve perf without anonymous callback
+							if(err){ return Gun.log(err) } // Handle error.
+							as.ref.put(as.data, as.soul = soul, as);
+						});
+						return;
+					}
+				}
+				as.ref.put(as.data, as.soul, as);
+			}
+			var obj = Gun.obj, obj_is = obj.is, obj_put = obj.put, obj_map = obj.map;
+			var u, empty = {}, noop = function(){}, iife = function(fn,as){fn.call(as||empty);};
+			var node_ = Gun.node._;
+		})(USE, './put');
+	USE(function(module){
+			var Gun = USE('./root');
+			USE('./chain');
+			USE('./back');
+			USE('./put');
+			USE('./get');
+			module.exports = Gun;
+		})(USE, './index');
+	USE(function(module){
+			var Gun = USE('./index');
+			Gun.chain.on = function(tag, arg, eas, as){
+				var gun = this, at = gun._, act;
+				if(typeof tag === 'string'){
+					if(!arg){ return at.on(tag) }
+					act = at.on(tag, arg, eas || at, as);
+					if(eas && eas.$){
+						(eas.subs || (eas.subs = [])).push(act);
+					}
+					return gun;
+				}
+				var opt = arg;
+				opt = (true === opt)? {change: true} : opt || {};
+				opt.at = at;
+				opt.ok = tag;
+				//opt.last = {};
+				gun.get(ok, opt); // TODO: PERF! Event listener leak!!!?
+				return gun;
+			};
+
+			function ok(msg, ev){ var opt = this;
+				var gun = msg.$, at = (gun||{})._ || {}, data = at.put || msg.put, cat = opt.at, tmp;
+				if(u === data){
+					return;
+				}
+				if(tmp = msg.$$){
+					tmp = (msg.$$._);
+					if(u === tmp.put){
+						return;
+					}
+					data = tmp.put;
+				}
+				if(opt.change){ // TODO: BUG? Move above the undef checks?
+					data = msg.put;
+				}
+				// DEDUPLICATE // TODO: NEEDS WORK! BAD PROTOTYPE
+				//if(tmp.put === data && tmp.get === id && !Gun.node.soul(data)){ return }
+				//tmp.put = data;
+				//tmp.get = id;
+				// DEDUPLICATE // TODO: NEEDS WORK! BAD PROTOTYPE
+				//at.last = data;
+				if(opt.as){
+					opt.ok.call(opt.as, msg, ev);
+				} else {
+					opt.ok.call(gun, data, msg.get, msg, ev);
+				}
+			}
+
+			Gun.chain.val = function(cb, opt){
+				Gun.log.once("onceval", "Future Breaking API Change: .val -> .once, apologies unexpected.");
+				return this.once(cb, opt);
+			};
+			Gun.chain.once = function(cb, opt){
+				var gun = this, at = gun._, data = at.put;
+				if(0 < at.ack && u !== data){
+					(cb || noop).call(gun, data, at.get);
+					return gun;
+				}
+				if(cb){
+					(opt = opt || {}).ok = cb;
+					opt.at = at;
+					opt.out = {'#': Gun.text.random(9)};
+					gun.get(val, {as: opt});
+					opt.async = true; //opt.async = at.stun? 1 : true;
+				} else {
+					Gun.log.once("valonce", "Chainable val is experimental, its behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");
+					var chain = gun.chain();
+					chain._.nix = gun.once(function(){
+						chain._.on('in', gun._);
+					});
+					return chain;
+				}
+				return gun;
+			};
+
+			function val(msg, eve, to){
+				var opt = this.as, cat = opt.at, gun = msg.$, at = gun._, data = at.put || msg.put, link, tmp;
+				if(tmp = msg.$$){
+					link = tmp = (msg.$$._);
+					if(u !== link.put){
+						data = link.put;
+					}
+				}
+				if((tmp = eve.wait) && (tmp = tmp[at.id])){ clearTimeout(tmp); }
+				if((!to && (u === data || at.soul || at.link || (link && !(0 < link.ack))))
+				|| (u === data && (tmp = (obj_map(at.root.opt.peers, function(v,k,t){t(k);})||[]).length) && (!to && (link||at).ack <= tmp))){
+					tmp = (eve.wait = {})[at.id] = setTimeout(function(){
+						val.call({as:opt}, msg, eve, tmp || 1);
+					}, opt.wait || 99);
+					return;
+				}
+				if(link && u === link.put && (tmp = rel.is(data))){ data = Gun.node.ify({}, tmp); }
+				eve.rid(msg);
+				opt.ok.call(gun || opt.$, data, msg.get);
+			}
+
+			Gun.chain.off = function(){
+				// make off more aggressive. Warning, it might backfire!
+				var gun = this, at = gun._, tmp;
+				var cat = at.back;
+				if(!cat){ return }
+				if(tmp = cat.next){
+					if(tmp[at.get]){
+						obj_del(tmp, at.get);
+					}
+				}
+				if(tmp = cat.ask){
+					obj_del(tmp, at.get);
+				}
+				if(tmp = cat.put){
+					obj_del(tmp, at.get);
+				}
+				if(tmp = at.soul){
+					obj_del(cat.root.graph, tmp);
+				}
+				if(tmp = at.map){
+					obj_map(tmp, function(at){
+						if(at.link){
+							cat.root.$.get(at.link).off();
+						}
+					});
+				}
+				if(tmp = at.next){
+					obj_map(tmp, function(neat){
+						neat.$.off();
+					});
+				}
+				at.on('off', {});
+				return gun;
+			};
+			var obj = Gun.obj, obj_map = obj.map, obj_has = obj.has, obj_del = obj.del, obj_to = obj.to;
+			var rel = Gun.val.link;
+			var noop = function(){}, u;
+		})(USE, './on');
+	USE(function(module){
+			var Gun = USE('./index');
+			Gun.chain.map = function(cb, opt, t){
+				var gun = this, cat = gun._, chain;
+				if(!cb){
+					if(chain = cat.each){ return chain }
+					cat.each = chain = gun.chain();
+					chain._.nix = gun.back('nix');
+					gun.on('in', map, chain._);
+					return chain;
+				}
+				Gun.log.once("mapfn", "Map functions are experimental, their behavior and API may change moving forward. Please play with it and report bugs and ideas on how to improve it.");
+				chain = gun.chain();
+				gun.map().on(function(data, key, at, ev){
+					var next = (cb||noop).call(this, data, key, at, ev);
+					if(u === next){ return }
+					if(data === next){ return chain._.on('in', at) }
+					if(Gun.is(next)){ return chain._.on('in', next._) }
+					chain._.on('in', {get: key, put: next});
+				});
+				return chain;
+			};
+			function map(msg){
+				if(!msg.put || Gun.val.is(msg.put)){ return this.to.next(msg) }
+				if(this.as.nix){ this.off(); } // TODO: Ugly hack!
+				obj_map(msg.put, each, {at: this.as, msg: msg});
+				this.to.next(msg);
+			}
+			function each(v,k){
+				if(n_ === k){ return }
+				var msg = this.msg, gun = msg.$, at = this.at, tmp = (gun.get(k)._);
+				(tmp.echo || (tmp.echo = {}))[at.id] = tmp.echo[at.id] || at;
+			}
+			var obj_map = Gun.obj.map, noop = function(){}, n_ = Gun.node._, u;
+		})(USE, './map');
+	USE(function(module){
+			var Gun = USE('./index');
+			Gun.chain.set = function(item, cb, opt){
+				var gun = this, soul;
+				cb = cb || function(){};
+				opt = opt || {}; opt.item = opt.item || item;
+				if(soul = Gun.node.soul(item)){ item = Gun.obj.put({}, soul, Gun.val.link.ify(soul)); }
+				if(!Gun.is(item)){
+					if(Gun.obj.is(item)){					item = gun.back(-1).get(soul = soul || Gun.node.soul(item) || gun.back('opt.uuid')()).put(item);
+					}
+					return gun.get(soul || (Gun.state.lex() + Gun.text.random(7))).put(item, cb, opt);
+				}
+				item.get(function(soul, o, msg){
+					if(!soul){ return cb.call(gun, {err: Gun.log('Only a node can be linked! Not "' + msg.put + '"!')}) }
+					gun.put(Gun.obj.put({}, soul, Gun.val.link.ify(soul)), cb, opt);
+				},true);
+				return item;
+			};
+		})(USE, './set');
+	USE(function(module){
+			if(typeof Gun === 'undefined'){ return } // TODO: localStorage is Browser only. But it would be nice if it could somehow plugin into NodeJS compatible localStorage APIs?
+
+			var noop = function(){}, store;
+			try{store = (Gun.window||noop).localStorage;}catch(e){}
+			if(!store){
+				console.log("Warning: No localStorage exists to persist data to!");
+				store = {setItem: function(k,v){this[k]=v;}, removeItem: function(k){delete this[k];}, getItem: function(k){return this[k]}};
+			}
+			/*
+				NOTE: Both `lib/file.js` and `lib/memdisk.js` are based on this design!
+				If you update anything here, consider updating the other adapters as well.
+			*/
+
+			Gun.on('create', function(root){
+				// This code is used to queue offline writes for resync.
+				// See the next 'opt' code below for actual saving of data.
+				var ev = this.to, opt = root.opt;
+				if(root.once){ return ev.next(root) }
+				//if(false === opt.localStorage){ return ev.next(root) } // we want offline resynce queue regardless!
+				opt.prefix = opt.file || 'gun/';
+				var gap = Gun.obj.ify(store.getItem('gap/'+opt.prefix)) || {};
+				var empty = Gun.obj.empty, id, to;
+				// add re-sync command.
+				if(!empty(gap)){
+					var disk = Gun.obj.ify(store.getItem(opt.prefix)) || {}, send = {};
+					Gun.obj.map(gap, function(node, soul){
+						Gun.obj.map(node, function(val, key){
+							send[soul] = Gun.state.to(disk[soul], key, send[soul]);
+						});
+					});
+					setTimeout(function(){
+						root.on('out', {put: send, '#': root.ask(ack), I: root.$});
+					},1);
+				}
+
+				root.on('out', function(msg){
+					if(msg.lS){ return }
+					if(msg.I && msg.put && !msg['@'] && !empty(opt.peers)){
+						id = msg['#'];
+						Gun.graph.is(msg.put, null, map);
+						if(!to){ to = setTimeout(flush, opt.wait || 1); }
+					}
+					this.to.next(msg);
+				});
+				root.on('ack', ack);
+
+				function ack(ack){ // TODO: This is experimental, not sure if we should keep this type of event hook.
+					if(ack.err || !ack.ok){ return }
+					var id = ack['@'];
+					setTimeout(function(){
+						Gun.obj.map(gap, function(node, soul){
+							Gun.obj.map(node, function(val, key){
+								if(id !== val){ return }
+								delete node[key];
+							});
+							if(empty(node)){
+								delete gap[soul];
+							}
+						});
+						flush();
+					}, opt.wait || 1);
+				}			ev.next(root);
+
+				var map = function(val, key, node, soul){
+					(gap[soul] || (gap[soul] = {}))[key] = id;
+				};
+				var flush = function(){
+					clearTimeout(to);
+					to = false;
+					try{store.setItem('gap/'+opt.prefix, JSON.stringify(gap));
+					}catch(e){ Gun.log(err = e || "localStorage failure"); }
+				};
+			});
+
+			Gun.on('create', function(root){
+				this.to.next(root);
+				var opt = root.opt;
+				if(root.once){ return }
+				if(false === opt.localStorage){ return }
+				opt.prefix = opt.file || 'gun/';
+				var graph = root.graph, acks = {}, count = 0, to;
+				var disk = Gun.obj.ify(store.getItem(opt.prefix)) || {};
+				root.on('localStorage', disk); // NON-STANDARD EVENT!
+
+				root.on('put', function(at){
+					this.to.next(at);
+					Gun.graph.is(at.put, null, map);
+					if(!at['@']){ acks[at['#']] = true; } // only ack non-acks.
+					count += 1;
+					if(count >= (opt.batch || 1000)){
+						return flush();
+					}
+					if(to){ return }
+					to = setTimeout(flush, opt.wait || 1);
+				});
+
+				root.on('get', function(msg){
+					this.to.next(msg);
+					var lex = msg.get, soul, data, u;
+					function to(){
+					if(!lex || !(soul = lex['#'])){ return }
+					//if(0 >= msg.cap){ return }
+					var has = lex['.'];
+					data = disk[soul] || u;
+					if(data && has){
+						data = Gun.state.to(data, has);
+					}
+					if(!data && !Gun.obj.empty(opt.peers)){ // if data not found, don't ack if there are peers.
+						return; // Hmm, what if we have peers but we are disconnected?
+					}
+					//console.log("lS get", lex, data);
+					root.on('in', {'@': msg['#'], put: Gun.graph.node(data), how: 'lS', lS: msg.I});
+					}				Gun.debug? setTimeout(to,1) : to();
+				});
+
+				var map = function(val, key, node, soul){
+					disk[soul] = Gun.state.to(node, key, disk[soul]);
+				};
+
+				var flush = function(data){
+					var err;
+					count = 0;
+					clearTimeout(to);
+					to = false;
+					var ack = acks;
+					acks = {};
+					if(data){ disk = data; }
+					try{store.setItem(opt.prefix, JSON.stringify(disk));
+					}catch(e){
+						Gun.log(err = (e || "localStorage failure") + " Consider using GUN's IndexedDB plugin for RAD for more storage space, temporary example at https://github.com/amark/gun/blob/master/test/tmp/indexedDB.html .");
+						root.on('localStorage:error', {err: err, file: opt.prefix, flush: disk, retry: flush});
+					}
+					if(!err && !Gun.obj.empty(opt.peers)){ return } // only ack if there are no peers.
+					Gun.obj.map(ack, function(yes, id){
+						root.on('in', {
+							'@': id,
+							err: err,
+							ok: 0 // localStorage isn't reliable, so make its `ok` code be a low number.
+						});
+					});
+				};
+			});
+		})(USE, './adapters/localStorage');
+	USE(function(module){
+			var Type = USE('../type');
+
+			function Mesh(ctx){
+				var mesh = function(){};
+				var opt = ctx.opt || {};
+				opt.log = opt.log || console.log;
+				opt.gap = opt.gap || opt.wait || 1;
+				opt.pack = opt.pack || (opt.memory? (opt.memory * 1000 * 1000) : 1399000000) * 0.3; // max_old_space_size defaults to 1400 MB.
+
+				mesh.out = function(msg){ var tmp;
+					if(this.to){ this.to.next(msg); }
+					//if(mesh.last != msg['#']){ return mesh.last = msg['#'], this.to.next(msg) }
+					if((tmp = msg['@'])
+					&& (tmp = ctx.dup.s[tmp])
+					&& (tmp = tmp.it)
+					&& tmp.mesh){
+						mesh.say(msg, tmp.mesh.via, 1);
+						tmp['##'] = msg['##'];
+						return;
+					}
+					// add hook for AXE?
+					//if (Gun.AXE && opt && opt.super) { Gun.AXE.say(msg, mesh.say, this); return; } // rogowski
+					mesh.say(msg);
+				};
+
+				ctx.on('create', function(root){
+					root.opt.pid = root.opt.pid || Type.text.random(9);
+					this.to.next(root);
+					ctx.on('out', mesh.out);
+				});
+
+				mesh.hear = function(raw, peer){
+					if(!raw){ return }
+					var dup = ctx.dup, id, hash, msg, tmp = raw[0];
+					if(opt.pack <= raw.length){ return mesh.say({dam: '!', err: "Message too big!"}, peer) }
+					try{msg = JSON.parse(raw);
+					}catch(e){opt.log('DAM JSON parse error', e);}
+					if('{' === tmp){
+						if(!msg){ return }
+						if(dup.check(id = msg['#'])){ return }
+						dup.track(id, true).it = msg; // GUN core also dedups, so `true` is needed.
+						if((tmp = msg['@']) && msg.put){
+							hash = msg['##'] || (msg['##'] = mesh.hash(msg));
+							if((tmp = tmp + hash) != id){
+								if(dup.check(tmp)){ return }
+								(tmp = dup.s)[hash] = tmp[id];
+							}
+						}
+						(msg.mesh = function(){}).via = peer;
+						if((tmp = msg['><'])){
+							msg.mesh.to = Type.obj.map(tmp.split(','), function(k,i,m){m(k,true);});
+						}
+						if(msg.dam){
+							if(tmp = mesh.hear[msg.dam]){
+								tmp(msg, peer, ctx);
+							}
+							return;
+						}
+	          
+						ctx.on('in', msg);
+
+						return;
+					} else
+					if('[' === tmp){
+						if(!msg){ return }
+						var i = 0, m;
+						while(m = msg[i++]){
+							mesh.hear(m, peer);
+						}
+
+						return;
+					}
+				}
+
+				;(function(){
+					mesh.say = function(msg, peer, o){
+						/*
+							TODO: Plenty of performance optimizations
+							that can be made just based off of ordering,
+							and reducing function calls for cached writes.
+						*/
+						if(!peer){
+							Type.obj.map(opt.peers, function(peer){
+								mesh.say(msg, peer);
+							});
+							return;
+						}
+						var tmp, wire = peer.wire || ((opt.wire) && opt.wire(peer)), msh, raw;// || open(peer, ctx); // TODO: Reopen!
+						if(!wire){ return }
+						msh = msg.mesh || empty;
+						if(peer === msh.via){ return }
+						if(!(raw = msh.raw)){ raw = mesh.raw(msg); }
+						if((tmp = msg['@'])
+						&& (tmp = ctx.dup.s[tmp])
+						&& (tmp = tmp.it)){
+							if(tmp.get && tmp['##'] && tmp['##'] === msg['##']){ // PERF: move this condition outside say?
+								return; // TODO: this still needs to be tested in the browser!
+							}
+						}
+						if((tmp = msh.to) && (tmp[peer.url] || tmp[peer.id]) && !o){ return } // TODO: still needs to be tested
+						if(peer.batch){
+							peer.tail = (peer.tail || 0) + raw.length;
+							if(peer.tail <= opt.pack){
+								peer.batch.push(raw);
+								return;
+							}
+							flush(peer);
+						}
+						peer.batch = [];
+						setTimeout(function(){flush(peer);}, opt.gap);
+						send(raw, peer);
+					};
+					function flush(peer){
+						var tmp = peer.batch;
+						if(!tmp){ return }
+						peer.batch = peer.tail = null;
+						if(!tmp.length){ return }
+						try{send(JSON.stringify(tmp), peer);
+						}catch(e){opt.log('DAM JSON stringify error', e);}
+					}
+					function send(raw, peer){
+						var wire = peer.wire;
+						try{
+							if(wire.send){
+								wire.send(raw);
+							} else
+							if(peer.say){
+								peer.say(raw);
+							}
+						}catch(e){
+							(peer.queue = peer.queue || []).push(raw);
+						}
+					}
+
+				}());
+	(function(){
+
+					mesh.raw = function(msg){
+						if(!msg){ return '' }
+						var dup = ctx.dup, msh = msg.mesh || {}, put, hash, tmp;
+						if(tmp = msh.raw){ return tmp }
+						if(typeof msg === 'string'){ return msg }
+						if(msg['@'] && (tmp = msg.put)){
+							if(!(hash = msg['##'])){
+								put = $(tmp, sort) || '';
+								hash = mesh.hash(msg, put);
+								msg['##'] = hash;
+							}
+							(tmp = dup.s)[hash = msg['@']+hash] = tmp[msg['#']];
+							msg['#'] = hash || msg['#'];
+							if(put){ (msg = Type.obj.to(msg)).put = _; }
+						}
+						var i = 0, to = []; Type.obj.map(opt.peers, function(p){
+							to.push(p.url || p.id); if(++i > 9){ return true } // limit server, fast fix, improve later!
+						}); msg['><'] = to.join();
+						var raw = $(msg);
+						if(u !== put){
+							tmp = raw.indexOf(_, raw.indexOf('put'));
+							raw = raw.slice(0, tmp-1) + put + raw.slice(tmp + _.length + 1);
+							//raw = raw.replace('"'+ _ +'"', put); // https://github.com/amark/gun/wiki/@$$ Heisenbug
+						}
+						if(msh){
+							msh.raw = raw;
+						}
+						return raw;
+					};
+
+					mesh.hash = function(msg, hash){
+						return Mesh.hash(hash || $(msg.put, sort) || '') || msg['#'] || Type.text.random(9);
+					};
+
+					function sort(k, v){ var tmp;
+						if(!(v instanceof Object)){ return v }
+						Type.obj.map(Object.keys(v).sort(), map, {to: tmp = {}, on: v});
+						return tmp;
+					}
+
+					function map(k){
+						this.to[k] = this.on[k];
+					}
+					var $ = JSON.stringify, _ = ':])([:';
+
+				}());
+
+				mesh.hi = function(peer){
+					var tmp = peer.wire || {};
+					if(peer.id || peer.url){
+						opt.peers[peer.url || peer.id] = peer;
+						Type.obj.del(opt.peers, tmp.id);
+					} else {
+						tmp = tmp.id = tmp.id || Type.text.random(9);
+						mesh.say({dam: '?'}, opt.peers[tmp] = peer);
+					}
+					if(!tmp.hied){ ctx.on(tmp.hied = 'hi', peer); }
+					tmp = peer.queue; peer.queue = [];
+					Type.obj.map(tmp, function(msg){
+						mesh.say(msg, peer);
+					});
+				};
+				mesh.bye = function(peer){
+					Type.obj.del(opt.peers, peer.id); // assume if peer.url then reconnect
+					ctx.on('bye', peer);
+				};
+
+				mesh.hear['!'] = function(msg, peer){ opt.log('Error:', msg.err); };
+				mesh.hear['?'] = function(msg, peer){
+					if(!msg.pid){ return mesh.say({dam: '?', pid: opt.pid, '@': msg['#']}, peer) }
+					peer.id = peer.id || msg.pid;
+					mesh.hi(peer);
+				};
+
+				return mesh;
+			}
+
+			Mesh.hash = function(s){ // via SO
+				if(typeof s !== 'string'){ return {err: 1} }
+		    var c = 0;
+		    if(!s.length){ return c }
+		    for(var i=0,l=s.length,n; i<l; ++i){
+		      n = s.charCodeAt(i);
+		      c = ((c<<5)-c)+n;
+		      c |= 0;
+		    }
+		    return c; // Math.abs(c);
+		  };
+
+		  var empty = {}, u;
+		  Object.keys = Object.keys || function(o){ return map(o, function(v,k,t){t(k);}) };
+
+		  try{ module.exports = Mesh; }catch(e){}
+
+		})(USE, './adapters/mesh');
+	USE(function(module){
+			var Gun = USE('../index');
+			Gun.Mesh = USE('./mesh');
+
+			Gun.on('opt', function(root){
+				this.to.next(root);
+				var opt = root.opt;
+				if(root.once){ return }
+				if(false === opt.WebSocket){ return }
+
+				var env;
+				if(typeof window !== "undefined"){ env = window; }
+				if(typeof commonjsGlobal !== "undefined"){ env = commonjsGlobal; }
+				env = env || {};
+
+				var websocket = opt.WebSocket || env.WebSocket || env.webkitWebSocket || env.mozWebSocket;
+				if(!websocket){ return }
+				opt.WebSocket = websocket;
+
+				var mesh = opt.mesh = opt.mesh || Gun.Mesh(root);
+
+				var wire = opt.wire;
+				opt.wire = open;
+				function open(peer){ try{
+					if(!peer || !peer.url){ return wire && wire(peer) }
+					var url = peer.url.replace('http', 'ws');
+					var wire = peer.wire = new opt.WebSocket(url);
+					wire.onclose = function(){
+						opt.mesh.bye(peer);
+						reconnect(peer);
+					};
+					wire.onerror = function(error){
+						reconnect(peer); // placement?
+						if(!error){ return }
+						if(error.code === 'ECONNREFUSED');
+					};
+					wire.onopen = function(){
+						opt.mesh.hi(peer);
+					};
+					wire.onmessage = function(msg){
+						if(!msg){ return }
+						opt.mesh.hear(msg.data || msg, peer);
+					};
+					return wire;
+				}catch(e){}}
+
+				function reconnect(peer){
+					clearTimeout(peer.defer);
+					peer.defer = setTimeout(function(){
+						open(peer);
+					}, 2 * 1000);
+				}
+			});
+		})(USE, './adapters/websocket');
+
+	}());
+	});
 
 	var Gun$1 = (typeof window !== "undefined")? window.Gun : gun;
 
@@ -13747,10 +13386,15 @@
 	  /**
 	  * When you use someone else's index, initialise it with this constructor
 	  */
-	  function Index(gun) {
+	  function Index(gun, options) {
 	    _classCallCheck(this, Index);
 
 	    this.gun = gun || new gun_min();
+	    this.options = _Object$assign({
+	      importFromTrustedIndexes: true,
+	      subscribeToTrustedIndexes: true,
+	      queryTrustedIndexes: true
+	    }, options);
 	  }
 
 	  /**
@@ -14081,21 +13725,23 @@
 	    console.log('addTrustedIndex', gunUri);
 	    this.gun.get('trustedIndexes').get(gunUri).put(true);
 	    var msgs = [];
-	    await util$1.timeoutPromise(new _Promise(function (resolve) {
-	      _this.gun.back(-1).get(gunUri).get('messagesByDistance').map(function (val, key) {
-	        var d = _Number$parseInt(key.split(':')[0]);
-	        if (!isNaN(d) && d <= maxCrawlDistance) {
-	          Message.fromSig(val).then(function (msg) {
-	            msgs.push(msg);
-	            if (msgs.length >= maxMsgsToCrawl) {
-	              resolve();
-	            }
-	          });
-	        }
-	      });
-	    }), 10000);
-	    console.log('adding', msgs.length, 'msgs');
-	    this.addMessages(msgs);
+	    if (this.options.importFromTrustedIndexes) {
+	      await util$1.timeoutPromise(new _Promise(function (resolve) {
+	        _this.gun.back(-1).get(gunUri).get('messagesByDistance').map(function (val, key) {
+	          var d = _Number$parseInt(key.split(':')[0]);
+	          if (!isNaN(d) && d <= maxCrawlDistance) {
+	            Message.fromSig(val).then(function (msg) {
+	              msgs.push(msg);
+	              if (msgs.length >= maxMsgsToCrawl) {
+	                resolve();
+	              }
+	            });
+	          }
+	        });
+	      }), 10000);
+	      console.log('adding', msgs.length, 'msgs');
+	      this.addMessages(msgs);
+	    }
 	  };
 
 	  Index.prototype._updateIdentityIndexesByMsg = async function _updateIdentityIndexesByMsg(msg) {
@@ -14265,23 +13911,25 @@
 	          r[soul] = new Identity(_this2.gun.get('identitiesByTrustDistance').get(key));
 	        }
 	      });
-	      _this2.gun.get('trustedIndexes').map(function (val, key) {
-	        if (val) {
-	          console.log('search stuff from trusted index', key);
+	      if (_this2.options.queryTrustedIndexes) {
+	        _this2.gun.get('trustedIndexes').map(function (val, key) {
+	          if (val) {
+	            console.log('search stuff from trusted index', key);
 
-	          _this2.gun.back(-1).get(key).get('identitiesByTrustDistance').map(function (id, k) {
-	            // TODO: where should this actually be searched from?
-	            if (k.indexOf(encodeURIComponent(value)) === -1) {
-	              return;
-	            }
-	            console.log('found search result from trusted index', key, ':', k);
-	            var soul = gun_min.node.soul(id);
-	            if (soul && !r.hasOwnProperty(soul)) {
-	              r[soul] = new Identity(_this2.gun.get('identitiesByTrustDistance').get(k));
-	            }
-	          });
-	        }
-	      });
+	            _this2.gun.back(-1).get(key).get('identitiesByTrustDistance').map(function (id, k) {
+	              // TODO: where should this actually be searched from?
+	              if (k.indexOf(encodeURIComponent(value)) === -1) {
+	                return;
+	              }
+	              console.log('found search result from trusted index', key, ':', k);
+	              var soul = gun_min.node.soul(id);
+	              if (soul && !r.hasOwnProperty(soul)) {
+	                r[soul] = new Identity(_this2.gun.get('identitiesByTrustDistance').get(k));
+	              }
+	            });
+	          }
+	        });
+	      }
 	      setTimeout(function () {
 	        resolve(_Object$values(r));
 	      }, 200);

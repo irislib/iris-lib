@@ -48,8 +48,13 @@ class Index {
   /**
   * When you use someone else's index, initialise it with this constructor
   */
-  constructor(gun: Object) {
+  constructor(gun: Object, options) {
     this.gun = gun || new Gun();
+    this.options = Object.assign({
+      importFromTrustedIndexes: true,
+      subscribeToTrustedIndexes: true,
+      queryTrustedIndexes: true
+    }, options);
   }
 
   /**
@@ -355,21 +360,23 @@ class Index {
     console.log(`addTrustedIndex`, gunUri);
     this.gun.get(`trustedIndexes`).get(gunUri).put(true);
     const msgs = [];
-    await util.timeoutPromise(new Promise(resolve => {
-      this.gun.back(-1).get(gunUri).get(`messagesByDistance`).map((val, key) => {
-        const d = Number.parseInt(key.split(`:`)[0]);
-        if (!isNaN(d) && d <= maxCrawlDistance) {
-          Message.fromSig(val).then(msg => {
-            msgs.push(msg);
-            if (msgs.length >= maxMsgsToCrawl) {
-              resolve();
-            }
-          });
-        }
-      });
-    }), 10000);
-    console.log('adding', msgs.length, 'msgs');
-    this.addMessages(msgs);
+    if (this.options.importFromTrustedIndexes) {
+      await util.timeoutPromise(new Promise(resolve => {
+        this.gun.back(-1).get(gunUri).get(`messagesByDistance`).map((val, key) => {
+          const d = Number.parseInt(key.split(`:`)[0]);
+          if (!isNaN(d) && d <= maxCrawlDistance) {
+            Message.fromSig(val).then(msg => {
+              msgs.push(msg);
+              if (msgs.length >= maxMsgsToCrawl) {
+                resolve();
+              }
+            });
+          }
+        });
+      }), 10000);
+      console.log('adding', msgs.length, 'msgs');
+      this.addMessages(msgs);
+    }
   }
 
   async _updateIdentityIndexesByMsg(msg) {
@@ -527,23 +534,24 @@ class Index {
           r[soul] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
         }
       });
-      this.gun.get(`trustedIndexes`).map((val, key) => {
-        if (val) {
-          console.log(`search stuff from trusted index`, key);
+      if (this.options.queryTrustedIndexes) {
+        this.gun.get(`trustedIndexes`).map((val, key) => {
+          if (val) {
+            console.log(`search stuff from trusted index`, key);
 
-          this.gun.back(-1).get(key).get(`identitiesByTrustDistance`).map((id, k) => { // TODO: where should this actually be searched from?
-            if (k.indexOf(encodeURIComponent(value)) === - 1) {
-              return;
-            }
-            console.log('found search result from trusted index', key, ':', k);
-            const soul = Gun.node.soul(id);
-            if (soul && !r.hasOwnProperty(soul)) {
-              r[soul] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(k));
-            }
-          });
-
-        }
-      });
+            this.gun.back(-1).get(key).get(`identitiesByTrustDistance`).map((id, k) => { // TODO: where should this actually be searched from?
+              if (k.indexOf(encodeURIComponent(value)) === - 1) {
+                return;
+              }
+              console.log('found search result from trusted index', key, ':', k);
+              const soul = Gun.node.soul(id);
+              if (soul && !r.hasOwnProperty(soul)) {
+                r[soul] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(k));
+              }
+            });
+          }
+        });
+      }
       setTimeout(() => { resolve(Object.values(r)); }, 200);
     });
   }
