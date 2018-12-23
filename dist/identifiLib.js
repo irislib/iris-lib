@@ -13403,26 +13403,22 @@
 	  */
 
 
-	  Index.create = function create(gun, viewpoint) {
-	    var i = new Index(gun);
-	    var setViewpoint = function setViewpoint(vp) {
-	      i.viewpoint = new Attribute(vp);
-	      i.gun.get('viewpoint').put(i.viewpoint);
-	      var uri = i.viewpoint.uri();
-	      var g = i.gun.get('identitiesBySearchKey').get(uri);
-	      var vpId = new Identity(g, {
-	        trustDistance: 0,
-	        linkTo: i.viewpoint
-	      }, true);
-	      i._addIdentityToIndexes(vpId.gun);
-	    };
-	    if (viewpoint) {
-	      setViewpoint(viewpoint);
-	    } else {
-	      Key.getDefault().then(function (defaultKey) {
-	        setViewpoint({ name: 'keyID', val: Key.getId(defaultKey) });
-	      });
+	  Index.create = async function create(gun, keypair) {
+	    if (!keypair) {
+	      keypair = await Key.getDefault();
 	    }
+	    var user = gun.user();
+	    user.auth(keypair);
+	    var i = new Index(user.get('identifi'));
+	    i.viewpoint = new Attribute({ name: 'keyID', val: Key.getId(keypair) });
+	    i.gun.get('viewpoint').put(i.viewpoint);
+	    var uri = i.viewpoint.uri();
+	    var g = i.gun.get('identitiesBySearchKey').get(uri);
+	    var kpId = new Identity(g, {
+	      trustDistance: 0,
+	      linkTo: i.viewpoint
+	    }, true);
+	    i._addIdentityToIndexes(kpId.gun);
 	    return i;
 	  };
 
@@ -13727,7 +13723,7 @@
 	    var msgs = [];
 	    if (this.options.importFromTrustedIndexes) {
 	      await util$1.timeoutPromise(new _Promise(function (resolve) {
-	        _this.gun.back(-1).get(gunUri).get('messagesByDistance').map(function (val, key) {
+	        _this.gun.user(gunUri).get('identifi').get('messagesByDistance').map(function (val, key) {
 	          var d = _Number$parseInt(key.split(':')[0]);
 	          if (!isNaN(d) && d <= maxCrawlDistance) {
 	            Message.fromSig(val).then(function (msg) {
@@ -13916,7 +13912,7 @@
 	          if (val) {
 	            console.log('search stuff from trusted index', key);
 
-	            _this2.gun.back(-1).get(key).get('identitiesByTrustDistance').map(function (id, k) {
+	            _this2.gun.user(key).get('identifi').get('identitiesByTrustDistance').map(function (id, k) {
 	              // TODO: where should this actually be searched from?
 	              if (k.indexOf(encodeURIComponent(value)) === -1) {
 	                return;

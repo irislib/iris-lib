@@ -416,7 +416,8 @@ class Index {
         attrs[attr.uri()] = attr;
       });
       const linkTo = Identity.getLinkTo(attrs);
-      const id = new Identity(this.gun.get(`identities`).set({}), {attrs, linkTo, trustDistance: 99}, true);
+      const random = Math.floor(Math.random()*Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
+      const id = new Identity(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: 99}, true);
 
       // TODO: take msg author trust into account
       recipientIdentities[id.gun[`_`].link] = id;
