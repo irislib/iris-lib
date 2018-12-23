@@ -60,7 +60,7 @@ class Key {
 
   static getId(key) {
     if (!(key && key.pub)) {
-      throw new Error('missing param');
+      throw new Error(`missing param`);
     }
     return key.pub; // hack until GUN supports lookups by keyID
     //return util.getHash(key.pub);

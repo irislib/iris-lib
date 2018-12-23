@@ -68,7 +68,7 @@ class Index {
     const user = gun.user();
     user.auth(keypair);
     const i = new Index(user.get(`identifi`));
-    i.viewpoint = new Attribute({name:`keyID`, val: Key.getId(keypair)});
+    i.viewpoint = new Attribute({name: `keyID`, val: Key.getId(keypair)});
     i.gun.get(`viewpoint`).put(i.viewpoint);
     const uri = i.viewpoint.uri();
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
@@ -370,7 +370,7 @@ class Index {
           }
         });
       }), 10000);
-      console.log('adding', msgs.length, 'msgs');
+      console.log(`adding`, msgs.length, `msgs`);
       this.addMessages(msgs);
     }
   }
@@ -405,7 +405,7 @@ class Index {
       if (!isNaN(td)) {
         recipientIdentities[id.gun[`_`].link] = id;
       }
-      if (selfAuthored && a[0] === 'keyID' && a[1] !== this.viewpoint.val && msg.isPositive()) { // TODO: not if already added - causes infinite loop
+      if (selfAuthored && a[0] === `keyID` && a[1] !== this.viewpoint.val && msg.isPositive()) { // TODO: not if already added - causes infinite loop
         this.addTrustedIndex(a[1]);
       }
     }
@@ -416,7 +416,7 @@ class Index {
         attrs[attr.uri()] = attr;
       });
       const linkTo = Identity.getLinkTo(attrs);
-      const random = Math.floor(Math.random()*Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
+      const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
       const id = new Identity(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: 99}, true);
 
       // TODO: take msg author trust into account
@@ -540,7 +540,7 @@ class Index {
               if (k.indexOf(encodeURIComponent(value)) === - 1) {
                 return;
               }
-              console.log('found search result from trusted index', key, ':', k);
+              console.log(`found search result from trusted index`, key, `:`, k);
               const soul = Gun.node.soul(id);
               if (soul && !r.hasOwnProperty(soul)) {
                 r[soul] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(k));
