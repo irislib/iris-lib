@@ -7,7 +7,9 @@
   "module": "es/index.js",
   "jsxnext:main": "es/index.js",
   "jest": {
-    "testURL": "http://localhost/"
+    "testURL": "http://localhost/",
+    "bail": true,
+    "verbose": true
   },
   "files": [
     "dist",
