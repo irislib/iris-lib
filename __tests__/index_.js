@@ -4,7 +4,7 @@ const GUN = require('gun');
 const load = require('gun/lib/load');
 const then = require('gun/lib/then');
 const SEA = require('gun/sea');
-SEA.throw = true;
+//SEA.throw = true;
 
 let key;
 //let ipfsNode = new IPFS({repo: './ipfs_repo'});

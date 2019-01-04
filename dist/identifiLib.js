@@ -9729,8 +9729,10 @@
 	    }
 	    SEA.opt.unpack = function(data, key, node){
 	      if(u === data){ return }
+	      if(data === node[key]){ return data }
+	      if(data && data['#'] && rel_is(data) === rel_is(node[key])){ return data }
 	      var tmp = data, soul = Gun.node.soul(node), s = Gun.state.is(node, key);
-	      if(tmp && 4 === tmp.length && soul === tmp[0] && key === tmp[1] && s === tmp[3]){
+	      if(tmp && 4 === tmp.length && soul === tmp[0] && key === tmp[1] && fl(s) === fl(tmp[3])){
 	        return tmp[2];
 	      }
 	      if(s < SEA.opt.shuffle_attack){
@@ -9739,6 +9741,9 @@
 	    };
 	    SEA.opt.shuffle_attack = 1546329600000; // Jan 1, 2019
 	    var noop = {}, u;
+	    var fl = Math.floor; // TODO: Still need to fix inconsistent state issue.
+	    var rel_is = Gun.val.rel.is;
+	    // TODO: Potential bug? If pub/priv key starts with `-`? IDK how possible.
 
 	  })(USE, './index');
 	}());
@@ -10933,6 +10938,19 @@
 
 	  return Identity;
 	}();
+
+	// 20.1.2.6 Number.MAX_SAFE_INTEGER
+
+
+	_export(_export.S, 'Number', { MAX_SAFE_INTEGER: 0x1fffffffffffff });
+
+	var maxSafeInteger = 0x1fffffffffffff;
+
+	var maxSafeInteger$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": maxSafeInteger, __esModule: true };
+	});
+
+	var _Number$MAX_SAFE_INTEGER = unwrapExports(maxSafeInteger$1);
 
 	var _stringWs = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
 	  '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
@@ -13783,7 +13801,8 @@
 	        attrs[attr.uri()] = attr;
 	      });
 	      var linkTo = Identity.getLinkTo(attrs);
-	      var _id2 = new Identity(this.gun.get('identities').set({}), { attrs: attrs, linkTo: linkTo, trustDistance: 99 }, true);
+	      var random = Math.floor(Math.random() * _Number$MAX_SAFE_INTEGER); // TODO: bubblegum fix
+	      var _id2 = new Identity(this.gun.get('identities').get(random).put({}), { attrs: attrs, linkTo: linkTo, trustDistance: 99 }, true);
 
 	      // TODO: take msg author trust into account
 	      recipientIdentities[_id2.gun['_'].link] = _id2;
