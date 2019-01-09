@@ -2,7 +2,6 @@
 
 import util from './util';
 import Gun from 'gun';
-import sea from 'gun/sea'; // eslint-disable-line no-unused-vars
 
 let myKey;
 
