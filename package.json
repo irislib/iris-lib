@@ -31,6 +31,7 @@
     "test": "clear && jest",
     "test:coverage": "jest --coverage ",
     "test:watch": "clear && jest --watch",
+    "test:debug": "node --inspect node_modules/.bin/jest --runInBand",
     "lint:test": "npm run lint && npm run test:coverage",
     "build": "clear && npm run lint:test && npm run build:cjs && npm run build:es && npm run build:umd",
     "build:watch": "clear && rimraf cjs && cross-env BABEL_ENV=cjs babel -w src --out-dir cjs",
@@ -78,7 +79,7 @@
   "dependencies": {
     "@trust/webcrypto": "^0.9.2",
     "create-hash": "^1.2.0",
-    "gun": "^0.9.999996",
+    "gun": "0.9.999996",
     "identicon.js": "^2.3.2",
     "node-webcrypto-ossl": "^1.0.37",
     "text-encoding": "^0.6.4"

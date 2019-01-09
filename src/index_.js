@@ -417,7 +417,8 @@ class Index {
       });
       const linkTo = Identity.getLinkTo(attrs);
       const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
-      const id = new Identity(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: 99}, true);
+      const id = new Identity(this.gun.get(`identities`).get(random).put({a:1}), {attrs, linkTo, trustDistance: 99}, true);
+      // {a:1} because inserting {} causes a "no signature on data" error from gun
 
       // TODO: take msg author trust into account
       recipientIdentities[id.gun[`_`].link] = id;
@@ -534,8 +535,6 @@ class Index {
       if (this.options.queryTrustedIndexes) {
         this.gun.get(`trustedIndexes`).map((val, key) => {
           if (val) {
-            console.log(`search stuff from trusted index`, key);
-
             this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).map((id, k) => { // TODO: where should this actually be searched from?
               if (k.indexOf(encodeURIComponent(value)) === - 1) {
                 return;
