@@ -27,11 +27,12 @@ async function searchText(node, query, limit, cursor) {
     }
     node.map((value, key) => {
       if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
-        if (value) {
-          r.push({value, key});
-        }
-        if (r.length >= limit) {
+        if (r.length > limit) {
+          return;
+        } else if (r.length === limit) {
           sortAndResolve();
+        } else if (value) {
+          r.push({value, key});
         }
       }
     });

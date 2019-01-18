@@ -12117,11 +12117,12 @@
 	    }
 	    node.map(function (value, key) {
 	      if ((!cursor || key > cursor) && key.indexOf(query) === 0) {
-	        if (value) {
-	          r.push({ value: value, key: key });
-	        }
-	        if (r.length >= limit) {
+	        if (r.length > limit) {
+	          return;
+	        } else if (r.length === limit) {
 	          sortAndResolve();
+	        } else if (value) {
+	          r.push({ value: value, key: key });
 	        }
 	      }
 	    });
@@ -12714,7 +12715,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.65";
+	var version$1 = "0.0.66";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
