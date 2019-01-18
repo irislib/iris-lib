@@ -419,7 +419,7 @@ class Index {
       });
       const linkTo = Identity.getLinkTo(attrs);
       const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
-      const id = new Identity(this.gun.get(`identities`).get(random).put({attrs, linkTo, trustDistance: 99}), {attrs, linkTo, trustDistance: 99}, true);
+      const id = new Identity(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: 99}, true);
       // {a:1} because inserting {} causes a "no signature on data" error from gun
 
       // TODO: take msg author trust into account
