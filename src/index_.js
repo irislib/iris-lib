@@ -35,7 +35,8 @@ async function searchText(node, query, limit, cursor) {
         }
       }
     });
-    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve(); }, 100);
+    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve(); }, 100); // This probably causes the problem of results not appearing on first try
+    // search should probably return an object that changes when new results are added / found
   });
 }
 
@@ -93,7 +94,7 @@ class Index {
     const indexKeys = [];
     const d = await util.timeoutPromise(identity.get(`trustDistance`).then(), GUN_TIMEOUT);
     await identity.get(`attrs`).map().once(a => {
-      if (!a) { // TODO: this sometimes returns undefined
+      if (!(a && a.val && a.name)) { // TODO: this sometimes returns undefined
         return;
       }
       let distance = d !== undefined ? d : parseInt(a.dist);
@@ -338,7 +339,8 @@ class Index {
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
-      const relocated = this.gun.get(`identities`).set(await ids[i].gun.then()); // this may screw up real time updates? and create unnecessary `identities` entries
+      const data = (await ids[i].gun.then()) || {}; // TODO: data is sometimes undefined and new identity is not added!
+      const relocated = this.gun.get(`identities`).set(data); // this may screw up real time updates? and create unnecessary `identities` entries
       if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
       }
@@ -417,7 +419,7 @@ class Index {
       });
       const linkTo = Identity.getLinkTo(attrs);
       const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
-      const id = new Identity(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: 99}, true);
+      const id = new Identity(this.gun.get(`identities`).get(random).put({attrs, linkTo, trustDistance: 99}), {attrs, linkTo, trustDistance: 99}, true);
       // {a:1} because inserting {} causes a "no signature on data" error from gun
 
       // TODO: take msg author trust into account
