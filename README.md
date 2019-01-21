@@ -7,7 +7,7 @@
 [![Coverage Status](https://img.shields.io/coveralls/identifi/identifi-lib.svg?style=flat-square)](https://coveralls.io/github/identifi/identifi-lib)
 [![Gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)](https://gitmoji.carloscuesta.me/)
 
-> Basic tools for reading and writing Identifi messages and identities.
+> Basic tools for reading, writing, indexing and searching Identifi messages and identities.
 
 ### Usage
 
