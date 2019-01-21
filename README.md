@@ -2,9 +2,9 @@
 
 ![Node](https://img.shields.io/node/v/identifi-lib.svg?style=flat-square)
 [![NPM](https://img.shields.io/npm/v/identifi-lib.svg?style=flat-square)](https://www.npmjs.com/package/identifi-lib)
-[![Travis](https://img.shields.io/travis/mmalmi/identifi-lib/master.svg?style=flat-square)](https://travis-ci.org/mmalmi/identifi-lib)
-[![David](https://img.shields.io/david/mmalmi/identifi-lib.svg?style=flat-square)](https://david-dm.org/mmalmi/identifi-lib)
-[![Coverage Status](https://img.shields.io/coveralls/mmalmi/identifi-lib.svg?style=flat-square)](https://coveralls.io/github/mmalmi/identifi-lib)
+[![Travis](https://img.shields.io/travis/identifi/identifi-lib/master.svg?style=flat-square)](https://travis-ci.org/identifi/identifi-lib)
+[![David](https://img.shields.io/david/identifi/identifi-lib.svg?style=flat-square)](https://david-dm.org/identifi/identifi-lib)
+[![Coverage Status](https://img.shields.io/coveralls/identifi/identifi-lib.svg?style=flat-square)](https://coveralls.io/github/identifi/identifi-lib)
 [![Gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)](https://gitmoji.carloscuesta.me/)
 
 > Basic tools for reading and writing Identifi messages and identities.
@@ -65,7 +65,7 @@ identifiLib
 
 ### Examples
 
-See [`example`](example/script.js) folder or the [runkit](https://runkit.com/mmalmi/identifi-lib) example.
+See [`example`](example/script.js) folder or the [runkit](https://runkit.com/identifi/identifi-lib) example.
 
 ### Builds
 
