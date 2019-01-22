@@ -12,13 +12,18 @@
 ### Usage
 
 ```js
-const identifi = require('identifi-lib');
+identifi = require('identifi-lib');
+Gun = require('gun'); // github.com/amark/gun is needed
+require('gun/sea');
 
-Index.load().then(async (index) => {
-  const profile = await index.get('martti@moni.com');
-  const name = await profile.verified('name');
-  console.log(`Verified name for martti@moni.com: ${name}`);
-});
+gun = new Gun(['https://identifi.herokuapp.com/gun', 'https://identifi2.herokuapp.com/gun']);
+defaultIndexID = '_D8nRhjFgAGo8frfJHMi4H7M7fTMB2LJshgeKyLaL1Y.9uNU0eQO-1ThgA9fJXFFN3yYbk9SNewC2Pz4mvQvGUE';
+user = gun.user(defaultIndexID);
+i = new identifi.Index(user);
+
+profile = i.get('sirius@iki.fi');
+profile.gun.get('attrs').then(console.log);
+profile.verified('name').then(console.log);
 ```
 
 See [`plnkr.co example`](http://plnkr.co/edit/jA6oPo?p=preview) for more.
