@@ -8321,6 +8321,16 @@
 	      }, timeout);
 	    })]);
 	  },
+	  injectCss: function injectCss() {
+	    var elementId = 'identifiStyle';
+	    if (document.getElementById(elementId)) {
+	      return;
+	    }
+	    var sheet = document.createElement('style');
+	    sheet.id = elementId;
+	    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .identifi-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .identifi-card a:hover, .identifi-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .identifi-pos {\n        color: #3c763d;\n      }\n\n      .identifi-neg {\n        color: #a94442;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
+	    document.body.appendChild(sheet);
+	  },
 
 
 	  isNode: isNode$2
@@ -8355,7 +8365,424 @@
 
 	var _Object$keys = unwrapExports(keys$2);
 
-	/*eslint no-useless-escape: "off", camelcase: "off" */
+	var pnglib = createCommonjsModule(function (module) {
+	/**
+	* A handy class to calculate color values.
+	*
+	* @version 1.0
+	* @author Robert Eisele <robert@xarg.org>
+	* @copyright Copyright (c) 2010, Robert Eisele
+	* @link http://www.xarg.org/2010/03/generate-client-side-png-files-using-javascript/
+	* @license http://www.opensource.org/licenses/bsd-license.php BSD License
+	*
+	*/
+
+	(function() {
+
+		// helper functions for that ctx
+		function write(buffer, offs) {
+			for (var i = 2; i < arguments.length; i++) {
+				for (var j = 0; j < arguments[i].length; j++) {
+					buffer[offs++] = arguments[i].charAt(j);
+				}
+			}
+		}
+
+		function byte2(w) {
+			return String.fromCharCode((w >> 8) & 255, w & 255);
+		}
+
+		function byte4(w) {
+			return String.fromCharCode((w >> 24) & 255, (w >> 16) & 255, (w >> 8) & 255, w & 255);
+		}
+
+		function byte2lsb(w) {
+			return String.fromCharCode(w & 255, (w >> 8) & 255);
+		}
+
+		// modified from original source to support NPM
+		var PNGlib = function(width,height,depth) {
+
+			this.width   = width;
+			this.height  = height;
+			this.depth   = depth;
+
+			// pixel data and row filter identifier size
+			this.pix_size = height * (width + 1);
+
+			// deflate header, pix_size, block headers, adler32 checksum
+			this.data_size = 2 + this.pix_size + 5 * Math.floor((0xfffe + this.pix_size) / 0xffff) + 4;
+
+			// offsets and sizes of Png chunks
+			this.ihdr_offs = 0;									// IHDR offset and size
+			this.ihdr_size = 4 + 4 + 13 + 4;
+			this.plte_offs = this.ihdr_offs + this.ihdr_size;	// PLTE offset and size
+			this.plte_size = 4 + 4 + 3 * depth + 4;
+			this.trns_offs = this.plte_offs + this.plte_size;	// tRNS offset and size
+			this.trns_size = 4 + 4 + depth + 4;
+			this.idat_offs = this.trns_offs + this.trns_size;	// IDAT offset and size
+			this.idat_size = 4 + 4 + this.data_size + 4;
+			this.iend_offs = this.idat_offs + this.idat_size;	// IEND offset and size
+			this.iend_size = 4 + 4 + 4;
+			this.buffer_size  = this.iend_offs + this.iend_size;	// total PNG size
+
+			this.buffer  = new Array();
+			this.palette = new Object();
+			this.pindex  = 0;
+
+			var _crc32 = new Array();
+
+			// initialize buffer with zero bytes
+			for (var i = 0; i < this.buffer_size; i++) {
+				this.buffer[i] = "\x00";
+			}
+
+			// initialize non-zero elements
+			write(this.buffer, this.ihdr_offs, byte4(this.ihdr_size - 12), 'IHDR', byte4(width), byte4(height), "\x08\x03");
+			write(this.buffer, this.plte_offs, byte4(this.plte_size - 12), 'PLTE');
+			write(this.buffer, this.trns_offs, byte4(this.trns_size - 12), 'tRNS');
+			write(this.buffer, this.idat_offs, byte4(this.idat_size - 12), 'IDAT');
+			write(this.buffer, this.iend_offs, byte4(this.iend_size - 12), 'IEND');
+
+			// initialize deflate header
+			var header = ((8 + (7 << 4)) << 8) | (3 << 6);
+			header+= 31 - (header % 31);
+
+			write(this.buffer, this.idat_offs + 8, byte2(header));
+
+			// initialize deflate block headers
+			for (var i = 0; (i << 16) - 1 < this.pix_size; i++) {
+				var size, bits;
+				if (i + 0xffff < this.pix_size) {
+					size = 0xffff;
+					bits = "\x00";
+				} else {
+					size = this.pix_size - (i << 16) - i;
+					bits = "\x01";
+				}
+				write(this.buffer, this.idat_offs + 8 + 2 + (i << 16) + (i << 2), bits, byte2lsb(size), byte2lsb(~size));
+			}
+
+			/* Create crc32 lookup table */
+			for (var i = 0; i < 256; i++) {
+				var c = i;
+				for (var j = 0; j < 8; j++) {
+					if (c & 1) {
+						c = -306674912 ^ ((c >> 1) & 0x7fffffff);
+					} else {
+						c = (c >> 1) & 0x7fffffff;
+					}
+				}
+				_crc32[i] = c;
+			}
+
+			// compute the index into a png for a given pixel
+			this.index = function(x,y) {
+				var i = y * (this.width + 1) + x + 1;
+				var j = this.idat_offs + 8 + 2 + 5 * Math.floor((i / 0xffff) + 1) + i;
+				return j;
+			};
+
+			// convert a color and build up the palette
+			this.color = function(red, green, blue, alpha) {
+
+				alpha = alpha >= 0 ? alpha : 255;
+				var color = (((((alpha << 8) | red) << 8) | green) << 8) | blue;
+
+				if (typeof this.palette[color] == "undefined") {
+					if (this.pindex == this.depth) return "\x00";
+
+					var ndx = this.plte_offs + 8 + 3 * this.pindex;
+
+					this.buffer[ndx + 0] = String.fromCharCode(red);
+					this.buffer[ndx + 1] = String.fromCharCode(green);
+					this.buffer[ndx + 2] = String.fromCharCode(blue);
+					this.buffer[this.trns_offs+8+this.pindex] = String.fromCharCode(alpha);
+
+					this.palette[color] = String.fromCharCode(this.pindex++);
+				}
+				return this.palette[color];
+			};
+
+			// output a PNG string, Base64 encoded
+			this.getBase64 = function() {
+
+				var s = this.getDump();
+
+				var ch = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+				var c1, c2, c3, e1, e2, e3, e4;
+				var l = s.length;
+				var i = 0;
+				var r = "";
+
+				do {
+					c1 = s.charCodeAt(i);
+					e1 = c1 >> 2;
+					c2 = s.charCodeAt(i+1);
+					e2 = ((c1 & 3) << 4) | (c2 >> 4);
+					c3 = s.charCodeAt(i+2);
+					if (l < i+2) { e3 = 64; } else { e3 = ((c2 & 0xf) << 2) | (c3 >> 6); }
+					if (l < i+3) { e4 = 64; } else { e4 = c3 & 0x3f; }
+					r+= ch.charAt(e1) + ch.charAt(e2) + ch.charAt(e3) + ch.charAt(e4);
+				} while ((i+= 3) < l);
+				return r;
+			};
+
+			// output a PNG string
+			this.getDump = function() {
+
+				// compute adler32 of output pixels + row filter bytes
+				var BASE = 65521; /* largest prime smaller than 65536 */
+				var NMAX = 5552;  /* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
+				var s1 = 1;
+				var s2 = 0;
+				var n = NMAX;
+
+				for (var y = 0; y < this.height; y++) {
+					for (var x = -1; x < this.width; x++) {
+						s1+= this.buffer[this.index(x, y)].charCodeAt(0);
+						s2+= s1;
+						if ((n-= 1) == 0) {
+							s1%= BASE;
+							s2%= BASE;
+							n = NMAX;
+						}
+					}
+				}
+				s1%= BASE;
+				s2%= BASE;
+				write(this.buffer, this.idat_offs + this.idat_size - 8, byte4((s2 << 16) | s1));
+
+				// compute crc32 of the PNG chunks
+				function crc32(png, offs, size) {
+					var crc = -1;
+					for (var i = 4; i < size-4; i += 1) {
+						crc = _crc32[(crc ^ png[offs+i].charCodeAt(0)) & 0xff] ^ ((crc >> 8) & 0x00ffffff);
+					}
+					write(png, offs+size-4, byte4(crc ^ -1));
+				}
+
+				crc32(this.buffer, this.ihdr_offs, this.ihdr_size);
+				crc32(this.buffer, this.plte_offs, this.plte_size);
+				crc32(this.buffer, this.trns_offs, this.trns_size);
+				crc32(this.buffer, this.idat_offs, this.idat_size);
+				crc32(this.buffer, this.iend_offs, this.iend_size);
+
+				// convert PNG to string
+				return "\x89PNG\r\n\x1a\n"+this.buffer.join('');
+			};
+		};
+
+		// modified from original source to support NPM
+		{
+			module.exports = PNGlib;
+		}
+	})();
+	});
+
+	var identicon = createCommonjsModule(function (module) {
+	/**
+	 * Identicon.js 2.3.3
+	 * http://github.com/stewartlord/identicon.js
+	 *
+	 * PNGLib required for PNG output
+	 * http://www.xarg.org/download/pnglib.js
+	 *
+	 * Copyright 2018, Stewart Lord
+	 * Released under the BSD license
+	 * http://www.opensource.org/licenses/bsd-license.php
+	 */
+
+	(function() {
+	    var PNGlib;
+	    {
+	        PNGlib = pnglib;
+	    }
+
+	    var Identicon = function(hash, options){
+	        if (typeof(hash) !== 'string' || hash.length < 15) {
+	            throw 'A hash of at least 15 characters is required.';
+	        }
+
+	        this.defaults = {
+	            background: [240, 240, 240, 255],
+	            margin:     0.08,
+	            size:       64,
+	            saturation: 0.7,
+	            brightness: 0.5,
+	            format:     'png'
+	        };
+
+	        this.options = typeof(options) === 'object' ? options : this.defaults;
+
+	        // backward compatibility with old constructor (hash, size, margin)
+	        if (typeof(arguments[1]) === 'number') { this.options.size   = arguments[1]; }
+	        if (arguments[2])                      { this.options.margin = arguments[2]; }
+
+	        this.hash        = hash;
+	        this.background  = this.options.background || this.defaults.background;
+	        this.size        = this.options.size       || this.defaults.size;
+	        this.format      = this.options.format     || this.defaults.format;
+	        this.margin      = this.options.margin !== undefined ? this.options.margin : this.defaults.margin;
+
+	        // foreground defaults to last 7 chars as hue at 70% saturation, 50% brightness
+	        var hue          = parseInt(this.hash.substr(-7), 16) / 0xfffffff;
+	        var saturation   = this.options.saturation || this.defaults.saturation;
+	        var brightness   = this.options.brightness || this.defaults.brightness;
+	        this.foreground  = this.options.foreground || this.hsl2rgb(hue, saturation, brightness);
+	    };
+
+	    Identicon.prototype = {
+	        background: null,
+	        foreground: null,
+	        hash:       null,
+	        margin:     null,
+	        size:       null,
+	        format:     null,
+
+	        image: function(){
+	            return this.isSvg()
+	                ? new Svg(this.size, this.foreground, this.background)
+	                : new PNGlib(this.size, this.size, 256);
+	        },
+
+	        render: function(){
+	            var image      = this.image(),
+	                size       = this.size,
+	                baseMargin = Math.floor(size * this.margin),
+	                cell       = Math.floor((size - (baseMargin * 2)) / 5),
+	                margin     = Math.floor((size - cell * 5) / 2),
+	                bg         = image.color.apply(image, this.background),
+	                fg         = image.color.apply(image, this.foreground);
+
+	            // the first 15 characters of the hash control the pixels (even/odd)
+	            // they are drawn down the middle first, then mirrored outwards
+	            var i, color;
+	            for (i = 0; i < 15; i++) {
+	                color = parseInt(this.hash.charAt(i), 16) % 2 ? bg : fg;
+	                if (i < 5) {
+	                    this.rectangle(2 * cell + margin, i * cell + margin, cell, cell, color, image);
+	                } else if (i < 10) {
+	                    this.rectangle(1 * cell + margin, (i - 5) * cell + margin, cell, cell, color, image);
+	                    this.rectangle(3 * cell + margin, (i - 5) * cell + margin, cell, cell, color, image);
+	                } else if (i < 15) {
+	                    this.rectangle(0 * cell + margin, (i - 10) * cell + margin, cell, cell, color, image);
+	                    this.rectangle(4 * cell + margin, (i - 10) * cell + margin, cell, cell, color, image);
+	                }
+	            }
+
+	            return image;
+	        },
+
+	        rectangle: function(x, y, w, h, color, image){
+	            if (this.isSvg()) {
+	                image.rectangles.push({x: x, y: y, w: w, h: h, color: color});
+	            } else {
+	                var i, j;
+	                for (i = x; i < x + w; i++) {
+	                    for (j = y; j < y + h; j++) {
+	                        image.buffer[image.index(i, j)] = color;
+	                    }
+	                }
+	            }
+	        },
+
+	        // adapted from: https://gist.github.com/aemkei/1325937
+	        hsl2rgb: function(h, s, b){
+	            h *= 6;
+	            s = [
+	                b += s *= b < .5 ? b : 1 - b,
+	                b - h % 1 * s * 2,
+	                b -= s *= 2,
+	                b,
+	                b + h % 1 * s,
+	                b + s
+	            ];
+
+	            return [
+	                s[ ~~h    % 6 ] * 255, // red
+	                s[ (h|16) % 6 ] * 255, // green
+	                s[ (h|8)  % 6 ] * 255  // blue
+	            ];
+	        },
+
+	        toString: function(raw){
+	            // backward compatibility with old toString, default to base64
+	            if (raw) {
+	                return this.render().getDump();
+	            } else {
+	                return this.render().getBase64();
+	            }
+	        },
+
+	        isSvg: function(){
+	            return this.format.match(/svg/i)
+	        }
+	    };
+
+	    var Svg = function(size, foreground, background){
+	        this.size       = size;
+	        this.foreground = this.color.apply(this, foreground);
+	        this.background = this.color.apply(this, background);
+	        this.rectangles = [];
+	    };
+
+	    Svg.prototype = {
+	        size:       null,
+	        foreground: null,
+	        background: null,
+	        rectangles: null,
+
+	        color: function(r, g, b, a){
+	            var values = [r, g, b].map(Math.round);
+	            values.push((a >= 0) && (a <= 255) ? a/255 : 1);
+	            return 'rgba(' + values.join(',') + ')';
+	        },
+
+	        getDump: function(){
+	          var i,
+	                xml,
+	                rect,
+	                fg     = this.foreground,
+	                bg     = this.background,
+	                stroke = this.size * 0.005;
+
+	            xml = "<svg xmlns='http://www.w3.org/2000/svg'"
+	                + " width='" + this.size + "' height='" + this.size + "'"
+	                + " style='background-color:" + bg + ";'>"
+	                + "<g style='fill:" + fg + "; stroke:" + fg + "; stroke-width:" + stroke + ";'>";
+
+	            for (i = 0; i < this.rectangles.length; i++) {
+	                rect = this.rectangles[i];
+	                if (rect.color == bg) continue;
+	                xml += "<rect "
+	                    + " x='"      + rect.x + "'"
+	                    + " y='"      + rect.y + "'"
+	                    + " width='"  + rect.w + "'"
+	                    + " height='" + rect.h + "'"
+	                    + "/>";
+	            }
+	            xml += "</g></svg>";
+
+	            return xml;
+	        },
+
+	        getBase64: function(){
+	            if ('function' === typeof btoa) {
+	                return btoa(this.getDump());
+	            } else if (Buffer) {
+	                return new Buffer(this.getDump(), 'binary').toString('base64');
+	            } else {
+	                throw 'Cannot generate base64 output';
+	            }
+	        }
+	    };
+
+	    {
+	        module.exports = Identicon;
+	    }
+	})();
+	});
 
 	var UNIQUE_ID_VALIDATORS = {
 	  email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
@@ -8385,26 +8812,26 @@
 	  function Attribute(data) {
 	    _classCallCheck(this, Attribute);
 
-	    if (data.hasOwnProperty("val")) {
+	    if (data.hasOwnProperty('val')) {
 	      this.val = data.val;
-	      if (data.hasOwnProperty("name")) {
+	      if (data.hasOwnProperty('name')) {
 	        this.name = data.name;
 	      } else {
 	        var n = Attribute.guessTypeOf(this.val);
 	        if (n) {
 	          this.name = n;
 	        } else {
-	          throw new Error("Type of attribute was omitted and could not be guessed");
+	          throw new Error('Type of attribute was omitted and could not be guessed');
 	        }
 	      }
 	    } else if (Array.isArray(data)) {
 	      if (data.length !== 2) {
-	        throw new Error("Invalid Attribute");
+	        throw new Error('Invalid Attribute');
 	      }
 	      this.name = data[0];
 	      this.val = data[1];
 	    } else {
-	      throw new Error("Invalid attribute data", data);
+	      throw new Error('Invalid attribute data', data);
 	    }
 	  }
 
@@ -8412,7 +8839,7 @@
 	    var b = function b(a) {
 	      return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, b);
 	    };
-	    return new Attribute(["uuid", b()]);
+	    return new Attribute(['uuid', b()]);
 	  };
 
 	  /**
@@ -8479,7 +8906,40 @@
 	  };
 
 	  Attribute.prototype.uri = function uri() {
-	    return encodeURIComponent(this.val) + ":" + encodeURIComponent(this.name);
+	    return encodeURIComponent(this.val) + ':' + encodeURIComponent(this.name);
+	  };
+
+	  /**
+	  * @param {integer} width width of the identicon
+	  * @returns {HTMLElement} img element containing the identicon
+	  */
+
+
+	  Attribute.prototype.identicon = function identicon$$1(width) {
+	    util$1.injectCss(); // some other way that is not called on each identicon generation?
+
+	    var div = document.createElement('div');
+	    div.className = 'identifi-identicon';
+	    div.style.width = width + 'px';
+	    div.style.height = width + 'px';
+
+	    var img = document.createElement('img');
+	    img.alt = '';
+	    img.width = width;
+	    img.height = width;
+	    var hash = util$1.getHash(encodeURIComponent(this.name) + ':' + encodeURIComponent(this.val), 'hex');
+	    var identicon$$1 = new identicon(hash, { width: width, format: 'svg' });
+	    img.src = 'data:image/svg+xml;base64,' + identicon$$1.toString();
+
+	    var name = document.createElement('span');
+	    name.className = 'identifi-distance';
+	    name.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
+	    name.textContent = this.name.slice(0, 5);
+	    div.appendChild(name);
+
+	    div.appendChild(img);
+
+	    return div;
 	  };
 
 	  return Attribute;
@@ -8923,425 +9383,6 @@
 	  return Message;
 	}();
 
-	var pnglib = createCommonjsModule(function (module) {
-	/**
-	* A handy class to calculate color values.
-	*
-	* @version 1.0
-	* @author Robert Eisele <robert@xarg.org>
-	* @copyright Copyright (c) 2010, Robert Eisele
-	* @link http://www.xarg.org/2010/03/generate-client-side-png-files-using-javascript/
-	* @license http://www.opensource.org/licenses/bsd-license.php BSD License
-	*
-	*/
-
-	(function() {
-
-		// helper functions for that ctx
-		function write(buffer, offs) {
-			for (var i = 2; i < arguments.length; i++) {
-				for (var j = 0; j < arguments[i].length; j++) {
-					buffer[offs++] = arguments[i].charAt(j);
-				}
-			}
-		}
-
-		function byte2(w) {
-			return String.fromCharCode((w >> 8) & 255, w & 255);
-		}
-
-		function byte4(w) {
-			return String.fromCharCode((w >> 24) & 255, (w >> 16) & 255, (w >> 8) & 255, w & 255);
-		}
-
-		function byte2lsb(w) {
-			return String.fromCharCode(w & 255, (w >> 8) & 255);
-		}
-
-		// modified from original source to support NPM
-		var PNGlib = function(width,height,depth) {
-
-			this.width   = width;
-			this.height  = height;
-			this.depth   = depth;
-
-			// pixel data and row filter identifier size
-			this.pix_size = height * (width + 1);
-
-			// deflate header, pix_size, block headers, adler32 checksum
-			this.data_size = 2 + this.pix_size + 5 * Math.floor((0xfffe + this.pix_size) / 0xffff) + 4;
-
-			// offsets and sizes of Png chunks
-			this.ihdr_offs = 0;									// IHDR offset and size
-			this.ihdr_size = 4 + 4 + 13 + 4;
-			this.plte_offs = this.ihdr_offs + this.ihdr_size;	// PLTE offset and size
-			this.plte_size = 4 + 4 + 3 * depth + 4;
-			this.trns_offs = this.plte_offs + this.plte_size;	// tRNS offset and size
-			this.trns_size = 4 + 4 + depth + 4;
-			this.idat_offs = this.trns_offs + this.trns_size;	// IDAT offset and size
-			this.idat_size = 4 + 4 + this.data_size + 4;
-			this.iend_offs = this.idat_offs + this.idat_size;	// IEND offset and size
-			this.iend_size = 4 + 4 + 4;
-			this.buffer_size  = this.iend_offs + this.iend_size;	// total PNG size
-
-			this.buffer  = new Array();
-			this.palette = new Object();
-			this.pindex  = 0;
-
-			var _crc32 = new Array();
-
-			// initialize buffer with zero bytes
-			for (var i = 0; i < this.buffer_size; i++) {
-				this.buffer[i] = "\x00";
-			}
-
-			// initialize non-zero elements
-			write(this.buffer, this.ihdr_offs, byte4(this.ihdr_size - 12), 'IHDR', byte4(width), byte4(height), "\x08\x03");
-			write(this.buffer, this.plte_offs, byte4(this.plte_size - 12), 'PLTE');
-			write(this.buffer, this.trns_offs, byte4(this.trns_size - 12), 'tRNS');
-			write(this.buffer, this.idat_offs, byte4(this.idat_size - 12), 'IDAT');
-			write(this.buffer, this.iend_offs, byte4(this.iend_size - 12), 'IEND');
-
-			// initialize deflate header
-			var header = ((8 + (7 << 4)) << 8) | (3 << 6);
-			header+= 31 - (header % 31);
-
-			write(this.buffer, this.idat_offs + 8, byte2(header));
-
-			// initialize deflate block headers
-			for (var i = 0; (i << 16) - 1 < this.pix_size; i++) {
-				var size, bits;
-				if (i + 0xffff < this.pix_size) {
-					size = 0xffff;
-					bits = "\x00";
-				} else {
-					size = this.pix_size - (i << 16) - i;
-					bits = "\x01";
-				}
-				write(this.buffer, this.idat_offs + 8 + 2 + (i << 16) + (i << 2), bits, byte2lsb(size), byte2lsb(~size));
-			}
-
-			/* Create crc32 lookup table */
-			for (var i = 0; i < 256; i++) {
-				var c = i;
-				for (var j = 0; j < 8; j++) {
-					if (c & 1) {
-						c = -306674912 ^ ((c >> 1) & 0x7fffffff);
-					} else {
-						c = (c >> 1) & 0x7fffffff;
-					}
-				}
-				_crc32[i] = c;
-			}
-
-			// compute the index into a png for a given pixel
-			this.index = function(x,y) {
-				var i = y * (this.width + 1) + x + 1;
-				var j = this.idat_offs + 8 + 2 + 5 * Math.floor((i / 0xffff) + 1) + i;
-				return j;
-			};
-
-			// convert a color and build up the palette
-			this.color = function(red, green, blue, alpha) {
-
-				alpha = alpha >= 0 ? alpha : 255;
-				var color = (((((alpha << 8) | red) << 8) | green) << 8) | blue;
-
-				if (typeof this.palette[color] == "undefined") {
-					if (this.pindex == this.depth) return "\x00";
-
-					var ndx = this.plte_offs + 8 + 3 * this.pindex;
-
-					this.buffer[ndx + 0] = String.fromCharCode(red);
-					this.buffer[ndx + 1] = String.fromCharCode(green);
-					this.buffer[ndx + 2] = String.fromCharCode(blue);
-					this.buffer[this.trns_offs+8+this.pindex] = String.fromCharCode(alpha);
-
-					this.palette[color] = String.fromCharCode(this.pindex++);
-				}
-				return this.palette[color];
-			};
-
-			// output a PNG string, Base64 encoded
-			this.getBase64 = function() {
-
-				var s = this.getDump();
-
-				var ch = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-				var c1, c2, c3, e1, e2, e3, e4;
-				var l = s.length;
-				var i = 0;
-				var r = "";
-
-				do {
-					c1 = s.charCodeAt(i);
-					e1 = c1 >> 2;
-					c2 = s.charCodeAt(i+1);
-					e2 = ((c1 & 3) << 4) | (c2 >> 4);
-					c3 = s.charCodeAt(i+2);
-					if (l < i+2) { e3 = 64; } else { e3 = ((c2 & 0xf) << 2) | (c3 >> 6); }
-					if (l < i+3) { e4 = 64; } else { e4 = c3 & 0x3f; }
-					r+= ch.charAt(e1) + ch.charAt(e2) + ch.charAt(e3) + ch.charAt(e4);
-				} while ((i+= 3) < l);
-				return r;
-			};
-
-			// output a PNG string
-			this.getDump = function() {
-
-				// compute adler32 of output pixels + row filter bytes
-				var BASE = 65521; /* largest prime smaller than 65536 */
-				var NMAX = 5552;  /* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
-				var s1 = 1;
-				var s2 = 0;
-				var n = NMAX;
-
-				for (var y = 0; y < this.height; y++) {
-					for (var x = -1; x < this.width; x++) {
-						s1+= this.buffer[this.index(x, y)].charCodeAt(0);
-						s2+= s1;
-						if ((n-= 1) == 0) {
-							s1%= BASE;
-							s2%= BASE;
-							n = NMAX;
-						}
-					}
-				}
-				s1%= BASE;
-				s2%= BASE;
-				write(this.buffer, this.idat_offs + this.idat_size - 8, byte4((s2 << 16) | s1));
-
-				// compute crc32 of the PNG chunks
-				function crc32(png, offs, size) {
-					var crc = -1;
-					for (var i = 4; i < size-4; i += 1) {
-						crc = _crc32[(crc ^ png[offs+i].charCodeAt(0)) & 0xff] ^ ((crc >> 8) & 0x00ffffff);
-					}
-					write(png, offs+size-4, byte4(crc ^ -1));
-				}
-
-				crc32(this.buffer, this.ihdr_offs, this.ihdr_size);
-				crc32(this.buffer, this.plte_offs, this.plte_size);
-				crc32(this.buffer, this.trns_offs, this.trns_size);
-				crc32(this.buffer, this.idat_offs, this.idat_size);
-				crc32(this.buffer, this.iend_offs, this.iend_size);
-
-				// convert PNG to string
-				return "\x89PNG\r\n\x1a\n"+this.buffer.join('');
-			};
-		};
-
-		// modified from original source to support NPM
-		{
-			module.exports = PNGlib;
-		}
-	})();
-	});
-
-	var identicon = createCommonjsModule(function (module) {
-	/**
-	 * Identicon.js 2.3.3
-	 * http://github.com/stewartlord/identicon.js
-	 *
-	 * PNGLib required for PNG output
-	 * http://www.xarg.org/download/pnglib.js
-	 *
-	 * Copyright 2018, Stewart Lord
-	 * Released under the BSD license
-	 * http://www.opensource.org/licenses/bsd-license.php
-	 */
-
-	(function() {
-	    var PNGlib;
-	    {
-	        PNGlib = pnglib;
-	    }
-
-	    var Identicon = function(hash, options){
-	        if (typeof(hash) !== 'string' || hash.length < 15) {
-	            throw 'A hash of at least 15 characters is required.';
-	        }
-
-	        this.defaults = {
-	            background: [240, 240, 240, 255],
-	            margin:     0.08,
-	            size:       64,
-	            saturation: 0.7,
-	            brightness: 0.5,
-	            format:     'png'
-	        };
-
-	        this.options = typeof(options) === 'object' ? options : this.defaults;
-
-	        // backward compatibility with old constructor (hash, size, margin)
-	        if (typeof(arguments[1]) === 'number') { this.options.size   = arguments[1]; }
-	        if (arguments[2])                      { this.options.margin = arguments[2]; }
-
-	        this.hash        = hash;
-	        this.background  = this.options.background || this.defaults.background;
-	        this.size        = this.options.size       || this.defaults.size;
-	        this.format      = this.options.format     || this.defaults.format;
-	        this.margin      = this.options.margin !== undefined ? this.options.margin : this.defaults.margin;
-
-	        // foreground defaults to last 7 chars as hue at 70% saturation, 50% brightness
-	        var hue          = parseInt(this.hash.substr(-7), 16) / 0xfffffff;
-	        var saturation   = this.options.saturation || this.defaults.saturation;
-	        var brightness   = this.options.brightness || this.defaults.brightness;
-	        this.foreground  = this.options.foreground || this.hsl2rgb(hue, saturation, brightness);
-	    };
-
-	    Identicon.prototype = {
-	        background: null,
-	        foreground: null,
-	        hash:       null,
-	        margin:     null,
-	        size:       null,
-	        format:     null,
-
-	        image: function(){
-	            return this.isSvg()
-	                ? new Svg(this.size, this.foreground, this.background)
-	                : new PNGlib(this.size, this.size, 256);
-	        },
-
-	        render: function(){
-	            var image      = this.image(),
-	                size       = this.size,
-	                baseMargin = Math.floor(size * this.margin),
-	                cell       = Math.floor((size - (baseMargin * 2)) / 5),
-	                margin     = Math.floor((size - cell * 5) / 2),
-	                bg         = image.color.apply(image, this.background),
-	                fg         = image.color.apply(image, this.foreground);
-
-	            // the first 15 characters of the hash control the pixels (even/odd)
-	            // they are drawn down the middle first, then mirrored outwards
-	            var i, color;
-	            for (i = 0; i < 15; i++) {
-	                color = parseInt(this.hash.charAt(i), 16) % 2 ? bg : fg;
-	                if (i < 5) {
-	                    this.rectangle(2 * cell + margin, i * cell + margin, cell, cell, color, image);
-	                } else if (i < 10) {
-	                    this.rectangle(1 * cell + margin, (i - 5) * cell + margin, cell, cell, color, image);
-	                    this.rectangle(3 * cell + margin, (i - 5) * cell + margin, cell, cell, color, image);
-	                } else if (i < 15) {
-	                    this.rectangle(0 * cell + margin, (i - 10) * cell + margin, cell, cell, color, image);
-	                    this.rectangle(4 * cell + margin, (i - 10) * cell + margin, cell, cell, color, image);
-	                }
-	            }
-
-	            return image;
-	        },
-
-	        rectangle: function(x, y, w, h, color, image){
-	            if (this.isSvg()) {
-	                image.rectangles.push({x: x, y: y, w: w, h: h, color: color});
-	            } else {
-	                var i, j;
-	                for (i = x; i < x + w; i++) {
-	                    for (j = y; j < y + h; j++) {
-	                        image.buffer[image.index(i, j)] = color;
-	                    }
-	                }
-	            }
-	        },
-
-	        // adapted from: https://gist.github.com/aemkei/1325937
-	        hsl2rgb: function(h, s, b){
-	            h *= 6;
-	            s = [
-	                b += s *= b < .5 ? b : 1 - b,
-	                b - h % 1 * s * 2,
-	                b -= s *= 2,
-	                b,
-	                b + h % 1 * s,
-	                b + s
-	            ];
-
-	            return [
-	                s[ ~~h    % 6 ] * 255, // red
-	                s[ (h|16) % 6 ] * 255, // green
-	                s[ (h|8)  % 6 ] * 255  // blue
-	            ];
-	        },
-
-	        toString: function(raw){
-	            // backward compatibility with old toString, default to base64
-	            if (raw) {
-	                return this.render().getDump();
-	            } else {
-	                return this.render().getBase64();
-	            }
-	        },
-
-	        isSvg: function(){
-	            return this.format.match(/svg/i)
-	        }
-	    };
-
-	    var Svg = function(size, foreground, background){
-	        this.size       = size;
-	        this.foreground = this.color.apply(this, foreground);
-	        this.background = this.color.apply(this, background);
-	        this.rectangles = [];
-	    };
-
-	    Svg.prototype = {
-	        size:       null,
-	        foreground: null,
-	        background: null,
-	        rectangles: null,
-
-	        color: function(r, g, b, a){
-	            var values = [r, g, b].map(Math.round);
-	            values.push((a >= 0) && (a <= 255) ? a/255 : 1);
-	            return 'rgba(' + values.join(',') + ')';
-	        },
-
-	        getDump: function(){
-	          var i,
-	                xml,
-	                rect,
-	                fg     = this.foreground,
-	                bg     = this.background,
-	                stroke = this.size * 0.005;
-
-	            xml = "<svg xmlns='http://www.w3.org/2000/svg'"
-	                + " width='" + this.size + "' height='" + this.size + "'"
-	                + " style='background-color:" + bg + ";'>"
-	                + "<g style='fill:" + fg + "; stroke:" + fg + "; stroke-width:" + stroke + ";'>";
-
-	            for (i = 0; i < this.rectangles.length; i++) {
-	                rect = this.rectangles[i];
-	                if (rect.color == bg) continue;
-	                xml += "<rect "
-	                    + " x='"      + rect.x + "'"
-	                    + " y='"      + rect.y + "'"
-	                    + " width='"  + rect.w + "'"
-	                    + " height='" + rect.h + "'"
-	                    + "/>";
-	            }
-	            xml += "</g></svg>";
-
-	            return xml;
-	        },
-
-	        getBase64: function(){
-	            if ('function' === typeof btoa) {
-	                return btoa(this.getDump());
-	            } else if (Buffer) {
-	                return new Buffer(this.getDump(), 'binary').toString('base64');
-	            } else {
-	                throw 'Cannot generate base64 output';
-	            }
-	        }
-	    };
-
-	    {
-	        module.exports = Identicon;
-	    }
-	})();
-	});
-
 	/**
 	* An Identifi identity profile. Usually you don't create them yourself, but get them
 	* from Index methods such as search().
@@ -9554,17 +9595,6 @@
 	    return n + (s[(v - 20) % 10] || s[v] || s[0]);
 	  };
 
-	  Identity._injectCss = function _injectCss() {
-	    var elementId = 'identifiStyle';
-	    if (document.getElementById(elementId)) {
-	      return;
-	    }
-	    var sheet = document.createElement('style');
-	    sheet.id = elementId;
-	    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .identifi-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .identifi-card a:hover, .identifi-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .identifi-pos {\n        color: #3c763d;\n      }\n\n      .identifi-neg {\n        color: #a94442;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
-	    document.body.appendChild(sheet);
-	  };
-
 	  /**
 	  * @param {number} width of the identicon
 	  * @param {number} border identicon border (aura) width
@@ -9579,7 +9609,7 @@
 	    var showDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 	    var ipfs = arguments[3];
 
-	    Identity._injectCss(); // some other way that is not called on each identicon generation?
+	    util$1.injectCss(); // some other way that is not called on each identicon generation?
 	    var identicon$$1 = document.createElement('div');
 	    identicon$$1.className = 'identifi-identicon';
 	    identicon$$1.style.width = width + 'px';
@@ -12715,7 +12745,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.67";
+	var version$1 = "0.0.68";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

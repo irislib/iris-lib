@@ -1,4 +1,6 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
+import Identicon from 'identicon.js';
+import util from './util';
 
 const UNIQUE_ID_VALIDATORS = {
   email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
@@ -107,6 +109,37 @@ class Attribute {
 
   uri() {
     return `${encodeURIComponent(this.val)}:${encodeURIComponent(this.name)}`;
+  }
+
+  /**
+  * @param {integer} width width of the identicon
+  * @returns {HTMLElement} img element containing the identicon
+  */
+  identicon(width) {
+    util.injectCss(); // some other way that is not called on each identicon generation?
+
+    const div = document.createElement(`div`);
+    div.className = `identifi-identicon`;
+    div.style.width = `${width}px`;
+    div.style.height = `${width}px`;
+
+    const img = document.createElement(`img`);
+    img.alt = ``;
+    img.width = width;
+    img.height = width;
+    const hash = util.getHash(`${encodeURIComponent(this.name)}:${encodeURIComponent(this.val)}`, `hex`);
+    const identicon = new Identicon(hash, {width, format: `svg`});
+    img.src = `data:image/svg+xml;base64,${identicon.toString()}`;
+
+    const name = document.createElement(`span`);
+    name.className = `identifi-distance`;
+    name.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
+    name.textContent = this.name.slice(0, 5);
+    div.appendChild(name);
+
+    div.appendChild(img);
+
+    return div;
   }
 }
 
