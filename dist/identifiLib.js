@@ -12485,8 +12485,8 @@
 	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
 	    for (var i = 0; i < ids.length; i++) {
 	      // add new identifiers to identity
-	      var data = (await ids[i].gun.then()) || {}; // TODO: data is sometimes undefined and new identity is not added!
-	      var relocated = this.gun.get('identities').set(data); // this may screw up real time updates? and create unnecessary `identities` entries
+	      var data = await ids[i].gun.then(); // TODO: data is sometimes undefined and new identity is not added!
+	      var relocated = data ? this.gun.get('identities').set(data) : ids[i].gun; // this may screw up real time updates? and create unnecessary `identities` entries
 	      if (recipientIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
 	        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
 	      }
@@ -12745,7 +12745,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.68";
+	var version$1 = "0.0.69";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
