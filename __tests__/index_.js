@@ -70,18 +70,24 @@ describe('local index', async () => {
       expect(data.receivedNegative).toBe(0);
     });
     test('get messages received by bob', async () => {
-      const r = await i.getReceivedMsgs(p);
-      expect(r.length).toBe(1);
+      const results = [];
+      i.getReceivedMsgs(p, result => results.push(result));
+      await new Promise(resolve => setTimeout(resolve, 200));
+      expect(results.length).toBe(1);
     });
     test('get messages sent by bob', async () => {
-      const r = await i.getSentMsgs(p);
-      expect(r.length).toBe(0);
+      const results = [];
+      i.getSentMsgs(p, result => results.push(result));
+      await new Promise(resolve => setTimeout(resolve, 200));
+      expect(results.length).toBe(0);
     });
     test('get messages sent by self', async () => {
       const viewpoint = await i.getViewpoint();
       expect(viewpoint).toBeInstanceOf(identifi.Identity);
-      const r = await i.getSentMsgs(viewpoint);
-      expect(r.length).toBe(1);
+      const results = [];
+      i.getSentMsgs(viewpoint, result => results.push(result));
+      await new Promise(resolve => setTimeout(resolve, 200));
+      expect(results.length).toBe(1);
     });
   });
   test('verify first, then rate', async () => {
@@ -149,9 +155,11 @@ describe('local index', async () => {
   describe('adding attributes to an identity', async () => {
     let c;
     test('get identity count', async () => {
-      const r = await i.search('');
-      c = r.length;
-      expect(r.length).toBeGreaterThan(1);
+      const results = [];
+      i.search('', null, result => results.push(result));
+      await new Promise(resolve => setTimeout(resolve, 200));
+      c = results.length;
+      expect(results.length).toBeGreaterThan(1);
     });
     test('add name to self identity', async () => {
       let viewpoint = await i.getViewpoint();
@@ -177,11 +185,16 @@ describe('local index', async () => {
       expect(data.mostVerifiedAttributes.name.attribute.val).toBe('Alice');
     });
     test('identity count should remain the same', async () => {
-      const r = await i.search('');
-      expect(r.length).toEqual(c);
+      const results = [];
+      i.search('', null, result => results.push(result));
+      await new Promise(resolve => setTimeout(resolve, 200));
+      expect(results.length).toEqual(c);
     });
     test('there should be only one identity with distance 0', async () => {
-      const r = await i.search('');
+      const r = [];
+      i.search('', null, result => r.push(result));
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       let viewpoints = 0;
       for (let j = 0; j < r.length; j++) {
         const id = await r[j].gun.then();
@@ -266,8 +279,10 @@ describe('local index', async () => {
     expect(data.sentPositive).toBe(4);
   });
   test('get messages by timestamp', async () => {
-    const r = await i.getMessagesByTimestamp();
-    expect(r.length).toBeGreaterThan(5);
+    const results = [];
+    i.getMessagesByTimestamp(result => results.push(result));
+    await new Promise(resolve => setTimeout(resolve, 200));
+    expect(results.length).toBeGreaterThan(5);
   });
 });
 

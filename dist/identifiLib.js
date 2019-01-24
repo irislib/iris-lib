@@ -12130,36 +12130,13 @@
 	var GUN_TIMEOUT = 100;
 
 	// temp method for GUN search
-	async function searchText(node, query, limit, cursor) {
-	  return new _Promise(function (resolve) {
-	    var r = [];
-	    function sortAndResolve() {
-	      r.sort(function (a, b) {
-	        if (a.key < b.key) {
-	          return -1;
-	        }
-	        if (a.key > b.key) {
-	          return 1;
-	        }
-	        return 0;
-	      });
-	      resolve(r);
-	    }
-	    node.map(function (value, key) {
-	      if ((!cursor || key > cursor) && key.indexOf(query) === 0) {
-	        if (r.length > limit) {
-	          return;
-	        } else if (r.length === limit) {
-	          sortAndResolve();
-	        } else if (value) {
-	          r.push({ value: value, key: key });
-	        }
+	async function searchText(node, callback, query, limit, cursor) {
+	  node.map(function (value, key) {
+	    if ((!cursor || key > cursor) && key.indexOf(query) === 0) {
+	      if (value) {
+	        callback({ value: value, key: key });
 	      }
-	    });
-	    setTimeout(function () {
-	      /* console.log(`r`, r);*/sortAndResolve();
-	    }, 100); // This probably causes the problem of results not appearing on first try
-	    // search should probably return an object that changes when new results are added / found
+	    }
 	  });
 	}
 
@@ -12296,17 +12273,15 @@
 	    return new Identity(this.gun.get('identitiesBySearchKey').get(a.uri()), { linkTo: a });
 	  };
 
-	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, limit, cursor) {
-	    var rawMsgs = await searchText(msgIndex, '', limit, cursor, true);
-	    var msgs = [];
-	    for (var i = 0; i < rawMsgs.length; i++) {
-	      var msg = await Message.fromSig(rawMsgs[i].value);
-	      if (rawMsgs[i].value && rawMsgs[i].value.ipfsUri) {
-	        msg.ipfsUri = rawMsgs[i].value.ipfsUri;
+	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, callback, limit, cursor) {
+	    async function resultFound(result) {
+	      var msg = await Message.fromSig(result.value);
+	      if (result.value && result.value.ipfsUri) {
+	        msg.ipfsUri = result.value.ipfsUri;
 	      }
-	      msgs.push(msg);
+	      callback(msg);
 	    }
-	    return msgs;
+	    searchText(msgIndex, resultFound, '', limit, cursor);
 	  };
 
 	  Index.prototype._addIdentityToIndexes = async function _addIdentityToIndexes(id) {
@@ -12325,10 +12300,10 @@
 	  */
 
 
-	  Index.prototype.getSentMsgs = async function getSentMsgs(identity, limit) {
-	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+	  Index.prototype.getSentMsgs = async function getSentMsgs(identity, callback, limit) {
+	    var cursor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
 
-	    return this._getMsgs(identity.gun.get('sent'), limit, cursor);
+	    return this._getMsgs(identity.gun.get('sent'), callback, limit, cursor);
 	  };
 
 	  /**
@@ -12336,10 +12311,10 @@
 	  */
 
 
-	  Index.prototype.getReceivedMsgs = async function getReceivedMsgs(identity, limit) {
-	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+	  Index.prototype.getReceivedMsgs = async function getReceivedMsgs(identity, callback, limit) {
+	    var cursor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
 
-	    return this._getMsgs(identity.gun.get('received'), limit, cursor);
+	    return this._getMsgs(identity.gun.get('received'), callback, limit, cursor);
 	  };
 
 	  Index.prototype._getAttributeTrustDistance = async function _getAttributeTrustDistance(a) {
@@ -12597,6 +12572,8 @@
 
 
 	  Index.prototype.addMessages = async function addMessages(msgs, ipfs) {
+	    var _this2 = this;
+
 	    var msgsByAuthor = {};
 	    if (Array.isArray(msgs)) {
 	      console.log('sorting ' + msgs.length + ' messages onto a search tree...');
@@ -12620,30 +12597,55 @@
 	    var initialMsgCount = void 0,
 	        msgCountAfterwards = void 0;
 	    var index = this.gun.get('identitiesBySearchKey');
-	    do {
-	      var knownIdentities = await searchText(index, '');
-	      var _i2 = 0;
-	      var author = msgAuthors[_i2];
+
+	    var _loop = async function _loop() {
+	      var knownIdentities = [];
+	      var stop = false;
+	      searchText(index, function (result) {
+	        if (stop) {
+	          return;
+	        }
+	        knownIdentities.push(result);
+	      }, '');
+	      await new _Promise(function (resolve) {
+	        return setTimeout(resolve, 200);
+	      }); // wait for results to accumulate
+	      stop = true;
+	      knownIdentities.sort(function (a, b) {
+	        if (a.key === b.key) {
+	          return 0;
+	        } else if (a.key > b.key) {
+	          return 1;
+	        } else {
+	          return -1;
+	        }
+	      });
+	      var i = 0;
+	      var author = msgAuthors[i];
 	      var knownIdentity = knownIdentities.shift();
 	      initialMsgCount = msgAuthors.length;
 	      // sort-merge join identitiesBySearchKey and msgsByAuthor
 	      while (author && knownIdentity) {
 	        if (author.indexOf(knownIdentity.key) === 0) {
 	          try {
-	            await util$1.timeoutPromise(this.addMessage(msgsByAuthor[author], ipfs), 10000);
+	            await util$1.timeoutPromise(_this2.addMessage(msgsByAuthor[author], ipfs), 10000);
 	          } catch (e) {
 	            console.log('adding failed:', e, _JSON$stringify(msgsByAuthor[author], null, 2));
 	          }
-	          msgAuthors.splice(_i2, 1);
-	          author = _i2 < msgAuthors.length ? msgAuthors[_i2] : undefined;
+	          msgAuthors.splice(i, 1);
+	          author = i < msgAuthors.length ? msgAuthors[i] : undefined;
 	          //knownIdentity = knownIdentities.shift();
 	        } else if (author < knownIdentity.key) {
-	          author = _i2 < msgAuthors.length ? msgAuthors[++_i2] : undefined;
+	          author = i < msgAuthors.length ? msgAuthors[++i] : undefined;
 	        } else {
 	          knownIdentity = knownIdentities.shift();
 	        }
 	      }
 	      msgCountAfterwards = msgAuthors.length;
+	    };
+
+	    do {
+	      await _loop();
 	    } while (msgCountAfterwards !== initialMsgCount);
 	    return true;
 	  };
@@ -12682,42 +12684,37 @@
 	  */
 
 
-	  Index.prototype.search = async function search(value) {
-	    var _this2 = this;
+	  Index.prototype.search = async function search(value, type, callback, limit) {
+	    var _this3 = this;
 
 	    // TODO: param 'exact', type param
-	    var r = {};
-	    return new _Promise(function (resolve) {
-	      _this2.gun.get('identitiesByTrustDistance').map(function (id, key) {
-	        if (key.indexOf(encodeURIComponent(value)) === -1) {
-	          return;
-	        }
-	        var soul = gun_min.node.soul(id);
-	        if (soul && !r.hasOwnProperty(soul)) {
-	          r[soul] = new Identity(_this2.gun.get('identitiesByTrustDistance').get(key));
+	    var seen = {};
+	    this.gun.get('identitiesByTrustDistance').map(function (id, key) {
+	      if (key.indexOf(encodeURIComponent(value)) === -1) {
+	        return;
+	      }
+	      var soul = gun_min.node.soul(id);
+	      if (soul && !seen.hasOwnProperty(soul)) {
+	        seen[soul] = true;
+	        callback(new Identity(_this3.gun.get('identitiesByTrustDistance').get(key)));
+	      }
+	    });
+	    if (this.options.queryTrustedIndexes) {
+	      this.gun.get('trustedIndexes').map(function (val, key) {
+	        if (val) {
+	          _this3.gun.user(key).get('identifi').get('identitiesByTrustDistance').map(function (id, k) {
+	            if (key.indexOf(encodeURIComponent(value)) === -1) {
+	              return;
+	            }
+	            var soul = gun_min.node.soul(id);
+	            if (soul && !seen.hasOwnProperty(soul)) {
+	              seen[soul] = true;
+	              callback(new Identity(_this3.gun.user(key).get('identifi').get('identitiesByTrustDistance').get(k)));
+	            }
+	          });
 	        }
 	      });
-	      if (_this2.options.queryTrustedIndexes) {
-	        _this2.gun.get('trustedIndexes').map(function (val, key) {
-	          if (val) {
-	            _this2.gun.user(key).get('identifi').get('identitiesByTrustDistance').map(function (id, k) {
-	              // TODO: where should this actually be searched from?
-	              if (k.indexOf(encodeURIComponent(value)) === -1) {
-	                return;
-	              }
-	              console.log('found search result from trusted index', key, ':', k);
-	              var soul = gun_min.node.soul(id);
-	              if (soul && !r.hasOwnProperty(soul)) {
-	                r[soul] = new Identity(_this2.gun.get('identitiesByTrustDistance').get(k));
-	              }
-	            });
-	          }
-	        });
-	      }
-	      setTimeout(function () {
-	        resolve(_Object$values(r));
-	      }, 200);
-	    });
+	    }
 	  };
 
 	  /**
@@ -12725,10 +12722,10 @@
 	  */
 
 
-	  Index.prototype.getMessagesByTimestamp = async function getMessagesByTimestamp(limit) {
-	    var cursor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+	  Index.prototype.getMessagesByTimestamp = function getMessagesByTimestamp(callback, limit) {
+	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    return this._getMsgs(this.gun.get('messagesByTimestamp'), limit, cursor);
+	    return this._getMsgs(this.gun.get('messagesByTimestamp'), callback, limit, cursor);
 	  };
 
 	  /**
@@ -12736,16 +12733,16 @@
 	  */
 
 
-	  Index.prototype.getMessagesByDistance = async function getMessagesByDistance(limit) {
-	    var cursor = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+	  Index.prototype.getMessagesByDistance = function getMessagesByDistance(callback, limit) {
+	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    return this._getMsgs(this.gun.get('messagesByDistance'), limit, cursor);
+	    return this._getMsgs(this.gun.get('messagesByDistance'), callback, limit, cursor);
 	  };
 
 	  return Index;
 	}();
 
-	var version$1 = "0.0.69";
+	var version$1 = "0.0.70";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

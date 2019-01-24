@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset='utf-8' />
-  <title>identifi-lib 0.0.69 | Documentation</title>
+  <title>identifi-lib 0.0.70 | Documentation</title>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
   <link href='assets/bass.css' type='text/css' rel='stylesheet' />
   <link href='assets/style.css' type='text/css' rel='stylesheet' />
@@ -15,7 +15,7 @@
       <div id='split-left' class='overflow-auto fs0 height-viewport-100'>
         <div class='py1 px2'>
           <h3 class='mb0 no-anchor'>identifi-lib</h3>
-          <div class='mb1'><code>0.0.69</code></div>
+          <div class='mb1'><code>0.0.70</code></div>
           <input
             placeholder='Filter'
             id='filter-input'
@@ -1619,7 +1619,7 @@ messagesByTimestamp, messagesByDistance.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getSentMsgs(identity, limit, cursor)</span>
+            <span class='code strong strong truncate'>getSentMsgs(identity, callback, limit, cursor)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1630,7 +1630,7 @@ messagesByTimestamp, messagesByDistance.</p>
   
  
   
-    <div class='pre p1 fill-light mt0'>getSentMsgs(identity: <a href="#identity">Identity</a>, limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
+    <div class='pre p1 fill-light mt0'>getSentMsgs(identity: <a href="#identity">Identity</a>, callback: any, limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
    
   
   
@@ -1649,6 +1649,14 @@ messagesByTimestamp, messagesByDistance.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>identity</span> <code class='quiet'>(<a href="#identity">Identity</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
 	    
           </div>
           
@@ -1704,7 +1712,7 @@ messagesByTimestamp, messagesByDistance.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getReceivedMsgs(identity, limit, cursor)</span>
+            <span class='code strong strong truncate'>getReceivedMsgs(identity, callback, limit, cursor)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1715,7 +1723,7 @@ messagesByTimestamp, messagesByDistance.</p>
   
  
   
-    <div class='pre p1 fill-light mt0'>getReceivedMsgs(identity: any, limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
+    <div class='pre p1 fill-light mt0'>getReceivedMsgs(identity: any, callback: any, limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
    
   
   
@@ -1734,6 +1742,14 @@ messagesByTimestamp, messagesByDistance.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>identity</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
 	    
           </div>
           
@@ -2010,7 +2026,7 @@ unknown authors.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>search(value, type)</span>
+            <span class='code strong strong truncate'>search(value, type, callback, limit)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2021,7 +2037,7 @@ unknown authors.</p>
   
  
   
-    <div class='pre p1 fill-light mt0'>search(value: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, type: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
+    <div class='pre p1 fill-light mt0'>search(value: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, type: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, callback: any, limit: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
    
   
   
@@ -2051,6 +2067,22 @@ unknown authors.</p>
             <span class='code bold'>type</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
 	    (optional) type of searched value
 
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>limit</span> <code class='quiet'>(any)</code>
+	    
           </div>
           
         </div>
@@ -2088,7 +2120,7 @@ unknown authors.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getMessagesByTimestamp(limit, cursor)</span>
+            <span class='code strong strong truncate'>getMessagesByTimestamp(callback, limit, cursor)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2099,7 +2131,7 @@ unknown authors.</p>
   
  
   
-    <div class='pre p1 fill-light mt0'>getMessagesByTimestamp(limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
+    <div class='pre p1 fill-light mt0'>getMessagesByTimestamp(callback: any, limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
    
   
   
@@ -2114,6 +2146,14 @@ unknown authors.</p>
   
     <div class='py1 quiet mt1 prose-big'>Parameters</div>
     <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
       
         <div class='space-bottom0'>
           <div>
@@ -2165,7 +2205,7 @@ unknown authors.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getMessagesByDistance(limit, cursor)</span>
+            <span class='code strong strong truncate'>getMessagesByDistance(callback, limit, cursor)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2176,7 +2216,7 @@ unknown authors.</p>
   
  
   
-    <div class='pre p1 fill-light mt0'>getMessagesByDistance(limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
+    <div class='pre p1 fill-light mt0'>getMessagesByDistance(callback: any, limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
    
   
   
@@ -2191,6 +2231,14 @@ unknown authors.</p>
   
     <div class='py1 quiet mt1 prose-big'>Parameters</div>
     <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
       
         <div class='space-bottom0'>
           <div>

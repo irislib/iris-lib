@@ -10,34 +10,18 @@ import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 const GUN_TIMEOUT = 100;
 
 // temp method for GUN search
-async function searchText(node, query, limit, cursor) {
-  return new Promise(resolve => {
-    const r = [];
-    function sortAndResolve() {
-      r.sort((a, b) => {
-        if (a.key < b.key) {
-          return - 1;
-        }
-        if (a.key > b.key) {
-          return 1;
-        }
-        return 0;
-      });
-      resolve(r);
-    }
-    node.map((value, key) => {
-      if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
-        if (r.length > limit) {
-          return;
-        } else if (r.length === limit) {
-          sortAndResolve();
-        } else if (value) {
-          r.push({value, key});
-        }
+async function searchText(node, callback, query, limit, cursor) {
+  let results = 0;
+  node.map((value, key) => {
+    if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
+      if (value) {
+        results ++;
+        callback({value, key});
       }
-    });
-    setTimeout(() => { /* console.log(`r`, r);*/ sortAndResolve(); }, 100); // This probably causes the problem of results not appearing on first try
-    // search should probably return an object that changes when new results are added / found
+      if (results >= limit) {
+        // turn off .map cb
+      }
+    }
   });
 }
 
@@ -164,17 +148,15 @@ class Index {
     return new Identity(this.gun.get(`identitiesBySearchKey`).get(a.uri()), {linkTo: a});
   }
 
-  async _getMsgs(msgIndex, limit, cursor) {
-    const rawMsgs = await searchText(msgIndex, ``, limit, cursor, true);
-    const msgs = [];
-    for (let i = 0;i < rawMsgs.length;i ++) {
-      const msg = await Message.fromSig(rawMsgs[i].value);
-      if (rawMsgs[i].value && rawMsgs[i].value.ipfsUri) {
-        msg.ipfsUri = rawMsgs[i].value.ipfsUri;
+  async _getMsgs(msgIndex, callback, limit, cursor) {
+    async function resultFound(result) {
+      const msg = await Message.fromSig(result.value);
+      if (result.value && result.value.ipfsUri) {
+        msg.ipfsUri = result.value.ipfsUri;
       }
-      msgs.push(msg);
+      callback(msg);
     }
-    return msgs;
+    searchText(msgIndex, resultFound, ``, limit, cursor);
   }
 
   async _addIdentityToIndexes(id) {
@@ -191,15 +173,15 @@ class Index {
   /**
   * @returns {Array} list of messages sent by param identity
   */
-  async getSentMsgs(identity: Identity, limit, cursor = ``) {
-    return this._getMsgs(identity.gun.get(`sent`), limit, cursor);
+  async getSentMsgs(identity: Identity, callback, limit, cursor = ``) {
+    return this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor);
   }
 
   /**
   * @returns {Array} list of messages received by param identity
   */
-  async getReceivedMsgs(identity, limit, cursor = ``) {
-    return this._getMsgs(identity.gun.get(`received`), limit, cursor);
+  async getReceivedMsgs(identity, callback, limit, cursor = ``) {
+    return this._getMsgs(identity.gun.get(`received`), callback, limit, cursor);
   }
 
   async _getAttributeTrustDistance(a) {
@@ -466,7 +448,23 @@ class Index {
     let initialMsgCount, msgCountAfterwards;
     const index = this.gun.get(`identitiesBySearchKey`);
     do {
-      const knownIdentities = await searchText(index, ``);
+      const knownIdentities = [];
+      let stop = false;
+      searchText(index, result => {
+        if (stop) { return; }
+        knownIdentities.push(result);
+      }, ``);
+      await new Promise(resolve => setTimeout(resolve, 200)); // wait for results to accumulate
+      stop = true;
+      knownIdentities.sort((a, b) => {
+        if (a.key === b.key) {
+          return 0;
+        } else if (a.key > b.key) {
+          return 1;
+        } else {
+          return - 1;
+        }
+      });
       let i = 0;
       let author = msgAuthors[i];
       let knownIdentity = knownIdentities.shift();
@@ -523,50 +521,59 @@ class Index {
   * @param {string} type (optional) type of searched value
   * @returns {Array} list of matching identities
   */
-  async search(value) { // TODO: param 'exact', type param
-    const r = {};
-    return new Promise(resolve => {
-      this.gun.get(`identitiesByTrustDistance`).map((id, key) => {
-        if (key.indexOf(encodeURIComponent(value)) === - 1) {
-          return;
+  async search(value, type, callback, limit) { // TODO: param 'exact', type param
+    const seen = {};
+    let results = 0;
+    this.gun.get(`identitiesByTrustDistance`).map((id, key) => {
+      if (key.indexOf(encodeURIComponent(value)) === - 1) {
+        return;
+      }
+      const soul = Gun.node.soul(id);
+      if (soul && !seen.hasOwnProperty(soul)) {
+        seen[soul] = true;
+        results ++;
+        callback(new Identity(this.gun.get(`identitiesByTrustDistance`).get(key)));
+        if (results >= limit) {
+          // turn off .map cb
         }
-        const soul = Gun.node.soul(id);
-        if (soul && !r.hasOwnProperty(soul)) {
-          r[soul] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
+      }
+    });
+    if (this.options.queryTrustedIndexes) {
+      this.gun.get(`trustedIndexes`).map((val, key) => {
+        if (val) {
+          this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).map((id, k) => {
+            if (key.indexOf(encodeURIComponent(value)) === - 1) {
+              return;
+            }
+            const soul = Gun.node.soul(id);
+            if (soul && !seen.hasOwnProperty(soul)) {
+              seen[soul] = true;
+              results ++;
+              callback(
+                new Identity(this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).get(k))
+              );
+              if (results >= limit) {
+                // turn off .map cb
+              }
+            }
+          });
         }
       });
-      if (this.options.queryTrustedIndexes) {
-        this.gun.get(`trustedIndexes`).map((val, key) => {
-          if (val) {
-            this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).map((id, k) => { // TODO: where should this actually be searched from?
-              if (k.indexOf(encodeURIComponent(value)) === - 1) {
-                return;
-              }
-              console.log(`found search result from trusted index`, key, `:`, k);
-              const soul = Gun.node.soul(id);
-              if (soul && !r.hasOwnProperty(soul)) {
-                r[soul] = new Identity(this.gun.get(`identitiesByTrustDistance`).get(k));
-              }
-            });
-          }
-        });
-      }
-      setTimeout(() => { resolve(Object.values(r)); }, 200);
-    });
+    }
   }
 
   /**
   * @returns {Array} list of messages
   */
-  async getMessagesByTimestamp(limit, cursor = ``) {
-    return this._getMsgs(this.gun.get(`messagesByTimestamp`), limit, cursor);
+  getMessagesByTimestamp(callback, limit, cursor = ``) {
+    return this._getMsgs(this.gun.get(`messagesByTimestamp`), callback, limit, cursor);
   }
 
   /**
   * @returns {Array} list of messages
   */
-  async getMessagesByDistance(limit, cursor = ``) {
-    return this._getMsgs(this.gun.get(`messagesByDistance`), limit, cursor);
+  getMessagesByDistance(callback, limit, cursor = ``) {
+    return this._getMsgs(this.gun.get(`messagesByDistance`), callback, limit, cursor);
   }
 }
 
