@@ -12131,9 +12131,15 @@
 
 	// temp method for GUN search
 	async function searchText(node, callback, query, limit, cursor) {
+	  var results = 0;
 	  node.map(function (value, key) {
 	    if ((!cursor || key > cursor) && key.indexOf(query) === 0) {
+	      if (results >= limit) {
+	        // TODO: turn off .map cb
+	        return;
+	      }
 	      if (value) {
+	        results++;
 	        callback({ value: value, key: key });
 	      }
 	    }
@@ -12689,13 +12695,19 @@
 
 	    // TODO: param 'exact', type param
 	    var seen = {};
+	    var results = 0;
 	    this.gun.get('identitiesByTrustDistance').map(function (id, key) {
+	      if (results >= limit) {
+	        // TODO: turn off .map cb
+	        return;
+	      }
 	      if (key.indexOf(encodeURIComponent(value)) === -1) {
 	        return;
 	      }
 	      var soul = gun_min.node.soul(id);
 	      if (soul && !seen.hasOwnProperty(soul)) {
 	        seen[soul] = true;
+	        results++;
 	        callback(new Identity(_this3.gun.get('identitiesByTrustDistance').get(key)));
 	      }
 	    });
@@ -12703,12 +12715,17 @@
 	      this.gun.get('trustedIndexes').map(function (val, key) {
 	        if (val) {
 	          _this3.gun.user(key).get('identifi').get('identitiesByTrustDistance').map(function (id, k) {
+	            if (results >= limit) {
+	              // TODO: turn off .map cb
+	              return;
+	            }
 	            if (key.indexOf(encodeURIComponent(value)) === -1) {
 	              return;
 	            }
 	            var soul = gun_min.node.soul(id);
 	            if (soul && !seen.hasOwnProperty(soul)) {
 	              seen[soul] = true;
+	              results++;
 	              callback(new Identity(_this3.gun.user(key).get('identifi').get('identitiesByTrustDistance').get(k)));
 	            }
 	          });
@@ -12742,7 +12759,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.70";
+	var version$1 = "0.0.71";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

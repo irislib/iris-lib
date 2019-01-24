@@ -14,12 +14,13 @@ async function searchText(node, callback, query, limit, cursor) {
   let results = 0;
   node.map((value, key) => {
     if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
+      if (results >= limit) {
+        // TODO: turn off .map cb
+        return;
+      }
       if (value) {
         results ++;
         callback({value, key});
-      }
-      if (results >= limit) {
-        // turn off .map cb
       }
     }
   });
@@ -525,6 +526,10 @@ class Index {
     const seen = {};
     let results = 0;
     this.gun.get(`identitiesByTrustDistance`).map((id, key) => {
+      if (results >= limit) {
+        // TODO: turn off .map cb
+        return;
+      }
       if (key.indexOf(encodeURIComponent(value)) === - 1) {
         return;
       }
@@ -533,15 +538,16 @@ class Index {
         seen[soul] = true;
         results ++;
         callback(new Identity(this.gun.get(`identitiesByTrustDistance`).get(key)));
-        if (results >= limit) {
-          // turn off .map cb
-        }
       }
     });
     if (this.options.queryTrustedIndexes) {
       this.gun.get(`trustedIndexes`).map((val, key) => {
         if (val) {
           this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).map((id, k) => {
+            if (results >= limit) {
+              // TODO: turn off .map cb
+              return;
+            }
             if (key.indexOf(encodeURIComponent(value)) === - 1) {
               return;
             }
@@ -552,9 +558,6 @@ class Index {
               callback(
                 new Identity(this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).get(k))
               );
-              if (results >= limit) {
-                // turn off .map cb
-              }
             }
           });
         }
