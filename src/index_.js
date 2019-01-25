@@ -11,17 +11,18 @@ const GUN_TIMEOUT = 100;
 
 // temp method for GUN search
 async function searchText(node, callback, query, limit, cursor) {
-  let results = 0;
   const seen = {};
-  node.map().once((value, key) => {
+  node.map().on((value, key, msg, eve) => {
     if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
-      if (results >= limit || seen.hasOwnProperty(key)) {
-        // TODO: turn off .map cb
+      if (Object.keys(seen).length >= limit) {
+        eve.off();
         return;
       }
-      if (value) {
+      if (seen.hasOwnProperty(key)) {
+        return;
+      }
+      if (value && Object.keys(value).length > 1) {
         seen[key] = true;
-        results ++;
         callback({value, key});
       }
     }
