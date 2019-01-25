@@ -12,13 +12,15 @@ const GUN_TIMEOUT = 100;
 // temp method for GUN search
 async function searchText(node, callback, query, limit, cursor) {
   let results = 0;
-  node.map((value, key) => {
+  const seen = {};
+  node.map().once((value, key) => {
     if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
-      if (results >= limit) {
+      if (results >= limit || seen.hasOwnProperty(key)) {
         // TODO: turn off .map cb
         return;
       }
       if (value) {
+        seen[key] = true;
         results ++;
         callback({value, key});
       }
@@ -344,7 +346,7 @@ class Index {
     const msgs = [];
     if (this.options.importFromTrustedIndexes) {
       await util.timeoutPromise(new Promise(resolve => {
-        this.gun.user(gunUri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
+        this.gun.user(gunUri).get(`identifi`).get(`messagesByDistance`).map().once((val, key) => {
           const d = Number.parseInt(key.split(`:`)[0]);
           if (!isNaN(d) && d <= maxCrawlDistance) {
             Message.fromSig(val).then(msg => {
@@ -525,7 +527,7 @@ class Index {
   async search(value, type, callback, limit) { // TODO: param 'exact', type param
     const seen = {};
     let results = 0;
-    this.gun.get(`identitiesByTrustDistance`).map((id, key) => {
+    this.gun.get(`identitiesByTrustDistance`).map().once((id, key) => {
       if (results >= limit) {
         // TODO: turn off .map cb
         return;
@@ -541,9 +543,9 @@ class Index {
       }
     });
     if (this.options.queryTrustedIndexes) {
-      this.gun.get(`trustedIndexes`).map((val, key) => {
+      this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).map((id, k) => {
+          this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).map().once((id, k) => {
             if (results >= limit) {
               // TODO: turn off .map cb
               return;
