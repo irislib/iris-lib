@@ -347,7 +347,7 @@ class Index {
     const msgs = [];
     if (this.options.importFromTrustedIndexes) {
       await util.timeoutPromise(new Promise(resolve => {
-        this.gun.user(gunUri).get(`identifi`).get(`messagesByDistance`).map().once((val, key) => {
+        this.gun.user(gunUri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
           const d = Number.parseInt(key.split(`:`)[0]);
           if (!isNaN(d) && d <= maxCrawlDistance) {
             Message.fromSig(val).then(msg => {

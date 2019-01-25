@@ -12495,7 +12495,7 @@
 	    var msgs = [];
 	    if (this.options.importFromTrustedIndexes) {
 	      await util$1.timeoutPromise(new _Promise(function (resolve) {
-	        _this.gun.user(gunUri).get('identifi').get('messagesByDistance').map().once(function (val, key) {
+	        _this.gun.user(gunUri).get('identifi').get('messagesByDistance').map(function (val, key) {
 	          var d = _Number$parseInt(key.split(':')[0]);
 	          if (!isNaN(d) && d <= maxCrawlDistance) {
 	            Message.fromSig(val).then(function (msg) {
