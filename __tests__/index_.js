@@ -56,6 +56,7 @@ describe('local index', async () => {
   let p;
   describe('create and fetch an identity using identifi messages', async () => {
     test('add trust rating to bob', async () => {
+      debugger;
       const msg = await identifi.Message.createRating({recipient:[['email', 'bob@example.com']], rating:10}, key);
       const r = await i.addMessage(msg);
       expect(r).toBe(true);
@@ -194,7 +195,7 @@ describe('local index', async () => {
       const r = [];
       i.search('', null, result => r.push(result));
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       let viewpoints = 0;
       for (let j = 0; j < r.length; j++) {
         const id = await r[j].gun.then();

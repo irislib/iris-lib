@@ -9,31 +9,28 @@ import util from './util';
 class Identity {
   /**
   * @param {Object} gun node where the Identity data lives
-  * @param {Object} tempData temporary data to present before data from gun is received
-  * @param {Boolean} save whether to save identity data to the given gun node
   */
-  constructor(gun: Object, tempData, save) {
+  constructor(gun: Object, linkTo) {
     this.gun = gun;
-    if (save) {
-      if (tempData.linkTo && !tempData.attrs) {
-        const linkTo = new Attribute(tempData.linkTo);
-        tempData.attrs = tempData.attrs || {};
-        if (!tempData.attrs.hasOwnProperty(linkTo.uri())) {
-          tempData.attrs[linkTo.uri()] = linkTo;
-        }
-      } else {
-        tempData.linkTo = Identity.getLinkTo(tempData.attrs);
-      }
-      this.gun.put(tempData);
-    } else {
-      this.tempData = tempData;
-      this.gun.on(data => {
-        if (data) {
-          //this.gun.off();
-          this.tempData = null;
-        }
-      });
+    this.linkTo = linkTo;
+  }
+
+  static create(gun, data) {
+    if (!data.linkTo && !data.attrs) {
+      throw new Error(`You must specify either data.linkTo or data.attrs`);
     }
+    if (data.linkTo && !data.attrs) {
+      const linkTo = new Attribute(data.linkTo);
+      data.attrs = {};
+      if (!data.attrs.hasOwnProperty(linkTo.uri())) {
+        data.attrs[linkTo.uri()] = linkTo;
+      }
+    } else {
+      data.linkTo = Identity.getLinkTo(data.attrs);
+    }
+    return gun.put(data).then(() => {
+      return new Identity(gun, data.linkTo);
+    });
   }
 
   static getLinkTo(attrs) {
@@ -272,15 +269,13 @@ class Identity {
       img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;
     }
 
-    if (this.tempData) {
-      setPie(this.tempData);
-      if (this.tempData.linkTo) {
-        setIdenticonImg(this.tempData.linkTo);
-      }
+    if (this.linkTo) {
+      setIdenticonImg(this.linkTo);
+    } else {
+      this.gun.get(`linkTo`).on(setIdenticonImg);
     }
 
     this.gun.on(setPie);
-    this.gun.get(`linkTo`).on(setIdenticonImg);
 
     if (ipfs) {
       this.gun.get(`attrs`).open(attrs => {

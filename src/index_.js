@@ -12,10 +12,9 @@ const GUN_TIMEOUT = 100;
 // temp method for GUN search
 async function searchText(node, callback, query, limit, cursor) {
   const seen = {};
-  node.map().on((value, key, msg, eve) => {
+  node.map((value, key) => {
     if ((!cursor || (key > cursor)) && key.indexOf(query) === 0) {
       if (Object.keys(seen).length >= limit) {
-        eve.off();
         return;
       }
       if (seen.hasOwnProperty(key)) {
@@ -59,15 +58,12 @@ class Index {
     user.auth(keypair);
     const i = new Index(user.get(`identifi`));
     i.viewpoint = new Attribute({name: `keyID`, val: Key.getId(keypair)});
-    i.gun.get(`viewpoint`).put(i.viewpoint);
+    await i.gun.get(`viewpoint`).put(i.viewpoint);
     const uri = i.viewpoint.uri();
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
-    const kpId = new Identity(g,
-      {
-        trustDistance: 0,
-        linkTo: i.viewpoint
-      }, true);
-    i._addIdentityToIndexes(kpId.gun);
+    const id = await Identity.create(g, {trustDistance: 0, linkTo: i.viewpoint});
+    await i._addIdentityToIndexes(id.gun);
+
     return i;
   }
 
@@ -79,10 +75,16 @@ class Index {
     return key;
   }
 
-  static async getIdentityIndexKeys(identity, hash) {
+  async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
-    const d = await util.timeoutPromise(identity.get(`trustDistance`).then(), GUN_TIMEOUT);
-    await identity.get(`attrs`).map().once(a => {
+    let d;
+    if (identity.linkTo && this.viewpoint.equals(identity.linkTo)) {
+      d = 0;
+    } else {
+      d = await util.timeoutPromise(identity.get(`trustDistance`).then(), GUN_TIMEOUT);
+    }
+
+    function addIndexKey(a) {
       if (!(a && a.val && a.name)) { // TODO: this sometimes returns undefined
         return;
       }
@@ -118,7 +120,13 @@ class Index {
         const split = key.split(`/`);
         indexKeys.push(split[split.length - 1]);
       }
-    }).then();
+    }
+
+    if (this.viewpoint.equals(identity.linkTo)) {
+      addIndexKey(identity.linkTo);
+    }
+
+    await identity.get(`attrs`).map().once(addIndexKey).then();
     return indexKeys;
   }
 
@@ -149,7 +157,7 @@ class Index {
       type = Attribute.guessTypeOf(value);
     }
     const a = new Attribute([type, value]);
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(a.uri()), {linkTo: a});
+    return new Identity(this.gun.get(`identitiesBySearchKey`).get(a.uri()), a);
   }
 
   async _getMsgs(msgIndex, callback, limit, cursor) {
@@ -165,12 +173,13 @@ class Index {
 
   async _addIdentityToIndexes(id) {
     const hash = Gun.node.soul(id) || `todo`;
-    const indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(0, 6));
+    const indexKeys = await this.getIdentityIndexKeys(id, hash.substr(0, 6));
+
     for (let i = 0;i < indexKeys.length;i ++) {
       const key = indexKeys[i];
       console.log(`adding key ${key}`);
-      this.gun.get(`identitiesByTrustDistance`).get(key).put(id);
-      this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id);
+      await this.gun.get(`identitiesByTrustDistance`).get(key).put(id);
+      await this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id);
     }
   }
 
@@ -228,7 +237,7 @@ class Index {
 
   async _updateMsgRecipientIdentity(msg, msgIndexKey, recipient) {
     const hash = `todo`;
-    const identityIndexKeysBefore = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
+    const identityIndexKeysBefore = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     const attrs = await new Promise(resolve => { recipient.get(`attrs`).load(r => resolve(r)); });
     if (msg.signedData.type === `verification`) {
       msg.signedData.recipient.forEach(a1 => {
@@ -287,7 +296,7 @@ class Index {
       obj.ipfsUri = msg.ipfsUri;
     }
     recipient.get(`received`).get(msgIndexKey).put(obj);
-    const identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
+    const identityIndexKeysAfter = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     for (let j = 0;j < identityIndexKeysBefore.length;j ++) {
       const k = identityIndexKeysBefore[j];
       if (identityIndexKeysAfter.indexOf(k) === - 1) {
@@ -406,7 +415,7 @@ class Index {
       });
       const linkTo = Identity.getLinkTo(attrs);
       const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
-      const id = new Identity(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: 99}, true);
+      const id = await Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: 99}, true);
       // {a:1} because inserting {} causes a "no signature on data" error from gun
 
       // TODO: take msg author trust into account

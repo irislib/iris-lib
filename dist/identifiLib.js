@@ -8902,7 +8902,7 @@
 
 
 	  Attribute.prototype.equals = function equals(a) {
-	    return this.name === a.name && this.val === a.val;
+	    return a && this.name === a.name && this.val === a.val;
 	  };
 
 	  Attribute.prototype.uri = function uri() {
@@ -9391,36 +9391,31 @@
 	var Identity = function () {
 	  /**
 	  * @param {Object} gun node where the Identity data lives
-	  * @param {Object} tempData temporary data to present before data from gun is received
-	  * @param {Boolean} save whether to save identity data to the given gun node
 	  */
-	  function Identity(gun, tempData, save) {
-	    var _this = this;
-
+	  function Identity(gun, linkTo) {
 	    _classCallCheck(this, Identity);
 
 	    this.gun = gun;
-	    if (save) {
-	      if (tempData.linkTo && !tempData.attrs) {
-	        var linkTo = new Attribute(tempData.linkTo);
-	        tempData.attrs = tempData.attrs || {};
-	        if (!tempData.attrs.hasOwnProperty(linkTo.uri())) {
-	          tempData.attrs[linkTo.uri()] = linkTo;
-	        }
-	      } else {
-	        tempData.linkTo = Identity.getLinkTo(tempData.attrs);
-	      }
-	      this.gun.put(tempData);
-	    } else {
-	      this.tempData = tempData;
-	      this.gun.on(function (data) {
-	        if (data) {
-	          //this.gun.off();
-	          _this.tempData = null;
-	        }
-	      });
-	    }
+	    this.linkTo = linkTo;
 	  }
+
+	  Identity.create = function create(gun, data) {
+	    if (!data.linkTo && !data.attrs) {
+	      throw new Error('You must specify either data.linkTo or data.attrs');
+	    }
+	    if (data.linkTo && !data.attrs) {
+	      var linkTo = new Attribute(data.linkTo);
+	      data.attrs = {};
+	      if (!data.attrs.hasOwnProperty(linkTo.uri())) {
+	        data.attrs[linkTo.uri()] = linkTo;
+	      }
+	    } else {
+	      data.linkTo = Identity.getLinkTo(data.attrs);
+	    }
+	    return gun.put(data).then(function () {
+	      return new Identity(gun, data.linkTo);
+	    });
+	  };
 
 	  Identity.getLinkTo = function getLinkTo(attrs) {
 	    var mva = Identity.getMostVerifiedAttributes(attrs);
@@ -9476,7 +9471,7 @@
 
 
 	  Identity.prototype.profileCard = function profileCard(ipfs) {
-	    var _this2 = this;
+	    var _this = this;
 
 	    var card = document.createElement('div');
 	    card.className = 'identifi-card';
@@ -9503,11 +9498,11 @@
 	        return;
 	      }
 	      var attrs = await new _Promise(function (resolve) {
-	        _this2.gun.get('attrs').load(function (r) {
+	        _this.gun.get('attrs').load(function (r) {
 	          return resolve(r);
 	        });
 	      });
-	      var linkTo = await _this2.gun.get('linkTo').then();
+	      var linkTo = await _this.gun.get('linkTo').then();
 	      var link = 'https://identi.fi/#/identities/' + linkTo.name + '/' + linkTo.val;
 	      var mva = Identity.getMostVerifiedAttributes(attrs);
 	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.name && mva.name.attribute.val || mva.nickname && mva.nickname.attribute.val || linkTo.name + ':' + linkTo.val) + '</a><br>';
@@ -9678,15 +9673,13 @@
 	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
 	    }
 
-	    if (this.tempData) {
-	      setPie(this.tempData);
-	      if (this.tempData.linkTo) {
-	        setIdenticonImg(this.tempData.linkTo);
-	      }
+	    if (this.linkTo) {
+	      setIdenticonImg(this.linkTo);
+	    } else {
+	      this.gun.get('linkTo').on(setIdenticonImg);
 	    }
 
 	    this.gun.on(setPie);
-	    this.gun.get('linkTo').on(setIdenticonImg);
 
 	    if (ipfs) {
 	      this.gun.get('attrs').open(function (attrs) {
@@ -12132,10 +12125,9 @@
 	// temp method for GUN search
 	async function searchText(node, callback, query, limit, cursor) {
 	  var seen = {};
-	  node.map().on(function (value, key, msg, eve) {
+	  node.map(function (value, key) {
 	    if ((!cursor || key > cursor) && key.indexOf(query) === 0) {
 	      if (_Object$keys(seen).length >= limit) {
-	        eve.off();
 	        return;
 	      }
 	      if (seen.hasOwnProperty(key)) {
@@ -12184,14 +12176,12 @@
 	    user.auth(keypair);
 	    var i = new Index(user.get('identifi'));
 	    i.viewpoint = new Attribute({ name: 'keyID', val: Key.getId(keypair) });
-	    i.gun.get('viewpoint').put(i.viewpoint);
+	    await i.gun.get('viewpoint').put(i.viewpoint);
 	    var uri = i.viewpoint.uri();
 	    var g = i.gun.get('identitiesBySearchKey').get(uri);
-	    var kpId = new Identity(g, {
-	      trustDistance: 0,
-	      linkTo: i.viewpoint
-	    }, true);
-	    i._addIdentityToIndexes(kpId.gun);
+	    var id = await Identity.create(g, { trustDistance: 0, linkTo: i.viewpoint });
+	    await i._addIdentityToIndexes(id.gun);
+
 	    return i;
 	  };
 
@@ -12203,10 +12193,16 @@
 	    return key;
 	  };
 
-	  Index.getIdentityIndexKeys = async function getIdentityIndexKeys(identity, hash) {
+	  Index.prototype.getIdentityIndexKeys = async function getIdentityIndexKeys(identity, hash) {
 	    var indexKeys = [];
-	    var d = await util$1.timeoutPromise(identity.get('trustDistance').then(), GUN_TIMEOUT);
-	    await identity.get('attrs').map().once(function (a) {
+	    var d = void 0;
+	    if (identity.linkTo && this.viewpoint.equals(identity.linkTo)) {
+	      d = 0;
+	    } else {
+	      d = await util$1.timeoutPromise(identity.get('trustDistance').then(), GUN_TIMEOUT);
+	    }
+
+	    function addIndexKey(a) {
 	      if (!(a && a.val && a.name)) {
 	        // TODO: this sometimes returns undefined
 	        return;
@@ -12244,7 +12240,13 @@
 	        var split = key.split('/');
 	        indexKeys.push(split[split.length - 1]);
 	      }
-	    }).then();
+	    }
+
+	    if (this.viewpoint.equals(identity.linkTo)) {
+	      addIndexKey(identity.linkTo);
+	    }
+
+	    await identity.get('attrs').map().once(addIndexKey).then();
 	    return indexKeys;
 	  };
 
@@ -12279,7 +12281,7 @@
 	      type = Attribute.guessTypeOf(value);
 	    }
 	    var a = new Attribute([type, value]);
-	    return new Identity(this.gun.get('identitiesBySearchKey').get(a.uri()), { linkTo: a });
+	    return new Identity(this.gun.get('identitiesBySearchKey').get(a.uri()), a);
 	  };
 
 	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, callback, limit, cursor) {
@@ -12295,12 +12297,13 @@
 
 	  Index.prototype._addIdentityToIndexes = async function _addIdentityToIndexes(id) {
 	    var hash = gun_min.node.soul(id) || 'todo';
-	    var indexKeys = await Index.getIdentityIndexKeys(id, hash.substr(0, 6));
+	    var indexKeys = await this.getIdentityIndexKeys(id, hash.substr(0, 6));
+
 	    for (var i = 0; i < indexKeys.length; i++) {
 	      var key = indexKeys[i];
 	      console.log('adding key ' + key);
-	      this.gun.get('identitiesByTrustDistance').get(key).put(id);
-	      this.gun.get('identitiesBySearchKey').get(key.substr(key.indexOf(':') + 1)).put(id);
+	      await this.gun.get('identitiesByTrustDistance').get(key).put(id);
+	      await this.gun.get('identitiesBySearchKey').get(key.substr(key.indexOf(':') + 1)).put(id);
 	    }
 	  };
 
@@ -12368,7 +12371,7 @@
 
 	  Index.prototype._updateMsgRecipientIdentity = async function _updateMsgRecipientIdentity(msg, msgIndexKey, recipient) {
 	    var hash = 'todo';
-	    var identityIndexKeysBefore = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
+	    var identityIndexKeysBefore = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
 	    var attrs = await new _Promise(function (resolve) {
 	      recipient.get('attrs').load(function (r) {
 	        return resolve(r);
@@ -12429,7 +12432,7 @@
 	      obj.ipfsUri = msg.ipfsUri;
 	    }
 	    recipient.get('received').get(msgIndexKey).put(obj);
-	    var identityIndexKeysAfter = await Index.getIdentityIndexKeys(recipient, hash.substr(0, 6));
+	    var identityIndexKeysAfter = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
 	    for (var j = 0; j < identityIndexKeysBefore.length; j++) {
 	      var k = identityIndexKeysBefore[j];
 	      if (identityIndexKeysAfter.indexOf(k) === -1) {
@@ -12556,7 +12559,7 @@
 	      });
 	      var linkTo = Identity.getLinkTo(attrs);
 	      var random = Math.floor(Math.random() * _Number$MAX_SAFE_INTEGER); // TODO: bubblegum fix
-	      var _id2 = new Identity(this.gun.get('identities').get(random).put({}), { attrs: attrs, linkTo: linkTo, trustDistance: 99 }, true);
+	      var _id2 = await Identity.create(this.gun.get('identities').get(random).put({}), { attrs: attrs, linkTo: linkTo, trustDistance: 99 }, true);
 	      // {a:1} because inserting {} causes a "no signature on data" error from gun
 
 	      // TODO: take msg author trust into account
@@ -12762,7 +12765,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.73";
+	var version$1 = "0.0.74";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

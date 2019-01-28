@@ -104,7 +104,7 @@ class Attribute {
   * @returns {boolean} true if attribute matches param
   */
   equals(a: Attribute) {
-    return this.name === a.name && this.val === a.val;
+    return a && this.name === a.name && this.val === a.val;
   }
 
   uri() {
