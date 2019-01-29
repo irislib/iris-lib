@@ -12432,6 +12432,7 @@
 	      obj.ipfsUri = msg.ipfsUri;
 	    }
 	    recipient.get('received').get(msgIndexKey).put(obj);
+	    recipient.get('received').get(msgIndexKey).put(obj);
 	    var identityIndexKeysAfter = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
 	    for (var j = 0; j < identityIndexKeysBefore.length; j++) {
 	      var k = identityIndexKeysBefore[j];
@@ -12463,7 +12464,9 @@
 	    if (msg.ipfsUri) {
 	      obj.ipfsUri = msg.ipfsUri;
 	    }
-	    return author.get('sent').get(msgIndexKey).put(obj).then();
+	    author.get('sent').get(msgIndexKey).put(obj);
+	    author.get('sent').get(msgIndexKey).put(obj);
+	    return;
 	  };
 
 	  Index.prototype._updateIdentityProfilesByMsg = async function _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
@@ -12683,7 +12686,9 @@
 	      obj.ipfsUri = ipfsUri;
 	    }
 	    this.gun.get('messagesByDistance').get(indexKey).put(obj);
+	    this.gun.get('messagesByDistance').get(indexKey).put(obj); // umm, what? doesn't work unless I write it twice
 	    indexKey = indexKey.substr(indexKey.indexOf(':') + 1); // remove distance from key
+	    this.gun.get('messagesByTimestamp').get(indexKey).put(obj);
 	    this.gun.get('messagesByTimestamp').get(indexKey).put(obj);
 	    await this._updateIdentityIndexesByMsg(msg);
 	    return true;
