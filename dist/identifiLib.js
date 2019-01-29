@@ -9286,7 +9286,7 @@
 	  };
 
 	  /**
-	  * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+	  * Create an Identifi verification message. Message signedData's type, timestamp and context (identifi) are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
 	  * @returns Promise{Object} message object promise
 	  */
 
@@ -9297,7 +9297,7 @@
 	  };
 
 	  /**
-	  * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.
+	  * Create an Identifi rating message. Message signedData's type, maxRating, minRating, timestamp and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
 	  * @returns Promise{Object} message object promise
 	  */
 
@@ -12200,12 +12200,14 @@
 
 
 	  Index.create = async function create(gun, keypair) {
+	    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
 	    if (!keypair) {
 	      keypair = await Key.getDefault();
 	    }
 	    var user = gun.user();
 	    user.auth(keypair);
-	    var i = new Index(user.get('identifi'));
+	    var i = new Index(user.get('identifi'), options);
 	    i.viewpoint = new Attribute({ name: 'keyID', val: Key.getId(keypair) });
 	    await i.gun.get('viewpoint').put(i.viewpoint);
 	    var uri = i.viewpoint.uri();

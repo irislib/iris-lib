@@ -1410,7 +1410,7 @@ messagesByTimestamp, messagesByDistance.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>create(gun, keypair)</span>
+            <span class='code strong strong truncate'>create(gun, keypair, options)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1422,7 +1422,7 @@ messagesByTimestamp, messagesByDistance.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>create(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): any</div>
+    <div class='pre p1 fill-light mt0'>create(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: any): any</div>
    
   
   
@@ -1452,6 +1452,15 @@ messagesByTimestamp, messagesByDistance.</p>
             <span class='code bold'>keypair</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    SEA keypair (can be generated with await identifiLib.Key.generate())
 
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>options</span> <code class='quiet'>(any
+            = <code>{}</code>)</code>
+	    
           </div>
           
         </div>
@@ -3005,7 +3014,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
   
 
-  <p>Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
+  <p>Create an Identifi verification message. Message signedData's type, timestamp and context (identifi) are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
 
  
   
@@ -3082,7 +3091,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
   
 
-  <p>Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.</p>
+  <p>Create an Identifi rating message. Message signedData's type, maxRating, minRating, timestamp and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
 
  
   

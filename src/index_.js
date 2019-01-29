@@ -55,13 +55,13 @@ class Index {
   * @param {Object} keypair SEA keypair (can be generated with await identifiLib.Key.generate())
   * @returns Promise{Index}
   */
-  static async create(gun: Object, keypair) {
+  static async create(gun: Object, keypair, options = {}) {
     if (!keypair) {
       keypair = await Key.getDefault();
     }
     const user = gun.user();
     user.auth(keypair);
-    const i = new Index(user.get(`identifi`));
+    const i = new Index(user.get(`identifi`), options);
     i.viewpoint = new Attribute({name: `keyID`, val: Key.getId(keypair)});
     await i.gun.get(`viewpoint`).put(i.viewpoint);
     const uri = i.viewpoint.uri();

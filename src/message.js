@@ -146,7 +146,7 @@ class Message {
   }
 
   /**
-  * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an Identifi verification message. Message signedData's type, timestamp and context (identifi) are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @returns Promise{Object} message object promise
   */
   static createVerification(signedData: Object, signingKey: Object) {
@@ -155,7 +155,7 @@ class Message {
   }
 
   /**
-  * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an Identifi rating message. Message signedData's type, maxRating, minRating, timestamp and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @returns Promise{Object} message object promise
   */
   static createRating(signedData: Object, signingKey: Object) {
