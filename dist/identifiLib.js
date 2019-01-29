@@ -8965,7 +8965,7 @@
 	  *
 	  * If default key does not exist, it is generated.
 	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
-	  * @returns {Object} Key object
+	  * @returns Promise{Object} keypair object
 	  */
 	  Key.getDefault = async function getDefault() {
 	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
@@ -9004,6 +9004,7 @@
 
 	  /**
 	  * Serialize key as JSON Web key
+	  * @param {Object} key key to serialize
 	  * @returns {String} JSON Web Key string
 	  */
 
@@ -9011,6 +9012,13 @@
 	  Key.toJwk = function toJwk(key) {
 	    return _JSON$stringify(key);
 	  };
+
+	  /**
+	  * Get keyID
+	  * @param {Object} key key to get an id for. Currently just returns the public key string.
+	  * @returns {String} JSON Web Key string
+	  */
+
 
 	  Key.getId = function getId(key) {
 	    if (!(key && key.pub)) {
@@ -9021,7 +9029,7 @@
 	  };
 
 	  /**
-	  * Get a Key from a JSON Web Key object.
+	  * Get a keypair from a JSON Web Key object.
 	  * @param {Object} jwk JSON Web Key
 	  * @returns {String}
 	  */
@@ -9032,8 +9040,8 @@
 	  };
 
 	  /**
-	  * Generate a new key
-	  * @returns {Object} Gun.SEA private key object
+	  * Generate a new keypair
+	  * @returns Promise{Object} Gun.SEA private key object
 	  */
 
 
@@ -9041,10 +9049,26 @@
 	    return (gun_min.SEA || window.Gun.SEA).pair();
 	  };
 
+	  /**
+	  * Sign a message
+	  * @param {String} msg message to sign
+	  * @param {Object} pair signing keypair
+	  * @returns Promise{String} signed message string
+	  */
+
+
 	  Key.sign = async function sign(msg, pair) {
 	    var sig = await (gun_min.SEA || window.Gun.SEA).sign(msg, pair);
 	    return 'a' + sig;
 	  };
+
+	  /**
+	  * Verify a signed message
+	  * @param {String} msg message to verify
+	  * @param {Object} pubKey public key of the signer
+	  * @returns Promise{String} signature string
+	  */
+
 
 	  Key.verify = function verify(msg, pubKey) {
 	    return (gun_min.SEA || window.Gun.SEA).verify(msg.slice(1), pubKey);
@@ -9244,7 +9268,7 @@
 	  * Create an identifi message. Message timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
 	  * @param {Object} signedData message data object including author, recipient and other possible attributes
 	  * @param {Object} signingKey optionally, you can set the key to sign the message with
-	  * @returns {Message} Identifi message
+	  * @returns Promise{Message} Identifi message
 	  */
 
 
@@ -9263,6 +9287,7 @@
 
 	  /**
 	  * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+	  * @returns Promise{Object} message object promise
 	  */
 
 
@@ -9273,6 +9298,7 @@
 
 	  /**
 	  * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.
+	  * @returns Promise{Object} message object promise
 	  */
 
 
@@ -12150,6 +12176,9 @@
 	var Index = function () {
 	  /**
 	  * When you use someone else's index, initialise it with this constructor
+	  * @param {Object} gun gun node that contains an Identifi index (e.g. user.get('identifi'))
+	  * @param {Object} options {importFromTrustedIndexes: true, subscribeToTrustedIndexes: true, queryTrustedIndexes: true}
+	  * @returns {Index} Identifi index object
 	  */
 	  function Index(gun, options) {
 	    _classCallCheck(this, Index);
@@ -12164,7 +12193,9 @@
 
 	  /**
 	  * Use this to load an index that you can write to
-	  * @returns {Index}
+	  * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
+	  * @param {Object} keypair SEA keypair (can be generated with await identifiLib.Key.generate())
+	  * @returns Promise{Index}
 	  */
 
 
@@ -12308,7 +12339,9 @@
 	  };
 
 	  /**
-	  * @returns {Array} list of messages sent by param identity
+	  * Get Messages sent by identity
+	  * @param {Identity} identity identity whose sent Messages to get
+	  * @param {Function} callback callback function that receives the Messages one by one
 	  */
 
 
@@ -12319,7 +12352,9 @@
 	  };
 
 	  /**
-	  * @returns {Array} list of messages received by param identity
+	  * Get Messages received by identity
+	  * @param {Identity} identity identity whose received Messages to get
+	  * @param {Function} callback callback function that receives the Messages one by one
 	  */
 
 
@@ -12464,7 +12499,7 @@
 	    if (msg.ipfsUri) {
 	      obj.ipfsUri = msg.ipfsUri;
 	    }
-	    author.get('sent').get(msgIndexKey).put(obj);
+	    author.get('sent').get(msgIndexKey).put(obj); // for some reason, doesn't work unless I do it twice
 	    author.get('sent').get(msgIndexKey).put(obj);
 	    return;
 	  };

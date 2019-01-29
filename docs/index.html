@@ -263,6 +263,12 @@
                       </a></li>
                     
                       <li><a
+                        href='#keygetid'
+                        class='regular pre-open'>
+                        .getId
+                      </a></li>
+                    
+                      <li><a
                         href='#keyfromjwk'
                         class='regular pre-open'>
                         .fromJwk
@@ -272,6 +278,18 @@
                         href='#keygenerate'
                         class='regular pre-open'>
                         .generate
+                      </a></li>
+                    
+                      <li><a
+                        href='#keysign'
+                        class='regular pre-open'>
+                        .sign
+                      </a></li>
+                    
+                      <li><a
+                        href='#keyverify'
+                        class='regular pre-open'>
+                        .verify
                       </a></li>
                     
                     </ul>
@@ -1339,7 +1357,7 @@ messagesByTimestamp, messagesByDistance.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>new Index(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: any)</div>
+    <div class='pre p1 fill-light mt0'>new Index(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
    
   
   
@@ -1358,15 +1376,17 @@ messagesByTimestamp, messagesByDistance.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>gun</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    
+	    gun node that contains an Identifi index (e.g. user.get('identifi'))
+
           </div>
           
         </div>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>options</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    {importFromTrustedIndexes: true, subscribeToTrustedIndexes: true, queryTrustedIndexes: true}
+
           </div>
           
         </div>
@@ -1402,7 +1422,7 @@ messagesByTimestamp, messagesByDistance.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>create(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: any): <a href="#index">Index</a></div>
+    <div class='pre p1 fill-light mt0'>create(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): any</div>
    
   
   
@@ -1421,15 +1441,17 @@ messagesByTimestamp, messagesByDistance.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>gun</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    
+	    gun instance where the index is stored (e.g. new Gun())
+
           </div>
           
         </div>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>keypair</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>keypair</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    SEA keypair (can be generated with await identifiLib.Key.generate())
+
           </div>
           
         </div>
@@ -1442,8 +1464,8 @@ messagesByTimestamp, messagesByDistance.</p>
   
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="#index">Index</a></code>:
-        
+      <code>any</code>:
+        Promise{Index}
 
       
     
@@ -1617,10 +1639,11 @@ messagesByTimestamp, messagesByDistance.</p>
 
   
 
-  
+  <p>Get Messages sent by identity</p>
+
  
   
-    <div class='pre p1 fill-light mt0'>getSentMsgs(identity: <a href="#identity">Identity</a>, callback: any, limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
+    <div class='pre p1 fill-light mt0'>getSentMsgs(identity: <a href="#identity">Identity</a>, callback: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function">Function</a>, limit: any, cursor: any)</div>
    
   
   
@@ -1639,15 +1662,17 @@ messagesByTimestamp, messagesByDistance.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>identity</span> <code class='quiet'>(<a href="#identity">Identity</a>)</code>
-	    
+	    identity whose sent Messages to get
+
           </div>
           
         </div>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>callback</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function">Function</a>)</code>
+	    callback function that receives the Messages one by one
+
           </div>
           
         </div>
@@ -1674,14 +1699,6 @@ messagesByTimestamp, messagesByDistance.</p>
 
   
 
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></code>:
-        list of messages sent by param identity
-
-      
-    
   
 
   
@@ -1710,10 +1727,11 @@ messagesByTimestamp, messagesByDistance.</p>
 
   
 
-  
+  <p>Get Messages received by identity</p>
+
  
   
-    <div class='pre p1 fill-light mt0'>getReceivedMsgs(identity: any, callback: any, limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
+    <div class='pre p1 fill-light mt0'>getReceivedMsgs(identity: <a href="#identity">Identity</a>, callback: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function">Function</a>, limit: any, cursor: any)</div>
    
   
   
@@ -1731,16 +1749,18 @@ messagesByTimestamp, messagesByDistance.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>identity</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>identity</span> <code class='quiet'>(<a href="#identity">Identity</a>)</code>
+	    identity whose received Messages to get
+
           </div>
           
         </div>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>callback</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function">Function</a>)</code>
+	    callback function that receives the Messages one by one
+
           </div>
           
         </div>
@@ -1767,14 +1787,6 @@ messagesByTimestamp, messagesByDistance.</p>
 
   
 
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></code>:
-        list of messages received by param identity
-
-      
-    
   
 
   
@@ -2345,7 +2357,7 @@ unknown authors.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>getDefault(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+    <div class='pre p1 fill-light mt0'>getDefault(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>): any</div>
    
   
   
@@ -2379,8 +2391,8 @@ unknown authors.</p>
   
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>:
-        Key object
+      <code>any</code>:
+        Promise{Object} keypair object
 
       
     
@@ -2416,7 +2428,7 @@ unknown authors.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>toJwk(key: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
+    <div class='pre p1 fill-light mt0'>toJwk(key: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
    
   
   
@@ -2434,8 +2446,79 @@ unknown authors.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>key</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    key to serialize
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code>:
+        JSON Web Key string
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='keygetid'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>getId(key)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Get keyID</p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>getId(key: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    key to get an id for. Currently just returns the public key string.
+
           </div>
           
         </div>
@@ -2481,7 +2564,7 @@ unknown authors.</p>
 
   
 
-  <p>Get a Key from a JSON Web Key object.</p>
+  <p>Get a keypair from a JSON Web Key object.</p>
 
  
   
@@ -2551,11 +2634,11 @@ unknown authors.</p>
 
   
 
-  <p>Generate a new key</p>
+  <p>Generate a new keypair</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>generate(): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+    <div class='pre p1 fill-light mt0'>generate(): any</div>
    
   
   
@@ -2574,8 +2657,166 @@ unknown authors.</p>
   
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>:
-        Gun.SEA private key object
+      <code>any</code>:
+        Promise{Object} Gun.SEA private key object
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='keysign'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>sign(msg, pair)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Sign a message</p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>sign(msg: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, pair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): any</div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>msg</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+	    message to sign
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>pair</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    signing keypair
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        Promise{String} signed message string
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='keyverify'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>verify(msg, pubKey)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Verify a signed message</p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>verify(msg: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, pubKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): any</div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>msg</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+	    message to verify
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>pubKey</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    public key of the signer
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        Promise{String} signature string
 
       
     
@@ -2689,7 +2930,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
  
   
-    <div class='pre p1 fill-light mt0'>create(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="#message">Message</a></div>
+    <div class='pre p1 fill-light mt0'>create(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): any</div>
    
   
   
@@ -2731,8 +2972,8 @@ from existing datasets. That makes Identifi an useful search tool even with no i
   
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="#message">Message</a></code>:
-        Identifi message
+      <code>any</code>:
+        Promise{Message} Identifi message
 
       
     
@@ -2768,7 +3009,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
  
   
-    <div class='pre p1 fill-light mt0'>createVerification(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+    <div class='pre p1 fill-light mt0'>createVerification(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): any</div>
    
   
   
@@ -2805,6 +3046,14 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
   
 
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        Promise{Object} message object promise
+
+      
+    
   
 
   
@@ -2837,7 +3086,7 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
  
   
-    <div class='pre p1 fill-light mt0'>createRating(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+    <div class='pre p1 fill-light mt0'>createRating(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): any</div>
    
   
   
@@ -2874,6 +3123,14 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
   
 
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code>any</code>:
+        Promise{Object} message object promise
+
+      
+    
   
 
   

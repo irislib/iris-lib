@@ -14,7 +14,7 @@ class Key {
   *
   * If default key does not exist, it is generated.
   * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
-  * @returns {Object} Key object
+  * @returns Promise{Object} keypair object
   */
   static async getDefault(datadir = `.`) {
     if (myKey) {
@@ -51,12 +51,18 @@ class Key {
 
   /**
   * Serialize key as JSON Web key
+  * @param {Object} key key to serialize
   * @returns {String} JSON Web Key string
   */
   static toJwk(key) {
     return JSON.stringify(key);
   }
 
+  /**
+  * Get keyID
+  * @param {Object} key key to get an id for. Currently just returns the public key string.
+  * @returns {String} JSON Web Key string
+  */
   static getId(key) {
     if (!(key && key.pub)) {
       throw new Error(`missing param`);
@@ -66,7 +72,7 @@ class Key {
   }
 
   /**
-  * Get a Key from a JSON Web Key object.
+  * Get a keypair from a JSON Web Key object.
   * @param {Object} jwk JSON Web Key
   * @returns {String}
   */
@@ -75,18 +81,30 @@ class Key {
   }
 
   /**
-  * Generate a new key
-  * @returns {Object} Gun.SEA private key object
+  * Generate a new keypair
+  * @returns Promise{Object} Gun.SEA private key object
   */
   static generate() {
     return (Gun.SEA || window.Gun.SEA).pair();
   }
 
+  /**
+  * Sign a message
+  * @param {String} msg message to sign
+  * @param {Object} pair signing keypair
+  * @returns Promise{String} signed message string
+  */
   static async sign(msg, pair) {
     const sig = await (Gun.SEA || window.Gun.SEA).sign(msg, pair);
     return `a${sig}`;
   }
 
+  /**
+  * Verify a signed message
+  * @param {String} msg message to verify
+  * @param {Object} pubKey public key of the signer
+  * @returns Promise{String} signature string
+  */
   static verify(msg, pubKey) {
     return (Gun.SEA || window.Gun.SEA).verify(msg.slice(1), pubKey);
   }

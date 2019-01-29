@@ -36,6 +36,9 @@ async function searchText(node, callback, query, limit, cursor) {
 class Index {
   /**
   * When you use someone else's index, initialise it with this constructor
+  * @param {Object} gun gun node that contains an Identifi index (e.g. user.get('identifi'))
+  * @param {Object} options {importFromTrustedIndexes: true, subscribeToTrustedIndexes: true, queryTrustedIndexes: true}
+  * @returns {Index} Identifi index object
   */
   constructor(gun: Object, options) {
     this.gun = gun || new Gun();
@@ -48,7 +51,9 @@ class Index {
 
   /**
   * Use this to load an index that you can write to
-  * @returns {Index}
+  * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
+  * @param {Object} keypair SEA keypair (can be generated with await identifiLib.Key.generate())
+  * @returns Promise{Index}
   */
   static async create(gun: Object, keypair) {
     if (!keypair) {
@@ -184,14 +189,18 @@ class Index {
   }
 
   /**
-  * @returns {Array} list of messages sent by param identity
+  * Get Messages sent by identity
+  * @param {Identity} identity identity whose sent Messages to get
+  * @param {Function} callback callback function that receives the Messages one by one
   */
   async getSentMsgs(identity: Identity, callback, limit, cursor = ``) {
     return this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor);
   }
 
   /**
-  * @returns {Array} list of messages received by param identity
+  * Get Messages received by identity
+  * @param {Identity} identity identity whose received Messages to get
+  * @param {Function} callback callback function that receives the Messages one by one
   */
   async getReceivedMsgs(identity, callback, limit, cursor = ``) {
     return this._getMsgs(identity.gun.get(`received`), callback, limit, cursor);

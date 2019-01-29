@@ -130,7 +130,7 @@ class Message {
   * Create an identifi message. Message timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @param {Object} signedData message data object including author, recipient and other possible attributes
   * @param {Object} signingKey optionally, you can set the key to sign the message with
-  * @returns {Message} Identifi message
+  * @returns Promise{Message} Identifi message
   */
   static async create(signedData: Object, signingKey: Object) {
     if (!signedData.author && signingKey) {
@@ -147,6 +147,7 @@ class Message {
 
   /**
   * Create an Identifi verification message. Message type, maxRating, minRating, timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * @returns Promise{Object} message object promise
   */
   static createVerification(signedData: Object, signingKey: Object) {
     signedData.type = `verification`;
@@ -155,6 +156,7 @@ class Message {
 
   /**
   * Create an Identifi rating message. Message type, maxRating, minRating, timestamp and context are set automatically. If signingKey is specified and author omitted, signingKey will be used as author.
+  * @returns Promise{Object} message object promise
   */
   static createRating(signedData: Object, signingKey: Object) {
     signedData.type = `rating`;
