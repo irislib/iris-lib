@@ -12431,7 +12431,9 @@
 	          attrs[encodeURIComponent(a1[1]) + ':' + encodeURIComponent(a1[0])].verified = true;
 	        }
 	      });
+	      recipient.get('mostVerifiedAttributes').put(Identity.getMostVerifiedAttributes(attrs)); // TODO: why this needs to be done twice to register?
 	      recipient.get('mostVerifiedAttributes').put(Identity.getMostVerifiedAttributes(attrs));
+	      recipient.get('attrs').put(attrs);
 	      recipient.get('attrs').put(attrs);
 	    }
 	    if (msg.signedData.type === 'rating') {
