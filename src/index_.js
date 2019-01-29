@@ -47,6 +47,21 @@ class Index {
       subscribeToTrustedIndexes: true,
       queryTrustedIndexes: true
     }, options);
+    if (this.options.subscribeToTrustedIndexes) {
+      setTimeout(() => {
+        this.gun.get(`trustedIndexes`).map((val, uri) => {
+          if (val) {
+            // TODO: only get new messages?
+            this.gun.user(uri).get(`identifi`).get(`messagesByDistance`).map(val => {
+              Message.fromSig(val).then(msg => {
+                console.log(`got msg ${msg.hash} from trusted index`);
+                this.addMessage(msg);
+              });
+            });
+          }
+        });
+      }, 5000); // TODO: this should be made to work without timeout
+    }
   }
 
   /**

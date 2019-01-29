@@ -12181,6 +12181,8 @@
 	  * @returns {Index} Identifi index object
 	  */
 	  function Index(gun, options) {
+	    var _this = this;
+
 	    _classCallCheck(this, Index);
 
 	    this.gun = gun || new gun_min();
@@ -12189,6 +12191,21 @@
 	      subscribeToTrustedIndexes: true,
 	      queryTrustedIndexes: true
 	    }, options);
+	    if (this.options.subscribeToTrustedIndexes) {
+	      setTimeout(function () {
+	        _this.gun.get('trustedIndexes').map(function (val, uri) {
+	          if (val) {
+	            // TODO: only get new messages?
+	            _this.gun.user(uri).get('identifi').get('messagesByDistance').map(function (val) {
+	              Message.fromSig(val).then(function (msg) {
+	                console.log('got msg ' + msg.hash + ' from trusted index');
+	                _this.addMessage(msg);
+	              });
+	            });
+	          }
+	        });
+	      }, 5000); // TODO: this should be made to work without timeout
+	    }
 	  }
 
 	  /**
@@ -12527,7 +12544,7 @@
 	  };
 
 	  Index.prototype.addTrustedIndex = async function addTrustedIndex(gunUri) {
-	    var _this = this;
+	    var _this2 = this;
 
 	    var maxMsgsToCrawl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 500;
 	    var maxCrawlDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
@@ -12540,7 +12557,7 @@
 	    var msgs = [];
 	    if (this.options.importFromTrustedIndexes) {
 	      await util$1.timeoutPromise(new _Promise(function (resolve) {
-	        _this.gun.user(gunUri).get('identifi').get('messagesByDistance').map(function (val, key) {
+	        _this2.gun.user(gunUri).get('identifi').get('messagesByDistance').map(function (val, key) {
 	          var d = _Number$parseInt(key.split(':')[0]);
 	          if (!isNaN(d) && d <= maxCrawlDistance) {
 	            Message.fromSig(val).then(function (msg) {
@@ -12626,7 +12643,7 @@
 
 
 	  Index.prototype.addMessages = async function addMessages(msgs, ipfs) {
-	    var _this2 = this;
+	    var _this3 = this;
 
 	    var msgsByAuthor = {};
 	    if (Array.isArray(msgs)) {
@@ -12682,7 +12699,7 @@
 	      while (author && knownIdentity) {
 	        if (author.indexOf(knownIdentity.key) === 0) {
 	          try {
-	            await util$1.timeoutPromise(_this2.addMessage(msgsByAuthor[author], ipfs), 10000);
+	            await util$1.timeoutPromise(_this3.addMessage(msgsByAuthor[author], ipfs), 10000);
 	          } catch (e) {
 	            console.log('adding failed:', e, _JSON$stringify(msgsByAuthor[author], null, 2));
 	          }
@@ -12741,7 +12758,7 @@
 
 
 	  Index.prototype.search = async function search(value, type, callback, limit) {
-	    var _this3 = this;
+	    var _this4 = this;
 
 	    // TODO: param 'exact', type param
 	    var seen = {};
@@ -12758,13 +12775,13 @@
 	      if (soul && !seen.hasOwnProperty(soul)) {
 	        seen[soul] = true;
 	        results++;
-	        callback(new Identity(_this3.gun.get('identitiesByTrustDistance').get(key)));
+	        callback(new Identity(_this4.gun.get('identitiesByTrustDistance').get(key)));
 	      }
 	    });
 	    if (this.options.queryTrustedIndexes) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          _this3.gun.user(key).get('identifi').get('identitiesByTrustDistance').map().once(function (id, k) {
+	          _this4.gun.user(key).get('identifi').get('identitiesByTrustDistance').map().once(function (id, k) {
 	            if (results >= limit) {
 	              // TODO: turn off .map cb
 	              return;
@@ -12776,7 +12793,7 @@
 	            if (soul && !seen.hasOwnProperty(soul)) {
 	              seen[soul] = true;
 	              results++;
-	              callback(new Identity(_this3.gun.user(key).get('identifi').get('identitiesByTrustDistance').get(k)));
+	              callback(new Identity(_this4.gun.user(key).get('identifi').get('identitiesByTrustDistance').get(k)));
 	            }
 	          });
 	        }
