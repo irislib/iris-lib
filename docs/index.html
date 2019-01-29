@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset='utf-8' />
-  <title>identifi-lib 0.0.75 | Documentation</title>
+  <title>identifi-lib 0.0.76 | Documentation</title>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
   <link href='assets/bass.css' type='text/css' rel='stylesheet' />
   <link href='assets/style.css' type='text/css' rel='stylesheet' />
@@ -15,7 +15,7 @@
       <div id='split-left' class='overflow-auto fs0 height-viewport-100'>
         <div class='py1 px2'>
           <h3 class='mb0 no-anchor'>identifi-lib</h3>
-          <div class='mb1'><code>0.0.75</code></div>
+          <div class='mb1'><code>0.0.76</code></div>
           <input
             placeholder='Filter'
             id='filter-input'
@@ -1422,7 +1422,7 @@ messagesByTimestamp, messagesByDistance.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>create(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: any): any</div>
+    <div class='pre p1 fill-light mt0'>create(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: any)</div>
    
   
   
@@ -1470,14 +1470,6 @@ messagesByTimestamp, messagesByDistance.</p>
 
   
 
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code>any</code>:
-        Promise{Index}
-
-      
-    
   
 
   
@@ -2366,7 +2358,7 @@ unknown authors.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>getDefault(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>): any</div>
+    <div class='pre p1 fill-light mt0'>getDefault(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
    
   
   
@@ -2397,14 +2389,6 @@ unknown authors.</p>
 
   
 
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code>any</code>:
-        Promise{Object} keypair object
-
-      
-    
   
 
   
@@ -2647,7 +2631,7 @@ unknown authors.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>generate(): any</div>
+    <div class='pre p1 fill-light mt0'>generate()</div>
    
   
   
@@ -2663,14 +2647,6 @@ unknown authors.</p>
 
   
 
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code>any</code>:
-        Promise{Object} Gun.SEA private key object
-
-      
-    
   
 
   
@@ -2703,7 +2679,7 @@ unknown authors.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>sign(msg: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, pair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): any</div>
+    <div class='pre p1 fill-light mt0'>sign(msg: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, pair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
    
   
   
@@ -2743,14 +2719,6 @@ unknown authors.</p>
   
 
   
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code>any</code>:
-        Promise{String} signed message string
-
-      
-    
-  
 
   
 
@@ -2782,7 +2750,7 @@ unknown authors.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>verify(msg: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, pubKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): any</div>
+    <div class='pre p1 fill-light mt0'>verify(msg: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, pubKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
    
   
   
@@ -2821,14 +2789,6 @@ unknown authors.</p>
 
   
 
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code>any</code>:
-        Promise{String} signature string
-
-      
-    
   
 
   

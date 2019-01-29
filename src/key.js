@@ -14,7 +14,7 @@ class Key {
   *
   * If default key does not exist, it is generated.
   * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
-  * @returns Promise{Object} keypair object
+  * @returns {Promise(Object)} keypair object
   */
   static async getDefault(datadir = `.`) {
     if (myKey) {
@@ -82,7 +82,7 @@ class Key {
 
   /**
   * Generate a new keypair
-  * @returns Promise{Object} Gun.SEA private key object
+  * @returns {Promise(Object)} Gun.SEA keypair object
   */
   static generate() {
     return (Gun.SEA || window.Gun.SEA).pair();
@@ -92,7 +92,7 @@ class Key {
   * Sign a message
   * @param {String} msg message to sign
   * @param {Object} pair signing keypair
-  * @returns Promise{String} signed message string
+  * @returns {Promise(String)} signed message string
   */
   static async sign(msg, pair) {
     const sig = await (Gun.SEA || window.Gun.SEA).sign(msg, pair);
@@ -103,7 +103,7 @@ class Key {
   * Verify a signed message
   * @param {String} msg message to verify
   * @param {Object} pubKey public key of the signer
-  * @returns Promise{String} signature string
+  * @returns {Promise(String)} signature string
   */
   static verify(msg, pubKey) {
     return (Gun.SEA || window.Gun.SEA).verify(msg.slice(1), pubKey);

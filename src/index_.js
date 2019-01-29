@@ -53,7 +53,7 @@ class Index {
   * Use this to load an index that you can write to
   * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
   * @param {Object} keypair SEA keypair (can be generated with await identifiLib.Key.generate())
-  * @returns Promise{Index}
+  * @returns {Promise(Index)}
   */
   static async create(gun: Object, keypair, options = {}) {
     if (!keypair) {

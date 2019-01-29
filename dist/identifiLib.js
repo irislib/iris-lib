@@ -8965,7 +8965,7 @@
 	  *
 	  * If default key does not exist, it is generated.
 	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
-	  * @returns Promise{Object} keypair object
+	  * @returns {Promise(Object)} keypair object
 	  */
 	  Key.getDefault = async function getDefault() {
 	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
@@ -9041,7 +9041,7 @@
 
 	  /**
 	  * Generate a new keypair
-	  * @returns Promise{Object} Gun.SEA private key object
+	  * @returns {Promise(Object)} Gun.SEA keypair object
 	  */
 
 
@@ -9053,7 +9053,7 @@
 	  * Sign a message
 	  * @param {String} msg message to sign
 	  * @param {Object} pair signing keypair
-	  * @returns Promise{String} signed message string
+	  * @returns {Promise(String)} signed message string
 	  */
 
 
@@ -9066,7 +9066,7 @@
 	  * Verify a signed message
 	  * @param {String} msg message to verify
 	  * @param {Object} pubKey public key of the signer
-	  * @returns Promise{String} signature string
+	  * @returns {Promise(String)} signature string
 	  */
 
 
@@ -12195,7 +12195,7 @@
 	  * Use this to load an index that you can write to
 	  * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
 	  * @param {Object} keypair SEA keypair (can be generated with await identifiLib.Key.generate())
-	  * @returns Promise{Index}
+	  * @returns {Promise(Index)}
 	  */
 
 
@@ -12809,7 +12809,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.75";
+	var version$1 = "0.0.76";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
