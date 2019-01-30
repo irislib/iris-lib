@@ -8826,12 +8826,15 @@
 	      }
 	    } else if (Array.isArray(data)) {
 	      if (data.length !== 2) {
-	        throw new Error('Invalid Attribute');
+	        throw new Error('Invalid attribute data (array length not 2): ' + _JSON$stringify(data));
+	      }
+	      if (!(data[0] && data[1])) {
+	        throw new Error('Invalid attribute data[0] or data[1]: ' + _JSON$stringify(data));
 	      }
 	      this.name = data[0];
 	      this.val = data[1];
 	    } else {
-	      throw new Error('Invalid attribute data', data);
+	      throw new Error('Invalid attribute data (should be array or {name, val} object): ' + _JSON$stringify(data));
 	    }
 	  }
 
@@ -8883,7 +8886,11 @@
 
 
 	  Attribute.equals = function equals(a, b) {
-	    return new Attribute(a).equals(new Attribute(b));
+	    try {
+	      return new Attribute(a).equals(new Attribute(b));
+	    } catch (e) {
+	      return false;
+	    }
 	  };
 
 	  /**
