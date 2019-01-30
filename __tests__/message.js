@@ -42,7 +42,7 @@ describe('Message', async () => {
     test('should create a verification message', async () => {
       msg = await Message.createVerification({
         author: [['email', 'alice@example.com']],
-        recipient: [['email', 'bob@example.com']],
+        recipient: [['email', 'bob@example.com'], ['name', 'Bob']],
         comment: 'Good guy'
       });
       expect(msg).toHaveProperty('signedData.timestamp');

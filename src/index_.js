@@ -33,30 +33,78 @@ async function searchText(node, callback, query, limit, cursor) {
 * Identifi index root. Contains four indexes: identitiesBySearchKey, identitiesByTrustDistance,
 * messagesByTimestamp, messagesByDistance.
 */
+/**
+* When you use someone else's index, initialise it using the Index constructor
+* @param {Object} gun gun node that contains an Identifi index (e.g. user.get('identifi'))
+* @param {Object} options see default options in example
+* @example
+* Default options:
+*{
+*  indexSync: {
+*    importOnAdd: {
+*      enabled: true,
+*      maxMsgCount: 500,
+*      maxMsgDistance: 2
+*    },
+*    subscribe: {
+*      enabled: true,
+*      maxMsgDistance: 1
+*    },
+*    query: {
+*      enabled: true
+*    },
+*    msgTypes: {
+*      all: false,
+*      rating: true,
+*      verification: true,
+*      unverification: true
+*    }
+*  }
+*}
+* @returns {Index} Identifi index object
+*/
 class Index {
-  /**
-  * When you use someone else's index, initialise it with this constructor
-  * @param {Object} gun gun node that contains an Identifi index (e.g. user.get('identifi'))
-  * @param {Object} options {importFromTrustedIndexes: true, subscribeToTrustedIndexes: true, queryTrustedIndexes: true}
-  * @returns {Index} Identifi index object
-  */
   constructor(gun: Object, options) {
     this.gun = gun || new Gun();
     this.options = Object.assign({
-      importFromTrustedIndexes: true,
-      subscribeToTrustedIndexes: true,
-      queryTrustedIndexes: true
+      indexSync: {
+        importOnAdd: {
+          enabled: true,
+          maxMsgCount: 500,
+          maxMsgDistance: 2
+        },
+        subscribe: {
+          enabled: true,
+          maxMsgDistance: 1
+        },
+        query: {
+          enabled: true
+        },
+        msgTypes: {
+          all: false,
+          rating: true,
+          verification: true,
+          unverification: true
+        }
+      }
     }, options);
-    if (this.options.subscribeToTrustedIndexes) {
+    if (this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {
         this.gun.get(`trustedIndexes`).map((val, uri) => {
           if (val) {
             // TODO: only get new messages?
-            this.gun.user(uri).get(`identifi`).get(`messagesByDistance`).map(val => {
-              Message.fromSig(val).then(msg => {
-                console.log(`got msg ${msg.hash} from trusted index`);
-                this.addMessage(msg);
-              });
+            this.gun.user(uri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
+              const d = Number.parseInt(key.split(`:`)[0]);
+              console.log(`got msg with d`, d, key);
+              if (!isNaN(d) && d <= this.options.indexSync.subscribe.maxMsgDistance) {
+                Message.fromSig(val).then(msg => {
+                  console.log(`adding msg ${msg.hash} from trusted index`);
+                  if (this.options.indexSync.msgTypes.all ||
+                    this.options.indexSync.msgTypes.hasOwnProperty(msg.signedData.type)) {
+                    this.addMessage(msg);
+                  }
+                });
+              }
             });
           }
         });
@@ -68,7 +116,8 @@ class Index {
   * Use this to load an index that you can write to
   * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
   * @param {Object} keypair SEA keypair (can be generated with await identifiLib.Key.generate())
-  * @returns {Promise(Index)}
+  * @param {Object} options see default options in Index constructor's example
+  * @returns {Promise}
   */
   static async create(gun: Object, keypair, options = {}) {
     if (!keypair) {
@@ -376,18 +425,20 @@ class Index {
     }
   }
 
-  async addTrustedIndex(gunUri, maxMsgsToCrawl = 500, maxCrawlDistance = 2) {
+  async addTrustedIndex(gunUri,
+    maxMsgsToCrawl = this.options.indexSync.importOnAdd.maxMsgCount,
+    maxMsgDistance = this.options.indexSync.importOnAdd.maxMsgDistance) {
     if (gunUri === this.viewpoint.val) {
       return;
     }
     console.log(`addTrustedIndex`, gunUri);
     this.gun.get(`trustedIndexes`).get(gunUri).put(true);
     const msgs = [];
-    if (this.options.importFromTrustedIndexes) {
+    if (this.options.indexSync.importOnAdd.enabled) {
       await util.timeoutPromise(new Promise(resolve => {
         this.gun.user(gunUri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
           const d = Number.parseInt(key.split(`:`)[0]);
-          if (!isNaN(d) && d <= maxCrawlDistance) {
+          if (!isNaN(d) && d <= maxMsgDistance) {
             Message.fromSig(val).then(msg => {
               msgs.push(msg);
               if (msgs.length >= maxMsgsToCrawl) {
@@ -567,9 +618,8 @@ class Index {
   */
   async search(value, type, callback, limit) { // TODO: param 'exact', type param
     const seen = {};
-    let results = 0;
     this.gun.get(`identitiesByTrustDistance`).map().once((id, key) => {
-      if (results >= limit) {
+      if (Object.keys(seen).length >= limit) {
         // TODO: turn off .map cb
         return;
       }
@@ -579,15 +629,14 @@ class Index {
       const soul = Gun.node.soul(id);
       if (soul && !seen.hasOwnProperty(soul)) {
         seen[soul] = true;
-        results ++;
         callback(new Identity(this.gun.get(`identitiesByTrustDistance`).get(key)));
       }
     });
-    if (this.options.queryTrustedIndexes) {
+    if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
           this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).map().once((id, k) => {
-            if (results >= limit) {
+            if (Object.keys(seen).length >= limit) {
               // TODO: turn off .map cb
               return;
             }
@@ -597,7 +646,6 @@ class Index {
             const soul = Gun.node.soul(id);
             if (soul && !seen.hasOwnProperty(soul)) {
               seen[soul] = true;
-              results ++;
               callback(
                 new Identity(this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).get(k))
               );
@@ -612,14 +660,47 @@ class Index {
   * @returns {Array} list of messages
   */
   getMessagesByTimestamp(callback, limit, cursor = ``) {
-    return this._getMsgs(this.gun.get(`messagesByTimestamp`), callback, limit, cursor);
+    const seen = {};
+    const cb = msg => {
+      console.log(`hash`, msg.hash);
+      if ((!limit || Object.keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {
+        seen[msg.hash] = true;
+        callback(msg);
+      }
+    };
+    this._getMsgs(this.gun.get(`messagesByTimestamp`), cb, limit, cursor);
+    if (this.options.indexSync.query.enabled) {
+      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+        if (val) {
+          const n = this.gun.user(key).get(`identifi`).get(`messagesByTimestamp`);
+          this._getMsgs(n, cb, limit, cursor);
+        }
+      });
+    }
   }
 
   /**
   * @returns {Array} list of messages
   */
   getMessagesByDistance(callback, limit, cursor = ``) {
-    return this._getMsgs(this.gun.get(`messagesByDistance`), callback, limit, cursor);
+    const seen = {};
+    const cb = msg => {
+      if (!seen.hasOwnProperty(msg.hash)) {
+        if ((!limit || Object.keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {
+          seen[msg.hash] = true;
+          callback(msg);
+        }
+      }
+    };
+    this._getMsgs(this.gun.get(`messagesByDistance`), cb, limit, cursor);
+    if (this.options.indexSync.query.enabled) {
+      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+        if (val) {
+          const n = this.gun.user(key).get(`identifi`).get(`messagesByDistance`);
+          this._getMsgs(n, cb, limit, cursor);
+        }
+      });
+    }
   }
 }
 

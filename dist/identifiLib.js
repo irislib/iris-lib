@@ -9216,9 +9216,9 @@
 	      }
 	    }
 
-	    if (d.type === 'verify_identity' || d.type === 'unverify_identity') {
+	    if (d.type === 'verification' || d.type === 'unverification') {
 	      if (d.recipient.length < 2) {
-	        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection');
+	        throw new ValidationError(errorMsg + ' At least 2 recipient attributes are needed for a connection / disconnection. Got: ' + d.recipient);
 	      }
 	    }
 
@@ -9741,57 +9741,6 @@
 
 	var _Number$MAX_SAFE_INTEGER = unwrapExports(maxSafeInteger$1);
 
-	var _stringWs = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
-	  '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
-
-	var space = '[' + _stringWs + ']';
-	var non = '\u200b\u0085';
-	var ltrim = RegExp('^' + space + space + '*');
-	var rtrim = RegExp(space + space + '*$');
-
-	var exporter = function (KEY, exec, ALIAS) {
-	  var exp = {};
-	  var FORCE = _fails(function () {
-	    return !!_stringWs[KEY]() || non[KEY]() != non;
-	  });
-	  var fn = exp[KEY] = FORCE ? exec(trim) : _stringWs[KEY];
-	  if (ALIAS) exp[ALIAS] = fn;
-	  _export(_export.P + _export.F * FORCE, 'String', exp);
-	};
-
-	// 1 -> String#trimLeft
-	// 2 -> String#trimRight
-	// 3 -> String#trim
-	var trim = exporter.trim = function (string, TYPE) {
-	  string = String(_defined(string));
-	  if (TYPE & 1) string = string.replace(ltrim, '');
-	  if (TYPE & 2) string = string.replace(rtrim, '');
-	  return string;
-	};
-
-	var _stringTrim = exporter;
-
-	var $parseInt = _global.parseInt;
-	var $trim = _stringTrim.trim;
-
-	var hex = /^[-+]?0[xX]/;
-
-	var _parseInt = $parseInt(_stringWs + '08') !== 8 || $parseInt(_stringWs + '0x16') !== 22 ? function parseInt(str, radix) {
-	  var string = $trim(String(str), 3);
-	  return $parseInt(string, (radix >>> 0) || (hex.test(string) ? 16 : 10));
-	} : $parseInt;
-
-	// 20.1.2.13 Number.parseInt(string, radix)
-	_export(_export.S + _export.F * (Number.parseInt != _parseInt), 'Number', { parseInt: _parseInt });
-
-	var _parseInt$1 = _core.Number.parseInt;
-
-	var _parseInt$2 = createCommonjsModule(function (module) {
-	module.exports = { "default": _parseInt$1, __esModule: true };
-	});
-
-	var _Number$parseInt = unwrapExports(_parseInt$2);
-
 	var isEnum$1 = _objectPie.f;
 	var _objectToArray = function (isEntries) {
 	  return function (it) {
@@ -9842,6 +9791,57 @@
 	});
 
 	var _Number$isNaN = unwrapExports(isNan$1);
+
+	var _stringWs = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
+	  '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
+
+	var space = '[' + _stringWs + ']';
+	var non = '\u200b\u0085';
+	var ltrim = RegExp('^' + space + space + '*');
+	var rtrim = RegExp(space + space + '*$');
+
+	var exporter = function (KEY, exec, ALIAS) {
+	  var exp = {};
+	  var FORCE = _fails(function () {
+	    return !!_stringWs[KEY]() || non[KEY]() != non;
+	  });
+	  var fn = exp[KEY] = FORCE ? exec(trim) : _stringWs[KEY];
+	  if (ALIAS) exp[ALIAS] = fn;
+	  _export(_export.P + _export.F * FORCE, 'String', exp);
+	};
+
+	// 1 -> String#trimLeft
+	// 2 -> String#trimRight
+	// 3 -> String#trim
+	var trim = exporter.trim = function (string, TYPE) {
+	  string = String(_defined(string));
+	  if (TYPE & 1) string = string.replace(ltrim, '');
+	  if (TYPE & 2) string = string.replace(rtrim, '');
+	  return string;
+	};
+
+	var _stringTrim = exporter;
+
+	var $parseInt = _global.parseInt;
+	var $trim = _stringTrim.trim;
+
+	var hex = /^[-+]?0[xX]/;
+
+	var _parseInt = $parseInt(_stringWs + '08') !== 8 || $parseInt(_stringWs + '0x16') !== 22 ? function parseInt(str, radix) {
+	  var string = $trim(String(str), 3);
+	  return $parseInt(string, (radix >>> 0) || (hex.test(string) ? 16 : 10));
+	} : $parseInt;
+
+	// 20.1.2.13 Number.parseInt(string, radix)
+	_export(_export.S + _export.F * (Number.parseInt != _parseInt), 'Number', { parseInt: _parseInt });
+
+	var _parseInt$1 = _core.Number.parseInt;
+
+	var _parseInt$2 = createCommonjsModule(function (module) {
+	module.exports = { "default": _parseInt$1, __esModule: true };
+	});
+
+	var _Number$parseInt = unwrapExports(_parseInt$2);
 
 	// 19.1.2.1 Object.assign(target, source, ...)
 
@@ -12172,14 +12172,38 @@
 	* Identifi index root. Contains four indexes: identitiesBySearchKey, identitiesByTrustDistance,
 	* messagesByTimestamp, messagesByDistance.
 	*/
+	/**
+	* When you use someone else's index, initialise it using the Index constructor
+	* @param {Object} gun gun node that contains an Identifi index (e.g. user.get('identifi'))
+	* @param {Object} options see default options in example
+	* @example
+	* Default options:
+	*{
+	*  indexSync: {
+	*    importOnAdd: {
+	*      enabled: true,
+	*      maxMsgCount: 500,
+	*      maxMsgDistance: 2
+	*    },
+	*    subscribe: {
+	*      enabled: true,
+	*      maxMsgDistance: 1
+	*    },
+	*    query: {
+	*      enabled: true
+	*    },
+	*    msgTypes: {
+	*      all: false,
+	*      rating: true,
+	*      verification: true,
+	*      unverification: true
+	*    }
+	*  }
+	*}
+	* @returns {Index} Identifi index object
+	*/
 
 	var Index = function () {
-	  /**
-	  * When you use someone else's index, initialise it with this constructor
-	  * @param {Object} gun gun node that contains an Identifi index (e.g. user.get('identifi'))
-	  * @param {Object} options {importFromTrustedIndexes: true, subscribeToTrustedIndexes: true, queryTrustedIndexes: true}
-	  * @returns {Index} Identifi index object
-	  */
 	  function Index(gun, options) {
 	    var _this = this;
 
@@ -12187,20 +12211,43 @@
 
 	    this.gun = gun || new gun_min();
 	    this.options = _Object$assign({
-	      importFromTrustedIndexes: true,
-	      subscribeToTrustedIndexes: true,
-	      queryTrustedIndexes: true
+	      indexSync: {
+	        importOnAdd: {
+	          enabled: true,
+	          maxMsgCount: 500,
+	          maxMsgDistance: 2
+	        },
+	        subscribe: {
+	          enabled: true,
+	          maxMsgDistance: 1
+	        },
+	        query: {
+	          enabled: true
+	        },
+	        msgTypes: {
+	          all: false,
+	          rating: true,
+	          verification: true,
+	          unverification: true
+	        }
+	      }
 	    }, options);
-	    if (this.options.subscribeToTrustedIndexes) {
+	    if (this.options.indexSync.subscribe.enabled) {
 	      setTimeout(function () {
 	        _this.gun.get('trustedIndexes').map(function (val, uri) {
 	          if (val) {
 	            // TODO: only get new messages?
-	            _this.gun.user(uri).get('identifi').get('messagesByDistance').map(function (val) {
-	              Message.fromSig(val).then(function (msg) {
-	                console.log('got msg ' + msg.hash + ' from trusted index');
-	                _this.addMessage(msg);
-	              });
+	            _this.gun.user(uri).get('identifi').get('messagesByDistance').map(function (val, key) {
+	              var d = _Number$parseInt(key.split(':')[0]);
+	              console.log('got msg with d', d, key);
+	              if (!isNaN(d) && d <= _this.options.indexSync.subscribe.maxMsgDistance) {
+	                Message.fromSig(val).then(function (msg) {
+	                  console.log('adding msg ' + msg.hash + ' from trusted index');
+	                  if (_this.options.indexSync.msgTypes.all || _this.options.indexSync.msgTypes.hasOwnProperty(msg.signedData.type)) {
+	                    _this.addMessage(msg);
+	                  }
+	                });
+	              }
 	            });
 	          }
 	        });
@@ -12212,7 +12259,8 @@
 	  * Use this to load an index that you can write to
 	  * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
 	  * @param {Object} keypair SEA keypair (can be generated with await identifiLib.Key.generate())
-	  * @returns {Promise(Index)}
+	  * @param {Object} options see default options in Index constructor's example
+	  * @returns {Promise}
 	  */
 
 
@@ -12546,8 +12594,8 @@
 	  Index.prototype.addTrustedIndex = async function addTrustedIndex(gunUri) {
 	    var _this2 = this;
 
-	    var maxMsgsToCrawl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 500;
-	    var maxCrawlDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
+	    var maxMsgsToCrawl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.options.indexSync.importOnAdd.maxMsgCount;
+	    var maxMsgDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.options.indexSync.importOnAdd.maxMsgDistance;
 
 	    if (gunUri === this.viewpoint.val) {
 	      return;
@@ -12555,11 +12603,11 @@
 	    console.log('addTrustedIndex', gunUri);
 	    this.gun.get('trustedIndexes').get(gunUri).put(true);
 	    var msgs = [];
-	    if (this.options.importFromTrustedIndexes) {
+	    if (this.options.indexSync.importOnAdd.enabled) {
 	      await util$1.timeoutPromise(new _Promise(function (resolve) {
 	        _this2.gun.user(gunUri).get('identifi').get('messagesByDistance').map(function (val, key) {
 	          var d = _Number$parseInt(key.split(':')[0]);
-	          if (!isNaN(d) && d <= maxCrawlDistance) {
+	          if (!isNaN(d) && d <= maxMsgDistance) {
 	            Message.fromSig(val).then(function (msg) {
 	              msgs.push(msg);
 	              if (msgs.length >= maxMsgsToCrawl) {
@@ -12762,9 +12810,8 @@
 
 	    // TODO: param 'exact', type param
 	    var seen = {};
-	    var results = 0;
 	    this.gun.get('identitiesByTrustDistance').map().once(function (id, key) {
-	      if (results >= limit) {
+	      if (_Object$keys(seen).length >= limit) {
 	        // TODO: turn off .map cb
 	        return;
 	      }
@@ -12774,15 +12821,14 @@
 	      var soul = gun_min.node.soul(id);
 	      if (soul && !seen.hasOwnProperty(soul)) {
 	        seen[soul] = true;
-	        results++;
 	        callback(new Identity(_this4.gun.get('identitiesByTrustDistance').get(key)));
 	      }
 	    });
-	    if (this.options.queryTrustedIndexes) {
+	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
 	          _this4.gun.user(key).get('identifi').get('identitiesByTrustDistance').map().once(function (id, k) {
-	            if (results >= limit) {
+	            if (_Object$keys(seen).length >= limit) {
 	              // TODO: turn off .map cb
 	              return;
 	            }
@@ -12792,7 +12838,6 @@
 	            var soul = gun_min.node.soul(id);
 	            if (soul && !seen.hasOwnProperty(soul)) {
 	              seen[soul] = true;
-	              results++;
 	              callback(new Identity(_this4.gun.user(key).get('identifi').get('identitiesByTrustDistance').get(k)));
 	            }
 	          });
@@ -12807,9 +12852,27 @@
 
 
 	  Index.prototype.getMessagesByTimestamp = function getMessagesByTimestamp(callback, limit) {
+	    var _this5 = this;
+
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    return this._getMsgs(this.gun.get('messagesByTimestamp'), callback, limit, cursor);
+	    var seen = {};
+	    var cb = function cb(msg) {
+	      console.log('hash', msg.hash);
+	      if ((!limit || _Object$keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {
+	        seen[msg.hash] = true;
+	        callback(msg);
+	      }
+	    };
+	    this._getMsgs(this.gun.get('messagesByTimestamp'), cb, limit, cursor);
+	    if (this.options.indexSync.query.enabled) {
+	      this.gun.get('trustedIndexes').map().once(function (val, key) {
+	        if (val) {
+	          var n = _this5.gun.user(key).get('identifi').get('messagesByTimestamp');
+	          _this5._getMsgs(n, cb, limit, cursor);
+	        }
+	      });
+	    }
 	  };
 
 	  /**
@@ -12818,9 +12881,28 @@
 
 
 	  Index.prototype.getMessagesByDistance = function getMessagesByDistance(callback, limit) {
+	    var _this6 = this;
+
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    return this._getMsgs(this.gun.get('messagesByDistance'), callback, limit, cursor);
+	    var seen = {};
+	    var cb = function cb(msg) {
+	      if (!seen.hasOwnProperty(msg.hash)) {
+	        if ((!limit || _Object$keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {
+	          seen[msg.hash] = true;
+	          callback(msg);
+	        }
+	      }
+	    };
+	    this._getMsgs(this.gun.get('messagesByDistance'), cb, limit, cursor);
+	    if (this.options.indexSync.query.enabled) {
+	      this.gun.get('trustedIndexes').map().once(function (val, key) {
+	        if (val) {
+	          var n = _this6.gun.user(key).get('identifi').get('messagesByDistance');
+	          _this6._getMsgs(n, cb, limit, cursor);
+	        }
+	      });
+	    }
 	  };
 
 	  return Index;

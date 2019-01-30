@@ -88,8 +88,8 @@ class Message {
       if (typeof d.context !== `string` || !d.context.length) {throw new ValidationError(`${errorMsg} Rating messages must have a context field`);}
     }
 
-    if (d.type === `verify_identity` || d.type === `unverify_identity`) {
-      if (d.recipient.length < 2) {throw new ValidationError(`${errorMsg} At least 2 recipient attributes are needed for a connection / disconnection`);}
+    if (d.type === `verification` || d.type === `unverification`) {
+      if (d.recipient.length < 2) {throw new ValidationError(`${errorMsg} At least 2 recipient attributes are needed for a connection / disconnection. Got: ${d.recipient}`);}
     }
 
     return true;
