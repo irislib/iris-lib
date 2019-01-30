@@ -12241,7 +12241,7 @@
 	    }, options);
 	    if (this.options.indexSync.subscribe.enabled) {
 	      setTimeout(function () {
-	        _this.gun.get('trustedIndexes').map(function (val, uri) {
+	        _this.gun.get('trustedIndexes').map().once(function (val, uri) {
 	          if (val) {
 	            // TODO: only get new messages?
 	            _this.gun.user(uri).get('identifi').get('messagesByDistance').map(function (val, key) {

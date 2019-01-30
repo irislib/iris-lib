@@ -90,7 +90,7 @@ class Index {
     }, options);
     if (this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {
-        this.gun.get(`trustedIndexes`).map((val, uri) => {
+        this.gun.get(`trustedIndexes`).map().once((val, uri) => {
           if (val) {
             // TODO: only get new messages?
             this.gun.user(uri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
