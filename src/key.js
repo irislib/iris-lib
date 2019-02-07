@@ -85,7 +85,7 @@ class Key {
   * @returns {Promise(Object)} Gun.SEA keypair object
   */
   static generate() {
-    return (Gun.SEA || window.Gun.SEA).pair();
+    return Gun.SEA.pair();
   }
 
   /**
@@ -95,7 +95,7 @@ class Key {
   * @returns {Promise(String)} signed message string
   */
   static async sign(msg, pair) {
-    const sig = await (Gun.SEA || window.Gun.SEA).sign(msg, pair);
+    const sig = await Gun.SEA.sign(msg, pair);
     return `a${sig}`;
   }
 
@@ -106,7 +106,7 @@ class Key {
   * @returns {Promise(String)} signature string
   */
   static verify(msg, pubKey) {
-    return (Gun.SEA || window.Gun.SEA).verify(msg.slice(1), pubKey);
+    return Gun.SEA.verify(msg.slice(1), pubKey);
   }
 }
 

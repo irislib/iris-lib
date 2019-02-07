@@ -7,10 +7,12 @@ import commonjs from 'rollup-plugin-commonjs';
 import builtins from 'rollup-plugin-node-builtins';
 import globals from 'rollup-plugin-node-globals';
 import hypothetical from 'rollup-plugin-hypothetical';
+import ignore from 'rollup-plugin-ignore';
 
 const name = `identifiLib`;
 
 const plugins = [
+  ignore(['gun/lib/then', 'gun/lib/load']),
   hypothetical({
     allowFallthrough: true,
     files: {
@@ -49,10 +51,14 @@ if (isProd) plugins.push(terser());
 
 export default {
   input: `src/index.js`,
+  external: ['gun'],
   plugins,
   output: {
     file: `dist/${name}${isProd ? `.min` : ``}.js`,
-    name: name,
+    name,
     format: `umd`,
+    globals: {
+      gun: 'Gun'
+    }
   }
 };
