@@ -10651,7 +10651,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.78";
+	var version$1 = "0.0.79";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
