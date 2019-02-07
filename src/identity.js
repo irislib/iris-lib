@@ -28,6 +28,7 @@ class Identity {
     } else {
       data.linkTo = Identity.getLinkTo(data.attrs);
     }
+    console.log(`data`, data);
     return gun.put(data).then(() => {
       return new Identity(gun, data.linkTo);
     });
@@ -52,16 +53,16 @@ class Identity {
     const mostVerifiedAttributes = {};
     Object.keys(attrs).forEach(k => {
       const a = attrs[k];
-      const keyExists = Object.keys(mostVerifiedAttributes).indexOf(a.name) > - 1;
+      const keyExists = Object.keys(mostVerifiedAttributes).indexOf(a.type) > - 1;
       a.conf = isNaN(a.conf) ? 1 : a.conf;
       a.ref = isNaN(a.ref) ? 0 : a.ref;
-      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.name].verificationScore)) {
-        mostVerifiedAttributes[a.name] = {
+      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.type].verificationScore)) {
+        mostVerifiedAttributes[a.type] = {
           attribute: a,
           verificationScore: a.conf - a.ref
         };
         if (a.verified) {
-          mostVerifiedAttributes[a.name].verified = true;
+          mostVerifiedAttributes[a.type].verified = true;
         }
       }
     });
@@ -111,13 +112,13 @@ class Identity {
       const linkTo = await this.gun.get(`linkTo`).then();
       const link = `https://identi.fi/#/identities/${linkTo.name}/${linkTo.val}`;
       const mva = Identity.getMostVerifiedAttributes(attrs);
-      linkEl.innerHTML = `<a href="${link}">${(mva.name && mva.name.attribute.val) || (mva.nickname && mva.nickname.attribute.val) || `${linkTo.name}:${linkTo.val}`}</a><br>`;
+      linkEl.innerHTML = `<a href="${link}">${(mva.type && mva.type.attribute.val) || (mva.nickname && mva.nickname.attribute.val) || `${linkTo.name}:${linkTo.val}`}</a><br>`;
       linkEl.innerHTML += `<small>Received: <span class="identifi-pos">+${data.receivedPositive || 0}</span> / <span class="identifi-neg">-${data.receivedNegative || 0}</span></small><br>`;
       links.innerHTML = ``;
       Object.keys(attrs).forEach(k => {
         const a = attrs[k];
         if (a.link) {
-          links.innerHTML += `${a.name}: <a href="${a.link}">${a.val}</a> `;
+          links.innerHTML += `${a.type}: <a href="${a.link}">${a.value}</a> `;
         }
       });
     });
@@ -264,7 +265,7 @@ class Identity {
     }
 
     function setIdenticonImg(data) {
-      const hash = util.getHash(`${encodeURIComponent(data.name)}:${encodeURIComponent(data.val)}`, `hex`);
+      const hash = util.getHash(`${encodeURIComponent(data.type)}:${encodeURIComponent(data.value)}`, `hex`);
       const identiconImg = new Identicon(hash, {width, format: `svg`});
       img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;
     }

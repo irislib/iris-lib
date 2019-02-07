@@ -31,19 +31,6 @@
 
 	var _JSON$stringify = unwrapExports(stringify$1);
 
-	var classCallCheck = createCommonjsModule(function (module, exports) {
-
-	exports.__esModule = true;
-
-	exports.default = function (instance, Constructor) {
-	  if (!(instance instanceof Constructor)) {
-	    throw new TypeError("Cannot call a class as a function");
-	  }
-	};
-	});
-
-	var _classCallCheck = unwrapExports(classCallCheck);
-
 	// 7.1.4 ToInteger
 	var ceil = Math.ceil;
 	var floor = Math.floor;
@@ -611,7 +598,7 @@
 	module.exports = { "default": iterator, __esModule: true };
 	});
 
-	unwrapExports(iterator$1);
+	var _Symbol$iterator = unwrapExports(iterator$1);
 
 	var _meta = createCommonjsModule(function (module) {
 	var META = _uid('meta');
@@ -1034,7 +1021,814 @@
 	};
 	});
 
-	unwrapExports(_typeof_1);
+	var _typeof = unwrapExports(_typeof_1);
+
+	var runtime = createCommonjsModule(function (module) {
+	/**
+	 * Copyright (c) 2014-present, Facebook, Inc.
+	 *
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
+	 */
+
+	!(function(global) {
+
+	  var Op = Object.prototype;
+	  var hasOwn = Op.hasOwnProperty;
+	  var undefined; // More compressible than void 0.
+	  var $Symbol = typeof Symbol === "function" ? Symbol : {};
+	  var iteratorSymbol = $Symbol.iterator || "@@iterator";
+	  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
+	  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+	  var runtime = global.regeneratorRuntime;
+	  if (runtime) {
+	    {
+	      // If regeneratorRuntime is defined globally and we're in a module,
+	      // make the exports object identical to regeneratorRuntime.
+	      module.exports = runtime;
+	    }
+	    // Don't bother evaluating the rest of this file if the runtime was
+	    // already defined globally.
+	    return;
+	  }
+
+	  // Define the runtime globally (as expected by generated code) as either
+	  // module.exports (if we're in a module) or a new, empty object.
+	  runtime = global.regeneratorRuntime = module.exports;
+
+	  function wrap(innerFn, outerFn, self, tryLocsList) {
+	    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
+	    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
+	    var generator = Object.create(protoGenerator.prototype);
+	    var context = new Context(tryLocsList || []);
+
+	    // The ._invoke method unifies the implementations of the .next,
+	    // .throw, and .return methods.
+	    generator._invoke = makeInvokeMethod(innerFn, self, context);
+
+	    return generator;
+	  }
+	  runtime.wrap = wrap;
+
+	  // Try/catch helper to minimize deoptimizations. Returns a completion
+	  // record like context.tryEntries[i].completion. This interface could
+	  // have been (and was previously) designed to take a closure to be
+	  // invoked without arguments, but in all the cases we care about we
+	  // already have an existing method we want to call, so there's no need
+	  // to create a new function object. We can even get away with assuming
+	  // the method takes exactly one argument, since that happens to be true
+	  // in every case, so we don't have to touch the arguments object. The
+	  // only additional allocation required is the completion record, which
+	  // has a stable shape and so hopefully should be cheap to allocate.
+	  function tryCatch(fn, obj, arg) {
+	    try {
+	      return { type: "normal", arg: fn.call(obj, arg) };
+	    } catch (err) {
+	      return { type: "throw", arg: err };
+	    }
+	  }
+
+	  var GenStateSuspendedStart = "suspendedStart";
+	  var GenStateSuspendedYield = "suspendedYield";
+	  var GenStateExecuting = "executing";
+	  var GenStateCompleted = "completed";
+
+	  // Returning this object from the innerFn has the same effect as
+	  // breaking out of the dispatch switch statement.
+	  var ContinueSentinel = {};
+
+	  // Dummy constructor functions that we use as the .constructor and
+	  // .constructor.prototype properties for functions that return Generator
+	  // objects. For full spec compliance, you may wish to configure your
+	  // minifier not to mangle the names of these two functions.
+	  function Generator() {}
+	  function GeneratorFunction() {}
+	  function GeneratorFunctionPrototype() {}
+
+	  // This is a polyfill for %IteratorPrototype% for environments that
+	  // don't natively support it.
+	  var IteratorPrototype = {};
+	  IteratorPrototype[iteratorSymbol] = function () {
+	    return this;
+	  };
+
+	  var getProto = Object.getPrototypeOf;
+	  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
+	  if (NativeIteratorPrototype &&
+	      NativeIteratorPrototype !== Op &&
+	      hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
+	    // This environment has a native %IteratorPrototype%; use it instead
+	    // of the polyfill.
+	    IteratorPrototype = NativeIteratorPrototype;
+	  }
+
+	  var Gp = GeneratorFunctionPrototype.prototype =
+	    Generator.prototype = Object.create(IteratorPrototype);
+	  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
+	  GeneratorFunctionPrototype.constructor = GeneratorFunction;
+	  GeneratorFunctionPrototype[toStringTagSymbol] =
+	    GeneratorFunction.displayName = "GeneratorFunction";
+
+	  // Helper for defining the .next, .throw, and .return methods of the
+	  // Iterator interface in terms of a single ._invoke method.
+	  function defineIteratorMethods(prototype) {
+	    ["next", "throw", "return"].forEach(function(method) {
+	      prototype[method] = function(arg) {
+	        return this._invoke(method, arg);
+	      };
+	    });
+	  }
+
+	  runtime.isGeneratorFunction = function(genFun) {
+	    var ctor = typeof genFun === "function" && genFun.constructor;
+	    return ctor
+	      ? ctor === GeneratorFunction ||
+	        // For the native GeneratorFunction constructor, the best we can
+	        // do is to check its .name property.
+	        (ctor.displayName || ctor.name) === "GeneratorFunction"
+	      : false;
+	  };
+
+	  runtime.mark = function(genFun) {
+	    if (Object.setPrototypeOf) {
+	      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+	    } else {
+	      genFun.__proto__ = GeneratorFunctionPrototype;
+	      if (!(toStringTagSymbol in genFun)) {
+	        genFun[toStringTagSymbol] = "GeneratorFunction";
+	      }
+	    }
+	    genFun.prototype = Object.create(Gp);
+	    return genFun;
+	  };
+
+	  // Within the body of any async function, `await x` is transformed to
+	  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+	  // `hasOwn.call(value, "__await")` to determine if the yielded value is
+	  // meant to be awaited.
+	  runtime.awrap = function(arg) {
+	    return { __await: arg };
+	  };
+
+	  function AsyncIterator(generator) {
+	    function invoke(method, arg, resolve, reject) {
+	      var record = tryCatch(generator[method], generator, arg);
+	      if (record.type === "throw") {
+	        reject(record.arg);
+	      } else {
+	        var result = record.arg;
+	        var value = result.value;
+	        if (value &&
+	            typeof value === "object" &&
+	            hasOwn.call(value, "__await")) {
+	          return Promise.resolve(value.__await).then(function(value) {
+	            invoke("next", value, resolve, reject);
+	          }, function(err) {
+	            invoke("throw", err, resolve, reject);
+	          });
+	        }
+
+	        return Promise.resolve(value).then(function(unwrapped) {
+	          // When a yielded Promise is resolved, its final value becomes
+	          // the .value of the Promise<{value,done}> result for the
+	          // current iteration. If the Promise is rejected, however, the
+	          // result for this iteration will be rejected with the same
+	          // reason. Note that rejections of yielded Promises are not
+	          // thrown back into the generator function, as is the case
+	          // when an awaited Promise is rejected. This difference in
+	          // behavior between yield and await is important, because it
+	          // allows the consumer to decide what to do with the yielded
+	          // rejection (swallow it and continue, manually .throw it back
+	          // into the generator, abandon iteration, whatever). With
+	          // await, by contrast, there is no opportunity to examine the
+	          // rejection reason outside the generator function, so the
+	          // only option is to throw it from the await expression, and
+	          // let the generator function handle the exception.
+	          result.value = unwrapped;
+	          resolve(result);
+	        }, reject);
+	      }
+	    }
+
+	    var previousPromise;
+
+	    function enqueue(method, arg) {
+	      function callInvokeWithMethodAndArg() {
+	        return new Promise(function(resolve, reject) {
+	          invoke(method, arg, resolve, reject);
+	        });
+	      }
+
+	      return previousPromise =
+	        // If enqueue has been called before, then we want to wait until
+	        // all previous Promises have been resolved before calling invoke,
+	        // so that results are always delivered in the correct order. If
+	        // enqueue has not been called before, then it is important to
+	        // call invoke immediately, without waiting on a callback to fire,
+	        // so that the async generator function has the opportunity to do
+	        // any necessary setup in a predictable way. This predictability
+	        // is why the Promise constructor synchronously invokes its
+	        // executor callback, and why async functions synchronously
+	        // execute code before the first await. Since we implement simple
+	        // async functions in terms of async generators, it is especially
+	        // important to get this right, even though it requires care.
+	        previousPromise ? previousPromise.then(
+	          callInvokeWithMethodAndArg,
+	          // Avoid propagating failures to Promises returned by later
+	          // invocations of the iterator.
+	          callInvokeWithMethodAndArg
+	        ) : callInvokeWithMethodAndArg();
+	    }
+
+	    // Define the unified helper method that is used to implement .next,
+	    // .throw, and .return (see defineIteratorMethods).
+	    this._invoke = enqueue;
+	  }
+
+	  defineIteratorMethods(AsyncIterator.prototype);
+	  AsyncIterator.prototype[asyncIteratorSymbol] = function () {
+	    return this;
+	  };
+	  runtime.AsyncIterator = AsyncIterator;
+
+	  // Note that simple async functions are implemented on top of
+	  // AsyncIterator objects; they just return a Promise for the value of
+	  // the final result produced by the iterator.
+	  runtime.async = function(innerFn, outerFn, self, tryLocsList) {
+	    var iter = new AsyncIterator(
+	      wrap(innerFn, outerFn, self, tryLocsList)
+	    );
+
+	    return runtime.isGeneratorFunction(outerFn)
+	      ? iter // If outerFn is a generator, return the full iterator.
+	      : iter.next().then(function(result) {
+	          return result.done ? result.value : iter.next();
+	        });
+	  };
+
+	  function makeInvokeMethod(innerFn, self, context) {
+	    var state = GenStateSuspendedStart;
+
+	    return function invoke(method, arg) {
+	      if (state === GenStateExecuting) {
+	        throw new Error("Generator is already running");
+	      }
+
+	      if (state === GenStateCompleted) {
+	        if (method === "throw") {
+	          throw arg;
+	        }
+
+	        // Be forgiving, per 25.3.3.3.3 of the spec:
+	        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+	        return doneResult();
+	      }
+
+	      context.method = method;
+	      context.arg = arg;
+
+	      while (true) {
+	        var delegate = context.delegate;
+	        if (delegate) {
+	          var delegateResult = maybeInvokeDelegate(delegate, context);
+	          if (delegateResult) {
+	            if (delegateResult === ContinueSentinel) continue;
+	            return delegateResult;
+	          }
+	        }
+
+	        if (context.method === "next") {
+	          // Setting context._sent for legacy support of Babel's
+	          // function.sent implementation.
+	          context.sent = context._sent = context.arg;
+
+	        } else if (context.method === "throw") {
+	          if (state === GenStateSuspendedStart) {
+	            state = GenStateCompleted;
+	            throw context.arg;
+	          }
+
+	          context.dispatchException(context.arg);
+
+	        } else if (context.method === "return") {
+	          context.abrupt("return", context.arg);
+	        }
+
+	        state = GenStateExecuting;
+
+	        var record = tryCatch(innerFn, self, context);
+	        if (record.type === "normal") {
+	          // If an exception is thrown from innerFn, we leave state ===
+	          // GenStateExecuting and loop back for another invocation.
+	          state = context.done
+	            ? GenStateCompleted
+	            : GenStateSuspendedYield;
+
+	          if (record.arg === ContinueSentinel) {
+	            continue;
+	          }
+
+	          return {
+	            value: record.arg,
+	            done: context.done
+	          };
+
+	        } else if (record.type === "throw") {
+	          state = GenStateCompleted;
+	          // Dispatch the exception by looping back around to the
+	          // context.dispatchException(context.arg) call above.
+	          context.method = "throw";
+	          context.arg = record.arg;
+	        }
+	      }
+	    };
+	  }
+
+	  // Call delegate.iterator[context.method](context.arg) and handle the
+	  // result, either by returning a { value, done } result from the
+	  // delegate iterator, or by modifying context.method and context.arg,
+	  // setting context.delegate to null, and returning the ContinueSentinel.
+	  function maybeInvokeDelegate(delegate, context) {
+	    var method = delegate.iterator[context.method];
+	    if (method === undefined) {
+	      // A .throw or .return when the delegate iterator has no .throw
+	      // method always terminates the yield* loop.
+	      context.delegate = null;
+
+	      if (context.method === "throw") {
+	        if (delegate.iterator.return) {
+	          // If the delegate iterator has a return method, give it a
+	          // chance to clean up.
+	          context.method = "return";
+	          context.arg = undefined;
+	          maybeInvokeDelegate(delegate, context);
+
+	          if (context.method === "throw") {
+	            // If maybeInvokeDelegate(context) changed context.method from
+	            // "return" to "throw", let that override the TypeError below.
+	            return ContinueSentinel;
+	          }
+	        }
+
+	        context.method = "throw";
+	        context.arg = new TypeError(
+	          "The iterator does not provide a 'throw' method");
+	      }
+
+	      return ContinueSentinel;
+	    }
+
+	    var record = tryCatch(method, delegate.iterator, context.arg);
+
+	    if (record.type === "throw") {
+	      context.method = "throw";
+	      context.arg = record.arg;
+	      context.delegate = null;
+	      return ContinueSentinel;
+	    }
+
+	    var info = record.arg;
+
+	    if (! info) {
+	      context.method = "throw";
+	      context.arg = new TypeError("iterator result is not an object");
+	      context.delegate = null;
+	      return ContinueSentinel;
+	    }
+
+	    if (info.done) {
+	      // Assign the result of the finished delegate to the temporary
+	      // variable specified by delegate.resultName (see delegateYield).
+	      context[delegate.resultName] = info.value;
+
+	      // Resume execution at the desired location (see delegateYield).
+	      context.next = delegate.nextLoc;
+
+	      // If context.method was "throw" but the delegate handled the
+	      // exception, let the outer generator proceed normally. If
+	      // context.method was "next", forget context.arg since it has been
+	      // "consumed" by the delegate iterator. If context.method was
+	      // "return", allow the original .return call to continue in the
+	      // outer generator.
+	      if (context.method !== "return") {
+	        context.method = "next";
+	        context.arg = undefined;
+	      }
+
+	    } else {
+	      // Re-yield the result returned by the delegate method.
+	      return info;
+	    }
+
+	    // The delegate iterator is finished, so forget it and continue with
+	    // the outer generator.
+	    context.delegate = null;
+	    return ContinueSentinel;
+	  }
+
+	  // Define Generator.prototype.{next,throw,return} in terms of the
+	  // unified ._invoke helper method.
+	  defineIteratorMethods(Gp);
+
+	  Gp[toStringTagSymbol] = "Generator";
+
+	  // A Generator should always return itself as the iterator object when the
+	  // @@iterator function is called on it. Some browsers' implementations of the
+	  // iterator prototype chain incorrectly implement this, causing the Generator
+	  // object to not be returned from this call. This ensures that doesn't happen.
+	  // See https://github.com/facebook/regenerator/issues/274 for more details.
+	  Gp[iteratorSymbol] = function() {
+	    return this;
+	  };
+
+	  Gp.toString = function() {
+	    return "[object Generator]";
+	  };
+
+	  function pushTryEntry(locs) {
+	    var entry = { tryLoc: locs[0] };
+
+	    if (1 in locs) {
+	      entry.catchLoc = locs[1];
+	    }
+
+	    if (2 in locs) {
+	      entry.finallyLoc = locs[2];
+	      entry.afterLoc = locs[3];
+	    }
+
+	    this.tryEntries.push(entry);
+	  }
+
+	  function resetTryEntry(entry) {
+	    var record = entry.completion || {};
+	    record.type = "normal";
+	    delete record.arg;
+	    entry.completion = record;
+	  }
+
+	  function Context(tryLocsList) {
+	    // The root entry object (effectively a try statement without a catch
+	    // or a finally block) gives us a place to store values thrown from
+	    // locations where there is no enclosing try statement.
+	    this.tryEntries = [{ tryLoc: "root" }];
+	    tryLocsList.forEach(pushTryEntry, this);
+	    this.reset(true);
+	  }
+
+	  runtime.keys = function(object) {
+	    var keys = [];
+	    for (var key in object) {
+	      keys.push(key);
+	    }
+	    keys.reverse();
+
+	    // Rather than returning an object with a next method, we keep
+	    // things simple and return the next function itself.
+	    return function next() {
+	      while (keys.length) {
+	        var key = keys.pop();
+	        if (key in object) {
+	          next.value = key;
+	          next.done = false;
+	          return next;
+	        }
+	      }
+
+	      // To avoid creating an additional object, we just hang the .value
+	      // and .done properties off the next function object itself. This
+	      // also ensures that the minifier will not anonymize the function.
+	      next.done = true;
+	      return next;
+	    };
+	  };
+
+	  function values(iterable) {
+	    if (iterable) {
+	      var iteratorMethod = iterable[iteratorSymbol];
+	      if (iteratorMethod) {
+	        return iteratorMethod.call(iterable);
+	      }
+
+	      if (typeof iterable.next === "function") {
+	        return iterable;
+	      }
+
+	      if (!isNaN(iterable.length)) {
+	        var i = -1, next = function next() {
+	          while (++i < iterable.length) {
+	            if (hasOwn.call(iterable, i)) {
+	              next.value = iterable[i];
+	              next.done = false;
+	              return next;
+	            }
+	          }
+
+	          next.value = undefined;
+	          next.done = true;
+
+	          return next;
+	        };
+
+	        return next.next = next;
+	      }
+	    }
+
+	    // Return an iterator with no values.
+	    return { next: doneResult };
+	  }
+	  runtime.values = values;
+
+	  function doneResult() {
+	    return { value: undefined, done: true };
+	  }
+
+	  Context.prototype = {
+	    constructor: Context,
+
+	    reset: function(skipTempReset) {
+	      this.prev = 0;
+	      this.next = 0;
+	      // Resetting context._sent for legacy support of Babel's
+	      // function.sent implementation.
+	      this.sent = this._sent = undefined;
+	      this.done = false;
+	      this.delegate = null;
+
+	      this.method = "next";
+	      this.arg = undefined;
+
+	      this.tryEntries.forEach(resetTryEntry);
+
+	      if (!skipTempReset) {
+	        for (var name in this) {
+	          // Not sure about the optimal order of these conditions:
+	          if (name.charAt(0) === "t" &&
+	              hasOwn.call(this, name) &&
+	              !isNaN(+name.slice(1))) {
+	            this[name] = undefined;
+	          }
+	        }
+	      }
+	    },
+
+	    stop: function() {
+	      this.done = true;
+
+	      var rootEntry = this.tryEntries[0];
+	      var rootRecord = rootEntry.completion;
+	      if (rootRecord.type === "throw") {
+	        throw rootRecord.arg;
+	      }
+
+	      return this.rval;
+	    },
+
+	    dispatchException: function(exception) {
+	      if (this.done) {
+	        throw exception;
+	      }
+
+	      var context = this;
+	      function handle(loc, caught) {
+	        record.type = "throw";
+	        record.arg = exception;
+	        context.next = loc;
+
+	        if (caught) {
+	          // If the dispatched exception was caught by a catch block,
+	          // then let that catch block handle the exception normally.
+	          context.method = "next";
+	          context.arg = undefined;
+	        }
+
+	        return !! caught;
+	      }
+
+	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+	        var entry = this.tryEntries[i];
+	        var record = entry.completion;
+
+	        if (entry.tryLoc === "root") {
+	          // Exception thrown outside of any try block that could handle
+	          // it, so set the completion value of the entire function to
+	          // throw the exception.
+	          return handle("end");
+	        }
+
+	        if (entry.tryLoc <= this.prev) {
+	          var hasCatch = hasOwn.call(entry, "catchLoc");
+	          var hasFinally = hasOwn.call(entry, "finallyLoc");
+
+	          if (hasCatch && hasFinally) {
+	            if (this.prev < entry.catchLoc) {
+	              return handle(entry.catchLoc, true);
+	            } else if (this.prev < entry.finallyLoc) {
+	              return handle(entry.finallyLoc);
+	            }
+
+	          } else if (hasCatch) {
+	            if (this.prev < entry.catchLoc) {
+	              return handle(entry.catchLoc, true);
+	            }
+
+	          } else if (hasFinally) {
+	            if (this.prev < entry.finallyLoc) {
+	              return handle(entry.finallyLoc);
+	            }
+
+	          } else {
+	            throw new Error("try statement without catch or finally");
+	          }
+	        }
+	      }
+	    },
+
+	    abrupt: function(type, arg) {
+	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+	        var entry = this.tryEntries[i];
+	        if (entry.tryLoc <= this.prev &&
+	            hasOwn.call(entry, "finallyLoc") &&
+	            this.prev < entry.finallyLoc) {
+	          var finallyEntry = entry;
+	          break;
+	        }
+	      }
+
+	      if (finallyEntry &&
+	          (type === "break" ||
+	           type === "continue") &&
+	          finallyEntry.tryLoc <= arg &&
+	          arg <= finallyEntry.finallyLoc) {
+	        // Ignore the finally entry if control is not jumping to a
+	        // location outside the try/catch block.
+	        finallyEntry = null;
+	      }
+
+	      var record = finallyEntry ? finallyEntry.completion : {};
+	      record.type = type;
+	      record.arg = arg;
+
+	      if (finallyEntry) {
+	        this.method = "next";
+	        this.next = finallyEntry.finallyLoc;
+	        return ContinueSentinel;
+	      }
+
+	      return this.complete(record);
+	    },
+
+	    complete: function(record, afterLoc) {
+	      if (record.type === "throw") {
+	        throw record.arg;
+	      }
+
+	      if (record.type === "break" ||
+	          record.type === "continue") {
+	        this.next = record.arg;
+	      } else if (record.type === "return") {
+	        this.rval = this.arg = record.arg;
+	        this.method = "return";
+	        this.next = "end";
+	      } else if (record.type === "normal" && afterLoc) {
+	        this.next = afterLoc;
+	      }
+
+	      return ContinueSentinel;
+	    },
+
+	    finish: function(finallyLoc) {
+	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+	        var entry = this.tryEntries[i];
+	        if (entry.finallyLoc === finallyLoc) {
+	          this.complete(entry.completion, entry.afterLoc);
+	          resetTryEntry(entry);
+	          return ContinueSentinel;
+	        }
+	      }
+	    },
+
+	    "catch": function(tryLoc) {
+	      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+	        var entry = this.tryEntries[i];
+	        if (entry.tryLoc === tryLoc) {
+	          var record = entry.completion;
+	          if (record.type === "throw") {
+	            var thrown = record.arg;
+	            resetTryEntry(entry);
+	          }
+	          return thrown;
+	        }
+	      }
+
+	      // The context.catch method must only be called with a location
+	      // argument that corresponds to a known catch block.
+	      throw new Error("illegal catch attempt");
+	    },
+
+	    delegateYield: function(iterable, resultName, nextLoc) {
+	      this.delegate = {
+	        iterator: values(iterable),
+	        resultName: resultName,
+	        nextLoc: nextLoc
+	      };
+
+	      if (this.method === "next") {
+	        // Deliberately forget the last sent value so that we don't
+	        // accidentally pass it on to the delegate.
+	        this.arg = undefined;
+	      }
+
+	      return ContinueSentinel;
+	    }
+	  };
+	})(
+	  // In sloppy mode, unbound `this` refers to the global object, fallback to
+	  // Function constructor if we're in global strict mode. That is sadly a form
+	  // of indirect eval which violates Content Security Policy.
+	  (function() { return this })() || Function("return this")()
+	);
+	});
+
+	/**
+	 * Copyright (c) 2014-present, Facebook, Inc.
+	 *
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
+	 */
+
+	// This method of obtaining a reference to the global object needs to be
+	// kept identical to the way it is obtained in runtime.js
+	var g = (function() { return this })() || Function("return this")();
+
+	// Use `getOwnPropertyNames` because not all browsers support calling
+	// `hasOwnProperty` on the global `self` object in a worker. See #183.
+	var hadRuntime = g.regeneratorRuntime &&
+	  Object.getOwnPropertyNames(g).indexOf("regeneratorRuntime") >= 0;
+
+	// Save the old regeneratorRuntime in case it needs to be restored later.
+	var oldRuntime = hadRuntime && g.regeneratorRuntime;
+
+	// Force reevalutation of runtime.js.
+	g.regeneratorRuntime = undefined;
+
+	var runtimeModule = runtime;
+
+	if (hadRuntime) {
+	  // Restore the original runtime.
+	  g.regeneratorRuntime = oldRuntime;
+	} else {
+	  // Remove the global property added by runtime.js.
+	  try {
+	    delete g.regeneratorRuntime;
+	  } catch(e) {
+	    g.regeneratorRuntime = undefined;
+	  }
+	}
+
+	var regenerator = runtimeModule;
+
+	// most Object methods by ES6 should accept primitives
+
+
+
+	var _objectSap = function (KEY, exec) {
+	  var fn = (_core.Object || {})[KEY] || Object[KEY];
+	  var exp = {};
+	  exp[KEY] = exec(fn);
+	  _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
+	};
+
+	// 19.1.2.14 Object.keys(O)
+
+
+
+	_objectSap('keys', function () {
+	  return function keys(it) {
+	    return _objectKeys(_toObject(it));
+	  };
+	});
+
+	var keys = _core.Object.keys;
+
+	var keys$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": keys, __esModule: true };
+	});
+
+	var _Object$keys = unwrapExports(keys$1);
+
+	var classCallCheck = createCommonjsModule(function (module, exports) {
+
+	exports.__esModule = true;
+
+	exports.default = function (instance, Constructor) {
+	  if (!(instance instanceof Constructor)) {
+	    throw new TypeError("Cannot call a class as a function");
+	  }
+	};
+	});
+
+	var _classCallCheck = unwrapExports(classCallCheck);
 
 	var possibleConstructorReturn = createCommonjsModule(function (module, exports) {
 
@@ -1342,7 +2136,7 @@
 	var macrotask = _task.set;
 	var Observer = _global.MutationObserver || _global.WebKitMutationObserver;
 	var process$1 = _global.process;
-	var Promise = _global.Promise;
+	var Promise$1 = _global.Promise;
 	var isNode = _cof(process$1) == 'process';
 
 	var _microtask = function () {
@@ -1379,9 +2173,9 @@
 	      node.data = toggle = !toggle;
 	    };
 	  // environments with maybe non-completely correct, but existent Promise
-	  } else if (Promise && Promise.resolve) {
+	  } else if (Promise$1 && Promise$1.resolve) {
 	    // Promise.resolve without an argument throws an error in LG WebOS 2
-	    var promise = Promise.resolve(undefined);
+	    var promise = Promise$1.resolve(undefined);
 	    notify = function () {
 	      promise.then(flush);
 	    };
@@ -6682,9 +7476,9 @@
 
 	inherits$2(Duplex, Readable);
 
-	var keys = Object.keys(Writable.prototype);
-	for (var v = 0; v < keys.length; v++) {
-	  var method = keys[v];
+	var keys$2 = Object.keys(Writable.prototype);
+	for (var v = 0; v < keys$2.length; v++) {
+	  var method = keys$2[v];
 	  if (!Duplex.prototype[method]) Duplex.prototype[method] = Writable.prototype[method];
 	}
 	function Duplex(options) {
@@ -8332,35 +9126,6 @@
 	  isNode: isNode$2
 	};
 
-	// most Object methods by ES6 should accept primitives
-
-
-
-	var _objectSap = function (KEY, exec) {
-	  var fn = (_core.Object || {})[KEY] || Object[KEY];
-	  var exp = {};
-	  exp[KEY] = exec(fn);
-	  _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
-	};
-
-	// 19.1.2.14 Object.keys(O)
-
-
-
-	_objectSap('keys', function () {
-	  return function keys(it) {
-	    return _objectKeys(_toObject(it));
-	  };
-	});
-
-	var keys$1 = _core.Object.keys;
-
-	var keys$2 = createCommonjsModule(function (module) {
-	module.exports = { "default": keys$1, __esModule: true };
-	});
-
-	var _Object$keys = unwrapExports(keys$2);
-
 	var pnglib = createCommonjsModule(function (module) {
 	/**
 	* A handy class to calculate color values.
@@ -8805,32 +9570,36 @@
 	  /**
 	  * @param {Object|Array} data {name, val} or [name, val]
 	  */
-	  function Attribute(data) {
+	  function Attribute(a, b) {
 	    _classCallCheck(this, Attribute);
 
-	    if (data.hasOwnProperty('val')) {
-	      this.val = data.val;
-	      if (data.hasOwnProperty('name')) {
-	        this.name = data.name;
-	      } else {
-	        var n = Attribute.guessTypeOf(this.val);
-	        if (n) {
-	          this.name = n;
-	        } else {
-	          throw new Error('Type of attribute was omitted and could not be guessed');
-	        }
+	    if (typeof a === 'object' && typeof a.type === 'string' && typeof a.value === 'string') {
+	      b = a.value;
+	      a = a.type;
+	    }
+	    if (typeof a !== 'string') {
+	      throw new Error('First param must be a string, got ' + (typeof a === 'undefined' ? 'undefined' : _typeof(a)) + ': ' + _JSON$stringify(a));
+	    }
+	    if (!a.length) {
+	      throw new Error('First param string is empty');
+	    }
+	    if (b) {
+	      if (typeof b !== 'string') {
+	        throw new Error('Second parameter must be a string, got ' + (typeof b === 'undefined' ? 'undefined' : _typeof(b)) + ': ' + _JSON$stringify(b));
 	      }
-	    } else if (Array.isArray(data)) {
-	      if (data.length !== 2) {
-	        throw new Error('Invalid attribute data (array length not 2): ' + _JSON$stringify(data));
+	      if (!b.length) {
+	        throw new Error('Second param string is empty');
 	      }
-	      if (!(data[0] && data[1])) {
-	        throw new Error('Invalid attribute data[0] or data[1]: ' + _JSON$stringify(data));
-	      }
-	      this.name = data[0];
-	      this.val = data[1];
+	      this.type = a;
+	      this.value = b;
 	    } else {
-	      throw new Error('Invalid attribute data (should be array or {name, val} object): ' + _JSON$stringify(data));
+	      this.value = a;
+	      var t = Attribute.guessTypeOf(this.value);
+	      if (t) {
+	        this.type = t;
+	      } else {
+	        throw new Error('Type of attribute was omitted and could not be guessed');
+	      }
 	    }
 	  }
 
@@ -8838,7 +9607,7 @@
 	    var b = function b(a) {
 	      return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, b);
 	    };
-	    return new Attribute(['uuid', b()]);
+	    return new Attribute('uuid', b());
 	  };
 
 	  /**
@@ -8858,6 +9627,15 @@
 
 	  Attribute.isUniqueType = function isUniqueType(type) {
 	    return _Object$keys(UNIQUE_ID_VALIDATORS).indexOf(type) > -1;
+	  };
+
+	  /**
+	  * @returns {boolean} true if the attribute type is unique
+	  */
+
+
+	  Attribute.prototype.isUniqueType = function isUniqueType() {
+	    return Attribute.isUniqueType(this.type);
 	  };
 
 	  /**
@@ -8883,19 +9661,10 @@
 
 	  Attribute.equals = function equals(a, b) {
 	    try {
-	      return new Attribute(a).equals(new Attribute(b));
+	      return a.equals(b);
 	    } catch (e) {
 	      return false;
 	    }
-	  };
-
-	  /**
-	  * @returns {Array} attribute represented as a [name, val] array
-	  */
-
-
-	  Attribute.prototype.toArray = function toArray() {
-	    return [this.name, this.val];
 	  };
 
 	  /**
@@ -8905,11 +9674,11 @@
 
 
 	  Attribute.prototype.equals = function equals(a) {
-	    return a && this.name === a.name && this.val === a.val;
+	    return a && this.type === a.type && this.value === a.value;
 	  };
 
 	  Attribute.prototype.uri = function uri() {
-	    return encodeURIComponent(this.val) + ':' + encodeURIComponent(this.name);
+	    return encodeURIComponent(this.value) + ':' + encodeURIComponent(this.type);
 	  };
 
 	  /**
@@ -8930,14 +9699,14 @@
 	    img.alt = '';
 	    img.width = width;
 	    img.height = width;
-	    var hash = util$1.getHash(encodeURIComponent(this.name) + ':' + encodeURIComponent(this.val), 'hex');
+	    var hash = util$1.getHash(encodeURIComponent(this.type) + ':' + encodeURIComponent(this.value), 'hex');
 	    var identicon$$1 = new identicon(hash, { width: width, format: 'svg' });
 	    img.src = 'data:image/svg+xml;base64,' + identicon$$1.toString();
 
 	    var name = document.createElement('span');
 	    name.className = 'identifi-distance';
 	    name.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
-	    name.textContent = this.name.slice(0, 5);
+	    name.textContent = this.type.slice(0, 5);
 	    div.appendChild(name);
 
 	    div.appendChild(img);
@@ -9127,6 +9896,89 @@
 	    this._validate();
 	  }
 
+	  Message._getIterable = function _getIterable(authorOrRecipient) {
+	    var _ref;
+
+	    return _ref = {}, _ref[_Symbol$iterator] = /*#__PURE__*/regenerator.mark(function _callee() {
+	      var keys, i, type, value, j, elementValue;
+	      return regenerator.wrap(function _callee$(_context) {
+	        while (1) {
+	          switch (_context.prev = _context.next) {
+	            case 0:
+	              keys = _Object$keys(authorOrRecipient);
+	              i = 0;
+
+	            case 2:
+	              if (!(i < keys.length)) {
+	                _context.next = 21;
+	                break;
+	              }
+
+	              type = keys[i];
+	              value = authorOrRecipient[keys[i]];
+
+	              if (!(typeof value === 'string')) {
+	                _context.next = 10;
+	                break;
+	              }
+
+	              _context.next = 8;
+	              return new Attribute(type, value);
+
+	            case 8:
+	              _context.next = 18;
+	              break;
+
+	            case 10:
+	              j = 0;
+
+	            case 11:
+	              if (!(j < value.length)) {
+	                _context.next = 18;
+	                break;
+	              }
+
+	              elementValue = value[j];
+	              _context.next = 15;
+	              return new Attribute(type, elementValue);
+
+	            case 15:
+	              j++;
+	              _context.next = 11;
+	              break;
+
+	            case 18:
+	              i++;
+	              _context.next = 2;
+	              break;
+
+	            case 21:
+	            case 'end':
+	              return _context.stop();
+	          }
+	        }
+	      }, _callee, this);
+	    }), _ref;
+	  };
+
+	  /**
+	  * @returns {object} Javascript iterator over author attributes
+	  */
+
+
+	  Message.prototype.getAuthorIterable = function getAuthorIterable() {
+	    return Message._getIterable(this.signedData.author);
+	  };
+
+	  /**
+	  * @returns {object} Javascript iterator over recipient attributes
+	  */
+
+
+	  Message.prototype.getRecipientIterable = function getRecipientIterable() {
+	    return Message._getIterable(this.signedData.recipient);
+	  };
+
 	  /**
 	  * @returns {string} Message signer keyID, i.e. base64 hash of public key
 	  */
@@ -9152,25 +10004,39 @@
 	    if (!d.author) {
 	      throw new ValidationError(errorMsg + ' Missing author');
 	    }
-	    if (!d.author.length) {
+	    if (typeof d.author !== 'object') {
+	      throw new ValidationError(errorMsg + ' Author must be object');
+	    }
+	    if (Array.isArray(d.author)) {
+	      throw new ValidationError(errorMsg + ' Author must not be an array');
+	    }
+	    if (_Object$keys(d.author).length === 0) {
 	      throw new ValidationError(errorMsg + ' Author empty');
 	    }
-	    var i = void 0;
-	    var authorKeyID = void 0;
 	    if (this.pubKey) {
 	      this.signerKeyHash = this.getSignerKeyID();
 	    }
-	    for (i = 0; i < d.author.length; i++) {
-	      if (d.author[i].length !== 2) {
-	        throw new ValidationError(errorMsg + ' Invalid author: ' + d.author[i].toString());
-	      }
-	      if (d.author[i][0] === 'keyID') {
-	        if (authorKeyID) {
-	          throw new ValidationError(errorMsg + ' Author may have only one keyID');
+	    for (var attr in d.author) {
+	      var t = _typeof(d.author[attr]);
+	      if (t !== 'string') {
+	        if (Array.isArray(d.author[attr])) {
+	          for (var i = 0; i < d.author[attr].length; i++) {
+	            if (typeof d.author[attr][i] !== 'string') {
+	              throw new ValidationError(errorMsg + ' Author attribute must be string, got ' + attr + ': [' + d.author[attr][i] + ']');
+	            }
+	            if (d.author[attr][i].length === 0) {
+	              throw new ValidationError(errorMsg + ' author ' + attr + ' in array[' + i + '] is empty');
+	            }
+	          }
 	        } else {
-	          authorKeyID = d.author[i][1];
+	          throw new ValidationError(errorMsg + ' Author attribute must be string or array, got ' + attr + ': ' + d.author[attr]);
 	        }
-	        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {
+	      }
+	      if (attr === 'keyID') {
+	        if (t !== 'string') {
+	          throw new ValidationError(errorMsg + ' Author keyID must be string, got ' + t);
+	        }
+	        if (this.signerKeyHash && d.author[attr] !== this.signerKeyHash) {
 	          throw new ValidationError(errorMsg + ' If message has a keyID author, it must be signed by the same key');
 	        }
 	      }
@@ -9178,12 +10044,30 @@
 	    if (!d.recipient) {
 	      throw new ValidationError(errorMsg + ' Missing recipient');
 	    }
-	    if (!d.recipient.length) {
-	      throw new ValidationError(errorMsg + ' Author empty');
+	    if (typeof d.recipient !== 'object') {
+	      throw new ValidationError(errorMsg + ' Recipient must be object');
 	    }
-	    for (i = 0; i < d.recipient.length; i++) {
-	      if (d.recipient[i].length !== 2) {
-	        throw new ValidationError(errorMsg + ' Invalid recipient: ' + d.recipient[i].toString());
+	    if (Array.isArray(d.recipient)) {
+	      throw new ValidationError(errorMsg + ' Recipient must not be an array');
+	    }
+	    if (_Object$keys(d.recipient).length === 0) {
+	      throw new ValidationError(errorMsg + ' Recipient empty');
+	    }
+	    for (var _attr in d.recipient) {
+	      var _t = _typeof(d.recipient[_attr]);
+	      if (_t !== 'string') {
+	        if (Array.isArray(d.recipient[_attr])) {
+	          for (var _i = 0; _i < d.recipient[_attr].length; _i++) {
+	            if (typeof d.recipient[_attr][_i] !== 'string') {
+	              throw new ValidationError(errorMsg + ' Recipient attribute must be string, got ' + _attr + ': [' + d.recipient[_attr][_i] + ']');
+	            }
+	            if (d.recipient[_attr][_i].length === 0) {
+	              throw new ValidationError(errorMsg + ' recipient ' + _attr + ' in array[' + _i + '] is empty');
+	            }
+	          }
+	        } else {
+	          throw new ValidationError(errorMsg + ' Recipient attribute must be string or array, got ' + _attr + ': ' + d.recipient[_attr]);
+	        }
 	      }
 	    }
 	    if (!d.timestamp) {
@@ -9273,7 +10157,7 @@
 
 	  Message.create = async function create(signedData, signingKey) {
 	    if (!signedData.author && signingKey) {
-	      signedData.author = [['keyID', Key.getId(signingKey)]];
+	      signedData.author = { keyID: Key.getId(signingKey) };
 	    }
 	    signedData.timestamp = signedData.timestamp || new Date().toISOString();
 	    signedData.context = signedData.context || 'identifi';
@@ -9315,10 +10199,9 @@
 
 
 	  Message.prototype.getAuthor = function getAuthor(index) {
-	    for (var i = 0; i < this.signedData.author.length; i++) {
-	      var a = this.signedData.author[i];
-	      if (Attribute.isUniqueType(a[0])) {
-	        return index.get(a[1], a[0]);
+	    for (var attr in this.signedData.author) {
+	      if (Attribute.isUniqueType(attr)) {
+	        return index.get(this.signedData.author[attr], attr);
 	      }
 	    }
 	  };
@@ -9330,10 +10213,9 @@
 
 
 	  Message.prototype.getRecipient = function getRecipient(index) {
-	    for (var i = 0; i < this.signedData.recipient.length; i++) {
-	      var a = this.signedData.recipient[i];
-	      if (Attribute.isUniqueType(a[0])) {
-	        return index.get(a[1], a[0]);
+	    for (var attr in this.signedData.recipient) {
+	      if (Attribute.isUniqueType(attr)) {
+	        return index.get(this.signedData.recipient[attr], attr);
 	      }
 	    }
 	  };
@@ -9437,6 +10319,7 @@
 	    } else {
 	      data.linkTo = Identity.getLinkTo(data.attrs);
 	    }
+	    console.log('data', data);
 	    return gun.put(data).then(function () {
 	      return new Identity(gun, data.linkTo);
 	    });
@@ -9461,16 +10344,16 @@
 	    var mostVerifiedAttributes = {};
 	    _Object$keys(attrs).forEach(function (k) {
 	      var a = attrs[k];
-	      var keyExists = _Object$keys(mostVerifiedAttributes).indexOf(a.name) > -1;
+	      var keyExists = _Object$keys(mostVerifiedAttributes).indexOf(a.type) > -1;
 	      a.conf = isNaN(a.conf) ? 1 : a.conf;
 	      a.ref = isNaN(a.ref) ? 0 : a.ref;
-	      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.name].verificationScore)) {
-	        mostVerifiedAttributes[a.name] = {
+	      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.type].verificationScore)) {
+	        mostVerifiedAttributes[a.type] = {
 	          attribute: a,
 	          verificationScore: a.conf - a.ref
 	        };
 	        if (a.verified) {
-	          mostVerifiedAttributes[a.name].verified = true;
+	          mostVerifiedAttributes[a.type].verified = true;
 	        }
 	      }
 	    });
@@ -9530,13 +10413,13 @@
 	      var linkTo = await _this.gun.get('linkTo').then();
 	      var link = 'https://identi.fi/#/identities/' + linkTo.name + '/' + linkTo.val;
 	      var mva = Identity.getMostVerifiedAttributes(attrs);
-	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.name && mva.name.attribute.val || mva.nickname && mva.nickname.attribute.val || linkTo.name + ':' + linkTo.val) + '</a><br>';
+	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.type && mva.type.attribute.val || mva.nickname && mva.nickname.attribute.val || linkTo.name + ':' + linkTo.val) + '</a><br>';
 	      linkEl.innerHTML += '<small>Received: <span class="identifi-pos">+' + (data.receivedPositive || 0) + '</span> / <span class="identifi-neg">-' + (data.receivedNegative || 0) + '</span></small><br>';
 	      links.innerHTML = '';
 	      _Object$keys(attrs).forEach(function (k) {
 	        var a = attrs[k];
 	        if (a.link) {
-	          links.innerHTML += a.name + ': <a href="' + a.link + '">' + a.val + '</a> ';
+	          links.innerHTML += a.type + ': <a href="' + a.link + '">' + a.value + '</a> ';
 	        }
 	      });
 	    });
@@ -9693,7 +10576,7 @@
 	    }
 
 	    function setIdenticonImg(data) {
-	      var hash = util$1.getHash(encodeURIComponent(data.name) + ':' + encodeURIComponent(data.val), 'hex');
+	      var hash = util$1.getHash(encodeURIComponent(data.type) + ':' + encodeURIComponent(data.value), 'hex');
 	      var identiconImg = new identicon(hash, { width: width, format: 'svg' });
 	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
 	    }
@@ -9772,6 +10655,20 @@
 	});
 
 	var _Object$values = unwrapExports(values$1);
+
+	var core_getIterator = _core.getIterator = function (it) {
+	  var iterFn = core_getIteratorMethod(it);
+	  if (typeof iterFn != 'function') throw TypeError(it + ' is not iterable!');
+	  return _anObject(iterFn.call(it));
+	};
+
+	var getIterator = core_getIterator;
+
+	var getIterator$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": getIterator, __esModule: true };
+	});
+
+	var _getIterator = unwrapExports(getIterator$1);
 
 	// 20.1.2.4 Number.isNaN(number)
 
@@ -9957,7 +10854,7 @@
 	      indexSync: {
 	        importOnAdd: {
 	          enabled: true,
-	          maxMsgCount: 500,
+	          maxMsgCount: 100,
 	          maxMsgDistance: 2
 	        },
 	        subscribe: {
@@ -10016,7 +10913,7 @@
 	    var user = gun.user();
 	    user.auth(keypair);
 	    var i = new Index(user.get('identifi'), options);
-	    i.viewpoint = new Attribute({ name: 'keyID', val: Key.getId(keypair) });
+	    i.viewpoint = new Attribute('keyID', Key.getId(keypair));
 	    await i.gun.get('viewpoint').put(i.viewpoint);
 	    var uri = i.viewpoint.uri();
 	    var g = i.gun.get('identitiesBySearchKey').get(uri);
@@ -10044,15 +10941,15 @@
 	    }
 
 	    function addIndexKey(a) {
-	      if (!(a && a.val && a.name)) {
+	      if (!(a && a.value && a.type)) {
 	        // TODO: this sometimes returns undefined
 	        return;
 	      }
 	      var distance = d !== undefined ? d : parseInt(a.dist);
 	      distance = _Number$isNaN(distance) ? 99 : distance;
 	      distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
-	      var v = a.val || a[1];
-	      var n = a.name || a[0];
+	      var v = a.value || a[1];
+	      var n = a.type || a[0];
 	      var value = encodeURIComponent(v);
 	      var lowerCaseValue = encodeURIComponent(v.toLowerCase());
 	      var name = encodeURIComponent(n);
@@ -10121,7 +11018,7 @@
 	    if (typeof type === 'undefined') {
 	      type = Attribute.guessTypeOf(value);
 	    }
-	    var a = new Attribute([type, value]);
+	    var a = new Attribute(type, value);
 	    return new Identity(this.gun.get('identitiesBySearchKey').get(a.uri()), a);
 	  };
 
@@ -10175,13 +11072,13 @@
 	  };
 
 	  Index.prototype._getAttributeTrustDistance = async function _getAttributeTrustDistance(a) {
-	    if (!Attribute.isUniqueType(a.name)) {
+	    if (!Attribute.isUniqueType(a.type)) {
 	      return;
 	    }
 	    if (this.viewpoint.equals(a)) {
 	      return 0;
 	    }
-	    var id = this.get(a.val, a.name);
+	    var id = this.get(a.value, a.type);
 	    var d = await id.gun.get('trustDistance').then();
 	    if (isNaN(d)) {
 	      d = Infinity;
@@ -10197,16 +11094,29 @@
 
 	  Index.prototype.getMsgTrustDistance = async function getMsgTrustDistance(msg) {
 	    var shortestDistance = Infinity;
-	    var signerAttr = new Attribute(['keyID', msg.getSignerKeyID()]);
+	    var signerAttr = new Attribute('keyID', msg.getSignerKeyID());
 	    if (!signerAttr.equals(this.viewpoint)) {
-	      var signer = this.get(signerAttr.val, signerAttr.name);
+	      var signer = this.get(signerAttr.value, signerAttr.type);
 	      var d = await signer.gun.get('trustDistance').then();
 	      if (isNaN(d)) {
 	        return;
 	      }
 	    }
-	    for (var i = 0; i < msg.signedData.author.length; i++) {
-	      var _d = await this._getAttributeTrustDistance(new Attribute(msg.signedData.author[i]));
+	    for (var _iterator = msg.getAuthorIterable(), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _getIterator(_iterator);;) {
+	      var _ref;
+
+	      if (_isArray) {
+	        if (_i >= _iterator.length) break;
+	        _ref = _iterator[_i++];
+	      } else {
+	        _i = _iterator.next();
+	        if (_i.done) break;
+	        _ref = _i.value;
+	      }
+
+	      var a = _ref;
+
+	      var _d = await this._getAttributeTrustDistance(a);
 	      if (_d < shortestDistance) {
 	        shortestDistance = _d;
 	      }
@@ -10223,22 +11133,41 @@
 	      });
 	    });
 	    if (msg.signedData.type === 'verification') {
-	      msg.signedData.recipient.forEach(function (a1) {
+	      var _loop = function _loop() {
+	        if (_isArray2) {
+	          if (_i2 >= _iterator2.length) return 'break';
+	          _ref2 = _iterator2[_i2++];
+	        } else {
+	          _i2 = _iterator2.next();
+	          if (_i2.done) return 'break';
+	          _ref2 = _i2.value;
+	        }
+
+	        var a = _ref2;
+
 	        var hasAttr = false;
 	        _Object$keys(attrs).forEach(function (k) {
 	          // TODO: if author is self, mark as self verified
-	          if (Attribute.equals(a1, attrs[k])) {
+	          if (a.equals(attrs[k])) {
 	            attrs[k].conf = (attrs[k].conf || 0) + 1;
 	            hasAttr = true;
 	          }
 	        });
 	        if (!hasAttr) {
-	          attrs[encodeURIComponent(a1[1]) + ':' + encodeURIComponent(a1[0])] = { name: a1[0], val: a1[1], conf: 1, ref: 0 };
+	          attrs[a.uri()] = { type: a.type, value: a.value, conf: 1, ref: 0 };
 	        }
 	        if (msg.goodVerification) {
-	          attrs[encodeURIComponent(a1[1]) + ':' + encodeURIComponent(a1[0])].verified = true;
+	          attrs[a.uri()].verified = true;
 	        }
-	      });
+	      };
+
+	      for (var _iterator2 = msg.getRecipientIterable(), _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _getIterator(_iterator2);;) {
+	        var _ref2;
+
+	        var _ret = _loop();
+
+	        if (_ret === 'break') break;
+	      }
 	      recipient.get('mostVerifiedAttributes').put(Identity.getMostVerifiedAttributes(attrs)); // TODO: why this needs to be done twice to register?
 	      recipient.get('mostVerifiedAttributes').put(Identity.getMostVerifiedAttributes(attrs));
 	      recipient.get('attrs').put(attrs);
@@ -10340,7 +11269,7 @@
 	    var maxMsgsToCrawl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.options.indexSync.importOnAdd.maxMsgCount;
 	    var maxMsgDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.options.indexSync.importOnAdd.maxMsgDistance;
 
-	    if (gunUri === this.viewpoint.val) {
+	    if (gunUri === this.viewpoint.value) {
 	      return;
 	    }
 	    console.log('addTrustedIndex', gunUri);
@@ -10369,13 +11298,25 @@
 	    var recipientIdentities = {};
 	    var authorIdentities = {};
 	    var selfAuthored = false;
-	    for (var i = 0; i < msg.signedData.author.length; i++) {
-	      var a = msg.signedData.author[i];
-	      var id = this.get(a[1], a[0]);
-	      var td = await util$1.timeoutPromise(id.gun.get('trustDistance').then(), GUN_TIMEOUT);
+	    for (var _iterator3 = msg.getAuthorIterable(), _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _getIterator(_iterator3);;) {
+	      var _ref3;
+
+	      if (_isArray3) {
+	        if (_i3 >= _iterator3.length) break;
+	        _ref3 = _iterator3[_i3++];
+	      } else {
+	        _i3 = _iterator3.next();
+	        if (_i3.done) break;
+	        _ref3 = _i3.value;
+	      }
+
+	      var _a2 = _ref3;
+
+	      var _id = this.get(_a2.value, _a2.type);
+	      var td = await util$1.timeoutPromise(_id.gun.get('trustDistance').then(), GUN_TIMEOUT);
 	      if (!isNaN(td)) {
-	        authorIdentities[id.gun['_'].link] = id;
-	        var scores = await id.gun.get('scores').then();
+	        authorIdentities[_id.gun['_'].link] = _id;
+	        var scores = await _id.gun.get('scores').then();
 	        if (scores && scores.verifier && msg.signedData.type === 'verification') {
 	          msg.goodVerification = true;
 	        }
@@ -10387,33 +11328,57 @@
 	    if (!_Object$keys(authorIdentities).length) {
 	      return; // unknown author, do nothing
 	    }
-	    for (var _i = 0; _i < msg.signedData.recipient.length; _i++) {
-	      var _a = msg.signedData.recipient[_i];
-	      var _id = this.get(_a[1], _a[0]);
-	      var _td = await util$1.timeoutPromise(_id.gun.get('trustDistance').then(), GUN_TIMEOUT);
+	    for (var _iterator4 = msg.getRecipientIterable(), _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _getIterator(_iterator4);;) {
+	      var _ref4;
+
+	      if (_isArray4) {
+	        if (_i4 >= _iterator4.length) break;
+	        _ref4 = _iterator4[_i4++];
+	      } else {
+	        _i4 = _iterator4.next();
+	        if (_i4.done) break;
+	        _ref4 = _i4.value;
+	      }
+
+	      var _a3 = _ref4;
+
+	      var _id2 = this.get(_a3.value, _a3.type);
+	      var _td = await util$1.timeoutPromise(_id2.gun.get('trustDistance').then(), GUN_TIMEOUT);
 
 	      if (!isNaN(_td)) {
-	        recipientIdentities[_id.gun['_'].link] = _id;
+	        recipientIdentities[_id2.gun['_'].link] = _id2;
 	      }
-	      if (selfAuthored && _a[0] === 'keyID' && _a[1] !== this.viewpoint.val && msg.isPositive()) {
-	        // TODO: not if already added - causes infinite loop
-	        this.addTrustedIndex(_a[1]);
+	      if (selfAuthored && _a3.type === 'keyID' && _a3.value !== this.viewpoint.value && msg.isPositive()) {
+	        // TODO: not if already added - causes infinite loop?
+	        this.addTrustedIndex(_a3.value);
 	      }
 	    }
 	    if (!_Object$keys(recipientIdentities).length) {
 	      // recipient is previously unknown
 	      var attrs = {};
-	      msg.signedData.recipient.forEach(function (a) {
-	        var attr = new Attribute([a[0], a[1]]);
-	        attrs[attr.uri()] = attr;
-	      });
+	      for (var _iterator5 = msg.getRecipientIterable(), _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _getIterator(_iterator5);;) {
+	        var _ref5;
+
+	        if (_isArray5) {
+	          if (_i5 >= _iterator5.length) break;
+	          _ref5 = _iterator5[_i5++];
+	        } else {
+	          _i5 = _iterator5.next();
+	          if (_i5.done) break;
+	          _ref5 = _i5.value;
+	        }
+
+	        var _a = _ref5;
+
+	        attrs[_a.uri()] = _a;
+	      }
 	      var linkTo = Identity.getLinkTo(attrs);
 	      var random = Math.floor(Math.random() * _Number$MAX_SAFE_INTEGER); // TODO: bubblegum fix
-	      var _id2 = await Identity.create(this.gun.get('identities').get(random).put({}), { attrs: attrs, linkTo: linkTo, trustDistance: 99 }, true);
+	      var id = await Identity.create(this.gun.get('identities').get(random).put({}), { attrs: attrs, linkTo: linkTo, trustDistance: 99 }, true);
 	      // {a:1} because inserting {} causes a "no signature on data" error from gun
 
 	      // TODO: take msg author trust into account
-	      recipientIdentities[_id2.gun['_'].link] = _id2;
+	      recipientIdentities[id.gun['_'].link] = id;
 	    }
 
 	    return this._updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities);
@@ -10440,10 +11405,22 @@
 	    if (Array.isArray(msgs)) {
 	      console.log('sorting ' + msgs.length + ' messages onto a search tree...');
 	      for (var i = 0; i < msgs.length; i++) {
-	        for (var j = 0; j < msgs[i].signedData.author.length; j++) {
-	          var id = msgs[i].signedData.author[j];
-	          if (Attribute.isUniqueType(id[0])) {
-	            var key = encodeURIComponent(id[1]) + ':' + encodeURIComponent(id[0]) + ':' + msgs[i].getHash();
+	        for (var _iterator6 = msgs[i].getAuthorIterable(), _isArray6 = Array.isArray(_iterator6), _i6 = 0, _iterator6 = _isArray6 ? _iterator6 : _getIterator(_iterator6);;) {
+	          var _ref6;
+
+	          if (_isArray6) {
+	            if (_i6 >= _iterator6.length) break;
+	            _ref6 = _iterator6[_i6++];
+	          } else {
+	            _i6 = _iterator6.next();
+	            if (_i6.done) break;
+	            _ref6 = _i6.value;
+	          }
+
+	          var _a4 = _ref6;
+
+	          if (_a4.isUniqueType()) {
+	            var key = _a4.uri() + ':' + msgs[i].getHash();
 	            msgsByAuthor[key] = msgs[i];
 	          }
 	        }
@@ -10460,7 +11437,7 @@
 	        msgCountAfterwards = void 0;
 	    var index = this.gun.get('identitiesBySearchKey');
 
-	    var _loop = async function _loop() {
+	    var _loop2 = async function _loop2() {
 	      var knownIdentities = [];
 	      var stop = false;
 	      searchText(index, function (result) {
@@ -10507,7 +11484,7 @@
 	    };
 
 	    do {
-	      await _loop();
+	      await _loop2();
 	    } while (msgCountAfterwards !== initialMsgCount);
 	    return true;
 	  };

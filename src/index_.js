@@ -70,7 +70,7 @@ class Index {
       indexSync: {
         importOnAdd: {
           enabled: true,
-          maxMsgCount: 500,
+          maxMsgCount: 100,
           maxMsgDistance: 2
         },
         subscribe: {
@@ -126,7 +126,7 @@ class Index {
     const user = gun.user();
     user.auth(keypair);
     const i = new Index(user.get(`identifi`), options);
-    i.viewpoint = new Attribute({name: `keyID`, val: Key.getId(keypair)});
+    i.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
     await i.gun.get(`viewpoint`).put(i.viewpoint);
     const uri = i.viewpoint.uri();
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
@@ -154,14 +154,14 @@ class Index {
     }
 
     function addIndexKey(a) {
-      if (!(a && a.val && a.name)) { // TODO: this sometimes returns undefined
+      if (!(a && a.value && a.type)) { // TODO: this sometimes returns undefined
         return;
       }
       let distance = d !== undefined ? d : parseInt(a.dist);
       distance = Number.isNaN(distance) ? 99 : distance;
       distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
-      const v = a.val || a[1];
-      const n = a.name || a[0];
+      const v = a.value || a[1];
+      const n = a.type || a[0];
       const value = encodeURIComponent(v);
       const lowerCaseValue = encodeURIComponent(v.toLowerCase());
       const name = encodeURIComponent(n);
@@ -225,7 +225,7 @@ class Index {
     if (typeof type === `undefined`) {
       type = Attribute.guessTypeOf(value);
     }
-    const a = new Attribute([type, value]);
+    const a = new Attribute(type, value);
     return new Identity(this.gun.get(`identitiesBySearchKey`).get(a.uri()), a);
   }
 
@@ -271,13 +271,13 @@ class Index {
   }
 
   async _getAttributeTrustDistance(a) {
-    if (!Attribute.isUniqueType(a.name)) {
+    if (!Attribute.isUniqueType(a.type)) {
       return;
     }
     if (this.viewpoint.equals(a)) {
       return 0;
     }
-    const id = this.get(a.val, a.name);
+    const id = this.get(a.value, a.type);
     let d = await id.gun.get(`trustDistance`).then();
     if (isNaN(d)) {
       d = Infinity;
@@ -291,16 +291,16 @@ class Index {
   */
   async getMsgTrustDistance(msg) {
     let shortestDistance = Infinity;
-    const signerAttr = new Attribute([`keyID`, msg.getSignerKeyID()]);
+    const signerAttr = new Attribute(`keyID`, msg.getSignerKeyID());
     if (!signerAttr.equals(this.viewpoint)) {
-      const signer = this.get(signerAttr.val, signerAttr.name);
+      const signer = this.get(signerAttr.value, signerAttr.type);
       const d = await signer.gun.get(`trustDistance`).then();
       if (isNaN(d)) {
         return;
       }
     }
-    for (let i = 0;i < msg.signedData.author.length;i ++) {
-      const d = await this._getAttributeTrustDistance(new Attribute(msg.signedData.author[i]));
+    for (const a of msg.getAuthorIterable()) {
+      const d = await this._getAttributeTrustDistance(a);
       if (d < shortestDistance) {
         shortestDistance = d;
       }
@@ -313,22 +313,22 @@ class Index {
     const identityIndexKeysBefore = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     const attrs = await new Promise(resolve => { recipient.get(`attrs`).load(r => resolve(r)); });
     if (msg.signedData.type === `verification`) {
-      msg.signedData.recipient.forEach(a1 => {
+      for (const a of msg.getRecipientIterable()) {
         let hasAttr = false;
         Object.keys(attrs).forEach(k => {
           // TODO: if author is self, mark as self verified
-          if (Attribute.equals(a1, attrs[k])) {
+          if (a.equals(attrs[k])) {
             attrs[k].conf = (attrs[k].conf || 0) + 1;
             hasAttr = true;
           }
         });
         if (!hasAttr) {
-          attrs[`${encodeURIComponent(a1[1])}:${encodeURIComponent(a1[0])}`] = {name: a1[0], val: a1[1], conf: 1, ref: 0};
+          attrs[a.uri()] = {type: a.type, value: a.value, conf: 1, ref: 0};
         }
         if (msg.goodVerification) {
-          attrs[`${encodeURIComponent(a1[1])}:${encodeURIComponent(a1[0])}`].verified = true;
+          attrs[a.uri()].verified = true;
         }
-      });
+      }
       recipient.get(`mostVerifiedAttributes`).put(Identity.getMostVerifiedAttributes(attrs)); // TODO: why this needs to be done twice to register?
       recipient.get(`mostVerifiedAttributes`).put(Identity.getMostVerifiedAttributes(attrs));
       recipient.get(`attrs`).put(attrs);
@@ -428,7 +428,7 @@ class Index {
   async addTrustedIndex(gunUri,
     maxMsgsToCrawl = this.options.indexSync.importOnAdd.maxMsgCount,
     maxMsgDistance = this.options.indexSync.importOnAdd.maxMsgDistance) {
-    if (gunUri === this.viewpoint.val) {
+    if (gunUri === this.viewpoint.value) {
       return;
     }
     console.log(`addTrustedIndex`, gunUri);
@@ -457,9 +457,8 @@ class Index {
     const recipientIdentities = {};
     const authorIdentities = {};
     let selfAuthored = false;
-    for (let i = 0;i < msg.signedData.author.length;i ++) {
-      const a = msg.signedData.author[i];
-      const id = this.get(a[1], a[0]);
+    for (const a of msg.getAuthorIterable()) {
+      const id = this.get(a.value, a.type);
       const td = await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT);
       if (!isNaN(td)) {
         authorIdentities[id.gun[`_`].link] = id;
@@ -475,24 +474,22 @@ class Index {
     if (!Object.keys(authorIdentities).length) {
       return; // unknown author, do nothing
     }
-    for (let i = 0;i < msg.signedData.recipient.length;i ++) {
-      const a = msg.signedData.recipient[i];
-      const id = this.get(a[1], a[0]);
+    for (const a of msg.getRecipientIterable()) {
+      const id = this.get(a.value, a.type);
       const td = await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT);
 
       if (!isNaN(td)) {
         recipientIdentities[id.gun[`_`].link] = id;
       }
-      if (selfAuthored && a[0] === `keyID` && a[1] !== this.viewpoint.val && msg.isPositive()) { // TODO: not if already added - causes infinite loop
-        this.addTrustedIndex(a[1]);
+      if (selfAuthored && a.type === `keyID` && a.value !== this.viewpoint.value && msg.isPositive()) { // TODO: not if already added - causes infinite loop?
+        this.addTrustedIndex(a.value);
       }
     }
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
       const attrs = {};
-      msg.signedData.recipient.forEach(a => {
-        const attr = new Attribute([a[0], a[1]]);
-        attrs[attr.uri()] = attr;
-      });
+      for (const a of msg.getRecipientIterable()) {
+        attrs[a.uri()] = a;
+      }
       const linkTo = Identity.getLinkTo(attrs);
       const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
       const id = await Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: 99}, true);
@@ -522,10 +519,9 @@ class Index {
     if (Array.isArray(msgs)) {
       console.log(`sorting ${msgs.length} messages onto a search tree...`);
       for (let i = 0;i < msgs.length;i ++) {
-        for (let j = 0;j < msgs[i].signedData.author.length;j ++) {
-          const id = msgs[i].signedData.author[j];
-          if (Attribute.isUniqueType(id[0])) {
-            const key = `${encodeURIComponent(id[1])}:${encodeURIComponent(id[0])}:${msgs[i].getHash()}`;
+        for (const a of msgs[i].getAuthorIterable()) {
+          if (a.isUniqueType()) {
+            const key = `${a.uri()}:${msgs[i].getHash()}`;
             msgsByAuthor[key] = msgs[i];
           }
         }

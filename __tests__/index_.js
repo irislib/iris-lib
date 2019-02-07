@@ -57,7 +57,7 @@ describe('local index', async () => {
   describe('create and fetch an identity using identifi messages', async () => {
     test('add trust rating to bob', async () => {
       debugger;
-      const msg = await identifi.Message.createRating({recipient:[['email', 'bob@example.com']], rating:10}, key);
+      const msg = await identifi.Message.createRating({recipient:{email:'bob@example.com'}, rating:10}, key);
       const r = await i.addMessage(msg);
       expect(r).toBe(true);
     });
@@ -92,13 +92,13 @@ describe('local index', async () => {
     });
   });
   test('verify first, then rate', async () => {
-    let msg = await identifi.Message.createVerification({recipient:[['name', 'Fabio'], ['email', 'fabio@example.com']]}, key);
+    let msg = await identifi.Message.createVerification({recipient:{name:'Fabio', email:'fabio@example.com'}}, key);
     let r = await i.addMessage(msg);
     expect(r).toBe(true);
     p = i.get('fabio@example.com');
     let data = await p.gun.once().then();
     expect(data.trustDistance).toBe(99);
-    msg = await identifi.Message.createRating({recipient:[['email', 'fabio@example.com']], rating:10}, key);
+    msg = await identifi.Message.createRating({recipient:{email:'fabio@example.com'}, rating:10}, key);
     r = await i.addMessage(msg);
     p = i.get('fabio@example.com');
     data = await p.gun.once().then();
@@ -106,9 +106,9 @@ describe('local index', async () => {
   });
   describe('add more identities', async () => {
     test('bob -> carl', async () => {
-      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'carl@example.com']], rating:10}, key);
+      let msg = await identifi.Message.createRating({author: {email:'bob@example.com'}, recipient: {email:'carl@example.com'}, rating:10}, key);
       await i.addMessage(msg);
-      msg = await identifi.Message.createRating({author: [['email', 'carl@example.com']], recipient: [['email', 'david@example.com']], rating:10}, key);
+      msg = await identifi.Message.createRating({author: {email:'carl@example.com'}, recipient: {email:'david@example.com'}, rating:10}, key);
       await i.addMessage(msg);
       p = i.get('david@example.com');
       const data = await p.gun.once().then();
@@ -116,13 +116,13 @@ describe('local index', async () => {
     });
     test('add a collection of messages using addMessages', async () => {
       const msgs = [];
-      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'bob1@example.com']], rating:10}, key);
+      let msg = await identifi.Message.createRating({author: {email:'bob@example.com'}, recipient: {email:'bob1@example.com'}, rating:10}, key);
       msgs.push(msg);
       for (let i = 0;i < 4;i++) {
-        msg = await identifi.Message.createRating({author: [['email', `bob${i}@example.com`]], recipient: [['email', `bob${i+1}@example.com`]], rating:10}, key);
+        msg = await identifi.Message.createRating({author: {email:`bob${i}@example.com`}, recipient: {email:`bob${i+1}@example.com`}, rating:10}, key);
         msgs.push(msg);
       }
-      msg = await identifi.Message.createRating({author: [['email', 'bert@example.com']], recipient: [['email', 'chris@example.com']], rating:10}, key);
+      msg = await identifi.Message.createRating({author: {email:'bert@example.com'}, recipient: {email:'chris@example.com'}, rating:10}, key);
       msgs.push(msg);
       await i.addMessages(shuffle(msgs));
       p = i.get('bob4@example.com');
@@ -138,7 +138,7 @@ describe('local index', async () => {
     let u;
     test('should not create new identity', async () => {
       u = await identifi.Key.generate();
-      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'angus@example.com']], rating:10}, u);
+      let msg = await identifi.Message.createRating({author: {email:'bob@example.com'}, recipient: {email:'angus@example.com'}, rating:10}, u);
       await i.addMessage(msg);
       p = await i.get('angus@example.com').gun.then();
       expect(p).toBeUndefined();
@@ -146,7 +146,7 @@ describe('local index', async () => {
     test('should not affect scores', async () => {
       p = i.get('david@example.com');
       const pos = await p.gun.get(`receivedPositive`).once().then();
-      let msg = await identifi.Message.createRating({author: [['email', 'bob@example.com']], recipient: [['email', 'david@example.com']], rating:10}, u);
+      let msg = await identifi.Message.createRating({author: {email:'bob@example.com'}, recipient: {email:'david@example.com'}, rating:10}, u);
       await i.addMessage(msg);
       p = i.get('david@example.com');
       const pos2 = await p.gun.get(`receivedPositive`).once().then();
@@ -165,11 +165,11 @@ describe('local index', async () => {
     test('add name to self identity', async () => {
       let viewpoint = await i.getViewpoint();
       expect(viewpoint).toBeInstanceOf(identifi.Identity);
-      const recipient = [['name', 'Alice']];
+      const recipient = {name:'Alice'};
       await new Promise(resolve => {
         viewpoint.gun.load(r => {
           Object.keys(r.attrs).forEach(key => {
-            recipient.push([r.attrs[key].name, r.attrs[key].val]);
+            recipient[r.attrs[key].type] = r.attrs[key].value;
           });
           resolve();
         });
@@ -183,7 +183,7 @@ describe('local index', async () => {
         });
       });
       expect(Object.keys(data.attrs).length).toBe(2);
-      expect(data.mostVerifiedAttributes.name.attribute.val).toBe('Alice');
+      expect(data.mostVerifiedAttributes.name.attribute.value).toBe('Alice');
     });
     test('identity count should remain the same', async () => {
       const results = [];
@@ -212,7 +212,7 @@ describe('local index', async () => {
     test('create verifier', async () => {
       verifierKey = await identifi.Key.generate();
       verifierKeyID = identifi.Key.getId(verifierKey);
-      let msg = await identifi.Message.createRating({recipient: [['keyID', verifierKeyID]], rating:10, context: 'verifier'}, key);
+      let msg = await identifi.Message.createRating({recipient: {keyID:verifierKeyID}, rating:10, context: 'verifier'}, key);
       await i.addMessage(msg);
       const verifier = i.get(verifierKeyID, 'keyID');
       const scores = await new Promise(resolve => {
@@ -223,9 +223,9 @@ describe('local index', async () => {
       expect(scores.verifier.score).toBe(10);
     });
     test('verifier status should not disappear when the identity is changed', async () => {
-      msg = await identifi.Message.createRating({recipient: [['keyID', verifierKeyID]], rating:10, context: 'identifi'}, key);
+      msg = await identifi.Message.createRating({recipient: {keyID:verifierKeyID}, rating:10, context: 'identifi'}, key);
       await i.addMessage(msg);
-      let msg = await identifi.Message.createVerification({recipient: [['keyID', verifierKeyID], ['name','VerifyBot'], ['email','VerifyBot@example.com']]}, key);
+      let msg = await identifi.Message.createVerification({recipient: {keyID:verifierKeyID, name:'VerifyBot', email:'VerifyBot@example.com'}}, key);
       await i.addMessage(msg);
       const verifier = i.get(verifierKeyID, 'keyID');
       const scores = await new Promise(resolve => {
@@ -236,7 +236,7 @@ describe('local index', async () => {
       expect(scores.verifier.score).toBe(10);
     });
     test('create trusted verification', async () => {
-      let msg = await identifi.Message.createVerification({recipient: [['email', 'david@example.com'], ['name', 'David Attenborough']]}, verifierKey);
+      let msg = await identifi.Message.createVerification({recipient: {email:'david@example.com', name: 'David Attenborough'}}, verifierKey);
       await i.addMessage(msg);
       p = i.get('david@example.com');
       const attrs = await new Promise(resolve => {
@@ -256,7 +256,7 @@ describe('local index', async () => {
       const keyID = identifi.Key.getId(k2);
       console.log('keyID', keyID);
       i2 = await identifi.Index.create(gun, k2);
-      let m = await identifi.Message.createRating({recipient:[['keyID', 'identifi']], rating: 10}, k2);
+      let m = await identifi.Message.createRating({recipient:{keyID:'identifi'}, rating: 10}, k2);
       await i2.addMessage(m);
     });
     /*

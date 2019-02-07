@@ -26,37 +26,32 @@ class Attribute {
   /**
   * @param {Object|Array} data {name, val} or [name, val]
   */
-  constructor(data) {
-    if (data.hasOwnProperty(`val`)) {
-      this.val = data.val;
-      if (data.hasOwnProperty(`name`)) {
-        this.name = data.name;
-      } else {
-        const n = Attribute.guessTypeOf(this.val);
-        if (n) {
-          this.name = n;
-        } else {
-          throw new Error(`Type of attribute was omitted and could not be guessed`);
-        }
-      }
+  constructor(a, b) {
+    if (typeof a === `object` && typeof a.type === `string` && typeof a.value === `string`) {
+      b = a.value;
+      a = a.type;
     }
-    else if (Array.isArray(data)) {
-      if (data.length !== 2) {
-        throw new Error(`Invalid attribute data (array length not 2): ${JSON.stringify(data)}`);
-      }
-      if (!(data[0] && data[1])) {
-        throw new Error(`Invalid attribute data[0] or data[1]: ${JSON.stringify(data)}`);
-      }
-      this.name = data[0];
-      this.val = data[1];
+    if (typeof a !== `string`) { throw new Error(`First param must be a string, got ${typeof a}: ${JSON.stringify(a)}`); }
+    if (!a.length) { throw new Error(`First param string is empty`); }
+    if (b) {
+      if (typeof b !== `string`) { throw new Error(`Second parameter must be a string, got ${typeof b}: ${JSON.stringify(b)}`); }
+      if (!b.length) { throw new Error(`Second param string is empty`); }
+      this.type = a;
+      this.value = b;
     } else {
-      throw new Error(`Invalid attribute data (should be array or {name, val} object): ${JSON.stringify(data)}`);
+      this.value = a;
+      const t = Attribute.guessTypeOf(this.value);
+      if (t) {
+        this.type = t;
+      } else {
+        throw new Error(`Type of attribute was omitted and could not be guessed`);
+      }
     }
   }
 
   static getUuid() {
     const b = a => a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + - 1e3 + - 4e3 + - 8e3 + - 1e11).replace(/[018]/g, b);
-    return new Attribute([`uuid`, b()]);
+    return new Attribute(`uuid`, b());
   }
 
   /**
@@ -72,6 +67,13 @@ class Attribute {
   */
   static isUniqueType(type) {
     return Object.keys(UNIQUE_ID_VALIDATORS).indexOf(type) > - 1;
+  }
+
+  /**
+  * @returns {boolean} true if the attribute type is unique
+  */
+  isUniqueType() {
+    return Attribute.isUniqueType(this.type);
   }
 
   /**
@@ -91,19 +93,12 @@ class Attribute {
   * @param {Attribute} b
   * @returns {boolean} true if params are equal
   */
-  static equals(a, b) {
+  static equals(a: Attribute, b: Attribute) {
     try {
-      return new Attribute(a).equals(new Attribute(b));
+      return a.equals(b);
     } catch (e) {
       return false;
     }
-  }
-
-  /**
-  * @returns {Array} attribute represented as a [name, val] array
-  */
-  toArray() {
-    return [this.name, this.val];
   }
 
   /**
@@ -111,11 +106,11 @@ class Attribute {
   * @returns {boolean} true if attribute matches param
   */
   equals(a: Attribute) {
-    return a && this.name === a.name && this.val === a.val;
+    return a && this.type === a.type && this.value === a.value;
   }
 
   uri() {
-    return `${encodeURIComponent(this.val)}:${encodeURIComponent(this.name)}`;
+    return `${encodeURIComponent(this.value)}:${encodeURIComponent(this.type)}`;
   }
 
   /**
@@ -134,14 +129,14 @@ class Attribute {
     img.alt = ``;
     img.width = width;
     img.height = width;
-    const hash = util.getHash(`${encodeURIComponent(this.name)}:${encodeURIComponent(this.val)}`, `hex`);
+    const hash = util.getHash(`${encodeURIComponent(this.type)}:${encodeURIComponent(this.value)}`, `hex`);
     const identicon = new Identicon(hash, {width, format: `svg`});
     img.src = `data:image/svg+xml;base64,${identicon.toString()}`;
 
     const name = document.createElement(`span`);
     name.className = `identifi-distance`;
     name.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
-    name.textContent = this.name.slice(0, 5);
+    name.textContent = this.type.slice(0, 5);
     div.appendChild(name);
 
     div.appendChild(img);

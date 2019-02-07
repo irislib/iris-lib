@@ -41,6 +41,40 @@ class Message {
     this._validate();
   }
 
+  static _getIterable(authorOrRecipient) {
+    return {
+      *[Symbol.iterator]() {
+        const keys = Object.keys(authorOrRecipient);
+        for (let i = 0;i < keys.length;i ++) {
+          const type = keys[i];
+          const value = authorOrRecipient[keys[i]];
+          if (typeof value === `string`) {
+            yield new Attribute(type, value);
+          } else { // array
+            for (let j = 0;j < value.length;j ++) {
+              const elementValue = value[j];
+              yield new Attribute(type, elementValue);
+            }
+          }
+        }
+      }
+    };
+  }
+
+  /**
+  * @returns {object} Javascript iterator over author attributes
+  */
+  getAuthorIterable() {
+    return Message._getIterable(this.signedData.author);
+  }
+
+  /**
+  * @returns {object} Javascript iterator over recipient attributes
+  */
+  getRecipientIterable() {
+    return Message._getIterable(this.signedData.recipient);
+  }
+
   /**
   * @returns {string} Message signer keyID, i.e. base64 hash of public key
   */
@@ -56,24 +90,49 @@ class Message {
 
     if (!d.type) {throw new ValidationError(`${errorMsg} Missing type definition`);}
     if (!d.author) {throw new ValidationError(`${errorMsg} Missing author`);}
-    if (!d.author.length) {throw new ValidationError(`${errorMsg} Author empty`);}
-    let i;
-    let authorKeyID;
+    if (typeof d.author !== `object`) {throw new ValidationError(`${errorMsg} Author must be object`);}
+    if (Array.isArray(d.author)) {throw new ValidationError(`${errorMsg} Author must not be an array`);}
+    if (Object.keys(d.author).length === 0) {throw new ValidationError(`${errorMsg} Author empty`);}
     if (this.pubKey) {
       this.signerKeyHash = this.getSignerKeyID();
     }
-    for (i = 0;i < d.author.length;i ++) {
-      if (d.author[i].length !== 2) {throw new ValidationError(`${errorMsg} Invalid author: ${d.author[i].toString()}`);}
-      if (d.author[i][0] === `keyID`) {
-        if (authorKeyID) {throw new ValidationError(`${errorMsg} Author may have only one keyID`);}
-        else {authorKeyID = d.author[i][1];}
-        if (this.signerKeyHash && authorKeyID !== this.signerKeyHash) {throw new ValidationError(`${errorMsg} If message has a keyID author, it must be signed by the same key`);}
+    for (const attr in d.author) {
+      const t = typeof d.author[attr];
+      if (t !== `string`) {
+        if (Array.isArray(d.author[attr])) {
+          for (let i = 0;i < d.author[attr].length;i ++) {
+            if (typeof d.author[attr][i] !== `string`) {throw new ValidationError(`${errorMsg} Author attribute must be string, got ${attr}: [${d.author[attr][i]}]`);}
+            if (d.author[attr][i].length === 0) {
+              throw new ValidationError(`${errorMsg} author ${attr} in array[${i}] is empty`);
+            }
+          }
+        } else {
+          throw new ValidationError(`${errorMsg} Author attribute must be string or array, got ${attr}: ${d.author[attr]}`);
+        }
+      }
+      if (attr === `keyID`) {
+        if (t !== `string`) {throw new ValidationError(`${errorMsg} Author keyID must be string, got ${t}`);}
+        if (this.signerKeyHash && d.author[attr] !== this.signerKeyHash) {throw new ValidationError(`${errorMsg} If message has a keyID author, it must be signed by the same key`);}
       }
     }
     if (!d.recipient) {throw new ValidationError(`${errorMsg} Missing recipient`);}
-    if (!d.recipient.length) {throw new ValidationError(`${errorMsg} Author empty`);}
-    for (i = 0;i < d.recipient.length;i ++) {
-      if (d.recipient[i].length !== 2) {throw new ValidationError(`${errorMsg} Invalid recipient: ${d.recipient[i].toString()}`);}
+    if (typeof d.recipient !== `object`) {throw new ValidationError(`${errorMsg} Recipient must be object`);}
+    if (Array.isArray(d.recipient)) {throw new ValidationError(`${errorMsg} Recipient must not be an array`);}
+    if (Object.keys(d.recipient).length === 0) {throw new ValidationError(`${errorMsg} Recipient empty`);}
+    for (const attr in d.recipient) {
+      const t = typeof d.recipient[attr];
+      if (t !== `string`) {
+        if (Array.isArray(d.recipient[attr])) {
+          for (let i = 0;i < d.recipient[attr].length;i ++) {
+            if (typeof d.recipient[attr][i] !== `string`) {throw new ValidationError(`${errorMsg} Recipient attribute must be string, got ${attr}: [${d.recipient[attr][i]}]`);}
+            if (d.recipient[attr][i].length === 0) {
+              throw new ValidationError(`${errorMsg} recipient ${attr} in array[${i}] is empty`);
+            }
+          }
+        } else {
+          throw new ValidationError(`${errorMsg} Recipient attribute must be string or array, got ${attr}: ${d.recipient[attr]}`);
+        }
+      }
     }
     if (!d.timestamp) {throw new ValidationError(`${errorMsg} Missing timestamp`);}
 
@@ -134,7 +193,7 @@ class Message {
   */
   static async create(signedData: Object, signingKey: Object) {
     if (!signedData.author && signingKey) {
-      signedData.author = [[`keyID`, Key.getId(signingKey)]];
+      signedData.author = {keyID: Key.getId(signingKey)};
     }
     signedData.timestamp = signedData.timestamp || (new Date()).toISOString();
     signedData.context = signedData.context || `identifi`;
@@ -170,10 +229,9 @@ class Message {
   * @returns {Identity} message author identity
   */
   getAuthor(index) {
-    for (let i = 0;i < this.signedData.author.length;i ++) {
-      const a = this.signedData.author[i];
-      if (Attribute.isUniqueType(a[0])) {
-        return index.get(a[1], a[0]);
+    for (const attr in this.signedData.author) {
+      if (Attribute.isUniqueType(attr)) {
+        return index.get(this.signedData.author[attr], attr);
       }
     }
   }
@@ -183,10 +241,9 @@ class Message {
   * @returns {Identity} message recipient identity
   */
   getRecipient(index) {
-    for (let i = 0;i < this.signedData.recipient.length;i ++) {
-      const a = this.signedData.recipient[i];
-      if (Attribute.isUniqueType(a[0])) {
-        return index.get(a[1], a[0]);
+    for (const attr in this.signedData.recipient) {
+      if (Attribute.isUniqueType(attr)) {
+        return index.get(this.signedData.recipient[attr], attr);
       }
     }
   }

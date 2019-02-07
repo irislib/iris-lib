@@ -26,8 +26,8 @@ test('Get default key and sign a message with it', async () => {
   const j = await identifi.Key.getDefault('.');
   expect(i).toEqual(j);
   const msg = await identifi.Message.createRating({
-    author: [['email', 'alice@example.com']],
-    recipient: [['email', 'bob@example.com']],
+    author: {email:'alice@example.com'},
+    recipient: {email: 'bob@example.com'},
     rating: 5,
     comment: 'Good guy'
   });

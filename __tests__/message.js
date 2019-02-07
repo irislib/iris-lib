@@ -13,8 +13,8 @@ describe('Message', async () => {
   describe('createRating method', async () => {
     test('should create a rating message', async () => {
       msg = await Message.createRating({
-        author: [['email', 'alice@example.com']],
-        recipient: [['email', 'bob@example.com']],
+        author: {email:'alice@example.com'},
+        recipient: {email:'bob@example.com'},
         rating: 5,
         comment: 'Good guy'
       });
@@ -30,23 +30,40 @@ describe('Message', async () => {
     test('should use signing key as author if not defined', async () => {
       const defaultKey = await Key.getDefault('.');
       msg = await Message.createRating({
-        recipient: [['email', 'bob@example.com']],
+        recipient: {email:'bob@example.com'},
         rating: 5,
         comment: 'Good guy'
       }, defaultKey);
       expect(msg).toHaveProperty('signedData.author');
-      expect(JSON.stringify(msg.signedData.author)).toEqual('[["keyID","' + Key.getId(defaultKey) + '"]]');
+      expect(JSON.stringify(msg.signedData.author)).toEqual('{"keyID":"' + Key.getId(defaultKey) + '"}');
     });
   });
   describe('createVerification method', async () => {
     test('should create a verification message', async () => {
       msg = await Message.createVerification({
-        author: [['email', 'alice@example.com']],
-        recipient: [['email', 'bob@example.com'], ['name', 'Bob']],
+        author: {email:'alice@example.com'},
+        recipient: {email:'bob@example.com', name: 'Bob'},
         comment: 'Good guy'
       });
       expect(msg).toHaveProperty('signedData.timestamp');
       expect(msg.signedData.type).toEqual('verification');
+    });
+  });
+  describe('Recipient iterator', async () => {
+    test('should go over recipient attributes', async () => {
+      msg = await Message.createVerification({
+        author: {email:'alice@example.com'},
+        recipient: {email:'bob@example.com', name: 'Bob', nickname: ['Bobby', 'Bobbie']},
+        comment: 'Good guy'
+      });
+      const seen = {};
+      for (let a of msg.getRecipientIterable()) {
+        seen[a.type + ':' + a.value] = true;
+      }
+      expect(seen.hasOwnProperty('email:bob@example.com')).toBe(true);
+      expect(seen.hasOwnProperty('name:Bob')).toBe(true);
+      expect(seen.hasOwnProperty('nickname:Bobby')).toBe(true);
+      expect(seen.hasOwnProperty('nickname:Bobbie')).toBe(true);
     });
   });
   describe('Validation', async () => {
@@ -62,8 +79,8 @@ describe('Message', async () => {
     msg = void 0;
     beforeAll(async () => {
       msg = await Message.createRating({
-        author: [['email', 'alice@example.com']],
-        recipient: [['email', 'bob@example.com']],
+        author: {email:'alice@example.com'},
+        recipient: {email:'bob@example.com'},
         rating: 5,
         comment: 'Good guy'
       });
