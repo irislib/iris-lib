@@ -1471,12 +1471,11 @@ from Index methods such as search().</p>
   </div>
   
 
-  <p>Identifi index root. Contains four indexes: identitiesBySearchKey, identitiesByTrustDistance,
-messagesByTimestamp, messagesByDistance.</p>
+  <p>When you use someone else's index, initialise it using the Index constructor</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>new Index(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: any)</div>
+    <div class='pre p1 fill-light mt0'>new Index(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="#index">Index</a></div>
    
   
   
@@ -1495,15 +1494,17 @@ messagesByTimestamp, messagesByDistance.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>gun</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    
+	    gun node that contains an Identifi index (e.g. user.get('identifi'))
+
           </div>
           
         </div>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>options</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    see default options in example
+
           </div>
           
         </div>
@@ -1514,9 +1515,45 @@ messagesByTimestamp, messagesByDistance.</p>
   
 
   
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="#index">Index</a></code>:
+        Identifi index object
+
+      
+    
+  
 
   
 
+  
+    <div class='py1 quiet mt1 prose-big'>Example</div>
+    
+      
+      <pre class='p1 overflow-auto round fill-light'>Default options:
+{
+ <span class="hljs-attr">indexSync</span>: {
+   <span class="hljs-attr">importOnAdd</span>: {
+     <span class="hljs-attr">enabled</span>: <span class="hljs-literal">true</span>,
+     <span class="hljs-attr">maxMsgCount</span>: <span class="hljs-number">500</span>,
+     <span class="hljs-attr">maxMsgDistance</span>: <span class="hljs-number">2</span>
+   },
+   <span class="hljs-attr">subscribe</span>: {
+     <span class="hljs-attr">enabled</span>: <span class="hljs-literal">true</span>,
+     <span class="hljs-attr">maxMsgDistance</span>: <span class="hljs-number">1</span>
+   },
+   <span class="hljs-attr">query</span>: {
+     <span class="hljs-attr">enabled</span>: <span class="hljs-literal">true</span>
+   },
+   <span class="hljs-attr">msgTypes</span>: {
+     <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>,
+     <span class="hljs-attr">rating</span>: <span class="hljs-literal">true</span>,
+     <span class="hljs-attr">verification</span>: <span class="hljs-literal">true</span>,
+     <span class="hljs-attr">unverification</span>: <span class="hljs-literal">true</span>
+   }
+ }
+}</pre>
+    
   
 
   
@@ -1679,7 +1716,7 @@ messagesByTimestamp, messagesByDistance.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>get(value, type)</span>
+            <span class='code strong strong truncate'>get(a, b)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1687,11 +1724,14 @@ messagesByTimestamp, messagesByDistance.</p>
 
   
 
-  <p>Get an identity referenced by an identifier.</p>
+  <p>Get an identity referenced by an identifier.
+get(type, value)
+get(Attribute)
+get(value) - guesses the type or throws an error</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>get(value: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, type: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>): <a href="#identity">Identity</a></div>
+    <div class='pre p1 fill-light mt0'>get(a: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, b: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>): <a href="#identity">Identity</a></div>
    
   
   
@@ -1709,18 +1749,16 @@ messagesByTimestamp, messagesByDistance.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>value</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
-	    identifier value to search by
-
+            <span class='code bold'>a</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+	    
           </div>
           
         </div>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>type</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
-	    (optional) identifier type to search by. If omitted, tries to guess it
-
+            <span class='code bold'>b</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+	    
           </div>
           
         </div>
@@ -2437,11 +2475,12 @@ unknown authors.</p>
   </div>
   
 
-  <p>When you use someone else's index, initialise it using the Index constructor</p>
+  <p>Identifi index root. Contains four indexes: identitiesBySearchKey, identitiesByTrustDistance,
+messagesByTimestamp, messagesByDistance.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>new Index(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="#index">Index</a></div>
+    <div class='pre p1 fill-light mt0'>new Index(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: any)</div>
    
   
   
@@ -2460,17 +2499,15 @@ unknown authors.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>gun</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    gun node that contains an Identifi index (e.g. user.get('identifi'))
-
+	    
           </div>
           
         </div>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    see default options in example
-
+            <span class='code bold'>options</span> <code class='quiet'>(any)</code>
+	    
           </div>
           
         </div>
@@ -2481,45 +2518,9 @@ unknown authors.</p>
   
 
   
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="#index">Index</a></code>:
-        Identifi index object
-
-      
-    
-  
 
   
 
-  
-    <div class='py1 quiet mt1 prose-big'>Example</div>
-    
-      
-      <pre class='p1 overflow-auto round fill-light'>Default options:
-{
- <span class="hljs-attr">indexSync</span>: {
-   <span class="hljs-attr">importOnAdd</span>: {
-     <span class="hljs-attr">enabled</span>: <span class="hljs-literal">true</span>,
-     <span class="hljs-attr">maxMsgCount</span>: <span class="hljs-number">500</span>,
-     <span class="hljs-attr">maxMsgDistance</span>: <span class="hljs-number">2</span>
-   },
-   <span class="hljs-attr">subscribe</span>: {
-     <span class="hljs-attr">enabled</span>: <span class="hljs-literal">true</span>,
-     <span class="hljs-attr">maxMsgDistance</span>: <span class="hljs-number">1</span>
-   },
-   <span class="hljs-attr">query</span>: {
-     <span class="hljs-attr">enabled</span>: <span class="hljs-literal">true</span>
-   },
-   <span class="hljs-attr">msgTypes</span>: {
-     <span class="hljs-attr">all</span>: <span class="hljs-literal">false</span>,
-     <span class="hljs-attr">rating</span>: <span class="hljs-literal">true</span>,
-     <span class="hljs-attr">verification</span>: <span class="hljs-literal">true</span>,
-     <span class="hljs-attr">unverification</span>: <span class="hljs-literal">true</span>
-   }
- }
-}</pre>
-    
   
 
   
@@ -2682,7 +2683,7 @@ unknown authors.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>get(value, type)</span>
+            <span class='code strong strong truncate'>get(a, b)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2690,11 +2691,14 @@ unknown authors.</p>
 
   
 
-  <p>Get an identity referenced by an identifier.</p>
+  <p>Get an identity referenced by an identifier.
+get(type, value)
+get(Attribute)
+get(value) - guesses the type or throws an error</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>get(value: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, type: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>): <a href="#identity">Identity</a></div>
+    <div class='pre p1 fill-light mt0'>get(a: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, b: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>): <a href="#identity">Identity</a></div>
    
   
   
@@ -2712,18 +2716,16 @@ unknown authors.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>value</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
-	    identifier value to search by
-
+            <span class='code bold'>a</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+	    
           </div>
           
         </div>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>type</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
-	    (optional) identifier type to search by. If omitted, tries to guess it
-
+            <span class='code bold'>b</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
+	    
           </div>
           
         </div>

@@ -11005,21 +11005,28 @@
 
 	  /**
 	  * Get an identity referenced by an identifier.
-	  * @param value identifier value to search by
-	  * @param type (optional) identifier type to search by. If omitted, tries to guess it
+	  * get(type, value)
+	  * get(Attribute)
+	  * get(value) - guesses the type or throws an error
 	  * @returns {Identity} identity that is connected to the identifier param
 	  */
 
 
-	  Index.prototype.get = function get(value, type) {
-	    if (typeof value === 'undefined') {
-	      throw 'Value is undefined';
+	  Index.prototype.get = function get(a, b) {
+	    var attr = a;
+	    if (a.constructor.name !== 'Attribute') {
+	      var type = void 0,
+	          value = void 0;
+	      if (b) {
+	        type = a;
+	        value = b;
+	      } else {
+	        value = a;
+	        type = Attribute.guessTypeOf(value);
+	      }
+	      attr = new Attribute(type, value);
 	    }
-	    if (typeof type === 'undefined') {
-	      type = Attribute.guessTypeOf(value);
-	    }
-	    var a = new Attribute(type, value);
-	    return new Identity(this.gun.get('identitiesBySearchKey').get(a.uri()), a);
+	    return new Identity(this.gun.get('identitiesBySearchKey').get(attr.uri()), attr);
 	  };
 
 	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, callback, limit, cursor) {
@@ -11078,7 +11085,7 @@
 	    if (this.viewpoint.equals(a)) {
 	      return 0;
 	    }
-	    var id = this.get(a.value, a.type);
+	    var id = this.get(a);
 	    var d = await id.gun.get('trustDistance').then();
 	    if (isNaN(d)) {
 	      d = Infinity;
@@ -11096,7 +11103,7 @@
 	    var shortestDistance = Infinity;
 	    var signerAttr = new Attribute('keyID', msg.getSignerKeyID());
 	    if (!signerAttr.equals(this.viewpoint)) {
-	      var signer = this.get(signerAttr.value, signerAttr.type);
+	      var signer = this.get(signerAttr);
 	      var d = await signer.gun.get('trustDistance').then();
 	      if (isNaN(d)) {
 	        return;
@@ -11312,7 +11319,7 @@
 
 	      var _a2 = _ref3;
 
-	      var _id = this.get(_a2.value, _a2.type);
+	      var _id = this.get(_a2);
 	      var td = await util$1.timeoutPromise(_id.gun.get('trustDistance').then(), GUN_TIMEOUT);
 	      if (!isNaN(td)) {
 	        authorIdentities[_id.gun['_'].link] = _id;
@@ -11342,7 +11349,7 @@
 
 	      var _a3 = _ref4;
 
-	      var _id2 = this.get(_a3.value, _a3.type);
+	      var _id2 = this.get(_a3);
 	      var _td = await util$1.timeoutPromise(_id2.gun.get('trustDistance').then(), GUN_TIMEOUT);
 
 	      if (!isNaN(_td)) {

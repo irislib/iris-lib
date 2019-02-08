@@ -214,19 +214,25 @@ class Index {
 
   /**
   * Get an identity referenced by an identifier.
-  * @param value identifier value to search by
-  * @param type (optional) identifier type to search by. If omitted, tries to guess it
+  * get(type, value)
+  * get(Attribute)
+  * get(value) - guesses the type or throws an error
   * @returns {Identity} identity that is connected to the identifier param
   */
-  get(value: String, type: String) {
-    if (typeof value === `undefined`) {
-      throw `Value is undefined`;
+  get(a: String, b: String) {
+    let attr = a;
+    if (a.constructor.name !== `Attribute`) {
+      let type, value;
+      if (b) {
+        type = a;
+        value = b;
+      } else {
+        value = a;
+        type = Attribute.guessTypeOf(value);
+      }
+      attr = new Attribute(type, value);
     }
-    if (typeof type === `undefined`) {
-      type = Attribute.guessTypeOf(value);
-    }
-    const a = new Attribute(type, value);
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(a.uri()), a);
+    return new Identity(this.gun.get(`identitiesBySearchKey`).get(attr.uri()), attr);
   }
 
   async _getMsgs(msgIndex, callback, limit, cursor) {
@@ -277,7 +283,7 @@ class Index {
     if (this.viewpoint.equals(a)) {
       return 0;
     }
-    const id = this.get(a.value, a.type);
+    const id = this.get(a);
     let d = await id.gun.get(`trustDistance`).then();
     if (isNaN(d)) {
       d = Infinity;
@@ -293,7 +299,7 @@ class Index {
     let shortestDistance = Infinity;
     const signerAttr = new Attribute(`keyID`, msg.getSignerKeyID());
     if (!signerAttr.equals(this.viewpoint)) {
-      const signer = this.get(signerAttr.value, signerAttr.type);
+      const signer = this.get(signerAttr);
       const d = await signer.gun.get(`trustDistance`).then();
       if (isNaN(d)) {
         return;
@@ -458,7 +464,7 @@ class Index {
     const authorIdentities = {};
     let selfAuthored = false;
     for (const a of msg.getAuthorIterable()) {
-      const id = this.get(a.value, a.type);
+      const id = this.get(a);
       const td = await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT);
       if (!isNaN(td)) {
         authorIdentities[id.gun[`_`].link] = id;
@@ -475,7 +481,7 @@ class Index {
       return; // unknown author, do nothing
     }
     for (const a of msg.getRecipientIterable()) {
-      const id = this.get(a.value, a.type);
+      const id = this.get(a);
       const td = await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT);
 
       if (!isNaN(td)) {

@@ -214,7 +214,7 @@ describe('local index', async () => {
       verifierKeyID = identifi.Key.getId(verifierKey);
       let msg = await identifi.Message.createRating({recipient: {keyID:verifierKeyID}, rating:10, context: 'verifier'}, key);
       await i.addMessage(msg);
-      const verifier = i.get(verifierKeyID, 'keyID');
+      const verifier = i.get('keyID', verifierKeyID);
       const scores = await new Promise(resolve => {
         verifier.gun.get('scores').load(r => {
           resolve(r);
@@ -227,7 +227,7 @@ describe('local index', async () => {
       await i.addMessage(msg);
       let msg = await identifi.Message.createVerification({recipient: {keyID:verifierKeyID, name:'VerifyBot', email:'VerifyBot@example.com'}}, key);
       await i.addMessage(msg);
-      const verifier = i.get(verifierKeyID, 'keyID');
+      const verifier = i.get('keyID', verifierKeyID);
       const scores = await new Promise(resolve => {
         verifier.gun.get('scores').load(r => {
           resolve(r);
@@ -273,7 +273,7 @@ describe('local index', async () => {
   });
   test('get viewpoint identity by searching the default keyID', async () => {
     const defaultKey = await identifi.Key.getDefault();
-    p = i.get(identifi.Key.getId(defaultKey), 'keyID');
+    p = i.get('keyID', identifi.Key.getId(defaultKey));
     const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(data.trustDistance).toBe(0);
