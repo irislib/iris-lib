@@ -220,6 +220,9 @@ class Index {
   * @returns {Identity} identity that is connected to the identifier param
   */
   get(a: String, b: String) {
+    if (!a) {
+      throw new Error(`get failed: param must be a string, received ${typeof a} ${a}`);
+    }
     let attr = a;
     if (a.constructor.name !== `Attribute`) {
       let type, value;

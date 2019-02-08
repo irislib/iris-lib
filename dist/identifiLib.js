@@ -11013,6 +11013,9 @@
 
 
 	  Index.prototype.get = function get(a, b) {
+	    if (!a) {
+	      throw new Error('get failed: param must be a string, received ' + (typeof a === 'undefined' ? 'undefined' : _typeof(a)) + ' ' + a);
+	    }
 	    var attr = a;
 	    if (a.constructor.name !== 'Attribute') {
 	      var type = void 0,
