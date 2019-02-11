@@ -1023,6 +1023,52 @@
 
 	var _typeof = unwrapExports(_typeof_1);
 
+	// getting tag from 19.1.3.6 Object.prototype.toString()
+
+	var TAG$1 = _wks('toStringTag');
+	// ES3 wrong here
+	var ARG = _cof(function () { return arguments; }()) == 'Arguments';
+
+	// fallback for IE11 Script Access Denied error
+	var tryGet = function (it, key) {
+	  try {
+	    return it[key];
+	  } catch (e) { /* empty */ }
+	};
+
+	var _classof = function (it) {
+	  var O, T, B;
+	  return it === undefined ? 'Undefined' : it === null ? 'Null'
+	    // @@toStringTag case
+	    : typeof (T = tryGet(O = Object(it), TAG$1)) == 'string' ? T
+	    // builtinTag case
+	    : ARG ? _cof(O)
+	    // ES3 arguments fallback
+	    : (B = _cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
+	};
+
+	var ITERATOR$1 = _wks('iterator');
+
+	var core_getIteratorMethod = _core.getIteratorMethod = function (it) {
+	  if (it != undefined) return it[ITERATOR$1]
+	    || it['@@iterator']
+	    || _iterators[_classof(it)];
+	};
+
+	var core_getIterator = _core.getIterator = function (it) {
+	  var iterFn = core_getIteratorMethod(it);
+	  if (typeof iterFn != 'function') throw TypeError(it + ' is not iterable!');
+	  return _anObject(iterFn.call(it));
+	};
+
+	var getIterator = core_getIterator;
+
+	var getIterator$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": getIterator, __esModule: true };
+	});
+
+	var _getIterator = unwrapExports(getIterator$1);
+
 	var runtime = createCommonjsModule(function (module) {
 	/**
 	 * Copyright (c) 2014-present, Facebook, Inc.
@@ -1944,30 +1990,6 @@
 	            typeof self !== "undefined" ? self :
 	            typeof window !== "undefined" ? window : {});
 
-	// getting tag from 19.1.3.6 Object.prototype.toString()
-
-	var TAG$1 = _wks('toStringTag');
-	// ES3 wrong here
-	var ARG = _cof(function () { return arguments; }()) == 'Arguments';
-
-	// fallback for IE11 Script Access Denied error
-	var tryGet = function (it, key) {
-	  try {
-	    return it[key];
-	  } catch (e) { /* empty */ }
-	};
-
-	var _classof = function (it) {
-	  var O, T, B;
-	  return it === undefined ? 'Undefined' : it === null ? 'Null'
-	    // @@toStringTag case
-	    : typeof (T = tryGet(O = Object(it), TAG$1)) == 'string' ? T
-	    // builtinTag case
-	    : ARG ? _cof(O)
-	    // ES3 arguments fallback
-	    : (B = _cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
-	};
-
 	var _anInstance = function (it, Constructor, name, forbiddenField) {
 	  if (!(it instanceof Constructor) || (forbiddenField !== undefined && forbiddenField in it)) {
 	    throw TypeError(name + ': incorrect invocation!');
@@ -1989,19 +2011,11 @@
 
 	// check on default Array iterator
 
-	var ITERATOR$1 = _wks('iterator');
+	var ITERATOR$2 = _wks('iterator');
 	var ArrayProto = Array.prototype;
 
 	var _isArrayIter = function (it) {
-	  return it !== undefined && (_iterators.Array === it || ArrayProto[ITERATOR$1] === it);
-	};
-
-	var ITERATOR$2 = _wks('iterator');
-
-	var core_getIteratorMethod = _core.getIteratorMethod = function (it) {
-	  if (it != undefined) return it[ITERATOR$2]
-	    || it['@@iterator']
-	    || _iterators[_classof(it)];
+	  return it !== undefined && (_iterators.Array === it || ArrayProto[ITERATOR$2] === it);
 	};
 
 	var _forOf = createCommonjsModule(function (module) {
@@ -9980,6 +9994,58 @@
 	  };
 
 	  /**
+	  * @returns {array} Array containing author attributes
+	  */
+
+
+	  Message.prototype.getAuthorArray = function getAuthorArray() {
+	    var arr = [];
+	    for (var _iterator = this.getAuthorIterable(), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _getIterator(_iterator);;) {
+	      var _ref2;
+
+	      if (_isArray) {
+	        if (_i >= _iterator.length) break;
+	        _ref2 = _iterator[_i++];
+	      } else {
+	        _i = _iterator.next();
+	        if (_i.done) break;
+	        _ref2 = _i.value;
+	      }
+
+	      var a = _ref2;
+
+	      arr.push(a);
+	    }
+	    return arr;
+	  };
+
+	  /**
+	  * @returns {array} Array containing recipient attributes
+	  */
+
+
+	  Message.prototype.getRecipientArray = function getRecipientArray() {
+	    var arr = [];
+	    for (var _iterator2 = this.getRecipientIterable(), _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _getIterator(_iterator2);;) {
+	      var _ref3;
+
+	      if (_isArray2) {
+	        if (_i2 >= _iterator2.length) break;
+	        _ref3 = _iterator2[_i2++];
+	      } else {
+	        _i2 = _iterator2.next();
+	        if (_i2.done) break;
+	        _ref3 = _i2.value;
+	      }
+
+	      var a = _ref3;
+
+	      arr.push(a);
+	    }
+	    return arr;
+	  };
+
+	  /**
 	  * @returns {string} Message signer keyID, i.e. base64 hash of public key
 	  */
 
@@ -10057,12 +10123,12 @@
 	      var _t = _typeof(d.recipient[_attr]);
 	      if (_t !== 'string') {
 	        if (Array.isArray(d.recipient[_attr])) {
-	          for (var _i = 0; _i < d.recipient[_attr].length; _i++) {
-	            if (typeof d.recipient[_attr][_i] !== 'string') {
-	              throw new ValidationError(errorMsg + ' Recipient attribute must be string, got ' + _attr + ': [' + d.recipient[_attr][_i] + ']');
+	          for (var _i3 = 0; _i3 < d.recipient[_attr].length; _i3++) {
+	            if (typeof d.recipient[_attr][_i3] !== 'string') {
+	              throw new ValidationError(errorMsg + ' Recipient attribute must be string, got ' + _attr + ': [' + d.recipient[_attr][_i3] + ']');
 	            }
-	            if (d.recipient[_attr][_i].length === 0) {
-	              throw new ValidationError(errorMsg + ' recipient ' + _attr + ' in array[' + _i + '] is empty');
+	            if (d.recipient[_attr][_i3].length === 0) {
+	              throw new ValidationError(errorMsg + ' recipient ' + _attr + ' in array[' + _i3 + '] is empty');
 	            }
 	          }
 	        } else {
@@ -10655,20 +10721,6 @@
 	});
 
 	var _Object$values = unwrapExports(values$1);
-
-	var core_getIterator = _core.getIterator = function (it) {
-	  var iterFn = core_getIteratorMethod(it);
-	  if (typeof iterFn != 'function') throw TypeError(it + ' is not iterable!');
-	  return _anObject(iterFn.call(it));
-	};
-
-	var getIterator = core_getIterator;
-
-	var getIterator$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": getIterator, __esModule: true };
-	});
-
-	var _getIterator = unwrapExports(getIterator$1);
 
 	// 20.1.2.4 Number.isNaN(number)
 

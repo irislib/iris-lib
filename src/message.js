@@ -76,6 +76,29 @@ class Message {
   }
 
   /**
+  * @returns {array} Array containing author attributes
+  */
+  getAuthorArray() {
+    const arr = [];
+    for (const a of this.getAuthorIterable()) {
+      arr.push(a);
+    }
+    return arr;
+  }
+
+  /**
+  * @returns {array} Array containing recipient attributes
+  */
+  getRecipientArray() {
+    const arr = [];
+    for (const a of this.getRecipientIterable()) {
+      arr.push(a);
+    }
+    return arr;
+  }
+
+
+  /**
   * @returns {string} Message signer keyID, i.e. base64 hash of public key
   */
   getSignerKeyID() {
