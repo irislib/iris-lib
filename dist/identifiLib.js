@@ -10265,9 +10265,22 @@
 
 
 	  Message.prototype.getAuthor = function getAuthor(index) {
-	    for (var attr in this.signedData.author) {
-	      if (Attribute.isUniqueType(attr)) {
-	        return index.get(this.signedData.author[attr], attr);
+	    for (var _iterator3 = this.getAuthorIterable(), _isArray3 = Array.isArray(_iterator3), _i4 = 0, _iterator3 = _isArray3 ? _iterator3 : _getIterator(_iterator3);;) {
+	      var _ref4;
+
+	      if (_isArray3) {
+	        if (_i4 >= _iterator3.length) break;
+	        _ref4 = _iterator3[_i4++];
+	      } else {
+	        _i4 = _iterator3.next();
+	        if (_i4.done) break;
+	        _ref4 = _i4.value;
+	      }
+
+	      var a = _ref4;
+
+	      if (a.isUniqueType()) {
+	        return index.get(a);
 	      }
 	    }
 	  };
@@ -10279,9 +10292,22 @@
 
 
 	  Message.prototype.getRecipient = function getRecipient(index) {
-	    for (var attr in this.signedData.recipient) {
-	      if (Attribute.isUniqueType(attr)) {
-	        return index.get(this.signedData.recipient[attr], attr);
+	    for (var _iterator4 = this.getRecipientIterable(), _isArray4 = Array.isArray(_iterator4), _i5 = 0, _iterator4 = _isArray4 ? _iterator4 : _getIterator(_iterator4);;) {
+	      var _ref5;
+
+	      if (_isArray4) {
+	        if (_i5 >= _iterator4.length) break;
+	        _ref5 = _iterator4[_i5++];
+	      } else {
+	        _i5 = _iterator4.next();
+	        if (_i5.done) break;
+	        _ref5 = _i5.value;
+	      }
+
+	      var a = _ref5;
+
+	      if (a.isUniqueType()) {
+	        return index.get(a);
 	      }
 	    }
 	  };

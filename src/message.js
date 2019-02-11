@@ -252,9 +252,9 @@ class Message {
   * @returns {Identity} message author identity
   */
   getAuthor(index) {
-    for (const attr in this.signedData.author) {
-      if (Attribute.isUniqueType(attr)) {
-        return index.get(this.signedData.author[attr], attr);
+    for (const a of this.getAuthorIterable()) {
+      if (a.isUniqueType()) {
+        return index.get(a);
       }
     }
   }
@@ -264,9 +264,9 @@ class Message {
   * @returns {Identity} message recipient identity
   */
   getRecipient(index) {
-    for (const attr in this.signedData.recipient) {
-      if (Attribute.isUniqueType(attr)) {
-        return index.get(this.signedData.recipient[attr], attr);
+    for (const a of this.getRecipientIterable()) {
+      if (a.isUniqueType()) {
+        return index.get(a);
       }
     }
   }
