@@ -76,7 +76,7 @@ class Identity {
   async verified(attribute: String) {
     const attrs = await this.gun.get(`attrs`).then();
     const mva = Identity.getMostVerifiedAttributes(attrs);
-    return mva.hasOwnProperty(attribute) ? mva[attribute].attribute.val : undefined;
+    return mva.hasOwnProperty(attribute) ? mva[attribute].attribute.value : undefined;
   }
 
   /**
@@ -110,9 +110,9 @@ class Identity {
       }
       const attrs = await new Promise(resolve => { this.gun.get(`attrs`).load(r => resolve(r)); });
       const linkTo = await this.gun.get(`linkTo`).then();
-      const link = `https://identi.fi/#/identities/${linkTo.name}/${linkTo.val}`;
+      const link = `https://identi.fi/#/identities/${linkTo.type}/${linkTo.value}`;
       const mva = Identity.getMostVerifiedAttributes(attrs);
-      linkEl.innerHTML = `<a href="${link}">${(mva.type && mva.type.attribute.val) || (mva.nickname && mva.nickname.attribute.val) || `${linkTo.name}:${linkTo.val}`}</a><br>`;
+      linkEl.innerHTML = `<a href="${link}">${(mva.type && mva.type.attribute.value) || (mva.nickname && mva.nickname.attribute.value) || `${linkTo.type}:${linkTo.value}`}</a><br>`;
       linkEl.innerHTML += `<small>Received: <span class="identifi-pos">+${data.receivedPositive || 0}</span> / <span class="identifi-neg">-${data.receivedNegative || 0}</span></small><br>`;
       links.innerHTML = ``;
       Object.keys(attrs).forEach(k => {
@@ -283,7 +283,7 @@ class Identity {
         const mva = Identity.getMostVerifiedAttributes(attrs);
         if (mva.profilePhoto) {
           const go = () => {
-            ipfs.files.cat(mva.profilePhoto.attribute.val).then(file => {
+            ipfs.files.cat(mva.profilePhoto.attribute.value).then(file => {
               const f = ipfs.types.Buffer.from(file).toString(`base64`);
               img.src = `data:image;base64,${f}`;
             });
