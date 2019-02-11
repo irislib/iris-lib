@@ -132,6 +132,11 @@ class Index {
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
     const id = await Identity.create(g, {trustDistance: 0, linkTo: i.viewpoint});
     await i._addIdentityToIndexes(id.gun);
+    if (options.self) {
+      const recipient = Object.assign(options.self, {keyID: i.viewpoint.value});
+      const msg = await Message.createVerification({recipient}, keypair);
+      i.addMessage(msg);
+    }
 
     return i;
   }

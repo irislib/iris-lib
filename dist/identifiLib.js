@@ -10919,6 +10919,11 @@
 	    var g = i.gun.get('identitiesBySearchKey').get(uri);
 	    var id = await Identity.create(g, { trustDistance: 0, linkTo: i.viewpoint });
 	    await i._addIdentityToIndexes(id.gun);
+	    if (options.self) {
+	      var recipient = _Object$assign(options.self, { keyID: i.viewpoint.value });
+	      var msg = await Message.createVerification({ recipient: recipient }, keypair);
+	      i.addMessage(msg);
+	    }
 
 	    return i;
 	  };
