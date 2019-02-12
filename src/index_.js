@@ -101,7 +101,7 @@ class Index {
                   console.log(`adding msg ${msg.hash} from trusted index`);
                   if (this.options.indexSync.msgTypes.all ||
                     this.options.indexSync.msgTypes.hasOwnProperty(msg.signedData.type)) {
-                    this.addMessage(msg);
+                    this.addMessage(msg, undefined, {checkIfExists: true});
                   }
                 });
               }
@@ -446,6 +446,10 @@ class Index {
       return;
     }
     console.log(`addTrustedIndex`, gunUri);
+    const exists = await this.gun.get(`trustedIndexes`).get(gunUri).then();
+    if (exists) {
+      return;
+    }
     this.gun.get(`trustedIndexes`).get(gunUri).put(true);
     const msgs = [];
     if (this.options.indexSync.importOnAdd.enabled) {
@@ -598,9 +602,16 @@ class Index {
   * @param msg Message to add to the index
   * @param ipfs (optional) ipfs instance where the message is additionally saved
   */
-  async addMessage(msg: Message, ipfs) {
+  async addMessage(msg: Message, ipfs, options = {}) {
     if (msg.constructor.name !== `Message`) {
       throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
+    }
+    const hash = msg.getHash();
+    if (true === options.checkIfExists) {
+      const exists = await this.gun.get(`messagesByHash`).get(hash).once().then();
+      if (exists) {
+        return;
+      }
     }
     msg.distance = await this.getMsgTrustDistance(msg);
     if (msg.distance === undefined) {
@@ -611,7 +622,11 @@ class Index {
     if (ipfs) {
       const ipfsUri = await msg.saveToIpfs(ipfs);
       obj.ipfsUri = ipfsUri;
+      this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
+      this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
     }
+    this.gun.get(`messagesByHash`).get(hash).put(obj);
+    this.gun.get(`messagesByHash`).get(hash).put(obj);
     this.gun.get(`messagesByDistance`).get(indexKey).put(obj);
     this.gun.get(`messagesByDistance`).get(indexKey).put(obj); // umm, what? doesn't work unless I write it twice
     indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
