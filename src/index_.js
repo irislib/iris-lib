@@ -30,16 +30,17 @@ async function searchText(node, callback, query, limit, cursor) {
 
 // TODO: flush onto IPFS
 /**
-* Identifi index root. Contains four indexes: identitiesBySearchKey, identitiesByTrustDistance,
-* messagesByTimestamp, messagesByDistance.
-*/
-/**
+* Identifi index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
+* messagesByHash, messagesByTimestamp, messagesByDistance. If you want messages saved to IPFS, pass
+* options.ipfs = instance.
+*
 * When you use someone else's index, initialise it using the Index constructor
 * @param {Object} gun gun node that contains an Identifi index (e.g. user.get('identifi'))
 * @param {Object} options see default options in example
 * @example
 * Default options:
 *{
+*  ipfs: undefined,
 *  indexSync: {
 *    importOnAdd: {
 *      enabled: true,
@@ -101,7 +102,7 @@ class Index {
                   console.log(`adding msg ${msg.hash} from trusted index`);
                   if (this.options.indexSync.msgTypes.all ||
                     this.options.indexSync.msgTypes.hasOwnProperty(msg.signedData.type)) {
-                    this.addMessage(msg, undefined, {checkIfExists: true});
+                    this.addMessage(msg, {checkIfExists: true});
                   }
                 });
               }
@@ -532,7 +533,7 @@ class Index {
   * @param {Object} ipfs (optional) ipfs instance where the messages are saved
   * @returns {boolean} true on success
   */
-  async addMessages(msgs, ipfs) {
+  async addMessages(msgs) {
     const msgsByAuthor = {};
     if (Array.isArray(msgs)) {
       console.log(`sorting ${msgs.length} messages onto a search tree...`);
@@ -580,7 +581,7 @@ class Index {
       while (author && knownIdentity) {
         if (author.indexOf(knownIdentity.key) === 0) {
           try {
-            await util.timeoutPromise(this.addMessage(msgsByAuthor[author], ipfs), 10000);
+            await util.timeoutPromise(this.addMessage(msgsByAuthor[author], {checkIfExists: true}), 10000);
           } catch (e) {
             console.log(`adding failed:`, e, JSON.stringify(msgsByAuthor[author], null, 2));
           }
@@ -602,7 +603,7 @@ class Index {
   * @param msg Message to add to the index
   * @param ipfs (optional) ipfs instance where the message is additionally saved
   */
-  async addMessage(msg: Message, ipfs, options = {}) {
+  async addMessage(msg: Message, options = {}) {
     if (msg.constructor.name !== `Message`) {
       throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
     }
@@ -619,11 +620,15 @@ class Index {
     }
     let indexKey = Index.getMsgIndexKey(msg);
     const obj = {sig: msg.sig, pubKey: msg.pubKey};
-    if (ipfs) {
-      const ipfsUri = await msg.saveToIpfs(ipfs);
-      obj.ipfsUri = ipfsUri;
-      this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
-      this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
+    if (this.options.ipfs) {
+      try {
+        const ipfsUri = await msg.saveToIpfs(this.options.ipfs);
+        obj.ipfsUri = ipfsUri;
+        this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
+        this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
+      } catch (e) {
+        console.error(`adding msg ${msg} to ipfs failed: ${e}`);
+      }
     }
     this.gun.get(`messagesByHash`).get(hash).put(obj);
     this.gun.get(`messagesByHash`).get(hash).put(obj);
