@@ -11109,6 +11109,7 @@
 	  Index.prototype._getMsgs = async function _getMsgs(msgIndex, callback, limit, cursor) {
 	    async function resultFound(result) {
 	      var msg = await Message.fromSig(result.value);
+	      msg.cursor = result.key;
 	      if (result.value && result.value.ipfsUri) {
 	        msg.ipfsUri = result.value.ipfsUri;
 	      }
@@ -11655,7 +11656,9 @@
 	      var soul = Gun.node.soul(id);
 	      if (soul && !seen.hasOwnProperty(soul)) {
 	        seen[soul] = true;
-	        callback(new Identity(_this4.gun.get('identitiesByTrustDistance').get(key)));
+	        var identity = new Identity(_this4.gun.get('identitiesByTrustDistance').get(key));
+	        identity.cursor = key;
+	        callback(identity);
 	      }
 	    });
 	    if (this.options.indexSync.query.enabled) {

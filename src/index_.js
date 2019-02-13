@@ -247,6 +247,7 @@ class Index {
   async _getMsgs(msgIndex, callback, limit, cursor) {
     async function resultFound(result) {
       const msg = await Message.fromSig(result.value);
+      msg.cursor = result.key;
       if (result.value && result.value.ipfsUri) {
         msg.ipfsUri = result.value.ipfsUri;
       }
@@ -662,7 +663,9 @@ class Index {
       const soul = Gun.node.soul(id);
       if (soul && !seen.hasOwnProperty(soul)) {
         seen[soul] = true;
-        callback(new Identity(this.gun.get(`identitiesByTrustDistance`).get(key)));
+        const identity = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
+        identity.cursor = key;
+        callback(identity);
       }
     });
     if (this.options.indexSync.query.enabled) {
