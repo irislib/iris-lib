@@ -313,7 +313,7 @@ class Message {
 
   async saveToIpfs(ipfs) {
     const s = this.toString();
-    const r = await ipfs.files.add(ipfs.types.Buffer.from(s));
+    const r = await ipfs.add(ipfs.types.Buffer.from(s));
     if (r.length) {
       this.ipfsUri = r[0].hash;
     }
@@ -321,7 +321,7 @@ class Message {
   }
 
   static async loadFromIpfs(ipfs, uri) {
-    const f = await ipfs.files.cat(uri);
+    const f = await ipfs.cat(uri);
     const s = ipfs.types.Buffer.from(f).toString(`utf8`);
     return Message.fromString(s);
   }
