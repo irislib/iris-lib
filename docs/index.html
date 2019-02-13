@@ -1719,7 +1719,7 @@ get(value) - guesses the type or throws an error</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getSentMsgs(identity, callback, limit, cursor)</span>
+            <span class='code strong strong truncate'>getSentMsgs(identity, callback, limit, cursor, filter)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1731,7 +1731,7 @@ get(value) - guesses the type or throws an error</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>getSentMsgs(identity: <a href="#identity">Identity</a>, callback: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function">Function</a>, limit: any, cursor: any)</div>
+    <div class='pre p1 fill-light mt0'>getSentMsgs(identity: <a href="#identity">Identity</a>, callback: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function">Function</a>, limit: any, cursor: any, filter: any)</div>
    
   
   
@@ -1782,6 +1782,14 @@ get(value) - guesses the type or throws an error</p>
           
         </div>
       
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>filter</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
     </div>
   
 
@@ -1807,7 +1815,7 @@ get(value) - guesses the type or throws an error</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getReceivedMsgs(identity, callback, limit, cursor)</span>
+            <span class='code strong strong truncate'>getReceivedMsgs(identity, callback, limit, cursor, filter)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1819,7 +1827,7 @@ get(value) - guesses the type or throws an error</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>getReceivedMsgs(identity: <a href="#identity">Identity</a>, callback: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function">Function</a>, limit: any, cursor: any)</div>
+    <div class='pre p1 fill-light mt0'>getReceivedMsgs(identity: <a href="#identity">Identity</a>, callback: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function">Function</a>, limit: any, cursor: any, filter: any)</div>
    
   
   
@@ -1865,6 +1873,14 @@ get(value) - guesses the type or throws an error</p>
           <div>
             <span class='code bold'>cursor</span> <code class='quiet'>(any
             = <code>``</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>filter</span> <code class='quiet'>(any)</code>
 	    
           </div>
           
@@ -2219,7 +2235,7 @@ unknown authors.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getMessagesByTimestamp(callback, limit, cursor)</span>
+            <span class='code strong strong truncate'>getMessagesByTimestamp(callback, limit, cursor, desc, filter)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2230,7 +2246,7 @@ unknown authors.</p>
   
  
   
-    <div class='pre p1 fill-light mt0'>getMessagesByTimestamp(callback: any, limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
+    <div class='pre p1 fill-light mt0'>getMessagesByTimestamp(callback: any, limit: any, cursor: any, desc: any, filter: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
    
   
   
@@ -2266,6 +2282,23 @@ unknown authors.</p>
           <div>
             <span class='code bold'>cursor</span> <code class='quiet'>(any
             = <code>``</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>desc</span> <code class='quiet'>(any
+            = <code>true</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>filter</span> <code class='quiet'>(any)</code>
 	    
           </div>
           
@@ -2304,7 +2337,7 @@ unknown authors.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getMessagesByDistance(callback, limit, cursor)</span>
+            <span class='code strong strong truncate'>getMessagesByDistance(callback, limit, cursor, desc, filter)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2315,7 +2348,7 @@ unknown authors.</p>
   
  
   
-    <div class='pre p1 fill-light mt0'>getMessagesByDistance(callback: any, limit: any, cursor: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
+    <div class='pre p1 fill-light mt0'>getMessagesByDistance(callback: any, limit: any, cursor: any, desc: any, filter: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
    
   
   
@@ -2351,6 +2384,22 @@ unknown authors.</p>
           <div>
             <span class='code bold'>cursor</span> <code class='quiet'>(any
             = <code>``</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>desc</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>filter</span> <code class='quiet'>(any)</code>
 	    
           </div>
           
