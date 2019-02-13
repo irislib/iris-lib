@@ -11647,21 +11647,27 @@
 
 	    // TODO: param 'exact', type param
 	    var seen = {};
+	    function searchTermCheck(key) {
+	      var arr = key.split(':');
+	      if (arr.length < 3) {
+	        return false;
+	      }
+	      var keyValue = arr[1];
+	      var keyType = arr[2];
+	      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) {
+	        return false;
+	      }
+	      if (type && keyType !== type) {
+	        return false;
+	      }
+	      return true;
+	    }
 	    this.gun.get('identitiesByTrustDistance').map().once(function (id, key) {
 	      if (_Object$keys(seen).length >= limit) {
 	        // TODO: turn off .map cb
 	        return;
 	      }
-	      var arr = key.split(':');
-	      if (arr.length < 3) {
-	        return;
-	      }
-	      var keyValue = arr[1];
-	      var keyType = arr[2];
-	      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) {
-	        return;
-	      }
-	      if (type && keyType !== type) {
+	      if (!searchTermCheck(key)) {
 	        return;
 	      }
 	      var soul = Gun.node.soul(id);
@@ -11680,7 +11686,7 @@
 	              // TODO: turn off .map cb
 	              return;
 	            }
-	            if (key.indexOf(encodeURIComponent(value)) === -1) {
+	            if (!searchTermCheck(key)) {
 	              return;
 	            }
 	            var soul = Gun.node.soul(id);

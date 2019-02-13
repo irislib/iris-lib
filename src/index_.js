@@ -654,17 +654,21 @@ class Index {
   */
   async search(value, type, callback, limit) { // TODO: param 'exact', type param
     const seen = {};
+    function searchTermCheck(key) {
+      const arr = key.split(`:`);
+      if (arr.length < 3) { return false; }
+      const keyValue = arr[1];
+      const keyType = arr[2];
+      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) { return false; }
+      if (type && keyType !== type) { return false; }
+      return true;
+    }
     this.gun.get(`identitiesByTrustDistance`).map().once((id, key) => {
       if (Object.keys(seen).length >= limit) {
         // TODO: turn off .map cb
         return;
       }
-      const arr = key.split(`:`);
-      if (arr.length < 3) { return; }
-      const keyValue = arr[1];
-      const keyType = arr[2];
-      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) { return; }
-      if (type && keyType !== type) { return; }
+      if (!searchTermCheck(key)) { return; }
       const soul = Gun.node.soul(id);
       if (soul && !seen.hasOwnProperty(soul)) {
         seen[soul] = true;
@@ -681,9 +685,7 @@ class Index {
               // TODO: turn off .map cb
               return;
             }
-            if (key.indexOf(encodeURIComponent(value)) === - 1) {
-              return;
-            }
+            if (!searchTermCheck(key)) { return; }
             const soul = Gun.node.soul(id);
             if (soul && !seen.hasOwnProperty(soul)) {
               seen[soul] = true;
