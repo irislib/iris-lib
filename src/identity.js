@@ -283,7 +283,7 @@ class Identity {
         const mva = Identity.getMostVerifiedAttributes(attrs);
         if (mva.profilePhoto) {
           const go = () => {
-            ipfs.files.cat(mva.profilePhoto.attribute.value).then(file => {
+            ipfs.cat(mva.profilePhoto.attribute.value).then(file => {
               const f = ipfs.types.Buffer.from(file).toString(`base64`);
               img.src = `data:image;base64,${f}`;
             });

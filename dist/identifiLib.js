@@ -10686,7 +10686,7 @@
 	        var mva = Identity.getMostVerifiedAttributes(attrs);
 	        if (mva.profilePhoto) {
 	          var go = function go() {
-	            ipfs.files.cat(mva.profilePhoto.attribute.value).then(function (file) {
+	            ipfs.cat(mva.profilePhoto.attribute.value).then(function (file) {
 	              var f = ipfs.types.Buffer.from(file).toString('base64');
 	              img.src = 'data:image;base64,' + f;
 	            });
