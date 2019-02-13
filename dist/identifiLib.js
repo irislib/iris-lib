@@ -7,7 +7,7 @@
 	Gun = Gun && Gun.hasOwnProperty('default') ? Gun['default'] : Gun;
 
 	function unwrapExports (x) {
-		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x.default : x;
 	}
 
 	function createCommonjsModule(fn, module) {
@@ -15,7 +15,7 @@
 	}
 
 	var _core = createCommonjsModule(function (module) {
-	var core = module.exports = { version: '2.5.7' };
+	var core = module.exports = { version: '2.6.4' };
 	if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 	});
 	var _core_1 = _core.version;
@@ -311,7 +311,7 @@
 	})('versions', []).push({
 	  version: _core.version,
 	  mode: 'pure',
-	  copyright: '© 2018 Denis Pushkarev (zloirock.ru)'
+	  copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
 	});
 	});
 
@@ -7765,20 +7765,8 @@
 	  return dest;
 	};
 
-	var stream = /*#__PURE__*/Object.freeze({
-		default: Stream,
-		Readable: Readable,
-		Writable: Writable,
-		Duplex: Duplex,
-		Transform: Transform,
-		PassThrough: PassThrough,
-		Stream: Stream
-	});
-
-	var require$$1 = ( stream && Stream ) || stream;
-
 	var Buffer$1 = safeBuffer.Buffer;
-	var Transform$1 = require$$1.Transform;
+	var Transform$1 = Stream.Transform;
 
 
 	function throwIfNotStringOrBuffer (val, prefix) {
@@ -7871,6 +7859,8 @@
 	};
 
 	var hashBase = HashBase;
+
+	var Buffer$2 = safeBuffer.Buffer;
 
 	var ARRAY16 = new Array(16);
 
@@ -7984,7 +7974,7 @@
 	  this._update();
 
 	  // produce result
-	  var buffer = new Buffer(16);
+	  var buffer = Buffer$2.allocUnsafe(16);
 	  buffer.writeInt32LE(this._a, 0);
 	  buffer.writeInt32LE(this._b, 4);
 	  buffer.writeInt32LE(this._c, 8);
@@ -8014,7 +8004,7 @@
 
 	var md5_js = MD5;
 
-	var Buffer$2 = buffer.Buffer;
+	var Buffer$3 = buffer.Buffer;
 
 
 
@@ -8142,7 +8132,7 @@
 	  this._update();
 
 	  // produce result
-	  var buffer$$1 = Buffer$2.alloc ? Buffer$2.alloc(20) : new Buffer$2(20);
+	  var buffer$$1 = Buffer$3.alloc ? Buffer$3.alloc(20) : new Buffer$3(20);
 	  buffer$$1.writeInt32LE(this._a, 0);
 	  buffer$$1.writeInt32LE(this._b, 4);
 	  buffer$$1.writeInt32LE(this._c, 8);
@@ -8177,11 +8167,11 @@
 
 	var ripemd160 = RIPEMD160;
 
-	var Buffer$3 = safeBuffer.Buffer;
+	var Buffer$4 = safeBuffer.Buffer;
 
 	// prototype class for hash functions
 	function Hash (blockSize, finalSize) {
-	  this._block = Buffer$3.alloc(blockSize);
+	  this._block = Buffer$4.alloc(blockSize);
 	  this._finalSize = finalSize;
 	  this._blockSize = blockSize;
 	  this._len = 0;
@@ -8190,7 +8180,7 @@
 	Hash.prototype.update = function (data, enc) {
 	  if (typeof data === 'string') {
 	    enc = enc || 'utf8';
-	    data = Buffer$3.from(data, enc);
+	    data = Buffer$4.from(data, enc);
 	  }
 
 	  var block = this._block;
@@ -8269,7 +8259,7 @@
 
 
 
-	var Buffer$4 = safeBuffer.Buffer;
+	var Buffer$5 = safeBuffer.Buffer;
 
 	var K = [
 	  0x5a827999, 0x6ed9eba1, 0x8f1bbcdc | 0, 0xca62c1d6 | 0
@@ -8341,7 +8331,7 @@
 	};
 
 	Sha.prototype._hash = function () {
-	  var H = Buffer$4.allocUnsafe(20);
+	  var H = Buffer$5.allocUnsafe(20);
 
 	  H.writeInt32BE(this._a | 0, 0);
 	  H.writeInt32BE(this._b | 0, 4);
@@ -8365,7 +8355,7 @@
 
 
 
-	var Buffer$5 = safeBuffer.Buffer;
+	var Buffer$6 = safeBuffer.Buffer;
 
 	var K$1 = [
 	  0x5a827999, 0x6ed9eba1, 0x8f1bbcdc | 0, 0xca62c1d6 | 0
@@ -8441,7 +8431,7 @@
 	};
 
 	Sha1.prototype._hash = function () {
-	  var H = Buffer$5.allocUnsafe(20);
+	  var H = Buffer$6.allocUnsafe(20);
 
 	  H.writeInt32BE(this._a | 0, 0);
 	  H.writeInt32BE(this._b | 0, 4);
@@ -8464,7 +8454,7 @@
 
 
 
-	var Buffer$6 = safeBuffer.Buffer;
+	var Buffer$7 = safeBuffer.Buffer;
 
 	var K$2 = [
 	  0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -8574,7 +8564,7 @@
 	};
 
 	Sha256.prototype._hash = function () {
-	  var H = Buffer$6.allocUnsafe(32);
+	  var H = Buffer$7.allocUnsafe(32);
 
 	  H.writeInt32BE(this._a, 0);
 	  H.writeInt32BE(this._b, 4);
@@ -8601,7 +8591,7 @@
 
 
 
-	var Buffer$7 = safeBuffer.Buffer;
+	var Buffer$8 = safeBuffer.Buffer;
 
 	var W$3 = new Array(64);
 
@@ -8629,7 +8619,7 @@
 	};
 
 	Sha224.prototype._hash = function () {
-	  var H = Buffer$7.allocUnsafe(28);
+	  var H = Buffer$8.allocUnsafe(28);
 
 	  H.writeInt32BE(this._a, 0);
 	  H.writeInt32BE(this._b, 4);
@@ -8644,7 +8634,7 @@
 
 	var sha224 = Sha224;
 
-	var Buffer$8 = safeBuffer.Buffer;
+	var Buffer$9 = safeBuffer.Buffer;
 
 	var K$3 = [
 	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
@@ -8882,7 +8872,7 @@
 	};
 
 	Sha512.prototype._hash = function () {
-	  var H = Buffer$8.allocUnsafe(64);
+	  var H = Buffer$9.allocUnsafe(64);
 
 	  function writeInt64BE (h, l, offset) {
 	    H.writeInt32BE(h, offset);
@@ -8903,7 +8893,7 @@
 
 	var sha512 = Sha512;
 
-	var Buffer$9 = safeBuffer.Buffer;
+	var Buffer$a = safeBuffer.Buffer;
 
 	var W$5 = new Array(160);
 
@@ -8939,7 +8929,7 @@
 	};
 
 	Sha384.prototype._hash = function () {
-	  var H = Buffer$9.allocUnsafe(48);
+	  var H = Buffer$a.allocUnsafe(48);
 
 	  function writeInt64BE (h, l, offset) {
 	    H.writeInt32BE(h, offset);
@@ -8976,8 +8966,8 @@
 	exports.sha512 = sha512;
 	});
 
-	var Buffer$a = safeBuffer.Buffer;
-	var Transform$2 = require$$1.Transform;
+	var Buffer$b = safeBuffer.Buffer;
+	var Transform$2 = Stream.Transform;
 	var StringDecoder$1 = stringDecoder.StringDecoder;
 
 
@@ -9000,7 +8990,7 @@
 
 	CipherBase.prototype.update = function (data, inputEnc, outputEnc) {
 	  if (typeof data === 'string') {
-	    data = Buffer$a.from(data, inputEnc);
+	    data = Buffer$b.from(data, inputEnc);
 	  }
 
 	  var outData = this._update(data);
@@ -9051,7 +9041,7 @@
 	  done(err);
 	};
 	CipherBase.prototype._finalOrDigest = function (outputEnc) {
-	  var outData = this.__final() || Buffer$a.alloc(0);
+	  var outData = this.__final() || Buffer$b.alloc(0);
 	  if (outputEnc) {
 	    outData = this._toString(outData, outputEnc, true);
 	  }
@@ -11650,7 +11640,16 @@
 	        // TODO: turn off .map cb
 	        return;
 	      }
-	      if (key.indexOf(encodeURIComponent(value)) === -1) {
+	      var arr = key.split(':');
+	      if (arr.length < 3) {
+	        return;
+	      }
+	      var keyValue = arr[1];
+	      var keyType = arr[2];
+	      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) {
+	        return;
+	      }
+	      if (type && keyType !== type) {
 	        return;
 	      }
 	      var soul = Gun.node.soul(id);
@@ -11743,7 +11742,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.82";
+	var version$1 = "0.0.83";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

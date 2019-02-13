@@ -653,9 +653,12 @@ class Index {
         // TODO: turn off .map cb
         return;
       }
-      if (key.indexOf(encodeURIComponent(value)) === - 1) {
-        return;
-      }
+      const arr = key.split(`:`);
+      if (arr.length < 3) { return; }
+      const keyValue = arr[1];
+      const keyType = arr[2];
+      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) { return; }
+      if (type && keyType !== type) { return; }
       const soul = Gun.node.soul(id);
       if (soul && !seen.hasOwnProperty(soul)) {
         seen[soul] = true;
