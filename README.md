@@ -17,15 +17,13 @@ Gun = require('gun'); // github.com/amark/gun is needed
 require('gun/sea');
 
 gun = new Gun(['https://identifi.herokuapp.com/gun', 'https://identifi2.herokuapp.com/gun']);
-defaultIndexID = '_D8nRhjFgAGo8frfJHMi4H7M7fTMB2LJshgeKyLaL1Y.9uNU0eQO-1ThgA9fJXFFN3yYbk9SNewC2Pz4mvQvGUE';
+defaultIndexID = 'b8ByaYNBDCMLNdZqMdas5oUFLCxBf2VH3-NjUulDaTo.DVzINErRVs6m5tyjAux6fcNfndadcgZVN5hLSwYTCLc';
+user = gun.user(defaultIndexID);
 
-identifi.Key.generate().then(keypair => {
-	return identifi.Index.create(gun, keypair);
-}).then(i => {
-	profile = i.get('sirius@iki.fi');
-	profile.gun.get('attrs').then(console.log);
-	profile.verified('name').then(console.log);
-});
+index = new identifi.Index(user.get('identifi'));
+profile = index.get('sirius@iki.fi');
+profile.gun.get('attrs').then(console.log);
+profile.verified('name').then(console.log);
 
 ```
 
