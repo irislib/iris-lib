@@ -10653,7 +10653,7 @@
 	      pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
 
 	      if (showDistance) {
-	        distance.textContent = data.trustDistance < 1000 ? Identity._ordinal(data.trustDistance) : '\u2715';
+	        distance.textContent = data.trustDistance < 99 ? Identity._ordinal(data.trustDistance) : '\u2715';
 	      }
 	    }
 
