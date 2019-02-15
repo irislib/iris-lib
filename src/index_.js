@@ -320,7 +320,7 @@ class Index {
         return;
       }
     }
-    for (const a of msg.getAuthorIterable()) {
+    for (const a of msg.getAuthorArray()) {
       const d = await this._getAttributeTrustDistance(a);
       if (d < shortestDistance) {
         shortestDistance = d;
@@ -334,7 +334,7 @@ class Index {
     const identityIndexKeysBefore = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     const attrs = await new Promise(resolve => { recipient.get(`attrs`).load(r => resolve(r)); });
     if (msg.signedData.type === `verification`) {
-      for (const a of msg.getRecipientIterable()) {
+      for (const a of msg.getRecipientArray()) {
         let hasAttr = false;
         Object.keys(attrs).forEach(k => {
           // TODO: if author is self, mark as self verified
@@ -482,7 +482,7 @@ class Index {
     const recipientIdentities = {};
     const authorIdentities = {};
     let selfAuthored = false;
-    for (const a of msg.getAuthorIterable()) {
+    for (const a of msg.getAuthorArray()) {
       const id = this.get(a);
       const td = await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT);
       if (!isNaN(td)) {
@@ -499,7 +499,7 @@ class Index {
     if (!Object.keys(authorIdentities).length) {
       return; // unknown author, do nothing
     }
-    for (const a of msg.getRecipientIterable()) {
+    for (const a of msg.getRecipientArray()) {
       const id = this.get(a);
       const td = await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT);
 
@@ -512,7 +512,7 @@ class Index {
     }
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
       const attrs = {};
-      for (const a of msg.getRecipientIterable()) {
+      for (const a of msg.getRecipientArray()) {
         attrs[a.uri()] = a;
       }
       const linkTo = Identity.getLinkTo(attrs);
@@ -544,7 +544,7 @@ class Index {
     if (Array.isArray(msgs)) {
       console.log(`sorting ${msgs.length} messages onto a search tree...`);
       for (let i = 0;i < msgs.length;i ++) {
-        for (const a of msgs[i].getAuthorIterable()) {
+        for (const a of msgs[i].getAuthorArray()) {
           if (a.isUniqueType()) {
             const key = `${a.uri()}:${msgs[i].getHash()}`;
             msgsByAuthor[key] = msgs[i];

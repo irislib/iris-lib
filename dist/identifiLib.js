@@ -31,11 +31,23 @@
 
 	var _JSON$stringify = unwrapExports(stringify$1);
 
-	// 7.1.4 ToInteger
-	var ceil = Math.ceil;
-	var floor = Math.floor;
-	var _toInteger = function (it) {
-	  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
+	var _iterStep = function (done, value) {
+	  return { value: value, done: !!done };
+	};
+
+	var _iterators = {};
+
+	var toString = {}.toString;
+
+	var _cof = function (it) {
+	  return toString.call(it).slice(8, -1);
+	};
+
+	// fallback for non-array-like ES3 and non-enumerable old V8 strings
+
+	// eslint-disable-next-line no-prototype-builtins
+	var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
+	  return _cof(it) == 'String' ? it.split('') : Object(it);
 	};
 
 	// 7.2.1 RequireObjectCoercible(argument)
@@ -44,20 +56,11 @@
 	  return it;
 	};
 
-	// true  -> String#at
-	// false -> String#codePointAt
-	var _stringAt = function (TO_STRING) {
-	  return function (that, pos) {
-	    var s = String(_defined(that));
-	    var i = _toInteger(pos);
-	    var l = s.length;
-	    var a, b;
-	    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
-	    a = s.charCodeAt(i);
-	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
-	      ? TO_STRING ? s.charAt(i) : a
-	      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
-	  };
+	// to indexed object, toObject with fallback for non-array-like ES3 strings
+
+
+	var _toIobject = function (it) {
+	  return _iobject(_defined(it));
 	};
 
 	var _library = true;
@@ -242,26 +245,11 @@
 
 	var _redefine = _hide;
 
-	var _iterators = {};
-
-	var toString = {}.toString;
-
-	var _cof = function (it) {
-	  return toString.call(it).slice(8, -1);
-	};
-
-	// fallback for non-array-like ES3 and non-enumerable old V8 strings
-
-	// eslint-disable-next-line no-prototype-builtins
-	var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
-	  return _cof(it) == 'String' ? it.split('') : Object(it);
-	};
-
-	// to indexed object, toObject with fallback for non-array-like ES3 strings
-
-
-	var _toIobject = function (it) {
-	  return _iobject(_defined(it));
+	// 7.1.4 ToInteger
+	var ceil = Math.ceil;
+	var floor = Math.floor;
+	var _toInteger = function (it) {
+	  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 	};
 
 	// 7.1.15 ToLength
@@ -524,27 +512,6 @@
 	  return methods;
 	};
 
-	var $at = _stringAt(true);
-
-	// 21.1.3.27 String.prototype[@@iterator]()
-	_iterDefine(String, 'String', function (iterated) {
-	  this._t = String(iterated); // target
-	  this._i = 0;                // next index
-	// 21.1.5.2.1 %StringIteratorPrototype%.next()
-	}, function () {
-	  var O = this._t;
-	  var index = this._i;
-	  var point;
-	  if (index >= O.length) return { value: undefined, done: true };
-	  point = $at(O, index);
-	  this._i += point.length;
-	  return { value: point, done: false };
-	});
-
-	var _iterStep = function (done, value) {
-	  return { value: value, done: !!done };
-	};
-
 	// 22.1.3.4 Array.prototype.entries()
 	// 22.1.3.13 Array.prototype.keys()
 	// 22.1.3.29 Array.prototype.values()
@@ -585,6 +552,85 @@
 	  if (proto && !proto[TO_STRING_TAG]) _hide(proto, TO_STRING_TAG, NAME);
 	  _iterators[NAME] = _iterators.Array;
 	}
+
+	// true  -> String#at
+	// false -> String#codePointAt
+	var _stringAt = function (TO_STRING) {
+	  return function (that, pos) {
+	    var s = String(_defined(that));
+	    var i = _toInteger(pos);
+	    var l = s.length;
+	    var a, b;
+	    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
+	    a = s.charCodeAt(i);
+	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+	      ? TO_STRING ? s.charAt(i) : a
+	      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+	  };
+	};
+
+	var $at = _stringAt(true);
+
+	// 21.1.3.27 String.prototype[@@iterator]()
+	_iterDefine(String, 'String', function (iterated) {
+	  this._t = String(iterated); // target
+	  this._i = 0;                // next index
+	// 21.1.5.2.1 %StringIteratorPrototype%.next()
+	}, function () {
+	  var O = this._t;
+	  var index = this._i;
+	  var point;
+	  if (index >= O.length) return { value: undefined, done: true };
+	  point = $at(O, index);
+	  this._i += point.length;
+	  return { value: point, done: false };
+	});
+
+	// getting tag from 19.1.3.6 Object.prototype.toString()
+
+	var TAG$1 = _wks('toStringTag');
+	// ES3 wrong here
+	var ARG = _cof(function () { return arguments; }()) == 'Arguments';
+
+	// fallback for IE11 Script Access Denied error
+	var tryGet = function (it, key) {
+	  try {
+	    return it[key];
+	  } catch (e) { /* empty */ }
+	};
+
+	var _classof = function (it) {
+	  var O, T, B;
+	  return it === undefined ? 'Undefined' : it === null ? 'Null'
+	    // @@toStringTag case
+	    : typeof (T = tryGet(O = Object(it), TAG$1)) == 'string' ? T
+	    // builtinTag case
+	    : ARG ? _cof(O)
+	    // ES3 arguments fallback
+	    : (B = _cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
+	};
+
+	var ITERATOR$1 = _wks('iterator');
+
+	var core_getIteratorMethod = _core.getIteratorMethod = function (it) {
+	  if (it != undefined) return it[ITERATOR$1]
+	    || it['@@iterator']
+	    || _iterators[_classof(it)];
+	};
+
+	var core_getIterator = _core.getIterator = function (it) {
+	  var iterFn = core_getIteratorMethod(it);
+	  if (typeof iterFn != 'function') throw TypeError(it + ' is not iterable!');
+	  return _anObject(iterFn.call(it));
+	};
+
+	var getIterator = core_getIterator;
+
+	var getIterator$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": getIterator, __esModule: true };
+	});
+
+	var _getIterator = unwrapExports(getIterator$1);
 
 	var f$1 = _wks;
 
@@ -1022,52 +1068,6 @@
 	});
 
 	var _typeof = unwrapExports(_typeof_1);
-
-	// getting tag from 19.1.3.6 Object.prototype.toString()
-
-	var TAG$1 = _wks('toStringTag');
-	// ES3 wrong here
-	var ARG = _cof(function () { return arguments; }()) == 'Arguments';
-
-	// fallback for IE11 Script Access Denied error
-	var tryGet = function (it, key) {
-	  try {
-	    return it[key];
-	  } catch (e) { /* empty */ }
-	};
-
-	var _classof = function (it) {
-	  var O, T, B;
-	  return it === undefined ? 'Undefined' : it === null ? 'Null'
-	    // @@toStringTag case
-	    : typeof (T = tryGet(O = Object(it), TAG$1)) == 'string' ? T
-	    // builtinTag case
-	    : ARG ? _cof(O)
-	    // ES3 arguments fallback
-	    : (B = _cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
-	};
-
-	var ITERATOR$1 = _wks('iterator');
-
-	var core_getIteratorMethod = _core.getIteratorMethod = function (it) {
-	  if (it != undefined) return it[ITERATOR$1]
-	    || it['@@iterator']
-	    || _iterators[_classof(it)];
-	};
-
-	var core_getIterator = _core.getIterator = function (it) {
-	  var iterFn = core_getIteratorMethod(it);
-	  if (typeof iterFn != 'function') throw TypeError(it + ' is not iterable!');
-	  return _anObject(iterFn.call(it));
-	};
-
-	var getIterator = core_getIterator;
-
-	var getIterator$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": getIterator, __esModule: true };
-	});
-
-	var _getIterator = unwrapExports(getIterator$1);
 
 	var runtime = createCommonjsModule(function (module) {
 	/**
@@ -9900,6 +9900,25 @@
 	    this._validate();
 	  }
 
+	  Message._getArray = function _getArray(authorOrRecipient) {
+	    var arr = [];
+	    var keys = _Object$keys(authorOrRecipient);
+	    for (var i = 0; i < keys.length; i++) {
+	      var type = keys[i];
+	      var value = authorOrRecipient[keys[i]];
+	      if (typeof value === 'string') {
+	        arr.push(new Attribute(type, value));
+	      } else {
+	        // array
+	        for (var j = 0; j < value.length; j++) {
+	          var elementValue = value[j];
+	          arr.push(new Attribute(type, elementValue));
+	        }
+	      }
+	    }
+	    return arr;
+	  };
+
 	  Message._getIterable = function _getIterable(authorOrRecipient) {
 	    var _ref;
 
@@ -9989,24 +10008,7 @@
 
 
 	  Message.prototype.getAuthorArray = function getAuthorArray() {
-	    var arr = [];
-	    for (var _iterator = this.getAuthorIterable(), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _getIterator(_iterator);;) {
-	      var _ref2;
-
-	      if (_isArray) {
-	        if (_i >= _iterator.length) break;
-	        _ref2 = _iterator[_i++];
-	      } else {
-	        _i = _iterator.next();
-	        if (_i.done) break;
-	        _ref2 = _i.value;
-	      }
-
-	      var a = _ref2;
-
-	      arr.push(a);
-	    }
-	    return arr;
+	    return Message._getArray(this.signedData.author);
 	  };
 
 	  /**
@@ -10015,24 +10017,7 @@
 
 
 	  Message.prototype.getRecipientArray = function getRecipientArray() {
-	    var arr = [];
-	    for (var _iterator2 = this.getRecipientIterable(), _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _getIterator(_iterator2);;) {
-	      var _ref3;
-
-	      if (_isArray2) {
-	        if (_i2 >= _iterator2.length) break;
-	        _ref3 = _iterator2[_i2++];
-	      } else {
-	        _i2 = _iterator2.next();
-	        if (_i2.done) break;
-	        _ref3 = _i2.value;
-	      }
-
-	      var a = _ref3;
-
-	      arr.push(a);
-	    }
-	    return arr;
+	    return Message._getArray(this.signedData.recipient);
 	  };
 
 	  /**
@@ -10113,12 +10098,12 @@
 	      var _t = _typeof(d.recipient[_attr]);
 	      if (_t !== 'string') {
 	        if (Array.isArray(d.recipient[_attr])) {
-	          for (var _i3 = 0; _i3 < d.recipient[_attr].length; _i3++) {
-	            if (typeof d.recipient[_attr][_i3] !== 'string') {
-	              throw new ValidationError(errorMsg + ' Recipient attribute must be string, got ' + _attr + ': [' + d.recipient[_attr][_i3] + ']');
+	          for (var _i = 0; _i < d.recipient[_attr].length; _i++) {
+	            if (typeof d.recipient[_attr][_i] !== 'string') {
+	              throw new ValidationError(errorMsg + ' Recipient attribute must be string, got ' + _attr + ': [' + d.recipient[_attr][_i] + ']');
 	            }
-	            if (d.recipient[_attr][_i3].length === 0) {
-	              throw new ValidationError(errorMsg + ' recipient ' + _attr + ' in array[' + _i3 + '] is empty');
+	            if (d.recipient[_attr][_i].length === 0) {
+	              throw new ValidationError(errorMsg + ' recipient ' + _attr + ' in array[' + _i + '] is empty');
 	            }
 	          }
 	        } else {
@@ -10255,19 +10240,19 @@
 
 
 	  Message.prototype.getAuthor = function getAuthor(index) {
-	    for (var _iterator3 = this.getAuthorIterable(), _isArray3 = Array.isArray(_iterator3), _i4 = 0, _iterator3 = _isArray3 ? _iterator3 : _getIterator(_iterator3);;) {
-	      var _ref4;
+	    for (var _iterator = this.getAuthorIterable(), _isArray = Array.isArray(_iterator), _i2 = 0, _iterator = _isArray ? _iterator : _getIterator(_iterator);;) {
+	      var _ref2;
 
-	      if (_isArray3) {
-	        if (_i4 >= _iterator3.length) break;
-	        _ref4 = _iterator3[_i4++];
+	      if (_isArray) {
+	        if (_i2 >= _iterator.length) break;
+	        _ref2 = _iterator[_i2++];
 	      } else {
-	        _i4 = _iterator3.next();
-	        if (_i4.done) break;
-	        _ref4 = _i4.value;
+	        _i2 = _iterator.next();
+	        if (_i2.done) break;
+	        _ref2 = _i2.value;
 	      }
 
-	      var a = _ref4;
+	      var a = _ref2;
 
 	      if (a.isUniqueType()) {
 	        return index.get(a);
@@ -10282,19 +10267,19 @@
 
 
 	  Message.prototype.getRecipient = function getRecipient(index) {
-	    for (var _iterator4 = this.getRecipientIterable(), _isArray4 = Array.isArray(_iterator4), _i5 = 0, _iterator4 = _isArray4 ? _iterator4 : _getIterator(_iterator4);;) {
-	      var _ref5;
+	    for (var _iterator2 = this.getRecipientIterable(), _isArray2 = Array.isArray(_iterator2), _i3 = 0, _iterator2 = _isArray2 ? _iterator2 : _getIterator(_iterator2);;) {
+	      var _ref3;
 
-	      if (_isArray4) {
-	        if (_i5 >= _iterator4.length) break;
-	        _ref5 = _iterator4[_i5++];
+	      if (_isArray2) {
+	        if (_i3 >= _iterator2.length) break;
+	        _ref3 = _iterator2[_i3++];
 	      } else {
-	        _i5 = _iterator4.next();
-	        if (_i5.done) break;
-	        _ref5 = _i5.value;
+	        _i3 = _iterator2.next();
+	        if (_i3.done) break;
+	        _ref3 = _i3.value;
 	      }
 
-	      var a = _ref5;
+	      var a = _ref3;
 
 	      if (a.isUniqueType()) {
 	        return index.get(a);
@@ -11198,7 +11183,7 @@
 	        return;
 	      }
 	    }
-	    for (var _iterator = msg.getAuthorIterable(), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _getIterator(_iterator);;) {
+	    for (var _iterator = msg.getAuthorArray(), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _getIterator(_iterator);;) {
 	      var _ref;
 
 	      if (_isArray) {
@@ -11257,7 +11242,7 @@
 	        }
 	      };
 
-	      for (var _iterator2 = msg.getRecipientIterable(), _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _getIterator(_iterator2);;) {
+	      for (var _iterator2 = msg.getRecipientArray(), _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _getIterator(_iterator2);;) {
 	        var _ref2;
 
 	        var _ret = _loop();
@@ -11398,7 +11383,7 @@
 	    var recipientIdentities = {};
 	    var authorIdentities = {};
 	    var selfAuthored = false;
-	    for (var _iterator3 = msg.getAuthorIterable(), _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _getIterator(_iterator3);;) {
+	    for (var _iterator3 = msg.getAuthorArray(), _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _getIterator(_iterator3);;) {
 	      var _ref3;
 
 	      if (_isArray3) {
@@ -11428,7 +11413,7 @@
 	    if (!_Object$keys(authorIdentities).length) {
 	      return; // unknown author, do nothing
 	    }
-	    for (var _iterator4 = msg.getRecipientIterable(), _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _getIterator(_iterator4);;) {
+	    for (var _iterator4 = msg.getRecipientArray(), _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _getIterator(_iterator4);;) {
 	      var _ref4;
 
 	      if (_isArray4) {
@@ -11456,7 +11441,7 @@
 	    if (!_Object$keys(recipientIdentities).length) {
 	      // recipient is previously unknown
 	      var attrs = {};
-	      for (var _iterator5 = msg.getRecipientIterable(), _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _getIterator(_iterator5);;) {
+	      for (var _iterator5 = msg.getRecipientArray(), _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _getIterator(_iterator5);;) {
 	        var _ref5;
 
 	        if (_isArray5) {
@@ -11505,7 +11490,7 @@
 	    if (Array.isArray(msgs)) {
 	      console.log('sorting ' + msgs.length + ' messages onto a search tree...');
 	      for (var i = 0; i < msgs.length; i++) {
-	        for (var _iterator6 = msgs[i].getAuthorIterable(), _isArray6 = Array.isArray(_iterator6), _i6 = 0, _iterator6 = _isArray6 ? _iterator6 : _getIterator(_iterator6);;) {
+	        for (var _iterator6 = msgs[i].getAuthorArray(), _isArray6 = Array.isArray(_iterator6), _i6 = 0, _iterator6 = _isArray6 ? _iterator6 : _getIterator(_iterator6);;) {
 	          var _ref6;
 
 	          if (_isArray6) {

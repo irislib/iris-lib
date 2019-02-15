@@ -41,6 +41,24 @@ class Message {
     this._validate();
   }
 
+  static _getArray(authorOrRecipient) {
+    const arr = [];
+    const keys = Object.keys(authorOrRecipient);
+    for (let i = 0;i < keys.length;i ++) {
+      const type = keys[i];
+      const value = authorOrRecipient[keys[i]];
+      if (typeof value === `string`) {
+        arr.push(new Attribute(type, value));
+      } else { // array
+        for (let j = 0;j < value.length;j ++) {
+          const elementValue = value[j];
+          arr.push(new Attribute(type, elementValue));
+        }
+      }
+    }
+    return arr;
+  }
+
   static _getIterable(authorOrRecipient) {
     return {
       *[Symbol.iterator]() {
@@ -79,22 +97,14 @@ class Message {
   * @returns {array} Array containing author attributes
   */
   getAuthorArray() {
-    const arr = [];
-    for (const a of this.getAuthorIterable()) {
-      arr.push(a);
-    }
-    return arr;
+    return Message._getArray(this.signedData.author);
   }
 
   /**
   * @returns {array} Array containing recipient attributes
   */
   getRecipientArray() {
-    const arr = [];
-    for (const a of this.getRecipientIterable()) {
-      arr.push(a);
-    }
-    return arr;
+    return Message._getArray(this.signedData.recipient);
   }
 
 
