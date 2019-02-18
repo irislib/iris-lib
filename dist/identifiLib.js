@@ -10976,8 +10976,9 @@
 	      i._addIdentityToIndexes(id.gun);
 	      if (options.self) {
 	        var recipient = _Object$assign(options.self, { keyID: i.viewpoint.value });
-	        var msg = Message.createVerification({ recipient: recipient }, keypair);
-	        i.addMessage(msg);
+	        Message.createVerification({ recipient: recipient }, keypair).then(function (msg) {
+	          return i.addMessage(msg);
+	        });
 	      }
 	    });
 
@@ -11754,7 +11755,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.84";
+	var version$1 = "0.0.85";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

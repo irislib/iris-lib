@@ -136,8 +136,7 @@ class Index {
       i._addIdentityToIndexes(id.gun);
       if (options.self) {
         const recipient = Object.assign(options.self, {keyID: i.viewpoint.value});
-        const msg = Message.createVerification({recipient}, keypair);
-        i.addMessage(msg);
+        Message.createVerification({recipient}, keypair).then(msg => i.addMessage(msg));
       }
     });
 
