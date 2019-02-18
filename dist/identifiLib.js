@@ -10386,10 +10386,8 @@
 	    } else {
 	      data.linkTo = Identity.getLinkTo(data.attrs);
 	    }
-	    console.log('data', data);
-	    return gun.put(data).then(function () {
-	      return new Identity(gun, data.linkTo);
-	    });
+	    gun.put(data);
+	    return new Identity(gun, data.linkTo);
 	  };
 
 	  Identity.getLinkTo = function getLinkTo(attrs) {
@@ -10972,15 +10970,14 @@
 	    i.gun.get('viewpoint').put(i.viewpoint);
 	    var uri = i.viewpoint.uri();
 	    var g = i.gun.get('identitiesBySearchKey').get(uri);
-	    Identity.create(g, { trustDistance: 0, linkTo: i.viewpoint }).then(function (id) {
-	      i._addIdentityToIndexes(id.gun);
-	      if (options.self) {
-	        var recipient = _Object$assign(options.self, { keyID: i.viewpoint.value });
-	        Message.createVerification({ recipient: recipient }, keypair).then(function (msg) {
-	          return i.addMessage(msg);
-	        });
-	      }
-	    });
+	    var id = Identity.create(g, { trustDistance: 0, linkTo: i.viewpoint });
+	    i._addIdentityToIndexes(id.gun);
+	    if (options.self) {
+	      var recipient = _Object$assign(options.self, { keyID: i.viewpoint.value });
+	      Message.createVerification({ recipient: recipient }, keypair).then(function (msg) {
+	        return i.addMessage(msg);
+	      });
+	    }
 
 	    return i;
 	  };
@@ -11755,7 +11752,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.85";
+	var version$1 = "0.0.86";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

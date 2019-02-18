@@ -132,13 +132,12 @@ class Index {
     i.gun.get(`viewpoint`).put(i.viewpoint);
     const uri = i.viewpoint.uri();
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
-    Identity.create(g, {trustDistance: 0, linkTo: i.viewpoint}).then(id => {
-      i._addIdentityToIndexes(id.gun);
-      if (options.self) {
-        const recipient = Object.assign(options.self, {keyID: i.viewpoint.value});
-        Message.createVerification({recipient}, keypair).then(msg => i.addMessage(msg));
-      }
-    });
+    const id = Identity.create(g, {trustDistance: 0, linkTo: i.viewpoint});
+    i._addIdentityToIndexes(id.gun);
+    if (options.self) {
+      const recipient = Object.assign(options.self, {keyID: i.viewpoint.value});
+      Message.createVerification({recipient}, keypair).then(msg => i.addMessage(msg));
+    }
 
     return i;
   }

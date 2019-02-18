@@ -28,10 +28,8 @@ class Identity {
     } else {
       data.linkTo = Identity.getLinkTo(data.attrs);
     }
-    console.log(`data`, data);
-    return gun.put(data).then(() => {
-      return new Identity(gun, data.linkTo);
-    });
+    gun.put(data);
+    return new Identity(gun, data.linkTo);
   }
 
   static getLinkTo(attrs) {
