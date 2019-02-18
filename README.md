@@ -90,6 +90,8 @@ The code is available under the [MIT](LICENSE) license.
 
 Please do **integrate** identifi-lib with your existing application or with a test application and **create Github issues** for the bugs and other problems you may encounter. Your help is much appreciated!
 
+TODO list is also available on [Trello](https://trello.com/b/8qUutkmP/identifi).
+
 ### Misc
 
 This module was created using [generator-module-boilerplate](https://github.com/duivvv/generator-module-boilerplate).
