@@ -10969,16 +10969,17 @@
 	    user.auth(keypair);
 	    var i = new Index(user.get('identifi'), options);
 	    i.viewpoint = new Attribute('keyID', Key.getId(keypair));
-	    await i.gun.get('viewpoint').put(i.viewpoint);
+	    i.gun.get('viewpoint').put(i.viewpoint);
 	    var uri = i.viewpoint.uri();
 	    var g = i.gun.get('identitiesBySearchKey').get(uri);
-	    var id = await Identity.create(g, { trustDistance: 0, linkTo: i.viewpoint });
-	    await i._addIdentityToIndexes(id.gun);
-	    if (options.self) {
-	      var recipient = _Object$assign(options.self, { keyID: i.viewpoint.value });
-	      var msg = await Message.createVerification({ recipient: recipient }, keypair);
-	      i.addMessage(msg);
-	    }
+	    Identity.create(g, { trustDistance: 0, linkTo: i.viewpoint }).then(function (id) {
+	      i._addIdentityToIndexes(id.gun);
+	      if (options.self) {
+	        var recipient = _Object$assign(options.self, { keyID: i.viewpoint.value });
+	        var msg = Message.createVerification({ recipient: recipient }, keypair);
+	        i.addMessage(msg);
+	      }
+	    });
 
 	    return i;
 	  };
@@ -11753,7 +11754,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.83";
+	var version$1 = "0.0.84";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

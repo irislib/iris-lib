@@ -129,16 +129,17 @@ class Index {
     user.auth(keypair);
     const i = new Index(user.get(`identifi`), options);
     i.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
-    await i.gun.get(`viewpoint`).put(i.viewpoint);
+    i.gun.get(`viewpoint`).put(i.viewpoint);
     const uri = i.viewpoint.uri();
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
-    const id = await Identity.create(g, {trustDistance: 0, linkTo: i.viewpoint});
-    await i._addIdentityToIndexes(id.gun);
-    if (options.self) {
-      const recipient = Object.assign(options.self, {keyID: i.viewpoint.value});
-      const msg = await Message.createVerification({recipient}, keypair);
-      i.addMessage(msg);
-    }
+    Identity.create(g, {trustDistance: 0, linkTo: i.viewpoint}).then(id => {
+      i._addIdentityToIndexes(id.gun);
+      if (options.self) {
+        const recipient = Object.assign(options.self, {keyID: i.viewpoint.value});
+        const msg = Message.createVerification({recipient}, keypair);
+        i.addMessage(msg);
+      }
+    });
 
     return i;
   }
