@@ -155,14 +155,52 @@ class Index {
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
+    const hashSlice = msg.getHash().substr(0, 9);
     keys.messagesByHash = [msg.getHash()];
-    keys.messagesByTimestamp = [`${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000)}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`];
+    keys.messagesByTimestamp = [`${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000)}:${hashSlice}`];
     keys.messagesByDistance = [`${distance}:${keys.messagesByTimestamp[0]}`];
-    if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
-      keys.verificationsByRecipient = [];
+
+    keys.messagesByAuthor = [];
+    const authors = msg.getAuthorArray();
+    for (let i = 0;i < authors.length;i ++) {
+      keys.messagesByAuthor.push(`${authors[i].uri()}:${msg.signedData.timestamp}:${hashSlice}`);
     }
-    if (msg.signedData.type === `rating`) {
+    keys.messagesByRecipient = [];
+    const recipients = msg.getRecipientArray();
+    for (let i = 0;i < recipients.length;i ++) {
+      keys.messagesByRecipient.push(`${recipients[i].uri()}:${msg.signedData.timestamp}:${hashSlice}`);
+    }
+
+    if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
+      keys.verificationsByRecipientAndAuthor = [];
+      for (let i = 0;i < recipients.length;i ++) {
+        const r = recipients[i];
+        if (!r.isUniqueType()) {
+          continue;
+        }
+        for (let j = 0;j < authors.length;j ++) {
+          const a = authors[j];
+          if (!a.isUniqueType()) {
+            continue;
+          }
+          keys.verificationsByRecipientAndAuthor.push(`${r.uri()}:${a.uri()}`);
+        }
+      }
+    } else if (msg.signedData.type === `rating`) {
       keys.ratingsByRecipientAndAuthor = [];
+      for (let i = 0;i < recipients.length;i ++) {
+        const r = recipients[i];
+        if (!r.isUniqueType()) {
+          continue;
+        }
+        for (let j = 0;j < authors.length;j ++) {
+          const a = authors[j];
+          if (!a.isUniqueType()) {
+            continue;
+          }
+          keys.ratingsByRecipientAndAuthor.push(`${r.uri()}:${a.uri()}`);
+        }
+      }
     }
     return keys;
   }
@@ -640,8 +678,16 @@ class Index {
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
     }
-    let indexKey = Index.getMsgIndexKey(msg);
     const obj = {sig: msg.sig, pubKey: msg.pubKey};
+    const indexKeys = Index.getMsgIndexKeys(msg);
+    for (const index in indexKeys) {
+      for (let i = 0;i < indexKeys[index].length;i ++) {
+        const key = indexKeys[index][i];
+        console.log(`adding to index ${index} message key ${key}`);
+        this.gun.get(index).get(key).put(obj);
+        this.gun.get(index).get(key).put(obj); // umm, what? doesn't work unless I write it twice
+      }
+    }
     if (this.options.ipfs) {
       try {
         const ipfsUri = await msg.saveToIpfs(this.options.ipfs);
@@ -652,13 +698,6 @@ class Index {
         console.error(`adding msg ${msg} to ipfs failed: ${e}`);
       }
     }
-    this.gun.get(`messagesByHash`).get(hash).put(obj);
-    this.gun.get(`messagesByHash`).get(hash).put(obj);
-    this.gun.get(`messagesByDistance`).get(indexKey).put(obj);
-    this.gun.get(`messagesByDistance`).get(indexKey).put(obj); // umm, what? doesn't work unless I write it twice
-    indexKey = indexKey.substr(indexKey.indexOf(`:`) + 1); // remove distance from key
-    this.gun.get(`messagesByTimestamp`).get(indexKey).put(obj);
-    this.gun.get(`messagesByTimestamp`).get(indexKey).put(obj);
     await this._updateIdentityIndexesByMsg(msg);
     return true;
   }
