@@ -134,6 +134,19 @@ describe('local index', async () => {
       expect(p).toBeUndefined();
     });
   });
+  describe('downvote', async () => {
+    test('up & down', async () => {
+      let msg = await identifi.Message.createRating({recipient:{email:'orwell@example.com'}, rating:1}, key);
+      await i.addMessage(msg);
+      p = i.get('orwell@example.com');
+      let data = await p.gun.once().then();
+      expect(data.trustDistance).toBe(1);
+      msg = await identifi.Message.createRating({recipient:{email:'orwell@example.com'}, rating:-1}, key);
+      await i.addMessage(msg);
+      data = await p.gun.once().then();
+      expect(data.trustDistance).toBe(99);
+    });
+  });
   describe ('untrusted key', async () => {
     let u;
     test('should not create new identity', async () => {
@@ -277,7 +290,7 @@ describe('local index', async () => {
     const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(data.trustDistance).toBe(0);
-    expect(data.sentPositive).toBe(4);
+    expect(data.sentPositive).toBe(5);
   });
   test('get messages by timestamp', async () => {
     const results = [];

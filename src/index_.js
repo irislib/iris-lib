@@ -150,6 +150,23 @@ class Index {
     return key;
   }
 
+  static getMsgIndexKeys(msg) {
+    const keys = {};
+    let distance = parseInt(msg.distance);
+    distance = Number.isNaN(distance) ? 99 : distance;
+    distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
+    keys.messagesByHash = [msg.getHash()];
+    keys.messagesByTimestamp = [`${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000)}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`];
+    keys.messagesByDistance = [`${distance}:${keys.messagesByTimestamp[0]}`];
+    if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
+      keys.verificationsByRecipient = [];
+    }
+    if (msg.signedData.type === `rating`) {
+      keys.ratingsByRecipientAndAuthor = [];
+    }
+    return keys;
+  }
+
   async getIdentityIndexKeys(identity, hash) {
     const indexKeys = [];
     let d;
