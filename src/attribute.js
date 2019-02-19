@@ -24,7 +24,9 @@ const UNIQUE_ID_VALIDATORS = {
 */
 class Attribute {
   /**
-  * @param {Object|Array} data {name, val} or [name, val]
+  * Usage: new Attribute(value) or new Attribute(type, value)
+  * @param {string} a
+  * @param {string} b
   */
   constructor(a, b) {
     if (typeof a === `object` && typeof a.type === `string` && typeof a.value === `string`) {
