@@ -206,7 +206,7 @@ class Index {
   }
 
   async getIdentityIndexKeys(identity, hash) {
-    const indexKeys = [];
+    const indexKeys = {identitiesByTrustDistance: [], identitiesBySearchKey: []};
     let d;
     if (identity.linkTo && this.viewpoint.equals(identity.linkTo)) {
       d = 0;
@@ -226,29 +226,33 @@ class Index {
       const value = encodeURIComponent(v);
       const lowerCaseValue = encodeURIComponent(v.toLowerCase());
       const name = encodeURIComponent(n);
-      let key = `${distance}:${value}:${name}`;
-      let lowerCaseKey = `${distance}:${lowerCaseValue}:${name}`;
+      let key = `${value}:${name}`;
+      let lowerCaseKey = `${lowerCaseValue}:${name}`;
       if (!Attribute.isUniqueType(n)) { // allow for multiple index keys with same non-unique attribute
         key = `${key}:${hash.substr(0, 9)}`;
         lowerCaseKey = `${lowerCaseKey}:${hash.substr(0, 9)}`;
       }
-      indexKeys.push(key);
+      indexKeys.identitiesBySearchKey.push(key);
+      indexKeys.identitiesByTrustDistance.push(`${distance}:${key}`);
       if (key !== lowerCaseKey) {
-        indexKeys.push(lowerCaseKey);
+        indexKeys.identitiesBySearchKey.push(lowerCaseKey);
+        indexKeys.identitiesByTrustDistance.push(`${distance}:${lowerCaseKey}`);
       }
       if (v.indexOf(` `) > - 1) {
         const words = v.toLowerCase().split(` `);
         for (let l = 0;l < words.length;l += 1) {
-          let k = `${distance}:${encodeURIComponent(words[l])}:${name}`;
+          let k = `${encodeURIComponent(words[l])}:${name}`;
           if (!Attribute.isUniqueType(n)) {
             k = `${k}:${hash.substr(0, 9)}`;
           }
-          indexKeys.push(k);
+          indexKeys.identitiesBySearchKey.push(k);
+          indexKeys.identitiesByTrustDistance.push(`${distance}:${k}`);
         }
       }
       if (key.match(/^http(s)?:\/\/.+\/[a-zA-Z0-9_]+$/)) {
         const split = key.split(`/`);
-        indexKeys.push(split[split.length - 1]);
+        indexKeys.identitiesBySearchKey.push(split[split.length - 1]);
+        indexKeys.identitiesByTrustDistance.push(`${distance}:${split[split.length - 1]}`);
       }
     }
 
@@ -319,11 +323,14 @@ class Index {
     const hash = Gun.node.soul(id) || `todo`;
     const indexKeys = await this.getIdentityIndexKeys(id, hash.substr(0, 6));
 
-    for (let i = 0;i < indexKeys.length;i ++) {
-      const key = indexKeys[i];
-      console.log(`adding key ${key}`);
-      await this.gun.get(`identitiesByTrustDistance`).get(key).put(id);
-      await this.gun.get(`identitiesBySearchKey`).get(key.substr(key.indexOf(`:`) + 1)).put(id);
+    const indexes = Object.keys(indexKeys);
+    for (let i = 0;i < indexes.length;i ++) {
+      const index = indexes[i];
+      for (let j = 0;j < indexKeys[index].length;j ++) {
+        const key = indexKeys[index][j];
+        console.log(`adding key ${key}`);
+        await this.gun.get(index).get(key).put(id);
+      }
     }
   }
 
@@ -415,14 +422,19 @@ class Index {
       id.receivedNegative = (id.receivedNegative || 0);
       id.receivedNeutral = (id.receivedNeutral || 0);
       if (msg.isPositive()) {
-        if (msg.distance + 1 < id.trustDistance) {
+        if (typeof id.trustDistance !== `number` || msg.distance + 1 < id.trustDistance) {
           recipient.get(`trustDistance`).put(msg.distance + 1);
         }
         id.receivedPositive ++;
-      } else if (msg.isNegative()) {
-        id.receivedNegative ++;
       } else {
-        id.receivedNeutral ++;
+        if (msg.distance < id.trustDistance) {
+          recipient.get(`trustDistance`).put(false); // TODO: this should take into account the aggregate score of the identity
+        }
+        if (msg.isNegative()) {
+          id.receivedNegative ++;
+        } else {
+          id.receivedNeutral ++;
+        }
       }
       recipient.get(`receivedPositive`).put(id.receivedPositive);
       recipient.get(`receivedNegative`).put(id.receivedNegative);
@@ -448,11 +460,15 @@ class Index {
     recipient.get(`received`).get(msgIndexKey).put(obj);
     recipient.get(`received`).get(msgIndexKey).put(obj);
     const identityIndexKeysAfter = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
-    for (let j = 0;j < identityIndexKeysBefore.length;j ++) {
-      const k = identityIndexKeysBefore[j];
-      if (identityIndexKeysAfter.indexOf(k) === - 1) {
-        this.gun.get(`identitiesByTrustDistance`).get(k).put(null);
-        this.gun.get(`identitiesBySearchKey`).get(k.substr(k.indexOf(`:`) + 1)).put(null);
+    const indexesBefore = Object.keys(identityIndexKeysBefore);
+    for (let i = 0;i < indexesBefore.length;i ++) {
+      const index = indexesBefore[i];
+      for (let j = 0;j < identityIndexKeysBefore[index].length;j ++) {
+        const key = identityIndexKeysBefore[index][j];
+        if (!identityIndexKeysAfter[index] || identityIndexKeysAfter[index].indexOf(key) === - 1) {
+          console.log(`removing stale key ${key} from index ${index}`);
+          this.gun.get(index).get(key).put(null);
+        }
       }
     }
   }
@@ -498,6 +514,10 @@ class Index {
       }
       await this._addIdentityToIndexes(relocated);
     }
+  }
+
+  async removeTrustedIndex(gunUri) {
+    this.gun.get(`trustedIndexes`).get(gunUri).put(null);
   }
 
   async addTrustedIndex(gunUri,
@@ -560,8 +580,12 @@ class Index {
       if (!isNaN(td)) {
         recipientIdentities[id.gun[`_`].link] = id;
       }
-      if (selfAuthored && a.type === `keyID` && a.value !== this.viewpoint.value && msg.isPositive()) { // TODO: not if already added - causes infinite loop?
-        this.addTrustedIndex(a.value);
+      if (selfAuthored && a.type === `keyID` && a.value !== this.viewpoint.value) { // TODO: not if already added - causes infinite loop?
+        if (msg.isPositive()) {
+          this.addTrustedIndex(a.value);
+        } else {
+          this.removeTrustedIndex(a.value);
+        }
       }
     }
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
@@ -571,7 +595,7 @@ class Index {
       }
       const linkTo = Identity.getLinkTo(attrs);
       const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
-      const id = await Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: 99}, true);
+      const id = await Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: false}, true);
       // {a:1} because inserting {} causes a "no signature on data" error from gun
 
       // TODO: take msg author trust into account

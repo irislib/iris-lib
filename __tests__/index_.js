@@ -97,7 +97,7 @@ describe('local index', async () => {
     expect(r).toBe(true);
     p = i.get('fabio@example.com');
     let data = await p.gun.once().then();
-    expect(data.trustDistance).toBe(99);
+    expect(data.trustDistance).toBe(false);
     msg = await identifi.Message.createRating({recipient:{email:'fabio@example.com'}, rating:10}, key);
     r = await i.addMessage(msg);
     p = i.get('fabio@example.com');
@@ -144,7 +144,7 @@ describe('local index', async () => {
       msg = await identifi.Message.createRating({recipient:{email:'orwell@example.com'}, rating:-1}, key);
       await i.addMessage(msg);
       data = await p.gun.once().then();
-      expect(data.trustDistance).toBe(99);
+      expect(data.trustDistance).toBe(false);
     });
   });
   describe ('untrusted key', async () => {
