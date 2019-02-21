@@ -90,6 +90,7 @@ class Index {
         }
       }
     }, options);
+    this.gun.get(`viewpoint`).on(vp => this.viewpoint = this.viewpoint || new Attribute(vp));
     if (this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {
         this.gun.get(`trustedIndexes`).map().once((val, uri) => {
@@ -98,7 +99,7 @@ class Index {
             this.gun.user(uri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
               const d = Number.parseInt(key.split(`:`)[0]);
               console.log(`got msg with d`, d, key);
-              if (!isNaN(d) && d <= this.options.indexSync.subscribe.maxMsgDistance) {
+              if (!Number.isNaN(d) && d <= this.options.indexSync.subscribe.maxMsgDistance) {
                 Message.fromSig(val).then(msg => {
                   console.log(`adding msg ${msg.hash} from trusted index`);
                   if (this.options.indexSync.msgTypes.all ||
@@ -143,7 +144,7 @@ class Index {
   }
 
   static getMsgIndexKey(msg) {
-    let distance = parseInt(msg.distance);
+    let distance = Number.parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
     const key = `${distance}:${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000)}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
@@ -152,7 +153,7 @@ class Index {
 
   static getMsgIndexKeys(msg) {
     const keys = {};
-    let distance = parseInt(msg.distance);
+    let distance = Number.parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
     const hashSlice = msg.getHash().substr(0, 9);
@@ -211,14 +212,14 @@ class Index {
     if (identity.linkTo && this.viewpoint.equals(identity.linkTo)) {
       d = 0;
     } else {
-      d = await util.timeoutPromise(identity.get(`trustDistance`).then(), GUN_TIMEOUT);
+      d = Number.parseInt(await util.timeoutPromise(identity.get(`trustDistance`).then(), GUN_TIMEOUT));
     }
 
     function addIndexKey(a) {
       if (!(a && a.value && a.type)) { // TODO: this sometimes returns undefined
         return;
       }
-      let distance = d !== undefined ? d : parseInt(a.dist);
+      let distance = d !== undefined ? d : Number.parseInt(a.dist);
       distance = Number.isNaN(distance) ? 99 : distance;
       distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
       const v = a.value || a[1];
@@ -328,7 +329,7 @@ class Index {
       const index = indexes[i];
       for (let j = 0;j < indexKeys[index].length;j ++) {
         const key = indexKeys[index][j];
-        console.log(`adding key ${key}`);
+        console.log(`adding to index ${index} key ${key}`);
         await this.gun.get(index).get(key).put(id);
       }
     }
@@ -360,8 +361,8 @@ class Index {
       return 0;
     }
     const id = this.get(a);
-    let d = await id.gun.get(`trustDistance`).then();
-    if (isNaN(d)) {
+    let d = Number.parseInt(await id.gun.get(`trustDistance`).then());
+    if (Number.isNaN(d)) {
       d = Infinity;
     }
     return d;
@@ -376,8 +377,8 @@ class Index {
     const signerAttr = new Attribute(`keyID`, msg.getSignerKeyID());
     if (!signerAttr.equals(this.viewpoint)) {
       const signer = this.get(signerAttr);
-      const d = await signer.gun.get(`trustDistance`).then();
-      if (isNaN(d)) {
+      const d = Number.parseInt(await signer.gun.get(`trustDistance`).then());
+      if (Number.isNaN(d)) {
         return;
       }
     }
@@ -422,6 +423,7 @@ class Index {
       id.receivedNegative = (id.receivedNegative || 0);
       id.receivedNeutral = (id.receivedNeutral || 0);
       if (msg.isPositive()) {
+        console.log(`trustDistance`, id.trustDistance, typeof id.trustDistance, `msg.distance`, msg.distance, `id.trustDistance`, id.trustDistance);
         if (typeof id.trustDistance !== `number` || msg.distance + 1 < id.trustDistance) {
           recipient.get(`trustDistance`).put(msg.distance + 1);
         }
@@ -537,7 +539,7 @@ class Index {
       await util.timeoutPromise(new Promise(resolve => {
         this.gun.user(gunUri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
           const d = Number.parseInt(key.split(`:`)[0]);
-          if (!isNaN(d) && d <= maxMsgDistance) {
+          if (!Number.isNaN(d) && d <= maxMsgDistance) {
             Message.fromSig(val).then(msg => {
               msgs.push(msg);
               if (msgs.length >= maxMsgsToCrawl) {
@@ -558,8 +560,8 @@ class Index {
     let selfAuthored = false;
     for (const a of msg.getAuthorArray()) {
       const id = this.get(a);
-      const td = await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT);
-      if (!isNaN(td)) {
+      const td = Number.parseInt(await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT));
+      if (!Number.isNaN(td)) {
         authorIdentities[id.gun[`_`].link] = id;
         const scores = await id.gun.get(`scores`).then();
         if (scores && scores.verifier && msg.signedData.type === `verification`) {
@@ -575,9 +577,9 @@ class Index {
     }
     for (const a of msg.getRecipientArray()) {
       const id = this.get(a);
-      const td = await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT);
+      const td = Number.parseInt(await util.timeoutPromise(id.gun.get(`trustDistance`).then(), GUN_TIMEOUT));
 
-      if (!isNaN(td)) {
+      if (!Number.isNaN(td)) {
         recipientIdentities[id.gun[`_`].link] = id;
       }
       if (selfAuthored && a.type === `keyID` && a.value !== this.viewpoint.value) { // TODO: not if already added - causes infinite loop?
@@ -784,7 +786,6 @@ class Index {
   getMessagesByTimestamp(callback, limit, cursor = ``, desc = true, filter) {
     const seen = {};
     const cb = msg => {
-      console.log(`hash`, msg.hash);
       if ((!limit || Object.keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {
         seen[msg.hash] = true;
         callback(msg);
