@@ -151,7 +151,7 @@ class Index {
         attrs[a.uri()] = a;
       }
     }
-    const id = Identity.create(g, {trustDistance: 0, linkTo: options.viewpoint, attrs});
+    const id = await Identity.create(g, {trustDistance: 0, linkTo: options.viewpoint, attrs});
     await i._addIdentityToIndexes(id.gun);
     if (options.self) {
       const recipient = Object.assign(options.self, {keyID: options.viewpoint.value});
@@ -615,7 +615,8 @@ class Index {
       }
       const linkTo = Identity.getLinkTo(attrs);
       const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
-      const id = Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: false});
+      const trustDistance = msg.isPositive() && typeof msg.distance === `number` ? msg.distance + 1 : false;
+      const id = await Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance});
       // {a:1} because inserting {} causes a "no signature on data" error from gun
 
       // TODO: take msg author trust into account
