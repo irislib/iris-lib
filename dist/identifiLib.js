@@ -11630,8 +11630,8 @@
 	        }
 	        knownIdentities.push(result);
 	      }, '');
-	      await new _Promise(function (resolve) {
-	        return setTimeout(resolve, 200);
+	      await new _Promise(function (r) {
+	        return setTimeout(r, 2000);
 	      }); // wait for results to accumulate
 	      stop = true;
 	      knownIdentities.sort(function (a, b) {
@@ -11853,7 +11853,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.88";
+	var version$1 = "0.0.89";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

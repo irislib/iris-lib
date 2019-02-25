@@ -667,7 +667,7 @@ class Index {
         if (stop) { return; }
         knownIdentities.push(result);
       }, ``);
-      await new Promise(resolve => setTimeout(resolve, 200)); // wait for results to accumulate
+      await new Promise(r => setTimeout(r, 2000)); // wait for results to accumulate
       stop = true;
       knownIdentities.sort((a, b) => {
         if (a.key === b.key) {
