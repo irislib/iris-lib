@@ -90,6 +90,16 @@ class Index {
         }
       }
     }, options);
+    if (options.viewpoint) {
+      this.viewpoint = options.viewpoint;
+    } else {
+      this.gun.get(`viewpoint`).on((val, key, msg, eve) => {
+        if (val) {
+          this.viewpoint = new Attribute(val);
+          eve.off();
+        }
+      });
+    }
     if (this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {
         this.gun.get(`trustedIndexes`).map().once((val, uri) => {
@@ -127,18 +137,28 @@ class Index {
     }
     const user = gun.user();
     user.auth(keypair);
+    options.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
     const i = new Index(user.get(`identifi`), options);
-    i.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
-    i.gun.get(`viewpoint`).put(i.viewpoint);
-    const uri = i.viewpoint.uri();
+    i.gun.get(`viewpoint`).put(options.viewpoint);
+    const uri = options.viewpoint.uri();
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
-    const id = Identity.create(g, {trustDistance: 0, linkTo: i.viewpoint});
-    i._addIdentityToIndexes(id.gun);
+    const attrs = {};
+    attrs[options.viewpoint.uri()] = options.viewpoint;
     if (options.self) {
-      const recipient = Object.assign(options.self, {keyID: i.viewpoint.value});
-      Message.createVerification({recipient}, keypair).then(msg => i.addMessage(msg));
+      const keys = Object.keys(options.self);
+      for (let i = 0;i < keys.length;i ++) {
+        const a = new Attribute(keys[i], options.self[keys[i]]);
+        attrs[a.uri()] = a;
+      }
     }
-
+    const id = Identity.create(g, {trustDistance: 0, linkTo: options.viewpoint, attrs});
+    await i._addIdentityToIndexes(id.gun);
+    if (options.self) {
+      const recipient = Object.assign(options.self, {keyID: options.viewpoint.value});
+      Message.createVerification({recipient}, keypair).then(msg => {
+        i.addMessage(msg);
+      });
+    }
     return i;
   }
 
@@ -595,7 +615,7 @@ class Index {
       }
       const linkTo = Identity.getLinkTo(attrs);
       const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
-      const id = await Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: false}, true);
+      const id = Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: false});
       // {a:1} because inserting {} causes a "no signature on data" error from gun
 
       // TODO: take msg author trust into account

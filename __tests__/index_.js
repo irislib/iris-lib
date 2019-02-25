@@ -50,8 +50,19 @@ describe('local index', async () => {
   let i, h;
   test('create new Index', async () => {
     key = await identifi.Key.getDefault();
-    i = await identifi.Index.create(gun);
+    const keyID = identifi.Key.getId(key);
+    i = await identifi.Index.create(gun, key, {self: {name: 'Alice'}});
+    await new Promise(r => setTimeout(r, 3000));
     expect(i).toBeInstanceOf(identifi.Index);
+    let viewpoint = await i.getViewpoint();
+    expect(viewpoint).toBeInstanceOf(identifi.Identity);
+    const data = await new Promise(resolve => {
+      viewpoint.gun.load(r => {
+        resolve(r);
+      });
+    });
+    expect(Object.keys(data.attrs).length).toBe(2);
+    expect(data.mostVerifiedAttributes.name.attribute.value).toBe('Alice');
   });
   let p;
   describe('create and fetch an identity using identifi messages', async () => {
@@ -88,7 +99,7 @@ describe('local index', async () => {
       const results = [];
       i.getSentMsgs(viewpoint, result => results.push(result));
       await new Promise(resolve => setTimeout(resolve, 200));
-      expect(results.length).toBe(1);
+      expect(results.length).toBe(2);
     });
   });
   test('verify first, then rate', async () => {
@@ -175,28 +186,19 @@ describe('local index', async () => {
       c = results.length;
       expect(results.length).toBeGreaterThan(1);
     });
-    test('add name to self identity', async () => {
-      let viewpoint = await i.getViewpoint();
-      expect(viewpoint).toBeInstanceOf(identifi.Identity);
-      const recipient = {name:'Alice'};
-      await new Promise(resolve => {
-        viewpoint.gun.load(r => {
-          Object.keys(r.attrs).forEach(key => {
-            recipient[r.attrs[key].type] = r.attrs[key].value;
-          });
-          resolve();
-        });
-      });
-      const msg = await identifi.Message.createVerification({recipient}, key);
-      const r = await i.addMessage(msg);
-      viewpoint = await i.getViewpoint();
+    test('add name to Bob', async () => {
+      let bob = await i.get('bob@example.com');
+      expect(bob).toBeInstanceOf(identifi.Identity);
+      const msg = await identifi.Message.createVerification({recipient:{email:'bob@example.com', name: 'Bob'}}, key);
+      await i.addMessage(msg);
+      bob = await i.get('bob@example.com');
       const data = await new Promise(resolve => {
-        viewpoint.gun.load(r => {
+        bob.gun.load(r => {
           resolve(r);
         });
       });
       expect(Object.keys(data.attrs).length).toBe(2);
-      expect(data.mostVerifiedAttributes.name.attribute.value).toBe('Alice');
+      expect(data.mostVerifiedAttributes.name.attribute.value).toBe('Bob');
     });
     test('identity count should remain the same', async () => {
       const results = [];
