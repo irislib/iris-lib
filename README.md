@@ -32,7 +32,7 @@ See [`plnkr.co example`](http://plnkr.co/edit/jA6oPo?p=preview) for more.
 
 ### Documentation
 
-See the [docs](https://rawgit.com/irislib/iris-lib/master/docs/index.html) directory.
+See the [docs](https://irislib.github.io/docs/index.html) directory.
 
 ### Installation
 
