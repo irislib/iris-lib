@@ -16,7 +16,7 @@ iris = require('iris-lib');
 Gun = require('gun'); // github.com/amark/gun is needed
 require('gun/sea');
 
-gun = new Gun(['https://iris.herokuapp.com/gun', 'https://iris2.herokuapp.com/gun']);
+gun = new Gun(['https://gun-us.herokuapp.com/gun', 'https://gun-eu.herokuapp.com/gun']);
 defaultIndexID = 'b8ByaYNBDCMLNdZqMdas5oUFLCxBf2VH3-NjUulDaTo.DVzINErRVs6m5tyjAux6fcNfndadcgZVN5hLSwYTCLc';
 user = gun.user(defaultIndexID);
 
