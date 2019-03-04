@@ -2,7 +2,7 @@ let index, msg, key;
 
 gun = new Gun(['http://localhost:8765/gun']);
 
-const loadIdentifi = window.identifiLib.Index.create(gun); // <--- Create identifi index
+const loadIdentifi = window.irisLib.Index.create(gun); // <--- Create identifi index
 
 loadIdentifi.then(async (index_) => {
   index = index_;
@@ -16,7 +16,7 @@ loadIdentifi.then(async (index_) => {
   document.getElementById('publishMsg').addEventListener('click', publishMsg);
   document.getElementById('runIndexExample').addEventListener('click', runIndexExample);
   const searchWidget = document.getElementById('searchWidget');
-  window.identifiLib.Identity.appendSearchWidget(searchWidget, index);
+  window.irisLib.Identity.appendSearchWidget(searchWidget, index);
 });
 
 async function search() {
@@ -62,8 +62,8 @@ async function getProfile() {
 function signMsg() {
   const d = document.getElementById('ratingMsg').value;
   const msgData = JSON.parse(d);
-  window.message = window.identifiLib.Message.createRating(msgData); // <--- Create an Identifi message
-  key = window.identifiLib.Key.getDefault(); // <--- Get or generate local key
+  window.message = window.irisLib.Message.createRating(msgData); // <--- Create an Identifi message
+  key = window.irisLib.Key.getDefault(); // <--- Get or generate local key
   window.message.sign(key); // <--- Sign message with the key
   document.getElementById('signMsgResult').textContent = JSON.stringify(window.message, null, 2);
 }
@@ -94,14 +94,14 @@ async function runIndexExample() {
       reject();
     });
   });
-  index = await window.identifiLib.Index.create(ipfs);
-  myKey = window.identifiLib.Key.getDefault('.');
-  msg = window.identifiLib.Message.createVerification({
+  index = await window.irisLib.Index.create(ipfs);
+  myKey = window.irisLib.Key.getDefault('.');
+  msg = window.irisLib.Message.createVerification({
     recipient: [['keyID', myKey.keyID], ['name', 'Alice Example']],
     comment: 'add name'
   }, myKey);
   await index.addMessage(msg);
-  msg2 = window.identifiLib.Message.createRating({
+  msg2 = window.irisLib.Message.createRating({
     recipient: [['email', 'bob@example.com']],
     rating: 5
   }, myKey);
