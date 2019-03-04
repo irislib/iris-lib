@@ -348,7 +348,7 @@ class Index {
       const index = indexes[i];
       for (let j = 0;j < indexKeys[index].length;j ++) {
         const key = indexKeys[index][j];
-        console.log(`adding key ${key}`);
+        console.log(`adding to index ${index} key ${key}`);
         await this.gun.get(index).get(key).put(id);
       }
     }
@@ -728,7 +728,7 @@ class Index {
     for (const index in indexKeys) {
       for (let i = 0;i < indexKeys[index].length;i ++) {
         const key = indexKeys[index][i];
-        console.log(`adding to index ${index} message key ${key}`);
+        console.log(`adding to index ${index} key ${key}`);
         this.gun.get(index).get(key).put(obj);
         this.gun.get(index).get(key).put(obj); // umm, what? doesn't work unless I write it twice
       }
