@@ -11199,7 +11199,7 @@
 	      var index = indexes[i];
 	      for (var j = 0; j < indexKeys[index].length; j++) {
 	        var key = indexKeys[index][j];
-	        console.log('adding key ' + key);
+	        console.log('adding to index ' + index + ' key ' + key);
 	        await this.gun.get(index).get(key).put(id);
 	      }
 	    }
@@ -11701,7 +11701,7 @@
 	    for (var index in indexKeys) {
 	      for (var i = 0; i < indexKeys[index].length; i++) {
 	        var key = indexKeys[index][i];
-	        console.log('adding to index ' + index + ' message key ' + key);
+	        console.log('adding to index ' + index + ' key ' + key);
 	        this.gun.get(index).get(key).put(obj);
 	        this.gun.get(index).get(key).put(obj); // umm, what? doesn't work unless I write it twice
 	      }
@@ -11853,7 +11853,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.89";
+	var version$1 = "0.0.90";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
