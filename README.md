@@ -4,7 +4,7 @@
 [![NPM](https://img.shields.io/npm/v/iris-lib.svg?style=flat-square)](https://www.npmjs.com/package/iris-lib)
 [![Travis](https://img.shields.io/travis/irislib/iris-lib/master.svg?style=flat-square)](https://travis-ci.org/iris/iris-lib)
 [![David](https://img.shields.io/david/irislib/iris-lib.svg?style=flat-square)](https://david-dm.org/iris/iris-lib)
-[![Coverage Status](https://img.shields.io/coveralls/irislib/iris-lib.svg?style=flat-square)](https://coveralls.io/github/iris/iris-lib)
+[![Coverage Status](https://img.shields.io/coveralls/irislib/iris-lib.svg?style=flat-square)](https://coveralls.io/github/irislib/iris-lib)
 [![Gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)](https://gitmoji.carloscuesta.me/)
 
 > Basic tools for reading, writing, indexing and searching Iris messages and identities.
