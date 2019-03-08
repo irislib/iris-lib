@@ -11849,7 +11849,7 @@
 	    }
 	  };
 
-	  Index.prototype.addReaction = function addReaction(msg, reaction) {
+	  Index.prototype.setReaction = function setReaction(msg, reaction) {
 	    this.gun.get('reactions').get(msg.getHash()).put(reaction);
 	    this.gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.viewpoint.value).put(reaction);
 	  };
