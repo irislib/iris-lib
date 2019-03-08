@@ -11691,26 +11691,28 @@
 	        return;
 	      }
 	    }
+	    var obj = { sig: msg.sig, pubKey: msg.pubKey };
+	    //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
+	    var node = this.gun.back(-1).get('messagesByHash').get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
 	    msg.distance = await this.getMsgTrustDistance(msg);
 	    if (msg.distance === undefined) {
 	      return false; // do not save messages from untrusted author
 	    }
-	    var obj = { sig: msg.sig, pubKey: msg.pubKey };
 	    var indexKeys = Index.getMsgIndexKeys(msg);
 	    for (var index in indexKeys) {
 	      for (var i = 0; i < indexKeys[index].length; i++) {
 	        var key = indexKeys[index][i];
 	        console.log('adding to index ' + index + ' key ' + key);
-	        this.gun.get(index).get(key).put(obj);
-	        this.gun.get(index).get(key).put(obj); // umm, what? doesn't work unless I write it twice
+	        this.gun.get(index).get(key).put(node);
+	        this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
 	      }
 	    }
 	    if (this.options.ipfs) {
 	      try {
 	        var ipfsUri = await msg.saveToIpfs(this.options.ipfs);
-	        obj.ipfsUri = ipfsUri;
-	        this.gun.get('messagesByHash').get(ipfsUri).put(obj);
-	        this.gun.get('messagesByHash').get(ipfsUri).put(obj);
+	        this.gun.get('messagesByHash').get(ipfsUri).put(node);
+	        this.gun.get('messagesByHash').get(ipfsUri).put(node);
+	        this.gun.get('messagesByHash').get(ipfsUri).put({ ipfsUri: ipfsUri });
 	      } catch (e) {
 	        console.error('adding msg ' + msg + ' to ipfs failed: ' + e);
 	      }
@@ -11851,6 +11853,7 @@
 
 	  Index.prototype.setReaction = function setReaction(msg, reaction) {
 	    this.gun.get('reactions').get(msg.getHash()).put(reaction);
+	    this.gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.viewpoint.value).put(reaction);
 	    this.gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.viewpoint.value).put(reaction);
 	  };
 

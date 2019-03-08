@@ -300,6 +300,25 @@ describe('local index', async () => {
     await new Promise(resolve => setTimeout(resolve, 200));
     expect(results.length).toBeGreaterThan(5);
   });
+  test('like & unlike', async () => {
+    let msg = await identifi.Message.create({type: 'post', author: {email:'bob@example.com'}, recipient: {email:'bob@example.com'}, comment: 'I don\'t want to set the world on fire. I just want to start a flame in your heart.'}, key);
+    console.log(111111);
+    await i.addMessage(msg);
+    console.log(222222);
+    i.setReaction(msg, 'like');
+    let msgReactions = await i.gun.get('messagesByHash').get(msg.getHash()).get('reactions').once().then();
+    let myReaction = await i.gun.get('reactions').get(msg.getHash()).once().then();
+    console.log(333333);
+    expect(Object.keys(msgReactions).length).toBe(1);
+    expect(msgReactions[i.viewpoint.value]).toBe('like');
+    expect(myReaction).toBe('like');
+    i.setReaction(msg, null);
+    msgReactions = await i.gun.get('messagesByHash').get(msg.getHash()).get('reactions').once().then();
+    myReaction = await i.gun.get('reactions').get(msg.getHash()).once().then();
+    expect(Object.keys(msgReactions).length).toBe(1);
+    expect(myReaction).toBe(null);
+    expect(msgReactions[i.viewpoint.value]).toBe(null);
+  });
 });
 
 /*

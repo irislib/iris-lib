@@ -719,26 +719,28 @@ class Index {
         return;
       }
     }
+    const obj = {sig: msg.sig, pubKey: msg.pubKey};
+    //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
+    const node = this.gun.back(- 1).get(`messagesByHash`).get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
     msg.distance = await this.getMsgTrustDistance(msg);
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
     }
-    const obj = {sig: msg.sig, pubKey: msg.pubKey};
     const indexKeys = Index.getMsgIndexKeys(msg);
     for (const index in indexKeys) {
       for (let i = 0;i < indexKeys[index].length;i ++) {
         const key = indexKeys[index][i];
         console.log(`adding to index ${index} key ${key}`);
-        this.gun.get(index).get(key).put(obj);
-        this.gun.get(index).get(key).put(obj); // umm, what? doesn't work unless I write it twice
+        this.gun.get(index).get(key).put(node);
+        this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
       }
     }
     if (this.options.ipfs) {
       try {
         const ipfsUri = await msg.saveToIpfs(this.options.ipfs);
-        obj.ipfsUri = ipfsUri;
-        this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
+        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
+        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
+        this.gun.get(`messagesByHash`).get(ipfsUri).put({ipfsUri});
       } catch (e) {
         console.error(`adding msg ${msg} to ipfs failed: ${e}`);
       }
@@ -848,6 +850,7 @@ class Index {
 
   setReaction(msg: Object, reaction) {
     this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
+    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
     this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
   }
 }
