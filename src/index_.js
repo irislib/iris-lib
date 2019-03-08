@@ -845,6 +845,11 @@ class Index {
       });
     }
   }
+
+  addReaction(msg: Object, reaction) {
+    this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
+    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
+  }
 }
 
 export default Index;

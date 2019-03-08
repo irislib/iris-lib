@@ -10084,32 +10084,31 @@
 	        }
 	      }
 	    }
-	    if (!d.recipient) {
-	      throw new ValidationError(errorMsg + ' Missing recipient');
-	    }
-	    if (typeof d.recipient !== 'object') {
-	      throw new ValidationError(errorMsg + ' Recipient must be object');
-	    }
-	    if (Array.isArray(d.recipient)) {
-	      throw new ValidationError(errorMsg + ' Recipient must not be an array');
-	    }
-	    if (_Object$keys(d.recipient).length === 0) {
-	      throw new ValidationError(errorMsg + ' Recipient empty');
-	    }
-	    for (var _attr in d.recipient) {
-	      var _t = _typeof(d.recipient[_attr]);
-	      if (_t !== 'string') {
-	        if (Array.isArray(d.recipient[_attr])) {
-	          for (var _i = 0; _i < d.recipient[_attr].length; _i++) {
-	            if (typeof d.recipient[_attr][_i] !== 'string') {
-	              throw new ValidationError(errorMsg + ' Recipient attribute must be string, got ' + _attr + ': [' + d.recipient[_attr][_i] + ']');
+	    if (d.recipient) {
+	      if (typeof d.recipient !== 'object') {
+	        throw new ValidationError(errorMsg + ' Recipient must be object');
+	      }
+	      if (Array.isArray(d.recipient)) {
+	        throw new ValidationError(errorMsg + ' Recipient must not be an array');
+	      }
+	      if (_Object$keys(d.recipient).length === 0) {
+	        throw new ValidationError(errorMsg + ' Recipient empty');
+	      }
+	      for (var _attr in d.recipient) {
+	        var _t = _typeof(d.recipient[_attr]);
+	        if (_t !== 'string') {
+	          if (Array.isArray(d.recipient[_attr])) {
+	            for (var _i = 0; _i < d.recipient[_attr].length; _i++) {
+	              if (typeof d.recipient[_attr][_i] !== 'string') {
+	                throw new ValidationError(errorMsg + ' Recipient attribute must be string, got ' + _attr + ': [' + d.recipient[_attr][_i] + ']');
+	              }
+	              if (d.recipient[_attr][_i].length === 0) {
+	                throw new ValidationError(errorMsg + ' recipient ' + _attr + ' in array[' + _i + '] is empty');
+	              }
 	            }
-	            if (d.recipient[_attr][_i].length === 0) {
-	              throw new ValidationError(errorMsg + ' recipient ' + _attr + ' in array[' + _i + '] is empty');
-	            }
+	          } else {
+	            throw new ValidationError(errorMsg + ' Recipient attribute must be string or array, got ' + _attr + ': ' + d.recipient[_attr]);
 	          }
-	        } else {
-	          throw new ValidationError(errorMsg + ' Recipient attribute must be string or array, got ' + _attr + ': ' + d.recipient[_attr]);
 	        }
 	      }
 	    }
@@ -11850,10 +11849,15 @@
 	    }
 	  };
 
+	  Index.prototype.addReaction = function addReaction(msg, reaction) {
+	    this.gun.get('reactions').get(msg.getHash()).put(reaction);
+	    this.gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.viewpoint.value).put(reaction);
+	  };
+
 	  return Index;
 	}();
 
-	var version$1 = "0.0.91";
+	var version$1 = "0.0.93";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
