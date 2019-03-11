@@ -334,6 +334,7 @@ class Index {
       if (result.value && result.value.ipfsUri) {
         msg.ipfsUri = result.value.ipfsUri;
       }
+      msg.gun = msgIndex.get(result.key);
       callback(msg);
     }
     searchText(msgIndex, resultFound, ``, undefined, cursor, desc);
