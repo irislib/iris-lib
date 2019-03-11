@@ -11699,6 +11699,10 @@
 	    if (msg.distance === undefined) {
 	      return false; // do not save messages from untrusted author
 	    }
+	    if (msg.signedData.replyTo) {
+	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.replyTo).get('replies').get(hash).put(node);
+	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.replyTo).get('replies').get(hash).put(node);
+	    }
 	    var indexKeys = Index.getMsgIndexKeys(msg);
 	    for (var index in indexKeys) {
 	      for (var i = 0; i < indexKeys[index].length; i++) {
