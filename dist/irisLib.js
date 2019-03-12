@@ -10953,6 +10953,10 @@
 	                });
 	              }
 	            });
+	            _this.gun.user(uri).get('identifi').get('reactions').map(function (reaction, msgHash) {
+	              _this.gun.get('messagesByHash').get(msgHash).get('reactions').get(uri).put(reaction);
+	              _this.gun.get('messagesByHash').get(msgHash).get('reactions').get(uri).put(reaction);
+	            });
 	          }
 	        });
 	      }, 5000); // TODO: this should be made to work without timeout
@@ -11857,6 +11861,7 @@
 	  };
 
 	  Index.prototype.setReaction = function setReaction(msg, reaction) {
+	    this.gun.get('reactions').get(msg.getHash()).put(reaction);
 	    this.gun.get('reactions').get(msg.getHash()).put(reaction);
 	    this.gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.viewpoint.value).put(reaction);
 	    this.gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.viewpoint.value).put(reaction);

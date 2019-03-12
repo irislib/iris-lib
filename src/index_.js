@@ -118,6 +118,10 @@ class Index {
                 });
               }
             });
+            this.gun.user(uri).get(`identifi`).get(`reactions`).map((reaction, msgHash) => {
+              this.gun.get(`messagesByHash`).get(msgHash).get(`reactions`).get(uri).put(reaction);
+              this.gun.get(`messagesByHash`).get(msgHash).get(`reactions`).get(uri).put(reaction);
+            });
           }
         });
       }, 5000); // TODO: this should be made to work without timeout
@@ -854,6 +858,7 @@ class Index {
   }
 
   setReaction(msg: Object, reaction) {
+    this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
     this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
     this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
     this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
