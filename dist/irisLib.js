@@ -11298,7 +11298,9 @@
 	        return resolve(r);
 	      });
 	    });
-	    if (msg.signedData.type === 'verification') {
+	    if (['verification', 'unverification'].indexOf(msg.signedData.type) > -1) {
+	      var isVerification = msg.signedData.type === 'verification';
+
 	      var _loop = function _loop() {
 	        if (_isArray2) {
 	          if (_i6 >= _iterator2.length) return 'break';
@@ -11312,18 +11314,28 @@
 	        var a = _ref2;
 
 	        var hasAttr = false;
+	        var v = {
+	          verifications: isVerification ? 1 : 0,
+	          unverifications: isVerification ? 0 : 1
+	        };
 	        _Object$keys(attrs).forEach(function (k) {
 	          // TODO: if author is self, mark as self verified
+	          // TODO: only 1 verif / unverif per author
 	          if (a.equals(attrs[k])) {
-	            attrs[k].conf = (attrs[k].conf || 0) + 1;
+	            attrs[k].verifications = (attrs[k].verifications || 0) + v.verifications;
+	            attrs[k].unverifications = (attrs[k].unverifications || 0) + v.unverifications;
 	            hasAttr = true;
 	          }
 	        });
 	        if (!hasAttr) {
-	          attrs[a.uri()] = { type: a.type, value: a.value, conf: 1, ref: 0 };
+	          attrs[a.uri()] = _Object$assign({ type: a.type, value: a.value }, v);
 	        }
 	        if (msg.goodVerification) {
-	          attrs[a.uri()].verified = true;
+	          if (isVerification) {
+	            attrs[a.uri()].wellVerified = true;
+	          } else {
+	            attrs[a.uri()].wellUnverified = true;
+	          }
 	        }
 	      };
 
@@ -11707,6 +11719,10 @@
 	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.replyTo).get('replies').get(hash).put(node);
 	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.replyTo).get('replies').get(hash).put(node);
 	    }
+	    if (msg.signedData.sharedMsg) {
+	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.sharedMsg).get('shares').get(hash).put(node);
+	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.sharedMsg).get('shares').get(hash).put(node);
+	    }
 	    var indexKeys = Index.getMsgIndexKeys(msg);
 	    for (var index in indexKeys) {
 	      for (var i = 0; i < indexKeys[index].length; i++) {
@@ -11870,7 +11886,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.93";
+	var version$1 = "0.0.94";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

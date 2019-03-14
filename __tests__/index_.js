@@ -260,7 +260,7 @@ describe('local index', async () => {
         });
       });
       Object.keys(attrs).forEach(key => {
-        expect(attrs[key].verified).toBe(true);
+        expect(attrs[key].wellVerified).toBe(true);
       });
     });
   });
