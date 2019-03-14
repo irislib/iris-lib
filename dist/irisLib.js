@@ -10411,12 +10411,12 @@
 	    _Object$keys(attrs).forEach(function (k) {
 	      var a = attrs[k];
 	      var keyExists = _Object$keys(mostVerifiedAttributes).indexOf(a.type) > -1;
-	      a.conf = isNaN(a.conf) ? 1 : a.conf;
-	      a.ref = isNaN(a.ref) ? 0 : a.ref;
-	      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.type].verificationScore)) {
+	      a.verifications = isNaN(a.verifications) ? 1 : a.verifications;
+	      a.unverifications = isNaN(a.unverifications) ? 0 : a.unverifications;
+	      if (a.verifications * 2 > a.unverifications * 3 && (!keyExists || a.verifications - a.unverifications > mostVerifiedAttributes[a.type].verificationScore)) {
 	        mostVerifiedAttributes[a.type] = {
 	          attribute: a,
-	          verificationScore: a.conf - a.ref
+	          verificationScore: a.verifications - a.unverifications
 	        };
 	        if (a.verified) {
 	          mostVerifiedAttributes[a.type].verified = true;
@@ -11886,7 +11886,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.94";
+	var version$1 = "0.0.95";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
