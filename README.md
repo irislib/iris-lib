@@ -27,8 +27,6 @@ profile.verified('name').then(console.log);
 
 ```
 
-See [`plnkr.co example`](http://plnkr.co/edit/jA6oPo?p=preview) for more.
-
 
 ### Documentation
 
