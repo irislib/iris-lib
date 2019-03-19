@@ -1,0 +1,3 @@
+build:
+  script:
+    - npm install
