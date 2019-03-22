@@ -30,7 +30,7 @@ profile.verified('name').then(console.log);
 
 ### Documentation
 
-See the [docs](https://irislib.github.io/docs/index.html) directory.
+See the [docs](http://docs.iris.to/) directory.
 
 ### Installation
 
