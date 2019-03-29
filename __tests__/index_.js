@@ -69,8 +69,13 @@ describe('local index', async () => {
     test('add trust rating to bob', async () => {
       debugger;
       const msg = await identifi.Message.createRating({recipient:{email:'bob@example.com'}, rating:10}, key);
+      h = msg.getHash();
       const r = await i.addMessage(msg);
       expect(r).toBe(true);
+    });
+    test('get added msg by hash', async () => {
+      const msg = await i.getMessageByHash(h);
+      expect(msg.signedData.recipient.email).toEqual('bob@example.com');
     });
     test('get added identity', async () => {
       p = i.get('bob@example.com');
