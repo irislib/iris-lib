@@ -230,7 +230,7 @@ class Message {
       signedData.author = {keyID: Key.getId(signingKey)};
     }
     signedData.timestamp = signedData.timestamp || (new Date()).toISOString();
-    signedData.context = signedData.context || `identifi`;
+    signedData.context = signedData.context || `iris`;
     const m = new Message({signedData});
     if (signingKey) {
       await m.sign(signingKey);

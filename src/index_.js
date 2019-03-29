@@ -826,6 +826,45 @@ class Index {
   }
 
   /**
+  * @returns {Object} message matching the hash
+  */
+  getMessageByHash(hash) {
+    const isIpfs = hash.indexOf(`Qm`) === 0;
+    return new Promise(async resolve => {
+      const resolveIfHashMatches = async msgData => {
+        let h;
+        if (isIpfs && this.ipfs) {
+          const r = await this.ipfs.add(this.ipfs.types.Buffer.from(msgData));
+          if (!r.length) { return; }
+          h = r[0].hash;
+        } else {
+          h = util.getHash(msgData.sig);
+        }
+        if (h === hash || (isIpfs && !this.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
+          const m = Message.fromSig(msgData);
+          resolve(m);
+        } else {
+          console.error(`queried index for message ${hash} but received ${h}`);
+        }
+      };
+      if (isIpfs && this.ipfs) {
+        this.ipfs.cat(hash).then(file => {
+          const s = this.ipfs.types.Buffer.from(file).toString(`utf8`);
+          resolveIfHashMatches(JSON.parse(s));
+        });
+      }
+      this.gun.get(`messagesByHash`).get(hash).on(resolveIfHashMatches);
+      if (this.options.indexSync.query.enabled) {
+        this.gun.get(`trustedIndexes`).map().once((val, key) => {
+          if (val) {
+            this.gun.user(key).get(`identifi`).get(`messagesByHash`).get(hash).on(resolveIfHashMatches);
+          }
+        });
+      }
+    });
+  }
+
+  /**
   * @returns {Array} list of messages
   */
   getMessagesByTimestamp(callback, limit, cursor = ``, desc = true, filter) {

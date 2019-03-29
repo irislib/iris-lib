@@ -10202,7 +10202,7 @@
 	      signedData.author = { keyID: Key.getId(signingKey) };
 	    }
 	    signedData.timestamp = signedData.timestamp || new Date().toISOString();
-	    signedData.context = signedData.context || 'identifi';
+	    signedData.context = signedData.context || 'iris';
 	    var m = new Message({ signedData: signedData });
 	    if (signingKey) {
 	      await m.sign(signingKey);
@@ -11203,7 +11203,7 @@
 	      var index = indexes[i];
 	      for (var j = 0; j < indexKeys[index].length; j++) {
 	        var key = indexKeys[index][j];
-	        console.log('adding to index ' + index + ' key ' + key);
+	        // console.log(`adding to index ${index} key ${key}`);
 	        await this.gun.get(index).get(key).put(id);
 	      }
 	    }
@@ -11727,7 +11727,7 @@
 	    for (var index in indexKeys) {
 	      for (var i = 0; i < indexKeys[index].length; i++) {
 	        var key = indexKeys[index][i];
-	        console.log('adding to index ' + index + ' key ' + key);
+	        // console.log(`adding to index ${index} key ${key}`);
 	        this.gun.get(index).get(key).put(node);
 	        this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
 	      }
@@ -11812,6 +11812,52 @@
 	  };
 
 	  /**
+	  * @returns {Object} message matching the hash
+	  */
+
+
+	  Index.prototype.getMessageByHash = function getMessageByHash(hash) {
+	    var _this5 = this;
+
+	    var isIpfs = hash.indexOf('Qm') === 0;
+	    return new _Promise(async function (resolve) {
+	      var resolveIfHashMatches = async function resolveIfHashMatches(msgData) {
+	        var h = void 0;
+	        if (isIpfs && _this5.ipfs) {
+	          var r = await _this5.ipfs.add(_this5.ipfs.types.Buffer.from(msgData));
+	          if (!r.length) {
+	            return;
+	          }
+	          h = r[0].hash;
+	        } else {
+	          h = util$1.getHash(msgData.sig);
+	        }
+	        if (h === hash || isIpfs && !_this5.ipfs) {
+	          // does not check hash validity if it's an ipfs uri and we don't have ipfs
+	          var m = Message.fromSig(msgData);
+	          resolve(m);
+	        } else {
+	          console.error('queried index for message ' + hash + ' but received ' + h);
+	        }
+	      };
+	      if (isIpfs && _this5.ipfs) {
+	        _this5.ipfs.cat(hash).then(function (file) {
+	          var s = _this5.ipfs.types.Buffer.from(file).toString('utf8');
+	          resolveIfHashMatches(JSON.parse(s));
+	        });
+	      }
+	      _this5.gun.get('messagesByHash').get(hash).on(resolveIfHashMatches);
+	      if (_this5.options.indexSync.query.enabled) {
+	        _this5.gun.get('trustedIndexes').map().once(function (val, key) {
+	          if (val) {
+	            _this5.gun.user(key).get('identifi').get('messagesByHash').get(hash).on(resolveIfHashMatches);
+	          }
+	        });
+	      }
+	    });
+	  };
+
+	  /**
 	  * @returns {Array} list of messages
 	  */
 
@@ -11819,7 +11865,7 @@
 	  Index.prototype.getMessagesByTimestamp = function getMessagesByTimestamp(callback, limit) {
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    var _this5 = this;
+	    var _this6 = this;
 
 	    var desc = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
 	    var filter = arguments[4];
@@ -11836,8 +11882,8 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this5.gun.user(key).get('identifi').get('messagesByTimestamp');
-	          _this5._getMsgs(n, cb, limit, cursor, desc, filter);
+	          var n = _this6.gun.user(key).get('identifi').get('messagesByTimestamp');
+	          _this6._getMsgs(n, cb, limit, cursor, desc, filter);
 	        }
 	      });
 	    }
@@ -11851,7 +11897,7 @@
 	  Index.prototype.getMessagesByDistance = function getMessagesByDistance(callback, limit) {
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    var _this6 = this;
+	    var _this7 = this;
 
 	    var desc = arguments[3];
 	    var filter = arguments[4];
@@ -11869,8 +11915,8 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this6.gun.user(key).get('identifi').get('messagesByDistance');
-	          _this6._getMsgs(n, cb, limit, cursor, desc, filter);
+	          var n = _this7.gun.user(key).get('identifi').get('messagesByDistance');
+	          _this7._getMsgs(n, cb, limit, cursor, desc, filter);
 	        }
 	      });
 	    }
@@ -11886,7 +11932,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.95";
+	var version$1 = "0.0.96";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
