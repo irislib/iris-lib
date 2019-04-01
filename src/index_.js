@@ -141,6 +141,7 @@ class Index {
     }
     const user = gun.user();
     user.auth(keypair);
+    this.writable = true;
     options.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
     const i = new Index(user.get(`identifi`), options);
     i.gun.get(`viewpoint`).put(options.viewpoint);
@@ -829,25 +830,36 @@ class Index {
   * @returns {Object} message matching the hash
   */
   getMessageByHash(hash) {
-    const isIpfs = hash.indexOf(`Qm`) === 0;
+    const isIpfsUri = hash.indexOf(`Qm`) === 0;
     return new Promise(async resolve => {
       const resolveIfHashMatches = async msgData => {
         let h;
-        if (isIpfs && this.ipfs) {
+        let republished = false;
+        if (isIpfsUri && this.ipfs) {
           const r = await this.ipfs.add(this.ipfs.types.Buffer.from(msgData));
+          republished = true;
           if (!r.length) { return; }
           h = r[0].hash;
         } else {
           h = util.getHash(msgData.sig);
         }
-        if (h === hash || (isIpfs && !this.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
+        if (h === hash || (isIpfsUri && !this.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
+          if (!isIpfsUri && this.ipfs && this.writable && !republished) {
+            this.ipfs.add(this.ipfs.types.Buffer.from(msgData)).then(r => {
+              if (r.length) {
+                msgData.ipfsUri = r[0].hash;
+                this.gun.get(`messagesByHash`).get(hash).put(msgData);
+                this.gun.get(`messagesByHash`).get(r[0].hash).put(msgData);
+              }
+            });
+          }
           const m = Message.fromSig(msgData);
           resolve(m);
         } else {
           console.error(`queried index for message ${hash} but received ${h}`);
         }
       };
-      if (isIpfs && this.ipfs) {
+      if (isIpfsUri && this.ipfs) {
         this.ipfs.cat(hash).then(file => {
           const s = this.ipfs.types.Buffer.from(file).toString(`utf8`);
           resolveIfHashMatches(JSON.parse(s));

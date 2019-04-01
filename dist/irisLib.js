@@ -10980,6 +10980,7 @@
 	    }
 	    var user = gun.user();
 	    user.auth(keypair);
+	    this.writable = true;
 	    options.viewpoint = new Attribute('keyID', Key.getId(keypair));
 	    var i = new Index(user.get('identifi'), options);
 	    i.gun.get('viewpoint').put(options.viewpoint);
@@ -11819,12 +11820,14 @@
 	  Index.prototype.getMessageByHash = function getMessageByHash(hash) {
 	    var _this5 = this;
 
-	    var isIpfs = hash.indexOf('Qm') === 0;
+	    var isIpfsUri = hash.indexOf('Qm') === 0;
 	    return new _Promise(async function (resolve) {
 	      var resolveIfHashMatches = async function resolveIfHashMatches(msgData) {
 	        var h = void 0;
-	        if (isIpfs && _this5.ipfs) {
+	        var republished = false;
+	        if (isIpfsUri && _this5.ipfs) {
 	          var r = await _this5.ipfs.add(_this5.ipfs.types.Buffer.from(msgData));
+	          republished = true;
 	          if (!r.length) {
 	            return;
 	          }
@@ -11832,15 +11835,24 @@
 	        } else {
 	          h = util$1.getHash(msgData.sig);
 	        }
-	        if (h === hash || isIpfs && !_this5.ipfs) {
+	        if (h === hash || isIpfsUri && !_this5.ipfs) {
 	          // does not check hash validity if it's an ipfs uri and we don't have ipfs
+	          if (!isIpfsUri && _this5.ipfs && _this5.writable && !republished) {
+	            _this5.ipfs.add(_this5.ipfs.types.Buffer.from(msgData)).then(function (r) {
+	              if (r.length) {
+	                msgData.ipfsUri = r[0].hash;
+	                _this5.gun.get('messagesByHash').get(hash).put(msgData);
+	                _this5.gun.get('messagesByHash').get(r[0].hash).put(msgData);
+	              }
+	            });
+	          }
 	          var m = Message.fromSig(msgData);
 	          resolve(m);
 	        } else {
 	          console.error('queried index for message ' + hash + ' but received ' + h);
 	        }
 	      };
-	      if (isIpfs && _this5.ipfs) {
+	      if (isIpfsUri && _this5.ipfs) {
 	        _this5.ipfs.cat(hash).then(function (file) {
 	          var s = _this5.ipfs.types.Buffer.from(file).toString('utf8');
 	          resolveIfHashMatches(JSON.parse(s));
@@ -11932,7 +11944,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.96";
+	var version$1 = "0.0.97";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
