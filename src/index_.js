@@ -832,44 +832,48 @@ class Index {
   getMessageByHash(hash) {
     const isIpfsUri = hash.indexOf(`Qm`) === 0;
     return new Promise(async resolve => {
-      const resolveIfHashMatches = async msgData => {
+      const resolveIfHashMatches = async d => {
+        const obj = typeof d === `object` ? d : JSON.parse(d);
+        const m = await Message.fromSig(obj);
         let h;
         let republished = false;
-        if (isIpfsUri && this.ipfs) {
-          const r = await this.ipfs.add(this.ipfs.types.Buffer.from(msgData));
+        if (isIpfsUri && this.options.ipfs) {
+          h = await m.saveToIpfs(this.options.ipfs);
           republished = true;
-          if (!r.length) { return; }
-          h = r[0].hash;
         } else {
-          h = util.getHash(msgData.sig);
+          h = m.getHash();
         }
-        if (h === hash || (isIpfsUri && !this.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
-          if (!isIpfsUri && this.ipfs && this.writable && !republished) {
-            this.ipfs.add(this.ipfs.types.Buffer.from(msgData)).then(r => {
-              if (r.length) {
-                msgData.ipfsUri = r[0].hash;
-                this.gun.get(`messagesByHash`).get(hash).put(msgData);
-                this.gun.get(`messagesByHash`).get(r[0].hash).put(msgData);
-              }
+        if (h === hash || (isIpfsUri && !this.options.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
+          if (!isIpfsUri && this.options.ipfs && this.writable && !republished) {
+            m.saveToIpfs(this.options.ipfs).then(ipfsUri => {
+              obj.ipfsUri = ipfsUri;
+              this.gun.get(`messagesByHash`).get(hash).put(obj);
+              this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
             });
           }
-          const m = Message.fromSig(msgData);
           resolve(m);
         } else {
           console.error(`queried index for message ${hash} but received ${h}`);
         }
       };
-      if (isIpfsUri && this.ipfs) {
-        this.ipfs.cat(hash).then(file => {
-          const s = this.ipfs.types.Buffer.from(file).toString(`utf8`);
-          resolveIfHashMatches(JSON.parse(s));
+      if (isIpfsUri && this.options.ipfs) {
+        this.options.ipfs.cat(hash).then(file => {
+          const s = this.options.ipfs.types.Buffer.from(file).toString(`utf8`);
+          console.log(`got msg ${hash} from ipfs`);
+          resolveIfHashMatches(s);
         });
       }
-      this.gun.get(`messagesByHash`).get(hash).on(resolveIfHashMatches);
+      this.gun.get(`messagesByHash`).get(hash).on(d => {
+        console.log(`got msg ${hash} from own gun index`);
+        resolveIfHashMatches(d);
+      });
       if (this.options.indexSync.query.enabled) {
         this.gun.get(`trustedIndexes`).map().once((val, key) => {
           if (val) {
-            this.gun.user(key).get(`identifi`).get(`messagesByHash`).get(hash).on(resolveIfHashMatches);
+            this.gun.user(key).get(`identifi`).get(`messagesByHash`).get(hash).on(d => {
+              console.log(`got msg ${hash} from friend's gun index ${val}`);
+              resolveIfHashMatches(d);
+            });
           }
         });
       }

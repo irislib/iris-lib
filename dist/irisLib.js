@@ -11822,47 +11822,49 @@
 
 	    var isIpfsUri = hash.indexOf('Qm') === 0;
 	    return new _Promise(async function (resolve) {
-	      var resolveIfHashMatches = async function resolveIfHashMatches(msgData) {
+	      var resolveIfHashMatches = async function resolveIfHashMatches(d) {
+	        var obj = typeof d === 'object' ? d : JSON.parse(d);
+	        var m = await Message.fromSig(obj);
 	        var h = void 0;
 	        var republished = false;
-	        if (isIpfsUri && _this5.ipfs) {
-	          var r = await _this5.ipfs.add(_this5.ipfs.types.Buffer.from(msgData));
+	        if (isIpfsUri && _this5.options.ipfs) {
+	          h = await m.saveToIpfs(_this5.options.ipfs);
 	          republished = true;
-	          if (!r.length) {
-	            return;
-	          }
-	          h = r[0].hash;
 	        } else {
-	          h = util$1.getHash(msgData.sig);
+	          h = m.getHash();
 	        }
-	        if (h === hash || isIpfsUri && !_this5.ipfs) {
+	        if (h === hash || isIpfsUri && !_this5.options.ipfs) {
 	          // does not check hash validity if it's an ipfs uri and we don't have ipfs
-	          if (!isIpfsUri && _this5.ipfs && _this5.writable && !republished) {
-	            _this5.ipfs.add(_this5.ipfs.types.Buffer.from(msgData)).then(function (r) {
-	              if (r.length) {
-	                msgData.ipfsUri = r[0].hash;
-	                _this5.gun.get('messagesByHash').get(hash).put(msgData);
-	                _this5.gun.get('messagesByHash').get(r[0].hash).put(msgData);
-	              }
+	          if (!isIpfsUri && _this5.options.ipfs && _this5.writable && !republished) {
+	            m.saveToIpfs(_this5.options.ipfs).then(function (ipfsUri) {
+	              obj.ipfsUri = ipfsUri;
+	              _this5.gun.get('messagesByHash').get(hash).put(obj);
+	              _this5.gun.get('messagesByHash').get(ipfsUri).put(obj);
 	            });
 	          }
-	          var m = Message.fromSig(msgData);
 	          resolve(m);
 	        } else {
 	          console.error('queried index for message ' + hash + ' but received ' + h);
 	        }
 	      };
-	      if (isIpfsUri && _this5.ipfs) {
-	        _this5.ipfs.cat(hash).then(function (file) {
-	          var s = _this5.ipfs.types.Buffer.from(file).toString('utf8');
-	          resolveIfHashMatches(JSON.parse(s));
+	      if (isIpfsUri && _this5.options.ipfs) {
+	        _this5.options.ipfs.cat(hash).then(function (file) {
+	          var s = _this5.options.ipfs.types.Buffer.from(file).toString('utf8');
+	          console.log('got msg ' + hash + ' from ipfs');
+	          resolveIfHashMatches(s);
 	        });
 	      }
-	      _this5.gun.get('messagesByHash').get(hash).on(resolveIfHashMatches);
+	      _this5.gun.get('messagesByHash').get(hash).on(function (d) {
+	        console.log('got msg ' + hash + ' from own gun index');
+	        resolveIfHashMatches(d);
+	      });
 	      if (_this5.options.indexSync.query.enabled) {
 	        _this5.gun.get('trustedIndexes').map().once(function (val, key) {
 	          if (val) {
-	            _this5.gun.user(key).get('identifi').get('messagesByHash').get(hash).on(resolveIfHashMatches);
+	            _this5.gun.user(key).get('identifi').get('messagesByHash').get(hash).on(function (d) {
+	              console.log('got msg ' + hash + ' from friend\'s gun index ' + val);
+	              resolveIfHashMatches(d);
+	            });
 	          }
 	        });
 	      }
