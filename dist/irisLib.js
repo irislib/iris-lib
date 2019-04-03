@@ -11014,15 +11014,20 @@
 	    return key;
 	  };
 
+	  // TODO: GUN indexing module that does this automatically
+
+
 	  Index.getMsgIndexKeys = function getMsgIndexKeys(msg) {
 	    var keys = {};
 	    var distance = parseInt(msg.distance);
 	    distance = _Number$isNaN(distance) ? 99 : distance;
 	    distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
+	    var timestamp = Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000);
 	    var hashSlice = msg.getHash().substr(0, 9);
 	    keys.messagesByHash = [msg.getHash()];
-	    keys.messagesByTimestamp = [Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000) + ':' + hashSlice];
+	    keys.messagesByTimestamp = [timestamp + ':' + hashSlice];
 	    keys.messagesByDistance = [distance + ':' + keys.messagesByTimestamp[0]];
+	    keys.messagesByType = [msg.signedData.type + ':' + timestamp + ':' + hashSlice];
 
 	    keys.messagesByAuthor = [];
 	    var authors = msg.getAuthorArray();
@@ -11946,7 +11951,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.97";
+	var version$1 = "0.0.98";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
