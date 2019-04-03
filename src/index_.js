@@ -175,15 +175,18 @@ class Index {
     return key;
   }
 
+  // TODO: GUN indexing module that does this automatically
   static getMsgIndexKeys(msg) {
     const keys = {};
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
+    const timestamp = Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000);
     const hashSlice = msg.getHash().substr(0, 9);
     keys.messagesByHash = [msg.getHash()];
-    keys.messagesByTimestamp = [`${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000)}:${hashSlice}`];
+    keys.messagesByTimestamp = [`${timestamp}:${hashSlice}`];
     keys.messagesByDistance = [`${distance}:${keys.messagesByTimestamp[0]}`];
+    keys.messagesByType = [`${msg.signedData.type}:${timestamp}:${hashSlice}`];
 
     keys.messagesByAuthor = [];
     const authors = msg.getAuthorArray();
