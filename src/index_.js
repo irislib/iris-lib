@@ -105,7 +105,7 @@ class Index {
         this.gun.get(`trustedIndexes`).map().once((val, uri) => {
           if (val) {
             // TODO: only get new messages?
-            this.gun.user(uri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
+            this.gun.user(uri).get(`iris`).get(`messagesByDistance`).map((val, key) => {
               const d = Number.parseInt(key.split(`:`)[0]);
               console.log(`got msg with d`, d, key);
               if (!isNaN(d) && d <= this.options.indexSync.subscribe.maxMsgDistance) {
@@ -118,7 +118,7 @@ class Index {
                 });
               }
             });
-            this.gun.user(uri).get(`identifi`).get(`reactions`).map((reaction, msgHash) => {
+            this.gun.user(uri).get(`iris`).get(`reactions`).map((reaction, msgHash) => {
               this.gun.get(`messagesByHash`).get(msgHash).get(`reactions`).get(uri).put(reaction);
               this.gun.get(`messagesByHash`).get(msgHash).get(`reactions`).get(uri).put(reaction);
             });
@@ -143,7 +143,10 @@ class Index {
     user.auth(keypair);
     this.writable = true;
     options.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
-    const i = new Index(user.get(`identifi`), options);
+    const identifi = user.get(`identifi`);
+    const gunRoot = user.get(`iris`);
+    gunRoot.put(identifi); // temp migration identifi -> iris
+    const i = new Index(gunRoot, options);
     i.gun.get(`viewpoint`).put(options.viewpoint);
     const uri = options.viewpoint.uri();
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
@@ -575,7 +578,7 @@ class Index {
     const msgs = [];
     if (this.options.indexSync.importOnAdd.enabled) {
       await util.timeoutPromise(new Promise(resolve => {
-        this.gun.user(gunUri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
+        this.gun.user(gunUri).get(`iris`).get(`messagesByDistance`).map((val, key) => {
           const d = Number.parseInt(key.split(`:`)[0]);
           if (!isNaN(d) && d <= maxMsgDistance) {
             Message.fromSig(val).then(msg => {
@@ -810,7 +813,7 @@ class Index {
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).map().once((id, k) => {
+          this.gun.user(key).get(`iris`).get(`identitiesByTrustDistance`).map().once((id, k) => {
             if (Object.keys(seen).length >= limit) {
               // TODO: turn off .map cb
               return;
@@ -820,7 +823,7 @@ class Index {
             if (soul && !seen.hasOwnProperty(soul)) {
               seen[soul] = true;
               callback(
-                new Identity(this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).get(k))
+                new Identity(this.gun.user(key).get(`iris`).get(`identitiesByTrustDistance`).get(k))
               );
             }
           });
@@ -873,7 +876,7 @@ class Index {
       if (this.options.indexSync.query.enabled) {
         this.gun.get(`trustedIndexes`).map().once((val, key) => {
           if (val) {
-            this.gun.user(key).get(`identifi`).get(`messagesByHash`).get(hash).on(d => {
+            this.gun.user(key).get(`iris`).get(`messagesByHash`).get(hash).on(d => {
               console.log(`got msg ${hash} from friend's gun index ${val}`);
               resolveIfHashMatches(d);
             });
@@ -899,7 +902,7 @@ class Index {
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`identifi`).get(`messagesByTimestamp`);
+          const n = this.gun.user(key).get(`iris`).get(`messagesByTimestamp`);
           this._getMsgs(n, cb, limit, cursor, desc, filter);
         }
       });
@@ -923,7 +926,7 @@ class Index {
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`identifi`).get(`messagesByDistance`);
+          const n = this.gun.user(key).get(`iris`).get(`messagesByDistance`);
           this._getMsgs(n, cb, limit, cursor, desc, filter);
         }
       });
