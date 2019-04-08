@@ -207,7 +207,7 @@ class Index {
     }
 
     if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
-      keys.verificationsByRecipientAndAuthor = [];
+      keys.verificationsByRecipient = {};
       for (let i = 0;i < recipients.length;i ++) {
         const r = recipients[i];
         if (!r.isUniqueType()) {
@@ -218,11 +218,11 @@ class Index {
           if (!a.isUniqueType()) {
             continue;
           }
-          keys.verificationsByRecipientAndAuthor.push(`${r.uri()}:${a.uri()}`);
+          keys.verificationsByRecipient[r.uri()] = a.uri();
         }
       }
     } else if (msg.signedData.type === `rating`) {
-      keys.ratingsByRecipientAndAuthor = [];
+      keys.ratingsByRecipient = {};
       for (let i = 0;i < recipients.length;i ++) {
         const r = recipients[i];
         if (!r.isUniqueType()) {
@@ -233,7 +233,7 @@ class Index {
           if (!a.isUniqueType()) {
             continue;
           }
-          keys.ratingsByRecipientAndAuthor.push(`${r.uri()}:${a.uri()}`);
+          keys.ratingsByRecipient[r.uri()] = a.uri();
         }
       }
     }
