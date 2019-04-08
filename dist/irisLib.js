@@ -10982,9 +10982,9 @@
 	    user.auth(keypair);
 	    this.writable = true;
 	    options.viewpoint = new Attribute('keyID', Key.getId(keypair));
-	    var identifi = user.get('identifi');
+	    // const identifi = user.get(`identifi`);
 	    var gunRoot = user.get('iris');
-	    gunRoot.put(identifi); // temp migration identifi -> iris
+	    // gunRoot.put(identifi); // temp migration identifi -> iris, but fails due to gun error
 	    var i = new Index(gunRoot, options);
 	    i.gun.get('viewpoint').put(options.viewpoint);
 	    var uri = options.viewpoint.uri();
@@ -11032,15 +11032,15 @@
 	    keys.messagesByDistance = [distance + ':' + keys.messagesByTimestamp[0]];
 	    keys.messagesByType = [msg.signedData.type + ':' + timestamp + ':' + hashSlice];
 
-	    keys.messagesByAuthor = [];
+	    keys.messagesByAuthor = {};
 	    var authors = msg.getAuthorArray();
 	    for (var i = 0; i < authors.length; i++) {
-	      keys.messagesByAuthor.push(authors[i].uri() + ':' + msg.signedData.timestamp + ':' + hashSlice);
+	      keys.messagesByAuthor[authors[i].uri()] = msg.signedData.timestamp + ':' + hashSlice;
 	    }
-	    keys.messagesByRecipient = [];
+	    keys.messagesByRecipient = {};
 	    var recipients = msg.getRecipientArray();
 	    for (var _i2 = 0; _i2 < recipients.length; _i2++) {
-	      keys.messagesByRecipient.push(recipients[_i2].uri() + ':' + msg.signedData.timestamp + ':' + hashSlice);
+	      keys.messagesByRecipient[recipients[_i2].uri()] = msg.signedData.timestamp + ':' + hashSlice;
 	    }
 
 	    if (['verification', 'unverification'].indexOf(msg.signedData.type) > -1) {
@@ -11139,7 +11139,7 @@
 	  };
 
 	  /**
-	  * @returns {Identity} viewpoint identity of the index
+	  * @returns {Identity} viewpoint identity (trustDistance == 0) of the index
 	  */
 
 
@@ -11226,10 +11226,20 @@
 
 
 	  Index.prototype.getSentMsgs = async function getSentMsgs(identity, callback, limit) {
+	    var _this2 = this;
+
 	    var cursor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
 	    var filter = arguments[4];
 
-	    return this._getMsgs(identity.gun.get('sent'), callback, limit, cursor, filter);
+	    this._getMsgs(identity.gun.get('sent'), callback, limit, cursor, filter);
+	    if (this.options.indexSync.query.enabled) {
+	      this.gun.get('trustedIndexes').map().once(function (val, key) {
+	        if (val) {
+	          var n = _this2.gun.user(key).get('iris').get('messagesByAuthor').get(identity.linkTo.uri());
+	          _this2._getMsgs(n, callback, limit, cursor, filter);
+	        }
+	      });
+	    }
 	  };
 
 	  /**
@@ -11240,10 +11250,20 @@
 
 
 	  Index.prototype.getReceivedMsgs = async function getReceivedMsgs(identity, callback, limit) {
+	    var _this3 = this;
+
 	    var cursor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
 	    var filter = arguments[4];
 
-	    return this._getMsgs(identity.gun.get('received'), callback, limit, cursor, filter);
+	    this._getMsgs(identity.gun.get('received'), callback, limit, cursor, filter);
+	    if (this.options.indexSync.query.enabled) {
+	      this.gun.get('trustedIndexes').map().once(function (val, key) {
+	        if (val) {
+	          var n = _this3.gun.user(key).get('iris').get('messagesByRecipient').get(identity.linkTo.uri());
+	          _this3._getMsgs(n, callback, limit, cursor, filter);
+	        }
+	      });
+	    }
 	  };
 
 	  Index.prototype._getAttributeTrustDistance = async function _getAttributeTrustDistance(a) {
@@ -11464,7 +11484,7 @@
 	  };
 
 	  Index.prototype.addTrustedIndex = async function addTrustedIndex(gunUri) {
-	    var _this2 = this;
+	    var _this4 = this;
 
 	    var maxMsgsToCrawl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.options.indexSync.importOnAdd.maxMsgCount;
 	    var maxMsgDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.options.indexSync.importOnAdd.maxMsgDistance;
@@ -11481,7 +11501,7 @@
 	    var msgs = [];
 	    if (this.options.indexSync.importOnAdd.enabled) {
 	      await util$1.timeoutPromise(new _Promise(function (resolve) {
-	        _this2.gun.user(gunUri).get('iris').get('messagesByDistance').map(function (val, key) {
+	        _this4.gun.user(gunUri).get('iris').get('messagesByDistance').map(function (val, key) {
 	          var d = _Number$parseInt(key.split(':')[0]);
 	          if (!isNaN(d) && d <= maxMsgDistance) {
 	            Message.fromSig(val).then(function (msg) {
@@ -11608,7 +11628,7 @@
 
 
 	  Index.prototype.addMessages = async function addMessages(msgs) {
-	    var _this3 = this;
+	    var _this5 = this;
 
 	    var msgsByAuthor = {};
 	    if (Array.isArray(msgs)) {
@@ -11676,7 +11696,7 @@
 	      while (author && knownIdentity) {
 	        if (author.indexOf(knownIdentity.key) === 0) {
 	          try {
-	            await util$1.timeoutPromise(_this3.addMessage(msgsByAuthor[author], { checkIfExists: true }), 10000);
+	            await util$1.timeoutPromise(_this5.addMessage(msgsByAuthor[author], { checkIfExists: true }), 10000);
 	          } catch (e) {
 	            console.log('adding failed:', e, _JSON$stringify(msgsByAuthor[author], null, 2));
 	          }
@@ -11734,11 +11754,19 @@
 	    }
 	    var indexKeys = Index.getMsgIndexKeys(msg);
 	    for (var index in indexKeys) {
-	      for (var i = 0; i < indexKeys[index].length; i++) {
-	        var key = indexKeys[index][i];
-	        // console.log(`adding to index ${index} key ${key}`);
-	        this.gun.get(index).get(key).put(node);
-	        this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
+	      if (Array.isArray(indexKeys[index])) {
+	        for (var i = 0; i < indexKeys[index].length; i++) {
+	          var key = indexKeys[index][i];
+	          // console.log(`adding to index ${index} key ${key}`);
+	          this.gun.get(index).get(key).put(node);
+	          this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
+	        }
+	      } else if (typeof indexKeys[index] === 'object') {
+	        for (var _key in indexKeys[index]) {
+	          console.log('indexing ' + index + '.' + _key + '.' + indexKeys[index][_key]);
+	          this.gun.get(index).get(_key).get(indexKeys[index][_key]).put(node);
+	          this.gun.get(index).get(_key).get(indexKeys[index][_key]).put(node);
+	        }
 	      }
 	    }
 	    if (this.options.ipfs) {
@@ -11763,7 +11791,7 @@
 
 
 	  Index.prototype.search = async function search(value, type, callback, limit) {
-	    var _this4 = this;
+	    var _this6 = this;
 
 	    // TODO: param 'exact', type param
 	    var seen = {};
@@ -11793,7 +11821,7 @@
 	      var soul = Gun.node.soul(id);
 	      if (soul && !seen.hasOwnProperty(soul)) {
 	        seen[soul] = true;
-	        var identity = new Identity(_this4.gun.get('identitiesByTrustDistance').get(key));
+	        var identity = new Identity(_this6.gun.get('identitiesByTrustDistance').get(key));
 	        identity.cursor = key;
 	        callback(identity);
 	      }
@@ -11801,7 +11829,7 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          _this4.gun.user(key).get('iris').get('identitiesByTrustDistance').map().once(function (id, k) {
+	          _this6.gun.user(key).get('iris').get('identitiesByTrustDistance').map().once(function (id, k) {
 	            if (_Object$keys(seen).length >= limit) {
 	              // TODO: turn off .map cb
 	              return;
@@ -11812,7 +11840,7 @@
 	            var soul = Gun.node.soul(id);
 	            if (soul && !seen.hasOwnProperty(soul)) {
 	              seen[soul] = true;
-	              callback(new Identity(_this4.gun.user(key).get('iris').get('identitiesByTrustDistance').get(k)));
+	              callback(new Identity(_this6.gun.user(key).get('iris').get('identitiesByTrustDistance').get(k)));
 	            }
 	          });
 	        }
@@ -11826,7 +11854,7 @@
 
 
 	  Index.prototype.getMessageByHash = function getMessageByHash(hash) {
-	    var _this5 = this;
+	    var _this7 = this;
 
 	    var isIpfsUri = hash.indexOf('Qm') === 0;
 	    return new _Promise(async function (resolve) {
@@ -11835,19 +11863,19 @@
 	        var m = await Message.fromSig(obj);
 	        var h = void 0;
 	        var republished = false;
-	        if (isIpfsUri && _this5.options.ipfs) {
-	          h = await m.saveToIpfs(_this5.options.ipfs);
+	        if (isIpfsUri && _this7.options.ipfs) {
+	          h = await m.saveToIpfs(_this7.options.ipfs);
 	          republished = true;
 	        } else {
 	          h = m.getHash();
 	        }
-	        if (h === hash || isIpfsUri && !_this5.options.ipfs) {
+	        if (h === hash || isIpfsUri && !_this7.options.ipfs) {
 	          // does not check hash validity if it's an ipfs uri and we don't have ipfs
-	          if (!isIpfsUri && _this5.options.ipfs && _this5.writable && !republished) {
-	            m.saveToIpfs(_this5.options.ipfs).then(function (ipfsUri) {
+	          if (!isIpfsUri && _this7.options.ipfs && _this7.writable && !republished) {
+	            m.saveToIpfs(_this7.options.ipfs).then(function (ipfsUri) {
 	              obj.ipfsUri = ipfsUri;
-	              _this5.gun.get('messagesByHash').get(hash).put(obj);
-	              _this5.gun.get('messagesByHash').get(ipfsUri).put(obj);
+	              _this7.gun.get('messagesByHash').get(hash).put(obj);
+	              _this7.gun.get('messagesByHash').get(ipfsUri).put(obj);
 	            });
 	          }
 	          resolve(m);
@@ -11855,21 +11883,21 @@
 	          console.error('queried index for message ' + hash + ' but received ' + h);
 	        }
 	      };
-	      if (isIpfsUri && _this5.options.ipfs) {
-	        _this5.options.ipfs.cat(hash).then(function (file) {
-	          var s = _this5.options.ipfs.types.Buffer.from(file).toString('utf8');
+	      if (isIpfsUri && _this7.options.ipfs) {
+	        _this7.options.ipfs.cat(hash).then(function (file) {
+	          var s = _this7.options.ipfs.types.Buffer.from(file).toString('utf8');
 	          console.log('got msg ' + hash + ' from ipfs');
 	          resolveIfHashMatches(s);
 	        });
 	      }
-	      _this5.gun.get('messagesByHash').get(hash).on(function (d) {
+	      _this7.gun.get('messagesByHash').get(hash).on(function (d) {
 	        console.log('got msg ' + hash + ' from own gun index');
 	        resolveIfHashMatches(d);
 	      });
-	      if (_this5.options.indexSync.query.enabled) {
-	        _this5.gun.get('trustedIndexes').map().once(function (val, key) {
+	      if (_this7.options.indexSync.query.enabled) {
+	        _this7.gun.get('trustedIndexes').map().once(function (val, key) {
 	          if (val) {
-	            _this5.gun.user(key).get('iris').get('messagesByHash').get(hash).on(function (d) {
+	            _this7.gun.user(key).get('iris').get('messagesByHash').get(hash).on(function (d) {
 	              console.log('got msg ' + hash + ' from friend\'s gun index ' + val);
 	              resolveIfHashMatches(d);
 	            });
@@ -11887,7 +11915,7 @@
 	  Index.prototype.getMessagesByTimestamp = function getMessagesByTimestamp(callback, limit) {
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    var _this6 = this;
+	    var _this8 = this;
 
 	    var desc = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
 	    var filter = arguments[4];
@@ -11904,8 +11932,8 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this6.gun.user(key).get('iris').get('messagesByTimestamp');
-	          _this6._getMsgs(n, cb, limit, cursor, desc, filter);
+	          var n = _this8.gun.user(key).get('iris').get('messagesByTimestamp');
+	          _this8._getMsgs(n, cb, limit, cursor, desc, filter);
 	        }
 	      });
 	    }
@@ -11919,7 +11947,7 @@
 	  Index.prototype.getMessagesByDistance = function getMessagesByDistance(callback, limit) {
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    var _this7 = this;
+	    var _this9 = this;
 
 	    var desc = arguments[3];
 	    var filter = arguments[4];
@@ -11937,8 +11965,8 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this7.gun.user(key).get('iris').get('messagesByDistance');
-	          _this7._getMsgs(n, cb, limit, cursor, desc, filter);
+	          var n = _this9.gun.user(key).get('iris').get('messagesByDistance');
+	          _this9._getMsgs(n, cb, limit, cursor, desc, filter);
 	        }
 	      });
 	    }
