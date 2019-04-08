@@ -11035,16 +11035,20 @@
 	    keys.messagesByAuthor = {};
 	    var authors = msg.getAuthorArray();
 	    for (var i = 0; i < authors.length; i++) {
-	      keys.messagesByAuthor[authors[i].uri()] = msg.signedData.timestamp + ':' + hashSlice;
+	      if (authors[i].isUniqueType()) {
+	        keys.messagesByAuthor[authors[i].uri()] = msg.signedData.timestamp + ':' + hashSlice;
+	      }
 	    }
 	    keys.messagesByRecipient = {};
 	    var recipients = msg.getRecipientArray();
 	    for (var _i2 = 0; _i2 < recipients.length; _i2++) {
-	      keys.messagesByRecipient[recipients[_i2].uri()] = msg.signedData.timestamp + ':' + hashSlice;
+	      if (recipients[_i2].isUniqueType()) {
+	        keys.messagesByRecipient[recipients[_i2].uri()] = msg.signedData.timestamp + ':' + hashSlice;
+	      }
 	    }
 
 	    if (['verification', 'unverification'].indexOf(msg.signedData.type) > -1) {
-	      keys.verificationsByRecipientAndAuthor = [];
+	      keys.verificationsByRecipient = {};
 	      for (var _i3 = 0; _i3 < recipients.length; _i3++) {
 	        var r = recipients[_i3];
 	        if (!r.isUniqueType()) {
@@ -11055,11 +11059,11 @@
 	          if (!a.isUniqueType()) {
 	            continue;
 	          }
-	          keys.verificationsByRecipientAndAuthor.push(r.uri() + ':' + a.uri());
+	          keys.verificationsByRecipient[r.uri()] = a.uri();
 	        }
 	      }
 	    } else if (msg.signedData.type === 'rating') {
-	      keys.ratingsByRecipientAndAuthor = [];
+	      keys.ratingsByRecipient = {};
 	      for (var _i4 = 0; _i4 < recipients.length; _i4++) {
 	        var _r = recipients[_i4];
 	        if (!_r.isUniqueType()) {
@@ -11070,7 +11074,7 @@
 	          if (!_a.isUniqueType()) {
 	            continue;
 	          }
-	          keys.ratingsByRecipientAndAuthor.push(_r.uri() + ':' + _a.uri());
+	          keys.ratingsByRecipient[_r.uri()] = _a.uri();
 	        }
 	      }
 	    }
@@ -11982,7 +11986,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.98";
+	var version$1 = "0.0.99";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
