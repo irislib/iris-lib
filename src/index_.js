@@ -143,9 +143,9 @@ class Index {
     user.auth(keypair);
     this.writable = true;
     options.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
-    const identifi = user.get(`identifi`);
+    // const identifi = user.get(`identifi`);
     const gunRoot = user.get(`iris`);
-    gunRoot.put(identifi); // temp migration identifi -> iris
+    // gunRoot.put(identifi); // temp migration identifi -> iris, but fails due to gun error
     const i = new Index(gunRoot, options);
     i.gun.get(`viewpoint`).put(options.viewpoint);
     const uri = options.viewpoint.uri();
@@ -191,15 +191,19 @@ class Index {
     keys.messagesByDistance = [`${distance}:${keys.messagesByTimestamp[0]}`];
     keys.messagesByType = [`${msg.signedData.type}:${timestamp}:${hashSlice}`];
 
-    keys.messagesByAuthor = [];
+    keys.messagesByAuthor = {};
     const authors = msg.getAuthorArray();
     for (let i = 0;i < authors.length;i ++) {
-      keys.messagesByAuthor.push(`${authors[i].uri()}:${msg.signedData.timestamp}:${hashSlice}`);
+      if (authors[i].isUniqueType()) {
+        keys.messagesByAuthor[authors[i].uri()] = `${msg.signedData.timestamp}:${hashSlice}`;
+      }
     }
-    keys.messagesByRecipient = [];
+    keys.messagesByRecipient = {};
     const recipients = msg.getRecipientArray();
     for (let i = 0;i < recipients.length;i ++) {
-      keys.messagesByRecipient.push(`${recipients[i].uri()}:${msg.signedData.timestamp}:${hashSlice}`);
+      if (recipients[i].isUniqueType()) {
+        keys.messagesByRecipient[recipients[i].uri()] = `${msg.signedData.timestamp}:${hashSlice}`;
+      }
     }
 
     if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
@@ -296,7 +300,7 @@ class Index {
   }
 
   /**
-  * @returns {Identity} viewpoint identity of the index
+  * @returns {Identity} viewpoint identity (trustDistance == 0) of the index
   */
   async getViewpoint() {
     let vpAttr;
@@ -372,7 +376,15 @@ class Index {
   * @param {Function} callback callback function that receives the Messages one by one
   */
   async getSentMsgs(identity: Identity, callback, limit, cursor = ``, filter) {
-    return this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor, filter);
+    this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor, filter);
+    if (this.options.indexSync.query.enabled) {
+      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+        if (val) {
+          const n = this.gun.user(key).get(`iris`).get(`messagesByAuthor`).get(identity.linkTo.uri());
+          this._getMsgs(n, callback, limit, cursor, filter);
+        }
+      });
+    }
   }
 
   /**
@@ -381,7 +393,15 @@ class Index {
   * @param {Function} callback callback function that receives the Messages one by one
   */
   async getReceivedMsgs(identity, callback, limit, cursor = ``, filter) {
-    return this._getMsgs(identity.gun.get(`received`), callback, limit, cursor, filter);
+    this._getMsgs(identity.gun.get(`received`), callback, limit, cursor, filter);
+    if (this.options.indexSync.query.enabled) {
+      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+        if (val) {
+          const n = this.gun.user(key).get(`iris`).get(`messagesByRecipient`).get(identity.linkTo.uri());
+          this._getMsgs(n, callback, limit, cursor, filter);
+        }
+      });
+    }
   }
 
   async _getAttributeTrustDistance(a) {
@@ -759,11 +779,19 @@ class Index {
     }
     const indexKeys = Index.getMsgIndexKeys(msg);
     for (const index in indexKeys) {
-      for (let i = 0;i < indexKeys[index].length;i ++) {
-        const key = indexKeys[index][i];
-        // console.log(`adding to index ${index} key ${key}`);
-        this.gun.get(index).get(key).put(node);
-        this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
+      if (Array.isArray(indexKeys[index])) {
+        for (let i = 0;i < indexKeys[index].length;i ++) {
+          const key = indexKeys[index][i];
+          // console.log(`adding to index ${index} key ${key}`);
+          this.gun.get(index).get(key).put(node);
+          this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
+        }
+      } else if (typeof indexKeys[index] === `object`) {
+        for (const key in indexKeys[index]) {
+          console.log(`indexing ${index}.${key}.${indexKeys[index][key]}`);
+          this.gun.get(index).get(key).get(indexKeys[index][key]).put(node);
+          this.gun.get(index).get(key).get(indexKeys[index][key]).put(node);
+        }
       }
     }
     if (this.options.ipfs) {
