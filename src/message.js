@@ -148,22 +148,23 @@ class Message {
         if (this.signerKeyHash && d.author[attr] !== this.signerKeyHash) {throw new ValidationError(`${errorMsg} If message has a keyID author, it must be signed by the same key`);}
       }
     }
-    if (!d.recipient) {throw new ValidationError(`${errorMsg} Missing recipient`);}
-    if (typeof d.recipient !== `object`) {throw new ValidationError(`${errorMsg} Recipient must be object`);}
-    if (Array.isArray(d.recipient)) {throw new ValidationError(`${errorMsg} Recipient must not be an array`);}
-    if (Object.keys(d.recipient).length === 0) {throw new ValidationError(`${errorMsg} Recipient empty`);}
-    for (const attr in d.recipient) {
-      const t = typeof d.recipient[attr];
-      if (t !== `string`) {
-        if (Array.isArray(d.recipient[attr])) {
-          for (let i = 0;i < d.recipient[attr].length;i ++) {
-            if (typeof d.recipient[attr][i] !== `string`) {throw new ValidationError(`${errorMsg} Recipient attribute must be string, got ${attr}: [${d.recipient[attr][i]}]`);}
-            if (d.recipient[attr][i].length === 0) {
-              throw new ValidationError(`${errorMsg} recipient ${attr} in array[${i}] is empty`);
+    if (d.recipient) {
+      if (typeof d.recipient !== `object`) {throw new ValidationError(`${errorMsg} Recipient must be object`);}
+      if (Array.isArray(d.recipient)) {throw new ValidationError(`${errorMsg} Recipient must not be an array`);}
+      if (Object.keys(d.recipient).length === 0) {throw new ValidationError(`${errorMsg} Recipient empty`);}
+      for (const attr in d.recipient) {
+        const t = typeof d.recipient[attr];
+        if (t !== `string`) {
+          if (Array.isArray(d.recipient[attr])) {
+            for (let i = 0;i < d.recipient[attr].length;i ++) {
+              if (typeof d.recipient[attr][i] !== `string`) {throw new ValidationError(`${errorMsg} Recipient attribute must be string, got ${attr}: [${d.recipient[attr][i]}]`);}
+              if (d.recipient[attr][i].length === 0) {
+                throw new ValidationError(`${errorMsg} recipient ${attr} in array[${i}] is empty`);
+              }
             }
+          } else {
+            throw new ValidationError(`${errorMsg} Recipient attribute must be string or array, got ${attr}: ${d.recipient[attr]}`);
           }
-        } else {
-          throw new ValidationError(`${errorMsg} Recipient attribute must be string or array, got ${attr}: ${d.recipient[attr]}`);
         }
       }
     }
@@ -229,7 +230,7 @@ class Message {
       signedData.author = {keyID: Key.getId(signingKey)};
     }
     signedData.timestamp = signedData.timestamp || (new Date()).toISOString();
-    signedData.context = signedData.context || `identifi`;
+    signedData.context = signedData.context || `iris`;
     const m = new Message({signedData});
     if (signingKey) {
       await m.sign(signingKey);

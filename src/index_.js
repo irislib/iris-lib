@@ -90,24 +90,44 @@ class Index {
         }
       }
     }, options);
+<<<<<<< HEAD
     this.gun.get(`viewpoint`).on(vp => this.viewpoint = this.viewpoint || new Attribute(vp));
+=======
+    if (options.viewpoint) {
+      this.viewpoint = options.viewpoint;
+    } else {
+      this.gun.get(`viewpoint`).on((val, key, msg, eve) => {
+        if (val) {
+          this.viewpoint = new Attribute(val);
+          eve.off();
+        }
+      });
+    }
+>>>>>>> master
     if (this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {
         this.gun.get(`trustedIndexes`).map().once((val, uri) => {
           if (val) {
             // TODO: only get new messages?
-            this.gun.user(uri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
+            this.gun.user(uri).get(`iris`).get(`messagesByDistance`).map((val, key) => {
               const d = Number.parseInt(key.split(`:`)[0]);
+<<<<<<< HEAD
               console.log(`got msg with d`, d, key);
               if (!Number.isNaN(d) && d <= this.options.indexSync.subscribe.maxMsgDistance) {
+=======
+              if (!isNaN(d) && d <= this.options.indexSync.subscribe.maxMsgDistance) {
+>>>>>>> master
                 Message.fromSig(val).then(msg => {
-                  console.log(`adding msg ${msg.hash} from trusted index`);
                   if (this.options.indexSync.msgTypes.all ||
                     this.options.indexSync.msgTypes.hasOwnProperty(msg.signedData.type)) {
                     this.addMessage(msg, {checkIfExists: true});
                   }
                 });
               }
+            });
+            this.gun.user(uri).get(`iris`).get(`reactions`).map((reaction, msgHash) => {
+              this.gun.get(`messagesByHash`).get(msgHash).get(`reactions`).get(uri).put(reaction);
+              this.gun.get(`messagesByHash`).get(msgHash).get(`reactions`).get(uri).put(reaction);
             });
           }
         });
@@ -118,7 +138,7 @@ class Index {
   /**
   * Use this to load an index that you can write to
   * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
-  * @param {Object} keypair SEA keypair (can be generated with await identifiLib.Key.generate())
+  * @param {Object} keypair SEA keypair (can be generated with await irisLib.Key.generate())
   * @param {Object} options see default options in Index constructor's example
   * @returns {Promise}
   */
@@ -128,18 +148,32 @@ class Index {
     }
     const user = gun.user();
     user.auth(keypair);
-    const i = new Index(user.get(`identifi`), options);
-    i.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
-    i.gun.get(`viewpoint`).put(i.viewpoint);
-    const uri = i.viewpoint.uri();
+    this.writable = true;
+    options.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
+    // const identifi = user.get(`identifi`);
+    const gunRoot = user.get(`iris`);
+    // gunRoot.put(identifi); // temp migration identifi -> iris, but fails due to gun error
+    const i = new Index(gunRoot, options);
+    i.gun.get(`viewpoint`).put(options.viewpoint);
+    const uri = options.viewpoint.uri();
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
-    const id = Identity.create(g, {trustDistance: 0, linkTo: i.viewpoint});
-    i._addIdentityToIndexes(id.gun);
+    const attrs = {};
+    attrs[options.viewpoint.uri()] = options.viewpoint;
     if (options.self) {
-      const recipient = Object.assign(options.self, {keyID: i.viewpoint.value});
-      Message.createVerification({recipient}, keypair).then(msg => i.addMessage(msg));
+      const keys = Object.keys(options.self);
+      for (let i = 0;i < keys.length;i ++) {
+        const a = new Attribute(keys[i], options.self[keys[i]]);
+        attrs[a.uri()] = a;
+      }
     }
-
+    const id = await Identity.create(g, {trustDistance: 0, linkTo: options.viewpoint, attrs});
+    await i._addIdentityToIndexes(id.gun);
+    if (options.self) {
+      const recipient = Object.assign(options.self, {keyID: options.viewpoint.value});
+      Message.createVerification({recipient}, keypair).then(msg => {
+        i.addMessage(msg);
+      });
+    }
     return i;
   }
 
@@ -151,29 +185,36 @@ class Index {
     return key;
   }
 
+  // TODO: GUN indexing module that does this automatically
   static getMsgIndexKeys(msg) {
     const keys = {};
     let distance = Number.parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
+    const timestamp = Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000);
     const hashSlice = msg.getHash().substr(0, 9);
     keys.messagesByHash = [msg.getHash()];
-    keys.messagesByTimestamp = [`${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000)}:${hashSlice}`];
+    keys.messagesByTimestamp = [`${timestamp}:${hashSlice}`];
     keys.messagesByDistance = [`${distance}:${keys.messagesByTimestamp[0]}`];
+    keys.messagesByType = [`${msg.signedData.type}:${timestamp}:${hashSlice}`];
 
-    keys.messagesByAuthor = [];
+    keys.messagesByAuthor = {};
     const authors = msg.getAuthorArray();
     for (let i = 0;i < authors.length;i ++) {
-      keys.messagesByAuthor.push(`${authors[i].uri()}:${msg.signedData.timestamp}:${hashSlice}`);
+      if (authors[i].isUniqueType()) {
+        keys.messagesByAuthor[authors[i].uri()] = `${msg.signedData.timestamp}:${hashSlice}`;
+      }
     }
-    keys.messagesByRecipient = [];
+    keys.messagesByRecipient = {};
     const recipients = msg.getRecipientArray();
     for (let i = 0;i < recipients.length;i ++) {
-      keys.messagesByRecipient.push(`${recipients[i].uri()}:${msg.signedData.timestamp}:${hashSlice}`);
+      if (recipients[i].isUniqueType()) {
+        keys.messagesByRecipient[recipients[i].uri()] = `${msg.signedData.timestamp}:${hashSlice}`;
+      }
     }
 
     if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
-      keys.verificationsByRecipientAndAuthor = [];
+      keys.verificationsByRecipient = {};
       for (let i = 0;i < recipients.length;i ++) {
         const r = recipients[i];
         if (!r.isUniqueType()) {
@@ -184,11 +225,11 @@ class Index {
           if (!a.isUniqueType()) {
             continue;
           }
-          keys.verificationsByRecipientAndAuthor.push(`${r.uri()}:${a.uri()}`);
+          keys.verificationsByRecipient[r.uri()] = a.uri();
         }
       }
     } else if (msg.signedData.type === `rating`) {
-      keys.ratingsByRecipientAndAuthor = [];
+      keys.ratingsByRecipient = {};
       for (let i = 0;i < recipients.length;i ++) {
         const r = recipients[i];
         if (!r.isUniqueType()) {
@@ -199,7 +240,7 @@ class Index {
           if (!a.isUniqueType()) {
             continue;
           }
-          keys.ratingsByRecipientAndAuthor.push(`${r.uri()}:${a.uri()}`);
+          keys.ratingsByRecipient[r.uri()] = a.uri();
         }
       }
     }
@@ -266,7 +307,7 @@ class Index {
   }
 
   /**
-  * @returns {Identity} viewpoint identity of the index
+  * @returns {Identity} viewpoint identity (trustDistance == 0) of the index
   */
   async getViewpoint() {
     let vpAttr;
@@ -285,7 +326,7 @@ class Index {
   * get(value) - guesses the type or throws an error
   * @returns {Identity} identity that is connected to the identifier param
   */
-  get(a: String, b: String) {
+  get(a: String, b: String, reload = false) {
     if (!a) {
       throw new Error(`get failed: param must be a string, received ${typeof a} ${a}`);
     }
@@ -301,7 +342,21 @@ class Index {
       }
       attr = new Attribute(type, value);
     }
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(attr.uri()), attr);
+    if (reload) {
+      // 1) get verifications connecting attr to other attributes
+      // 2) recurse
+      // 3) get messages received by this list of attributes
+      // 4) calculate stats
+      // 5) update identity index entry
+      const seenAttributes = {};
+      seenAttributes[attr.uri()] = true;
+      this.gun.get(`verificationsByRecipient`).get(attr.uri()).map().once(val => {
+        // val is message
+        val;
+      });
+    } else {
+      return new Identity(this.gun.get(`identitiesBySearchKey`).get(attr.uri()), attr);
+    }
   }
 
   async _getMsgs(msgIndex, callback, limit, cursor, desc, filter) {
@@ -315,6 +370,7 @@ class Index {
       if (result.value && result.value.ipfsUri) {
         msg.ipfsUri = result.value.ipfsUri;
       }
+      msg.gun = msgIndex.get(result.key);
       callback(msg);
     }
     searchText(msgIndex, resultFound, ``, undefined, cursor, desc);
@@ -329,7 +385,11 @@ class Index {
       const index = indexes[i];
       for (let j = 0;j < indexKeys[index].length;j ++) {
         const key = indexKeys[index][j];
+<<<<<<< HEAD
         console.log(`adding to index ${index} key ${key}`);
+=======
+        // console.log(`adding to index ${index} key ${key}`);
+>>>>>>> master
         await this.gun.get(index).get(key).put(id);
       }
     }
@@ -341,7 +401,15 @@ class Index {
   * @param {Function} callback callback function that receives the Messages one by one
   */
   async getSentMsgs(identity: Identity, callback, limit, cursor = ``, filter) {
-    return this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor, filter);
+    this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor, filter);
+    if (this.options.indexSync.query.enabled) {
+      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+        if (val) {
+          const n = this.gun.user(key).get(`iris`).get(`messagesByAuthor`).get(identity.linkTo.uri());
+          this._getMsgs(n, callback, limit, cursor, filter);
+        }
+      });
+    }
   }
 
   /**
@@ -350,7 +418,15 @@ class Index {
   * @param {Function} callback callback function that receives the Messages one by one
   */
   async getReceivedMsgs(identity, callback, limit, cursor = ``, filter) {
-    return this._getMsgs(identity.gun.get(`received`), callback, limit, cursor, filter);
+    this._getMsgs(identity.gun.get(`received`), callback, limit, cursor, filter);
+    if (this.options.indexSync.query.enabled) {
+      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+        if (val) {
+          const n = this.gun.user(key).get(`iris`).get(`messagesByRecipient`).get(identity.linkTo.uri());
+          this._getMsgs(n, callback, limit, cursor, filter);
+        }
+      });
+    }
   }
 
   async _getAttributeTrustDistance(a) {
@@ -395,21 +471,32 @@ class Index {
     const hash = `todo`;
     const identityIndexKeysBefore = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     const attrs = await new Promise(resolve => { recipient.get(`attrs`).load(r => resolve(r)); });
-    if (msg.signedData.type === `verification`) {
+    if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
+      const isVerification = msg.signedData.type === `verification`;
       for (const a of msg.getRecipientArray()) {
         let hasAttr = false;
+        const v = {
+          verifications: isVerification ? 1 : 0,
+          unverifications: isVerification ? 0 : 1
+        };
         Object.keys(attrs).forEach(k => {
           // TODO: if author is self, mark as self verified
+          // TODO: only 1 verif / unverif per author
           if (a.equals(attrs[k])) {
-            attrs[k].conf = (attrs[k].conf || 0) + 1;
+            attrs[k].verifications = (attrs[k].verifications || 0) + v.verifications;
+            attrs[k].unverifications = (attrs[k].unverifications || 0) + v.unverifications;
             hasAttr = true;
           }
         });
         if (!hasAttr) {
-          attrs[a.uri()] = {type: a.type, value: a.value, conf: 1, ref: 0};
+          attrs[a.uri()] = Object.assign({type: a.type, value: a.value}, v);
         }
         if (msg.goodVerification) {
-          attrs[a.uri()].verified = true;
+          if (isVerification) {
+            attrs[a.uri()].wellVerified = true;
+          } else {
+            attrs[a.uri()].wellUnverified = true;
+          }
         }
       }
       recipient.get(`mostVerifiedAttributes`).put(Identity.getMostVerifiedAttributes(attrs)); // TODO: why this needs to be done twice to register?
@@ -468,7 +555,6 @@ class Index {
       for (let j = 0;j < identityIndexKeysBefore[index].length;j ++) {
         const key = identityIndexKeysBefore[index][j];
         if (!identityIndexKeysAfter[index] || identityIndexKeysAfter[index].indexOf(key) === - 1) {
-          console.log(`removing stale key ${key} from index ${index}`);
           this.gun.get(index).get(key).put(null);
         }
       }
@@ -528,7 +614,6 @@ class Index {
     if (gunUri === this.viewpoint.value) {
       return;
     }
-    console.log(`addTrustedIndex`, gunUri);
     const exists = await this.gun.get(`trustedIndexes`).get(gunUri).then();
     if (exists) {
       return;
@@ -537,7 +622,7 @@ class Index {
     const msgs = [];
     if (this.options.indexSync.importOnAdd.enabled) {
       await util.timeoutPromise(new Promise(resolve => {
-        this.gun.user(gunUri).get(`identifi`).get(`messagesByDistance`).map((val, key) => {
+        this.gun.user(gunUri).get(`iris`).get(`messagesByDistance`).map((val, key) => {
           const d = Number.parseInt(key.split(`:`)[0]);
           if (!Number.isNaN(d) && d <= maxMsgDistance) {
             Message.fromSig(val).then(msg => {
@@ -597,7 +682,8 @@ class Index {
       }
       const linkTo = Identity.getLinkTo(attrs);
       const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
-      const id = await Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance: false}, true);
+      const trustDistance = msg.isPositive() && typeof msg.distance === `number` ? msg.distance + 1 : false;
+      const id = await Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance});
       // {a:1} because inserting {} causes a "no signature on data" error from gun
 
       // TODO: take msg author trust into account
@@ -648,7 +734,7 @@ class Index {
         if (stop) { return; }
         knownIdentities.push(result);
       }, ``);
-      await new Promise(resolve => setTimeout(resolve, 200)); // wait for results to accumulate
+      await new Promise(r => setTimeout(r, 2000)); // wait for results to accumulate
       stop = true;
       knownIdentities.sort((a, b) => {
         if (a.key === b.key) {
@@ -700,26 +786,43 @@ class Index {
         return;
       }
     }
+    const obj = {sig: msg.sig, pubKey: msg.pubKey};
+    //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
+    const node = this.gun.back(- 1).get(`messagesByHash`).get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
     msg.distance = await this.getMsgTrustDistance(msg);
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
     }
-    const obj = {sig: msg.sig, pubKey: msg.pubKey};
+    if (msg.signedData.replyTo) {
+      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.replyTo).get(`replies`).get(hash).put(node);
+      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.replyTo).get(`replies`).get(hash).put(node);
+    }
+    if (msg.signedData.sharedMsg) {
+      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
+      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
+    }
     const indexKeys = Index.getMsgIndexKeys(msg);
     for (const index in indexKeys) {
-      for (let i = 0;i < indexKeys[index].length;i ++) {
-        const key = indexKeys[index][i];
-        console.log(`adding to index ${index} message key ${key}`);
-        this.gun.get(index).get(key).put(obj);
-        this.gun.get(index).get(key).put(obj); // umm, what? doesn't work unless I write it twice
+      if (Array.isArray(indexKeys[index])) {
+        for (let i = 0;i < indexKeys[index].length;i ++) {
+          const key = indexKeys[index][i];
+          // console.log(`adding to index ${index} key ${key}`);
+          this.gun.get(index).get(key).put(node);
+          this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
+        }
+      } else if (typeof indexKeys[index] === `object`) {
+        for (const key in indexKeys[index]) {
+          this.gun.get(index).get(key).get(indexKeys[index][key]).put(node);
+          this.gun.get(index).get(key).get(indexKeys[index][key]).put(node);
+        }
       }
     }
     if (this.options.ipfs) {
       try {
         const ipfsUri = await msg.saveToIpfs(this.options.ipfs);
-        obj.ipfsUri = ipfsUri;
-        this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
+        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
+        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
+        this.gun.get(`messagesByHash`).get(ipfsUri).put({ipfsUri});
       } catch (e) {
         console.error(`adding msg ${msg} to ipfs failed: ${e}`);
       }
@@ -761,7 +864,7 @@ class Index {
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).map().once((id, k) => {
+          this.gun.user(key).get(`iris`).get(`identitiesByTrustDistance`).map().once((id, k) => {
             if (Object.keys(seen).length >= limit) {
               // TODO: turn off .map cb
               return;
@@ -771,13 +874,67 @@ class Index {
             if (soul && !seen.hasOwnProperty(soul)) {
               seen[soul] = true;
               callback(
-                new Identity(this.gun.user(key).get(`identifi`).get(`identitiesByTrustDistance`).get(k))
+                new Identity(this.gun.user(key).get(`iris`).get(`identitiesByTrustDistance`).get(k))
               );
             }
           });
         }
       });
     }
+  }
+
+  /**
+  * @returns {Object} message matching the hash
+  */
+  getMessageByHash(hash) {
+    const isIpfsUri = hash.indexOf(`Qm`) === 0;
+    return new Promise(async resolve => {
+      const resolveIfHashMatches = async d => {
+        const obj = typeof d === `object` ? d : JSON.parse(d);
+        const m = await Message.fromSig(obj);
+        let h;
+        let republished = false;
+        if (isIpfsUri && this.options.ipfs) {
+          h = await m.saveToIpfs(this.options.ipfs);
+          republished = true;
+        } else {
+          h = m.getHash();
+        }
+        if (h === hash || (isIpfsUri && !this.options.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
+          if (!isIpfsUri && this.options.ipfs && this.writable && !republished) {
+            m.saveToIpfs(this.options.ipfs).then(ipfsUri => {
+              obj.ipfsUri = ipfsUri;
+              this.gun.get(`messagesByHash`).get(hash).put(obj);
+              this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
+            });
+          }
+          resolve(m);
+        } else {
+          console.error(`queried index for message ${hash} but received ${h}`);
+        }
+      };
+      if (isIpfsUri && this.options.ipfs) {
+        this.options.ipfs.cat(hash).then(file => {
+          const s = this.options.ipfs.types.Buffer.from(file).toString(`utf8`);
+          console.log(`got msg ${hash} from ipfs`);
+          resolveIfHashMatches(s);
+        });
+      }
+      this.gun.get(`messagesByHash`).get(hash).on(d => {
+        console.log(`got msg ${hash} from own gun index`);
+        resolveIfHashMatches(d);
+      });
+      if (this.options.indexSync.query.enabled) {
+        this.gun.get(`trustedIndexes`).map().once((val, key) => {
+          if (val) {
+            this.gun.user(key).get(`iris`).get(`messagesByHash`).get(hash).on(d => {
+              console.log(`got msg ${hash} from friend's gun index ${val}`);
+              resolveIfHashMatches(d);
+            });
+          }
+        });
+      }
+    });
   }
 
   /**
@@ -795,7 +952,7 @@ class Index {
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`identifi`).get(`messagesByTimestamp`);
+          const n = this.gun.user(key).get(`iris`).get(`messagesByTimestamp`);
           this._getMsgs(n, cb, limit, cursor, desc, filter);
         }
       });
@@ -819,11 +976,18 @@ class Index {
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`identifi`).get(`messagesByDistance`);
+          const n = this.gun.user(key).get(`iris`).get(`messagesByDistance`);
           this._getMsgs(n, cb, limit, cursor, desc, filter);
         }
       });
     }
+  }
+
+  setReaction(msg: Object, reaction) {
+    this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
+    this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
+    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
+    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
   }
 }
 

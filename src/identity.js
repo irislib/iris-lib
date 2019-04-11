@@ -15,7 +15,7 @@ class Identity {
     this.linkTo = linkTo;
   }
 
-  static create(gun, data) {
+  static async create(gun, data) {
     if (!data.linkTo && !data.attrs) {
       throw new Error(`You must specify either data.linkTo or data.attrs`);
     }
@@ -28,7 +28,7 @@ class Identity {
     } else {
       data.linkTo = Identity.getLinkTo(data.attrs);
     }
-    gun.put(data);
+    await gun.put(data);
     return new Identity(gun, data.linkTo);
   }
 
@@ -52,12 +52,12 @@ class Identity {
     Object.keys(attrs).forEach(k => {
       const a = attrs[k];
       const keyExists = Object.keys(mostVerifiedAttributes).indexOf(a.type) > - 1;
-      a.conf = isNaN(a.conf) ? 1 : a.conf;
-      a.ref = isNaN(a.ref) ? 0 : a.ref;
-      if (a.conf * 2 > a.ref * 3 && (!keyExists || a.conf - a.ref > mostVerifiedAttributes[a.type].verificationScore)) {
+      a.verifications = isNaN(a.verifications) ? 1 : a.verifications;
+      a.unverifications = isNaN(a.unverifications) ? 0 : a.unverifications;
+      if (a.verifications * 2 > a.unverifications * 3 && (!keyExists || a.verifications - a.unverifications > mostVerifiedAttributes[a.type].verificationScore)) {
         mostVerifiedAttributes[a.type] = {
           attribute: a,
-          verificationScore: a.conf - a.ref
+          verificationScore: a.verifications - a.unverifications
         };
         if (a.verified) {
           mostVerifiedAttributes[a.type].verified = true;

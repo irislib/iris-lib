@@ -9,7 +9,7 @@ import globals from 'rollup-plugin-node-globals';
 import hypothetical from 'rollup-plugin-hypothetical';
 import ignore from 'rollup-plugin-ignore';
 
-const name = `identifiLib`;
+const name = `irisLib`;
 
 const plugins = [
   ignore(['gun/lib/then', 'gun/lib/load']),

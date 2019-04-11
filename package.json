@@ -1,9 +1,9 @@
 {
-  "name": "identifi-lib",
-  "version": "0.0.88",
-  "description": "Basic tools for reading and writing Identifi messages and identities.",
+  "name": "iris-lib",
+  "version": "0.0.99",
+  "description": "Basic tools for reading and writing Iris messages and identities.",
   "main": "cjs/index.js",
-  "browser": "dist/identifiLib.js",
+  "browser": "dist/irisLib.js",
   "module": "es/index.js",
   "jsxnext:main": "es/index.js",
   "jest": {
@@ -41,7 +41,7 @@
   "keywords": [],
   "author": "Martti Malmi (martti.malmi@iki.fi)",
   "license": "MIT",
-  "repository": "mmalmi/identifi-lib",
+  "repository": "irislib/iris-lib",
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "babel-cli": "^6.26.0",
