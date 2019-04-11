@@ -348,12 +348,73 @@ class Index {
       // 3) get messages received by this list of attributes
       // 4) calculate stats
       // 5) update identity index entry
-      const seenAttributes = {};
-      seenAttributes[attr.uri()] = true;
-      this.gun.get(`verificationsByRecipient`).get(attr.uri()).map().once(val => {
-        // val is message
-        val;
-      });
+      const o = {
+        attributes: {},
+        sent: {},
+        received: {},
+        receivedPositive: 0,
+        receivedNeutral: 0,
+        receivedNegative: 0,
+        sentPositive: 0,
+        sentNeutral: 0,
+        sentNegative: 0
+      };
+      const node = this.gun.get(`identities`).set(o);
+      const updateIdentityByLinkedAttribute = attribute => {
+        this.gun.get(`verificationsByRecipient`).get(attribute.uri()).map().once(val => {
+          const m = Message.fromSig(val);
+          const recipients = m.getRecipientArray();
+          for (let i = 0;i < recipients.length;i ++) {
+            const a2 = recipients[i];
+            if (!o.attributes.hasOwnProperty(a2.uri())) {
+              // TODO remove attribute from identity if not enough verifications / too many unverifications
+              o.attributes[a2.uri()] = a2;
+              this.gun.get(`messagesByRecipient`).get(a2.uri()).map().once(val => {
+                const m2 = Message.fromSig(val);
+                if (!o.received.hasOwnProperty(m2.getHash())) {
+                  o.received[m2.getHash()] = m2;
+                  if (m2.isPositive()) {
+                    o.receivedPositive ++;
+                    m2.getAuthor(this).gun.get(`trustDistance`).on(d => {
+                      if (typeof d === `number`) {
+                        if (typeof o.trustDistance !== `number` || o.trustDistance > d + 1) {
+                          o.trustDistance = d + 1;
+                          node.get(`trustDistance`).put(d + 1);
+                        }
+                      }
+                    });
+                  } else if (m2.isNegative()) {
+                    o.receivedNegative ++;
+                  } else {
+                    o.receivedNeutral ++;
+                  }
+                  node.put(o);
+                }
+              });
+              this.gun.get(`messagesByAuthor`).get(a2.uri()).map().once(val => {
+                const m2 = Message.fromSig(val);
+                if (!o.sent.hasOwnProperty(m2.getHash())) {
+                  o.sent[m2.getHash()] = m2;
+                  if (m2.isPositive()) {
+                    o.sentPositive ++;
+                  } else if (m2.isNegative()) {
+                    o.sentNegative ++;
+                  } else {
+                    o.sentNeutral ++;
+                  }
+                  node.put(o);
+                }
+              });
+              updateIdentityByLinkedAttribute(a2);
+            }
+          }
+        });
+      };
+      updateIdentityByLinkedAttribute(attr);
+      if (this.writable) {
+        this._addIdentityToIndexes(node);
+      }
+      return new Identity(node, attr);
     } else {
       return new Identity(this.gun.get(`identitiesBySearchKey`).get(attr.uri()), attr);
     }
