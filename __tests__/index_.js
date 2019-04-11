@@ -79,7 +79,7 @@ describe('local index', async () => {
       expect(msg.signedData.recipient.email).toEqual('bob@example.com');
     });
     test('get added identity', async () => {
-      p = i.get('bob@example.com');
+      p = i.get('bob@example.com', 'email', true);
       const data = await p.gun.once().then();
       //expect(q).toBeInstanceOf(identifi.Identity);
       expect(data.trustDistance).toBe(1);
@@ -280,10 +280,19 @@ describe('local index', async () => {
       await i2.addMessage(m);
       const trustedIndexes = await i2.gun.get('trustedIndexes').once();
       expect(trustedIndexes[keyID]).toBe(true);
+
       m = await identifi.Message.create({type: 'post', recipient:{keyID}, comment: 'hello world'}, key);
       await i.addMessage(m);
+      return; // TODO
+
+      console.log(`looking for message ${m.getHash()}`);
+      let m2 = await i2.getMessageByHash(m.getHash());
+
+      expect(typeof m2).toBe('object');
+      expect(m2.getHash()).toEqual(m.getHash());
+
       const identity = i2.get('keyID', keyID);
-      const msg = await new Promise(resolve => {
+      const m3 = await new Promise(resolve => {
         i2.getReceivedMsgs(identity, (msg) => {
           console.log('found msg', msg.getHash(), msg);
           if (msg.getHash() === m.getHash()) {
@@ -292,8 +301,8 @@ describe('local index', async () => {
         });
         setTimeout(() => resolve(), 5000);
       });
-      //expect(typeof msg).toBe('object'); // TODO
-      //expect(msg.getHash()).toEqual(m.getHash());
+      expect(typeof m3).toBe('object'); // TODO
+      expect(m3.getHash()).toEqual(m.getHash());
     });
     /*
     test('get identity from linked index', async () => {
