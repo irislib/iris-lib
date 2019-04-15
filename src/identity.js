@@ -28,7 +28,7 @@ class Identity {
     } else {
       data.linkTo = Identity.getLinkTo(data.attrs);
     }
-    await gun.put(data);
+    gun.put(data);
     return new Identity(gun, data.linkTo);
   }
 
