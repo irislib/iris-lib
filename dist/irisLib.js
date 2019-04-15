@@ -11254,7 +11254,9 @@
 	        });
 	      };
 	      updateIdentityByLinkedAttribute(attr);
-	      this._addIdentityToIndexes(node);
+	      if (this.writable) {
+	        this._addIdentityToIndexes(node);
+	      }
 	      return new Identity(node, attr);
 	    } else {
 	      return new Identity(this.gun.get('identitiesBySearchKey').get(attr.uri()), attr);
@@ -11802,6 +11804,8 @@
 
 
 	  Index.prototype.addMessage = async function addMessage(msg) {
+	    var _this7 = this;
+
 	    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
 	    if (msg.constructor.name !== 'Message') {
@@ -11809,7 +11813,11 @@
 	    }
 	    var hash = msg.getHash();
 	    if (true === options.checkIfExists) {
-	      var exists = await this.gun.get('messagesByHash').get(hash).once().then();
+	      var exists = await new _Promise(function (resolve) {
+	        _this7.gun.get('messagesByHash').get(hash).get(function (soul) {
+	          resolve(soul);
+	        }, true);
+	      });
 	      if (exists) {
 	        return;
 	      }
@@ -11867,17 +11875,17 @@
 
 
 	  Index.prototype.search = async function search(value, type, callback, limit) {
-	    var _this7 = this;
+	    var _this8 = this;
 
 	    // TODO: param 'exact', type param
 	    var seen = {};
 	    function searchTermCheck(key) {
 	      var arr = key.split(':');
-	      if (arr.length < 3) {
+	      if (arr.length < 2) {
 	        return false;
 	      }
-	      var keyValue = arr[1];
-	      var keyType = arr[2];
+	      var keyValue = arr[0];
+	      var keyType = arr[1];
 	      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) {
 	        return false;
 	      }
@@ -11886,7 +11894,8 @@
 	      }
 	      return true;
 	    }
-	    this.gun.get('identitiesByTrustDistance').map().once(function (id, key) {
+	    this.gun.get('identitiesBySearchKey').get({ '.': { '*': value, '%': 2000 } }).once().map().once(function (id, key) {
+	      console.log('got result', key, id);
 	      if (_Object$keys(seen).length >= limit) {
 	        // TODO: turn off .map cb
 	        return;
@@ -11897,7 +11906,7 @@
 	      var soul = Gun.node.soul(id);
 	      if (soul && !seen.hasOwnProperty(soul)) {
 	        seen[soul] = true;
-	        var identity = new Identity(_this7.gun.get('identitiesByTrustDistance').get(key));
+	        var identity = new Identity(_this8.gun.get('identitiesBySearchKey').get(key));
 	        identity.cursor = key;
 	        callback(identity);
 	      }
@@ -11905,7 +11914,7 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          _this7.gun.user(key).get('iris').get('identitiesByTrustDistance').map().once(function (id, k) {
+	          _this8.gun.user(key).get('iris').get('identitiesBySearchKey').map().once(function (id, k) {
 	            if (_Object$keys(seen).length >= limit) {
 	              // TODO: turn off .map cb
 	              return;
@@ -11916,7 +11925,7 @@
 	            var soul = Gun.node.soul(id);
 	            if (soul && !seen.hasOwnProperty(soul)) {
 	              seen[soul] = true;
-	              callback(new Identity(_this7.gun.user(key).get('iris').get('identitiesByTrustDistance').get(k)));
+	              callback(new Identity(_this8.gun.user(key).get('iris').get('identitiesBySearchKey').get(k)));
 	            }
 	          });
 	        }
@@ -11930,7 +11939,7 @@
 
 
 	  Index.prototype.getMessageByHash = function getMessageByHash(hash) {
-	    var _this8 = this;
+	    var _this9 = this;
 
 	    var isIpfsUri = hash.indexOf('Qm') === 0;
 	    return new _Promise(async function (resolve) {
@@ -11939,19 +11948,19 @@
 	        var m = await Message.fromSig(obj);
 	        var h = void 0;
 	        var republished = false;
-	        if (isIpfsUri && _this8.options.ipfs) {
-	          h = await m.saveToIpfs(_this8.options.ipfs);
+	        if (isIpfsUri && _this9.options.ipfs) {
+	          h = await m.saveToIpfs(_this9.options.ipfs);
 	          republished = true;
 	        } else {
 	          h = m.getHash();
 	        }
-	        if (h === hash || isIpfsUri && !_this8.options.ipfs) {
+	        if (h === hash || isIpfsUri && !_this9.options.ipfs) {
 	          // does not check hash validity if it's an ipfs uri and we don't have ipfs
-	          if (!isIpfsUri && _this8.options.ipfs && _this8.writable && !republished) {
-	            m.saveToIpfs(_this8.options.ipfs).then(function (ipfsUri) {
+	          if (!isIpfsUri && _this9.options.ipfs && _this9.writable && !republished) {
+	            m.saveToIpfs(_this9.options.ipfs).then(function (ipfsUri) {
 	              obj.ipfsUri = ipfsUri;
-	              _this8.gun.get('messagesByHash').get(hash).put(obj);
-	              _this8.gun.get('messagesByHash').get(ipfsUri).put(obj);
+	              _this9.gun.get('messagesByHash').get(hash).put(obj);
+	              _this9.gun.get('messagesByHash').get(ipfsUri).put(obj);
 	            });
 	          }
 	          resolve(m);
@@ -11959,21 +11968,21 @@
 	          console.error('queried index for message ' + hash + ' but received ' + h);
 	        }
 	      };
-	      if (isIpfsUri && _this8.options.ipfs) {
-	        _this8.options.ipfs.cat(hash).then(function (file) {
-	          var s = _this8.options.ipfs.types.Buffer.from(file).toString('utf8');
+	      if (isIpfsUri && _this9.options.ipfs) {
+	        _this9.options.ipfs.cat(hash).then(function (file) {
+	          var s = _this9.options.ipfs.types.Buffer.from(file).toString('utf8');
 	          console.log('got msg ' + hash + ' from ipfs');
 	          resolveIfHashMatches(s);
 	        });
 	      }
-	      _this8.gun.get('messagesByHash').get(hash).on(function (d) {
+	      _this9.gun.get('messagesByHash').get(hash).on(function (d) {
 	        console.log('got msg ' + hash + ' from own gun index');
 	        resolveIfHashMatches(d);
 	      });
-	      if (_this8.options.indexSync.query.enabled) {
-	        _this8.gun.get('trustedIndexes').map().once(function (val, key) {
+	      if (_this9.options.indexSync.query.enabled) {
+	        _this9.gun.get('trustedIndexes').map().once(function (val, key) {
 	          if (val) {
-	            _this8.gun.user(key).get('iris').get('messagesByHash').get(hash).on(function (d) {
+	            _this9.gun.user(key).get('iris').get('messagesByHash').get(hash).on(function (d) {
 	              console.log('got msg ' + hash + ' from friend\'s gun index ' + val);
 	              resolveIfHashMatches(d);
 	            });
@@ -11991,7 +12000,7 @@
 	  Index.prototype.getMessagesByTimestamp = function getMessagesByTimestamp(callback, limit) {
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    var _this9 = this;
+	    var _this10 = this;
 
 	    var desc = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
 	    var filter = arguments[4];
@@ -12007,8 +12016,8 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this9.gun.user(key).get('iris').get('messagesByTimestamp');
-	          _this9._getMsgs(n, cb, limit, cursor, desc, filter);
+	          var n = _this10.gun.user(key).get('iris').get('messagesByTimestamp');
+	          _this10._getMsgs(n, cb, limit, cursor, desc, filter);
 	        }
 	      });
 	    }
@@ -12022,7 +12031,7 @@
 	  Index.prototype.getMessagesByDistance = function getMessagesByDistance(callback, limit) {
 	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-	    var _this10 = this;
+	    var _this11 = this;
 
 	    var desc = arguments[3];
 	    var filter = arguments[4];
@@ -12040,8 +12049,8 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this10.gun.user(key).get('iris').get('messagesByDistance');
-	          _this10._getMsgs(n, cb, limit, cursor, desc, filter);
+	          var n = _this11.gun.user(key).get('iris').get('messagesByDistance');
+	          _this11._getMsgs(n, cb, limit, cursor, desc, filter);
 	        }
 	      });
 	    }
