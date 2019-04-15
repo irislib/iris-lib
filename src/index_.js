@@ -828,7 +828,7 @@ class Index {
     }
     const hash = msg.getHash();
     if (true === options.checkIfExists) {
-      const exists = await this.gun.get(`messagesByHash`).get(hash).once().then();
+      const exists = await this.gun.get(`messagesByHash`).get(hash).then();
       if (exists) {
         return;
       }
@@ -887,14 +887,14 @@ class Index {
     const seen = {};
     function searchTermCheck(key) {
       const arr = key.split(`:`);
-      if (arr.length < 3) { return false; }
-      const keyValue = arr[1];
-      const keyType = arr[2];
+      if (arr.length < 2) { return false; }
+      const keyValue = arr[0];
+      const keyType = arr[1];
       if (keyValue.indexOf(encodeURIComponent(value)) !== 0) { return false; }
       if (type && keyType !== type) { return false; }
       return true;
     }
-    this.gun.get(`identitiesByTrustDistance`).map().once((id, key) => {
+    this.gun.get(`identitiesBySearchKey`).get({'.': {'*': value, '%': 2000}}).once().map().once((id, key) => {
       if (Object.keys(seen).length >= limit) {
         // TODO: turn off .map cb
         return;
@@ -903,7 +903,7 @@ class Index {
       const soul = Gun.node.soul(id);
       if (soul && !seen.hasOwnProperty(soul)) {
         seen[soul] = true;
-        const identity = new Identity(this.gun.get(`identitiesByTrustDistance`).get(key));
+        const identity = new Identity(this.gun.get(`identitiesBySearchKey`).get(key));
         identity.cursor = key;
         callback(identity);
       }
@@ -911,7 +911,7 @@ class Index {
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          this.gun.user(key).get(`iris`).get(`identitiesByTrustDistance`).map().once((id, k) => {
+          this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get({'.': {'*': value, '%': 2000}}).once().map().once((id, k) => {
             if (Object.keys(seen).length >= limit) {
               // TODO: turn off .map cb
               return;
@@ -921,7 +921,7 @@ class Index {
             if (soul && !seen.hasOwnProperty(soul)) {
               seen[soul] = true;
               callback(
-                new Identity(this.gun.user(key).get(`iris`).get(`identitiesByTrustDistance`).get(k))
+                new Identity(this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k))
               );
             }
           });
