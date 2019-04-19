@@ -127,7 +127,7 @@ class Index {
 
   debug(msg) {
     if (this.options.debug) {
-      this.debug(msg);
+      console.log(msg);
     }
   }
 
