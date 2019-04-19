@@ -131,16 +131,6 @@ class Index {
     }
   }
 
-  async time(f, msg) {
-    if (this.options.debug) {
-      const start = new Date();
-      await f();
-      console.log((new Date() - start), `ms`, msg);
-    } else {
-      await f();
-    }
-  }
-
   /**
   * Use this to load an index that you can write to
   * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
@@ -655,6 +645,7 @@ class Index {
   }
 
   async _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
+    let start;
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
@@ -662,18 +653,18 @@ class Index {
       const data = await ids[i].gun.then(); // TODO: data is sometimes undefined and new identity is not added! might be related to https://github.com/amark/gun/issues/719
       const relocated = data ? this.gun.get(`identities`).set(data) : ids[i].gun; // this may screw up real time updates? and create unnecessary `identities` entries
       if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
-        this.time(async () => {
-          await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
-        }, `_updateMsgRecipientIdentity`);
+        start = new Date();
+        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
+        this.debug((new Date()) - start, `ms _updateMsgRecipientIdentity`);
       }
       if (authorIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
-        this.time(async () => {
-          await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
-        }, `_updateMsgAuthorIdentity`);
+        start = new Date();
+        await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
+        this.debug((new Date()) - start, `ms _updateMsgAuthorIdentity`);
       }
-      this.time(async () => {
-        await this._addIdentityToIndexes(relocated);
-      }, `_addIdentityToIndexes`);
+      start = new Date();
+      await this._addIdentityToIndexes(relocated);
+      this.debug((new Date()) - start, `ms _addIdentityToIndexes`);
     }
   }
 
@@ -716,46 +707,47 @@ class Index {
     const recipientIdentities = {};
     const authorIdentities = {};
     let selfAuthored = false;
-    this.time(async () => {
-      for (const a of msg.getAuthorArray()) {
-        const id = this.get(a);
-        let start2 = new Date();
-        const td = await id.gun.get(`trustDistance`).then();
-        this.debug((new Date()) - start2, `ms get trustDistance`);
-        if (!isNaN(td)) {
-          authorIdentities[id.gun[`_`].link] = id;
-          start2 = new Date();
-          const scores = await id.gun.get(`scores`).then();
-          this.debug((new Date()) - start2, `ms get scores`);
-          if (scores && scores.verifier && msg.signedData.type === `verification`) {
-            msg.goodVerification = true;
-          }
-          if (td === 0) {
-            selfAuthored = true;
-          }
+    let start;
+    start = new Date();
+    for (const a of msg.getAuthorArray()) {
+      const id = this.get(a);
+      let start2 = new Date();
+      const td = await id.gun.get(`trustDistance`).then();
+      this.debug((new Date()) - start2, `ms get trustDistance`);
+      if (!isNaN(td)) {
+        authorIdentities[id.gun[`_`].link] = id;
+        start2 = new Date();
+        const scores = await id.gun.get(`scores`).then();
+        this.debug((new Date()) - start2, `ms get scores`);
+        if (scores && scores.verifier && msg.signedData.type === `verification`) {
+          msg.goodVerification = true;
+        }
+        if (td === 0) {
+          selfAuthored = true;
         }
       }
-    }, `getAuthorArray`);
+    }
+    this.debug((new Date()) - start, `ms getAuthorArray`);
     if (!Object.keys(authorIdentities).length) {
       return; // unknown author, do nothing
     }
-    this.time(async () => {
-      for (const a of msg.getRecipientArray()) {
-        const id = this.get(a);
-        const td = await id.gun.get(`trustDistance`).then();
+    start = new Date();
+    for (const a of msg.getRecipientArray()) {
+      const id = this.get(a);
+      const td = await id.gun.get(`trustDistance`).then();
 
-        if (!isNaN(td)) {
-          recipientIdentities[id.gun[`_`].link] = id;
-        }
-        if (selfAuthored && a.type === `keyID` && a.value !== this.viewpoint.value) { // TODO: not if already added - causes infinite loop?
-          if (msg.isPositive()) {
-            this.addTrustedIndex(a.value);
-          } else {
-            this.removeTrustedIndex(a.value);
-          }
+      if (!isNaN(td)) {
+        recipientIdentities[id.gun[`_`].link] = id;
+      }
+      if (selfAuthored && a.type === `keyID` && a.value !== this.viewpoint.value) { // TODO: not if already added - causes infinite loop?
+        if (msg.isPositive()) {
+          this.addTrustedIndex(a.value);
+        } else {
+          this.removeTrustedIndex(a.value);
         }
       }
-    }, `getRecipientArray`);
+    }
+    this.debug((new Date()) - start, `ms getRecipientArray`);
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
       const attrs = {};
       for (const a of msg.getRecipientArray()) {
@@ -873,9 +865,9 @@ class Index {
     const obj = {sig: msg.sig, pubKey: msg.pubKey};
     //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
     const node = this.gun.back(- 1).get(`messagesByHash`).get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
-    this.debug(`----`);
     start = new Date();
     msg.distance = await this.getMsgTrustDistance(msg);
+    this.debug(`----`);
     this.debug((new Date()) - start, `ms getMsgTrustDistance`);
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
