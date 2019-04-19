@@ -50,7 +50,7 @@ describe('local index', async () => {
   beforeAll(async () => {
     key = await identifi.Key.getDefault();
     keyID = identifi.Key.getId(key);
-    i = await identifi.Index.create(gun, key, {self: {name: 'Alice'}});
+    i = await identifi.Index.create(gun, key, {self: {name: 'Alice'}, debug: true});
     await new Promise(r => setTimeout(r, 3000));
   });
   test('create new Index', async () => {
@@ -275,7 +275,7 @@ describe('local index', async () => {
   describe('trusted indexes', async () => {
     test('create a new index that is linked to the previous', async () => {
       const k2 = await identifi.Key.generate();
-      const i2 = await identifi.Index.create(gun, k2);
+      const i2 = await identifi.Index.create(gun, k2, {debug: true});
       let m = await identifi.Message.createRating({recipient:{keyID}, rating: 10}, k2);
       await i2.addMessage(m);
       const trustedIndexes = await i2.gun.get('trustedIndexes').once();
@@ -326,7 +326,7 @@ describe('local index', async () => {
   });
   test('get messages by timestamp', async () => {
     const k2 = await identifi.Key.generate();
-    const i2 = await identifi.Index.create(gun, k2);
+    const i2 = await identifi.Index.create(gun, k2, {debug:true});
     for (let i = 0; i < 5; i++) {
       const m = await identifi.Message.createRating({recipient:{uuid:'something'}, rating: 10}, k2);
       await i2.addMessage(m);

@@ -15,7 +15,7 @@ class Identity {
     this.linkTo = linkTo;
   }
 
-  static async create(gun, data) {
+  static create(gun, data) {
     if (!data.linkTo && !data.attrs) {
       throw new Error(`You must specify either data.linkTo or data.attrs`);
     }
