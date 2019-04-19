@@ -10960,9 +10960,9 @@
 	    }
 	  }
 
-	  Index.prototype.debug = function debug(msg) {
+	  Index.prototype.debug = function debug() {
 	    if (this.options.debug) {
-	      console.log(msg);
+	      console.log.apply(console, arguments);
 	    }
 	  };
 
@@ -12096,7 +12096,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.100";
+	var version$1 = "0.0.101";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

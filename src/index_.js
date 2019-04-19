@@ -125,9 +125,9 @@ class Index {
     }
   }
 
-  debug(msg) {
+  debug() {
     if (this.options.debug) {
-      console.log(msg);
+      console.log.apply(console, arguments);
     }
   }
 
