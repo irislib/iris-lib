@@ -1,4 +1,4 @@
-const identifi = require('../cjs/index.js');
+const iris = require('../cjs/index.js');
 const fs = require(`fs`);
 
 jest.setTimeout(30000);
@@ -9,23 +9,23 @@ beforeAll(() => {
   }
 });
 test('Generate key', async () => {
-  const i = await identifi.Key.generate();
+  const i = await iris.Key.generate();
   expect(i).toBeDefined();
 });
 test('Serialize and deserialize a key', async () => {
-  const i = await identifi.Key.generate();
-  const serialized = identifi.Key.toJwk(i);
+  const i = await iris.Key.generate();
+  const serialized = iris.Key.toJwk(i);
   expect(typeof serialized).toBe('string');
-  const deserialized = identifi.Key.fromJwk(serialized);
+  const deserialized = iris.Key.fromJwk(serialized);
   expect(typeof deserialized).toBe('object')
   expect(i).toBeDefined();
 });
 test('Get default key and sign a message with it', async () => {
-  const i = await identifi.Key.getDefault('.');
+  const i = await iris.Key.getDefault('.');
   expect(i).toBeDefined();
-  const j = await identifi.Key.getDefault('.');
+  const j = await iris.Key.getDefault('.');
   expect(i).toEqual(j);
-  const msg = await identifi.Message.createRating({
+  const msg = await iris.Message.createRating({
     author: {email:'alice@example.com'},
     recipient: {email: 'bob@example.com'},
     rating: 5,
