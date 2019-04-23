@@ -10839,11 +10839,14 @@
 	var _Object$assign = unwrapExports(assign$1);
 
 	// temp method for GUN search
-	async function searchText(node, callback, query, limit, cursor, desc) {
+	async function searchText(node, callback, query, limit) {
+	  var cursor = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '';
+
 	  var seen = {};
-	  node.map(function (value, key) {
-	    var cursorCheck = !cursor || desc && key < cursor || !desc && key > cursor;
-	    if (cursorCheck && key.indexOf(query) === 0) {
+	  console.log('cursor', cursor, 'query', query);
+	  node.get({ '.': { '<': cursor, '-': true }, '%': 20 * 1000 }).map().on(function (value, key) {
+	    console.log('searchText', value, key);
+	    if (key.indexOf(query) === 0) {
 	      if (typeof limit === 'number' && _Object$keys(seen).length >= limit) {
 	        return;
 	      }
@@ -10889,7 +10892,8 @@
 	*      rating: true,
 	*      verification: true,
 	*      unverification: true
-	*    }
+	*    },
+	*    debug: false
 	*  }
 	*}
 	* @returns {Index} Identifi index object
@@ -11905,9 +11909,15 @@
 	  */
 
 
-	  Index.prototype.search = async function search(value, type, callback, limit) {
+	  Index.prototype.search = async function search() {
+	    var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+	    var type = arguments[1];
+	    var callback = arguments[2];
+
 	    var _this7 = this;
 
+	    var limit = arguments[3];
+	    var cursor = arguments[4];
 	    // TODO: param 'exact', type param
 	    var seen = {};
 	    function searchTermCheck(key) {
@@ -11925,7 +11935,12 @@
 	      }
 	      return true;
 	    }
-	    this.gun.get('identitiesBySearchKey').get({ '.': { '*': value, '%': 2000 } }).once().map().once(function (id, key) {
+	    console.log('search()', value, type, limit, cursor);
+	    var node = this.gun.get('identitiesBySearchKey');
+	    node.get({ '.': { '*': value, '>': cursor }, '%': 2000 }).once().map(function () {
+	      return this;
+	    }).on(function (id, key) {
+	      console.log('search(' + value + ', ' + type + ', callback, ' + limit + ', ' + cursor + ') returned id ' + id + ' key ' + key);
 	      if (_Object$keys(seen).length >= limit) {
 	        // TODO: turn off .map cb
 	        return;
@@ -11936,7 +11951,7 @@
 	      var soul = Gun.node.soul(id);
 	      if (soul && !seen.hasOwnProperty(soul)) {
 	        seen[soul] = true;
-	        var identity = new Identity(_this7.gun.get('identitiesBySearchKey').get(key));
+	        var identity = new Identity(node.get(key));
 	        identity.cursor = key;
 	        callback(identity);
 	      }
