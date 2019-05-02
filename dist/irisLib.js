@@ -10841,10 +10841,12 @@
 	// temp method for GUN search
 	async function searchText(node, callback, query, limit) {
 	  var cursor = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '';
+	  var desc = arguments[5];
 
 	  var seen = {};
-	  console.log('cursor', cursor, 'query', query);
-	  node.get({ '.': { '<': cursor, '-': true }, '%': 20 * 1000 }).map().on(function (value, key) {
+	  console.log('cursor', cursor, 'query', query, 'desc', desc);
+	  var q = desc ? { '<': cursor, '-': desc } : { '>': cursor, '-': desc };
+	  node.get({ '.': q, '%': 20 * 1000 }).once().map().on(function (value, key) {
 	    console.log('searchText', value, key);
 	    if (key.indexOf(query) === 0) {
 	      if (typeof limit === 'number' && _Object$keys(seen).length >= limit) {
@@ -11937,9 +11939,7 @@
 	    }
 	    console.log('search()', value, type, limit, cursor);
 	    var node = this.gun.get('identitiesBySearchKey');
-	    node.get({ '.': { '*': value, '>': cursor }, '%': 2000 }).once().map(function () {
-	      return this;
-	    }).on(function (id, key) {
+	    node.get({ '.': { '*': value, '>': cursor }, '%': 2000 }).once().map().on(function (id, key) {
 	      console.log('search(' + value + ', ' + type + ', callback, ' + limit + ', ' + cursor + ') returned id ' + id + ' key ' + key);
 	      if (_Object$keys(seen).length >= limit) {
 	        // TODO: turn off .map cb

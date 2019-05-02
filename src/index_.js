@@ -10,9 +10,9 @@ import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 // temp method for GUN search
 async function searchText(node, callback, query, limit, cursor = ``, desc) {
   const seen = {};
-  console.log(`cursor`, cursor, `query`, query);
+  console.log(`cursor`, cursor, `query`, query, `desc`, desc);
   const q = desc ? {'<': cursor, '-': desc} : {'>': cursor, '-': desc};
-  node.get({'.': q, '%': 20 * 1000}).map().on((value, key) => {
+  node.get({'.': q, '%': 20 * 1000}).once().map().on((value, key) => {
     console.log(`searchText`, value, key);
     if (key.indexOf(query) === 0) {
       if (typeof limit === `number` && Object.keys(seen).length >= limit) {
@@ -935,7 +935,7 @@ class Index {
     }
     console.log(`search()`, value, type, limit, cursor);
     const node = this.gun.get(`identitiesBySearchKey`);
-    node.get({'.': {'*': value, '>': cursor}, '%': 2000}).once().map(function() { return this; }).on((id, key) => {
+    node.get({'.': {'*': value, '>': cursor}, '%': 2000}).once().map().on((id, key) => {
       console.log(`search(${value}, ${type}, callback, ${limit}, ${cursor}) returned id ${id} key ${key}`);
       if (Object.keys(seen).length >= limit) {
         // TODO: turn off .map cb
