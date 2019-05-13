@@ -10847,7 +10847,7 @@
 	  console.log('cursor', cursor, 'query', query, 'desc', desc);
 	  var q = desc ? { '<': cursor, '-': desc } : { '>': cursor, '-': desc };
 	  node.get({ '.': q, '%': 20 * 1000 }).once().map().on(function (value, key) {
-	    console.log('searchText', value, key);
+	    console.log('searchText', value, key, desc);
 	    if (key.indexOf(query) === 0) {
 	      if (typeof limit === 'number' && _Object$keys(seen).length >= limit) {
 	        return;
@@ -12057,7 +12057,7 @@
 	        callback(msg);
 	      }
 	    };
-	    this._getMsgs(this.gun.get('messagesByTimestamp'), cb, limit, cursor, filter);
+	    this._getMsgs(this.gun.get('messagesByTimestamp'), cb, limit, cursor, desc, filter);
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {

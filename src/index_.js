@@ -13,7 +13,7 @@ async function searchText(node, callback, query, limit, cursor = ``, desc) {
   console.log(`cursor`, cursor, `query`, query, `desc`, desc);
   const q = desc ? {'<': cursor, '-': desc} : {'>': cursor, '-': desc};
   node.get({'.': q, '%': 20 * 1000}).once().map().on((value, key) => {
-    console.log(`searchText`, value, key);
+    console.log(`searchText`, value, key, desc);
     if (key.indexOf(query) === 0) {
       if (typeof limit === `number` && Object.keys(seen).length >= limit) {
         return;
@@ -1037,7 +1037,7 @@ class Index {
         callback(msg);
       }
     };
-    this._getMsgs(this.gun.get(`messagesByTimestamp`), cb, limit, cursor, filter);
+    this._getMsgs(this.gun.get(`messagesByTimestamp`), cb, limit, cursor, desc, filter);
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
