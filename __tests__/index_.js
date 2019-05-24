@@ -79,7 +79,7 @@ describe('local index', async () => {
       expect(msg.signedData.recipient.email).toEqual('bob@example.com');
     });
     test('get added identity', async () => {
-      p = i.get('bob@example.com', 'email'); // ,true
+      p = i.get('bob@example.com'); // ,true
       const data = await p.gun.once().then();
       //expect(q).toBeInstanceOf(identifi.Identity);
       expect(data.trustDistance).toBe(1);
