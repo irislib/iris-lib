@@ -10,7 +10,7 @@ import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 // temp method for GUN search
 async function searchText(node, callback, query, limit, cursor = ``, desc) {
   const seen = {};
-  console.log(`cursor`, cursor, `query`, query, `desc`, desc);
+  //console.log(`cursor`, cursor, `query`, query, `desc`, desc);
   const q = desc ? {'<': cursor, '-': desc} : {'>': cursor, '-': desc};
   node.get({'.': q, '%': 20 * 1000}).once().map().on((value, key) => {
     //console.log(`searchText`, value, key, desc);
@@ -462,12 +462,12 @@ class Index {
   * @param {Function} callback callback function that receives the Messages one by one
   */
   async getSentMsgs(identity: Identity, callback, limit, cursor = ``, filter) {
-    this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor, filter);
+    this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor, false, filter);
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
           const n = this.gun.user(key).get(`iris`).get(`messagesByAuthor`).get(identity.linkTo.uri());
-          this._getMsgs(n, callback, limit, cursor, filter);
+          this._getMsgs(n, callback, limit, cursor, false, filter);
         }
       });
     }
@@ -479,12 +479,12 @@ class Index {
   * @param {Function} callback callback function that receives the Messages one by one
   */
   async getReceivedMsgs(identity, callback, limit, cursor = ``, filter) {
-    this._getMsgs(identity.gun.get(`received`), callback, limit, cursor, filter);
+    this._getMsgs(identity.gun.get(`received`), callback, limit, cursor, false, filter);
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
           const n = this.gun.user(key).get(`iris`).get(`messagesByRecipient`).get(identity.linkTo.uri());
-          this._getMsgs(n, callback, limit, cursor, filter);
+          this._getMsgs(n, callback, limit, cursor, false, filter);
         }
       });
     }
@@ -653,8 +653,6 @@ class Index {
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
-      const data = await ids[i].gun.then(); // TODO: data is sometimes undefined and new identity is not added! might be related to https://github.com/amark/gun/issues/719
-      const relocated = data ? this.gun.get(`identities`).set(data) : ids[i].gun; // this may screw up real time updates? and create unnecessary `identities` entries
       if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         start = new Date();
         await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
@@ -666,7 +664,7 @@ class Index {
         this.debug((new Date()) - start, `ms _updateMsgAuthorIdentity`);
       }
       start = new Date();
-      await this._addIdentityToIndexes(relocated);
+      await this._addIdentityToIndexes(ids[i].gun);
       this.debug((new Date()) - start, `ms _addIdentityToIndexes`);
     }
   }
@@ -761,7 +759,6 @@ class Index {
         }
       }
       const linkTo = Identity.getLinkTo(attrs);
-      const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
       const trustDistance = msg.isPositive() && typeof msg.distance === `number` ? msg.distance + 1 : false;
       const start = new Date();
       const node = this.gun.get(`identitiesBySearchKey`).get(u.uri());
@@ -939,10 +936,10 @@ class Index {
       if (type && keyType !== type) { return false; }
       return true;
     }
-    console.log(`search()`, value, type, limit, cursor);
+    this.debug(`search()`, value, type, limit, cursor);
     const node = this.gun.get(`identitiesBySearchKey`);
     node.get({'.': {'*': value, '>': cursor}, '%': 2000}).once().map().on((id, key) => {
-      console.log(`search(${value}, ${type}, callback, ${limit}, ${cursor}) returned id ${id} key ${key}`);
+      this.debug(`search(${value}, ${type}, callback, ${limit}, ${cursor}) returned id ${id} key ${key}`);
       if (Object.keys(seen).length >= limit) {
         // TODO: turn off .map cb
         return;
@@ -1043,6 +1040,9 @@ class Index {
         callback(msg);
       }
     };
+
+
+
     this._getMsgs(this.gun.get(`messagesByTimestamp`), cb, limit, cursor, desc, filter);
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {

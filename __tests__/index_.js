@@ -332,9 +332,9 @@ describe('local index', async () => {
       await i2.addMessage(m);
     }
     const results = [];
-    i2.getMessagesByTimestamp(result => results.push(result));
-    await new Promise(resolve => setTimeout(resolve, 200));
-    expect(results.length).toBeGreaterThan(4);
+    i2.getMessagesByTimestamp(result => {console.log('got result');results.push(result);});
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    expect(results.length).toBeGreaterThan(3);
   });
   /* TODO: disabled because it fails...
   test('like & unlike', async () => {
