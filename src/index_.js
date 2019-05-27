@@ -13,7 +13,7 @@ async function searchText(node, callback, query, limit, cursor = ``, desc) {
   console.log(`cursor`, cursor, `query`, query, `desc`, desc);
   const q = desc ? {'<': cursor, '-': desc} : {'>': cursor, '-': desc};
   node.get({'.': q, '%': 20 * 1000}).once().map().on((value, key) => {
-    console.log(`searchText`, value, key, desc);
+    //console.log(`searchText`, value, key, desc);
     if (key.indexOf(query) === 0) {
       if (typeof limit === `number` && Object.keys(seen).length >= limit) {
         return;
@@ -129,7 +129,8 @@ class Index {
   }
 
   debug() {
-    if (this.options.debug) {
+    const d = (util.isNode && process.env.DEBUG) ? process.env.DEBUG == `true` : this.options.debug;
+    if (d) {
       console.log.apply(console, arguments);
     }
   }
@@ -149,15 +150,14 @@ class Index {
     user.auth(keypair);
     this.writable = true;
     options.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
-    // const identifi = user.get(`identifi`);
     const gunRoot = user.get(`iris`);
-    // gunRoot.put(identifi); // temp migration identifi -> iris, but fails due to gun error
     const i = new Index(gunRoot, options);
     i.gun.get(`viewpoint`).put(options.viewpoint);
     const uri = options.viewpoint.uri();
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
+    g.put({});
     const attrs = {};
-    attrs[options.viewpoint.uri()] = options.viewpoint;
+    attrs[uri] = options.viewpoint;
     if (options.self) {
       const keys = Object.keys(options.self);
       for (let i = 0;i < keys.length;i ++) {
@@ -753,14 +753,20 @@ class Index {
     this.debug((new Date()) - start, `ms getRecipientArray`);
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
       const attrs = {};
+      let u;
       for (const a of msg.getRecipientArray()) {
         attrs[a.uri()] = a;
+        if (!u && a.isUniqueType()) {
+          u = a;
+        }
       }
       const linkTo = Identity.getLinkTo(attrs);
       const random = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER); // TODO: bubblegum fix
       const trustDistance = msg.isPositive() && typeof msg.distance === `number` ? msg.distance + 1 : false;
       const start = new Date();
-      const id = Identity.create(this.gun.get(`identities`).get(random).put({}), {attrs, linkTo, trustDistance});
+      const node = this.gun.get(`identitiesBySearchKey`).get(u.uri());
+      node.put({});
+      const id = Identity.create(node, {attrs, linkTo, trustDistance});
       this.debug((new Date) - start, `ms identity.create`);
       // {a:1} because inserting {} causes a "no signature on data" error from gun
 
