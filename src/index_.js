@@ -14,9 +14,9 @@ async function searchText(node, callback, query, limit, cursor, desc) {
   const q = {'-': desc};
   if (cursor) {
     if (desc) {
-      q['<'] = cursor;
+      q[`<`] = cursor;
     } else {
-      q['>'] = cursor;
+      q[`>`] = cursor;
     }
   }
   node.get({'.': q, '%': 20 * 1000}).once().map().on((value, key) => {
@@ -136,7 +136,7 @@ class Index {
   }
 
   debug() {
-    const d = (util.isNode && process.env.DEBUG) ? process.env.DEBUG == `true` : this.options.debug;
+    const d = (util.isNode && process.env.DEBUG) ? process.env.DEBUG === `true` : this.options.debug;
     if (d) {
       console.log.apply(console, arguments);
     }

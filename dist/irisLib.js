@@ -5460,7 +5460,7 @@
 	var debugEnviron;
 	function debuglog(set) {
 	  if (isUndefined(debugEnviron))
-	    debugEnviron = process$3.env.NODE_DEBUG || '';
+	    debugEnviron = '';
 	  set = set.toUpperCase();
 	  if (!debugs[set]) {
 	    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
@@ -10676,19 +10676,6 @@
 	  return Identity;
 	}();
 
-	// 20.1.2.6 Number.MAX_SAFE_INTEGER
-
-
-	_export(_export.S, 'Number', { MAX_SAFE_INTEGER: 0x1fffffffffffff });
-
-	var maxSafeInteger = 0x1fffffffffffff;
-
-	var maxSafeInteger$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": maxSafeInteger, __esModule: true };
-	});
-
-	var _Number$MAX_SAFE_INTEGER = unwrapExports(maxSafeInteger$1);
-
 	var isEnum$1 = _objectPie.f;
 	var _objectToArray = function (isEntries) {
 	  return function (it) {
@@ -10839,15 +10826,19 @@
 	var _Object$assign = unwrapExports(assign$1);
 
 	// temp method for GUN search
-	async function searchText(node, callback, query, limit) {
-	  var cursor = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '';
-	  var desc = arguments[5];
-
+	async function searchText(node, callback, query, limit, cursor, desc) {
 	  var seen = {};
-	  console.log('cursor', cursor, 'query', query, 'desc', desc);
-	  var q = desc ? { '<': cursor, '-': desc } : { '>': cursor, '-': desc };
+	  //console.log(`cursor`, cursor, `query`, query, `desc`, desc);
+	  var q = { '-': desc };
+	  if (cursor) {
+	    if (desc) {
+	      q['<'] = cursor;
+	    } else {
+	      q['>'] = cursor;
+	    }
+	  }
 	  node.get({ '.': q, '%': 20 * 1000 }).once().map().on(function (value, key) {
-	    console.log('searchText', value, key, desc);
+	    //console.log(`searchText`, value, key, desc);
 	    if (key.indexOf(query) === 0) {
 	      if (typeof limit === 'number' && _Object$keys(seen).length >= limit) {
 	        return;
@@ -10967,7 +10958,8 @@
 	  }
 
 	  Index.prototype.debug = function debug() {
-	    if (this.options.debug) {
+	    var d = util$1.isNode && process$3.env.DEBUG ? process$3.env.DEBUG === 'true' : this.options.debug;
+	    if (d) {
 	      console.log.apply(console, arguments);
 	    }
 	  };
@@ -10991,15 +10983,14 @@
 	    user.auth(keypair);
 	    this.writable = true;
 	    options.viewpoint = new Attribute('keyID', Key.getId(keypair));
-	    // const identifi = user.get(`identifi`);
 	    var gunRoot = user.get('iris');
-	    // gunRoot.put(identifi); // temp migration identifi -> iris, but fails due to gun error
 	    var i = new Index(gunRoot, options);
 	    i.gun.get('viewpoint').put(options.viewpoint);
 	    var uri = options.viewpoint.uri();
 	    var g = i.gun.get('identitiesBySearchKey').get(uri);
+	    g.put({});
 	    var attrs = {};
-	    attrs[options.viewpoint.uri()] = options.viewpoint;
+	    attrs[uri] = options.viewpoint;
 	    if (options.self) {
 	      var keys = _Object$keys(options.self);
 	      for (var _i = 0; _i < keys.length; _i++) {
@@ -11323,18 +11314,15 @@
 	  */
 
 
-	  Index.prototype.getSentMsgs = async function getSentMsgs(identity, callback, limit) {
+	  Index.prototype.getSentMsgs = async function getSentMsgs(identity, callback, limit, cursor, filter) {
 	    var _this3 = this;
 
-	    var cursor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
-	    var filter = arguments[4];
-
-	    this._getMsgs(identity.gun.get('sent'), callback, limit, cursor, filter);
+	    this._getMsgs(identity.gun.get('sent'), callback, limit, cursor, true, filter);
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
 	          var n = _this3.gun.user(key).get('iris').get('messagesByAuthor').get(identity.linkTo.uri());
-	          _this3._getMsgs(n, callback, limit, cursor, filter);
+	          _this3._getMsgs(n, callback, limit, cursor, false, filter);
 	        }
 	      });
 	    }
@@ -11347,18 +11335,15 @@
 	  */
 
 
-	  Index.prototype.getReceivedMsgs = async function getReceivedMsgs(identity, callback, limit) {
+	  Index.prototype.getReceivedMsgs = async function getReceivedMsgs(identity, callback, limit, cursor, filter) {
 	    var _this4 = this;
 
-	    var cursor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
-	    var filter = arguments[4];
-
-	    this._getMsgs(identity.gun.get('received'), callback, limit, cursor, filter);
+	    this._getMsgs(identity.gun.get('received'), callback, limit, cursor, true, filter);
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
 	          var n = _this4.gun.user(key).get('iris').get('messagesByRecipient').get(identity.linkTo.uri());
-	          _this4._getMsgs(n, callback, limit, cursor, filter);
+	          _this4._getMsgs(n, callback, limit, cursor, false, filter);
 	        }
 	      });
 	    }
@@ -11565,8 +11550,6 @@
 	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
 	    for (var i = 0; i < ids.length; i++) {
 	      // add new identifiers to identity
-	      var data = await ids[i].gun.then(); // TODO: data is sometimes undefined and new identity is not added! might be related to https://github.com/amark/gun/issues/719
-	      var relocated = data ? this.gun.get('identities').set(data) : ids[i].gun; // this may screw up real time updates? and create unnecessary `identities` entries
 	      if (recipientIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
 	        start = new Date();
 	        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
@@ -11578,7 +11561,7 @@
 	        this.debug(new Date() - start, 'ms _updateMsgAuthorIdentity');
 	      }
 	      start = new Date();
-	      await this._addIdentityToIndexes(relocated);
+	      await this._addIdentityToIndexes(ids[i].gun);
 	      this.debug(new Date() - start, 'ms _addIdentityToIndexes');
 	    }
 	  };
@@ -11696,6 +11679,7 @@
 	    if (!_Object$keys(recipientIdentities).length) {
 	      // recipient is previously unknown
 	      var attrs = {};
+	      var u = void 0;
 	      for (var _iterator5 = msg.getRecipientArray(), _isArray5 = Array.isArray(_iterator5), _i9 = 0, _iterator5 = _isArray5 ? _iterator5 : _getIterator(_iterator5);;) {
 	        var _ref5;
 
@@ -11711,12 +11695,16 @@
 	        var _a2 = _ref5;
 
 	        attrs[_a2.uri()] = _a2;
+	        if (!u && _a2.isUniqueType()) {
+	          u = _a2;
+	        }
 	      }
 	      var linkTo = Identity.getLinkTo(attrs);
-	      var random = Math.floor(Math.random() * _Number$MAX_SAFE_INTEGER); // TODO: bubblegum fix
 	      var trustDistance = msg.isPositive() && typeof msg.distance === 'number' ? msg.distance + 1 : false;
 	      var _start = new Date();
-	      var id = Identity.create(this.gun.get('identities').get(random).put({}), { attrs: attrs, linkTo: linkTo, trustDistance: trustDistance });
+	      var node = this.gun.get('identitiesBySearchKey').get(u.uri());
+	      node.put({});
+	      var id = Identity.create(node, { attrs: attrs, linkTo: linkTo, trustDistance: trustDistance });
 	      this.debug(new Date() - _start, 'ms identity.create');
 	      // {a:1} because inserting {} causes a "no signature on data" error from gun
 
@@ -11937,10 +11925,10 @@
 	      }
 	      return true;
 	    }
-	    console.log('search()', value, type, limit, cursor);
+	    this.debug('search()', value, type, limit, cursor);
 	    var node = this.gun.get('identitiesBySearchKey');
 	    node.get({ '.': { '*': value, '>': cursor }, '%': 2000 }).once().map().on(function (id, key) {
-	      console.log('search(' + value + ', ' + type + ', callback, ' + limit + ', ' + cursor + ') returned id ' + id + ' key ' + key);
+	      _this7.debug('search(' + value + ', ' + type + ', callback, ' + limit + ', ' + cursor + ') returned id ' + id + ' key ' + key);
 	      if (_Object$keys(seen).length >= limit) {
 	        // TODO: turn off .map cb
 	        return;
@@ -12042,9 +12030,7 @@
 	  */
 
 
-	  Index.prototype.getMessagesByTimestamp = function getMessagesByTimestamp(callback, limit) {
-	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-
+	  Index.prototype.getMessagesByTimestamp = function getMessagesByTimestamp(callback, limit, cursor) {
 	    var _this9 = this;
 
 	    var desc = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
@@ -12057,6 +12043,7 @@
 	        callback(msg);
 	      }
 	    };
+
 	    this._getMsgs(this.gun.get('messagesByTimestamp'), cb, limit, cursor, desc, filter);
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
@@ -12073,13 +12060,8 @@
 	  */
 
 
-	  Index.prototype.getMessagesByDistance = function getMessagesByDistance(callback, limit) {
-	    var cursor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-
+	  Index.prototype.getMessagesByDistance = function getMessagesByDistance(callback, limit, cursor, desc, filter) {
 	    var _this10 = this;
-
-	    var desc = arguments[3];
-	    var filter = arguments[4];
 
 	    var seen = {};
 	    var cb = function cb(msg) {

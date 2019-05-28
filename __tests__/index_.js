@@ -50,7 +50,7 @@ describe('local index', async () => {
   beforeAll(async () => {
     key = await identifi.Key.getDefault();
     keyID = identifi.Key.getId(key);
-    i = await identifi.Index.create(gun, key, {self: {name: 'Alice'}, debug: true});
+    i = await identifi.Index.create(gun, key, {self: {name: 'Alice'}, debug: false});
     await new Promise(r => setTimeout(r, 3000));
   });
   test('create new Index', async () => {
@@ -68,7 +68,6 @@ describe('local index', async () => {
   let p;
   describe('create and fetch an identity using identifi messages', async () => {
     test('add trust rating to bob', async () => {
-      debugger;
       const msg = await identifi.Message.createRating({recipient:{email:'bob@example.com'}, rating:10}, key);
       h = msg.getHash();
       const r = await i.addMessage(msg);
@@ -275,7 +274,7 @@ describe('local index', async () => {
   describe('trusted indexes', async () => {
     test('create a new index that is linked to the previous', async () => {
       const k2 = await identifi.Key.generate();
-      const i2 = await identifi.Index.create(gun, k2, {debug: true});
+      const i2 = await identifi.Index.create(gun, k2, {debug: false});
       let m = await identifi.Message.createRating({recipient:{keyID}, rating: 10}, k2);
       await i2.addMessage(m);
       const trustedIndexes = await i2.gun.get('trustedIndexes').once();
@@ -326,14 +325,14 @@ describe('local index', async () => {
   });
   test('get messages by timestamp', async () => {
     const k2 = await identifi.Key.generate();
-    const i2 = await identifi.Index.create(gun, k2, {debug:true});
+    const i2 = await identifi.Index.create(gun, k2, {debug:false});
     for (let i = 0; i < 5; i++) {
       const m = await identifi.Message.createRating({recipient:{uuid:'something'}, rating: 10}, k2);
       await i2.addMessage(m);
     }
     const results = [];
     await new Promise(resolve => {
-      setTimeout(resolve, 500);
+      setTimeout(resolve, 5000);
       i2.getMessagesByTimestamp(result => {
         console.log('got result');
         results.push(result);
@@ -343,7 +342,7 @@ describe('local index', async () => {
       });
     });
     expect(results.length).toBeGreaterThan(3);
-  });
+  }, 20000);
   /* TODO: disabled because it fails...
   test('like & unlike', async () => {
     let msg = await identifi.Message.create({type: 'post', recipient: {email:'bob@example.com'}, comment: 'I don\'t want to set the world on fire. I just want to start a flame in your heart.'}, key);
