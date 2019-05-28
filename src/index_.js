@@ -1032,7 +1032,7 @@ class Index {
   /**
   * @returns {Array} list of messages
   */
-  getMessagesByTimestamp(callback, limit, cursor = ``, desc = true, filter) {
+  getMessagesByTimestamp(callback, limit, cursor = ``, desc = false, filter) {
     const seen = {};
     const cb = msg => {
       if ((!limit || Object.keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {

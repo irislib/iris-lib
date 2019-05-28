@@ -332,8 +332,16 @@ describe('local index', async () => {
       await i2.addMessage(m);
     }
     const results = [];
-    i2.getMessagesByTimestamp(result => {console.log('got result');results.push(result);});
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => {
+      setTimeout(resolve, 500);
+      i2.getMessagesByTimestamp(result => {
+        console.log('got result');
+        results.push(result);
+        if (results.length > 3) {
+          resolve();
+        }
+      });
+    });
     expect(results.length).toBeGreaterThan(3);
   });
   /* TODO: disabled because it fails...
