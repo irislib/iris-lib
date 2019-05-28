@@ -8,10 +8,17 @@ import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 
 // temp method for GUN search
-async function searchText(node, callback, query, limit, cursor = ``, desc) {
+async function searchText(node, callback, query, limit, cursor, desc) {
   const seen = {};
   //console.log(`cursor`, cursor, `query`, query, `desc`, desc);
-  const q = desc ? {'<': cursor, '-': desc} : {'>': cursor, '-': desc};
+  const q = {'-': desc};
+  if (cursor) {
+    if (desc) {
+      q['<'] = cursor;
+    } else {
+      q['>'] = cursor;
+    }
+  }
   node.get({'.': q, '%': 20 * 1000}).once().map().on((value, key) => {
     //console.log(`searchText`, value, key, desc);
     if (key.indexOf(query) === 0) {
@@ -461,8 +468,8 @@ class Index {
   * @param {Identity} identity identity whose sent Messages to get
   * @param {Function} callback callback function that receives the Messages one by one
   */
-  async getSentMsgs(identity: Identity, callback, limit, cursor = ``, filter) {
-    this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor, false, filter);
+  async getSentMsgs(identity: Identity, callback, limit, cursor, filter) {
+    this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor, true, filter);
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
@@ -478,8 +485,8 @@ class Index {
   * @param {Identity} identity identity whose received Messages to get
   * @param {Function} callback callback function that receives the Messages one by one
   */
-  async getReceivedMsgs(identity, callback, limit, cursor = ``, filter) {
-    this._getMsgs(identity.gun.get(`received`), callback, limit, cursor, false, filter);
+  async getReceivedMsgs(identity, callback, limit, cursor, filter) {
+    this._getMsgs(identity.gun.get(`received`), callback, limit, cursor, true, filter);
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
@@ -1032,7 +1039,7 @@ class Index {
   /**
   * @returns {Array} list of messages
   */
-  getMessagesByTimestamp(callback, limit, cursor = ``, desc = false, filter) {
+  getMessagesByTimestamp(callback, limit, cursor, desc = true, filter) {
     const seen = {};
     const cb = msg => {
       if ((!limit || Object.keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {
@@ -1057,7 +1064,7 @@ class Index {
   /**
   * @returns {Array} list of messages
   */
-  getMessagesByDistance(callback, limit, cursor = ``, desc, filter) {
+  getMessagesByDistance(callback, limit, cursor, desc, filter) {
     const seen = {};
     const cb = msg => {
       if (!seen.hasOwnProperty(msg.hash)) {
