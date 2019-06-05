@@ -9,6 +9,28 @@ const SEA = require('gun/sea');
 //let ipfsNode = new IPFS({repo: './ipfs_repo'});
 const gun = new GUN({radisk: false});
 
+var logger = function()
+{
+    var oldConsoleLog = null;
+    var pub = {};
+
+    pub.enable =  function enable()
+                        {
+                            if(oldConsoleLog == null)
+                                return;
+
+                            window['console']['log'] = oldConsoleLog;
+                        };
+
+    pub.disable = function disable()
+                        {
+                            oldConsoleLog = console.log;
+                            window['console']['log'] = function() {};
+                        };
+
+    return pub;
+}();
+
 jest.setTimeout(15000);
 
 function shuffle(array) {
@@ -44,6 +66,10 @@ beforeAll(() => {
   });
 });
 */
+
+beforeAll(() => {
+  logger.disable();
+});
 
 describe('local index', async () => {
   let i, h, key, keyID;
@@ -364,8 +390,7 @@ describe('local index', async () => {
   });*/
 });
 
-/*
 afterAll(() => {
-  return ipfsNode.stop();
+  logger.enable();
+  //return ipfsNode.stop();
 });
-*/
