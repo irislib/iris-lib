@@ -1,34 +1,33 @@
-const identifi = require('../cjs/index.js');
-const fs = require('fs');
-const GUN = require('gun');
-const load = require('gun/lib/load');
-const then = require('gun/lib/then');
-const SEA = require('gun/sea');
+const identifi = require(`../cjs/index.js`);
+const GUN = require(`gun`);
+const load = require(`gun/lib/load`);
+const then = require(`gun/lib/then`);
+const SEA = require(`gun/sea`);
 //SEA.throw = true;
 
 //let ipfsNode = new IPFS({repo: './ipfs_repo'});
 const gun = new GUN({radisk: false});
 
-var logger = function()
+const logger = function()
 {
-    var oldConsoleLog = null;
-    var pub = {};
+  let oldConsoleLog = null;
+  const pub = {};
 
-    pub.enable =  function enable()
-                        {
-                            if(oldConsoleLog == null)
-                                return;
+  pub.enable =  function enable()
+  {
+    if (oldConsoleLog == null)
+      return;
 
-                            window['console']['log'] = oldConsoleLog;
-                        };
+    window[`console`][`log`] = oldConsoleLog;
+  };
 
-    pub.disable = function disable()
-                        {
-                            oldConsoleLog = console.log;
-                            window['console']['log'] = function() {};
-                        };
+  pub.disable = function disable()
+  {
+    oldConsoleLog = console.log;
+    window[`console`][`log`] = function() {};
+  };
 
-    return pub;
+  return pub;
 }();
 
 jest.setTimeout(15000);
@@ -50,7 +49,7 @@ function shuffle(array) {
   }
 
   return array;
-};
+}
 
 /*
 beforeAll(() => {
@@ -71,17 +70,17 @@ beforeAll(() => {
   logger.disable();
 });
 
-describe('local index', async () => {
+describe(`local index`, async () => {
   let i, h, key, keyID;
   beforeAll(async () => {
     key = await identifi.Key.getDefault();
     keyID = identifi.Key.getId(key);
-    i = await identifi.Index.create(gun, key, {self: {name: 'Alice'}, debug: false});
+    i = await identifi.Index.create(gun, key, {self: {name: `Alice`}, debug: false});
     await new Promise(r => setTimeout(r, 3000));
   });
-  test('create new Index', async () => {
+  test(`create new Index`, async () => {
     expect(i).toBeInstanceOf(identifi.Index);
-    let viewpoint = await i.getViewpoint();
+    const viewpoint = await i.getViewpoint();
     expect(viewpoint).toBeInstanceOf(identifi.Identity);
     const data = await new Promise(resolve => {
       viewpoint.gun.load(r => {
@@ -89,22 +88,22 @@ describe('local index', async () => {
       });
     });
     expect(Object.keys(data.attrs).length).toBe(2);
-    expect(data.mostVerifiedAttributes.name.attribute.value).toBe('Alice');
+    expect(data.mostVerifiedAttributes.name.attribute.value).toBe(`Alice`);
   });
   let p;
-  describe('create and fetch an identity using identifi messages', async () => {
-    test('add trust rating to bob', async () => {
-      const msg = await identifi.Message.createRating({recipient:{email:'bob@example.com'}, rating:10}, key);
+  describe(`create and fetch an identity using identifi messages`, async () => {
+    test(`add trust rating to bob`, async () => {
+      const msg = await identifi.Message.createRating({recipient: {email: `bob@example.com`}, rating: 10}, key);
       h = msg.getHash();
       const r = await i.addMessage(msg);
       expect(r).toBe(true);
     });
-    test('get added msg by hash', async () => {
+    test(`get added msg by hash`, async () => {
       const msg = await i.getMessageByHash(h);
-      expect(msg.signedData.recipient.email).toEqual('bob@example.com');
+      expect(msg.signedData.recipient.email).toEqual(`bob@example.com`);
     });
-    test('get added identity', async () => {
-      p = i.get('bob@example.com'); // ,true
+    test(`get added identity`, async () => {
+      p = i.get(`bob@example.com`); // ,true
       const data = await p.gun.once().then();
       //expect(q).toBeInstanceOf(identifi.Identity);
       expect(data.trustDistance).toBe(1);
@@ -112,19 +111,19 @@ describe('local index', async () => {
       expect(data.receivedNeutral).toBe(0);
       expect(data.receivedNegative).toBe(0);
     });
-    test('get messages received by bob', async () => {
+    test(`get messages received by bob`, async () => {
       const results = [];
       i.getReceivedMsgs(p, result => results.push(result));
       await new Promise(resolve => setTimeout(resolve, 200));
       expect(results.length).toBe(1);
     });
-    test('get messages sent by bob', async () => {
+    test(`get messages sent by bob`, async () => {
       const results = [];
       i.getSentMsgs(p, result => results.push(result));
       await new Promise(resolve => setTimeout(resolve, 200));
       expect(results.length).toBe(0);
     });
-    test('get messages sent by self', async () => {
+    test(`get messages sent by self`, async () => {
       const viewpoint = await i.getViewpoint();
       expect(viewpoint).toBeInstanceOf(identifi.Identity);
       const results = [];
@@ -133,162 +132,161 @@ describe('local index', async () => {
       expect(results.length).toBe(2);
     });
   });
-  test('verify first, then rate', async () => {
-    let msg = await identifi.Message.createVerification({recipient:{name:'Fabio', email:'fabio@example.com'}}, key);
+  test(`verify first, then rate`, async () => {
+    let msg = await identifi.Message.createVerification({recipient: {name: `Fabio`, email: `fabio@example.com`}}, key);
     let r = await i.addMessage(msg);
     expect(r).toBe(true);
-    p = i.get('fabio@example.com');
+    p = i.get(`fabio@example.com`);
     let data = await p.gun.once().then();
     expect(data.trustDistance).toBe(false);
-    msg = await identifi.Message.createRating({recipient:{email:'fabio@example.com'}, rating:10}, key);
+    msg = await identifi.Message.createRating({recipient: {email: `fabio@example.com`}, rating: 10}, key);
     r = await i.addMessage(msg);
-    p = i.get('fabio@example.com');
+    p = i.get(`fabio@example.com`);
     data = await p.gun.once().then();
     expect(data.trustDistance).toBe(1);
   });
-  describe('add more identities', async () => {
-    test('bob -> carl', async () => {
-      let msg = await identifi.Message.createRating({author: {email:'bob@example.com'}, recipient: {email:'carl@example.com'}, rating:10}, key);
+  describe(`add more identities`, async () => {
+    test(`bob -> carl`, async () => {
+      let msg = await identifi.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `carl@example.com`}, rating: 10}, key);
       await i.addMessage(msg);
-      msg = await identifi.Message.createRating({author: {email:'carl@example.com'}, recipient: {email:'david@example.com'}, rating:10}, key);
+      msg = await identifi.Message.createRating({author: {email: `carl@example.com`}, recipient: {email: `david@example.com`}, rating: 10}, key);
       await i.addMessage(msg);
-      p = i.get('david@example.com');
+      p = i.get(`david@example.com`);
       const data = await p.gun.once().then();
       expect(data.trustDistance).toBe(3);
     });
-    test('add a collection of messages using addMessages', async () => {
+    test(`add a collection of messages using addMessages`, async () => {
       const msgs = [];
-      let msg = await identifi.Message.createRating({author: {email:'bob@example.com'}, recipient: {email:'bob1@example.com'}, rating:10}, key);
+      let msg = await identifi.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `bob1@example.com`}, rating: 10}, key);
       msgs.push(msg);
-      for (let i = 0;i < 4;i++) {
-        msg = await identifi.Message.createRating({author: {email:`bob${i}@example.com`}, recipient: {email:`bob${i+1}@example.com`}, rating:10}, key);
+      for (let i = 0;i < 4;i ++) {
+        msg = await identifi.Message.createRating({author: {email: `bob${i}@example.com`}, recipient: {email: `bob${i + 1}@example.com`}, rating: 10}, key);
         msgs.push(msg);
       }
-      msg = await identifi.Message.createRating({author: {email:'bert@example.com'}, recipient: {email:'chris@example.com'}, rating:10}, key);
+      msg = await identifi.Message.createRating({author: {email: `bert@example.com`}, recipient: {email: `chris@example.com`}, rating: 10}, key);
       msgs.push(msg);
       await i.addMessages(shuffle(msgs));
-      p = i.get('bob4@example.com');
+      p = i.get(`bob4@example.com`);
       expect(p).toBeDefined();
-      const trustDistance = p.gun.get(`trustDistance`);
-      p = await i.get('bert@example.com').gun.then();
+      p = await i.get(`bert@example.com`).gun.then();
       expect(p).toBeUndefined();
-      p = await i.get('chris@example.com').gun.then();
+      p = await i.get(`chris@example.com`).gun.then();
       expect(p).toBeUndefined();
     });
   });
-  describe('downvote', async () => {
-    test('up & down', async () => {
-      let msg = await identifi.Message.createRating({recipient:{email:'orwell@example.com'}, rating:1}, key);
+  describe(`downvote`, async () => {
+    test(`up & down`, async () => {
+      let msg = await identifi.Message.createRating({recipient: {email: `orwell@example.com`}, rating: 1}, key);
       await i.addMessage(msg);
-      p = i.get('orwell@example.com');
+      p = i.get(`orwell@example.com`);
       let data = await p.gun.once().then();
       expect(data.trustDistance).toBe(1);
-      msg = await identifi.Message.createRating({recipient:{email:'orwell@example.com'}, rating:-1}, key);
+      msg = await identifi.Message.createRating({recipient: {email: `orwell@example.com`}, rating: - 1}, key);
       await i.addMessage(msg);
       data = await p.gun.once().then();
       expect(data.trustDistance).toBe(false);
     });
   });
-  describe ('untrusted key', async () => {
+  describe (`untrusted key`, async () => {
     let u;
-    test('should not create new identity', async () => {
+    test(`should not create new identity`, async () => {
       u = await identifi.Key.generate();
-      let msg = await identifi.Message.createRating({author: {email:'bob@example.com'}, recipient: {email:'angus@example.com'}, rating:10}, u);
+      const msg = await identifi.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `angus@example.com`}, rating: 10}, u);
       await i.addMessage(msg);
-      p = await i.get('angus@example.com').gun.then();
+      p = await i.get(`angus@example.com`).gun.then();
       expect(p).toBeUndefined();
     });
-    test('should not affect scores', async () => {
-      p = i.get('david@example.com');
+    test(`should not affect scores`, async () => {
+      p = i.get(`david@example.com`);
       const pos = await p.gun.get(`receivedPositive`).once().then();
-      let msg = await identifi.Message.createRating({author: {email:'bob@example.com'}, recipient: {email:'david@example.com'}, rating:10}, u);
+      const msg = await identifi.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `david@example.com`}, rating: 10}, u);
       await i.addMessage(msg);
-      p = i.get('david@example.com');
+      p = i.get(`david@example.com`);
       const pos2 = await p.gun.get(`receivedPositive`).once().then();
       expect(pos2).toEqual(pos);
     });
   });
-  describe('adding attributes to an identity', async () => {
+  describe(`adding attributes to an identity`, async () => {
     let c;
-    test('get identity count', async () => {
+    test(`get identity count`, async () => {
       const results = [];
-      i.search('', null, result => results.push(result));
+      i.search(``, null, result => results.push(result));
       await new Promise(resolve => setTimeout(resolve, 200));
       c = results.length;
       expect(results.length).toBeGreaterThan(1);
     });
-    test('add name to Bob', async () => {
-      let bob = await i.get('bob@example.com');
+    test(`add name to Bob`, async () => {
+      let bob = await i.get(`bob@example.com`);
       expect(bob).toBeInstanceOf(identifi.Identity);
-      const msg = await identifi.Message.createVerification({recipient:{email:'bob@example.com', name: 'Bob'}}, key);
+      const msg = await identifi.Message.createVerification({recipient: {email: `bob@example.com`, name: `Bob`}}, key);
       await i.addMessage(msg);
-      bob = await i.get('bob@example.com');
+      bob = await i.get(`bob@example.com`);
       const data = await new Promise(resolve => {
         bob.gun.load(r => {
           resolve(r);
         });
       });
       expect(Object.keys(data.attrs).length).toBe(2);
-      expect(data.mostVerifiedAttributes.name.attribute.value).toBe('Bob');
+      expect(data.mostVerifiedAttributes.name.attribute.value).toBe(`Bob`);
     });
-    test('identity count should remain the same', async () => {
+    test(`identity count should remain the same`, async () => {
       const results = [];
-      i.search('', null, result => results.push(result));
+      i.search(``, null, result => results.push(result));
       await new Promise(resolve => setTimeout(resolve, 200));
       expect(results.length).toEqual(c);
     });
-    test('there should be only one identity with distance 0', async () => {
+    test(`there should be only one identity with distance 0`, async () => {
       const r = [];
-      i.search('', null, result => r.push(result));
+      i.search(``, null, result => r.push(result));
       await new Promise(resolve => setTimeout(resolve, 200));
 
       let viewpoints = 0;
-      for (let j = 0; j < r.length; j++) {
+      for (let j = 0;j < r.length;j ++) {
         const id = await r[j].gun.then();
         if (id && id.trustDistance === 0) {
           //console.log(r[j]);
-          viewpoints++;
+          viewpoints ++;
         }
       }
       expect(viewpoints).toEqual(1);
     });
   });
-  describe('trusted verifier', async () => {
+  describe(`trusted verifier`, async () => {
     let verifierKey, verifierKeyID;
     beforeAll(async () => {
       verifierKey = await identifi.Key.generate();
       verifierKeyID = identifi.Key.getId(verifierKey);
     });
-    test('create verifier', async () => {
-      let msg = await identifi.Message.createRating({recipient: {keyID:verifierKeyID}, rating:10, context: 'verifier'}, key);
+    test(`create verifier`, async () => {
+      const msg = await identifi.Message.createRating({recipient: {keyID: verifierKeyID}, rating: 10, context: `verifier`}, key);
       await i.addMessage(msg);
-      const verifier = i.get('keyID', verifierKeyID);
+      const verifier = i.get(`keyID`, verifierKeyID);
       const scores = await new Promise(resolve => {
-        verifier.gun.get('scores').load(r => {
+        verifier.gun.get(`scores`).load(r => {
           resolve(r);
         });
       });
       expect(scores.verifier.score).toBe(10);
     });
-    test('verifier status should not disappear when the identity is changed', async () => {
-      msg = await identifi.Message.createRating({recipient: {keyID:verifierKeyID}, rating:10, context: 'identifi'}, key);
+    test(`verifier status should not disappear when the identity is changed`, async () => {
+      msg = await identifi.Message.createRating({recipient: {keyID: verifierKeyID}, rating: 10, context: `identifi`}, key);
       await i.addMessage(msg);
-      let msg = await identifi.Message.createVerification({recipient: {keyID:verifierKeyID, name:'VerifyBot', email:'VerifyBot@example.com'}}, key);
+      let msg = await identifi.Message.createVerification({recipient: {keyID: verifierKeyID, name: `VerifyBot`, email: `VerifyBot@example.com`}}, key);
       await i.addMessage(msg);
-      const verifier = i.get('keyID', verifierKeyID);
+      const verifier = i.get(`keyID`, verifierKeyID);
       const scores = await new Promise(resolve => {
-        verifier.gun.get('scores').load(r => {
+        verifier.gun.get(`scores`).load(r => {
           resolve(r);
         });
       });
       expect(scores.verifier.score).toBe(10);
     });
-    test('create trusted verification', async () => {
-      let msg = await identifi.Message.createVerification({recipient: {email:'david@example.com', name: 'David Attenborough'}}, verifierKey);
+    test(`create trusted verification`, async () => {
+      const msg = await identifi.Message.createVerification({recipient: {email: `david@example.com`, name: `David Attenborough`}}, verifierKey);
       await i.addMessage(msg);
-      p = i.get('david@example.com');
+      p = i.get(`david@example.com`);
       const attrs = await new Promise(resolve => {
-        p.gun.get('attrs').load(r => {
+        p.gun.get(`attrs`).load(r => {
           resolve(r);
         });
       });
@@ -297,36 +295,36 @@ describe('local index', async () => {
       });
     });
   });
-  describe('trusted indexes', async () => {
-    test('create a new index that is linked to the previous', async () => {
+  describe(`trusted indexes`, async () => {
+    test(`create a new index that is linked to the previous`, async () => {
       const k2 = await identifi.Key.generate();
       const i2 = await identifi.Index.create(gun, k2, {debug: false});
-      let m = await identifi.Message.createRating({recipient:{keyID}, rating: 10}, k2);
+      let m = await identifi.Message.createRating({recipient: {keyID}, rating: 10}, k2);
       await i2.addMessage(m);
-      const trustedIndexes = await i2.gun.get('trustedIndexes').once();
+      const trustedIndexes = await i2.gun.get(`trustedIndexes`).once();
       expect(trustedIndexes[keyID]).toBe(true);
 
-      m = await identifi.Message.create({type: 'post', recipient:{keyID}, comment: 'hello world'}, key);
+      m = await identifi.Message.create({type: `post`, recipient: {keyID}, comment: `hello world`}, key);
       await i.addMessage(m);
       return; // TODO
 
       console.log(`looking for message ${m.getHash()}`);
-      let m2 = await i2.getMessageByHash(m.getHash());
+      const m2 = await i2.getMessageByHash(m.getHash());
 
-      expect(typeof m2).toBe('object');
+      expect(typeof m2).toBe(`object`);
       expect(m2.getHash()).toEqual(m.getHash());
 
-      const identity = i2.get('keyID', keyID);
+      const identity = i2.get(`keyID`, keyID);
       const m3 = await new Promise(resolve => {
-        i2.getReceivedMsgs(identity, (msg) => {
-          console.log('found msg', msg.getHash(), msg);
+        i2.getReceivedMsgs(identity, msg => {
+          console.log(`found msg`, msg.getHash(), msg);
           if (msg.getHash() === m.getHash()) {
             resolve(msg);
           }
         });
         setTimeout(() => resolve(), 5000);
       });
-      expect(typeof m3).toBe('object'); // TODO
+      expect(typeof m3).toBe(`object`); // TODO
       expect(m3.getHash()).toEqual(m.getHash());
     });
     /*
@@ -341,26 +339,26 @@ describe('local index', async () => {
     });
     */
   });
-  test('get viewpoint identity by searching the default keyID', async () => {
+  test(`get viewpoint identity by searching the default keyID`, async () => {
     const defaultKey = await identifi.Key.getDefault();
-    p = i.get('keyID', identifi.Key.getId(defaultKey));
+    p = i.get(`keyID`, identifi.Key.getId(defaultKey));
     const data = await p.gun.once().then();
     expect(p).toBeInstanceOf(identifi.Identity);
     expect(data.trustDistance).toBe(0);
     expect(data.sentPositive).toBe(5);
   });
-  test('get messages by timestamp', async () => {
+  test(`get messages by timestamp`, async () => {
     const k2 = await identifi.Key.generate();
-    const i2 = await identifi.Index.create(gun, k2, {debug:false});
-    for (let i = 0; i < 5; i++) {
-      const m = await identifi.Message.createRating({recipient:{uuid:'something'}, rating: 10}, k2);
+    const i2 = await identifi.Index.create(gun, k2, {debug: false});
+    for (let i = 0;i < 5;i ++) {
+      const m = await identifi.Message.createRating({recipient: {uuid: `something`}, rating: 10}, k2);
       await i2.addMessage(m);
     }
     const results = [];
     await new Promise(resolve => {
       setTimeout(resolve, 5000);
       i2.getMessagesByTimestamp(result => {
-        console.log('got result');
+        console.log(`got result`);
         results.push(result);
         if (results.length > 3) {
           resolve();
