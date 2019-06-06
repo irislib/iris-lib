@@ -187,7 +187,7 @@ class Index {
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
-    const key = `${distance}:${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000)}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
+    const key = `${distance}:${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp))}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
     return key;
   }
 
@@ -197,7 +197,7 @@ class Index {
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
-    const timestamp = Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000);
+    const timestamp = Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp));
     const hashSlice = msg.getHash().substr(0, 9);
     keys.messagesByHash = [msg.getHash()];
     keys.messagesByTimestamp = [`${timestamp}:${hashSlice}`];
@@ -1042,8 +1042,8 @@ class Index {
   getMessagesByTimestamp(callback, limit, cursor, desc = true, filter) {
     const seen = {};
     const cb = msg => {
-      if ((!limit || Object.keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {
-        seen[msg.hash] = true;
+      if ((!limit || Object.keys(seen).length < limit) && !seen.hasOwnProperty(msg.hash)) {
+        seen[msg.getHash()] = true;
         callback(msg);
       }
     };

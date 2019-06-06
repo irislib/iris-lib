@@ -11013,7 +11013,7 @@
 	    var distance = parseInt(msg.distance);
 	    distance = _Number$isNaN(distance) ? 99 : distance;
 	    distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
-	    var key = distance + ':' + Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000) + ':' + (msg.ipfs_hash || msg.hash).substr(0, 9);
+	    var key = distance + ':' + Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp)) + ':' + (msg.ipfs_hash || msg.hash).substr(0, 9);
 	    return key;
 	  };
 
@@ -11025,7 +11025,7 @@
 	    var distance = parseInt(msg.distance);
 	    distance = _Number$isNaN(distance) ? 99 : distance;
 	    distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
-	    var timestamp = Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp) / 1000);
+	    var timestamp = Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp));
 	    var hashSlice = msg.getHash().substr(0, 9);
 	    keys.messagesByHash = [msg.getHash()];
 	    keys.messagesByTimestamp = [timestamp + ':' + hashSlice];
@@ -12038,8 +12038,8 @@
 
 	    var seen = {};
 	    var cb = function cb(msg) {
-	      if ((!limit || _Object$keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {
-	        seen[msg.hash] = true;
+	      if ((!limit || _Object$keys(seen).length < limit) && !seen.hasOwnProperty(msg.hash)) {
+	        seen[msg.getHash()] = true;
 	        callback(msg);
 	      }
 	    };
