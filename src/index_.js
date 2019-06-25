@@ -74,8 +74,8 @@ async function searchText(node, callback, query, limit, cursor, desc) {
 * @returns {Index} Identifi index object
 */
 class Index {
-  constructor(gun: Object, options) {
-    this.gun = gun || new Gun();
+  constructor(options) {
+    this.storage = options.storage;
     this.options = Object.assign({
       indexSync: {
         importOnAdd: {
@@ -102,7 +102,7 @@ class Index {
     if (options.viewpoint) {
       this.viewpoint = options.viewpoint;
     } else {
-      this.gun.get(`viewpoint`).on((val, key, msg, eve) => {
+      this.storage.get(`viewpoint`).on((val, key, msg, eve) => {
         if (val) {
           this.viewpoint = new Attribute(val);
           eve.off();
@@ -111,10 +111,10 @@ class Index {
     }
     if (this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {
-        this.gun.get(`trustedIndexes`).map().once((val, uri) => {
+        this.storage.get(`trustedIndexes`).map().once((val, uri) => {
           if (val) {
             // TODO: only get new messages?
-            this.gun.user(uri).get(`iris`).get(`messagesByDistance`).map((val, key) => {
+            this.storage.user(uri).get(`iris`).get(`messagesByDistance`).map((val, key) => {
               const d = Number.parseInt(key.split(`:`)[0]);
               if (!isNaN(d) && d <= this.options.indexSync.subscribe.maxMsgDistance) {
                 Message.fromSig(val).then(msg => {
@@ -125,9 +125,9 @@ class Index {
                 });
               }
             });
-            this.gun.user(uri).get(`iris`).get(`reactions`).map((reaction, msgHash) => {
-              this.gun.get(`messagesByHash`).get(msgHash).get(`reactions`).get(uri).put(reaction);
-              this.gun.get(`messagesByHash`).get(msgHash).get(`reactions`).get(uri).put(reaction);
+            this.storage.user(uri).get(`iris`).get(`reactions`).map((reaction, msgHash) => {
+              this.storage.get(`messagesByHash`).get(msgHash).get(`reactions`).get(uri).put(reaction);
+              this.storage.get(`messagesByHash`).get(msgHash).get(`reactions`).get(uri).put(reaction);
             });
           }
         });
@@ -149,7 +149,8 @@ class Index {
   * @param {Object} options see default options in Index constructor's example
   * @returns {Promise}
   */
-  static async create(gun: Object, keypair, options = {}) {
+  static async create(keypair, options = {}) {
+    const gun = options.gun;
     if (!keypair) {
       keypair = await Key.getDefault();
     }
@@ -320,9 +321,9 @@ class Index {
     if (this.viewpoint) {
       vpAttr = this.viewpoint;
     } else {
-      vpAttr = new Attribute(await this.gun.get(`viewpoint`).then());
+      vpAttr = new Attribute(await this.storage.get(`viewpoint`).then());
     }
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(vpAttr.uri()));
+    return new Identity(this.storage.get(`identitiesBySearchKey`).get(vpAttr.uri()));
   }
 
   /**
@@ -365,9 +366,9 @@ class Index {
         sentNeutral: 0,
         sentNegative: 0
       };
-      const node = this.gun.get(`identities`).set(o);
+      const node = this.storage.get(`identities`).set(o);
       const updateIdentityByLinkedAttribute = attribute => {
-        this.gun.get(`verificationsByRecipient`).get(attribute.uri()).map().once(val => {
+        this.storage.get(`verificationsByRecipient`).get(attribute.uri()).map().once(val => {
           const m = Message.fromSig(val);
           const recipients = m.getRecipientArray();
           for (let i = 0;i < recipients.length;i ++) {
@@ -375,7 +376,7 @@ class Index {
             if (!o.attributes.hasOwnProperty(a2.uri())) {
               // TODO remove attribute from identity if not enough verifications / too many unverifications
               o.attributes[a2.uri()] = a2;
-              this.gun.get(`messagesByRecipient`).get(a2.uri()).map().once(val => {
+              this.storage.get(`messagesByRecipient`).get(a2.uri()).map().once(val => {
                 const m2 = Message.fromSig(val);
                 if (!o.received.hasOwnProperty(m2.getHash())) {
                   o.received[m2.getHash()] = m2;
@@ -397,7 +398,7 @@ class Index {
                   node.put(o);
                 }
               });
-              this.gun.get(`messagesByAuthor`).get(a2.uri()).map().once(val => {
+              this.storage.get(`messagesByAuthor`).get(a2.uri()).map().once(val => {
                 const m2 = Message.fromSig(val);
                 if (!o.sent.hasOwnProperty(m2.getHash())) {
                   o.sent[m2.getHash()] = m2;
@@ -422,7 +423,7 @@ class Index {
       }
       return new Identity(node, attr);
     } else {
-      return new Identity(this.gun.get(`identitiesBySearchKey`).get(attr.uri()), attr);
+      return new Identity(this.storage.get(`identitiesBySearchKey`).get(attr.uri()), attr);
     }
   }
 
@@ -458,7 +459,7 @@ class Index {
       for (let j = 0;j < indexKeys[index].length;j ++) {
         const key = indexKeys[index][j];
         // this.debug(`adding to index ${index} key ${key}`);
-        await this.gun.get(index).get(key).put(id);
+        await this.storage.get(index).get(key).put(id);
       }
     }
   }
@@ -471,9 +472,9 @@ class Index {
   async getSentMsgs(identity: Identity, callback, limit, cursor, filter) {
     this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor, true, filter);
     if (this.options.indexSync.query.enabled) {
-      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+      this.storage.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`iris`).get(`messagesByAuthor`).get(identity.linkTo.uri());
+          const n = this.storage.user(key).get(`iris`).get(`messagesByAuthor`).get(identity.linkTo.uri());
           this._getMsgs(n, callback, limit, cursor, false, filter);
         }
       });
@@ -488,9 +489,9 @@ class Index {
   async getReceivedMsgs(identity, callback, limit, cursor, filter) {
     this._getMsgs(identity.gun.get(`received`), callback, limit, cursor, true, filter);
     if (this.options.indexSync.query.enabled) {
-      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+      this.storage.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`iris`).get(`messagesByRecipient`).get(identity.linkTo.uri());
+          const n = this.storage.user(key).get(`iris`).get(`messagesByRecipient`).get(identity.linkTo.uri());
           this._getMsgs(n, callback, limit, cursor, false, filter);
         }
       });
@@ -622,7 +623,7 @@ class Index {
       for (let j = 0;j < identityIndexKeysBefore[index].length;j ++) {
         const key = identityIndexKeysBefore[index][j];
         if (!identityIndexKeysAfter[index] || identityIndexKeysAfter[index].indexOf(key) === - 1) {
-          this.gun.get(index).get(key).put(null);
+          this.storage.get(index).get(key).put(null);
         }
       }
     }
@@ -677,7 +678,7 @@ class Index {
   }
 
   async removeTrustedIndex(gunUri) {
-    this.gun.get(`trustedIndexes`).get(gunUri).put(null);
+    this.storage.get(`trustedIndexes`).get(gunUri).put(null);
   }
 
   async addTrustedIndex(gunUri,
@@ -686,15 +687,15 @@ class Index {
     if (gunUri === this.viewpoint.value) {
       return;
     }
-    const exists = await this.gun.get(`trustedIndexes`).get(gunUri).then();
+    const exists = await this.storage.get(`trustedIndexes`).get(gunUri).then();
     if (exists) {
       return;
     }
-    this.gun.get(`trustedIndexes`).get(gunUri).put(true);
+    this.storage.get(`trustedIndexes`).get(gunUri).put(true);
     const msgs = [];
     if (this.options.indexSync.importOnAdd.enabled) {
       await util.timeoutPromise(new Promise(resolve => {
-        this.gun.user(gunUri).get(`iris`).get(`messagesByDistance`).map((val, key) => {
+        this.storage.user(gunUri).get(`iris`).get(`messagesByDistance`).map((val, key) => {
           const d = Number.parseInt(key.split(`:`)[0]);
           if (!isNaN(d) && d <= maxMsgDistance) {
             Message.fromSig(val).then(msg => {
@@ -768,7 +769,7 @@ class Index {
       const linkTo = Identity.getLinkTo(attrs);
       const trustDistance = msg.isPositive() && typeof msg.distance === `number` ? msg.distance + 1 : false;
       const start = new Date();
-      const node = this.gun.get(`identitiesBySearchKey`).get(u.uri());
+      const node = this.storage.get(`identitiesBySearchKey`).get(u.uri());
       node.put({});
       const id = Identity.create(node, {attrs, linkTo, trustDistance});
       this.debug((new Date) - start, `ms identity.create`);
@@ -814,7 +815,7 @@ class Index {
       return;
     }
     let initialMsgCount, msgCountAfterwards;
-    const index = this.gun.get(`identitiesBySearchKey`);
+    const index = this.storage.get(`identitiesBySearchKey`);
     do {
       const knownIdentities = [];
       let stop = false;
@@ -870,14 +871,14 @@ class Index {
     }
     const hash = msg.getHash();
     if (true === options.checkIfExists) {
-      const exists = await this.gun.get(`messagesByHash`).get(hash).then();
+      const exists = await this.storage.get(`messagesByHash`).get(hash).then();
       if (exists) {
         return;
       }
     }
     const obj = {sig: msg.sig, pubKey: msg.pubKey};
-    //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
-    const node = this.gun.back(- 1).get(`messagesByHash`).get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
+    //const node = this.storage.get(`messagesByHash`).get(hash).put(obj);
+    const node = this.storage.back(- 1).get(`messagesByHash`).get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
     start = new Date();
     msg.distance = await this.getMsgTrustDistance(msg);
     this.debug(`----`);
@@ -886,12 +887,12 @@ class Index {
       return false; // do not save messages from untrusted author
     }
     if (msg.signedData.replyTo) {
-      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.replyTo).get(`replies`).get(hash).put(node);
-      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.replyTo).get(`replies`).get(hash).put(node);
+      this.storage.back(- 1).get(`messagesByHash`).get(msg.signedData.replyTo).get(`replies`).get(hash).put(node);
+      this.storage.back(- 1).get(`messagesByHash`).get(msg.signedData.replyTo).get(`replies`).get(hash).put(node);
     }
     if (msg.signedData.sharedMsg) {
-      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
-      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
+      this.storage.back(- 1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
+      this.storage.back(- 1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
     }
     start = new Date();
     const indexKeys = Index.getMsgIndexKeys(msg);
@@ -901,22 +902,22 @@ class Index {
         for (let i = 0;i < indexKeys[index].length;i ++) {
           const key = indexKeys[index][i];
           // this.debug(`adding to index ${index} key ${key}`);
-          this.gun.get(index).get(key).put(node);
-          this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
+          this.storage.get(index).get(key).put(node);
+          this.storage.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
         }
       } else if (typeof indexKeys[index] === `object`) {
         for (const key in indexKeys[index]) {
-          this.gun.get(index).get(key).get(indexKeys[index][key]).put(node);
-          this.gun.get(index).get(key).get(indexKeys[index][key]).put(node);
+          this.storage.get(index).get(key).get(indexKeys[index][key]).put(node);
+          this.storage.get(index).get(key).get(indexKeys[index][key]).put(node);
         }
       }
     }
     if (this.options.ipfs) {
       try {
         const ipfsUri = await msg.saveToIpfs(this.options.ipfs);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put({ipfsUri});
+        this.storage.get(`messagesByHash`).get(ipfsUri).put(node);
+        this.storage.get(`messagesByHash`).get(ipfsUri).put(node);
+        this.storage.get(`messagesByHash`).get(ipfsUri).put({ipfsUri});
       } catch (e) {
         console.error(`adding msg ${msg} to ipfs failed: ${e}`);
       }
@@ -944,7 +945,7 @@ class Index {
       return true;
     }
     this.debug(`search()`, value, type, limit, cursor);
-    const node = this.gun.get(`identitiesBySearchKey`);
+    const node = this.storage.get(`identitiesBySearchKey`);
     node.get({'.': {'*': value, '>': cursor}, '%': 2000}).once().map().on((id, key) => {
       this.debug(`search(${value}, ${type}, callback, ${limit}, ${cursor}) returned id ${id} key ${key}`);
       if (Object.keys(seen).length >= limit) {
@@ -961,9 +962,9 @@ class Index {
       }
     });
     if (this.options.indexSync.query.enabled) {
-      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+      this.storage.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get({'.': {'*': value, '%': 2000}}).once().map().once((id, k) => {
+          this.storage.user(key).get(`iris`).get(`identitiesBySearchKey`).get({'.': {'*': value, '%': 2000}}).once().map().once((id, k) => {
             if (Object.keys(seen).length >= limit) {
               // TODO: turn off .map cb
               return;
@@ -973,7 +974,7 @@ class Index {
             if (soul && !seen.hasOwnProperty(soul)) {
               seen[soul] = true;
               callback(
-                new Identity(this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k))
+                new Identity(this.storage.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k))
               );
             }
           });
@@ -1003,8 +1004,8 @@ class Index {
           if (!isIpfsUri && this.options.ipfs && this.writable && !republished) {
             m.saveToIpfs(this.options.ipfs).then(ipfsUri => {
               obj.ipfsUri = ipfsUri;
-              this.gun.get(`messagesByHash`).get(hash).put(obj);
-              this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
+              this.storage.get(`messagesByHash`).get(hash).put(obj);
+              this.storage.get(`messagesByHash`).get(ipfsUri).put(obj);
             });
           }
           resolve(m);
@@ -1019,14 +1020,14 @@ class Index {
           resolveIfHashMatches(s);
         });
       }
-      this.gun.get(`messagesByHash`).get(hash).on(d => {
+      this.storage.get(`messagesByHash`).get(hash).on(d => {
         this.debug(`got msg ${hash} from own gun index`);
         resolveIfHashMatches(d);
       });
       if (this.options.indexSync.query.enabled) {
-        this.gun.get(`trustedIndexes`).map().once((val, key) => {
+        this.storage.get(`trustedIndexes`).map().once((val, key) => {
           if (val) {
-            this.gun.user(key).get(`iris`).get(`messagesByHash`).get(hash).on(d => {
+            this.storage.user(key).get(`iris`).get(`messagesByHash`).get(hash).on(d => {
               this.debug(`got msg ${hash} from friend's gun index ${val}`);
               resolveIfHashMatches(d);
             });
@@ -1050,11 +1051,11 @@ class Index {
 
 
 
-    this._getMsgs(this.gun.get(`messagesByTimestamp`), cb, limit, cursor, desc, filter);
+    this._getMsgs(this.storage.get(`messagesByTimestamp`), cb, limit, cursor, desc, filter);
     if (this.options.indexSync.query.enabled) {
-      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+      this.storage.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`iris`).get(`messagesByTimestamp`);
+          const n = this.storage.user(key).get(`iris`).get(`messagesByTimestamp`);
           this._getMsgs(n, cb, limit, cursor, desc, filter);
         }
       });
@@ -1074,11 +1075,11 @@ class Index {
         }
       }
     };
-    this._getMsgs(this.gun.get(`messagesByDistance`), cb, limit, cursor, desc, filter);
+    this._getMsgs(this.storage.get(`messagesByDistance`), cb, limit, cursor, desc, filter);
     if (this.options.indexSync.query.enabled) {
-      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+      this.storage.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`iris`).get(`messagesByDistance`);
+          const n = this.storage.user(key).get(`iris`).get(`messagesByDistance`);
           this._getMsgs(n, cb, limit, cursor, desc, filter);
         }
       });
@@ -1086,10 +1087,10 @@ class Index {
   }
 
   setReaction(msg: Object, reaction) {
-    this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
-    this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
-    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
-    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
+    this.storage.get(`reactions`).get(msg.getHash()).put(reaction);
+    this.storage.get(`reactions`).get(msg.getHash()).put(reaction);
+    this.storage.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
+    this.storage.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
   }
 }
 

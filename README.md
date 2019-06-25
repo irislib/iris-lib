@@ -7,7 +7,10 @@
 [![Coverage Status](https://img.shields.io/coveralls/irislib/iris-lib.svg?style=flat-square)](https://coveralls.io/github/irislib/iris-lib)
 [![Gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)](https://gitmoji.carloscuesta.me/)
 
-> Basic tools for reading, writing, indexing and searching Iris messages and identities.
+### Description
+Iris-lib provides the [Iris API](http://docs.iris.to/) for reading, writing, indexing and searching Iris messages and identities.
+
+Iris-lib does not concern itself with underlying data storage and networking. Instead, the problem can be outsourced to storage adapters. Since message authenticity is guaranteed by digital signatures, peer-to-peer storage such as GUN or IPFS can be used.
 
 ### Usage
 
@@ -26,11 +29,6 @@ profile.gun.get('attrs').then(console.log);
 profile.verified('name').then(console.log);
 
 ```
-
-
-### Documentation
-
-See the [docs](http://docs.iris.to/) directory.
 
 ### Installation
 

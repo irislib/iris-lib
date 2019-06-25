@@ -4,7 +4,7 @@ import util from './util';
 
 /**
 * An Identifi identity profile. Usually you don't create them yourself, but get them
-* from Index methods such as search().
+* from Index methods such as get() and search().
 */
 class Identity {
   /**

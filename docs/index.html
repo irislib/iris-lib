@@ -430,6 +430,78 @@
                 
                 </li>
               
+                
+                <li><a
+                  href='#gunstorage'
+                  class="">
+                  GunStorage
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#ipfsstorage'
+                  class="">
+                  IpfsStorage
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#storage'
+                  class=" toggle-sibling">
+                  Storage
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#storageput'
+                        class='regular pre-open'>
+                        #put
+                      </a></li>
+                      
+                      <li><a
+                        href='#storageonce'
+                        class='regular pre-open'>
+                        #once
+                      </a></li>
+                      
+                      <li><a
+                        href='#storageon'
+                        class='regular pre-open'>
+                        #on
+                      </a></li>
+                      
+                      <li><a
+                        href='#storagedelete'
+                        class='regular pre-open'>
+                        #delete
+                      </a></li>
+                      
+                      <li><a
+                        href='#storagesearch'
+                        class='regular pre-open'>
+                        #search
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                  
+                </div>
+                
+                </li>
+              
             </ul>
           </div>
           <div class='mt1 h6 quiet'>
@@ -997,7 +1069,7 @@
   
 
   <p>An Identifi identity profile. Usually you don't create them yourself, but get them
-from Index methods such as search().</p>
+from Index methods such as get() and search().</p>
 
  
   
@@ -1393,7 +1465,7 @@ options.ipfs = instance.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>new Index(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="#index">Index</a></div>
+    <div class='pre p1 fill-light mt0'>new Index(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="#index">Index</a></div>
    
   
   
@@ -1411,8 +1483,8 @@ options.ipfs = instance.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>gun</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    gun node that contains an Identifi index (e.g. user.get('identifi'))
+            <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    see default options in example
 
           </div>
           
@@ -1420,8 +1492,8 @@ options.ipfs = instance.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    see default options in example
+            <span class='code bold'>gun</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    gun node that contains an Identifi index (e.g. user.get('identifi'))
 
           </div>
           
@@ -1484,7 +1556,7 @@ options.ipfs = instance.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>create(gun, keypair, options)</span>
+            <span class='code strong strong truncate'>create(keypair, options, gun)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1496,7 +1568,7 @@ options.ipfs = instance.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>create(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></div>
+    <div class='pre p1 fill-light mt0'>create(keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></div>
    
   
   
@@ -1514,15 +1586,6 @@ options.ipfs = instance.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>gun</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    gun instance where the index is stored (e.g. new Gun())
-
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
             <span class='code bold'>keypair</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    SEA keypair (can be generated with await irisLib.Key.generate())
 
@@ -1535,6 +1598,15 @@ options.ipfs = instance.</p>
             <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
             = <code>{}</code>)</code>
 	    see default options in Index constructor's example
+
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>gun</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    gun instance where the index is stored (e.g. new Gun())
 
           </div>
           
@@ -4081,6 +4153,553 @@ from existing datasets. That makes Identifi an useful search tool even with no i
 
       
     
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+</section>
+
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='gunstorage'>
+      GunStorage
+    </h3>
+    
+    
+  </div>
+  
+
+  <p><a href="https://github.com/amark/gun">https://github.com/amark/gun</a></p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>new GunStorage(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+   
+  
+  
+    <p>
+      Extends
+      
+        <a href="#storage">Storage</a>
+      
+    </p>
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    {gun: merkleBtreeInstance}
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='ipfsstorage'>
+      IpfsStorage
+    </h3>
+    
+    
+  </div>
+  
+
+  <p><a href="https://ipfs.io">https://ipfs.io</a></p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>new IpfsStorage(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+   
+  
+  
+    <p>
+      Extends
+      
+        <a href="#storage">Storage</a>
+      
+    </p>
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    {tree: merkleBtreeInstance}
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='storage'>
+      Storage
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Abstract class - instantiate child classes GunStorage or IpfsStorage instead.</p>
+<p>Iris does not concern itself with underlying data storage and networking. Instead, the problem can be outsourced to storage adapters.</p>
+<p>Since message authenticity is guaranteed by digital signatures, peer-to-peer storage such as GUN or IPFS can be used.</p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>new Storage()</div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='storageput'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>put(key, value, cb)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Insert a value for a key.</p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>put(key: any, value: any, cb: any)</div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>value</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>cb</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='storageonce'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>once(key, cb)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Callback function receives the current value for a key.</p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>once(key: any, cb: any)</div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>cb</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='storageon'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>on(key, cb)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Callback function receives the current value for a key and subscribes to its future changes. If subscription is not available, works similarly to once().</p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>on(key: any, cb: any)</div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>cb</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='storagedelete'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>delete(key, cb)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Remove the key-value pair.</p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>delete(key: any, cb: any)</div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>cb</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='storagesearch'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>search(o, cb)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Opts.callback function is called for each key matching the search terms in opts.</p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>search(o: any, cb: any)</div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>o</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>cb</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
   
 
   
