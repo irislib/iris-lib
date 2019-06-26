@@ -40,31 +40,6 @@ or npm
 
 	npm install iris-lib (--save-dev)
 
-
-### configuration
-
-You can pass in extra options as a configuration object (➕ required, ➖ optional, ✏️ default).
-
-```js
-import irisLib from 'iris-lib';
-
-```
-
-➖ **property** ( type ) ` ✏️ default `
-<br/> 📝 description
-<br/> ❗️ warning
-<br/> ℹ️ info
-<br/> 💡 example
-
-### methods
-
-#### #name
-
-```js
-irisLib
-
-```
-
 ### Examples
 
 See [`example`](example/script.js) folder or the [runkit](https://runkit.com/irislib/iris-lib) example.
