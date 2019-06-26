@@ -10,7 +10,7 @@
 ### Description
 Iris-lib provides the [Iris API](http://docs.iris.to/) for reading, writing, indexing and searching Messages and Identities.
 
-The task of data storage and networking is outsourced to [GUN](https://github.com/amark/gun), which manages the synchronization of data between different storages (memory, localstorage, GUN websocket server, WebRTC peers, IPFS, S3, whatever).
+The task of data storage and networking is outsourced to [GUN](https://github.com/amark/gun), which manages the synchronization of data between different storages (memory, localstorage, GUN websocket server, WebRTC peers, LAN multicast peers, IPFS, S3, whatever).
 
 GUN enables subscription to data changes, so message feeds and identity profiles just update real-time without having to hit f5 or writing complex update logic.
 
