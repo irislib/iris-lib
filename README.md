@@ -8,7 +8,7 @@
 [![Gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)](https://gitmoji.carloscuesta.me/)
 
 ### Description
-Iris-lib provides the [Iris API](http://docs.iris.to/) for reading, writing, indexing and searching Iris messages and identities.
+Iris-lib provides the [Iris API](http://docs.iris.to/) for reading, writing, indexing and searching Messages and Identities - the fundamental objects of Iris.
 
 The task of data storage and networking is outsourced to [GUN](https://github.com/amark/gun), which manages the synchronization of data between different storages (memory, localstorage, GUN websocket server, WebRTC peers, IPFS, S3, whatever).
 
