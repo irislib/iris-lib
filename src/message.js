@@ -9,7 +9,7 @@ const errorMsg = `Invalid  message:`;
 class ValidationError extends Error {}
 
 /**
-* Messages are objects containing fields signedData, signer (public key) and signature. Message iriser is the base64 sha256 hash derived from its canonical utf8 string representation.
+* Messages are objects containing fields signedData, signer (public key) and signature. Message identifier is the base64 sha256 hash derived from its canonical utf8 string representation.
 *
 * signedData has an author, recipient, signer, type, timestamp, context and optionally other fields.
 *
@@ -19,7 +19,8 @@ class ValidationError extends Error {}
 *
 * For example, a crawler can import and sign other people's messages from Twitter. Only the users who trust the crawler will see the messages.
 *
-* Rating message example:
+* @example
+* Rating message:
 * {
 *   signedData: {
 *     author: {name:'Alice', key:'ABCD1234'},
@@ -34,7 +35,7 @@ class ValidationError extends Error {}
 *   signature: '1234ABCD'
 * }
 *
-* Verification message example:
+* Verification message:
 * {
 *   signedData: {
 *     author: {name:'Alice', key:'ABCD1234'},

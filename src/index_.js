@@ -326,11 +326,11 @@ class Index {
   }
 
   /**
-  * Get an identity referenced by an iriser.
+  * Get an identity referenced by an identifier.
   * get(type, value)
   * get(Attribute)
   * get(value) - guesses the type or throws an error
-  * @returns {Identity} identity that is connected to the iriser param
+  * @returns {Identity} identity that is connected to the identifier param
   */
   get(a: String, b: String, reload = false) {
     if (!a) {
@@ -659,7 +659,7 @@ class Index {
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
-    for (let i = 0;i < ids.length;i ++) { // add new irisers to identity
+    for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
       if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         start = new Date();
         await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);

@@ -21,10 +21,11 @@ const UNIQUE_ID_VALIDATORS = {
 
 /**
 * A simple key-value pair with helper functions.
+*
+* Constructor: new Attribute(value), new Attribute(type, value) or new Attribute({type, value})
 */
 class Attribute {
   /**
-  * Usage: new Attribute(value) or new Attribute(type, value)
   * @param {string} a
   * @param {string} b
   */
@@ -51,6 +52,9 @@ class Attribute {
     }
   }
 
+  /**
+  * @returns {string} uuid
+  */
   static getUuid() {
     const b = a => a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + - 1e3 + - 4e3 + - 8e3 + - 1e11).replace(/[018]/g, b);
     return new Attribute(`uuid`, b());
