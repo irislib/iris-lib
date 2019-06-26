@@ -38,7 +38,7 @@ async function searchText(node, callback, query, limit, cursor, desc) {
 
 // TODO: flush onto IPFS
 /**
-*  index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
+* Iris index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
 * messagesByHash, messagesByTimestamp, messagesByDistance. If you want messages saved to IPFS, pass
 * options.ipfs = instance.
 *

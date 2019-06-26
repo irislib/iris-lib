@@ -157,7 +157,7 @@ class Identity {
   }
 
   /**
-  * Appends a search widget to the given HTMLElement
+  * Appends an identity search widget to the given HTMLElement
   * @param {HTMLElement} parentElement element where the search widget is added and event listener attached
   * @param {Index} index index root to use for search
   */

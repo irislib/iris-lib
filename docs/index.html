@@ -275,9 +275,9 @@
                       </a></li>
                     
                       <li><a
-                        href='#keytojwk'
+                        href='#keytostring'
                         class='regular pre-open'>
-                        .toJwk
+                        .toString
                       </a></li>
                     
                       <li><a
@@ -287,9 +287,9 @@
                       </a></li>
                     
                       <li><a
-                        href='#keyfromjwk'
+                        href='#keyfromstring'
                         class='regular pre-open'>
-                        .fromJwk
+                        .fromString
                       </a></li>
                     
                       <li><a
@@ -1192,7 +1192,7 @@ from Index methods such as get() and search().</p>
 
   
 
-  <p>Appends a search widget to the given HTMLElement</p>
+  <p>Appends an identity search widget to the given HTMLElement</p>
 
  
   
@@ -1517,7 +1517,7 @@ from Index methods such as get() and search().</p>
   </div>
   
 
-  <p>index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
+  <p>Iris index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
 messagesByHash, messagesByTimestamp, messagesByDistance. If you want messages saved to IPFS, pass
 options.ipfs = instance.</p>
 <p>When you use someone else's index, initialise it using the Index constructor</p>
@@ -2761,11 +2761,11 @@ unknown authors.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='keytojwk'>
+    <div class='border-bottom' id='keytostring'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>toJwk(key)</span>
+            <span class='code strong strong truncate'>toString(key)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2773,11 +2773,11 @@ unknown authors.</p>
 
   
 
-  <p>Serialize key as JSON Web key</p>
+  <p>Serialize key as JSON string</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>toJwk(key: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
+    <div class='pre p1 fill-light mt0'>toString(key: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
    
   
   
@@ -2901,11 +2901,11 @@ unknown authors.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='keyfromjwk'>
+    <div class='border-bottom' id='keyfromstring'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>fromJwk(jwk)</span>
+            <span class='code strong strong truncate'>fromString(jwk)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2913,11 +2913,11 @@ unknown authors.</p>
 
   
 
-  <p>Get a keypair from a JSON Web Key object.</p>
+  <p>Get a keypair from a JSON string.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>fromJwk(jwk: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
+    <div class='pre p1 fill-light mt0'>fromString(jwk: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
    
   
   

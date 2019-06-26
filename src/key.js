@@ -25,10 +25,10 @@ class Key {
       const privKeyFile = `${datadir}/private.key`;
       if (fs.existsSync(privKeyFile)) {
         const f = fs.readFileSync(privKeyFile, `utf8`);
-        myKey = Key.fromJwk(f);
+        myKey = Key.fromString(f);
       } else {
         myKey = await Key.generate();
-        fs.writeFileSync(privKeyFile, Key.toJwk(myKey));
+        fs.writeFileSync(privKeyFile, Key.toString(myKey));
         fs.chmodSync(privKeyFile, 400);
       }
       if (!myKey) {
@@ -37,10 +37,10 @@ class Key {
     } else {
       const jwk = window.localStorage.getItem(`iris.myKey`);
       if (jwk) {
-        myKey = Key.fromJwk(jwk);
+        myKey = Key.fromString(jwk);
       } else {
         myKey = await Key.generate();
-        window.localStorage.setItem(`iris.myKey`, Key.toJwk(myKey));
+        window.localStorage.setItem(`iris.myKey`, Key.toString(myKey));
       }
       if (!myKey) {
         throw new Error(`loading default key failed - check localStorage iris.myKey`);
@@ -50,11 +50,11 @@ class Key {
   }
 
   /**
-  * Serialize key as JSON Web key
+  * Serialize key as JSON string
   * @param {Object} key key to serialize
   * @returns {String} JSON Web Key string
   */
-  static toJwk(key) {
+  static toString(key) {
     return JSON.stringify(key);
   }
 
@@ -72,11 +72,11 @@ class Key {
   }
 
   /**
-  * Get a keypair from a JSON Web Key object.
+  * Get a keypair from a JSON string.
   * @param {Object} jwk JSON Web Key
   * @returns {String}
   */
-  static fromJwk(jwk) {
+  static fromString(jwk) {
     return JSON.parse(jwk);
   }
 

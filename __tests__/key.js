@@ -14,9 +14,9 @@ test(`Generate key`, async () => {
 });
 test(`Serialize and deserialize a key`, async () => {
   const i = await iris.Key.generate();
-  const serialized = iris.Key.toJwk(i);
+  const serialized = iris.Key.toString(i);
   expect(typeof serialized).toBe(`string`);
-  const deserialized = iris.Key.fromJwk(serialized);
+  const deserialized = iris.Key.fromString(serialized);
   expect(typeof deserialized).toBe(`object`);
   expect(i).toBeDefined();
 });
