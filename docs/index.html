@@ -86,6 +86,12 @@
                       </a></li>
                       
                       <li><a
+                        href='#attributeuri'
+                        class='regular pre-open'>
+                        #uri
+                      </a></li>
+                      
+                      <li><a
                         href='#attributeidenticon'
                         class='regular pre-open'>
                         #identicon
@@ -526,7 +532,7 @@
   
  
   
-    <div class='pre p1 fill-light mt0'>getUuid(): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></div>
+    <div class='pre p1 fill-light mt0'>getUuid(): <a href="#attribute">Attribute</a></div>
    
   
   
@@ -545,7 +551,7 @@
   
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>:
+      <code><a href="#attribute">Attribute</a></code>:
         uuid
 
       
@@ -967,6 +973,68 @@
       </div>
     </div>
   
+    <div class='border-bottom' id='attributeuri'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>uri()</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+ 
+  
+    <div class='pre p1 fill-light mt0'>uri(): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>:
+        uri - 
+<code>${encodeURIComponent(this.value)}:${encodeURIComponent(this.type)}</code>
+
+      
+    
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Example</div>
+    
+      
+      <pre class='p1 overflow-auto round fill-light'>user%<span class="hljs-number">20</span>example.com:email</pre>
+    
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
     <div class='border-bottom' id='attributeidenticon'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
@@ -979,7 +1047,8 @@
 
   
 
-  
+  <p>Generate a visually recognizable representation of the attribute</p>
+
  
   
     <div class='pre p1 fill-light mt0'>identicon(width: integer): <a href="https://developer.mozilla.org/docs/Web/HTML/Element">HTMLElement</a></div>
@@ -1016,7 +1085,7 @@
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
       <code><a href="https://developer.mozilla.org/docs/Web/HTML/Element">HTMLElement</a></code>:
-        img element containing the identicon
+        identicon div element
 
       
     
