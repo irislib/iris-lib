@@ -38,9 +38,11 @@ async function searchText(node, callback, query, limit, cursor, desc) {
 
 // TODO: flush onto IPFS
 /**
-* Iris index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
-* messagesByHash, messagesByTimestamp, messagesByDistance. If you want messages saved to IPFS, pass
-* options.ipfs = instance.
+* A database of Messages and Identities within the indexer's web of trust.
+*
+* Each added Message updates the Message and Identity indexes and web of trust accordingly.
+*
+* If you want messages saved to IPFS, pass options.ipfs = instance.
 *
 * When you use someone else's index, initialise it using the Index constructor
 * @param {Object} gun gun node that contains an  index (e.g. user.get('iris'))
