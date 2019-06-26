@@ -4,22 +4,55 @@ import util from './util';
 import Attribute from './attribute';
 import Key from './key';
 
-const errorMsg = `Invalid Identifi message:`;
+const errorMsg = `Invalid  message:`;
 
 class ValidationError extends Error {}
 
 /**
-* Identifi message: an object that has an author, recipient, signer, type, timestamp, context and optionally other fields.
+* Messages are objects containing fields signedData, signer (public key) and signature. Message iriser is the base64 sha256 hash derived from its canonical utf8 string representation.
 *
-* On Identifi, signer and author can be different entities. This enables the crawling of content
-* from existing datasets. That makes Identifi an useful search tool even with no initial userbase.
+* signedData has an author, recipient, signer, type, timestamp, context and optionally other fields.
 *
-* Messages are serialized as JSON Web Signatures.
+* signature covers the utf8 string representation of signedData. Since messages are digitally signed, users only need to care about the message signer and not who relayed it or whose index it was found from.
+*
+* signer is the entity that verified its origin. In other words: message author and signer can be different entities, and only the signer needs to use Iris.
+*
+* For example, a crawler can import and sign other people's messages from Twitter. Only the users who trust the crawler will see the messages.
+*
+* Rating message example:
+* {
+*   signedData: {
+*     author: {name:'Alice', key:'ABCD1234'},
+*     recipient: {name:'Bob', email:'bob@example.com'},
+*     type: 'rating',
+*     rating: 1,
+*     maxRating: 10,
+*     minRating: -10,
+*     comment: 'Traded 1 BTC'
+*   },
+*   signer: 'ABCD1234',
+*   signature: '1234ABCD'
+* }
+*
+* Verification message example:
+* {
+*   signedData: {
+*     author: {name:'Alice', key:'ABCD1234'},
+*     recipient: {
+*       name: 'Bob',
+*       email: ['bob@example.com', 'bob.saget@example.com'],
+*       bitcoin: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
+*     },
+*     type: 'verification'
+*   },
+*   signer: 'ABCD1234',
+*   signature: '1234ABCD'
+* }
 */
 class Message {
   /**
-  * Creates a message from the param object that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
-  * @param signedData
+  * Creates a message from the param obj.signedData that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
+  * @param obj
   */
   constructor(obj: Object) {
     if (obj.signedData) {
@@ -220,10 +253,10 @@ class Message {
   }
 
   /**
-  * Create an identifi message. Message timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an iris message. Message timestamp and context (iris) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @param {Object} signedData message data object including author, recipient and other possible attributes
   * @param {Object} signingKey optionally, you can set the key to sign the message with
-  * @returns Promise{Message} Identifi message
+  * @returns Promise{Message}  message
   */
   static async create(signedData: Object, signingKey: Object) {
     if (!signedData.author && signingKey) {
@@ -239,7 +272,7 @@ class Message {
   }
 
   /**
-  * Create an Identifi verification message. Message signedData's type, timestamp and context (identifi) are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an  verification message. Message signedData's type, timestamp and context (iris) are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @returns Promise{Object} message object promise
   */
   static createVerification(signedData: Object, signingKey: Object) {
@@ -248,7 +281,7 @@ class Message {
   }
 
   /**
-  * Create an Identifi rating message. Message signedData's type, maxRating, minRating, timestamp and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an  rating message. Message signedData's type, maxRating, minRating, timestamp and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @returns Promise{Object} message object promise
   */
   static createRating(signedData: Object, signingKey: Object) {

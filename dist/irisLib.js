@@ -9116,13 +9116,13 @@
 	    })]);
 	  },
 	  injectCss: function injectCss() {
-	    var elementId = 'identifiStyle';
+	    var elementId = 'irisStyle';
 	    if (document.getElementById(elementId)) {
 	      return;
 	    }
 	    var sheet = document.createElement('style');
 	    sheet.id = elementId;
-	    sheet.innerHTML = '\n      .identifi-identicon * {\n        box-sizing: border-box;\n      }\n\n      .identifi-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .identifi-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .identifi-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .identifi-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .identifi-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .identifi-card a:hover, .identifi-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .identifi-pos {\n        color: #3c763d;\n      }\n\n      .identifi-neg {\n        color: #a94442;\n      }\n\n      .identifi-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
+	    sheet.innerHTML = '\n      .iris-identicon * {\n        box-sizing: border-box;\n      }\n\n      .iris-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .iris-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .iris-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .iris-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .iris-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .iris-card a:hover, .iris-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .iris-pos {\n        color: #3c763d;\n      }\n\n      .iris-neg {\n        color: #a94442;\n      }\n\n      .iris-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
 	    document.body.appendChild(sheet);
 	  },
 
@@ -9567,7 +9567,7 @@
 	};
 
 	/**
-	* A simple key-value pair.
+	* A simple key-value pair with helper functions.
 	*/
 
 	var Attribute = function () {
@@ -9697,7 +9697,7 @@
 	    util$1.injectCss(); // some other way that is not called on each identicon generation?
 
 	    var div = document.createElement('div');
-	    div.className = 'identifi-identicon';
+	    div.className = 'iris-identicon';
 	    div.style.width = width + 'px';
 	    div.style.height = width + 'px';
 
@@ -9710,7 +9710,7 @@
 	    img.src = 'data:image/svg+xml;base64,' + identicon$$1.toString();
 
 	    var name = document.createElement('span');
-	    name.className = 'identifi-distance';
+	    name.className = 'iris-distance';
 	    name.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
 	    name.textContent = this.type.slice(0, 5);
 	    div.appendChild(name);
@@ -9735,7 +9735,7 @@
 	  }
 
 	  /**
-	  * Load default key from datadir/private.key on node.js or from local storage 'identifi.myKey' in browser.
+	  * Load default key from datadir/private.key on node.js or from local storage 'iris.myKey' in browser.
 	  *
 	  * If default key does not exist, it is generated.
 	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
@@ -9762,15 +9762,15 @@
 	        throw new Error('loading default key failed - check ' + datadir + '/private.key');
 	      }
 	    } else {
-	      var jwk = window.localStorage.getItem('identifi.myKey');
+	      var jwk = window.localStorage.getItem('iris.myKey');
 	      if (jwk) {
 	        myKey = Key.fromJwk(jwk);
 	      } else {
 	        myKey = await Key.generate();
-	        window.localStorage.setItem('identifi.myKey', Key.toJwk(myKey));
+	        window.localStorage.setItem('iris.myKey', Key.toJwk(myKey));
 	      }
 	      if (!myKey) {
-	        throw new Error('loading default key failed - check localStorage identifi.myKey');
+	        throw new Error('loading default key failed - check localStorage iris.myKey');
 	      }
 	    }
 	    return myKey;
@@ -9851,7 +9851,7 @@
 	  return Key;
 	}();
 
-	var errorMsg = 'Invalid Identifi message:';
+	var errorMsg = 'Invalid  message:';
 
 	var ValidationError = function (_Error) {
 	  _inherits(ValidationError, _Error);
@@ -9866,19 +9866,52 @@
 	}(Error);
 
 	/**
-	* Identifi message: an object that has an author, recipient, signer, type, timestamp, context and optionally other fields.
+	* Messages are objects containing fields signedData, signer (public key) and signature. Message iriser is the base64 sha256 hash derived from its canonical utf8 string representation.
 	*
-	* On Identifi, signer and author can be different entities. This enables the crawling of content
-	* from existing datasets. That makes Identifi an useful search tool even with no initial userbase.
+	* signedData has an author, recipient, signer, type, timestamp, context and optionally other fields.
 	*
-	* Messages are serialized as JSON Web Signatures.
+	* signature covers the utf8 string representation of signedData. Since messages are digitally signed, users only need to care about the message signer and not who relayed it or whose index it was found from.
+	*
+	* signer is the entity that verified its origin. In other words: message author and signer can be different entities, and only the signer needs to use Iris.
+	*
+	* For example, a crawler can import and sign other people's messages from Twitter. Only the users who trust the crawler will see the messages.
+	*
+	* Rating message example:
+	* {
+	*   signedData: {
+	*     author: {name:'Alice', key:'ABCD1234'},
+	*     recipient: {name:'Bob', email:'bob@example.com'},
+	*     type: 'rating',
+	*     rating: 1,
+	*     maxRating: 10,
+	*     minRating: -10,
+	*     comment: 'Traded 1 BTC'
+	*   },
+	*   signer: 'ABCD1234',
+	*   signature: '1234ABCD'
+	* }
+	*
+	* Verification message example:
+	* {
+	*   signedData: {
+	*     author: {name:'Alice', key:'ABCD1234'},
+	*     recipient: {
+	*       name: 'Bob',
+	*       email: ['bob@example.com', 'bob.saget@example.com'],
+	*       bitcoin: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
+	*     },
+	*     type: 'verification'
+	*   },
+	*   signer: 'ABCD1234',
+	*   signature: '1234ABCD'
+	* }
 	*/
 
 
 	var Message = function () {
 	  /**
-	  * Creates a message from the param object that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
-	  * @param signedData
+	  * Creates a message from the param obj.signedData that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
+	  * @param obj
 	  */
 	  function Message(obj) {
 	    _classCallCheck(this, Message);
@@ -10190,10 +10223,10 @@
 	  };
 
 	  /**
-	  * Create an identifi message. Message timestamp and context (identifi) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+	  * Create an iris message. Message timestamp and context (iris) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
 	  * @param {Object} signedData message data object including author, recipient and other possible attributes
 	  * @param {Object} signingKey optionally, you can set the key to sign the message with
-	  * @returns Promise{Message} Identifi message
+	  * @returns Promise{Message}  message
 	  */
 
 
@@ -10211,7 +10244,7 @@
 	  };
 
 	  /**
-	  * Create an Identifi verification message. Message signedData's type, timestamp and context (identifi) are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
+	  * Create an  verification message. Message signedData's type, timestamp and context (iris) are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
 	  * @returns Promise{Object} message object promise
 	  */
 
@@ -10222,7 +10255,7 @@
 	  };
 
 	  /**
-	  * Create an Identifi rating message. Message signedData's type, maxRating, minRating, timestamp and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
+	  * Create an  rating message. Message signedData's type, maxRating, minRating, timestamp and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
 	  * @returns Promise{Object} message object promise
 	  */
 
@@ -10359,8 +10392,8 @@
 	}();
 
 	/**
-	* An Identifi identity profile. Usually you don't create them yourself, but get them
-	* from Index methods such as search().
+	* An Iris identity profile. Usually you don't create them yourself, but get them
+	* from Index methods such as get() and search().
 	*/
 
 	var Identity = function () {
@@ -10448,7 +10481,7 @@
 	    var _this = this;
 
 	    var card = document.createElement('div');
-	    card.className = 'identifi-card';
+	    card.className = 'iris-card';
 
 	    var identicon$$1 = this.identicon(60, null, null, ipfs);
 	    identicon$$1.style.order = 1;
@@ -10480,7 +10513,7 @@
 	      var link = 'https://identi.fi/#/identities/' + linkTo.type + '/' + linkTo.value;
 	      var mva = Identity.getMostVerifiedAttributes(attrs);
 	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.type && mva.type.attribute.value || mva.nickname && mva.nickname.attribute.value || linkTo.type + ':' + linkTo.value) + '</a><br>';
-	      linkEl.innerHTML += '<small>Received: <span class="identifi-pos">+' + (data.receivedPositive || 0) + '</span> / <span class="identifi-neg">-' + (data.receivedNegative || 0) + '</span></small><br>';
+	      linkEl.innerHTML += '<small>Received: <span class="iris-pos">+' + (data.receivedPositive || 0) + '</span> / <span class="iris-neg">-' + (data.receivedNegative || 0) + '</span></small><br>';
 	      links.innerHTML = '';
 	      _Object$keys(attrs).forEach(function (k) {
 	        var a = attrs[k];
@@ -10538,8 +10571,8 @@
 	    var input = document.createElement('input');
 	    input.type = 'text';
 	    input.placeholder = 'Search';
-	    input.id = 'identifiSearchInput';
-	    form.innerHTML += '<div id="identifiSearchResults"></div>';
+	    input.id = 'irisSearchInput';
+	    form.innerHTML += '<div id="irisSearchResults"></div>';
 
 	    var searchResults = document.createElement('div');
 
@@ -10580,12 +10613,12 @@
 
 	    util$1.injectCss(); // some other way that is not called on each identicon generation?
 	    var identicon$$1 = document.createElement('div');
-	    identicon$$1.className = 'identifi-identicon';
+	    identicon$$1.className = 'iris-identicon';
 	    identicon$$1.style.width = width + 'px';
 	    identicon$$1.style.height = width + 'px';
 
 	    var pie = document.createElement('div');
-	    pie.className = 'identifi-pie';
+	    pie.className = 'iris-pie';
 	    pie.style.width = width + 'px';
 
 	    var img = document.createElement('img');
@@ -10597,7 +10630,7 @@
 	    var distance = void 0;
 	    if (showDistance) {
 	      distance = document.createElement('span');
-	      distance.className = 'identifi-distance';
+	      distance.className = 'iris-distance';
 	      distance.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
 	      identicon$$1.appendChild(distance);
 	    }
@@ -10856,12 +10889,12 @@
 
 	// TODO: flush onto IPFS
 	/**
-	* Identifi index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
+	*  index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
 	* messagesByHash, messagesByTimestamp, messagesByDistance. If you want messages saved to IPFS, pass
 	* options.ipfs = instance.
 	*
 	* When you use someone else's index, initialise it using the Index constructor
-	* @param {Object} gun gun node that contains an Identifi index (e.g. user.get('identifi'))
+	* @param {Object} gun gun node that contains an  index (e.g. user.get('iris'))
 	* @param {Object} options see default options in example
 	* @example
 	* Default options:
@@ -10889,7 +10922,7 @@
 	*    debug: false
 	*  }
 	*}
-	* @returns {Index} Identifi index object
+	* @returns {Index}  index object
 	*/
 
 	var Index = function () {
@@ -11159,11 +11192,11 @@
 	  };
 
 	  /**
-	  * Get an identity referenced by an identifier.
+	  * Get an identity referenced by an iriser.
 	  * get(type, value)
 	  * get(Attribute)
 	  * get(value) - guesses the type or throws an error
-	  * @returns {Identity} identity that is connected to the identifier param
+	  * @returns {Identity} identity that is connected to the iriser param
 	  */
 
 
@@ -11549,7 +11582,7 @@
 	    msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(':') + 1);
 	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
 	    for (var i = 0; i < ids.length; i++) {
-	      // add new identifiers to identity
+	      // add new irisers to identity
 	      if (recipientIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
 	        start = new Date();
 	        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
@@ -11821,6 +11854,8 @@
 	  };
 
 	  /**
+	  * Add a message to messagesByTimestamp and other relevant indexes. Update identities in the web of trust according to message data.
+	  *
 	  * @param msg Message to add to the index
 	  * @param ipfs (optional) ipfs instance where the message is additionally saved
 	  */

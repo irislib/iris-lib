@@ -20,7 +20,7 @@ const UNIQUE_ID_VALIDATORS = {
 };
 
 /**
-* A simple key-value pair.
+* A simple key-value pair with helper functions.
 */
 class Attribute {
   /**
@@ -123,7 +123,7 @@ class Attribute {
     util.injectCss(); // some other way that is not called on each identicon generation?
 
     const div = document.createElement(`div`);
-    div.className = `identifi-identicon`;
+    div.className = `iris-identicon`;
     div.style.width = `${width}px`;
     div.style.height = `${width}px`;
 
@@ -136,7 +136,7 @@ class Attribute {
     img.src = `data:image/svg+xml;base64,${identicon.toString()}`;
 
     const name = document.createElement(`span`);
-    name.className = `identifi-distance`;
+    name.className = `iris-distance`;
     name.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
     name.textContent = this.type.slice(0, 5);
     div.appendChild(name);

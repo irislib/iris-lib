@@ -29,18 +29,18 @@ export default {
   },
 
   injectCss() {
-    const elementId = `identifiStyle`;
+    const elementId = `irisStyle`;
     if (document.getElementById(elementId)) {
       return;
     }
     const sheet = document.createElement(`style`);
     sheet.id = elementId;
     sheet.innerHTML = `
-      .identifi-identicon * {
+      .iris-identicon * {
         box-sizing: border-box;
       }
 
-      .identifi-identicon {
+      .iris-identicon {
         vertical-align: middle;
         margin: auto;
         border-radius: 50%;
@@ -51,7 +51,7 @@ export default {
         max-width: 100%;
       }
 
-      .identifi-distance {
+      .iris-distance {
         z-index: 2;
         position: absolute;
         left:0%;
@@ -65,7 +65,7 @@ export default {
         font-weight: bold;
       }
 
-      .identifi-pie {
+      .iris-pie {
         border-radius: 50%;
         position: absolute;
         top: 0;
@@ -78,7 +78,7 @@ export default {
         transition: all 0.2s ease-in-out;
       }
 
-      .identifi-card {
+      .iris-card {
         padding: 10px;
         background-color: #f7f7f7;
         color: #777;
@@ -88,27 +88,27 @@ export default {
         overflow: hidden;
       }
 
-      .identifi-card a {
+      .iris-card a {
         -webkit-transition: color 150ms;
         transition: color 150ms;
         text-decoration: none;
         color: #337ab7;
       }
 
-      .identifi-card a:hover, .identifi-card a:active {
+      .iris-card a:hover, .iris-card a:active {
         text-decoration: underline;
         color: #23527c;
       }
 
-      .identifi-pos {
+      .iris-pos {
         color: #3c763d;
       }
 
-      .identifi-neg {
+      .iris-neg {
         color: #a94442;
       }
 
-      .identifi-identicon img {
+      .iris-identicon img {
         position: absolute;
         top: 0;
         left: 0;

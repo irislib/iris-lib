@@ -10,7 +10,7 @@ let myKey;
 */
 class Key {
   /**
-  * Load default key from datadir/private.key on node.js or from local storage 'identifi.myKey' in browser.
+  * Load default key from datadir/private.key on node.js or from local storage 'iris.myKey' in browser.
   *
   * If default key does not exist, it is generated.
   * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
@@ -35,15 +35,15 @@ class Key {
         throw new Error(`loading default key failed - check ${datadir}/private.key`);
       }
     } else {
-      const jwk = window.localStorage.getItem(`identifi.myKey`);
+      const jwk = window.localStorage.getItem(`iris.myKey`);
       if (jwk) {
         myKey = Key.fromJwk(jwk);
       } else {
         myKey = await Key.generate();
-        window.localStorage.setItem(`identifi.myKey`, Key.toJwk(myKey));
+        window.localStorage.setItem(`iris.myKey`, Key.toJwk(myKey));
       }
       if (!myKey) {
-        throw new Error(`loading default key failed - check localStorage identifi.myKey`);
+        throw new Error(`loading default key failed - check localStorage iris.myKey`);
       }
     }
     return myKey;

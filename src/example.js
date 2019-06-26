@@ -1,7 +1,7 @@
-const identifi = require(`./`);
+const iris = require(`./`);
 
 const run = function() {
-  console.log(`identifi-lib version:`, identifi.VERSION);
+  console.log(`iris-lib version:`, iris.VERSION);
 };
 
 module.exports = run;

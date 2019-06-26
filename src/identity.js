@@ -3,8 +3,8 @@ import Attribute from './attribute';
 import util from './util';
 
 /**
-* An Identifi identity profile. Usually you don't create them yourself, but get them
-* from Index methods such as search().
+* An Iris identity profile. Usually you don't create them yourself, but get them
+* from Index methods such as get() and search().
 */
 class Identity {
   /**
@@ -83,7 +83,7 @@ class Identity {
   */
   profileCard(ipfs: Object) {
     const card = document.createElement(`div`);
-    card.className = `identifi-card`;
+    card.className = `iris-card`;
 
     const identicon = this.identicon(60, null, null, ipfs);
     identicon.style.order = 1;
@@ -111,7 +111,7 @@ class Identity {
       const link = `https://identi.fi/#/identities/${linkTo.type}/${linkTo.value}`;
       const mva = Identity.getMostVerifiedAttributes(attrs);
       linkEl.innerHTML = `<a href="${link}">${(mva.type && mva.type.attribute.value) || (mva.nickname && mva.nickname.attribute.value) || `${linkTo.type}:${linkTo.value}`}</a><br>`;
-      linkEl.innerHTML += `<small>Received: <span class="identifi-pos">+${data.receivedPositive || 0}</span> / <span class="identifi-neg">-${data.receivedNegative || 0}</span></small><br>`;
+      linkEl.innerHTML += `<small>Received: <span class="iris-pos">+${data.receivedPositive || 0}</span> / <span class="iris-neg">-${data.receivedNegative || 0}</span></small><br>`;
       links.innerHTML = ``;
       Object.keys(attrs).forEach(k => {
         const a = attrs[k];
@@ -167,8 +167,8 @@ class Identity {
     const input = document.createElement(`input`);
     input.type = `text`;
     input.placeholder = `Search`;
-    input.id = `identifiSearchInput`;
-    form.innerHTML += `<div id="identifiSearchResults"></div>`;
+    input.id = `irisSearchInput`;
+    form.innerHTML += `<div id="irisSearchResults"></div>`;
 
     const searchResults = document.createElement(`div`);
 
@@ -201,12 +201,12 @@ class Identity {
   identicon(width, border = 4, showDistance = true, ipfs) {
     util.injectCss(); // some other way that is not called on each identicon generation?
     const identicon = document.createElement(`div`);
-    identicon.className = `identifi-identicon`;
+    identicon.className = `iris-identicon`;
     identicon.style.width = `${width}px`;
     identicon.style.height = `${width}px`;
 
     const pie = document.createElement(`div`);
-    pie.className = `identifi-pie`;
+    pie.className = `iris-pie`;
     pie.style.width = `${width}px`;
 
     const img = document.createElement(`img`);
@@ -218,7 +218,7 @@ class Identity {
     let distance;
     if (showDistance) {
       distance = document.createElement(`span`);
-      distance.className = `identifi-distance`;
+      distance.className = `iris-distance`;
       distance.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
       identicon.appendChild(distance);
     }

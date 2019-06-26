@@ -38,12 +38,12 @@ async function searchText(node, callback, query, limit, cursor, desc) {
 
 // TODO: flush onto IPFS
 /**
-* Identifi index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
+*  index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
 * messagesByHash, messagesByTimestamp, messagesByDistance. If you want messages saved to IPFS, pass
 * options.ipfs = instance.
 *
 * When you use someone else's index, initialise it using the Index constructor
-* @param {Object} gun gun node that contains an Identifi index (e.g. user.get('identifi'))
+* @param {Object} gun gun node that contains an  index (e.g. user.get('iris'))
 * @param {Object} options see default options in example
 * @example
 * Default options:
@@ -71,7 +71,7 @@ async function searchText(node, callback, query, limit, cursor, desc) {
 *    debug: false
 *  }
 *}
-* @returns {Index} Identifi index object
+* @returns {Index}  index object
 */
 class Index {
   constructor(gun: Object, options) {
@@ -326,11 +326,11 @@ class Index {
   }
 
   /**
-  * Get an identity referenced by an identifier.
+  * Get an identity referenced by an iriser.
   * get(type, value)
   * get(Attribute)
   * get(value) - guesses the type or throws an error
-  * @returns {Identity} identity that is connected to the identifier param
+  * @returns {Identity} identity that is connected to the iriser param
   */
   get(a: String, b: String, reload = false) {
     if (!a) {
@@ -659,7 +659,7 @@ class Index {
     let msgIndexKey = Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
-    for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
+    for (let i = 0;i < ids.length;i ++) { // add new irisers to identity
       if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
         start = new Date();
         await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
@@ -860,6 +860,8 @@ class Index {
   }
 
   /**
+  * Add a message to messagesByTimestamp and other relevant indexes. Update identities in the web of trust according to message data.
+  *
   * @param msg Message to add to the index
   * @param ipfs (optional) ipfs instance where the message is additionally saved
   */
