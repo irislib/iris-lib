@@ -17,9 +17,9 @@ class ValidationError extends Error {}
 *
 * signer is the entity that verified its origin. In other words: message author and signer can be different entities, and only the signer needs to use Iris.
 *
-* "Rating" type messages, when added to an Index, can add or remove Identities from the web of trust. Verification/unverification messages can add or remove Attributes from an Identity. Other types of messages such as social media "post" are just indexed by their author, recipient and timestamp.
-*
 * For example, a crawler can import and sign other people's messages from Twitter. Only the users who trust the crawler will see the messages.
+*
+* "Rating" type messages, when added to an Index, can add or remove Identities from the web of trust. Verification/unverification messages can add or remove Attributes from an Identity. Other types of messages such as social media "post" are just indexed by their author, recipient and timestamp.
 *
 * Constructor: creates a message from the param obj.signedData that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
 * @param obj
