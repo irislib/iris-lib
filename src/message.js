@@ -357,6 +357,9 @@ class Message {
     return true;
   }
 
+  /**
+  *
+  */
   async saveToIpfs(ipfs) {
     const s = this.toString();
     const r = await ipfs.add(ipfs.types.Buffer.from(s));
@@ -366,16 +369,25 @@ class Message {
     return this.ipfsUri;
   }
 
+  /**
+  *
+  */
   static async loadFromIpfs(ipfs, uri) {
     const f = await ipfs.cat(uri);
     const s = ipfs.types.Buffer.from(f).toString(`utf8`);
     return Message.fromString(s);
   }
 
+  /**
+  * @returns {string} JSON string of signature and public key
+  */
   toString() {
     return JSON.stringify({sig: this.sig, pubKey: this.pubKey});
   }
 
+  /**
+  * @returns {Message} message from JSON string produced by toString
+  */
   static fromString(s) {
     return Message.fromSig(JSON.parse(s));
   }
