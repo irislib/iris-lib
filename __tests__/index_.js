@@ -1,4 +1,4 @@
-const identifi = require(`../cjs/index.js`);
+const iris = require(`../cjs/index.js`);
 const GUN = require(`gun`);
 const load = require(`gun/lib/load`);
 const then = require(`gun/lib/then`);
@@ -73,15 +73,15 @@ beforeAll(() => {
 describe(`local index`, async () => {
   let i, h, key, keyID;
   beforeAll(async () => {
-    key = await identifi.Key.getDefault();
-    keyID = identifi.Key.getId(key);
-    i = await identifi.Index.create(gun, key, {self: {name: `Alice`}, debug: false});
+    key = await iris.Key.getDefault();
+    keyID = iris.Key.getId(key);
+    i = await iris.Index.create(gun, key, {self: {name: `Alice`}, debug: false});
     await new Promise(r => setTimeout(r, 3000));
   });
   test(`create new Index`, async () => {
-    expect(i).toBeInstanceOf(identifi.Index);
+    expect(i).toBeInstanceOf(iris.Index);
     const viewpoint = await i.getViewpoint();
-    expect(viewpoint).toBeInstanceOf(identifi.Identity);
+    expect(viewpoint).toBeInstanceOf(iris.Identity);
     const data = await new Promise(resolve => {
       viewpoint.gun.load(r => {
         resolve(r);
@@ -91,9 +91,9 @@ describe(`local index`, async () => {
     expect(data.mostVerifiedAttributes.name.attribute.value).toBe(`Alice`);
   });
   let p;
-  describe(`create and fetch an identity using identifi messages`, async () => {
+  describe(`create and fetch an identity using iris messages`, async () => {
     test(`add trust rating to bob`, async () => {
-      const msg = await identifi.Message.createRating({recipient: {email: `bob@example.com`}, rating: 10}, key);
+      const msg = await iris.Message.createRating({recipient: {email: `bob@example.com`}, rating: 10}, key);
       h = msg.getHash();
       const r = await i.addMessage(msg);
       expect(r).toBe(true);
@@ -105,7 +105,7 @@ describe(`local index`, async () => {
     test(`get added identity`, async () => {
       p = i.get(`bob@example.com`); // ,true
       const data = await p.gun.once().then();
-      //expect(q).toBeInstanceOf(identifi.Identity);
+      //expect(q).toBeInstanceOf(iris.Identity);
       expect(data.trustDistance).toBe(1);
       expect(data.receivedPositive).toBe(1);
       expect(data.receivedNeutral).toBe(0);
@@ -125,7 +125,7 @@ describe(`local index`, async () => {
     });
     test(`get messages sent by self`, async () => {
       const viewpoint = await i.getViewpoint();
-      expect(viewpoint).toBeInstanceOf(identifi.Identity);
+      expect(viewpoint).toBeInstanceOf(iris.Identity);
       const results = [];
       i.getSentMsgs(viewpoint, result => results.push(result));
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -133,13 +133,13 @@ describe(`local index`, async () => {
     });
   });
   test(`verify first, then rate`, async () => {
-    let msg = await identifi.Message.createVerification({recipient: {name: `Fabio`, email: `fabio@example.com`}}, key);
+    let msg = await iris.Message.createVerification({recipient: {name: `Fabio`, email: `fabio@example.com`}}, key);
     let r = await i.addMessage(msg);
     expect(r).toBe(true);
     p = i.get(`fabio@example.com`);
     let data = await p.gun.once().then();
     expect(data.trustDistance).toBe(false);
-    msg = await identifi.Message.createRating({recipient: {email: `fabio@example.com`}, rating: 10}, key);
+    msg = await iris.Message.createRating({recipient: {email: `fabio@example.com`}, rating: 10}, key);
     r = await i.addMessage(msg);
     p = i.get(`fabio@example.com`);
     data = await p.gun.once().then();
@@ -147,9 +147,9 @@ describe(`local index`, async () => {
   });
   describe(`add more identities`, async () => {
     test(`bob -> carl`, async () => {
-      let msg = await identifi.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `carl@example.com`}, rating: 10}, key);
+      let msg = await iris.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `carl@example.com`}, rating: 10}, key);
       await i.addMessage(msg);
-      msg = await identifi.Message.createRating({author: {email: `carl@example.com`}, recipient: {email: `david@example.com`}, rating: 10}, key);
+      msg = await iris.Message.createRating({author: {email: `carl@example.com`}, recipient: {email: `david@example.com`}, rating: 10}, key);
       await i.addMessage(msg);
       p = i.get(`david@example.com`);
       const data = await p.gun.once().then();
@@ -157,13 +157,13 @@ describe(`local index`, async () => {
     });
     test(`add a collection of messages using addMessages`, async () => {
       const msgs = [];
-      let msg = await identifi.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `bob1@example.com`}, rating: 10}, key);
+      let msg = await iris.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `bob1@example.com`}, rating: 10}, key);
       msgs.push(msg);
       for (let i = 0;i < 4;i ++) {
-        msg = await identifi.Message.createRating({author: {email: `bob${i}@example.com`}, recipient: {email: `bob${i + 1}@example.com`}, rating: 10}, key);
+        msg = await iris.Message.createRating({author: {email: `bob${i}@example.com`}, recipient: {email: `bob${i + 1}@example.com`}, rating: 10}, key);
         msgs.push(msg);
       }
-      msg = await identifi.Message.createRating({author: {email: `bert@example.com`}, recipient: {email: `chris@example.com`}, rating: 10}, key);
+      msg = await iris.Message.createRating({author: {email: `bert@example.com`}, recipient: {email: `chris@example.com`}, rating: 10}, key);
       msgs.push(msg);
       await i.addMessages(shuffle(msgs));
       p = i.get(`bob4@example.com`);
@@ -176,12 +176,12 @@ describe(`local index`, async () => {
   });
   describe(`downvote`, async () => {
     test(`up & down`, async () => {
-      let msg = await identifi.Message.createRating({recipient: {email: `orwell@example.com`}, rating: 1}, key);
+      let msg = await iris.Message.createRating({recipient: {email: `orwell@example.com`}, rating: 1}, key);
       await i.addMessage(msg);
       p = i.get(`orwell@example.com`);
       let data = await p.gun.once().then();
       expect(data.trustDistance).toBe(1);
-      msg = await identifi.Message.createRating({recipient: {email: `orwell@example.com`}, rating: - 1}, key);
+      msg = await iris.Message.createRating({recipient: {email: `orwell@example.com`}, rating: - 1}, key);
       await i.addMessage(msg);
       data = await p.gun.once().then();
       expect(data.trustDistance).toBe(false);
@@ -190,8 +190,8 @@ describe(`local index`, async () => {
   describe (`untrusted key`, async () => {
     let u;
     test(`should not create new identity`, async () => {
-      u = await identifi.Key.generate();
-      const msg = await identifi.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `angus@example.com`}, rating: 10}, u);
+      u = await iris.Key.generate();
+      const msg = await iris.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `angus@example.com`}, rating: 10}, u);
       await i.addMessage(msg);
       p = await i.get(`angus@example.com`).gun.then();
       expect(p).toBeUndefined();
@@ -199,7 +199,7 @@ describe(`local index`, async () => {
     test(`should not affect scores`, async () => {
       p = i.get(`david@example.com`);
       const pos = await p.gun.get(`receivedPositive`).once().then();
-      const msg = await identifi.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `david@example.com`}, rating: 10}, u);
+      const msg = await iris.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `david@example.com`}, rating: 10}, u);
       await i.addMessage(msg);
       p = i.get(`david@example.com`);
       const pos2 = await p.gun.get(`receivedPositive`).once().then();
@@ -217,8 +217,8 @@ describe(`local index`, async () => {
     });
     test(`add name to Bob`, async () => {
       let bob = await i.get(`bob@example.com`);
-      expect(bob).toBeInstanceOf(identifi.Identity);
-      const msg = await identifi.Message.createVerification({recipient: {email: `bob@example.com`, name: `Bob`}}, key);
+      expect(bob).toBeInstanceOf(iris.Identity);
+      const msg = await iris.Message.createVerification({recipient: {email: `bob@example.com`, name: `Bob`}}, key);
       await i.addMessage(msg);
       bob = await i.get(`bob@example.com`);
       const data = await new Promise(resolve => {
@@ -255,7 +255,7 @@ describe(`local index`, async () => {
     test(`add a lot of messages and retrieve with getMessagesByTimestamp`, async () => {
       const msgs = [];
       for (let i = 0;i < 15;i ++) {
-        const msg = await identifi.Message.createRating({recipient: {email: `bob${i + 1}@example.com`}, rating: 10}, key);
+        const msg = await iris.Message.createRating({recipient: {email: `bob${i + 1}@example.com`}, rating: 10}, key);
         msgs.push(msg);
       }
       const firstMsg = msgs[0];
@@ -306,11 +306,11 @@ describe(`local index`, async () => {
   describe(`trusted verifier`, async () => {
     let verifierKey, verifierKeyID;
     beforeAll(async () => {
-      verifierKey = await identifi.Key.generate();
-      verifierKeyID = identifi.Key.getId(verifierKey);
+      verifierKey = await iris.Key.generate();
+      verifierKeyID = iris.Key.getId(verifierKey);
     });
     test(`create verifier`, async () => {
-      const msg = await identifi.Message.createRating({recipient: {keyID: verifierKeyID}, rating: 10, context: `verifier`}, key);
+      const msg = await iris.Message.createRating({recipient: {keyID: verifierKeyID}, rating: 10, context: `verifier`}, key);
       await i.addMessage(msg);
       const verifier = i.get(`keyID`, verifierKeyID);
       const scores = await new Promise(resolve => {
@@ -321,9 +321,9 @@ describe(`local index`, async () => {
       expect(scores.verifier.score).toBe(10);
     });
     test(`verifier status should not disappear when the identity is changed`, async () => {
-      msg = await identifi.Message.createRating({recipient: {keyID: verifierKeyID}, rating: 10, context: `identifi`}, key);
+      msg = await iris.Message.createRating({recipient: {keyID: verifierKeyID}, rating: 10, context: `iris`}, key);
       await i.addMessage(msg);
-      let msg = await identifi.Message.createVerification({recipient: {keyID: verifierKeyID, name: `VerifyBot`, email: `VerifyBot@example.com`}}, key);
+      let msg = await iris.Message.createVerification({recipient: {keyID: verifierKeyID, name: `VerifyBot`, email: `VerifyBot@example.com`}}, key);
       await i.addMessage(msg);
       const verifier = i.get(`keyID`, verifierKeyID);
       const scores = await new Promise(resolve => {
@@ -334,7 +334,7 @@ describe(`local index`, async () => {
       expect(scores.verifier.score).toBe(10);
     });
     test(`create trusted verification`, async () => {
-      const msg = await identifi.Message.createVerification({recipient: {email: `david@example.com`, name: `David Attenborough`}}, verifierKey);
+      const msg = await iris.Message.createVerification({recipient: {email: `david@example.com`, name: `David Attenborough`}}, verifierKey);
       await i.addMessage(msg);
       p = i.get(`david@example.com`);
       const attrs = await new Promise(resolve => {
@@ -349,14 +349,14 @@ describe(`local index`, async () => {
   });
   describe(`trusted indexes`, async () => {
     test(`create a new index that is linked to the previous`, async () => {
-      const k2 = await identifi.Key.generate();
-      const i2 = await identifi.Index.create(gun, k2, {debug: false});
-      let m = await identifi.Message.createRating({recipient: {keyID}, rating: 10}, k2);
+      const k2 = await iris.Key.generate();
+      const i2 = await iris.Index.create(gun, k2, {debug: false});
+      let m = await iris.Message.createRating({recipient: {keyID}, rating: 10}, k2);
       await i2.addMessage(m);
       const trustedIndexes = await i2.gun.get(`trustedIndexes`).once();
       expect(trustedIndexes[keyID]).toBe(true);
 
-      m = await identifi.Message.create({type: `post`, recipient: {keyID}, comment: `hello world`}, key);
+      m = await iris.Message.create({type: `post`, recipient: {keyID}, comment: `hello world`}, key);
       await i.addMessage(m);
       return; // TODO
 
@@ -383,7 +383,7 @@ describe(`local index`, async () => {
     test('get identity from linked index', async () => {
       p = i2.get('bob@example.com');
       const data = await p.gun.once().then();
-      //expect(q).toBeInstanceOf(identifi.Identity);
+      //expect(q).toBeInstanceOf(iris.Identity);
       expect(data.trustDistance).toBe(1);
       expect(data.receivedPositive).toBe(1);
       expect(data.receivedNeutral).toBe(0);
@@ -392,18 +392,18 @@ describe(`local index`, async () => {
     */
   });
   test(`get viewpoint identity by searching the default keyID`, async () => {
-    const defaultKey = await identifi.Key.getDefault();
-    p = i.get(`keyID`, identifi.Key.getId(defaultKey));
+    const defaultKey = await iris.Key.getDefault();
+    p = i.get(`keyID`, iris.Key.getId(defaultKey));
     const data = await p.gun.once().then();
-    expect(p).toBeInstanceOf(identifi.Identity);
+    expect(p).toBeInstanceOf(iris.Identity);
     expect(data.trustDistance).toBe(0);
     expect(data.sentPositive).toBeGreaterThan(4);
   });
   test(`get messages by timestamp`, async () => {
-    const k2 = await identifi.Key.generate();
-    const i2 = await identifi.Index.create(gun, k2, {debug: false});
+    const k2 = await iris.Key.generate();
+    const i2 = await iris.Index.create(gun, k2, {debug: false});
     for (let i = 0;i < 5;i ++) {
-      const m = await identifi.Message.createRating({recipient: {uuid: `something`}, rating: 10}, k2);
+      const m = await iris.Message.createRating({recipient: {uuid: `something`}, rating: 10}, k2);
       await i2.addMessage(m);
     }
     const results = [];
@@ -421,7 +421,7 @@ describe(`local index`, async () => {
   }, 20000);
   /* TODO: disabled because it fails...
   test('like & unlike', async () => {
-    let msg = await identifi.Message.create({type: 'post', recipient: {email:'bob@example.com'}, comment: 'I don\'t want to set the world on fire. I just want to start a flame in your heart.'}, key);
+    let msg = await iris.Message.create({type: 'post', recipient: {email:'bob@example.com'}, comment: 'I don\'t want to set the world on fire. I just want to start a flame in your heart.'}, key);
     const added = await i.addMessage(msg);
     expect(added).toBe(true);
     i.setReaction(msg, 'like');

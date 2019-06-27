@@ -100,11 +100,7 @@ class Attribute {
   * @returns {boolean} true if params are equal
   */
   static equals(a: Attribute, b: Attribute) {
-    try {
-      return a.equals(b);
-    } catch (e) {
-      return false;
-    }
+    return a.equals(b);
   }
 
   /**
