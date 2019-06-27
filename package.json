@@ -9,7 +9,18 @@
   "jest": {
     "testURL": "http://localhost/",
     "bail": true,
-    "verbose": true
+    "verbose": true,
+    "collectCoverage": true,
+    "reporters": [
+      "default",
+      [
+        "./node_modules/jest-html-reporter",
+        {
+          "pageTitle": "Test Report"
+        }
+      ],
+      "jest-stare"
+    ]
   },
   "files": [
     "dist",
@@ -81,6 +92,8 @@
     "create-hash": "^1.2.0",
     "gun": "^0.2019.413",
     "identicon.js": "^2.3.3",
+    "jest-html-reporter": "^2.5.0",
+    "jest-stare": "^1.16.0",
     "node-webcrypto-ossl": "^1.0.39",
     "text-encoding": "^0.7.0"
   }

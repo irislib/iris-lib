@@ -65,6 +65,8 @@ Please do **integrate** iris-lib with your existing application or with a test a
 
 TODO list is also available on [Trello](https://trello.com/b/8qUutkmP/iris).
 
+[Majestic](https://github.com/Raathigesh/majestic) is a handy tool for viewing jest test results and coverage.
+
 ### Misc
 
 This module was created using [generator-module-boilerplate](https://github.com/duivvv/generator-module-boilerplate).

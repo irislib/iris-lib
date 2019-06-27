@@ -4,3 +4,5 @@ node_modules
 coverage
 *.log
 ipfs_repo
+test-report.html
+jest-stare

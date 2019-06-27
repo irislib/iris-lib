@@ -29,3 +29,6 @@ node_modules
 .DS_Store
 
 ipfs_repo
+
+test-report.html
+jest-stare

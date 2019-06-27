@@ -92,7 +92,7 @@ class Key {
   * Sign a message
   * @param {String} msg message to sign
   * @param {Object} pair signing keypair
-  * @returns {Promise<string>} signed message string
+  * @returns {Promise<String>} signed message string
   */
   static async sign(msg, pair) {
     const sig = await Gun.SEA.sign(msg, pair);
@@ -103,7 +103,7 @@ class Key {
   * Verify a signed message
   * @param {String} msg message to verify
   * @param {Object} pubKey public key of the signer
-  * @returns {Promise<string>} signature string
+  * @returns {Promise<String>} signature string
   */
   static verify(msg, pubKey) {
     return Gun.SEA.verify(msg.slice(1), pubKey);
