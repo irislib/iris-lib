@@ -258,7 +258,7 @@ class Message {
   * Create an iris message. Message timestamp and context (iris) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @param {Object} signedData message data object including author, recipient and other possible attributes
   * @param {Object} signingKey optionally, you can set the key to sign the message with
-  * @returns Promise{Message}  message
+  * @returns {Promise<Message>}  message
   */
   static async create(signedData: Object, signingKey: Object) {
     if (!signedData.author && signingKey) {
@@ -275,7 +275,7 @@ class Message {
 
   /**
   * Create an  verification message. Message signedData's type, timestamp and context (iris) are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
-  * @returns Promise{Object} message object promise
+  * @returns {Promise<Object>} message object promise
   */
   static createVerification(signedData: Object, signingKey: Object) {
     signedData.type = `verification`;
@@ -284,7 +284,7 @@ class Message {
 
   /**
   * Create an  rating message. Message signedData's type, maxRating, minRating, timestamp and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
-  * @returns Promise{Object} message object promise
+  * @returns {Promise<Object>} message object promise
   */
   static createRating(signedData: Object, signingKey: Object) {
     signedData.type = `rating`;
