@@ -6,7 +6,7 @@ import Gun from 'gun';
 let myKey;
 
 /**
-* Key management utils
+* Key management utils. Wraps GUN's SEA. https://gun.eco/docs/SEA
 */
 class Key {
   /**
@@ -14,7 +14,7 @@ class Key {
   *
   * If default key does not exist, it is generated.
   * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
-  * @returns {Promise(Object)} keypair object
+  * @returns {Promise<Object>} keypair object
   */
   static async getDefault(datadir = `.`) {
     if (myKey) {
@@ -35,9 +35,9 @@ class Key {
         throw new Error(`loading default key failed - check ${datadir}/private.key`);
       }
     } else {
-      const jwk = window.localStorage.getItem(`iris.myKey`);
-      if (jwk) {
-        myKey = Key.fromString(jwk);
+      const str = window.localStorage.getItem(`iris.myKey`);
+      if (str) {
+        myKey = Key.fromString(str);
       } else {
         myKey = await Key.generate();
         window.localStorage.setItem(`iris.myKey`, Key.toString(myKey));
@@ -61,7 +61,7 @@ class Key {
   /**
   * Get keyID
   * @param {Object} key key to get an id for. Currently just returns the public key string.
-  * @returns {String} JSON Web Key string
+  * @returns {String} public key string
   */
   static getId(key) {
     if (!(key && key.pub)) {
@@ -73,16 +73,16 @@ class Key {
 
   /**
   * Get a keypair from a JSON string.
-  * @param {Object} jwk JSON Web Key
-  * @returns {String}
+  * @param {String} str key JSON
+  * @returns {Object} Gun.SEA keypair object
   */
-  static fromString(jwk) {
-    return JSON.parse(jwk);
+  static fromString(str) {
+    return JSON.parse(str);
   }
 
   /**
   * Generate a new keypair
-  * @returns {Promise(Object)} Gun.SEA keypair object
+  * @returns {Promise<Object>} Gun.SEA keypair object
   */
   static generate() {
     return Gun.SEA.pair();
@@ -92,7 +92,7 @@ class Key {
   * Sign a message
   * @param {String} msg message to sign
   * @param {Object} pair signing keypair
-  * @returns {Promise(String)} signed message string
+  * @returns {Promise<string>} signed message string
   */
   static async sign(msg, pair) {
     const sig = await Gun.SEA.sign(msg, pair);
@@ -103,7 +103,7 @@ class Key {
   * Verify a signed message
   * @param {String} msg message to verify
   * @param {Object} pubKey public key of the signer
-  * @returns {Promise(String)} signature string
+  * @returns {Promise<string>} signature string
   */
   static verify(msg, pubKey) {
     return Gun.SEA.verify(msg.slice(1), pubKey);

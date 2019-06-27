@@ -149,7 +149,7 @@ class Index {
   * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
   * @param {Object} keypair SEA keypair (can be generated with await irisLib.Key.generate())
   * @param {Object} options see default options in Index constructor's example
-  * @returns {Promise}
+  * @returns {Promise<Index>}
   */
   static async create(gun: Object, keypair, options = {}) {
     if (!keypair) {
