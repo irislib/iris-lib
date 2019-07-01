@@ -9568,11 +9568,12 @@
 
 	/**
 	* A simple key-value pair with helper functions.
+	*
+	* Constructor: new Attribute(value), new Attribute(type, value) or new Attribute({type, value})
 	*/
 
 	var Attribute = function () {
 	  /**
-	  * Usage: new Attribute(value) or new Attribute(type, value)
 	  * @param {string} a
 	  * @param {string} b
 	  */
@@ -9608,6 +9609,11 @@
 	      }
 	    }
 	  }
+
+	  /**
+	  * @returns {Attribute} uuid
+	  */
+
 
 	  Attribute.getUuid = function getUuid() {
 	    var b = function b(a) {
@@ -9666,11 +9672,7 @@
 
 
 	  Attribute.equals = function equals(a, b) {
-	    try {
-	      return a.equals(b);
-	    } catch (e) {
-	      return false;
-	    }
+	    return a.equals(b);
 	  };
 
 	  /**
@@ -9683,13 +9685,21 @@
 	    return a && this.type === a.type && this.value === a.value;
 	  };
 
+	  /**
+	  * @returns {string} uri - `${encodeURIComponent(this.value)}:${encodeURIComponent(this.type)}`
+	  * @example
+	  * user%20example.com:email
+	  */
+
+
 	  Attribute.prototype.uri = function uri() {
 	    return encodeURIComponent(this.value) + ':' + encodeURIComponent(this.type);
 	  };
 
 	  /**
+	  * Generate a visually recognizable representation of the attribute
 	  * @param {integer} width width of the identicon
-	  * @returns {HTMLElement} img element containing the identicon
+	  * @returns {HTMLElement} identicon div element
 	  */
 
 
@@ -9726,7 +9736,7 @@
 	var myKey = void 0;
 
 	/**
-	* Key management utils
+	* Key management utils. Wraps GUN's SEA. https://gun.eco/docs/SEA
 	*/
 
 	var Key = function () {
@@ -9739,7 +9749,7 @@
 	  *
 	  * If default key does not exist, it is generated.
 	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
-	  * @returns {Promise(Object)} keypair object
+	  * @returns {Promise<Object>} keypair object
 	  */
 	  Key.getDefault = async function getDefault() {
 	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
@@ -9752,22 +9762,22 @@
 	      var privKeyFile = datadir + '/private.key';
 	      if (fs.existsSync(privKeyFile)) {
 	        var f = fs.readFileSync(privKeyFile, 'utf8');
-	        myKey = Key.fromJwk(f);
+	        myKey = Key.fromString(f);
 	      } else {
 	        myKey = await Key.generate();
-	        fs.writeFileSync(privKeyFile, Key.toJwk(myKey));
+	        fs.writeFileSync(privKeyFile, Key.toString(myKey));
 	        fs.chmodSync(privKeyFile, 400);
 	      }
 	      if (!myKey) {
 	        throw new Error('loading default key failed - check ' + datadir + '/private.key');
 	      }
 	    } else {
-	      var jwk = window.localStorage.getItem('iris.myKey');
-	      if (jwk) {
-	        myKey = Key.fromJwk(jwk);
+	      var str = window.localStorage.getItem('iris.myKey');
+	      if (str) {
+	        myKey = Key.fromString(str);
 	      } else {
 	        myKey = await Key.generate();
-	        window.localStorage.setItem('iris.myKey', Key.toJwk(myKey));
+	        window.localStorage.setItem('iris.myKey', Key.toString(myKey));
 	      }
 	      if (!myKey) {
 	        throw new Error('loading default key failed - check localStorage iris.myKey');
@@ -9777,20 +9787,20 @@
 	  };
 
 	  /**
-	  * Serialize key as JSON Web key
+	  * Serialize key as JSON string
 	  * @param {Object} key key to serialize
 	  * @returns {String} JSON Web Key string
 	  */
 
 
-	  Key.toJwk = function toJwk(key) {
+	  Key.toString = function toString(key) {
 	    return _JSON$stringify(key);
 	  };
 
 	  /**
 	  * Get keyID
 	  * @param {Object} key key to get an id for. Currently just returns the public key string.
-	  * @returns {String} JSON Web Key string
+	  * @returns {String} public key string
 	  */
 
 
@@ -9803,19 +9813,19 @@
 	  };
 
 	  /**
-	  * Get a keypair from a JSON Web Key object.
-	  * @param {Object} jwk JSON Web Key
-	  * @returns {String}
+	  * Get a keypair from a JSON string.
+	  * @param {String} str key JSON
+	  * @returns {Object} Gun.SEA keypair object
 	  */
 
 
-	  Key.fromJwk = function fromJwk(jwk) {
-	    return JSON.parse(jwk);
+	  Key.fromString = function fromString(str) {
+	    return JSON.parse(str);
 	  };
 
 	  /**
 	  * Generate a new keypair
-	  * @returns {Promise(Object)} Gun.SEA keypair object
+	  * @returns {Promise<Object>} Gun.SEA keypair object
 	  */
 
 
@@ -9827,7 +9837,7 @@
 	  * Sign a message
 	  * @param {String} msg message to sign
 	  * @param {Object} pair signing keypair
-	  * @returns {Promise(String)} signed message string
+	  * @returns {Promise<String>} signed message string
 	  */
 
 
@@ -9840,7 +9850,7 @@
 	  * Verify a signed message
 	  * @param {String} msg message to verify
 	  * @param {Object} pubKey public key of the signer
-	  * @returns {Promise(String)} signature string
+	  * @returns {Promise<String>} signature string
 	  */
 
 
@@ -9866,7 +9876,7 @@
 	}(Error);
 
 	/**
-	* Messages are objects containing fields signedData, signer (public key) and signature. Message iriser is the base64 sha256 hash derived from its canonical utf8 string representation.
+	* Messages are objects containing fields signedData, signer (public key) and signature. Message identifier is the base64 sha256 hash derived from its canonical utf8 string representation.
 	*
 	* signedData has an author, recipient, signer, type, timestamp, context and optionally other fields.
 	*
@@ -9876,7 +9886,13 @@
 	*
 	* For example, a crawler can import and sign other people's messages from Twitter. Only the users who trust the crawler will see the messages.
 	*
-	* Rating message example:
+	* "Rating" type messages, when added to an Index, can add or remove Identities from the web of trust. Verification/unverification messages can add or remove Attributes from an Identity. Other types of messages such as social media "post" are just indexed by their author, recipient and timestamp.
+	*
+	* Constructor: creates a message from the param obj.signedData that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
+	* @param obj
+	*
+	* @example
+	* Rating message:
 	* {
 	*   signedData: {
 	*     author: {name:'Alice', key:'ABCD1234'},
@@ -9891,7 +9907,7 @@
 	*   signature: '1234ABCD'
 	* }
 	*
-	* Verification message example:
+	* Verification message:
 	* {
 	*   signedData: {
 	*     author: {name:'Alice', key:'ABCD1234'},
@@ -9909,10 +9925,6 @@
 
 
 	var Message = function () {
-	  /**
-	  * Creates a message from the param obj.signedData that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
-	  * @param obj
-	  */
 	  function Message(obj) {
 	    _classCallCheck(this, Message);
 
@@ -10226,7 +10238,7 @@
 	  * Create an iris message. Message timestamp and context (iris) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
 	  * @param {Object} signedData message data object including author, recipient and other possible attributes
 	  * @param {Object} signingKey optionally, you can set the key to sign the message with
-	  * @returns Promise{Message}  message
+	  * @returns {Promise<Message>}  message
 	  */
 
 
@@ -10245,7 +10257,7 @@
 
 	  /**
 	  * Create an  verification message. Message signedData's type, timestamp and context (iris) are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
-	  * @returns Promise{Object} message object promise
+	  * @returns {Promise<Object>} message object promise
 	  */
 
 
@@ -10256,7 +10268,7 @@
 
 	  /**
 	  * Create an  rating message. Message signedData's type, maxRating, minRating, timestamp and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
-	  * @returns Promise{Object} message object promise
+	  * @returns {Promise<Object>} message object promise
 	  */
 
 
@@ -10365,6 +10377,11 @@
 	    return true;
 	  };
 
+	  /**
+	  *
+	  */
+
+
 	  Message.prototype.saveToIpfs = async function saveToIpfs(ipfs) {
 	    var s = this.toString();
 	    var r = await ipfs.add(ipfs.types.Buffer.from(s));
@@ -10374,15 +10391,30 @@
 	    return this.ipfsUri;
 	  };
 
+	  /**
+	  *
+	  */
+
+
 	  Message.loadFromIpfs = async function loadFromIpfs(ipfs, uri) {
 	    var f = await ipfs.cat(uri);
 	    var s = ipfs.types.Buffer.from(f).toString('utf8');
 	    return Message.fromString(s);
 	  };
 
+	  /**
+	  * @returns {string} JSON string of signature and public key
+	  */
+
+
 	  Message.prototype.toString = function toString() {
 	    return _JSON$stringify({ sig: this.sig, pubKey: this.pubKey });
 	  };
+
+	  /**
+	  * @returns {Message} message from JSON string produced by toString
+	  */
+
 
 	  Message.fromString = function fromString(s) {
 	    return Message.fromSig(JSON.parse(s));
@@ -10559,7 +10591,7 @@
 	  };
 
 	  /**
-	  * Appends a search widget to the given HTMLElement
+	  * Appends an identity search widget to the given HTMLElement
 	  * @param {HTMLElement} parentElement element where the search widget is added and event listener attached
 	  * @param {Index} index index root to use for search
 	  */
@@ -10889,9 +10921,11 @@
 
 	// TODO: flush onto IPFS
 	/**
-	*  index root. Contains five indexes: identitiesBySearchKey, identitiesByTrustDistance,
-	* messagesByHash, messagesByTimestamp, messagesByDistance. If you want messages saved to IPFS, pass
-	* options.ipfs = instance.
+	* A database of Messages and Identities within the indexer's web of trust.
+	*
+	* Each added Message updates the Message and Identity indexes and web of trust accordingly.
+	*
+	* If you want messages saved to IPFS, pass options.ipfs = instance.
 	*
 	* When you use someone else's index, initialise it using the Index constructor
 	* @param {Object} gun gun node that contains an  index (e.g. user.get('iris'))
@@ -11002,7 +11036,7 @@
 	  * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
 	  * @param {Object} keypair SEA keypair (can be generated with await irisLib.Key.generate())
 	  * @param {Object} options see default options in Index constructor's example
-	  * @returns {Promise}
+	  * @returns {Promise<Index>}
 	  */
 
 
@@ -11192,11 +11226,11 @@
 	  };
 
 	  /**
-	  * Get an identity referenced by an iriser.
+	  * Get an identity referenced by an identifier.
 	  * get(type, value)
 	  * get(Attribute)
 	  * get(value) - guesses the type or throws an error
-	  * @returns {Identity} identity that is connected to the iriser param
+	  * @returns {Identity} identity that is connected to the identifier param
 	  */
 
 
@@ -11582,7 +11616,7 @@
 	    msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(':') + 1);
 	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
 	    for (var i = 0; i < ids.length; i++) {
-	      // add new irisers to identity
+	      // add new identifiers to identity
 	      if (recipientIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
 	        start = new Date();
 	        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);

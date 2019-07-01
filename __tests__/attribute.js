@@ -21,16 +21,16 @@ describe(`Constructor`, () => {
     expect(() => new Attribute('#BADBAD;')).toThrow(Error);
   });
   test(`new Attribute(1, 'asdf') non-string 1st param`, () => {
-    expect(() => new Attribute('#BADBAD;')).toThrow(Error);
+    expect(() => new Attribute(1, 'asdf')).toThrow(Error);
   });
   test(`new Attribute('asdf', 1) non-string 2nd param`, () => {
-    expect(() => new Attribute('#BADBAD;')).toThrow(Error);
+    expect(() => new Attribute('asdf', 1)).toThrow(Error);
   });
   test(`new Attribute('', 'asdf') empty string 1st param`, () => {
-    expect(() => new Attribute('#BADBAD;')).toThrow(Error);
+    expect(() => new Attribute('', 'asdf')).toThrow(Error);
   });
   test(`new Attribute('asdf', '') empty string 2nd param`, () => {
-    expect(() => new Attribute('#BADBAD;')).toThrow(Error);
+    expect(() => new Attribute('asdf', '')).toThrow(Error);
   });
 });
 describe(`equals`, () => {
@@ -54,14 +54,20 @@ describe(`static methods`, () => {
     expect(Attribute.guessTypeOf('#BADBAD;')).toBe(undefined);
   });
   test(`getUniqueIdValidators`, () => {
-    expect(typeof Attribute.getUniqueIdValidators()).toBe(`Object`);
+    expect(typeof Attribute.getUniqueIdValidators()).toBe(`object`);
     expect(Object.keys(Attribute.getUniqueIdValidators()).length).toBeGreaterThan(10);
   })
 });
 describe(`methods`, () => {
-  test(`identicon`, () => {
+  test(`identicon()`, () => {
     const a = new Attribute('a', 'b');
     // TODO: mock document object needed for identicon
     // expect(a.identicon(50).prototype.name).toBe(`HTMLElement`);
   });
+  test(`getUuid()`, () => {
+    const uuid = Attribute.getUuid();
+    expect(uuid.type).toBe(`uuid`);
+    expect(typeof uuid.value).toBe(`string`);
+    expect(uuid.value.length).toBeGreaterThan(10);
+  })
 });
