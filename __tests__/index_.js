@@ -80,7 +80,7 @@ describe(`local index`, async () => {
   });
   test(`create new Index`, async () => {
     expect(i).toBeInstanceOf(iris.Index);
-    const viewpoint = await i.getViewpoint();
+    const viewpoint = i.getViewpoint();
     expect(viewpoint).toBeInstanceOf(iris.Identity);
     const data = await new Promise(resolve => {
       viewpoint.gun.load(r => {
@@ -124,7 +124,7 @@ describe(`local index`, async () => {
       expect(results.length).toBe(0);
     });
     test(`get messages sent by self`, async () => {
-      const viewpoint = await i.getViewpoint();
+      const viewpoint = i.getViewpoint();
       expect(viewpoint).toBeInstanceOf(iris.Identity);
       const results = [];
       i.getSentMsgs(viewpoint, result => results.push(result));

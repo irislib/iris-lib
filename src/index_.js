@@ -101,16 +101,7 @@ class Index {
         debug: false
       }
     }, options);
-    if (options.viewpoint) {
-      this.viewpoint = options.viewpoint;
-    } else {
-      this.gun.get(`viewpoint`).on((val, key, msg, eve) => {
-        if (val) {
-          this.viewpoint = new Attribute(val);
-          eve.off();
-        }
-      });
-    }
+    this.viewpoint = options.viewpoint;
     if (this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {
         this.gun.get(`trustedIndexes`).map().once((val, uri) => {
@@ -161,7 +152,6 @@ class Index {
     options.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
     const gunRoot = user.get(`iris`);
     const i = new Index(gunRoot, options);
-    i.gun.get(`viewpoint`).put(options.viewpoint);
     const uri = options.viewpoint.uri();
     const g = i.gun.get(`identitiesBySearchKey`).get(uri);
     g.put({});
@@ -317,14 +307,8 @@ class Index {
   /**
   * @returns {Identity} viewpoint identity (trustDistance == 0) of the index
   */
-  async getViewpoint() {
-    let vpAttr;
-    if (this.viewpoint) {
-      vpAttr = this.viewpoint;
-    } else {
-      vpAttr = new Attribute(await this.gun.get(`viewpoint`).then());
-    }
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(vpAttr.uri()));
+  getViewpoint() {
+    return new Identity(this.gun.get(`identitiesBySearchKey`).get(this.viewpoint.uri()));
   }
 
   /**

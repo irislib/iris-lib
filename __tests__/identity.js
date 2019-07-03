@@ -34,7 +34,7 @@ let index, vp;
 beforeAll(async () => {
   logger.disable();
   index = await iris.Index.create(gun);
-  vp = await index.getViewpoint();
+  vp = index.getViewpoint();
 });
 
 describe(`Identity`, () => {
