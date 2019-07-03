@@ -25,7 +25,7 @@ async function searchText(node, callback, query, limit, cursor, desc) {
       if (typeof limit === `number` && Object.keys(seen).length >= limit) {
         return;
       }
-      if (seen.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(seen, key)) {
         return;
       }
       if (value && Object.keys(value).length > 1) {
@@ -121,7 +121,7 @@ class Index {
               if (!isNaN(d) && d <= this.options.indexSync.subscribe.maxMsgDistance) {
                 Message.fromSig(val).then(msg => {
                   if (this.options.indexSync.msgTypes.all ||
-                    this.options.indexSync.msgTypes.hasOwnProperty(msg.signedData.type)) {
+                    Object.prototype.hasOwnProperty.call(this.options.indexSync.msgTypes, msg.signedData.type)) {
                     this.addMessage(msg, {checkIfExists: true});
                   }
                 });
@@ -374,12 +374,12 @@ class Index {
           const recipients = m.getRecipientArray();
           for (let i = 0;i < recipients.length;i ++) {
             const a2 = recipients[i];
-            if (!o.attributes.hasOwnProperty(a2.uri())) {
+            if (!Object.prototype.hasOwnProperty.call(o.attributes), a2.uri()) {
               // TODO remove attribute from identity if not enough verifications / too many unverifications
               o.attributes[a2.uri()] = a2;
               this.gun.get(`messagesByRecipient`).get(a2.uri()).map().once(val => {
                 const m2 = Message.fromSig(val);
-                if (!o.received.hasOwnProperty(m2.getHash())) {
+                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2.getHash())) {
                   o.received[m2.getHash()] = m2;
                   if (m2.isPositive()) {
                     o.receivedPositive ++;
@@ -401,7 +401,7 @@ class Index {
               });
               this.gun.get(`messagesByAuthor`).get(a2.uri()).map().once(val => {
                 const m2 = Message.fromSig(val);
-                if (!o.sent.hasOwnProperty(m2.getHash())) {
+                if (!Object.prototype.hasOwnProperty.call(o.sent, m2.getHash())) {
                   o.sent[m2.getHash()] = m2;
                   if (m2.isPositive()) {
                     o.sentPositive ++;
@@ -662,12 +662,12 @@ class Index {
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
-      if (recipientIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
+      if (Object.prototype.hasOwnProperty.call(recipientIdentities, ids[i].gun[`_`].link)) {
         start = new Date();
         await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
         this.debug((new Date()) - start, `ms _updateMsgRecipientIdentity`);
       }
-      if (authorIdentities.hasOwnProperty(ids[i].gun[`_`].link)) {
+      if (Object.prototype.hasOwnProperty.call(authorIdentities, ids[i].gun[`_`].link)) {
         start = new Date();
         await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
         this.debug((new Date()) - start, `ms _updateMsgAuthorIdentity`);
@@ -883,7 +883,8 @@ class Index {
     //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
     const node = this.gun.back(- 1).get(`messagesByHash`).get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
     start = new Date();
-    msg.distance = await this.getMsgTrustDistance(msg);
+    const d = await this.getMsgTrustDistance(msg);
+    msg.distance = Object.prototype.hasOwnProperty.call(msg, `distance`) ? msg.distance : d;  // eslint-disable-line require-atomic-updates
     this.debug(`----`);
     this.debug((new Date()) - start, `ms getMsgTrustDistance`);
     if (msg.distance === undefined) {
@@ -957,7 +958,7 @@ class Index {
       }
       if (!searchTermCheck(key)) { return; }
       const soul = Gun.node.soul(id);
-      if (soul && !seen.hasOwnProperty(soul)) {
+      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
         seen[soul] = true;
         const identity = new Identity(node.get(key));
         identity.cursor = key;
@@ -974,7 +975,7 @@ class Index {
             }
             if (!searchTermCheck(key)) { return; }
             const soul = Gun.node.soul(id);
-            if (soul && !seen.hasOwnProperty(soul)) {
+            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
               seen[soul] = true;
               callback(
                 new Identity(this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k))
@@ -1046,7 +1047,7 @@ class Index {
   getMessagesByTimestamp(callback, limit, cursor, desc = true, filter) {
     const seen = {};
     const cb = msg => {
-      if ((!limit || Object.keys(seen).length < limit) && !seen.hasOwnProperty(msg.hash)) {
+      if ((!limit || Object.keys(seen).length < limit) && !Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
         seen[msg.getHash()] = true;
         callback(msg);
       }
@@ -1071,8 +1072,8 @@ class Index {
   getMessagesByDistance(callback, limit, cursor, desc, filter) {
     const seen = {};
     const cb = msg => {
-      if (!seen.hasOwnProperty(msg.hash)) {
-        if ((!limit || Object.keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {
+      if (!Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
+        if ((!limit || Object.keys(seen).length <= limit) && !Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
           seen[msg.hash] = true;
           callback(msg);
         }

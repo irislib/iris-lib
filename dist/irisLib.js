@@ -9764,7 +9764,8 @@
 	        var f = fs.readFileSync(privKeyFile, 'utf8');
 	        myKey = Key.fromString(f);
 	      } else {
-	        myKey = await Key.generate();
+	        var newKey = await Key.generate();
+	        myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
 	        fs.writeFileSync(privKeyFile, Key.toString(myKey));
 	        fs.chmodSync(privKeyFile, 400);
 	      }
@@ -9776,7 +9777,8 @@
 	      if (str) {
 	        myKey = Key.fromString(str);
 	      } else {
-	        myKey = await Key.generate();
+	        var _newKey = await Key.generate();
+	        myKey = myKey || _newKey; // eslint-disable-line require-atomic-updates
 	        window.localStorage.setItem('iris.myKey', Key.toString(myKey));
 	      }
 	      if (!myKey) {
@@ -10446,7 +10448,7 @@
 	    if (data.linkTo && !data.attrs) {
 	      var linkTo = new Attribute(data.linkTo);
 	      data.attrs = {};
-	      if (!data.attrs.hasOwnProperty(linkTo.uri())) {
+	      if (!Object.prototype.hasOwnProperty.call(data.attrs, linkTo.uri())) {
 	        data.attrs[linkTo.uri()] = linkTo;
 	      }
 	    } else {
@@ -10500,7 +10502,7 @@
 	  Identity.prototype.verified = async function verified(attribute) {
 	    var attrs = await this.gun.get('attrs').then();
 	    var mva = Identity.getMostVerifiedAttributes(attrs);
-	    return mva.hasOwnProperty(attribute) ? mva[attribute].attribute.value : undefined;
+	    return Object.prototype.hasOwnProperty.call(mva, attribute) ? mva[attribute].attribute.value : undefined;
 	  };
 
 	  /**
@@ -10908,7 +10910,7 @@
 	      if (typeof limit === 'number' && _Object$keys(seen).length >= limit) {
 	        return;
 	      }
-	      if (seen.hasOwnProperty(key)) {
+	      if (Object.prototype.hasOwnProperty.call(seen, key)) {
 	        return;
 	      }
 	      if (value && _Object$keys(value).length > 1) {
@@ -11008,7 +11010,7 @@
 	              var d = _Number$parseInt(key.split(':')[0]);
 	              if (!isNaN(d) && d <= _this.options.indexSync.subscribe.maxMsgDistance) {
 	                Message.fromSig(val).then(function (msg) {
-	                  if (_this.options.indexSync.msgTypes.all || _this.options.indexSync.msgTypes.hasOwnProperty(msg.signedData.type)) {
+	                  if (_this.options.indexSync.msgTypes.all || Object.prototype.hasOwnProperty.call(_this.options.indexSync.msgTypes, msg.signedData.type)) {
 	                    _this.addMessage(msg, { checkIfExists: true });
 	                  }
 	                });
@@ -11279,12 +11281,12 @@
 	          var recipients = m.getRecipientArray();
 	          for (var i = 0; i < recipients.length; i++) {
 	            var a2 = recipients[i];
-	            if (!o.attributes.hasOwnProperty(a2.uri())) {
+	            if (!Object.prototype.hasOwnProperty.call(o.attributes), a2.uri()) {
 	              // TODO remove attribute from identity if not enough verifications / too many unverifications
 	              o.attributes[a2.uri()] = a2;
 	              _this2.gun.get('messagesByRecipient').get(a2.uri()).map().once(function (val) {
 	                var m2 = Message.fromSig(val);
-	                if (!o.received.hasOwnProperty(m2.getHash())) {
+	                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2.getHash())) {
 	                  o.received[m2.getHash()] = m2;
 	                  if (m2.isPositive()) {
 	                    o.receivedPositive++;
@@ -11306,7 +11308,7 @@
 	              });
 	              _this2.gun.get('messagesByAuthor').get(a2.uri()).map().once(function (val) {
 	                var m2 = Message.fromSig(val);
-	                if (!o.sent.hasOwnProperty(m2.getHash())) {
+	                if (!Object.prototype.hasOwnProperty.call(o.sent, m2.getHash())) {
 	                  o.sent[m2.getHash()] = m2;
 	                  if (m2.isPositive()) {
 	                    o.sentPositive++;
@@ -11617,12 +11619,12 @@
 	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
 	    for (var i = 0; i < ids.length; i++) {
 	      // add new identifiers to identity
-	      if (recipientIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
+	      if (Object.prototype.hasOwnProperty.call(recipientIdentities, ids[i].gun['_'].link)) {
 	        start = new Date();
 	        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
 	        this.debug(new Date() - start, 'ms _updateMsgRecipientIdentity');
 	      }
-	      if (authorIdentities.hasOwnProperty(ids[i].gun['_'].link)) {
+	      if (Object.prototype.hasOwnProperty.call(authorIdentities, ids[i].gun['_'].link)) {
 	        start = new Date();
 	        await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
 	        this.debug(new Date() - start, 'ms _updateMsgAuthorIdentity');
@@ -11913,7 +11915,8 @@
 	    //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
 	    var node = this.gun.back(-1).get('messagesByHash').get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
 	    start = new Date();
-	    msg.distance = await this.getMsgTrustDistance(msg);
+	    var d = await this.getMsgTrustDistance(msg);
+	    msg.distance = Object.prototype.hasOwnProperty.call(msg, 'distance') ? msg.distance : d; // eslint-disable-line require-atomic-updates
 	    this.debug('----');
 	    this.debug(new Date() - start, 'ms getMsgTrustDistance');
 	    if (msg.distance === undefined) {
@@ -12006,7 +12009,7 @@
 	        return;
 	      }
 	      var soul = Gun.node.soul(id);
-	      if (soul && !seen.hasOwnProperty(soul)) {
+	      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	        seen[soul] = true;
 	        var identity = new Identity(node.get(key));
 	        identity.cursor = key;
@@ -12025,7 +12028,7 @@
 	              return;
 	            }
 	            var soul = Gun.node.soul(id);
-	            if (soul && !seen.hasOwnProperty(soul)) {
+	            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	              seen[soul] = true;
 	              callback(new Identity(_this7.gun.user(key).get('iris').get('identitiesBySearchKey').get(k)));
 	            }
@@ -12107,7 +12110,7 @@
 
 	    var seen = {};
 	    var cb = function cb(msg) {
-	      if ((!limit || _Object$keys(seen).length < limit) && !seen.hasOwnProperty(msg.hash)) {
+	      if ((!limit || _Object$keys(seen).length < limit) && !Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
 	        seen[msg.getHash()] = true;
 	        callback(msg);
 	      }
@@ -12134,8 +12137,8 @@
 
 	    var seen = {};
 	    var cb = function cb(msg) {
-	      if (!seen.hasOwnProperty(msg.hash)) {
-	        if ((!limit || _Object$keys(seen).length <= limit) && !seen.hasOwnProperty(msg.hash)) {
+	      if (!Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
+	        if ((!limit || _Object$keys(seen).length <= limit) && !Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
 	          seen[msg.hash] = true;
 	          callback(msg);
 	        }
@@ -12162,7 +12165,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.101";
+	var version$1 = "0.0.102";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

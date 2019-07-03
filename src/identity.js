@@ -22,7 +22,7 @@ class Identity {
     if (data.linkTo && !data.attrs) {
       const linkTo = new Attribute(data.linkTo);
       data.attrs = {};
-      if (!data.attrs.hasOwnProperty(linkTo.uri())) {
+      if (!Object.prototype.hasOwnProperty.call(data.attrs, linkTo.uri())) {
         data.attrs[linkTo.uri()] = linkTo;
       }
     } else {
@@ -74,7 +74,7 @@ class Identity {
   async verified(attribute: String) {
     const attrs = await this.gun.get(`attrs`).then();
     const mva = Identity.getMostVerifiedAttributes(attrs);
-    return mva.hasOwnProperty(attribute) ? mva[attribute].attribute.value : undefined;
+    return Object.prototype.hasOwnProperty.call(mva, attribute) ? mva[attribute].attribute.value : undefined;
   }
 
   /**

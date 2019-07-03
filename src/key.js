@@ -27,7 +27,8 @@ class Key {
         const f = fs.readFileSync(privKeyFile, `utf8`);
         myKey = Key.fromString(f);
       } else {
-        myKey = await Key.generate();
+        const newKey = await Key.generate();
+        myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
         fs.writeFileSync(privKeyFile, Key.toString(myKey));
         fs.chmodSync(privKeyFile, 400);
       }
@@ -39,7 +40,8 @@ class Key {
       if (str) {
         myKey = Key.fromString(str);
       } else {
-        myKey = await Key.generate();
+        const newKey = await Key.generate();
+        myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
         window.localStorage.setItem(`iris.myKey`, Key.toString(myKey));
       }
       if (!myKey) {
