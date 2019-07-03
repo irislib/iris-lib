@@ -74,7 +74,7 @@ describe(`Message`, async () => {
       expect(f).toThrow(Error);
     });
   });
-  describe(`Message signature`, async () => {
+  describe(`methods`, async () => {
     let key;
     msg = void 0;
     beforeAll(async () => {
@@ -94,6 +94,12 @@ describe(`Message`, async () => {
     });
     test(`should be verified with verify()`, async () => {
       expect(await msg.verify()).toBe(true);
+    });
+    test(`serialize & deserialize`, async () => {
+      const h = msg.getHash();
+      const s = msg.toString();
+      const m = await Message.fromString(s);
+      expect(m.getHash()).toEqual(h);
     });
   });
 });

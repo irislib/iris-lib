@@ -386,9 +386,9 @@ class Message {
   }
 
   /**
-  * @returns {Message} message from JSON string produced by toString
+  * @returns {Promise<Message>} message from JSON string produced by toString
   */
-  static fromString(s) {
+  static async fromString(s) {
     return Message.fromSig(JSON.parse(s));
   }
 }

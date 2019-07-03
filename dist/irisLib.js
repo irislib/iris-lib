@@ -10414,11 +10414,11 @@
 	  };
 
 	  /**
-	  * @returns {Message} message from JSON string produced by toString
+	  * @returns {Promise<Message>} message from JSON string produced by toString
 	  */
 
 
-	  Message.fromString = function fromString(s) {
+	  Message.fromString = async function fromString(s) {
 	    return Message.fromSig(JSON.parse(s));
 	  };
 
