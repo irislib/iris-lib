@@ -1,3 +1,10 @@
-test(`empty`, () => {
-  expect(1).toBe(1);
+const iris = require('../cjs/index.js');
+const Identity = iris.Identity;
+
+// get them from index, actually?
+
+describe(`Identity`, () => {
+  test(`constructor`, () => {
+    const i = new Identity();
+  });
 });

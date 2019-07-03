@@ -61,8 +61,8 @@ describe(`static methods`, () => {
 describe(`methods`, () => {
   test(`identicon()`, () => {
     const a = new Attribute('a', 'b');
-    // TODO: mock document object needed for identicon
-    // expect(a.identicon(50).prototype.name).toBe(`HTMLElement`);
+    const identicon = a.identicon(50);
+    expect(a.identicon(50).constructor.name).toBe(`HTMLDivElement`);
   });
   test(`getUuid()`, () => {
     const uuid = Attribute.getUuid();
