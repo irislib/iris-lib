@@ -10544,7 +10544,7 @@
 	        });
 	      });
 	      var linkTo = await _this.gun.get('linkTo').then();
-	      var link = 'https://identi.fi/#/identities/' + linkTo.type + '/' + linkTo.value;
+	      var link = 'https://iris.to/#/identities/' + linkTo.type + '/' + linkTo.value;
 	      var mva = Identity.getMostVerifiedAttributes(attrs);
 	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.type && mva.type.attribute.value || mva.nickname && mva.nickname.attribute.value || linkTo.type + ':' + linkTo.value) + '</a><br>';
 	      linkEl.innerHTML += '<small>Received: <span class="iris-pos">+' + (data.receivedPositive || 0) + '</span> / <span class="iris-neg">-' + (data.receivedNegative || 0) + '</span></small><br>';

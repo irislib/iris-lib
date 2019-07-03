@@ -108,7 +108,7 @@ class Identity {
       }
       const attrs = await new Promise(resolve => { this.gun.get(`attrs`).load(r => resolve(r)); });
       const linkTo = await this.gun.get(`linkTo`).then();
-      const link = `https://identi.fi/#/identities/${linkTo.type}/${linkTo.value}`;
+      const link = `https://iris.to/#/identities/${linkTo.type}/${linkTo.value}`;
       const mva = Identity.getMostVerifiedAttributes(attrs);
       linkEl.innerHTML = `<a href="${link}">${(mva.type && mva.type.attribute.value) || (mva.nickname && mva.nickname.attribute.value) || `${linkTo.type}:${linkTo.value}`}</a><br>`;
       linkEl.innerHTML += `<small>Received: <span class="iris-pos">+${data.receivedPositive || 0}</span> / <span class="iris-neg">-${data.receivedNegative || 0}</span></small><br>`;
