@@ -183,6 +183,8 @@ class Identity {
         searchResults.appendChild(i.profileCard());
       });
     });
+
+    return form;
   }
 
   static _ordinal(n) {

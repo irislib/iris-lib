@@ -10623,6 +10623,8 @@
 	        searchResults.appendChild(i.profileCard());
 	      });
 	    });
+
+	    return form;
 	  };
 
 	  Identity._ordinal = function _ordinal(n) {
@@ -10991,16 +10993,7 @@
 	        debug: false
 	      }
 	    }, options);
-	    if (options.viewpoint) {
-	      this.viewpoint = options.viewpoint;
-	    } else {
-	      this.gun.get('viewpoint').on(function (val, key, msg, eve) {
-	        if (val) {
-	          _this.viewpoint = new Attribute(val);
-	          eve.off();
-	        }
-	      });
-	    }
+	    this.viewpoint = options.viewpoint;
 	    if (this.options.indexSync.subscribe.enabled) {
 	      setTimeout(function () {
 	        _this.gun.get('trustedIndexes').map().once(function (val, uri) {
@@ -11054,7 +11047,6 @@
 	    options.viewpoint = new Attribute('keyID', Key.getId(keypair));
 	    var gunRoot = user.get('iris');
 	    var i = new Index(gunRoot, options);
-	    i.gun.get('viewpoint').put(options.viewpoint);
 	    var uri = options.viewpoint.uri();
 	    var g = i.gun.get('identitiesBySearchKey').get(uri);
 	    g.put({});
@@ -11217,14 +11209,8 @@
 	  */
 
 
-	  Index.prototype.getViewpoint = async function getViewpoint() {
-	    var vpAttr = void 0;
-	    if (this.viewpoint) {
-	      vpAttr = this.viewpoint;
-	    } else {
-	      vpAttr = new Attribute((await this.gun.get('viewpoint').then()));
-	    }
-	    return new Identity(this.gun.get('identitiesBySearchKey').get(vpAttr.uri()));
+	  Index.prototype.getViewpoint = function getViewpoint() {
+	    return new Identity(this.gun.get('identitiesBySearchKey').get(this.viewpoint.uri()));
 	  };
 
 	  /**

@@ -6,6 +6,7 @@ const load = require(`gun/lib/load`);
 const then = require(`gun/lib/then`);
 const SEA = require(`gun/sea`);
 const gun = new GUN({radisk: false});
+const $ = require(`jquery`);
 
 const logger = function()
 {
@@ -52,7 +53,11 @@ describe(`Identity`, () => {
   });
   test(`appendSearchWidget()`, () => {
     const parent = document.createElement(`div`); // index param
-    Identity.appendSearchWidget(parent);
+    const widget = Identity.appendSearchWidget(parent);
     expect(parent.hasChildNodes()).toBe(true);
+    const input = $(widget).find(`input`);
+    const results = $(widget).find(`div`);
+    expect(input.constructor.name).toBe(`jQuery`);
+    expect(results.constructor.name).toBe(`jQuery`);
   });
 });

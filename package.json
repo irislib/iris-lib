@@ -76,6 +76,7 @@
     "jest": "^23.5.0",
     "jest-html-reporter": "^2.5.0",
     "jest-stare": "^1.16.0",
+    "jquery": "^3.4.1",
     "libp2p-connection-manager": "0.0.2",
     "release-it": "^7.6.0",
     "rimraf": "^2.6.2",
