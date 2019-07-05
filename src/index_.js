@@ -40,17 +40,23 @@ async function searchText(node, callback, query, limit, cursor, desc) {
 /**
 * A database of Messages and Identities within the indexer's web of trust.
 *
+* To use someone else's index (read-only): set options.pubKey
+*
+* To use your own index: set options.keypair or omit it to use Key.getDefaultKey().
+*
 * Each added Message updates the Message and Identity indexes and web of trust accordingly.
 *
-* If you want messages saved to IPFS, pass options.ipfs = instance.
+* You can pass options.gun to use custom gun storages and networking settings.
 *
-* When you use someone else's index, initialise it using the Index constructor
-* @param {Object} gun gun node that contains an  index (e.g. user.get('iris'))
+* If you want messages saved to IPFS, pass options.ipfs = instance.
 * @param {Object} options see default options in example
 * @example
 * Default options:
 *{
 *  ipfs: undefined,
+*  keypair: undefined,
+*  pubKey: undefined,
+*  gun: undefined,
 *  indexSync: {
 *    importOnAdd: {
 *      enabled: true,
@@ -76,9 +82,11 @@ async function searchText(node, callback, query, limit, cursor, desc) {
 * @returns {Index}  index object
 */
 class Index {
-  constructor(gun: Object, options) {
-    this.gun = gun || new Gun();
+  constructor(options) {
     this.options = Object.assign({
+      ipfs: undefined,
+      keypair: undefined,
+      pubKey: undefined,
       indexSync: {
         importOnAdd: {
           enabled: true,
@@ -101,7 +109,54 @@ class Index {
         debug: false
       }
     }, options);
-    this.viewpoint = options.viewpoint;
+
+    if (options.pubKey) { // someone else's index
+      const gun = options.gun || new Gun();
+      const user = gun.user();
+      user.auth(options.pubKey);
+      this.gun = user.get(`iris`);
+      this.viewpoint = new Attribute({type: `keyID`, value: options.pubKey});
+      this.ready = Promise.resolve();
+    } else { // our own index
+      this.ready = this._init();
+    }
+    this.ready.then(() => this._subscribeToTrustedIndexes());
+  }
+
+  async _init() {
+    let keypair = this.options.keypair;
+    if (!keypair) {
+      keypair = await Key.getDefault();
+    }
+    const gun = this.options.gun || new Gun();
+    const user = gun.user();
+    user.auth(keypair);
+    this.writable = true;
+    this.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
+    this.gun = user.get(`iris`);
+    const uri = this.viewpoint.uri();
+    const g = this.gun.get(`identitiesBySearchKey`).get(uri);
+    g.put({});
+    const attrs = {};
+    attrs[uri] = this.viewpoint;
+    if (this.options.self) {
+      const keys = Object.keys(this.options.self);
+      for (let i = 0;i < keys.length;i ++) {
+        const a = new Attribute(keys[i], this.options.self[keys[i]]);
+        attrs[a.uri()] = a;
+      }
+    }
+    const id = Identity.create(g, {trustDistance: 0, linkTo: this.viewpoint, attrs});
+    await this._addIdentityToIndexes(id.gun);
+    if (this.options.self) {
+      const recipient = Object.assign(this.options.self, {keyID: this.viewpoint.value});
+      Message.createVerification({recipient}, keypair).then(msg => {
+        this.addMessage(msg);
+      });
+    }
+  }
+
+  _subscribeToTrustedIndexes() {
     if (this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {
         this.gun.get(`trustedIndexes`).map().once((val, uri) => {
@@ -133,46 +188,6 @@ class Index {
     if (d) {
       console.log.apply(console, arguments);
     }
-  }
-
-  /**
-  * Use this to load an index that you can write to
-  * @param {Object} gun gun instance where the index is stored (e.g. new Gun())
-  * @param {Object} keypair SEA keypair (can be generated with await irisLib.Key.generate())
-  * @param {Object} options see default options in Index constructor's example
-  * @returns {Promise<Index>}
-  */
-  static async create(gun: Object, keypair, options = {}) {
-    if (!keypair) {
-      keypair = await Key.getDefault();
-    }
-    const user = gun.user();
-    user.auth(keypair);
-    this.writable = true;
-    options.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
-    const gunRoot = user.get(`iris`);
-    const i = new Index(gunRoot, options);
-    const uri = options.viewpoint.uri();
-    const g = i.gun.get(`identitiesBySearchKey`).get(uri);
-    g.put({});
-    const attrs = {};
-    attrs[uri] = options.viewpoint;
-    if (options.self) {
-      const keys = Object.keys(options.self);
-      for (let i = 0;i < keys.length;i ++) {
-        const a = new Attribute(keys[i], options.self[keys[i]]);
-        attrs[a.uri()] = a;
-      }
-    }
-    const id = Identity.create(g, {trustDistance: 0, linkTo: options.viewpoint, attrs});
-    await i._addIdentityToIndexes(id.gun);
-    if (options.self) {
-      const recipient = Object.assign(options.self, {keyID: options.viewpoint.value});
-      Message.createVerification({recipient}, keypair).then(msg => {
-        i.addMessage(msg);
-      });
-    }
-    return i;
   }
 
   static getMsgIndexKey(msg) {

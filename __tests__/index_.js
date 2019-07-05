@@ -75,7 +75,8 @@ describe(`local index`, async () => {
   beforeAll(async () => {
     key = await iris.Key.getDefault();
     keyID = iris.Key.getId(key);
-    i = await iris.Index.create(gun, key, {self: {name: `Alice`}, debug: false});
+    i = new iris.Index({gun, keypair: key, self: {name: `Alice`}, debug: false});
+    await i.ready;
     await new Promise(r => setTimeout(r, 3000));
   });
   test(`create new Index`, async () => {
@@ -351,7 +352,8 @@ describe(`local index`, async () => {
   describe(`trusted indexes`, async () => {
     test(`create a new index that is linked to the previous`, async () => {
       const k2 = await iris.Key.generate();
-      const i2 = await iris.Index.create(gun, k2, {debug: false});
+      const i2 = new iris.Index({gun, keypair: k2, debug: false});
+      await i2.ready;
       let m = await iris.Message.createRating({recipient: {keyID}, rating: 10}, k2);
       await i2.addMessage(m);
       const trustedIndexes = await i2.gun.get(`trustedIndexes`).once();
@@ -402,7 +404,8 @@ describe(`local index`, async () => {
   });
   test(`get messages by timestamp`, async () => {
     const k2 = await iris.Key.generate();
-    const i2 = await iris.Index.create(gun, k2, {debug: false});
+    const i2 = new iris.Index({gun, keypair: k2, debug: false});
+    await i2.ready;
     for (let i = 0;i < 5;i ++) {
       const m = await iris.Message.createRating({recipient: {uuid: `something`}, rating: 10}, k2);
       await i2.addMessage(m);

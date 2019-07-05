@@ -34,7 +34,8 @@ const logger = function()
 let index, vp;
 beforeAll(async () => {
   logger.disable();
-  index = await iris.Index.create(gun);
+  index = new iris.Index({gun});
+  await index.ready;
   vp = index.getViewpoint();
 });
 
@@ -55,9 +56,11 @@ describe(`Identity`, () => {
     const parent = document.createElement(`div`); // index param
     const widget = Identity.appendSearchWidget(parent);
     expect(parent.hasChildNodes()).toBe(true);
-    const input = $(widget).find(`input`);
-    const results = $(widget).find(`div`);
+    const input = $(widget).find(`input`).first();
+    const results = $(widget).find(`div`).first();
     expect(input.constructor.name).toBe(`jQuery`);
     expect(results.constructor.name).toBe(`jQuery`);
+    input.val(`Al`);
+    input.keyup();
   });
 });

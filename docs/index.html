@@ -166,17 +166,6 @@
                 
                 <div class='toggle-target display-none'>
                   
-                  <ul class='list-reset py1-ul pl1'>
-                    <li class='h5'><span>Static members</span></li>
-                    
-                      <li><a
-                        href='#indexcreate'
-                        class='regular pre-open'>
-                        .create
-                      </a></li>
-                    
-                    </ul>
-                  
                   
                     <ul class='list-reset py1-ul pl1'>
                       <li class='h5'><span>Instance members</span></li>
@@ -1542,13 +1531,15 @@ from Index methods such as get() and search().</p>
   
 
   <p>A database of Messages and Identities within the indexer's web of trust.</p>
+<p>To use someone else's index (read-only): set options.pubKey</p>
+<p>To use your own index: set options.keypair or omit it to use Key.getDefaultKey().</p>
 <p>Each added Message updates the Message and Identity indexes and web of trust accordingly.</p>
+<p>You can pass options.gun to use custom gun storages and networking settings.</p>
 <p>If you want messages saved to IPFS, pass options.ipfs = instance.</p>
-<p>When you use someone else's index, initialise it using the Index constructor</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>new Index(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="#index">Index</a></div>
+    <div class='pre p1 fill-light mt0'>new Index(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="#index">Index</a></div>
    
   
   
@@ -1563,15 +1554,6 @@ from Index methods such as get() and search().</p>
   
     <div class='py1 quiet mt1 prose-big'>Parameters</div>
     <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>gun</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    gun node that contains an  index (e.g. user.get('iris'))
-
-          </div>
-          
-        </div>
       
         <div class='space-bottom0'>
           <div>
@@ -1606,6 +1588,9 @@ from Index methods such as get() and search().</p>
       <pre class='p1 overflow-auto round fill-light'>Default options:
 {
  <span class="hljs-attr">ipfs</span>: <span class="hljs-literal">undefined</span>,
+ <span class="hljs-attr">keypair</span>: <span class="hljs-literal">undefined</span>,
+ <span class="hljs-attr">pubKey</span>: <span class="hljs-literal">undefined</span>,
+ <span class="hljs-attr">gun</span>: <span class="hljs-literal">undefined</span>,
  <span class="hljs-attr">indexSync</span>: {
    <span class="hljs-attr">importOnAdd</span>: {
      <span class="hljs-attr">enabled</span>: <span class="hljs-literal">true</span>,
@@ -1630,101 +1615,6 @@ from Index methods such as get() and search().</p>
 }</pre>
     
   
-
-  
-    <div class='py1 quiet mt1 prose-big'>Static Members</div>
-    <div class="clearfix">
-  
-    <div class='border-bottom' id='indexcreate'>
-      <div class="clearfix small pointer toggle-sibling">
-        <div class="py1 contain">
-            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>create(gun, keypair, options)</span>
-        </div>
-      </div>
-      <div class="clearfix display-none toggle-target">
-        <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-
-  <p>Use this to load an index that you can write to</p>
-
- 
-  
-    <div class='pre p1 fill-light mt0'>create(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#index">Index</a>></div>
-   
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>gun</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    gun instance where the index is stored (e.g. new Gun())
-
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>keypair</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    SEA keypair (can be generated with await irisLib.Key.generate())
-
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
-            = <code>{}</code>)</code>
-	    see default options in Index constructor's example
-
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#index">Index</a>></code>:
-        
-
-      
-    
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-      </div>
-    </div>
-  
-</div>
 
   
 
