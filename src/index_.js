@@ -517,11 +517,7 @@ class Index {
     return d;
   }
 
-  /**
-  * @param {Message} msg
-  * @returns {number} trust distance to msg author. Returns undefined if msg signer is not trusted.
-  */
-  async getMsgTrustDistance(msg) {
+  async _getMsgTrustDistance(msg) {
     let shortestDistance = Infinity;
     const signerAttr = new Attribute(`keyID`, msg.getSignerKeyID());
     if (!signerAttr.equals(this.viewpoint)) {
@@ -884,10 +880,10 @@ class Index {
     //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
     const node = this.gun.back(- 1).get(`messagesByHash`).get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
     start = new Date();
-    const d = await this.getMsgTrustDistance(msg);
+    const d = await this._getMsgTrustDistance(msg);
     msg.distance = Object.prototype.hasOwnProperty.call(msg, `distance`) ? msg.distance : d;  // eslint-disable-line require-atomic-updates
     this.debug(`----`);
-    this.debug((new Date()) - start, `ms getMsgTrustDistance`);
+    this.debug((new Date()) - start, `ms _getMsgTrustDistance`);
     if (msg.distance === undefined) {
       return false; // do not save messages from untrusted author
     }
