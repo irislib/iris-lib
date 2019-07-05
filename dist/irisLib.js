@@ -10936,6 +10936,8 @@
 	* You can pass options.gun to use custom gun storages and networking settings.
 	*
 	* If you want messages saved to IPFS, pass options.ipfs = instance.
+	*
+	* Wait for index.ready promise to resolve before calling instance methods.
 	* @param {Object} options see default options in example
 	* @example
 	* Default options:
@@ -10944,6 +10946,7 @@
 	*  keypair: undefined,
 	*  pubKey: undefined,
 	*  gun: undefined,
+	*  self: undefined,
 	*  indexSync: {
 	*    importOnAdd: {
 	*      enabled: true,
@@ -10979,6 +10982,7 @@
 	      ipfs: undefined,
 	      keypair: undefined,
 	      pubKey: undefined,
+	      self: undefined,
 	      indexSync: {
 	        importOnAdd: {
 	          enabled: true,
@@ -11798,7 +11802,6 @@
 	  * [new msgs authors], until all messages from within the WoT have been added.
 	  *
 	  * @param {Array} msgs an array of messages.
-	  * @param {Object} ipfs (optional) ipfs instance where the messages are saved
 	  * @returns {boolean} true on success
 	  */
 
@@ -11898,7 +11901,6 @@
 	  * Add a message to messagesByTimestamp and other relevant indexes. Update identities in the web of trust according to message data.
 	  *
 	  * @param msg Message to add to the index
-	  * @param ipfs (optional) ipfs instance where the message is additionally saved
 	  */
 
 
