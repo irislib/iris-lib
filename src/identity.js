@@ -10,12 +10,13 @@ class Identity {
   /**
   * @param {Object} gun node where the Identity data lives
   */
-  constructor(gun: Object, linkTo) {
+  constructor(gun: Object, linkTo, index) {
     this.gun = gun;
     this.linkTo = linkTo;
+    this.index = index;
   }
 
-  static create(gun, data) {
+  static create(gun, data, index) {
     if (!data.linkTo && !data.attrs) {
       throw new Error(`You must specify either data.linkTo or data.attrs`);
     }
@@ -29,7 +30,7 @@ class Identity {
       data.linkTo = Identity.getLinkTo(data.attrs);
     }
     gun.put(data);
-    return new Identity(gun, data.linkTo);
+    return new Identity(gun, data.linkTo, index);
   }
 
   static getLinkTo(attrs) {
@@ -65,6 +66,22 @@ class Identity {
       }
     });
     return mostVerifiedAttributes;
+  }
+
+  /**
+  * Get sent Messages
+  * @param {Object} options
+  */
+  sent(options) {
+    this.index._getSentMsgs(this, options);
+  }
+
+  /**
+  * Get received Messages
+  * @param {Object} options
+  */
+  received(options) {
+    this.index._getReceivedMsgs(this, options);
   }
 
   /**

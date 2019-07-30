@@ -150,7 +150,7 @@ class Index {
         attrs[a.uri()] = a;
       }
     }
-    const id = Identity.create(g, {trustDistance: 0, linkTo: this.viewpoint, attrs});
+    const id = Identity.create(g, {trustDistance: 0, linkTo: this.viewpoint, attrs}, this);
     await this._addIdentityToIndexes(id.gun);
     if (this.options.self) {
       const recipient = Object.assign(this.options.self, {keyID: this.viewpoint.value});
@@ -327,7 +327,7 @@ class Index {
   * @returns {Identity} viewpoint identity (trustDistance == 0) of the index
   */
   getViewpoint() {
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(this.viewpoint.uri()));
+    return new Identity(this.gun.get(`identitiesBySearchKey`).get(this.viewpoint.uri()), undefined, this);
   }
 
   /**
@@ -425,9 +425,9 @@ class Index {
       if (this.writable) {
         this._addIdentityToIndexes(node);
       }
-      return new Identity(node, attr);
+      return new Identity(node, attr, this);
     } else {
-      return new Identity(this.gun.get(`identitiesBySearchKey`).get(attr.uri()), attr);
+      return new Identity(this.gun.get(`identitiesBySearchKey`).get(attr.uri()), attr, this);
     }
   }
 
@@ -468,35 +468,25 @@ class Index {
     }
   }
 
-  /**
-  * Get Messages sent by identity
-  * @param {Identity} identity identity whose sent Messages to get
-  * @param {Function} callback callback function that receives the Messages one by one
-  */
-  async getSentMsgs(identity: Identity, callback, limit, cursor, filter) {
-    this._getMsgs(identity.gun.get(`sent`), callback, limit, cursor, true, filter);
+  async _getSentMsgs(identity, options) {
+    this._getMsgs(identity.gun.get(`sent`), options.callback, options.limit, options.cursor, true, options.filter);
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
           const n = this.gun.user(key).get(`iris`).get(`messagesByAuthor`).get(identity.linkTo.uri());
-          this._getMsgs(n, callback, limit, cursor, false, filter);
+          this._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
         }
       });
     }
   }
 
-  /**
-  * Get Messages received by identity
-  * @param {Identity} identity identity whose received Messages to get
-  * @param {Function} callback callback function that receives the Messages one by one
-  */
-  async getReceivedMsgs(identity, callback, limit, cursor, filter) {
-    this._getMsgs(identity.gun.get(`received`), callback, limit, cursor, true, filter);
+  async _getReceivedMsgs(identity, options) {
+    this._getMsgs(identity.gun.get(`received`), options.callback, options.limit, options.cursor, true, options.filter);
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
           const n = this.gun.user(key).get(`iris`).get(`messagesByRecipient`).get(identity.linkTo.uri());
-          this._getMsgs(n, callback, limit, cursor, false, filter);
+          this._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
         }
       });
     }
@@ -771,7 +761,7 @@ class Index {
       const start = new Date();
       const node = this.gun.get(`identitiesBySearchKey`).get(u.uri());
       node.put({});
-      const id = Identity.create(node, {attrs, linkTo, trustDistance});
+      const id = Identity.create(node, {attrs, linkTo, trustDistance}, this);
       this.debug((new Date) - start, `ms identity.create`);
       // {a:1} because inserting {} causes a "no signature on data" error from gun
 
@@ -957,7 +947,7 @@ class Index {
       const soul = Gun.node.soul(id);
       if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
         seen[soul] = true;
-        const identity = new Identity(node.get(key));
+        const identity = new Identity(node.get(key), undefined, this);
         identity.cursor = key;
         callback(identity);
       }
@@ -975,7 +965,7 @@ class Index {
             if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
               seen[soul] = true;
               callback(
-                new Identity(this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k))
+                new Identity(this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k), undefined, this)
               );
             }
           });

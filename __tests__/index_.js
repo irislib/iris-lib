@@ -114,13 +114,13 @@ describe(`local index`, async () => {
     });
     test(`get messages received by bob`, async () => {
       const results = [];
-      i.getReceivedMsgs(p, result => results.push(result));
+      p.received({callback: result => results.push(result)});
       await new Promise(resolve => setTimeout(resolve, 200));
       expect(results.length).toBe(1);
     });
     test(`get messages sent by bob`, async () => {
       const results = [];
-      i.getSentMsgs(p, result => results.push(result));
+      p.sent({callback: result => results.push(result)});
       await new Promise(resolve => setTimeout(resolve, 200));
       expect(results.length).toBe(0);
     });
@@ -128,7 +128,7 @@ describe(`local index`, async () => {
       const viewpoint = i.getViewpoint();
       expect(viewpoint).toBeInstanceOf(iris.Identity);
       const results = [];
-      i.getSentMsgs(viewpoint, result => results.push(result));
+      viewpoint.sent({callback: result => results.push(result)});
       await new Promise(resolve => setTimeout(resolve, 200));
       expect(results.length).toBe(2);
     });

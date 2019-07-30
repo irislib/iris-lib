@@ -10434,14 +10434,15 @@
 	  /**
 	  * @param {Object} gun node where the Identity data lives
 	  */
-	  function Identity(gun, linkTo) {
+	  function Identity(gun, linkTo, index) {
 	    _classCallCheck(this, Identity);
 
 	    this.gun = gun;
 	    this.linkTo = linkTo;
+	    this.index = index;
 	  }
 
-	  Identity.create = function create(gun, data) {
+	  Identity.create = function create(gun, data, index) {
 	    if (!data.linkTo && !data.attrs) {
 	      throw new Error('You must specify either data.linkTo or data.attrs');
 	    }
@@ -10455,7 +10456,7 @@
 	      data.linkTo = Identity.getLinkTo(data.attrs);
 	    }
 	    gun.put(data);
-	    return new Identity(gun, data.linkTo);
+	    return new Identity(gun, data.linkTo, index);
 	  };
 
 	  Identity.getLinkTo = function getLinkTo(attrs) {
@@ -10491,6 +10492,26 @@
 	      }
 	    });
 	    return mostVerifiedAttributes;
+	  };
+
+	  /**
+	  * Get sent Messages
+	  * @param {Object} options
+	  */
+
+
+	  Identity.prototype.sent = function sent(options) {
+	    this.index._getSentMsgs(this, options);
+	  };
+
+	  /**
+	  * Get received Messages
+	  * @param {Object} options
+	  */
+
+
+	  Identity.prototype.received = function received(options) {
+	    this.index._getReceivedMsgs(this, options);
 	  };
 
 	  /**
@@ -11048,7 +11069,7 @@
 	        attrs[a.uri()] = a;
 	      }
 	    }
-	    var id = Identity.create(g, { trustDistance: 0, linkTo: this.viewpoint, attrs: attrs });
+	    var id = Identity.create(g, { trustDistance: 0, linkTo: this.viewpoint, attrs: attrs }, this);
 	    await this._addIdentityToIndexes(id.gun);
 	    if (this.options.self) {
 	      var recipient = _Object$assign(this.options.self, { keyID: this.viewpoint.value });
@@ -11233,7 +11254,7 @@
 
 
 	  Index.prototype.getViewpoint = function getViewpoint() {
-	    return new Identity(this.gun.get('identitiesBySearchKey').get(this.viewpoint.uri()));
+	    return new Identity(this.gun.get('identitiesBySearchKey').get(this.viewpoint.uri()), undefined, this);
 	  };
 
 	  /**
@@ -11338,9 +11359,9 @@
 	      if (this.writable) {
 	        this._addIdentityToIndexes(node);
 	      }
-	      return new Identity(node, attr);
+	      return new Identity(node, attr, this);
 	    } else {
-	      return new Identity(this.gun.get('identitiesBySearchKey').get(attr.uri()), attr);
+	      return new Identity(this.gun.get('identitiesBySearchKey').get(attr.uri()), attr, this);
 	    }
 	  };
 
@@ -11385,43 +11406,29 @@
 	    }
 	  };
 
-	  /**
-	  * Get Messages sent by identity
-	  * @param {Identity} identity identity whose sent Messages to get
-	  * @param {Function} callback callback function that receives the Messages one by one
-	  */
-
-
-	  Index.prototype.getSentMsgs = async function getSentMsgs(identity, callback, limit, cursor, filter) {
+	  Index.prototype._getSentMsgs = async function _getSentMsgs(identity, options) {
 	    var _this5 = this;
 
-	    this._getMsgs(identity.gun.get('sent'), callback, limit, cursor, true, filter);
+	    this._getMsgs(identity.gun.get('sent'), options.callback, options.limit, options.cursor, true, options.filter);
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
 	          var n = _this5.gun.user(key).get('iris').get('messagesByAuthor').get(identity.linkTo.uri());
-	          _this5._getMsgs(n, callback, limit, cursor, false, filter);
+	          _this5._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
 	        }
 	      });
 	    }
 	  };
 
-	  /**
-	  * Get Messages received by identity
-	  * @param {Identity} identity identity whose received Messages to get
-	  * @param {Function} callback callback function that receives the Messages one by one
-	  */
-
-
-	  Index.prototype.getReceivedMsgs = async function getReceivedMsgs(identity, callback, limit, cursor, filter) {
+	  Index.prototype._getReceivedMsgs = async function _getReceivedMsgs(identity, options) {
 	    var _this6 = this;
 
-	    this._getMsgs(identity.gun.get('received'), callback, limit, cursor, true, filter);
+	    this._getMsgs(identity.gun.get('received'), options.callback, options.limit, options.cursor, true, options.filter);
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
 	          var n = _this6.gun.user(key).get('iris').get('messagesByRecipient').get(identity.linkTo.uri());
-	          _this6._getMsgs(n, callback, limit, cursor, false, filter);
+	          _this6._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
 	        }
 	      });
 	    }
@@ -11776,7 +11783,7 @@
 	      var _start = new Date();
 	      var node = this.gun.get('identitiesBySearchKey').get(u.uri());
 	      node.put({});
-	      var id = Identity.create(node, { attrs: attrs, linkTo: linkTo, trustDistance: trustDistance });
+	      var id = Identity.create(node, { attrs: attrs, linkTo: linkTo, trustDistance: trustDistance }, this);
 	      this.debug(new Date() - _start, 'ms identity.create');
 	      // {a:1} because inserting {} causes a "no signature on data" error from gun
 
@@ -12012,7 +12019,7 @@
 	      var soul = Gun.node.soul(id);
 	      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	        seen[soul] = true;
-	        var identity = new Identity(node.get(key));
+	        var identity = new Identity(node.get(key), undefined, _this9);
 	        identity.cursor = key;
 	        callback(identity);
 	      }
@@ -12031,7 +12038,7 @@
 	            var soul = Gun.node.soul(id);
 	            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	              seen[soul] = true;
-	              callback(new Identity(_this9.gun.user(key).get('iris').get('identitiesBySearchKey').get(k)));
+	              callback(new Identity(_this9.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this9));
 	            }
 	          });
 	        }
