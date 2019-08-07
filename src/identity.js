@@ -70,7 +70,7 @@ class Identity {
 
   /**
   * Get sent Messages
-  * @param {Object} options
+  * @param {Object} options {callback, limit, cursor}
   */
   sent(options) {
     this.index._getSentMsgs(this, options);
@@ -78,7 +78,7 @@ class Identity {
 
   /**
   * Get received Messages
-  * @param {Object} options
+  * @param {Object} options {callback, limit, cursor}
   */
   received(options) {
     this.index._getReceivedMsgs(this, options);

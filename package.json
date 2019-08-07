@@ -8,6 +8,7 @@
   "jsxnext:main": "es/index.js",
   "jest": {
     "testURL": "http://localhost/",
+    "testEnvironment": "jsdom",
     "bail": true,
     "verbose": true,
     "collectCoverage": true,
