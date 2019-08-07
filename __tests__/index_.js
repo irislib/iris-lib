@@ -1,7 +1,3 @@
-/**
- * @jest-environment jest-environment-node
- */
-
 const iris = require(`../cjs/index.js`);
 const GUN = require(`gun`);
 const load = require(`gun/lib/load`);
