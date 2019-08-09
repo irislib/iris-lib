@@ -1,0 +1,74 @@
+version: "3.4"
+services:
+  # Iris library builder
+  irislib:
+    build:
+      context: .
+      target: iris-lib
+    container_name: iris-lib
+    image: iris-lib
+
+  # For local development use.
+  # Build with:
+  #   docker-compose build irislib-dev
+  # And run, typically using:
+  #   docker-compose up irislib-dev
+  irislib-dev:
+    build:
+      context: .
+      target: iris-base
+    container_name: irislib-dev
+    image: iris-lib-dev
+    working_dir: /app
+    ports:
+      - "3456:3456"
+    volumes: &irisdev-build-volumes
+      # Shared between everything using APK locally...
+      - devcache-apk:/var/cache/apk/
+      # Mount our project directory under the app
+      - .:/app
+      # For watching to work without --watchAll
+      - .git:/app/.git
+      # Anonymous volumes, just to persist caches from one build to another
+      #- /app/.build_dependencies
+      #- /app/.yarn_cache
+      # Builds can be accessed through a shared volume, e.g. by dev-angular
+      - irisdev-dist:/app/dist
+    command: yarn dev
+
+  # Service for CI/test execution
+  irislib-test:
+    image: iris-lib
+    command: yarn test:all
+    volumes:
+      - ./test:/app/test
+    container: irislib-test
+
+  # Stand-alone Iris node
+  irisnode:
+    build:
+      context: .
+      target: iris-node-prod
+    container_name: iris-node
+    # Serves: cjs/server.js
+    command: yarn serve
+
+  # Development version of the stand-alone Iris node
+  irisnode-dev:
+    build:
+      context: .
+      target: iris-node-dev
+    container_name: iris-node-dev
+    volumes:
+      - ./src:/app/src
+      - ./.git:/app/.git
+    # Serves & watches src/server.js
+    command: yarn dev
+
+  # TODO: Look into https://erikengervall.github.io/dockest/
+
+volumes:
+  irisdev-dist:
+  irisdev-apkbuild:
+  irisdev-yarn:
+  devcache-apk:
