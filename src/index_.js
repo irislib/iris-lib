@@ -116,8 +116,7 @@ class Index {
 
     if (options.pubKey) { // someone else's index
       const gun = options.gun || new Gun();
-      const user = gun.user();
-      user.auth(options.pubKey);
+      const user = gun.user(options.pubKey);
       this.gun = user.get(`iris`);
       this.viewpoint = new Attribute({type: `keyID`, value: options.pubKey});
       this.ready = Promise.resolve();
