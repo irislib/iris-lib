@@ -11030,8 +11030,7 @@
 	    if (options.pubKey) {
 	      // someone else's index
 	      var gun = options.gun || new Gun();
-	      var user = gun.user();
-	      user.auth(options.pubKey);
+	      var user = gun.user(options.pubKey);
 	      this.gun = user.get('iris');
 	      this.viewpoint = new Attribute({ type: 'keyID', value: options.pubKey });
 	      this.ready = _Promise.resolve();
@@ -12173,7 +12172,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.102";
+	var version$1 = "0.0.104";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
