@@ -42,7 +42,7 @@ CMD ['yarn', 'test:all']
 
 # ============================================= #
 
-FROM node:current-alpine AS iris-node-base
+FROM node:current-alpine AS irisnode-base
 
 # Parameters for the container:
 
@@ -78,7 +78,7 @@ COPY --from=iris-lib /app/cjs /app/cjs
 
 # ============================================= #
 
-FROM iris-node-base AS iris-node-prod
+FROM irisnode-base AS irisnode-prod
 
 COPY --from=iris-lib /app/yarn_prod /app/node_modules
 ENV NODE_ENV='production'
@@ -87,7 +87,7 @@ CMD ["yarn", "serve"]
 
 # ============================================= #
 
-FROM iris-node-base AS iris-node-dev
+FROM irisnode-base AS irisnode-dev
 
 COPY --from=iris-lib /app/node_modules /app/node_modules
 COPY .*rc ./

@@ -2,7 +2,7 @@
   "name": "iris-lib",
   "version": "0.0.104",
   "description": "Basic tools for reading and writing Iris messages and identities.",
-  "main": "src/server.js",
+  "main": "src/index.js",
   "browser": "dist/irisLib.js",
   "module": "es/index.js",
   "jsxnext:main": "es/index.js",
@@ -63,7 +63,7 @@
     "build:docs": "documentation build src/** -f html -o docs",
     "build:run": "clear && rimraf cjs && cross-env BABEL_ENV=cjs yarn nodemon src/server.js --watch src --exec babel-node",
     "dev": "concurrently -n tests,build \"yarn test:watch\" \"yarn build:run\"",
-    "serve": "node cjs/server.js"
+    "start": "node cjs/server.js"
   },
   "keywords": [],
   "author": "Martti Malmi (martti.malmi@iki.fi)",

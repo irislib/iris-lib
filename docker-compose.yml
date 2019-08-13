@@ -42,14 +42,14 @@ services:
     command: yarn test:all
     volumes:
       - ./test:/app/test
-    container: irislib-test
+    container_name: irislib-test
 
   # Stand-alone Iris node
   irisnode:
     build:
       context: .
-      target: iris-node-prod
-    container_name: iris-node
+      target: irisnode-prod
+    container_name: irisnode
     # Serves: cjs/server.js
     command: yarn serve
 
@@ -57,8 +57,8 @@ services:
   irisnode-dev:
     build:
       context: .
-      target: iris-node-dev
-    container_name: iris-node-dev
+      target: irisnode-dev
+    container_name: irisnode-dev
     volumes:
       - ./src:/app/src
       - ./.git:/app/.git
