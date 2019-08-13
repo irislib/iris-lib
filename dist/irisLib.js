@@ -9753,13 +9753,14 @@
 	  */
 	  Key.getDefault = async function getDefault() {
 	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
+	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'identifi.key';
 
 	    if (myKey) {
 	      return myKey;
 	    }
 	    if (util$1.isNode) {
 	      var fs = require('fs');
-	      var privKeyFile = datadir + '/private.key';
+	      var privKeyFile = datadir + '/' + keyfile;
 	      if (fs.existsSync(privKeyFile)) {
 	        var f = fs.readFileSync(privKeyFile, 'utf8');
 	        myKey = Key.fromString(f);
@@ -9770,7 +9771,7 @@
 	        fs.chmodSync(privKeyFile, 400);
 	      }
 	      if (!myKey) {
-	        throw new Error('loading default key failed - check ' + datadir + '/private.key');
+	        throw new Error('loading default key failed - check ' + datadir + '/' + keyfile);
 	      }
 	    } else {
 	      var str = window.localStorage.getItem('iris.myKey');
@@ -11030,8 +11031,7 @@
 	    if (options.pubKey) {
 	      // someone else's index
 	      var gun = options.gun || new Gun();
-	      var user = gun.user();
-	      user.auth(options.pubKey);
+	      var user = gun.user(options.pubKey);
 	      this.gun = user.get('iris');
 	      this.viewpoint = new Attribute({ type: 'keyID', value: options.pubKey });
 	      this.ready = _Promise.resolve();
@@ -11810,6 +11810,9 @@
 	  Index.prototype.addMessages = async function addMessages(msgs) {
 	    var _this8 = this;
 
+	    if (!this.writable) {
+	      throw new Error('Cannot write to a read-only index (initialized with options.pubKey)');
+	    }
 	    var msgsByAuthor = {};
 	    if (Array.isArray(msgs)) {
 	      this.debug('sorting ' + msgs.length + ' messages onto a search tree...');
@@ -11908,6 +11911,9 @@
 	  Index.prototype.addMessage = async function addMessage(msg) {
 	    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
+	    if (!this.writable) {
+	      throw new Error('Cannot write to a read-only index (initialized with options.pubKey)');
+	    }
 	    var start = void 0;
 	    if (msg.constructor.name !== 'Message') {
 	      throw new Error('addMessage failed: param must be a Message, received ' + msg.constructor.name);
@@ -12173,7 +12179,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.102";
+	var version$1 = "0.0.105";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

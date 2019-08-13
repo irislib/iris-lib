@@ -16,7 +16,7 @@ class Key {
   * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
   * @returns {Promise<Object>} keypair object
   */
-  static async getDefault(datadir = `.`, keyfile = 'identifi.key') {
+  static async getDefault(datadir = `.`, keyfile = `identifi.key`) {
     if (myKey) {
       return myKey;
     }

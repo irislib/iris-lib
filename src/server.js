@@ -2,9 +2,9 @@
 
 /**
  * Stand-alone iris node service wrapper. If NODE_ENV is 'production', uses
- * ../irisLib.js, else uses the version in src or cjs directly. Development version
+ * ../dist/irisLib.js, else uses the version in src or cjs directly. Development version
  * assumes that it is running directly under the checked-out source tree from git,
- * or in an `irisnode-dev` container, built with `docker-compose build iris-node`.
+ * or in an `irisnode-dev` container, built with `docker-compose build irisnode`.
  *
  * Run with:
  *   NODE_ENV='production' yarn serve
@@ -26,12 +26,12 @@ import Gun from 'gun';
 
 // Iris import depends on whether we're in dev mode or not
 let Iris;
-if (process.env.NODE_ENV === 'production') {
-  console.log('Loading irisLib.js!');
-  Iris = require('../irisLib.js');
+if (process.env.NODE_ENV === `production`) {
+  console.log(`Loading irisLib.js!`);
+  Iris = require(`../dist/irisLib.js`);
 } else {
-  console.log('Loading src as Iris!');
-  Iris = require('./index.js');
+  console.log(`Loading src as Iris!`);
+  Iris = require(`./index.js`);
 }
 
 // Debug output?
@@ -41,9 +41,9 @@ const fsExists = promisify(exists);
 const fsMkdir = promisify(mkdir);
 const fsReadFile = promisify(readFile);
 
-const configDir = './.iris';
-const keyFileName = 'iris.default.key';
-const gunDBName = 'iris.db.radix';
+const configDir = `./.iris`;
+const keyFileName = `iris.default.key`;
+const gunDBName = `iris.db.radix`;
 
 let configFile = `${configDir}/config.json`;
 
@@ -61,14 +61,14 @@ let configFile = `${configDir}/config.json`;
 
   // Load config file
   if (!await fsExists(configFile)) {
-    configFile = 'config.default.json';
+    configFile = `config.default.json`;
     console.warn(`Config file missing, using ${configFile} instead.`);
   }
   const config = JSON.parse(await fsReadFile(configFile));
 
   // Read-in keyfile, or generate (and store) a new key pair
   const key = Iris.Key.getDefault(configDir, keyFileName);
-  debug('Key!', key);
+  debug(`Key!`, key);
 
   // TODO: If executed with --gen-keys => just generate keys, save, output to stdout, exit
 
@@ -85,9 +85,9 @@ let configFile = `${configDir}/config.json`;
   // IRIS_GUN_PEERS format: "http://localhost:123/gun/;http://1.2.3.4:5678/gun/"
   if (process.env.IRIS_GUN_PEERS) {
     gunConfig.peers = process.env.IRIS_GUN_PEERS
-      .split(';')
+      .split(`;`)
       .reduce((obj, item) => {
-        obj[item] = '';
+        obj[item] = ``;
         return obj;
       }, {});
   }
@@ -99,10 +99,10 @@ let configFile = `${configDir}/config.json`;
   // Load default Iris index with given configuration
   config.gun = gun;
   const index = new Iris.Index(config);
-  debug('index!', index);
+  debug(`index!`, index);
 
   //await index.create(); // Create an index, if one does not exist
-  console.info('Iris is up and running!');
+  console.info(`Iris is up and running!`);
 })().catch(e => {
   console.error(e);
   process.exit(1);
