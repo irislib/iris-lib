@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset='utf-8' />
-  <title>iris-lib 0.0.104 | Documentation</title>
+  <title>iris-lib 0.0.105 | Documentation</title>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
   <link href='assets/bass.css' type='text/css' rel='stylesheet' />
   <link href='assets/style.css' type='text/css' rel='stylesheet' />
@@ -15,7 +15,7 @@
       <div id='split-left' class='overflow-auto fs0 height-viewport-100'>
         <div class='py1 px2'>
           <h3 class='mb0 no-anchor'>iris-lib</h3>
-          <div class='mb1'><code>0.0.104</code></div>
+          <div class='mb1'><code>0.0.105</code></div>
           <input
             placeholder='Filter'
             id='filter-input'
@@ -446,6 +446,16 @@
                   
                   
                 </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#readfile'
+                  class="">
+                  readFile
+                  
+                </a>
                 
                 </li>
               
@@ -2465,7 +2475,7 @@ unknown authors.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getDefault(datadir)</span>
+            <span class='code strong strong truncate'>getDefault(datadir, keyfile)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2478,7 +2488,7 @@ unknown authors.</p>
 
  
   
-    <div class='pre p1 fill-light mt0'>getDefault(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
+    <div class='pre p1 fill-light mt0'>getDefault(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, keyfile: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
    
   
   
@@ -2500,6 +2510,15 @@ unknown authors.</p>
             = <code>`.`</code>)</code>
 	    directory to find key from. In browser, localStorage is used instead.
 
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>keyfile</span> <code class='quiet'>(any
+            = <code>`identifi.key`</code>)</code>
+	    
           </div>
           
         </div>
@@ -4306,6 +4325,66 @@ Verification message:
     </div>
   
 </div>
+
+  
+
+  
+</section>
+
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='readfile'>
+      readFile
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Stand-alone iris node service wrapper. If NODE_ENV is 'production', uses
+../dist/irisLib.js, else uses the version in src or cjs directly. Development version
+assumes that it is running directly under the checked-out source tree from git,
+or in an <code>irisnode-dev</code> container, built with <code>docker-compose build irisnode</code>.</p>
+<p>Run with:
+NODE_ENV='production' yarn serve
+or
+NODE_ENV='development' yarn build:run
+or (for running tests + server)
+NODE_ENV='development' yarn dev</p>
+<p>Special environment variables:
+IRIS_GUN_PEERS - colon-separated peers that gun should try to connect to.
+Example: "<a href="http://localhost:123/gun/;http://1.2.3.4:5678/gun/">http://localhost:123/gun/;http://1.2.3.4:5678/gun/</a>"</p>
+
+ 
+  
+    <div class='pre p1 fill-light mt0'>readFile</div>
+   
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
 
   
 
