@@ -71,16 +71,20 @@ beforeAll(() => {
 });
 
 describe(`local index`, async () => {
-  let i, h, key, keyID;
+  let i, r, h, key, keyID;
   beforeAll(async () => {
     key = await iris.Key.getDefault();
     keyID = iris.Key.getId(key);
     i = new iris.Index({gun, keypair: key, self: {name: `Alice`}, debug: false});
+    r = new iris.Index({gun, pubKey: key.pub, debug: false}); // read-only
     await i.ready;
     await new Promise(r => setTimeout(r, 3000));
   });
   test(`create new Index`, async () => {
     expect(i).toBeInstanceOf(iris.Index);
+    expect(r).toBeInstanceOf(iris.Index);
+    expect(i.writable).toBe(true);
+    expect(r.writable).not.toBe(true);
     const viewpoint = i.getViewpoint();
     expect(viewpoint).toBeInstanceOf(iris.Identity);
     const data = await new Promise(resolve => {
@@ -100,7 +104,9 @@ describe(`local index`, async () => {
       expect(r).toBe(true);
     });
     test(`get added msg by hash`, async () => {
-      const msg = await i.getMessageByHash(h);
+      let msg = await i.getMessageByHash(h);
+      expect(msg.signedData.recipient.email).toEqual(`bob@example.com`);
+      msg = await r.getMessageByHash(h);
       expect(msg.signedData.recipient.email).toEqual(`bob@example.com`);
     });
     test(`get added identity`, async () => {
@@ -210,10 +216,14 @@ describe(`local index`, async () => {
   describe(`adding attributes to an identity`, async () => {
     let c;
     test(`get identity count`, async () => {
-      const results = [];
+      let results = [];
       i.search(``, null, result => results.push(result));
       await new Promise(resolve => setTimeout(resolve, 200));
       c = results.length;
+      expect(results.length).toBeGreaterThan(1);
+      results = [];
+      r.search(``, null, result => results.push(result));
+      await new Promise(resolve => setTimeout(resolve, 200));
       expect(results.length).toBeGreaterThan(1);
     });
     test(`add name to Bob`, async () => {

@@ -783,6 +783,9 @@ class Index {
   * @returns {boolean} true on success
   */
   async addMessages(msgs) {
+    if (!this.writable) {
+      throw new Error(`Cannot write to a read-only index (initialized with options.pubKey)`);
+    }
     const msgsByAuthor = {};
     if (Array.isArray(msgs)) {
       this.debug(`sorting ${msgs.length} messages onto a search tree...`);
@@ -854,6 +857,9 @@ class Index {
   * @param msg Message to add to the index
   */
   async addMessage(msg: Message, options = {}) {
+    if (!this.writable) {
+      throw new Error(`Cannot write to a read-only index (initialized with options.pubKey)`);
+    }
     let start;
     if (msg.constructor.name !== `Message`) {
       throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);

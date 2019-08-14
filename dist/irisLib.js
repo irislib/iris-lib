@@ -11809,6 +11809,9 @@
 	  Index.prototype.addMessages = async function addMessages(msgs) {
 	    var _this8 = this;
 
+	    if (!this.writable) {
+	      throw new Error('Cannot write to a read-only index (initialized with options.pubKey)');
+	    }
 	    var msgsByAuthor = {};
 	    if (Array.isArray(msgs)) {
 	      this.debug('sorting ' + msgs.length + ' messages onto a search tree...');
@@ -11907,6 +11910,9 @@
 	  Index.prototype.addMessage = async function addMessage(msg) {
 	    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
+	    if (!this.writable) {
+	      throw new Error('Cannot write to a read-only index (initialized with options.pubKey)');
+	    }
 	    var start = void 0;
 	    if (msg.constructor.name !== 'Message') {
 	      throw new Error('addMessage failed: param must be a Message, received ' + msg.constructor.name);
@@ -12172,7 +12178,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.104";
+	var version$1 = "0.0.105";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
