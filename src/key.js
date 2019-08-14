@@ -16,13 +16,13 @@ class Key {
   * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
   * @returns {Promise<Object>} keypair object
   */
-  static async getDefault(datadir = `.`) {
+  static async getDefault(datadir = `.`, keyfile = `identifi.key`) {
     if (myKey) {
       return myKey;
     }
     if (util.isNode) {
       const fs = require(`fs`);
-      const privKeyFile = `${datadir}/private.key`;
+      const privKeyFile = `${datadir}/${keyfile}`;
       if (fs.existsSync(privKeyFile)) {
         const f = fs.readFileSync(privKeyFile, `utf8`);
         myKey = Key.fromString(f);
@@ -33,7 +33,7 @@ class Key {
         fs.chmodSync(privKeyFile, 400);
       }
       if (!myKey) {
-        throw new Error(`loading default key failed - check ${datadir}/private.key`);
+        throw new Error(`loading default key failed - check ${datadir}/${keyfile}`);
       }
     } else {
       const str = window.localStorage.getItem(`iris.myKey`);

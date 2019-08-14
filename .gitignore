@@ -6,3 +6,5 @@ coverage
 ipfs_repo
 test-report.html
 jest-stare
+.iris
+.idea

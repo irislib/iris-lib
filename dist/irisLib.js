@@ -9753,13 +9753,14 @@
 	  */
 	  Key.getDefault = async function getDefault() {
 	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
+	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'identifi.key';
 
 	    if (myKey) {
 	      return myKey;
 	    }
 	    if (util$1.isNode) {
 	      var fs = require('fs');
-	      var privKeyFile = datadir + '/private.key';
+	      var privKeyFile = datadir + '/' + keyfile;
 	      if (fs.existsSync(privKeyFile)) {
 	        var f = fs.readFileSync(privKeyFile, 'utf8');
 	        myKey = Key.fromString(f);
@@ -9770,7 +9771,7 @@
 	        fs.chmodSync(privKeyFile, 400);
 	      }
 	      if (!myKey) {
-	        throw new Error('loading default key failed - check ' + datadir + '/private.key');
+	        throw new Error('loading default key failed - check ' + datadir + '/' + keyfile);
 	      }
 	    } else {
 	      var str = window.localStorage.getItem('iris.myKey');
