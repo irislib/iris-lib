@@ -34,6 +34,15 @@ if (process.env.NODE_ENV === `production`) {
   Iris = require(`./index.js`);
 }
 
+// Explicit check for node-webcrypto-ossl, 'cause it just breaks sometimes
+try {
+  require('node-webcrypto-ossl');
+}
+catch (err) {
+  console.error('(^_^)> This is a passive-aggressive warning that node-webcrypto-ossl has spontaneously self-destructed, again.');
+  process.exit(1);
+}
+
 // Debug output?
 const debug = (process.env.IRIS_VERBOSE ? console.log : console.debug);
 
@@ -44,6 +53,7 @@ const fsReadFile = promisify(readFile);
 const configDir = `./.iris`;
 const keyFileName = `iris.default.key`;
 const gunDBName = `iris.db.radix`;
+const ipfsRepo = 'ipfs';
 
 let configFile = `${configDir}/config.json`;
 
@@ -90,6 +100,20 @@ let configFile = `${configDir}/config.json`;
         obj[item] = ``;
         return obj;
       }, {});
+  }
+
+  // Create an IPFS node - if js-ipfs exists, and unless flagged otherwise
+  if (!process.env.IRIS_NO_IPFS) {
+    let IPFS = null;
+    try {
+      IPFS = require('js-ipfs');
+    }
+    catch (err) {
+      console.warn('IRIS_NO_IPFS not set, and `js-ipfs` library not found! Local IPFS node NOT instantiated.');
+    }
+    if (IPFS) {
+      await IPFS.create({repo: `${configDir}/${ipfsRepo}`});
+    }
   }
 
   // Instantiate gun

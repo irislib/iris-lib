@@ -1,4 +1,4 @@
-const iris = require(`../cjs/index.js`);
+const iris = require(`index.js`);
 const GUN = require(`gun`);
 const load = require(`gun/lib/load`);
 const then = require(`gun/lib/then`);

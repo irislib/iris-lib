@@ -1,9 +1,9 @@
 /*global describe, it, after, before */
 const crypto = require(`crypto`);
-const Attribute = require(`../cjs/attribute.js`);
-const Message = require(`../cjs/message.js`);
-const Identity = require(`../cjs/identity.js`);
-const Key = require(`../cjs/key.js`);
+const Attribute = require(`attribute.js`);
+const Message = require(`message.js`);
+const Identity = require(`identity.js`);
+const Key = require(`key.js`);
 
 jest.setTimeout(30000);
 
