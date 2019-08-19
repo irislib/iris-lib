@@ -7,30 +7,33 @@
 [![Coverage Status](https://img.shields.io/coveralls/irislib/iris-lib.svg?style=flat-square)](https://coveralls.io/github/irislib/iris-lib)
 [![Gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)](https://gitmoji.carloscuesta.me/)
 
-### Description
-Iris-lib provides the [Iris API](http://docs.iris.to/) for reading, writing, indexing and searching Messages and Identities.
 
+### Description
+Iris-lib allows you to integrate decentralized social networking features into your application.
+
+* Public messaging
+** Add a troll-free comment box to your website or app
+* Web of trust: Filter out spam and other unwanted content, without giving power to central moderators.
+** Iris public and private messages are automatically filtered
+** Filter your own datasets by author's web of trust distance
+* Private chats
+** Don't reinvent the wheel - just deploy iris-lib for real-time private and group discussions
+** Instant messaging with no phone number or other "account" required
+* Contacts management
+** Ask friends to verify your public key or cryptocurrency address and changes to them
+** Get verified payment addresses in crypto wallets
+
+Iris-lib runs in the browser and on Node.js.
+
+### Usage
+See [Iris API](http://docs.iris.to/) and tests directory.
+
+### Tech
 The task of data storage and networking is outsourced to [GUN](https://github.com/amark/gun), which manages the synchronization of data between different storages: RAM, localstorage, GUN websocket server, WebRTC peers, LAN multicast peers, IPFS (no adapter yet), S3 or others.
 
 GUN enables subscription to data changes, so message feeds and identity profiles just update real-time without having to hit f5 or writing complex update logic.
 
-### Usage
-
-```js
-iris = require('iris-lib');
-Gun = require('gun'); // github.com/amark/gun is needed
-require('gun/sea');
-
-gun = new Gun(['https://gun-us.herokuapp.com/gun', 'https://gun-eu.herokuapp.com/gun']);
-defaultIndexID = 'b8ByaYNBDCMLNdZqMdas5oUFLCxBf2VH3-NjUulDaTo.DVzINErRVs6m5tyjAux6fcNfndadcgZVN5hLSwYTCLc';
-user = gun.user(defaultIndexID);
-
-index = new iris.Index(user.get('iris'));
-profile = index.get('sirius@iki.fi');
-profile.gun.get('attrs').then(console.log);
-profile.verified('name').then(console.log);
-
-```
+IPFS is used to store file attachments and optional message backups.
 
 ### Installation
 
@@ -41,10 +44,6 @@ Install via [yarn](https://github.com/yarnpkg/yarn)
 or npm
 
 	npm install iris-lib (--save-dev)
-
-### Examples
-
-See [`example`](example/script.js) folder or the [runkit](https://runkit.com/irislib/iris-lib) example.
 
 ### Builds
 
