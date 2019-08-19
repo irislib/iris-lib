@@ -11,17 +11,13 @@
 ### Description
 Iris-lib allows you to integrate decentralized social networking features into your application.
 
-* Public messaging
-* * Add a troll-free comment box to your website or app
-* Web of trust: Filter out spam and other unwanted content, without giving power to central moderators.
-* * Iris public and private messages are automatically filtered
-* * Filter your own datasets by author's web of trust distance
-* Private chats
-* * Don't reinvent the wheel - just deploy iris-lib for real-time private and group discussions
-* * Instant messaging with no phone number or other "account" required
-* Contacts management
-* * Ask friends to verify your public key or cryptocurrency address and changes to them
-* * Get verified payment addresses in crypto wallets
+__Public messaging__: Add a troll-free comment box to your website or app.
+
+__Web of trust__: Filter out spam and other unwanted content, without giving power to central moderators. Iris public and private messages are automatically filtered. You can also filter your own datasets by user's web of trust distance.
+
+__Private chats__: Don't reinvent the wheel - just deploy iris-lib for real-time private and group discussions. Instant messaging that doesn't require a phone number or other "account".
+
+__Contacts management__: Ask friends to verify your public key or cryptocurrency address and changes to them. Use verified payment addresses in crypto wallets. Any other types of attributes can also be added and verified.
 
 Iris-lib runs in the browser and on Node.js.
 
