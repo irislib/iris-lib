@@ -6,6 +6,7 @@ import Attribute from './attribute';
 import util from './util';
 import Index from './index_';
 import Key from './key';
+import Chat from './chat';
 import {version} from '../package.json';
 
 export default {
@@ -15,5 +16,6 @@ export default {
   Attribute,
   Index,
   Key,
+  Chat,
   util,
 };
