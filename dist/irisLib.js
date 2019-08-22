@@ -7,7 +7,7 @@
 	Gun = Gun && Gun.hasOwnProperty('default') ? Gun['default'] : Gun;
 
 	function unwrapExports (x) {
-		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x.default : x;
+		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 	}
 
 	function createCommonjsModule(fn, module) {
@@ -15,7 +15,7 @@
 	}
 
 	var _core = createCommonjsModule(function (module) {
-	var core = module.exports = { version: '2.6.4' };
+	var core = module.exports = { version: '2.6.9' };
 	if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 	});
 	var _core_1 = _core.version;
@@ -824,6 +824,8 @@
 
 
 
+
+
 	var gOPD$1 = _objectGopd.f;
 	var dP$1 = _objectDp.f;
 	var gOPN$1 = _objectGopnExt.f;
@@ -838,7 +840,7 @@
 	var AllSymbols = _shared('symbols');
 	var OPSymbols = _shared('op-symbols');
 	var ObjectProto$1 = Object[PROTOTYPE$2];
-	var USE_NATIVE = typeof $Symbol == 'function';
+	var USE_NATIVE = typeof $Symbol == 'function' && !!_objectGops.f;
 	var QObject = _global.QObject;
 	// Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
 	var setter = !QObject || !QObject[PROTOTYPE$2] || !QObject[PROTOTYPE$2].findChild;
@@ -997,6 +999,16 @@
 	  getOwnPropertyNames: $getOwnPropertyNames,
 	  // 19.1.2.8 Object.getOwnPropertySymbols(O)
 	  getOwnPropertySymbols: $getOwnPropertySymbols
+	});
+
+	// Chrome 38 and 39 `Object.getOwnPropertySymbols` fails on primitives
+	// https://bugs.chromium.org/p/v8/issues/detail?id=3443
+	var FAILS_ON_PRIMITIVES = _fails(function () { _objectGops.f(1); });
+
+	_export(_export.S + _export.F * FAILS_ON_PRIMITIVES, 'Object', {
+	  getOwnPropertySymbols: function getOwnPropertySymbols(it) {
+	    return _objectGops.f(_toObject(it));
+	  }
 	});
 
 	// 24.3.2 JSON.stringify(value [, replacer [, space]])
@@ -2610,24 +2622,28 @@
 	if (typeof Object.create === 'function') {
 	  // implementation from standard node.js 'util' module
 	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor;
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	      constructor: {
-	        value: ctor,
-	        enumerable: false,
-	        writable: true,
-	        configurable: true
-	      }
-	    });
+	    if (superCtor) {
+	      ctor.super_ = superCtor;
+	      ctor.prototype = Object.create(superCtor.prototype, {
+	        constructor: {
+	          value: ctor,
+	          enumerable: false,
+	          writable: true,
+	          configurable: true
+	        }
+	      });
+	    }
 	  };
 	} else {
 	  // old school shim for old browsers
 	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor;
-	    var TempCtor = function () {};
-	    TempCtor.prototype = superCtor.prototype;
-	    ctor.prototype = new TempCtor();
-	    ctor.prototype.constructor = ctor;
+	    if (superCtor) {
+	      ctor.super_ = superCtor;
+	      var TempCtor = function () {};
+	      TempCtor.prototype = superCtor.prototype;
+	      ctor.prototype = new TempCtor();
+	      ctor.prototype.constructor = ctor;
+	    }
 	  };
 	}
 	});
@@ -4635,6 +4651,8 @@
 	function SafeBuffer (arg, encodingOrOffset, length) {
 	  return Buffer(arg, encodingOrOffset, length)
 	}
+
+	SafeBuffer.prototype = Object.create(Buffer.prototype);
 
 	// Copy static methods from Buffer
 	copyProps(Buffer, SafeBuffer);
@@ -10776,9 +10794,13 @@
 	    var i = 0;
 	    var result = [];
 	    var key;
-	    while (length > i) if (isEnum$1.call(O, key = keys[i++])) {
-	      result.push(isEntries ? [key, O[key]] : O[key]);
-	    } return result;
+	    while (length > i) {
+	      key = keys[i++];
+	      if (!_descriptors || isEnum$1.call(O, key)) {
+	        result.push(isEntries ? [key, O[key]] : O[key]);
+	      }
+	    }
+	    return result;
 	  };
 	};
 
@@ -10875,6 +10897,7 @@
 
 
 
+
 	var $assign = Object.assign;
 
 	// should work with symbols and should have deterministic property order (V8 bug)
@@ -10899,7 +10922,10 @@
 	    var length = keys.length;
 	    var j = 0;
 	    var key;
-	    while (length > j) if (isEnum.call(S, key = keys[j++])) T[key] = S[key];
+	    while (length > j) {
+	      key = keys[j++];
+	      if (!_descriptors || isEnum.call(S, key)) T[key] = S[key];
+	    }
 	  } return T;
 	} : $assign;
 
@@ -12179,6 +12205,135 @@
 	  return Index;
 	}();
 
+	/**
+	* Private communication channel between two or more participants
+	*/
+
+	var Chat = function () {
+	  function Chat(options) {
+	    _classCallCheck(this, Chat);
+
+	    this.key = options.key;
+	    this.gun = options.gun;
+	    this.user = this.gun.user();
+	    this.user.auth(this.key);
+	    this.user.put({ epub: this.key.epub });
+	    this.participants = [];
+	    this.addPub(this.key.pub);
+	    this.onMessage = options.onMessage;
+	  }
+
+	  Chat.prototype.addChat = function addChat(data, pub) {
+	    console.log('data received');
+	    console.log(data);
+	    this.gun.user(pub).get('epub').once(this.step.bind(this, data));
+	  };
+
+	  Chat.prototype.step = function step(data, epub) {
+	    console.log('this.step');
+	    console.log(epub, data);
+	    Gun.SEA.secret(epub, this.user._.sea, this.step2.bind(this, data));
+	  };
+
+	  Chat.prototype.step2 = function step2(data, key) {
+	    console.log('decrypt');
+	    Gun.SEA.decrypt(data, key, this.decrypted.bind(this));
+	  };
+
+	  Chat.prototype.decrypted = function decrypted(data) {
+	    console.log('this.decrypted', data, this.onMessage);
+	    if (this.onMessage) {
+	      this.onMessage(data);
+	    } else {
+	      console.log('no onMessage handler');
+	    }
+	  };
+
+	  /*
+	  createUser () {
+	    const uName = document.getElementById(`username`).value;
+	    const passP = document.getElementById(`passphrase`).value;
+	    console.log(`Called user create`);
+	    user.create(uName, passP, console.log);
+	  }
+	   signIn () {
+	    const uName = document.getElementById(`username`).value;
+	    name = uName;
+	    document.getElementById(`name`).innerHTML = name;
+	    document.getElementById(`username`).value = ``;
+	    const passP = document.getElementById(`passphrase`).value;
+	    document.getElementById(`passphrase`).value = ``;
+	    console.log(`Called user signin`);
+	    user.auth(uName, passP, function(ack) {
+	      console.log(ack);
+	      this.gun.user().once(function(data, key) {
+	        console.log(data);
+	        const epub = document.getElementById(`epub`);
+	        epub.value = data.pub; // <-- change all epub to pub in UI and ids
+	      });
+	    });
+	  }
+	  */
+
+	  Chat.prototype.addPub = function addPub(pub) {
+	    var _this = this;
+
+	    this.participants.push(pub);
+	    this.gun.user(pub).get('chat').get(this.key.pub).on(function (data) {
+	      _this.addChat(data, pub);
+	    });
+	  };
+
+	  Chat.prototype.send = function send(msg) {
+	    var temp = {};
+	    temp.date = new Date().toString();
+	    temp.name = 'name';
+	    temp.text = msg;
+	    //this.gun.user().get('message').set(temp);
+	    var i = 0;
+	    var l = this.participants.length;
+	    for (i; i < l; i++) {
+	      this.gun.user(this.participants[i]).once(this.setup.bind(this, this.participants[i], temp));
+	    }
+	  };
+
+	  //add another this.step for key retrieval to avoid calling this.gun.user().pair()
+
+
+	  Chat.prototype.setup = function setup(pub, message, userObj) {
+	    if (!userObj) {
+	      console.log('userObj undefined');
+	      return;
+	    }
+	    console.log(pub, message, userObj);
+	    console.log('setup');
+	    this.gun.user(pub).once(this.secret.bind(this, userObj, message, pub));
+	  };
+
+	  Chat.prototype.secret = function secret(userObj, message, pub, person) {
+	    if (!person) {
+	      console.log('person undefined');
+	      return;
+	    }
+	    console.log(userObj, message, person);
+	    console.log('secret');
+	    Gun.SEA.secret(person.epub, this.user._.sea, this.encrypt.bind(this, message, pub));
+	  };
+
+	  Chat.prototype.encrypt = function encrypt(message, pub, key) {
+	    console.log('encrypt', key);
+	    var stringified = _JSON$stringify(message);
+	    Gun.SEA.encrypt(stringified, key, this.sendEncrypt.bind(this, pub));
+	  };
+
+	  Chat.prototype.sendEncrypt = function sendEncrypt(pub, encr) {
+	    console.log(encr, pub);
+	    this.gun.user().get('chat').get(pub).put(encr);
+	  };
+
+	  return Chat;
+	}();
+
 	var version$1 = "0.0.105";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
@@ -12190,6 +12345,7 @@
 	  Attribute: Attribute,
 	  Index: Index,
 	  Key: Key,
+	  Chat: Chat,
 	  util: util$1
 	};
 
