@@ -2,6 +2,8 @@ import Gun from 'gun'; // eslint-disable-line no-unused-vars
 
 /**
 * Private communication channel between two or more participants
+*
+* @param {Object} options {key, gun, onMessage}
 */
 class Chat {
   constructor(options) {
@@ -41,38 +43,17 @@ class Chat {
     }
   }
 
-  /*
-  createUser () {
-    const uName = document.getElementById(`username`).value;
-    const passP = document.getElementById(`passphrase`).value;
-    console.log(`Called user create`);
-    user.create(uName, passP, console.log);
-  }
-
-  signIn () {
-    const uName = document.getElementById(`username`).value;
-    name = uName;
-    document.getElementById(`name`).innerHTML = name;
-    document.getElementById(`username`).value = ``;
-    const passP = document.getElementById(`passphrase`).value;
-    document.getElementById(`passphrase`).value = ``;
-    console.log(`Called user signin`);
-    user.auth(uName, passP, function(ack) {
-      console.log(ack);
-      this.gun.user().once(function(data, key) {
-        console.log(data);
-        const epub = document.getElementById(`epub`);
-        epub.value = data.pub; // <-- change all epub to pub in UI and ids
-      });
-    });
-  }
+  /**
+  * Add a public key to the chat
   */
-
   addPub(pub) {
     this.participants.push(pub);
     this.gun.user(pub).get(`chat`).get(this.key.pub).on(data => {this.addChat(data, pub);});
   }
 
+  /**
+  * Send a message to the chat
+  */
   send(msg) {
     const temp = {};
     temp.date = (new Date()).toString();
