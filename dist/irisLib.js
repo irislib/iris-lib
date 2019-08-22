@@ -12206,7 +12206,10 @@
 	}();
 
 	/**
-	* Private communication channel between two or more participants
+	* Private communication channel between two or more participants.
+	*
+	* Messages are encrypted, but currently anyone can see which public keys
+	* are communicating with each other. This will change in later versions.
 	*
 	* @param {Object} options {key, gun, onMessage}
 	*/
@@ -12267,14 +12270,20 @@
 
 	  /**
 	  * Send a message to the chat
+	  * @param msg string or {time, author, text} object
 	  */
 
 
 	  Chat.prototype.send = function send(msg) {
-	    var temp = {};
-	    temp.date = new Date().toString();
-	    temp.name = 'name';
-	    temp.text = msg;
+	    var temp = void 0;
+	    if (typeof msg === 'string') {
+	      temp = {};
+	      temp.date = new Date().toString();
+	      temp.author = 'anonymous';
+	      temp.text = msg;
+	    } else {
+	      temp = msg;
+	    }
 	    //this.gun.user().get('message').set(temp);
 	    var i = 0;
 	    var l = this.participants.length;
@@ -12320,7 +12329,7 @@
 	  return Chat;
 	}();
 
-	var version$1 = "0.0.105";
+	var version$1 = "0.0.106";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

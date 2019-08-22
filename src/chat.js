@@ -1,7 +1,10 @@
 import Gun from 'gun'; // eslint-disable-line no-unused-vars
 
 /**
-* Private communication channel between two or more participants
+* Private communication channel between two or more participants.
+*
+* Messages are encrypted, but currently anyone can see which public keys
+* are communicating with each other. This will change in later versions.
 *
 * @param {Object} options {key, gun, onMessage}
 */
@@ -53,12 +56,18 @@ class Chat {
 
   /**
   * Send a message to the chat
+  * @param msg string or {time, author, text} object
   */
   send(msg) {
-    const temp = {};
-    temp.date = (new Date()).toString();
-    temp.name = `name`;
-    temp.text = msg;
+    let temp;
+    if (typeof msg === `string`) {
+      temp = {};
+      temp.date = (new Date()).toString();
+      temp.author = `anonymous`;
+      temp.text = msg;
+    } else {
+      temp = msg;
+    }
     //this.gun.user().get('message').set(temp);
     let i = 0;
     const l = this.participants.length;

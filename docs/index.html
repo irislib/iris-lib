@@ -1169,7 +1169,9 @@
   </div>
   
 
-  <p>Private communication channel between two or more participants</p>
+  <p>Private communication channel between two or more participants.</p>
+<p>Messages are encrypted, but currently anyone can see which public keys
+are communicating with each other. This will change in later versions.</p>
 
     <div class='pre p1 fill-light mt0'>new Chat(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
@@ -1304,7 +1306,8 @@
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>msg</span> <code class='quiet'>(any)</code>
-	    
+	    string or {time, author, text} object
+
           </div>
           
         </div>
