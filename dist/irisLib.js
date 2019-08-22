@@ -12263,7 +12263,7 @@
 	    var _this = this;
 
 	    this.participants.push(pub);
-	    this.gun.user(pub).get('chat').get(this.key.pub).on(function (data) {
+	    this.gun.user(pub).get('iris').get('chat').get(this.key.pub).on(function (data) {
 	      _this.addChat(data, pub);
 	    });
 	  };
@@ -12278,7 +12278,7 @@
 	    var temp = void 0;
 	    if (typeof msg === 'string') {
 	      temp = {};
-	      temp.date = new Date().toString();
+	      temp.date = new Date().getTime();
 	      temp.author = 'anonymous';
 	      temp.text = msg;
 	    } else {
@@ -12323,13 +12323,13 @@
 
 	  Chat.prototype.sendEncrypt = function sendEncrypt(pub, encr) {
 	    console.log(encr, pub);
-	    this.gun.user().get('chat').get(pub).put(encr);
+	    this.gun.user().get('iris').get('chat').get(pub).put(encr);
 	  };
 
 	  return Chat;
 	}();
 
-	var version$1 = "0.0.106";
+	var version$1 = "0.0.107";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

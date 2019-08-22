@@ -51,7 +51,7 @@ class Chat {
   */
   addPub(pub) {
     this.participants.push(pub);
-    this.gun.user(pub).get(`chat`).get(this.key.pub).on(data => {this.addChat(data, pub);});
+    this.gun.user(pub).get(`iris`).get(`chat`).get(this.key.pub).on(data => {this.addChat(data, pub);});
   }
 
   /**
@@ -62,7 +62,7 @@ class Chat {
     let temp;
     if (typeof msg === `string`) {
       temp = {};
-      temp.date = (new Date()).toString();
+      temp.date = new Date().getTime();
       temp.author = `anonymous`;
       temp.text = msg;
     } else {
@@ -105,7 +105,7 @@ class Chat {
 
   sendEncrypt(pub, encr) {
     console.log(encr, pub);
-    this.gun.user().get(`chat`).get(pub).put(encr);
+    this.gun.user().get(`iris`).get(`chat`).get(pub).put(encr);
   }
 }
 
