@@ -12207,6 +12207,8 @@
 
 	/**
 	* Private communication channel between two or more participants
+	*
+	* @param {Object} options {key, gun, onMessage}
 	*/
 
 	var Chat = function () {
@@ -12249,31 +12251,10 @@
 	    }
 	  };
 
-	  /*
-	  createUser () {
-	    const uName = document.getElementById(`username`).value;
-	    const passP = document.getElementById(`passphrase`).value;
-	    console.log(`Called user create`);
-	    user.create(uName, passP, console.log);
-	  }
-	   signIn () {
-	    const uName = document.getElementById(`username`).value;
-	    name = uName;
-	    document.getElementById(`name`).innerHTML = name;
-	    document.getElementById(`username`).value = ``;
-	    const passP = document.getElementById(`passphrase`).value;
-	    document.getElementById(`passphrase`).value = ``;
-	    console.log(`Called user signin`);
-	    user.auth(uName, passP, function(ack) {
-	      console.log(ack);
-	      this.gun.user().once(function(data, key) {
-	        console.log(data);
-	        const epub = document.getElementById(`epub`);
-	        epub.value = data.pub; // <-- change all epub to pub in UI and ids
-	      });
-	    });
-	  }
+	  /**
+	  * Add a public key to the chat
 	  */
+
 
 	  Chat.prototype.addPub = function addPub(pub) {
 	    var _this = this;
@@ -12283,6 +12264,11 @@
 	      _this.addChat(data, pub);
 	    });
 	  };
+
+	  /**
+	  * Send a message to the chat
+	  */
+
 
 	  Chat.prototype.send = function send(msg) {
 	    var temp = {};
