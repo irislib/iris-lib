@@ -11082,6 +11082,7 @@
 	    user.auth(keypair);
 	    this.writable = true;
 	    this.viewpoint = new Attribute('keyID', Key.getId(keypair));
+	    user.get('epub').put(keypair.epub);
 	    this.gun = user.get('iris');
 	    var uri = this.viewpoint.uri();
 	    var g = this.gun.get('identitiesBySearchKey').get(uri);
@@ -12329,7 +12330,7 @@
 	  return Chat;
 	}();
 
-	var version$1 = "0.0.107";
+	var version$1 = "0.0.108";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
