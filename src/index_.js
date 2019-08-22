@@ -136,6 +136,7 @@ class Index {
     user.auth(keypair);
     this.writable = true;
     this.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
+    user.get(`epub`).put(keypair.epub);
     this.gun = user.get(`iris`);
     const uri = this.viewpoint.uri();
     const g = this.gun.get(`identitiesBySearchKey`).get(uri);
