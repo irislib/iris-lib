@@ -1,4 +1,4 @@
-import Gun from 'gun'; // eslint-disable-line no-unused-vars
+import Gun from 'gun';
 
 /**
 * Private communication channel between two or more participants.
@@ -35,6 +35,7 @@ class Chat {
 
   /**
   * Add a public key to the chat
+  * @param {string} pub
   */
   addPub(pub) {
     this.participants.push(pub);

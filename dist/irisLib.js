@@ -12244,6 +12244,7 @@
 
 	  /**
 	  * Add a public key to the chat
+	  * @param {string} pub
 	  */
 
 
@@ -12284,7 +12285,7 @@
 	  return Chat;
 	}();
 
-	var version$1 = "0.0.109";
+	var version$1 = "0.0.110";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
