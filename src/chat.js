@@ -20,27 +20,14 @@ class Chat {
     this.onMessage = options.onMessage;
   }
 
-  addChat(data, pub) {
+  async messageReceived(data, pub) {
     console.log(`data received`);
-    console.log(data);
-    this.gun.user(pub).get(`epub`).once(this.step.bind(this, data));
-  }
-
-  step(data, epub) {
-    console.log(`this.step`);
-    console.log(epub, data);
-    Gun.SEA.secret(epub, this.user._.sea, this.step2.bind(this, data));
-  }
-
-  step2(data, key) {
-    console.log(`decrypt`);
-    Gun.SEA.decrypt(data, key, this.decrypted.bind(this));
-  }
-
-  decrypted(data) {
-    console.log(`this.decrypted`, data, this.onMessage);
+    const epub = await this.gun.user(pub).get(`epub`).once().then();
+    const secret = await Gun.SEA.secret(epub, this.user._.sea);
+    const decrypted = await Gun.SEA.decrypt(data, secret);
+    console.log(`decrypted`, decrypted);
     if (this.onMessage) {
-      this.onMessage(data);
+      this.onMessage(decrypted);
     } else {
       console.log(`no onMessage handler`);
     }
@@ -51,61 +38,30 @@ class Chat {
   */
   addPub(pub) {
     this.participants.push(pub);
-    this.gun.user(pub).get(`iris`).get(`chat`).get(this.key.pub).on(data => {this.addChat(data, pub);});
+    this.gun.user(pub).get(`chat`).get(this.key.pub).on(data => {this.messageReceived(data, pub);});
   }
 
   /**
   * Send a message to the chat
   * @param msg string or {time, author, text} object
   */
-  send(msg) {
-    let temp;
+  async send(msg) {
     if (typeof msg === `string`) {
-      temp = {};
-      temp.date = new Date().getTime();
-      temp.author = `anonymous`;
-      temp.text = msg;
-    } else {
-      temp = msg;
+      msg = {
+        date: new Date().getTime(),
+        author: `anonymous`,
+        text: msg
+      };
     }
     //this.gun.user().get('message').set(temp);
-    let i = 0;
     const l = this.participants.length;
-    for (i;i < l;i ++) {
-      this.gun.user(this.participants[i]).once(this.setup.bind(this, this.participants[i], temp));
+    for (let i = 0;i < l;i ++) {
+      const pub = this.participants[i];
+      const userObj = await this.gun.user(pub).once().then();
+      const secret = await Gun.SEA.secret(userObj.epub, this.user._.sea);
+      const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), secret);
+      this.gun.user().get(`chat`).get(pub).put(encrypted);
     }
-  }
-
-  //add another this.step for key retrieval to avoid calling this.gun.user().pair()
-  setup(pub, message, userObj) {
-    if (!userObj) {
-      console.log(`userObj undefined`);
-      return;
-    }
-    console.log(pub, message, userObj);
-    console.log(`setup`);
-    this.gun.user(pub).once(this.secret.bind(this, userObj, message, pub));
-  }
-
-  secret(userObj, message, pub, person) {
-    if (!person) {
-      console.log(`person undefined`);
-      return;
-    }
-    console.log(userObj, message, person);
-    console.log(`secret`);
-    Gun.SEA.secret(person.epub, this.user._.sea, this.encrypt.bind(this, message, pub));
-  }
-
-  encrypt(message, pub, key) {
-    console.log(`encrypt`, key);
-    const stringified = JSON.stringify(message);
-    Gun.SEA.encrypt(stringified, key, this.sendEncrypt.bind(this, pub));
-  }
-
-  sendEncrypt(pub, encr) {
-    console.log(encr, pub);
-    this.gun.user().get(`iris`).get(`chat`).get(pub).put(encr);
   }
 }
 
