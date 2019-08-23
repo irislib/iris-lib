@@ -8,3 +8,4 @@ test-report.html
 jest-stare
 .iris
 .idea
+.env

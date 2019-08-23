@@ -8,3 +8,4 @@ example
 npm-debug.log
 .iris
 .idea
+.env
