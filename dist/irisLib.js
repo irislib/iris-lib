@@ -12213,7 +12213,7 @@
 	* Messages are encrypted, but currently anyone can see which public keys
 	* are communicating with each other. This will change in later versions.
 	*
-	* @param {Object} options {key, gun, onMessage}
+	* @param {Object} options {key, gun, onMessage, participants}
 	*/
 
 	var Chat = function () {
