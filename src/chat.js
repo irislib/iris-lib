@@ -79,9 +79,6 @@ class Chat {
     for (let i = 0;i < keys.length;i ++) {
       const pub = keys[i];
       const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(pub)));
-      console.log(`send`, pub, encrypted);
-      console.log(`send`, pub, encrypted);
-      console.log(`send`, pub, encrypted);
       this.user.get(`chat`).get(pub).set(encrypted);
     }
   }
