@@ -12298,9 +12298,6 @@
 	    for (var i = 0; i < keys.length; i++) {
 	      var pub = keys[i];
 	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(pub)));
-	      console.log('send', pub, encrypted);
-	      console.log('send', pub, encrypted);
-	      console.log('send', pub, encrypted);
 	      this.user.get('chat').get(pub).set(encrypted);
 	    }
 	  };
