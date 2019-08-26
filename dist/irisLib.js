@@ -12207,7 +12207,8 @@
 	}();
 
 	/**
-	* Private communication channel between two or more participants.
+	* Private communication channel between two or more participants. Can be used
+	* independently of other Iris stuff.
 	*
 	* Messages are encrypted, but currently anyone can see which public keys
 	* are communicating with each other. This will change in later versions.
@@ -12224,21 +12225,36 @@
 	    this.user = this.gun.user();
 	    this.user.auth(this.key);
 	    this.user.put({ epub: this.key.epub });
-	    this.participants = [];
-	    this.addPub(this.key.pub);
+	    this.secrets = {}; // maps participant public key to shared secret
 	    this.onMessage = options.onMessage;
+
+	    if (typeof options.participants === 'string') {
+	      this.addPub(options.participants);
+	    } else if (Array.isArray(options.participants)) {
+	      for (var i = 0; i < options.participants.length; i++) {
+	        if (typeof options.participants[i] === 'string') {
+	          this.addPub(options.participants[i]);
+	        } else {
+	          console.log('participant public key must be string, got', _typeof(options.participants[i]), options.participants[i]);
+	        }
+	      }
+	    }
 	  }
 
+	  Chat.prototype.getSecret = async function getSecret(pub) {
+	    if (!this.secrets[pub]) {
+	      var epub = await this.gun.user(pub).get('epub').once().then();
+	      this.secrets[pub] = await Gun.SEA.secret(epub, this.user._.sea);
+	    }
+	    return this.secrets[pub];
+	  };
+
 	  Chat.prototype.messageReceived = async function messageReceived(data, pub) {
-	    console.log('data received');
-	    var epub = await this.gun.user(pub).get('epub').once().then();
-	    var secret = await Gun.SEA.secret(epub, this.user._.sea);
-	    var decrypted = await Gun.SEA.decrypt(data, secret);
-	    console.log('decrypted', decrypted);
+	    var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
 	    if (this.onMessage) {
 	      this.onMessage(decrypted);
 	    } else {
-	      console.log('no onMessage handler');
+	      console.log('chat message received', decrypted);
 	    }
 	  };
 
@@ -12251,8 +12267,14 @@
 	  Chat.prototype.addPub = function addPub(pub) {
 	    var _this = this;
 
-	    this.participants.push(pub);
-	    this.gun.user(pub).get('chat').get(this.key.pub).on(function (data) {
+	    this.secrets[pub] = null;
+	    this.getSecret(pub);
+	    // Subscribe to their messages
+	    this.gun.user(pub).get('chat').get(this.key.pub).map().once(function (data) {
+	      _this.messageReceived(data, pub);
+	    });
+	    // Subscribe to our messages
+	    this.user.get('chat').get(pub).map().once(function (data) {
 	      _this.messageReceived(data, pub);
 	    });
 	  };
@@ -12272,13 +12294,14 @@
 	      };
 	    }
 	    //this.gun.user().get('message').set(temp);
-	    var l = this.participants.length;
-	    for (var i = 0; i < l; i++) {
-	      var pub = this.participants[i];
-	      var userObj = await this.gun.user(pub).once().then();
-	      var secret = await Gun.SEA.secret(userObj.epub, this.user._.sea);
-	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), secret);
-	      this.gun.user().get('chat').get(pub).put(encrypted);
+	    var keys = _Object$keys(this.secrets);
+	    for (var i = 0; i < keys.length; i++) {
+	      var pub = keys[i];
+	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(pub)));
+	      console.log('send', pub, encrypted);
+	      console.log('send', pub, encrypted);
+	      console.log('send', pub, encrypted);
+	      this.user.get('chat').get(pub).set(encrypted);
 	    }
 	  };
 
