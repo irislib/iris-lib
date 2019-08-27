@@ -160,6 +160,46 @@ class Index {
     }
   }
 
+  /**
+  * Set the user's online status
+  *
+  * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
+  */
+  setOnline(isOnline) {
+    if (!this.writable) {
+      console.error(`setOnline can't be called on a non-writable index`);
+      return;
+    }
+    if (isOnline) {
+      const update = () => {
+        this.gun.user().get(`lastActive`).put(Math.round(new Date().getTime() / 1000));
+      };
+      update();
+      this.setOnlineInterval = setInterval(update, 3000);
+    } else {
+      clearInterval(this.setOnlineInterval);
+    }
+  }
+
+  /**
+  * Get the online status of a user.
+  *
+  * @param {string} pubKey public key of the user
+  * @param {boolean} callback receives a boolean each time the user's online status changes
+  */
+  getOnline(pubKey, callback) {
+    let timeout;
+    this.gun.user(pubKey).get(`lastActive`).on(lastActive => {
+      clearTimeout(timeout);
+      const now = Math.round(new Date().getTime() / 1000);
+      const isOnline = lastActive > now - 6 && lastActive < now + 30;
+      callback(isOnline);
+      if (isOnline) {
+        timeout = setTimeout(() => callback(false), 6000);
+      }
+    });
+  }
+
   _subscribeToTrustedIndexes() {
     if (this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {

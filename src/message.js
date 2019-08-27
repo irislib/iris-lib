@@ -34,7 +34,7 @@ class ValidationError extends Error {}
 *     rating: 1,
 *     maxRating: 10,
 *     minRating: -10,
-*     comment: 'Traded 1 BTC'
+*     text: 'Traded 1 BTC'
 *   },
 *   signer: 'ABCD1234',
 *   signature: '1234ABCD'
