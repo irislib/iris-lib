@@ -10942,6 +10942,148 @@
 
 	var _Object$assign = unwrapExports(assign$1);
 
+	/**
+	* Private communication channel between two or more participants. Can be used
+	* independently of other Iris stuff.
+	*
+	* Messages are encrypted, but currently anyone can see which public keys
+	* are communicating with each other. This will change in later versions.
+	*
+	* @param {Object} options {key, gun, onMessage, participants}
+	*/
+
+	var Chat = function () {
+	  function Chat(options) {
+	    _classCallCheck(this, Chat);
+
+	    this.key = options.key;
+	    this.gun = options.gun;
+	    this.user = this.gun.user();
+	    this.user.auth(this.key);
+	    this.user.put({ epub: this.key.epub });
+	    this.secrets = {}; // maps participant public key to shared secret
+	    this.onMessage = options.onMessage;
+
+	    if (typeof options.participants === 'string') {
+	      this.addPub(options.participants);
+	    } else if (Array.isArray(options.participants)) {
+	      for (var i = 0; i < options.participants.length; i++) {
+	        if (typeof options.participants[i] === 'string') {
+	          this.addPub(options.participants[i]);
+	        } else {
+	          console.log('participant public key must be string, got', _typeof(options.participants[i]), options.participants[i]);
+	        }
+	      }
+	    }
+	  }
+
+	  Chat.prototype.getSecret = async function getSecret(pub) {
+	    if (!this.secrets[pub]) {
+	      var epub = await this.gun.user(pub).get('epub').once().then();
+	      this.secrets[pub] = await Gun.SEA.secret(epub, this.user._.sea);
+	    }
+	    return this.secrets[pub];
+	  };
+
+	  Chat.prototype.messageReceived = async function messageReceived(data, pub) {
+	    var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+	    if (this.onMessage) {
+	      this.onMessage(decrypted);
+	    } else {
+	      console.log('chat message received', decrypted);
+	    }
+	  };
+
+	  /**
+	  * Add a public key to the chat
+	  * @param {string} pub
+	  */
+
+
+	  Chat.prototype.addPub = function addPub(pub) {
+	    var _this = this;
+
+	    this.secrets[pub] = null;
+	    this.getSecret(pub);
+	    // Subscribe to their messages
+	    this.gun.user(pub).get('chat').get(this.key.pub).map().once(function (data) {
+	      _this.messageReceived(data, pub);
+	    });
+	    // Subscribe to our messages
+	    this.user.get('chat').get(pub).map().once(function (data) {
+	      _this.messageReceived(data, pub);
+	    });
+	  };
+
+	  /**
+	  * Send a message to the chat
+	  * @param msg string or {time, author, text} object
+	  */
+
+
+	  Chat.prototype.send = async function send(msg) {
+	    if (typeof msg === 'string') {
+	      msg = {
+	        date: new Date().getTime(),
+	        author: 'anonymous',
+	        text: msg
+	      };
+	    }
+	    //this.gun.user().get('message').set(temp);
+	    var keys = _Object$keys(this.secrets);
+	    for (var i = 0; i < keys.length; i++) {
+	      var pub = keys[i];
+	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(pub)));
+	      this.user.get('chat').get(pub).set(encrypted);
+	    }
+	  };
+
+	  /**
+	  * Set the user's online status
+	  * @param {object} gun
+	  * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
+	  */
+
+
+	  Chat.setOnline = function setOnline(gun, isOnline) {
+	    if (isOnline) {
+	      var update = function update() {
+	        gun.user().get('lastActive').put(Math.round(Gun.state() / 1000));
+	      };
+	      update();
+	      gun.setOnlineInterval = setInterval(update, 3000);
+	    } else {
+	      clearInterval(gun.setOnlineInterval);
+	    }
+	  };
+
+	  /**
+	  * Get the online status of a user.
+	  *
+	  * @param {object} gun
+	  * @param {string} pubKey public key of the user
+	  * @param {boolean} callback receives a boolean each time the user's online status changes
+	  */
+
+
+	  Chat.getOnline = function getOnline(gun, pubKey, callback) {
+	    var timeout = void 0;
+	    gun.user(pubKey).get('lastActive').on(function (lastActive) {
+	      clearTimeout(timeout);
+	      var now = Math.round(Gun.state() / 1000);
+	      var isOnline = lastActive > now - 6 && lastActive < now + 30;
+	      callback(isOnline);
+	      if (isOnline) {
+	        timeout = setTimeout(function () {
+	          return callback(false);
+	        }, 6000);
+	      }
+	    });
+	  };
+
+	  return Chat;
+	}();
+
 	// temp method for GUN search
 	async function searchText(node, callback, query, limit, cursor, desc) {
 	  var seen = {};
@@ -11114,21 +11256,11 @@
 
 
 	  Index.prototype.setOnline = function setOnline(isOnline) {
-	    var _this3 = this;
-
 	    if (!this.writable) {
 	      console.error('setOnline can\'t be called on a non-writable index');
 	      return;
 	    }
-	    if (isOnline) {
-	      var update = function update() {
-	        _this3.gun.user().get('lastActive').put(Math.round(new Date().getTime() / 1000));
-	      };
-	      update();
-	      this.setOnlineInterval = setInterval(update, 3000);
-	    } else {
-	      clearInterval(this.setOnlineInterval);
-	    }
+	    Chat.setOnline(this.gun, isOnline);
 	  };
 
 	  /**
@@ -11140,41 +11272,30 @@
 
 
 	  Index.prototype.getOnline = function getOnline(pubKey, callback) {
-	    var timeout = void 0;
-	    this.gun.user(pubKey).get('lastActive').on(function (lastActive) {
-	      clearTimeout(timeout);
-	      var now = Math.round(new Date().getTime() / 1000);
-	      var isOnline = lastActive > now - 6 && lastActive < now + 30;
-	      callback(isOnline);
-	      if (isOnline) {
-	        timeout = setTimeout(function () {
-	          return callback(false);
-	        }, 6000);
-	      }
-	    });
+	    Chat.getOnline(this.gun, pubKey, callback);
 	  };
 
 	  Index.prototype._subscribeToTrustedIndexes = function _subscribeToTrustedIndexes() {
-	    var _this4 = this;
+	    var _this3 = this;
 
 	    if (this.options.indexSync.subscribe.enabled) {
 	      setTimeout(function () {
-	        _this4.gun.get('trustedIndexes').map().once(function (val, uri) {
+	        _this3.gun.get('trustedIndexes').map().once(function (val, uri) {
 	          if (val) {
 	            // TODO: only get new messages?
-	            _this4.gun.user(uri).get('iris').get('messagesByDistance').map(function (val, key) {
+	            _this3.gun.user(uri).get('iris').get('messagesByDistance').map(function (val, key) {
 	              var d = _Number$parseInt(key.split(':')[0]);
-	              if (!isNaN(d) && d <= _this4.options.indexSync.subscribe.maxMsgDistance) {
+	              if (!isNaN(d) && d <= _this3.options.indexSync.subscribe.maxMsgDistance) {
 	                Message.fromSig(val).then(function (msg) {
-	                  if (_this4.options.indexSync.msgTypes.all || Object.prototype.hasOwnProperty.call(_this4.options.indexSync.msgTypes, msg.signedData.type)) {
-	                    _this4.addMessage(msg, { checkIfExists: true });
+	                  if (_this3.options.indexSync.msgTypes.all || Object.prototype.hasOwnProperty.call(_this3.options.indexSync.msgTypes, msg.signedData.type)) {
+	                    _this3.addMessage(msg, { checkIfExists: true });
 	                  }
 	                });
 	              }
 	            });
-	            _this4.gun.user(uri).get('iris').get('reactions').map(function (reaction, msgHash) {
-	              _this4.gun.get('messagesByHash').get(msgHash).get('reactions').get(uri).put(reaction);
-	              _this4.gun.get('messagesByHash').get(msgHash).get('reactions').get(uri).put(reaction);
+	            _this3.gun.user(uri).get('iris').get('reactions').map(function (reaction, msgHash) {
+	              _this3.gun.get('messagesByHash').get(msgHash).get('reactions').get(uri).put(reaction);
+	              _this3.gun.get('messagesByHash').get(msgHash).get('reactions').get(uri).put(reaction);
 	            });
 	          }
 	        });
@@ -11342,7 +11463,7 @@
 
 
 	  Index.prototype.get = function get(a, b) {
-	    var _this5 = this;
+	    var _this4 = this;
 
 	    var reload = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
@@ -11381,7 +11502,7 @@
 	      };
 	      var node = this.gun.get('identities').set(o);
 	      var updateIdentityByLinkedAttribute = function updateIdentityByLinkedAttribute(attribute) {
-	        _this5.gun.get('verificationsByRecipient').get(attribute.uri()).map().once(function (val) {
+	        _this4.gun.get('verificationsByRecipient').get(attribute.uri()).map().once(function (val) {
 	          var m = Message.fromSig(val);
 	          var recipients = m.getRecipientArray();
 	          for (var i = 0; i < recipients.length; i++) {
@@ -11389,13 +11510,13 @@
 	            if (!Object.prototype.hasOwnProperty.call(o.attributes), a2.uri()) {
 	              // TODO remove attribute from identity if not enough verifications / too many unverifications
 	              o.attributes[a2.uri()] = a2;
-	              _this5.gun.get('messagesByRecipient').get(a2.uri()).map().once(function (val) {
+	              _this4.gun.get('messagesByRecipient').get(a2.uri()).map().once(function (val) {
 	                var m2 = Message.fromSig(val);
 	                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2.getHash())) {
 	                  o.received[m2.getHash()] = m2;
 	                  if (m2.isPositive()) {
 	                    o.receivedPositive++;
-	                    m2.getAuthor(_this5).gun.get('trustDistance').on(function (d) {
+	                    m2.getAuthor(_this4).gun.get('trustDistance').on(function (d) {
 	                      if (typeof d === 'number') {
 	                        if (typeof o.trustDistance !== 'number' || o.trustDistance > d + 1) {
 	                          o.trustDistance = d + 1;
@@ -11411,7 +11532,7 @@
 	                  node.put(o);
 	                }
 	              });
-	              _this5.gun.get('messagesByAuthor').get(a2.uri()).map().once(function (val) {
+	              _this4.gun.get('messagesByAuthor').get(a2.uri()).map().once(function (val) {
 	                var m2 = Message.fromSig(val);
 	                if (!Object.prototype.hasOwnProperty.call(o.sent, m2.getHash())) {
 	                  o.sent[m2.getHash()] = m2;
@@ -11482,28 +11603,28 @@
 	  };
 
 	  Index.prototype._getSentMsgs = async function _getSentMsgs(identity, options) {
-	    var _this6 = this;
+	    var _this5 = this;
 
 	    this._getMsgs(identity.gun.get('sent'), options.callback, options.limit, options.cursor, true, options.filter);
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this6.gun.user(key).get('iris').get('messagesByAuthor').get(identity.linkTo.uri());
-	          _this6._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
+	          var n = _this5.gun.user(key).get('iris').get('messagesByAuthor').get(identity.linkTo.uri());
+	          _this5._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
 	        }
 	      });
 	    }
 	  };
 
 	  Index.prototype._getReceivedMsgs = async function _getReceivedMsgs(identity, options) {
-	    var _this7 = this;
+	    var _this6 = this;
 
 	    this._getMsgs(identity.gun.get('received'), options.callback, options.limit, options.cursor, true, options.filter);
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this7.gun.user(key).get('iris').get('messagesByRecipient').get(identity.linkTo.uri());
-	          _this7._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
+	          var n = _this6.gun.user(key).get('iris').get('messagesByRecipient').get(identity.linkTo.uri());
+	          _this6._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
 	        }
 	      });
 	    }
@@ -11725,7 +11846,7 @@
 	  };
 
 	  Index.prototype.addTrustedIndex = async function addTrustedIndex(gunUri) {
-	    var _this8 = this;
+	    var _this7 = this;
 
 	    var maxMsgsToCrawl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.options.indexSync.importOnAdd.maxMsgCount;
 	    var maxMsgDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.options.indexSync.importOnAdd.maxMsgDistance;
@@ -11741,7 +11862,7 @@
 	    var msgs = [];
 	    if (this.options.indexSync.importOnAdd.enabled) {
 	      await util$1.timeoutPromise(new _Promise(function (resolve) {
-	        _this8.gun.user(gunUri).get('iris').get('messagesByDistance').map(function (val, key) {
+	        _this7.gun.user(gunUri).get('iris').get('messagesByDistance').map(function (val, key) {
 	          var d = _Number$parseInt(key.split(':')[0]);
 	          if (!isNaN(d) && d <= maxMsgDistance) {
 	            Message.fromSig(val).then(function (msg) {
@@ -11883,7 +12004,7 @@
 
 
 	  Index.prototype.addMessages = async function addMessages(msgs) {
-	    var _this9 = this;
+	    var _this8 = this;
 
 	    if (!this.writable) {
 	      throw new Error('Cannot write to a read-only index (initialized with options.pubKey)');
@@ -11954,9 +12075,9 @@
 	      while (author && knownIdentity) {
 	        if (author.indexOf(knownIdentity.key) === 0) {
 	          try {
-	            await util$1.timeoutPromise(_this9.addMessage(msgsByAuthor[author], { checkIfExists: true }), 10000);
+	            await util$1.timeoutPromise(_this8.addMessage(msgsByAuthor[author], { checkIfExists: true }), 10000);
 	          } catch (e) {
-	            _this9.debug('adding failed:', e, _JSON$stringify(msgsByAuthor[author], null, 2));
+	            _this8.debug('adding failed:', e, _JSON$stringify(msgsByAuthor[author], null, 2));
 	          }
 	          msgAuthors.splice(i, 1);
 	          author = i < msgAuthors.length ? msgAuthors[i] : undefined;
@@ -12065,7 +12186,7 @@
 	    var type = arguments[1];
 	    var callback = arguments[2];
 
-	    var _this10 = this;
+	    var _this9 = this;
 
 	    var limit = arguments[3];
 	    var cursor = arguments[4];
@@ -12089,7 +12210,7 @@
 	    this.debug('search()', value, type, limit, cursor);
 	    var node = this.gun.get('identitiesBySearchKey');
 	    node.get({ '.': { '*': value, '>': cursor }, '%': 2000 }).once().map().on(function (id, key) {
-	      _this10.debug('search(' + value + ', ' + type + ', callback, ' + limit + ', ' + cursor + ') returned id ' + id + ' key ' + key);
+	      _this9.debug('search(' + value + ', ' + type + ', callback, ' + limit + ', ' + cursor + ') returned id ' + id + ' key ' + key);
 	      if (_Object$keys(seen).length >= limit) {
 	        // TODO: turn off .map cb
 	        return;
@@ -12100,7 +12221,7 @@
 	      var soul = Gun.node.soul(id);
 	      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	        seen[soul] = true;
-	        var identity = new Identity(node.get(key), undefined, _this10);
+	        var identity = new Identity(node.get(key), undefined, _this9);
 	        identity.cursor = key;
 	        callback(identity);
 	      }
@@ -12108,7 +12229,7 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          _this10.gun.user(key).get('iris').get('identitiesBySearchKey').get({ '.': { '*': value, '%': 2000 } }).once().map().once(function (id, k) {
+	          _this9.gun.user(key).get('iris').get('identitiesBySearchKey').get({ '.': { '*': value, '%': 2000 } }).once().map().once(function (id, k) {
 	            if (_Object$keys(seen).length >= limit) {
 	              // TODO: turn off .map cb
 	              return;
@@ -12119,7 +12240,7 @@
 	            var soul = Gun.node.soul(id);
 	            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	              seen[soul] = true;
-	              callback(new Identity(_this10.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this10));
+	              callback(new Identity(_this9.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this9));
 	            }
 	          });
 	        }
@@ -12133,7 +12254,7 @@
 
 
 	  Index.prototype.getMessageByHash = function getMessageByHash(hash) {
-	    var _this11 = this;
+	    var _this10 = this;
 
 	    var isIpfsUri = hash.indexOf('Qm') === 0;
 	    return new _Promise(async function (resolve) {
@@ -12142,19 +12263,19 @@
 	        var m = await Message.fromSig(obj);
 	        var h = void 0;
 	        var republished = false;
-	        if (isIpfsUri && _this11.options.ipfs) {
-	          h = await m.saveToIpfs(_this11.options.ipfs);
+	        if (isIpfsUri && _this10.options.ipfs) {
+	          h = await m.saveToIpfs(_this10.options.ipfs);
 	          republished = true;
 	        } else {
 	          h = m.getHash();
 	        }
-	        if (h === hash || isIpfsUri && !_this11.options.ipfs) {
+	        if (h === hash || isIpfsUri && !_this10.options.ipfs) {
 	          // does not check hash validity if it's an ipfs uri and we don't have ipfs
-	          if (!isIpfsUri && _this11.options.ipfs && _this11.writable && !republished) {
-	            m.saveToIpfs(_this11.options.ipfs).then(function (ipfsUri) {
+	          if (!isIpfsUri && _this10.options.ipfs && _this10.writable && !republished) {
+	            m.saveToIpfs(_this10.options.ipfs).then(function (ipfsUri) {
 	              obj.ipfsUri = ipfsUri;
-	              _this11.gun.get('messagesByHash').get(hash).put(obj);
-	              _this11.gun.get('messagesByHash').get(ipfsUri).put(obj);
+	              _this10.gun.get('messagesByHash').get(hash).put(obj);
+	              _this10.gun.get('messagesByHash').get(ipfsUri).put(obj);
 	            });
 	          }
 	          resolve(m);
@@ -12162,22 +12283,22 @@
 	          console.error('queried index for message ' + hash + ' but received ' + h);
 	        }
 	      };
-	      if (isIpfsUri && _this11.options.ipfs) {
-	        _this11.options.ipfs.cat(hash).then(function (file) {
-	          var s = _this11.options.ipfs.types.Buffer.from(file).toString('utf8');
-	          _this11.debug('got msg ' + hash + ' from ipfs');
+	      if (isIpfsUri && _this10.options.ipfs) {
+	        _this10.options.ipfs.cat(hash).then(function (file) {
+	          var s = _this10.options.ipfs.types.Buffer.from(file).toString('utf8');
+	          _this10.debug('got msg ' + hash + ' from ipfs');
 	          resolveIfHashMatches(s);
 	        });
 	      }
-	      _this11.gun.get('messagesByHash').get(hash).on(function (d) {
-	        _this11.debug('got msg ' + hash + ' from own gun index');
+	      _this10.gun.get('messagesByHash').get(hash).on(function (d) {
+	        _this10.debug('got msg ' + hash + ' from own gun index');
 	        resolveIfHashMatches(d);
 	      });
-	      if (_this11.options.indexSync.query.enabled) {
-	        _this11.gun.get('trustedIndexes').map().once(function (val, key) {
+	      if (_this10.options.indexSync.query.enabled) {
+	        _this10.gun.get('trustedIndexes').map().once(function (val, key) {
 	          if (val) {
-	            _this11.gun.user(key).get('iris').get('messagesByHash').get(hash).on(function (d) {
-	              _this11.debug('got msg ' + hash + ' from friend\'s gun index ' + val);
+	            _this10.gun.user(key).get('iris').get('messagesByHash').get(hash).on(function (d) {
+	              _this10.debug('got msg ' + hash + ' from friend\'s gun index ' + val);
 	              resolveIfHashMatches(d);
 	            });
 	          }
@@ -12192,7 +12313,7 @@
 
 
 	  Index.prototype.getMessagesByTimestamp = function getMessagesByTimestamp(callback, limit, cursor) {
-	    var _this12 = this;
+	    var _this11 = this;
 
 	    var desc = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
 	    var filter = arguments[4];
@@ -12209,8 +12330,8 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this12.gun.user(key).get('iris').get('messagesByTimestamp');
-	          _this12._getMsgs(n, cb, limit, cursor, desc, filter);
+	          var n = _this11.gun.user(key).get('iris').get('messagesByTimestamp');
+	          _this11._getMsgs(n, cb, limit, cursor, desc, filter);
 	        }
 	      });
 	    }
@@ -12222,7 +12343,7 @@
 
 
 	  Index.prototype.getMessagesByDistance = function getMessagesByDistance(callback, limit, cursor, desc, filter) {
-	    var _this13 = this;
+	    var _this12 = this;
 
 	    var seen = {};
 	    var cb = function cb(msg) {
@@ -12237,8 +12358,8 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this13.gun.user(key).get('iris').get('messagesByDistance');
-	          _this13._getMsgs(n, cb, limit, cursor, desc, filter);
+	          var n = _this12.gun.user(key).get('iris').get('messagesByDistance');
+	          _this12._getMsgs(n, cb, limit, cursor, desc, filter);
 	        }
 	      });
 	    }
@@ -12254,106 +12375,7 @@
 	  return Index;
 	}();
 
-	/**
-	* Private communication channel between two or more participants. Can be used
-	* independently of other Iris stuff.
-	*
-	* Messages are encrypted, but currently anyone can see which public keys
-	* are communicating with each other. This will change in later versions.
-	*
-	* @param {Object} options {key, gun, onMessage, participants}
-	*/
-
-	var Chat = function () {
-	  function Chat(options) {
-	    _classCallCheck(this, Chat);
-
-	    this.key = options.key;
-	    this.gun = options.gun;
-	    this.user = this.gun.user();
-	    this.user.auth(this.key);
-	    this.user.put({ epub: this.key.epub });
-	    this.secrets = {}; // maps participant public key to shared secret
-	    this.onMessage = options.onMessage;
-
-	    if (typeof options.participants === 'string') {
-	      this.addPub(options.participants);
-	    } else if (Array.isArray(options.participants)) {
-	      for (var i = 0; i < options.participants.length; i++) {
-	        if (typeof options.participants[i] === 'string') {
-	          this.addPub(options.participants[i]);
-	        } else {
-	          console.log('participant public key must be string, got', _typeof(options.participants[i]), options.participants[i]);
-	        }
-	      }
-	    }
-	  }
-
-	  Chat.prototype.getSecret = async function getSecret(pub) {
-	    if (!this.secrets[pub]) {
-	      var epub = await this.gun.user(pub).get('epub').once().then();
-	      this.secrets[pub] = await Gun.SEA.secret(epub, this.user._.sea);
-	    }
-	    return this.secrets[pub];
-	  };
-
-	  Chat.prototype.messageReceived = async function messageReceived(data, pub) {
-	    var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
-	    if (this.onMessage) {
-	      this.onMessage(decrypted);
-	    } else {
-	      console.log('chat message received', decrypted);
-	    }
-	  };
-
-	  /**
-	  * Add a public key to the chat
-	  * @param {string} pub
-	  */
-
-
-	  Chat.prototype.addPub = function addPub(pub) {
-	    var _this = this;
-
-	    this.secrets[pub] = null;
-	    this.getSecret(pub);
-	    // Subscribe to their messages
-	    this.gun.user(pub).get('chat').get(this.key.pub).map().once(function (data) {
-	      _this.messageReceived(data, pub);
-	    });
-	    // Subscribe to our messages
-	    this.user.get('chat').get(pub).map().once(function (data) {
-	      _this.messageReceived(data, pub);
-	    });
-	  };
-
-	  /**
-	  * Send a message to the chat
-	  * @param msg string or {time, author, text} object
-	  */
-
-
-	  Chat.prototype.send = async function send(msg) {
-	    if (typeof msg === 'string') {
-	      msg = {
-	        date: new Date().getTime(),
-	        author: 'anonymous',
-	        text: msg
-	      };
-	    }
-	    //this.gun.user().get('message').set(temp);
-	    var keys = _Object$keys(this.secrets);
-	    for (var i = 0; i < keys.length; i++) {
-	      var pub = keys[i];
-	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(pub)));
-	      this.user.get('chat').get(pub).set(encrypted);
-	    }
-	  };
-
-	  return Chat;
-	}();
-
-	var version$1 = "0.0.111";
+	var version$1 = "0.0.112";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

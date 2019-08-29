@@ -82,6 +82,43 @@ class Chat {
       this.user.get(`chat`).get(pub).set(encrypted);
     }
   }
+
+  /**
+  * Set the user's online status
+  * @param {object} gun
+  * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
+  */
+  static setOnline(gun, isOnline) {
+    if (isOnline) {
+      const update = () => {
+        gun.user().get(`lastActive`).put(Math.round(Gun.state() / 1000));
+      };
+      update();
+      gun.setOnlineInterval = setInterval(update, 3000);
+    } else {
+      clearInterval(gun.setOnlineInterval);
+    }
+  }
+
+  /**
+  * Get the online status of a user.
+  *
+  * @param {object} gun
+  * @param {string} pubKey public key of the user
+  * @param {boolean} callback receives a boolean each time the user's online status changes
+  */
+  static getOnline(gun, pubKey, callback) {
+    let timeout;
+    gun.user(pubKey).get(`lastActive`).on(lastActive => {
+      clearTimeout(timeout);
+      const now = Math.round(Gun.state() / 1000);
+      const isOnline = lastActive > now - 6 && lastActive < now + 30;
+      callback(isOnline);
+      if (isOnline) {
+        timeout = setTimeout(() => callback(false), 6000);
+      }
+    });
+  }
 }
 
 export default Chat;

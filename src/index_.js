@@ -2,6 +2,7 @@ import Message from './message';
 import Key from './key';
 import Identity from './identity';
 import Attribute from './attribute';
+import Chat from './chat';
 import util from './util';
 import Gun from 'gun'; // eslint-disable-line no-unused-vars
 import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
@@ -170,15 +171,7 @@ class Index {
       console.error(`setOnline can't be called on a non-writable index`);
       return;
     }
-    if (isOnline) {
-      const update = () => {
-        this.gun.user().get(`lastActive`).put(Math.round(new Date().getTime() / 1000));
-      };
-      update();
-      this.setOnlineInterval = setInterval(update, 3000);
-    } else {
-      clearInterval(this.setOnlineInterval);
-    }
+    Chat.setOnline(this.gun, isOnline);
   }
 
   /**
@@ -188,16 +181,7 @@ class Index {
   * @param {boolean} callback receives a boolean each time the user's online status changes
   */
   getOnline(pubKey, callback) {
-    let timeout;
-    this.gun.user(pubKey).get(`lastActive`).on(lastActive => {
-      clearTimeout(timeout);
-      const now = Math.round(new Date().getTime() / 1000);
-      const isOnline = lastActive > now - 6 && lastActive < now + 30;
-      callback(isOnline);
-      if (isOnline) {
-        timeout = setTimeout(() => callback(false), 6000);
-      }
-    });
+    Chat.getOnline(this.gun, pubKey, callback);
   }
 
   _subscribeToTrustedIndexes() {
