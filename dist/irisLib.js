@@ -10980,7 +10980,7 @@
 	  Chat.prototype.getSecret = async function getSecret(pub) {
 	    if (!this.secrets[pub]) {
 	      var epub = await this.gun.user(pub).get('epub').once().then();
-	      this.secrets[pub] = await Gun.SEA.secret(epub, this.user._.sea);
+	      this.secrets[pub] = await Gun.SEA.secret(epub, this.key);
 	    }
 	    return this.secrets[pub];
 	  };
@@ -11024,7 +11024,7 @@
 	  Chat.prototype.send = async function send(msg) {
 	    if (typeof msg === 'string') {
 	      msg = {
-	        date: new Date().getTime(),
+	        time: new Date().getTime(),
 	        author: 'anonymous',
 	        text: msg
 	      };
@@ -11278,7 +11278,7 @@
 	  Index.prototype._subscribeToTrustedIndexes = function _subscribeToTrustedIndexes() {
 	    var _this3 = this;
 
-	    if (this.options.indexSync.subscribe.enabled) {
+	    if (this.writable && this.options.indexSync.subscribe.enabled) {
 	      setTimeout(function () {
 	        _this3.gun.get('trustedIndexes').map().once(function (val, uri) {
 	          if (val) {
@@ -12375,7 +12375,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.112";
+	var version$1 = "0.0.113";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

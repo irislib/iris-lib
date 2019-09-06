@@ -185,7 +185,7 @@ class Index {
   }
 
   _subscribeToTrustedIndexes() {
-    if (this.options.indexSync.subscribe.enabled) {
+    if (this.writable && this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {
         this.gun.get(`trustedIndexes`).map().once((val, uri) => {
           if (val) {
