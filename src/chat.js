@@ -35,7 +35,7 @@ class Chat {
   async getSecret(pub) {
     if (!this.secrets[pub]) {
       const epub = await this.gun.user(pub).get(`epub`).once().then();
-      this.secrets[pub] = await Gun.SEA.secret(epub, this.user._.sea);
+      this.secrets[pub] = await Gun.SEA.secret(epub, this.key);
     }
     return this.secrets[pub];
   }
@@ -69,7 +69,7 @@ class Chat {
   async send(msg) {
     if (typeof msg === `string`) {
       msg = {
-        date: new Date().getTime(),
+        time: new Date().getTime(),
         author: `anonymous`,
         text: msg
       };
