@@ -14,8 +14,9 @@ test(`We say hi`, async (done) => {
     gun,
     key: myself,
     participants: friend.pub,
-    onMessage: (msg) => {
+    onMessage: (msg, info) => {
       expect(msg.text).toEqual(`hi`);
+      expect(info.selfAuthored).toBe(true);
       done();
     }
   });

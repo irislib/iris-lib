@@ -40,10 +40,10 @@ class Chat {
     return this.secrets[pub];
   }
 
-  async messageReceived(data, pub) {
+  async messageReceived(data, pub, selfAuthored) {
     const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
     if (this.onMessage) {
-      this.onMessage(decrypted);
+      this.onMessage(decrypted, {selfAuthored});
     } else {
       console.log(`chat message received`, decrypted);
     }
@@ -59,7 +59,7 @@ class Chat {
     // Subscribe to their messages
     this.gun.user(pub).get(`chat`).get(this.key.pub).map().once(data => {this.messageReceived(data, pub);});
     // Subscribe to our messages
-    this.user.get(`chat`).get(pub).map().once(data => {this.messageReceived(data, pub);});
+    this.user.get(`chat`).get(pub).map().once(data => {this.messageReceived(data, pub, true);});
   }
 
   /**

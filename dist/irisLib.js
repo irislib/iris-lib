@@ -10985,10 +10985,10 @@
 	    return this.secrets[pub];
 	  };
 
-	  Chat.prototype.messageReceived = async function messageReceived(data, pub) {
+	  Chat.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored) {
 	    var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
 	    if (this.onMessage) {
-	      this.onMessage(decrypted);
+	      this.onMessage(decrypted, { selfAuthored: selfAuthored });
 	    } else {
 	      console.log('chat message received', decrypted);
 	    }
@@ -11011,7 +11011,7 @@
 	    });
 	    // Subscribe to our messages
 	    this.user.get('chat').get(pub).map().once(function (data) {
-	      _this.messageReceived(data, pub);
+	      _this.messageReceived(data, pub, true);
 	    });
 	  };
 
