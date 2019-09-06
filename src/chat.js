@@ -113,7 +113,7 @@ class Chat {
       clearTimeout(timeout);
       const now = Math.round(Gun.state() / 1000);
       const isOnline = lastActive > now - 6 && lastActive < now + 30;
-      callback(isOnline);
+      callback({isOnline, lastActive});
       if (isOnline) {
         timeout = setTimeout(() => callback(false), 6000);
       }
