@@ -292,7 +292,7 @@ describe(`local index`, async () => {
         else if (a.cursor < b.cursor) return 1;
         else return 0;
       });
-      expect(results[0].signedData.timestamp).toEqual(lastMsg.signedData.timestamp);
+      expect(results[0].signedData.time).toEqual(lastMsg.signedData.time);
       expect(lastMsg.getHash()).toEqual(results[0].getHash());
 
       const last = results[results.length - 1];
@@ -412,7 +412,7 @@ describe(`local index`, async () => {
     expect(data.trustDistance).toBe(0);
     expect(data.sentPositive).toBeGreaterThan(4);
   });
-  test(`get messages by timestamp`, async () => {
+  test(`get messages by time`, async () => {
     const k2 = await iris.Key.generate();
     const i2 = new iris.Index({gun, keypair: k2, debug: false});
     await i2.ready;

@@ -11,7 +11,7 @@ class ValidationError extends Error {}
 /**
 * Messages are objects containing fields signedData, signer (public key) and signature. Message identifier is the base64 sha256 hash derived from its canonical utf8 string representation.
 *
-* signedData has an author, recipient, signer, type, timestamp, context and optionally other fields.
+* signedData has an author, recipient, signer, type, time and optionally other fields.
 *
 * signature covers the utf8 string representation of signedData. Since messages are digitally signed, users only need to care about the message signer and not who relayed it or whose index it was found from.
 *
@@ -19,9 +19,9 @@ class ValidationError extends Error {}
 *
 * For example, a crawler can import and sign other people's messages from Twitter. Only the users who trust the crawler will see the messages.
 *
-* "Rating" type messages, when added to an Index, can add or remove Identities from the web of trust. Verification/unverification messages can add or remove Attributes from an Identity. Other types of messages such as social media "post" are just indexed by their author, recipient and timestamp.
+* "Rating" type messages, when added to an Index, can add or remove Identities from the web of trust. Verification/unverification messages can add or remove Attributes from an Identity. Other types of messages such as social media "post" are just indexed by their author, recipient and time.
 *
-* Constructor: creates a message from the param obj.signedData that must contain at least the mandatory fields: author, recipient, type, context and timestamp. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
+* Constructor: creates a message from the param obj.signedData that must contain at least the mandatory fields: author, recipient, type and time. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
 * @param obj
 *
 * @example
@@ -203,9 +203,9 @@ class Message {
         }
       }
     }
-    if (!d.timestamp) {throw new ValidationError(`${errorMsg} Missing timestamp`);}
+    if (!(d.time || d.timestamp)) {throw new ValidationError(`${errorMsg} Missing time field`);}
 
-    if (!Date.parse(d.timestamp)) {throw new ValidationError(`${errorMsg} Invalid timestamp`);}
+    if (!Date.parse(d.time || d.timestamp)) {throw new ValidationError(`${errorMsg} Invalid time field`);}
 
     if (d.type === `rating`) {
       if (isNaN(d.rating)) {throw new ValidationError(`${errorMsg} Invalid rating`);}
@@ -255,7 +255,7 @@ class Message {
   }
 
   /**
-  * Create an iris message. Message timestamp and context (iris) are automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an iris message. Message time is automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @param {Object} signedData message data object including author, recipient and other possible attributes
   * @param {Object} signingKey optionally, you can set the key to sign the message with
   * @returns {Promise<Message>}  message
@@ -264,8 +264,7 @@ class Message {
     if (!signedData.author && signingKey) {
       signedData.author = {keyID: Key.getId(signingKey)};
     }
-    signedData.timestamp = signedData.timestamp || (new Date()).toISOString();
-    signedData.context = signedData.context || `iris`;
+    signedData.time = signedData.time || (new Date()).toISOString();
     const m = new Message({signedData});
     if (signingKey) {
       await m.sign(signingKey);
@@ -274,7 +273,7 @@ class Message {
   }
 
   /**
-  * Create an  verification message. Message signedData's type, timestamp and context (iris) are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an  verification message. Message signedData's type and time are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @returns {Promise<Object>} message object promise
   */
   static createVerification(signedData: Object, signingKey: Object) {
@@ -283,11 +282,12 @@ class Message {
   }
 
   /**
-  * Create an  rating message. Message signedData's type, maxRating, minRating, timestamp and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an  rating message. Message signedData's type, maxRating, minRating, time and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @returns {Promise<Object>} message object promise
   */
   static createRating(signedData: Object, signingKey: Object) {
     signedData.type = `rating`;
+    signedData.context = signedData.context || `iris`;
     signedData.maxRating = signedData.maxRating || 10;
     signedData.minRating = signedData.minRating || - 10;
     return Message.create(signedData, signingKey);

@@ -18,7 +18,7 @@ describe(`Message`, async () => {
         rating: 5,
         text: `Good guy`
       });
-      expect(msg).toHaveProperty(`signedData.timestamp`);
+      expect(msg).toHaveProperty(`signedData.time`);
       expect(msg.signedData.type).toEqual(`rating`);
     });
     /*
@@ -45,7 +45,7 @@ describe(`Message`, async () => {
         recipient: {email: `bob@example.com`, name: `Bob`},
         text: `Good guy`
       });
-      expect(msg).toHaveProperty(`signedData.timestamp`);
+      expect(msg).toHaveProperty(`signedData.time`);
       expect(msg.signedData.type).toEqual(`verification`);
     });
   });
