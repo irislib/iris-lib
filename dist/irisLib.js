@@ -10085,7 +10085,7 @@
 
 
 	  Message.prototype.getRecipientArray = function getRecipientArray() {
-	    return Message._getArray(this.signedData.recipient);
+	    return this.signedData.recipient ? Message._getArray(this.signedData.recipient) : [];
 	  };
 
 	  /**
@@ -10329,11 +10329,14 @@
 
 	  /**
 	  * @param {Index} index index to look up the message recipient from
-	  * @returns {Identity} message recipient identity
+	  * @returns {Identity} message recipient identity or undefined
 	  */
 
 
 	  Message.prototype.getRecipient = function getRecipient(index) {
+	    if (!this.signedData.recipient) {
+	      return undefined;
+	    }
 	    for (var _iterator2 = this.getRecipientIterable(), _isArray2 = Array.isArray(_iterator2), _i3 = 0, _iterator2 = _isArray2 ? _iterator2 : _getIterator(_iterator2);;) {
 	      var _ref3;
 
@@ -11973,6 +11976,10 @@
 	      }
 	    }
 	    this.debug(new Date() - start, 'ms getRecipientArray');
+	    if (!msg.signedData.recipient) {
+	      // message to self
+	      recipientIdentities = authorIdentities;
+	    }
 	    if (!_Object$keys(recipientIdentities).length) {
 	      // recipient is previously unknown
 	      var attrs = {};

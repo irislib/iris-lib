@@ -139,7 +139,7 @@ class Message {
   * @returns {array} Array containing recipient attributes
   */
   getRecipientArray() {
-    return Message._getArray(this.signedData.recipient);
+    return this.signedData.recipient ? Message._getArray(this.signedData.recipient) : [];
   }
 
 
@@ -307,9 +307,12 @@ class Message {
 
   /**
   * @param {Index} index index to look up the message recipient from
-  * @returns {Identity} message recipient identity
+  * @returns {Identity} message recipient identity or undefined
   */
   getRecipient(index) {
+    if (!this.signedData.recipient) {
+      return undefined;
+    }
     for (const a of this.getRecipientIterable()) {
       if (a.isUniqueType()) {
         return index.get(a);

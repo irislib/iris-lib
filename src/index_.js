@@ -746,7 +746,7 @@ class Index {
   }
 
   async _updateIdentityIndexesByMsg(msg) {
-    const recipientIdentities = {};
+    let recipientIdentities = {};
     const authorIdentities = {};
     let selfAuthored = false;
     let start;
@@ -790,6 +790,9 @@ class Index {
       }
     }
     this.debug((new Date()) - start, `ms getRecipientArray`);
+    if (!msg.signedData.recipient) { // message to self
+      recipientIdentities = authorIdentities;
+    }
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
       const attrs = {};
       let u;
