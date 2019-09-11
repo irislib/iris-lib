@@ -222,7 +222,7 @@ class Index {
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
-    const key = `${distance}:${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp))}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
+    const key = `${distance}:${Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp))}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
     return key;
   }
 
@@ -232,8 +232,17 @@ class Index {
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
-    const timestamp = Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp));
+    const timestamp = Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp));
     const hashSlice = msg.getHash().substr(0, 9);
+
+    if (msg.signedData.type === `chat`) {
+      if (msg.signedData.recipient.uuid) {
+        keys.chatMessagesByUuid = {};
+        keys.chatMessagesByUuid[msg.signedData.recipient.uuid] = `${msg.signedData.time}:${hashSlice}`;
+      }
+      return keys;
+    }
+
     keys.messagesByHash = [msg.getHash()];
     keys.messagesByTimestamp = [`${timestamp}:${hashSlice}`];
     keys.messagesByDistance = [`${distance}:${keys.messagesByTimestamp[0]}`];
@@ -514,6 +523,16 @@ class Index {
         }
       });
     }
+  }
+
+  async getChatMsgs(uuid, options) {
+    this._getMsgs(this.gun.get(`chatMessagesByUuid`).get(uuid), options.callback, options.limit, options.cursor, true, options.filter);
+    this.gun.get(`trustedIndexes`).map().once((val, key) => {
+      if (val) {
+        const n = this.gun.user(key).get(`iris`).get(`chatMessagesByUuid`).get(uuid);
+        this._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
+      }
+    });
   }
 
   async _getAttributeTrustDistance(a) {
