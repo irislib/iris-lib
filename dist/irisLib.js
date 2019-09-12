@@ -12197,9 +12197,11 @@
 	        console.error('adding msg ' + msg + ' to ipfs failed: ' + e);
 	      }
 	    }
-	    start = new Date();
-	    await this._updateIdentityIndexesByMsg(msg);
-	    this.debug(new Date() - start, 'ms _updateIdentityIndexesByMsg');
+	    if (msg.signedData.type !== 'chat') {
+	      start = new Date();
+	      await this._updateIdentityIndexesByMsg(msg);
+	      this.debug(new Date() - start, 'ms _updateIdentityIndexesByMsg');
+	    }
 	    return true;
 	  };
 
