@@ -415,7 +415,7 @@ describe(`local index`, async () => {
             resolve(msg);
           }
         };
-        i.getChatMsgs({uuid, callback});
+        i.getChatMsgs(uuid, {callback});
         setTimeout(() => resolve(), 5000);
       });
       logger.disable();
