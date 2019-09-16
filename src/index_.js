@@ -989,10 +989,8 @@ class Index {
       if (type && keyType !== type) { return false; }
       return true;
     }
-    this.debug(`search()`, value, type, limit, cursor);
     const node = this.gun.get(`identitiesBySearchKey`);
     node.get({'.': {'*': value, '>': cursor}, '%': 2000}).once().map().on((id, key) => {
-      this.debug(`search(${value}, ${type}, callback, ${limit}, ${cursor}) returned id ${id} key ${key}`);
       if (Object.keys(seen).length >= limit) {
         // TODO: turn off .map cb
         return;
