@@ -111,11 +111,9 @@
     "rollup-plugin-terser": "^1.0.1"
   },
   "dependencies": {
-    "@trust/webcrypto": "^0.9.2",
     "create-hash": "^1.2.0",
-    "gun": "0.2019.413",
+    "gun": "amark/gun",
     "identicon.js": "^2.3.3",
-    "node-webcrypto-ossl": "^1.0.48",
     "text-encoding": "^0.7.0"
   }
 }
