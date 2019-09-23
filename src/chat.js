@@ -42,10 +42,57 @@ class Chat {
 
   async messageReceived(data, pub, selfAuthored) {
     const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+    if (typeof decrypted !== `object`) {
+      console.log(`chat data received`, decrypted);
+      return;
+    }
     if (this.onMessage) {
       this.onMessage(decrypted, {selfAuthored});
     } else {
       console.log(`chat message received`, decrypted);
+    }
+  }
+
+  /**
+  * Useful for notifications
+  * @param {integer} time last seen msg time (default: now)
+  */
+  async setMyMsgsLastSeenTime(time) {
+    const keys = Object.keys(this.secrets);
+    time = time || new Date().getTime();
+    for (let i = 0;i < keys.length;i ++) {
+      const encrypted = await Gun.SEA.encrypt(time, (await this.getSecret(keys[i])));
+      this.user.get(`chat`).get(keys[i]).get(`msgsLastSeenTime`).put(encrypted);
+    }
+  }
+
+  /**
+  * Useful for notifications
+  */
+  getMyMsgsLastSeenTime(callback) {
+    const keys = Object.keys(this.secrets);
+    for (let i = 0;i < keys.length;i ++) {
+      this.gun.user().get(`chat`).get(keys[i]).get(`msgsLastSeenTime`).on(async (data) => {
+        this.myMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
+        if (callback) {
+          callback(this.myMsgsLastSeenTime);
+        }
+      });
+    }
+  }
+
+  /**
+  * For "seen" status indicator
+  */
+  getTheirMsgsLastSeenTime(callback) {
+    const keys = Object.keys(this.secrets);
+    for (let i = 0;i < keys.length;i ++) {
+      this.gun.user(keys[i]).get(`chat`).get(this.key.pub).get(`msgsLastSeenTime`).on(async (data) => {
+        this.theirMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
+        if (callback) {
+          callback(this.theirMsgsLastSeenTime, keys[i]);
+        }
+      });
     }
   }
 
@@ -78,9 +125,8 @@ class Chat {
     //this.gun.user().get('message').set(temp);
     const keys = Object.keys(this.secrets);
     for (let i = 0;i < keys.length;i ++) {
-      const pub = keys[i];
-      const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(pub)));
-      this.user.get(`chat`).get(pub).get(`${msg.time}`).put(encrypted);
+      const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
+      this.user.get(`chat`).get(keys[i]).get(`${msg.time}`).put(encrypted);
     }
   }
 
@@ -113,10 +159,10 @@ class Chat {
     gun.user(pubKey).get(`lastActive`).on(lastActive => {
       clearTimeout(timeout);
       const now = Math.round(Gun.state() / 1000);
-      const isOnline = lastActive > now - 6 && lastActive < now + 30;
+      const isOnline = lastActive > now - 10 && lastActive < now + 30;
       callback({isOnline, lastActive});
       if (isOnline) {
-        timeout = setTimeout(() => callback(false), 6000);
+        timeout = setTimeout(() => callback(false), 10000);
       }
     });
   }

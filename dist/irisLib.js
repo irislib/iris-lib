@@ -10993,10 +10993,77 @@
 
 	  Chat.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored) {
 	    var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+	    if (typeof decrypted !== 'object') {
+	      console.log('chat data received', decrypted);
+	      return;
+	    }
 	    if (this.onMessage) {
 	      this.onMessage(decrypted, { selfAuthored: selfAuthored });
 	    } else {
 	      console.log('chat message received', decrypted);
+	    }
+	  };
+
+	  /**
+	  * Useful for notifications
+	  * @param {integer} time last seen msg time (default: now)
+	  */
+
+
+	  Chat.prototype.setMyMsgsLastSeenTime = async function setMyMsgsLastSeenTime(time) {
+	    var keys = _Object$keys(this.secrets);
+	    time = time || new Date().getTime();
+	    for (var i = 0; i < keys.length; i++) {
+	      var encrypted = await Gun.SEA.encrypt(time, (await this.getSecret(keys[i])));
+	      this.user.get('chat').get(keys[i]).get('msgsLastSeenTime').put(encrypted);
+	    }
+	  };
+
+	  /**
+	  * Useful for notifications
+	  */
+
+
+	  Chat.prototype.getMyMsgsLastSeenTime = function getMyMsgsLastSeenTime(callback) {
+	    var _this = this;
+
+	    var keys = _Object$keys(this.secrets);
+
+	    var _loop = function _loop(i) {
+	      _this.gun.user().get('chat').get(keys[i]).get('msgsLastSeenTime').on(async function (data) {
+	        _this.myMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this.getSecret(keys[i])));
+	        if (callback) {
+	          callback(_this.myMsgsLastSeenTime);
+	        }
+	      });
+	    };
+
+	    for (var i = 0; i < keys.length; i++) {
+	      _loop(i);
+	    }
+	  };
+
+	  /**
+	  * For "seen" status indicator
+	  */
+
+
+	  Chat.prototype.getTheirMsgsLastSeenTime = function getTheirMsgsLastSeenTime(callback) {
+	    var _this2 = this;
+
+	    var keys = _Object$keys(this.secrets);
+
+	    var _loop2 = function _loop2(i) {
+	      _this2.gun.user(keys[i]).get('chat').get(_this2.key.pub).get('msgsLastSeenTime').on(async function (data) {
+	        _this2.theirMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
+	        if (callback) {
+	          callback(_this2.theirMsgsLastSeenTime, keys[i]);
+	        }
+	      });
+	    };
+
+	    for (var i = 0; i < keys.length; i++) {
+	      _loop2(i);
 	    }
 	  };
 
@@ -11007,17 +11074,17 @@
 
 
 	  Chat.prototype.addPub = function addPub(pub) {
-	    var _this = this;
+	    var _this3 = this;
 
 	    this.secrets[pub] = null;
 	    this.getSecret(pub);
 	    // Subscribe to their messages
 	    this.gun.user(pub).get('chat').get(this.key.pub).map().once(function (data) {
-	      _this.messageReceived(data, pub);
+	      _this3.messageReceived(data, pub);
 	    });
 	    // Subscribe to our messages
 	    this.user.get('chat').get(pub).map().once(function (data) {
-	      _this.messageReceived(data, pub, true);
+	      _this3.messageReceived(data, pub, true);
 	    });
 	  };
 
@@ -11039,9 +11106,8 @@
 	    //this.gun.user().get('message').set(temp);
 	    var keys = _Object$keys(this.secrets);
 	    for (var i = 0; i < keys.length; i++) {
-	      var pub = keys[i];
-	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(pub)));
-	      this.user.get('chat').get(pub).get('' + msg.time).put(encrypted);
+	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
+	      this.user.get('chat').get(keys[i]).get('' + msg.time).put(encrypted);
 	    }
 	  };
 
@@ -11078,12 +11144,12 @@
 	    gun.user(pubKey).get('lastActive').on(function (lastActive) {
 	      clearTimeout(timeout);
 	      var now = Math.round(Gun.state() / 1000);
-	      var isOnline = lastActive > now - 6 && lastActive < now + 30;
+	      var isOnline = lastActive > now - 10 && lastActive < now + 30;
 	      callback({ isOnline: isOnline, lastActive: lastActive });
 	      if (isOnline) {
 	        timeout = setTimeout(function () {
 	          return callback(false);
-	        }, 6000);
+	        }, 10000);
 	      }
 	    });
 	  };
@@ -12407,7 +12473,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.118";
+	var version$1 = "0.0.119";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
