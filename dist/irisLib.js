@@ -10994,13 +10994,11 @@
 	  Chat.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored) {
 	    var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
 	    if (typeof decrypted !== 'object') {
-	      console.log('chat data received', decrypted);
+	      // console.log(`chat data received`, decrypted);
 	      return;
 	    }
 	    if (this.onMessage) {
 	      this.onMessage(decrypted, { selfAuthored: selfAuthored });
-	    } else {
-	      console.log('chat message received', decrypted);
 	    }
 	  };
 

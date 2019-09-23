@@ -43,13 +43,13 @@ class Chat {
   async messageReceived(data, pub, selfAuthored) {
     const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
     if (typeof decrypted !== `object`) {
-      console.log(`chat data received`, decrypted);
+      // console.log(`chat data received`, decrypted);
       return;
     }
     if (this.onMessage) {
       this.onMessage(decrypted, {selfAuthored});
     } else {
-      console.log(`chat message received`, decrypted);
+      // console.log(`chat message received`, decrypted);
     }
   }
 
