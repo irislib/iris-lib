@@ -22,7 +22,11 @@ Contacts management: Ask friends to verify your public key or cryptocurrency add
 Iris-lib runs in the browser and on Node.js.
 
 ### Usage
-See [Iris API](http://docs.iris.to/) and tests directory.
+Integrate the library: [Iris API](http://docs.iris.to/) and tests directory.
+
+Or run the server script: "npm start" or [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/irislib/iris-lib)
+
+TODO: docker instructions
 
 ### Tech
 Data storage and networking are outsourced to [GUN](https://github.com/amark/gun), which manages the synchronization of data between different storages: RAM, localstorage, GUN websocket server, WebRTC peers, LAN multicast peers, IPFS (no adapter yet), S3 or others.
