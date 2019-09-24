@@ -22,9 +22,13 @@ Contacts management: Ask friends to verify your public key or cryptocurrency add
 Iris-lib runs in the browser and on Node.js.
 
 ### Usage
-Integrate the library: [Iris API](http://docs.iris.to/) and tests directory.
+For library integration: [Iris API](http://docs.iris.to/) and tests directory.
 
-Or run the server script: "npm start" or [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/irislib/iris-lib)
+Server script:
+`npm start`
+
+Deploy to Heroku:
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/irislib/iris-lib)
 
 TODO: docker instructions
 
