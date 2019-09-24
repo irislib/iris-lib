@@ -8,6 +8,18 @@
     "YARN_PRODUCTION": {
       "value": true,
       "description": "Skip devDependencies"
+    },
+    "IRIS_PRIVATE_KEY": {
+      "description": "Paste your private key here. If left blank, a new key will be generated",
+      "value": ""
+    },
+    "IRIS_GUN_PEERS": {
+      "description": "Gun peer(s) you want to connect to",
+      "value": "https://gun-eu.herokuapp.com/gun"
+    },
+    "NODE_ENV": {
+      "value": "production",
+      "description": "for iris server.js"
     }
   }
 }
