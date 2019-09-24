@@ -22,7 +22,7 @@ Contacts management: Ask friends to verify your public key or cryptocurrency add
 Iris-lib runs in the browser and on Node.js.
 
 ### Usage
-For library integration: [Iris API](http://docs.iris.to/) and tests directory.
+Library integration: see [Iris API](http://docs.iris.to/) for documentation and [tests](https://github.com/irislib/iris-lib/tree/master/__tests__) directory for examples.
 
 Server script:
 
