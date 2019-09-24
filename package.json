@@ -63,7 +63,8 @@
     "build:docs": "documentation build src/** -f html -o docs",
     "build:run": "clear && rimraf cjs && cross-env BABEL_ENV=cjs yarn nodemon src/server.js --watch src --exec babel-node",
     "dev": "concurrently -n tests,build \"yarn test:watch\" \"yarn build:run\"",
-    "start": "node cjs/server.js"
+    "start": "node cjs/server.js",
+    "heroku-postbuild": "cat \"not running build script\""
   },
   "keywords": [],
   "author": "Martti Malmi (martti.malmi@iki.fi)",
