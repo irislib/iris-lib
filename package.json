@@ -41,7 +41,7 @@
     "src"
   ],
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=10.0.0"
   },
   "scripts": {
     "release": "release-it",
@@ -69,7 +69,7 @@
   "keywords": [],
   "author": "Martti Malmi (martti.malmi@iki.fi)",
   "license": "MIT",
-  "repository": "irislib/iris-lib",
+  "repository": "https://github.com/irislib/iris-lib",
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@babel/node": "^7.4.5",
