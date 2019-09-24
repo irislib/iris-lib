@@ -115,5 +115,9 @@
     "gun": "amark/gun",
     "identicon.js": "^2.3.3",
     "text-encoding": "^0.7.0"
+  },
+  "react-native": {
+    "fs": false,
+    "create-hash": false
   }
 }

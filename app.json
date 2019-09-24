@@ -1,0 +1,7 @@
+{
+  "name": "iris-node",
+  "description": "An Iris node that listens to messages from your friends and updates your messages and contacts index accordingly",
+  "repository": "https://github.com/irislib/iris-lib",
+  "logo": "https://raw.githubusercontent.com/irislib/iris-angular/master/dist/assets/images/icon128.png",
+  "keywords": ["node", "p2p"]
+}
