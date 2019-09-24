@@ -25,9 +25,11 @@ Iris-lib runs in the browser and on Node.js.
 For library integration: [Iris API](http://docs.iris.to/) and tests directory.
 
 Server script:
+
 `npm start`
 
 Deploy to Heroku:
+
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/irislib/iris-lib)
 
 TODO: docker instructions
