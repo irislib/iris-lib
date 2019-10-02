@@ -526,10 +526,16 @@ class Index {
 
   async getChatMsgs(uuid, options) {
     this._getMsgs(this.gun.get(`chatMessagesByUuid`).get(uuid), options.callback, options.limit, options.cursor, true, options.filter);
+    const callback = (msg) => {
+      if (options.callback) {
+        options.callback(msg);
+      }
+      this.addMessage(msg, {checkIfExists: true});
+    };
     this.gun.get(`trustedIndexes`).map().once((val, key) => {
       if (val) {
         const n = this.gun.user(key).get(`iris`).get(`chatMessagesByUuid`).get(uuid);
-        this._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
+        this._getMsgs(n, callback, options.limit, options.cursor, false, options.filter);
       }
     });
   }
