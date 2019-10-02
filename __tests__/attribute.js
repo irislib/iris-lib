@@ -59,11 +59,13 @@ describe(`static methods`, () => {
   })
 });
 describe(`methods`, () => {
+  /*
   test(`identicon()`, () => {
     const a = new Attribute('a', 'b');
     const identicon = a.identicon(50);
     expect(a.identicon(50).constructor.name).toBe(`HTMLDivElement`);
   });
+  */
   test(`getUuid()`, () => {
     const uuid = Attribute.getUuid();
     expect(uuid.type).toBe(`uuid`);

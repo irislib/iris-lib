@@ -9,6 +9,7 @@
   "jest": {
     "testURL": "http://localhost/",
     "bail": true,
+    "testEnvironment": "node",
     "verbose": true,
     "collectCoverage": true,
     "watchPathIgnorePatterns": [
@@ -113,7 +114,7 @@
   },
   "dependencies": {
     "create-hash": "^1.2.0",
-    "gun": "amark/gun",
+    "gun": "^0.2019.930",
     "identicon.js": "^2.3.3",
     "text-encoding": "^0.7.0"
   },

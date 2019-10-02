@@ -72,7 +72,7 @@ class Chat {
   getMyMsgsLastSeenTime(callback) {
     const keys = Object.keys(this.secrets);
     for (let i = 0;i < keys.length;i ++) {
-      this.gun.user().get(`chat`).get(keys[i]).get(`msgsLastSeenTime`).on(async (data) => {
+      this.gun.user().get(`chat`).get(keys[i]).get(`msgsLastSeenTime`).on(async data => {
         this.myMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
         if (callback) {
           callback(this.myMsgsLastSeenTime);
@@ -87,7 +87,7 @@ class Chat {
   getTheirMsgsLastSeenTime(callback) {
     const keys = Object.keys(this.secrets);
     for (let i = 0;i < keys.length;i ++) {
-      this.gun.user(keys[i]).get(`chat`).get(this.key.pub).get(`msgsLastSeenTime`).on(async (data) => {
+      this.gun.user(keys[i]).get(`chat`).get(this.key.pub).get(`msgsLastSeenTime`).on(async data => {
         this.theirMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
         if (callback) {
           callback(this.theirMsgsLastSeenTime, keys[i]);

@@ -141,7 +141,6 @@ class Index {
     this.gun = user.get(`iris`);
     const uri = this.viewpoint.uri();
     const g = this.gun.get(`identitiesBySearchKey`).get(uri);
-    g.put({});
     const attrs = {};
     attrs[uri] = this.viewpoint;
     if (this.options.self) {
@@ -487,7 +486,7 @@ class Index {
       console.error(e.stack);
       throw e;
     }
-    const hash = Gun.node.soul(id) || `todo`;
+    const hash = Gun.node.soul(id) || id._ && id._.link || `todo`;
     const indexKeys = await this.getIdentityIndexKeys(id, hash.substr(0, 6));
 
     const indexes = Object.keys(indexKeys);
@@ -570,7 +569,7 @@ class Index {
   }
 
   async _updateMsgRecipientIdentity(msg, msgIndexKey, recipient) {
-    const hash = `todo`;
+    const hash = recipient._ && recipient._.link || `todo`;
     const identityIndexKeysBefore = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     const attrs = await new Promise(resolve => { recipient.get(`attrs`).load(r => resolve(r)); });
     if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {

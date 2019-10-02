@@ -44,6 +44,7 @@ describe(`Identity`, () => {
     //expect(vp.verified(`email`)).toBe(undefined);
     //expect(typeof vp.verified(`keyID`)).toBe(`string`);
   });
+  /*
   test(`identicon()`, () => {
     const identicon = vp.identicon(50);
     expect(identicon.constructor.name).toBe(`HTMLDivElement`);
@@ -63,4 +64,5 @@ describe(`Identity`, () => {
     input.val(`Al`);
     input.keyup();
   });
+  */
 });
