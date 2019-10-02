@@ -116,7 +116,7 @@ class Chat {
   async send(msg) {
     if (typeof msg === `string`) {
       msg = {
-        time: new Date().getTime(),
+        time: (new Date()).toISOString(),
         author: `anonymous`,
         text: msg
       };
