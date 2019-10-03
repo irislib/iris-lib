@@ -59,7 +59,7 @@ class Chat {
   */
   async setMyMsgsLastSeenTime(time) {
     const keys = Object.keys(this.secrets);
-    time = time || new Date().getTime();
+    time = time || new Date().toISOString();
     for (let i = 0;i < keys.length;i ++) {
       const encrypted = await Gun.SEA.encrypt(time, (await this.getSecret(keys[i])));
       this.user.get(`chat`).get(keys[i]).get(`msgsLastSeenTime`).put(encrypted);
