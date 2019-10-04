@@ -526,7 +526,7 @@ class Index {
 
   async getChatMsgs(uuid, options) {
     this._getMsgs(this.gun.get(`chatMessagesByUuid`).get(uuid), options.callback, options.limit, options.cursor, true, options.filter);
-    const callback = (msg) => {
+    const callback = msg => {
       if (options.callback) {
         options.callback(msg);
       }
@@ -1037,12 +1037,14 @@ class Index {
   getMessageByHash(hash) {
     const isIpfsUri = hash.indexOf(`Qm`) === 0;
     return new Promise(async resolve => {
-      const resolveIfHashMatches = async d => {
+      const resolveIfHashMatches = async (d, fromIpfs) => {
         const obj = typeof d === `object` ? d : JSON.parse(d);
         const m = await Message.fromSig(obj);
         let h;
         let republished = false;
-        if (isIpfsUri && this.options.ipfs) {
+        if (fromIpfs) {
+          return resolve(m);
+        } else if (isIpfsUri && this.options.ipfs) {
           h = await m.saveToIpfs(this.options.ipfs);
           republished = true;
         } else {
@@ -1065,7 +1067,7 @@ class Index {
         this.options.ipfs.cat(hash).then(file => {
           const s = this.options.ipfs.types.Buffer.from(file).toString(`utf8`);
           this.debug(`got msg ${hash} from ipfs`);
-          resolveIfHashMatches(s);
+          resolveIfHashMatches(s, true);
         });
       }
       this.gun.get(`messagesByHash`).get(hash).on(d => {

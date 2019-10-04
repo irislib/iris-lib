@@ -9,7 +9,7 @@
   "jest": {
     "testURL": "http://localhost/",
     "bail": true,
-    "testEnvironment": "node",
+    "testEnvironment": "jsdom",
     "verbose": true,
     "collectCoverage": true,
     "watchPathIgnorePatterns": [

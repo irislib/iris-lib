@@ -11010,7 +11010,7 @@
 
 	  Chat.prototype.setMyMsgsLastSeenTime = async function setMyMsgsLastSeenTime(time) {
 	    var keys = _Object$keys(this.secrets);
-	    time = time || new Date().getTime();
+	    time = time || new Date().toISOString();
 	    for (var i = 0; i < keys.length; i++) {
 	      var encrypted = await Gun.SEA.encrypt(time, (await this.getSecret(keys[i])));
 	      this.user.get('chat').get(keys[i]).get('msgsLastSeenTime').put(encrypted);
@@ -11095,7 +11095,7 @@
 	  Chat.prototype.send = async function send(msg) {
 	    if (typeof msg === 'string') {
 	      msg = {
-	        time: new Date().getTime(),
+	        time: new Date().toISOString(),
 	        author: 'anonymous',
 	        text: msg
 	      };
@@ -11713,10 +11713,16 @@
 	    var _this7 = this;
 
 	    this._getMsgs(this.gun.get('chatMessagesByUuid').get(uuid), options.callback, options.limit, options.cursor, true, options.filter);
+	    var callback = function callback(msg) {
+	      if (options.callback) {
+	        options.callback(msg);
+	      }
+	      _this7.addMessage(msg, { checkIfExists: true });
+	    };
 	    this.gun.get('trustedIndexes').map().once(function (val, key) {
 	      if (val) {
 	        var n = _this7.gun.user(key).get('iris').get('chatMessagesByUuid').get(uuid);
-	        _this7._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
+	        _this7._getMsgs(n, callback, options.limit, options.cursor, false, options.filter);
 	      }
 	    });
 	  };
@@ -12353,12 +12359,14 @@
 
 	    var isIpfsUri = hash.indexOf('Qm') === 0;
 	    return new _Promise(async function (resolve) {
-	      var resolveIfHashMatches = async function resolveIfHashMatches(d) {
+	      var resolveIfHashMatches = async function resolveIfHashMatches(d, fromIpfs) {
 	        var obj = typeof d === 'object' ? d : JSON.parse(d);
 	        var m = await Message.fromSig(obj);
 	        var h = void 0;
 	        var republished = false;
-	        if (isIpfsUri && _this11.options.ipfs) {
+	        if (fromIpfs) {
+	          return resolve(m);
+	        } else if (isIpfsUri && _this11.options.ipfs) {
 	          h = await m.saveToIpfs(_this11.options.ipfs);
 	          republished = true;
 	        } else {
@@ -12382,7 +12390,7 @@
 	        _this11.options.ipfs.cat(hash).then(function (file) {
 	          var s = _this11.options.ipfs.types.Buffer.from(file).toString('utf8');
 	          _this11.debug('got msg ' + hash + ' from ipfs');
-	          resolveIfHashMatches(s);
+	          resolveIfHashMatches(s, true);
 	        });
 	      }
 	      _this11.gun.get('messagesByHash').get(hash).on(function (d) {

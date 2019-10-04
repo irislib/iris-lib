@@ -5,6 +5,7 @@ const GUN = require(`gun`);
 const load = require(`gun/lib/load`);
 const then = require(`gun/lib/then`);
 const SEA = require(`gun/sea`);
+const radix = require(`gun/lib/radix`);
 const gun = new GUN({radisk: false});
 const $ = require(`jquery`);
 
