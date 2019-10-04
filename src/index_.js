@@ -1051,7 +1051,7 @@ class Index {
           h = m.getHash();
         }
         if (h === hash || (isIpfsUri && !this.options.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
-          if (!isIpfsUri && this.options.ipfs && this.writable && !republished) {
+          if (!fromIpfs && this.options.ipfs && this.writable && !republished) {
             m.saveToIpfs(this.options.ipfs).then(ipfsUri => {
               obj.ipfsUri = ipfsUri;
               this.gun.get(`messagesByHash`).get(hash).put(obj);

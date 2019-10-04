@@ -12374,7 +12374,7 @@
 	        }
 	        if (h === hash || isIpfsUri && !_this11.options.ipfs) {
 	          // does not check hash validity if it's an ipfs uri and we don't have ipfs
-	          if (!isIpfsUri && _this11.options.ipfs && _this11.writable && !republished) {
+	          if (!fromIpfs && _this11.options.ipfs && _this11.writable && !republished) {
 	            m.saveToIpfs(_this11.options.ipfs).then(function (ipfsUri) {
 	              obj.ipfsUri = ipfsUri;
 	              _this11.gun.get('messagesByHash').get(hash).put(obj);
