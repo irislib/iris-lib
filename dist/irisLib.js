@@ -10447,6 +10447,57 @@
 	  return Message;
 	}();
 
+	// 19.1.2.1 Object.assign(target, source, ...)
+
+
+
+
+
+
+	var $assign = Object.assign;
+
+	// should work with symbols and should have deterministic property order (V8 bug)
+	var _objectAssign = !$assign || _fails(function () {
+	  var A = {};
+	  var B = {};
+	  // eslint-disable-next-line no-undef
+	  var S = Symbol();
+	  var K = 'abcdefghijklmnopqrst';
+	  A[S] = 7;
+	  K.split('').forEach(function (k) { B[k] = k; });
+	  return $assign({}, A)[S] != 7 || Object.keys($assign({}, B)).join('') != K;
+	}) ? function assign(target, source) { // eslint-disable-line no-unused-vars
+	  var T = _toObject(target);
+	  var aLen = arguments.length;
+	  var index = 1;
+	  var getSymbols = _objectGops.f;
+	  var isEnum = _objectPie.f;
+	  while (aLen > index) {
+	    var S = _iobject(arguments[index++]);
+	    var keys = getSymbols ? _objectKeys(S).concat(getSymbols(S)) : _objectKeys(S);
+	    var length = keys.length;
+	    var j = 0;
+	    var key;
+	    while (length > j) {
+	      key = keys[j++];
+	      if (!_descriptors || isEnum.call(S, key)) T[key] = S[key];
+	    }
+	  } return T;
+	} : $assign;
+
+	// 19.1.3.1 Object.assign(target, source)
+
+
+	_export(_export.S + _export.F, 'Object', { assign: _objectAssign });
+
+	var assign = _core.Object.assign;
+
+	var assign$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": assign, __esModule: true };
+	});
+
+	var _Object$assign = unwrapExports(assign$1);
+
 	/**
 	* An Iris identity profile. Usually you don't create them yourself, but get them
 	* from Index methods such as get() and search().
@@ -10560,7 +10611,7 @@
 	    var card = document.createElement('div');
 	    card.className = 'iris-card';
 
-	    var identicon$$1 = this.identicon(60, null, null, ipfs);
+	    var identicon$$1 = this.identicon({ width: 60, ipfs: ipfs });
 	    identicon$$1.style.order = 1;
 	    identicon$$1.style.flexShrink = 0;
 	    identicon$$1.style.marginRight = '15px';
@@ -10680,40 +10731,42 @@
 	  };
 
 	  /**
-	  * @param {number} width of the identicon
-	  * @param {number} border identicon border (aura) width
-	  * @param {boolean} showDistance whether to show web of trust distance ordinal
-	  * @param {Object} ipfs (optional) an IPFS instance that is used to fetch images
+	  * @param {Object} options {width: 50, border: 4, showDistance: true, ipfs: null, outerGlow: false}
 	  * @returns {HTMLElement} identicon element that can be appended to DOM
 	  */
 
 
-	  Identity.prototype.identicon = function identicon$$1(width) {
-	    var border = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
-	    var showDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
-	    var ipfs = arguments[3];
+	  Identity.prototype.identicon = function identicon$$1() {
+	    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
+	    options = _Object$assign({
+	      width: 50,
+	      border: 4,
+	      showDistance: true,
+	      outerGlow: false,
+	      ipfs: null
+	    }, options);
 	    util$1.injectCss(); // some other way that is not called on each identicon generation?
 	    var identicon$$1 = document.createElement('div');
 	    identicon$$1.className = 'iris-identicon';
-	    identicon$$1.style.width = width + 'px';
-	    identicon$$1.style.height = width + 'px';
+	    identicon$$1.style.width = options.width + 'px';
+	    identicon$$1.style.height = options.width + 'px';
 
 	    var pie = document.createElement('div');
 	    pie.className = 'iris-pie';
-	    pie.style.width = width + 'px';
+	    pie.style.width = options.width + 'px';
 
 	    var img = document.createElement('img');
 	    img.alt = '';
-	    img.width = width;
-	    img.height = width;
-	    img.style.borderWidth = border + 'px';
+	    img.width = options.width;
+	    img.height = options.width;
+	    img.style.borderWidth = options.border + 'px';
 
 	    var distance = void 0;
-	    if (showDistance) {
+	    if (options.border) {
 	      distance = document.createElement('span');
 	      distance.className = 'iris-distance';
-	      distance.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
+	      distance.style.fontSize = options.width > 50 ? options.width / 4 + 'px' : '10px';
 	      identicon$$1.appendChild(distance);
 	    }
 	    identicon$$1.appendChild(pie);
@@ -10727,11 +10780,14 @@
 	      var bgColor = 'rgba(0,0,0,0.2)';
 	      var bgImage = 'none';
 	      var transform = '';
-	      var boxShadow = '0px 0px 0px 0px #82FF84';
-	      if (data.receivedPositive > data.receivedNegative * 20) {
-	        boxShadow = '0px 0px ' + border * data.receivedPositive / 50 + 'px 0px #82FF84';
-	      } else if (data.receivedPositive < data.receivedNegative * 3) {
-	        boxShadow = '0px 0px ' + border * data.receivedNegative / 10 + 'px 0px #BF0400';
+	      if (options.outerGlow) {
+	        var boxShadow = '0px 0px 0px 0px #82FF84';
+	        if (data.receivedPositive > data.receivedNegative * 20) {
+	          boxShadow = '0px 0px ' + options.border * data.receivedPositive / 50 + 'px 0px #82FF84';
+	        } else if (data.receivedPositive < data.receivedNegative * 3) {
+	          boxShadow = '0px 0px ' + options.border * data.receivedNegative / 10 + 'px 0px #BF0400';
+	        }
+	        pie.style.boxShadow = boxShadow;
 	      }
 	      if (data.receivedPositive + data.receivedNegative > 0) {
 	        if (data.receivedPositive > data.receivedNegative) {
@@ -10747,18 +10803,17 @@
 
 	      pie.style.backgroundColor = bgColor;
 	      pie.style.backgroundImage = bgImage;
-	      pie.style.boxShadow = boxShadow;
 	      pie.style.transform = transform;
 	      pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
 
-	      if (showDistance) {
+	      if (options.showDistance) {
 	        distance.textContent = typeof data.trustDistance === 'number' ? Identity._ordinal(data.trustDistance) : '\u2715';
 	      }
 	    }
 
 	    function setIdenticonImg(data) {
 	      var hash = util$1.getHash(encodeURIComponent(data.type) + ':' + encodeURIComponent(data.value), 'hex');
-	      var identiconImg = new identicon(hash, { width: width, format: 'svg' });
+	      var identiconImg = new identicon(hash, { width: options.width, format: 'svg' });
 	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
 	    }
 
@@ -10770,17 +10825,17 @@
 
 	    this.gun.on(setPie);
 
-	    if (ipfs) {
+	    if (options.ipfs) {
 	      this.gun.get('attrs').open(function (attrs) {
 	        var mva = Identity.getMostVerifiedAttributes(attrs);
 	        if (mva.profilePhoto) {
 	          var go = function go() {
-	            ipfs.cat(mva.profilePhoto.attribute.value).then(function (file) {
-	              var f = ipfs.types.Buffer.from(file).toString('base64');
+	            options.ipfs.cat(mva.profilePhoto.attribute.value).then(function (file) {
+	              var f = options.ipfs.types.Buffer.from(file).toString('base64');
 	              img.src = 'data:image;base64,' + f;
 	            });
 	          };
-	          ipfs.isOnline() ? go() : ipfs.on('ready', go);
+	          options.ipfs.isOnline() ? go() : options.ipfs.on('ready', go);
 	        }
 	      });
 	    }
@@ -10896,57 +10951,6 @@
 	});
 
 	var _Number$parseInt = unwrapExports(_parseInt$2);
-
-	// 19.1.2.1 Object.assign(target, source, ...)
-
-
-
-
-
-
-	var $assign = Object.assign;
-
-	// should work with symbols and should have deterministic property order (V8 bug)
-	var _objectAssign = !$assign || _fails(function () {
-	  var A = {};
-	  var B = {};
-	  // eslint-disable-next-line no-undef
-	  var S = Symbol();
-	  var K = 'abcdefghijklmnopqrst';
-	  A[S] = 7;
-	  K.split('').forEach(function (k) { B[k] = k; });
-	  return $assign({}, A)[S] != 7 || Object.keys($assign({}, B)).join('') != K;
-	}) ? function assign(target, source) { // eslint-disable-line no-unused-vars
-	  var T = _toObject(target);
-	  var aLen = arguments.length;
-	  var index = 1;
-	  var getSymbols = _objectGops.f;
-	  var isEnum = _objectPie.f;
-	  while (aLen > index) {
-	    var S = _iobject(arguments[index++]);
-	    var keys = getSymbols ? _objectKeys(S).concat(getSymbols(S)) : _objectKeys(S);
-	    var length = keys.length;
-	    var j = 0;
-	    var key;
-	    while (length > j) {
-	      key = keys[j++];
-	      if (!_descriptors || isEnum.call(S, key)) T[key] = S[key];
-	    }
-	  } return T;
-	} : $assign;
-
-	// 19.1.3.1 Object.assign(target, source)
-
-
-	_export(_export.S + _export.F, 'Object', { assign: _objectAssign });
-
-	var assign = _core.Object.assign;
-
-	var assign$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": assign, __esModule: true };
-	});
-
-	var _Object$assign = unwrapExports(assign$1);
 
 	/**
 	* Private communication channel between two or more participants. Can be used

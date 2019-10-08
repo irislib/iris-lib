@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset='utf-8' />
-  <title>iris-lib 0.0.119 | Documentation</title>
+  <title>iris-lib 0.0.120 | Documentation</title>
   <meta name='description' content='Basic tools for reading and writing Iris messages and identities.'>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
   <link href='assets/bass.css' rel='stylesheet' />
@@ -15,7 +15,7 @@
       <div id='split-left' class='overflow-auto fs0 height-viewport-100'>
         <div class='py1 px2'>
           <h3 class='mb0 no-anchor'>iris-lib</h3>
-          <div class='mb1'><code>0.0.119</code></div>
+          <div class='mb1'><code>0.0.120</code></div>
           <input
             placeholder='Filter'
             id='filter-input'
@@ -2138,7 +2138,7 @@ from Index methods such as get() and search().</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>identicon(width, border, showDistance, ipfs)</span>
+            <span class='code strong strong truncate'>identicon(options)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2147,7 +2147,7 @@ from Index methods such as get() and search().</p>
   
 
   
-    <div class='pre p1 fill-light mt0'>identicon(width: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, border: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, showDistance: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>, ipfs: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/HTML/Element">HTMLElement</a></div>
+    <div class='pre p1 fill-light mt0'>identicon(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/HTML/Element">HTMLElement</a></div>
   
   
 
@@ -2164,37 +2164,9 @@ from Index methods such as get() and search().</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>width</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</code>
-	    of the identicon
-
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>border</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>
-            = <code>4</code>)</code>
-	    identicon border (aura) width
-
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>showDistance</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>
-            = <code>true</code>)</code>
-	    whether to show web of trust distance ordinal
-
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>ipfs</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    (optional) an IPFS instance that is used to fetch images
+            <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+            = <code>{}</code>)</code>
+	    {width: 50, border: 4, showDistance: true, ipfs: null, outerGlow: false}
 
           </div>
           
