@@ -9716,30 +9716,32 @@
 
 	  /**
 	  * Generate a visually recognizable representation of the attribute
-	  * @param {integer} width width of the identicon
+	  * @param {object} options {width}
 	  * @returns {HTMLElement} identicon div element
 	  */
 
 
-	  Attribute.prototype.identicon = function identicon$$1(width) {
+	  Attribute.prototype.identicon = function identicon$$1() {
+	    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { width: 50 };
+
 	    util$1.injectCss(); // some other way that is not called on each identicon generation?
 
 	    var div = document.createElement('div');
 	    div.className = 'iris-identicon';
-	    div.style.width = width + 'px';
-	    div.style.height = width + 'px';
+	    div.style.width = options.width + 'px';
+	    div.style.height = options.width + 'px';
 
 	    var img = document.createElement('img');
 	    img.alt = '';
-	    img.width = width;
-	    img.height = width;
+	    img.width = options.width;
+	    img.height = options.width;
 	    var hash = util$1.getHash(encodeURIComponent(this.type) + ':' + encodeURIComponent(this.value), 'hex');
-	    var identicon$$1 = new identicon(hash, { width: width, format: 'svg' });
+	    var identicon$$1 = new identicon(hash, { width: options.width, format: 'svg' });
 	    img.src = 'data:image/svg+xml;base64,' + identicon$$1.toString();
 
 	    var name = document.createElement('span');
 	    name.className = 'iris-distance';
-	    name.style.fontSize = width > 50 ? width / 4 + 'px' : '10px';
+	    name.style.fontSize = options.width > 50 ? options.width / 4 + 'px' : '10px';
 	    name.textContent = this.type.slice(0, 5);
 	    div.appendChild(name);
 
@@ -12482,7 +12484,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.120";
+	var version$1 = "0.0.121";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
