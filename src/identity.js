@@ -226,20 +226,22 @@ class Identity {
       ipfs: null
     }, options);
     util.injectCss(); // some other way that is not called on each identicon generation?
+    const container = document.createElement(`div`);
+    container.className = `iris-identicon-container`;
+    container.style.width = `${options.width}px`;
+    container.style['max-height'] = `${options.width}px`;
+
     const identicon = document.createElement(`div`);
     identicon.className = `iris-identicon`;
-    identicon.style.width = `${options.width}px`;
-    identicon.style.height = `${options.width}px`;
 
     const pie = document.createElement(`div`);
     pie.className = `iris-pie`;
-    pie.style.width = `${options.width}px`;
+    pie.style.width = `100%`;
 
     const img = document.createElement(`img`);
     img.alt = ``;
-    img.width = options.width;
-    img.height = options.width;
     img.style.borderWidth = `${options.border}px`;
+    img.style.width = '100%';
 
     let distance;
     if (options.border) {
@@ -248,6 +250,7 @@ class Identity {
       distance.style.fontSize = options.width > 50 ? `${options.width / 4}px` : `10px`;
       identicon.appendChild(distance);
     }
+    container.appendChild(identicon);
     identicon.appendChild(pie);
     identicon.appendChild(img);
 
@@ -319,7 +322,7 @@ class Identity {
       });
     }
 
-    return identicon;
+    return container;
   }
 }
 

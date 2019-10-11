@@ -36,19 +36,32 @@ export default {
     const sheet = document.createElement(`style`);
     sheet.id = elementId;
     sheet.innerHTML = `
-      .iris-identicon * {
+      .iris-identicon-container * {
         box-sizing: border-box;
+        padding-right: 0% !important;
+        padding-left: 0% !important;
+      }
+
+      .iris-identicon-container {
+        display: inline-block;
+        max-width: 100%;
+        padding-right: 0% !important;
+        padding-left: 0% !important;
       }
 
       .iris-identicon {
-        vertical-align: middle;
-        margin: auto;
+        position: relative;
         border-radius: 50%;
         text-align: center;
         display: inline-block;
-        position: relative;
-        margin: auto;
-        max-width: 100%;
+        width: 100%;
+        padding-top: 100%;
+      }
+
+      .iris-identicon > div {
+        position: absolute;
+        top: 0; bottom: 0; left: 0; right: 0;
+        padding: 0 !important;
       }
 
       .iris-distance {
@@ -67,9 +80,6 @@ export default {
 
       .iris-pie {
         border-radius: 50%;
-        position: absolute;
-        top: 0;
-        left: 0;
         box-shadow: 0px 0px 0px 0px #82FF84;
         padding-bottom: 100%;
         max-width: 100%;

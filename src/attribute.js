@@ -128,10 +128,12 @@ class Attribute {
   identicon(options = {width:50}) {
     util.injectCss(); // some other way that is not called on each identicon generation?
 
+    const container = document.createElement(`div`);
+    container.className = `iris-identicon-container`;
+    container.style.width = `${options.width}px`;
+    container.style['max-height'] = `${options.width}px`;
     const div = document.createElement(`div`);
     div.className = `iris-identicon`;
-    div.style.width = `${options.width}px`;
-    div.style.height = `${options.width}px`;
 
     const img = document.createElement(`img`);
     img.alt = ``;
@@ -145,11 +147,13 @@ class Attribute {
     name.className = `iris-distance`;
     name.style.fontSize = options.width > 50 ? `${options.width / 4}px` : `10px`;
     name.textContent = this.type.slice(0, 5);
+
+    container.appendChild(div);
     div.appendChild(name);
 
     div.appendChild(img);
 
-    return div;
+    return container;
   }
 }
 
