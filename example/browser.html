@@ -4,7 +4,7 @@
   <!--<script type="text/javascript" src="../dist/irisLib.js"></script>-->
   <script type="text/javascript" src="./assets/gun.js"></script>
   <script type="text/javascript" src="./assets/gun.then.js"></script>
-  <script type="text/javascript" src="./assets/gun.load.js"></script>
+  <script type="text/javascript" src="./assets/gun.open.js"></script>
   <script type="text/javascript" src="../dist/irisLib.js"></script>
   <script src="script.js"></script>
   <link rel="stylesheet" href="./assets/bootstrap.min.css">
@@ -91,89 +91,9 @@
 key = await util.getDefaultKey();</pre>
     <p><input type="button" value="msg.sign(key);" id="signMsg" class="btn btn-primary"></p>
     <pre id="signMsgResult"></pre>
-    <p><input type="button" value="index.publishMessage(msg);" id="publishMsg" class="btn btn-primary"></p>
+    <p><input type="button" value="index.addMessage(msg);" id="publishMsg" class="btn btn-primary"></p>
     <pre id="publishMsgResult"></pre>
     <p id="publishMsgResultLink"></p>
-
-    <p>By default, maxRating is 10 and minRating is -10.</p>
-
-    <p>Messages are encoded and signed with GUN's <a href="https://gun.eco/docs/SEA">SEA</a>.</p>
-
-    <p>Default key is read from localStorage/filesystem or a new one is generated.</p>
-
-    <p>Verification message example:</p>
-
-    <pre>
-      msg = Message.createVerification({
-        author: {name: 'Alice', email: 'alice@example.com'},
-        recipient: {
-          name: 'Bob',
-          keyID: '4321DCBA',
-          email: 'bob@example.com',
-          bitcoin_address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
-        },
-        comment 'Verified in person'
-      });
-    </pre>
-
-    <h2>Index.create()</h2>
-    <!--
-    <p>To be implemented. Currently, Identifi indices can be only created with
-    <a href="https://github.com/identifi/identifi-daemon">identifi-daemon.</a></p>
-
-    <p>Indices are <a href="https://github.com/mmalmi/merkle-btree">merkle-btrees</a>
-    that anyone can easily write messages to, essentially creating a fork of the original
-    index. Since it's a btree, you only need to rewrite one branch, not the whole tree.</p>
-    -->
-
-    <h2>So, what about saving the world?</h2>
-    <p>Identifi's web-of-trust approach to identity management could be more resilient,
-    accessible and intuitive than the hierarchical approach of DNS. It could free our
-    digital identities from domain names, email providers, social media companies and phone carriers.
-    Instead, we can use public key hashes as unique identifiers. Identifi solves the
-    problem of connecting human-readable names (and faces) to public keys without
-    a single source of truth.
-    </p>
-
-    <p>Ubiquitously available identity and reputation data would bring us closer to our
-    native social habitat - a tribe or a village society where everyone knows each other.
-    That would incentivize people to treat each other well and apologize and compensate
-    for misdeeds. It would be a cost-effective and non-violent alternative to the punitive,
-    expensive, slow and too often corrupt or unjust state monopolies of justice. See
-    <a href="https://medium.com/@mmalmi/learning-to-trust-strangers-167b652a654f">
-    Learning to Trust Strangers</a> and
-    <a href="https://medium.com/liberation-day/law-is-better-without-monopoly-778963880276">
-    Law Is Better Without Monopoly</a>.</p>
-
-    <p>We must not let centrally managed systems like China's dystopian big brother
-    "reputation" system define how we regard each other. Identifi's reputation scores always
-    depend on whose web-of-trust you are looking through (and you can easily maintain your own).</p>
-
-    <p>Identifi's web of trust can be used in other system to filter out spam,
-    fake users, propaganda or other untrusted content. That is helpful when building
-    decentralized social media applications, which need some way to limit write access.</p>
-
-    <p>Storing all data on the IPFS network makes it more difficult to be shut down
-    by lawsuits or oppressive governments.</p>
-
-    <h3>In the future</h3>
-    Self-driving cars, drones and other autonomous agents inhabiting the same physical space
-    will need to identify each other and be accountable for their behavior. Unidentifiable
-    agents, much like masked people or cars without license plates, will probably be seen
-    as a threat by others and can be stopped without recourse. To avoid centralization of power,
-    we should pursue a decentralized web of trust registry rather than a top-down system.
-
-    <h2>How to solve the chicken-and-egg problem?</h2>
-    <p><b>The signer and author of an Identifi message need not be the same person.</b>
-    A signature on an identifi message means just that the signer verifies its authenticity.</p>
-    <p>That allows us to write crawlers that import content into Identifi from other platforms.
-    That makes Identifi useful even with no initial users. In the beginning, people
-    can rely on 3rd parties to sign and import their messages into Identifi.</p>
-    <p>The dataset you see as of April 2018 is crawled from bitcoin-otc.com.</p>
-
-    <h2>What's next?</h2>
-    <p>If you like the idea, you can help by integrating and improving identifi-lib
-    (<a href="https://github.com/identifi/identifi-lib">Github</a>) or writing crawlers.</p>
 
     <p>Possible applications:</p>
     <ul>

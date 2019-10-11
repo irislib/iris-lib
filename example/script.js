@@ -2,10 +2,9 @@ let index, msg, key;
 
 gun = new Gun(['http://localhost:8765/gun']);
 
-const loadIdentifi = window.irisLib.Index.create(gun); // <--- Create identifi index
+index = new window.irisLib.Index({gun}); // <--- Create identifi index
 
-loadIdentifi.then(async (index_) => {
-  index = index_;
+index.ready.then(async () => {
   document.getElementById('searchResults').textContent = 'Searching...';
   document.getElementById('profileResults').textContent = 'Searching...';
   await search(index);
@@ -69,13 +68,13 @@ function signMsg() {
 }
 
 async function publishMsg() {
-  const r = await index.publishMessage(window.message);
+  const r = await index.addMessage(window.message);
   document.getElementById('publishMsgResult').textContent = JSON.stringify(r);
   if (r && r.hash) {
     const link = `https://ipfs.io/ipfs/${r.hash}`;
     const el = document.getElementById('publishMsgResultLink');
     el.className = `alert alert-info`;
-    el.innerHTML = `Link to the newly published JWT serialized identifi message on IPFS: <a href="${link}">${link}</a>`;
+    el.innerHTML = `<a href="${link}">${link}</a>`;
   }
 }
 
@@ -94,15 +93,15 @@ async function runIndexExample() {
       reject();
     });
   });
-  index = await window.irisLib.Index.create(ipfs);
+  index = new window.irisLib.Index({gun, ipfs});
   myKey = window.irisLib.Key.getDefault('.');
   msg = window.irisLib.Message.createVerification({
-    recipient: [['keyID', myKey.keyID], ['name', 'Alice Example']],
+    recipient: {'keyID': myKey.keyID, 'name': 'Alice Example'},
     comment: 'add name'
   }, myKey);
   await index.addMessage(msg);
   msg2 = window.irisLib.Message.createRating({
-    recipient: [['email', 'bob@example.com']],
+    recipient: {'email': 'bob@example.com'},
     rating: 5
   }, myKey);
   await index.addMessage(msg2);
