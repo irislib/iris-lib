@@ -70,6 +70,37 @@ beforeAll(() => {
   logger.disable();
 });
 
+function gunWaitForPath(gun, path, timeout) {
+  const chain = path && Array.isArray(path) ? path.reduce((g, key) => g.get(key), gun) : gun;
+  return new Promise((resolve, reject) => {
+    let resolved = false;
+    chain.on(data => {
+      if(resolved || data === undefined) return;
+      resolved = true;
+      resolve(data);
+    });
+    setTimeout(() => reject(`gunOnPath(${path}) TIMEOUT!`), timeout);
+  });
+}
+
+function gunWaitForAttributes(gun, attributes, timeout) {
+  const expect = {};
+  attributes.forEach(attr => expect[attr] = true);
+  return new Promise((resolve, reject) => {
+    gun.on(data => {
+      Object.keys(expect).map(k => {
+        if (data[k] !== undefined && expect[k] !== undefined) {
+          delete expect[k];
+        }
+      });
+      if (expect.length <= 0) {
+        resolve(attributes.length);
+      }
+    });
+    setTimeout(() => reject(`gunExpectAttributes(${attributes}) TIMEOUT!`), timeout);
+  });
+}
+
 describe(`local index`, async () => {
   let i, r, h, key, keyID;
   beforeAll(async () => {
@@ -78,7 +109,7 @@ describe(`local index`, async () => {
     i = new iris.Index({gun, keypair: key, self: {name: `Alice`}, debug: false});
     r = new iris.Index({gun, pubKey: key.pub, debug: false}); // read-only
     await i.ready;
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 2000));
   });
   test(`create new Index`, async () => {
     expect(i).toBeInstanceOf(iris.Index);
@@ -97,46 +128,57 @@ describe(`local index`, async () => {
   });
   let p;
   describe(`create and fetch an identity using iris messages`, async () => {
-    test(`add trust rating to bob`, async () => {
-      const msg = await iris.Message.createRating({recipient: {email: `bob@example.com`}, rating: 10}, key);
-      h = msg.getHash();
-      const r = await i.addMessage(msg);
-      expect(r).toBe(true);
+    describe(`add new info`, async () => {
+      test(`add trust rating to bob`, async () => {
+        const msg = await iris.Message.createRating({recipient: {email: `bob@example.com`}, rating: 10}, key);
+        h = msg.getHash();
+        const r = await i.addMessage(msg);
+        expect(r).toBe(true);
+      });
+      test(`get added msg by hash`, async () => {
+        let msg = await i.getMessageByHash(h);
+        expect(msg.signedData.recipient.email).toEqual(`bob@example.com`);
+        msg = await r.getMessageByHash(h);
+        expect(msg.signedData.recipient.email).toEqual(`bob@example.com`);
+      });
     });
-    test(`get added msg by hash`, async () => {
-      let msg = await i.getMessageByHash(h);
-      expect(msg.signedData.recipient.email).toEqual(`bob@example.com`);
-      msg = await r.getMessageByHash(h);
-      expect(msg.signedData.recipient.email).toEqual(`bob@example.com`);
-    });
-    test(`get added identity`, async () => {
-      p = i.get(`bob@example.com`); // ,true
-      const data = await p.gun.once().then();
-      //expect(q).toBeInstanceOf(iris.Identity);
-      expect(data.trustDistance).toBe(1);
-      expect(data.receivedPositive).toBe(1);
-      expect(data.receivedNeutral).toBe(0);
-      expect(data.receivedNegative).toBe(0);
-    });
-    test(`get messages received by bob`, async () => {
-      const results = [];
-      p.received({callback: result => results.push(result)});
-      await new Promise(resolve => setTimeout(resolve, 200));
-      expect(results.length).toBe(1);
-    });
-    test(`get messages sent by bob`, async () => {
-      const results = [];
-      p.sent({callback: result => results.push(result)});
-      await new Promise(resolve => setTimeout(resolve, 200));
-      expect(results.length).toBe(0);
-    });
-    test(`get messages sent by self`, async () => {
-      const viewpoint = i.getViewpoint();
-      expect(viewpoint).toBeInstanceOf(iris.Identity);
-      const results = [];
-      viewpoint.sent({callback: result => results.push(result)});
-      await new Promise(resolve => setTimeout(resolve, 200));
-      expect(results.length).toBe(2);
+    describe(`check entered info`, async() => {
+      test(`get added identity`, async () => {
+        p = i.get(`bob@example.com`); // ,true
+        //await new Promise(resolve => setTimeout(resolve, 800));
+        //await gunWaitForAttributes(p.gun, ['trustDistance', 'receivedPositive', 'receivedNeutral', 'receivedNegative'], 1000);
+        //const outcome = await gunWaitForPath(p.gun, 'receivedPositive', 2000);
+        const data = await p.gun.once().then();
+        //const data = await p.gun.on().then().then();
+        /*p.gun.on(data => {
+          console.log('SOMETHING CHANGED', data);
+        });*/
+        //expect(q).toBeInstanceOf(iris.Identity);
+        expect(data.trustDistance).toBe(1);
+        expect(data.receivedPositive).toBe(1);
+        expect(data.receivedNeutral).toBe(0);
+        expect(data.receivedNegative).toBe(0);
+      });
+      test(`get messages received by bob`, async () => {
+        const results = [];
+        p.received({callback: result => results.push(result)});
+        await new Promise(resolve => setTimeout(resolve, 200));
+        expect(results.length).toBe(1);
+      });
+      test(`get messages sent by bob`, async () => {
+        const results = [];
+        p.sent({callback: result => results.push(result)});
+        await new Promise(resolve => setTimeout(resolve, 200));
+        expect(results.length).toBe(0);
+      });
+      test(`get messages sent by self`, async () => {
+        const viewpoint = i.getViewpoint();
+        expect(viewpoint).toBeInstanceOf(iris.Identity);
+        const results = [];
+        viewpoint.sent({callback: result => results.push(result)});
+        await new Promise(resolve => setTimeout(resolve, 200));
+        expect(results.length).toBe(2);
+      });
     });
   });
   test(`verify first, then rate`, async () => {
@@ -166,8 +208,8 @@ describe(`local index`, async () => {
       const msgs = [];
       let msg = await iris.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `bob1@example.com`}, rating: 10}, key);
       msgs.push(msg);
-      for (let i = 0;i < 4;i ++) {
-        msg = await iris.Message.createRating({author: {email: `bob${i}@example.com`}, recipient: {email: `bob${i + 1}@example.com`}, rating: 10}, key);
+      for (let j = 0;j < 4;j ++) {
+        msg = await iris.Message.createRating({author: {email: `bob${j}@example.com`}, recipient: {email: `bob${j + 1}@example.com`}, rating: 10}, key);
         msgs.push(msg);
       }
       msg = await iris.Message.createRating({author: {email: `bert@example.com`}, recipient: {email: `chris@example.com`}, rating: 10}, key);
@@ -185,12 +227,15 @@ describe(`local index`, async () => {
     test(`up & down`, async () => {
       let msg = await iris.Message.createRating({recipient: {email: `orwell@example.com`}, rating: 1}, key);
       await i.addMessage(msg);
+      let z = i.get(`orwell@example.com`);
       p = i.get(`orwell@example.com`);
-      let data = await p.gun.once().then();
+      //let data = await p.gun.once().then();
+      let data = await z.gun.once().then();
       expect(data.trustDistance).toBe(1);
       msg = await iris.Message.createRating({recipient: {email: `orwell@example.com`}, rating: - 1}, key);
       await i.addMessage(msg);
-      data = await p.gun.once().then();
+      //data = await p.gun.once().then();
+      data = await z.gun.once().then();
       expect(data.trustDistance).toBe(false);
     });
   });
