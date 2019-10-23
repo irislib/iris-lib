@@ -338,7 +338,7 @@ describe(`local index`, async () => {
         else if (a.cursor < b.cursor) return 1;
         else return 0;
       });
-      expect(results[0].signedData.timestamp).toEqual(lastMsg.signedData.timestamp);
+      expect(results[0].signedData.time).toEqual(lastMsg.signedData.time);
       expect(lastMsg.getHash()).toEqual(results[0].getHash());
 
       const last = results[results.length - 1];
@@ -415,7 +415,7 @@ describe(`local index`, async () => {
       const trustedIndexes = await i2.gun.get(`trustedIndexes`).once();
       expect(trustedIndexes[keyID]).toBe(true);
 
-      m = await iris.Message.create({type: `post`, recipient: {keyID}, comment: `hello world`}, key);
+      m = await iris.Message.create({type: `post`, recipient: {keyID}, text: `hello world`}, key);
       await i.addMessage(m);
       return; // TODO
 
@@ -449,6 +449,24 @@ describe(`local index`, async () => {
       expect(data.receivedNegative).toBe(0);
     });
     */
+    test(`public chat messaging`, async () => {
+      logger.enable();
+      const uuid = iris.Attribute.getUuid().value;
+      const m = await iris.Message.create({type: `chat`, recipient: {uuid}, text: `hello world`}, key);
+      await i.addMessage(m);
+      const response = await new Promise(resolve => {
+        const callback = (msg) => {
+          if (msg) {
+            console.log(`got chat msg`, msg);
+            resolve(msg);
+          }
+        };
+        i.getChatMsgs(uuid, {callback});
+        setTimeout(() => resolve(), 5000);
+      });
+      logger.disable();
+      expect(response.getHash()).toEqual(m.getHash());
+    });
   });
   test(`get viewpoint identity by searching the default keyID`, async () => {
     const defaultKey = await iris.Key.getDefault();
@@ -458,7 +476,7 @@ describe(`local index`, async () => {
     expect(data.trustDistance).toBe(0);
     expect(data.sentPositive).toBeGreaterThan(4);
   });
-  test(`get messages by timestamp`, async () => {
+  test(`get messages by time`, async () => {
     const k2 = await iris.Key.generate();
     const i2 = new iris.Index({gun, keypair: k2, debug: false});
     await i2.ready;
@@ -481,7 +499,7 @@ describe(`local index`, async () => {
   }, 20000);
   /* TODO: disabled because it fails...
   test('like & unlike', async () => {
-    let msg = await iris.Message.create({type: 'post', recipient: {email:'bob@example.com'}, comment: 'I don\'t want to set the world on fire. I just want to start a flame in your heart.'}, key);
+    let msg = await iris.Message.create({type: 'post', recipient: {email:'bob@example.com'}, text: 'I don\'t want to set the world on fire. I just want to start a flame in your heart.'}, key);
     const added = await i.addMessage(msg);
     expect(added).toBe(true);
     i.setReaction(msg, 'like');

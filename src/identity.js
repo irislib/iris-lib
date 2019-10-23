@@ -110,7 +110,7 @@ class Identity {
     const card = document.createElement(`div`);
     card.className = `iris-card`;
 
-    const identicon = this.identicon(60, null, null, ipfs);
+    const identicon = this.identicon({width: 60, ipfs});
     identicon.style.order = 1;
     identicon.style.flexShrink = 0;
     identicon.style.marginRight = `15px`;
@@ -213,40 +213,47 @@ class Identity {
   }
 
   static _ordinal(n) {
+    if (n === 0) {
+      return '';
+    }
     const s = [`th`, `st`, `nd`, `rd`];
     const v = n % 100;
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
 
   /**
-  * @param {number} width of the identicon
-  * @param {number} border identicon border (aura) width
-  * @param {boolean} showDistance whether to show web of trust distance ordinal
-  * @param {Object} ipfs (optional) an IPFS instance that is used to fetch images
+  * @param {Object} options {width: 50, border: 4, showDistance: true, ipfs: null, outerGlow: false}
   * @returns {HTMLElement} identicon element that can be appended to DOM
   */
-  identicon(width, border = 4, showDistance = true, ipfs) {
+  identicon(options = {}) {
+    options = Object.assign({
+      width: 50,
+      border: 4,
+      showDistance: true,
+      outerGlow: false,
+      ipfs: null
+    }, options);
     util.injectCss(); // some other way that is not called on each identicon generation?
     const identicon = document.createElement(`div`);
     identicon.className = `iris-identicon`;
-    identicon.style.width = `${width}px`;
-    identicon.style.height = `${width}px`;
+    identicon.style.width = `${options.width}px`;
+    identicon.style.height = `${options.width}px`;
 
     const pie = document.createElement(`div`);
     pie.className = `iris-pie`;
-    pie.style.width = `${width}px`;
+    pie.style.width = `${options.width}px`;
 
     const img = document.createElement(`img`);
     img.alt = ``;
-    img.width = width;
-    img.height = width;
-    img.style.borderWidth = `${border}px`;
+    img.width = options.width;
+    img.height = options.width;
+    img.style.borderWidth = `${options.border}px`;
 
     let distance;
-    if (showDistance) {
+    if (options.border) {
       distance = document.createElement(`span`);
       distance.className = `iris-distance`;
-      distance.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
+      distance.style.fontSize = options.width > 50 ? `${options.width / 4}px` : `10px`;
       identicon.appendChild(distance);
     }
     identicon.appendChild(pie);
@@ -260,11 +267,14 @@ class Identity {
       let bgColor = `rgba(0,0,0,0.2)`;
       let bgImage = `none`;
       let transform = ``;
-      let boxShadow = `0px 0px 0px 0px #82FF84`;
-      if (data.receivedPositive > data.receivedNegative * 20) {
-        boxShadow = `0px 0px ${border * data.receivedPositive / 50}px 0px #82FF84`;
-      } else if (data.receivedPositive < data.receivedNegative * 3) {
-        boxShadow = `0px 0px ${border * data.receivedNegative / 10}px 0px #BF0400`;
+      if (options.outerGlow) {
+        let boxShadow = `0px 0px 0px 0px #82FF84`;
+        if (data.receivedPositive > data.receivedNegative * 20) {
+          boxShadow = `0px 0px ${options.border * data.receivedPositive / 50}px 0px #82FF84`;
+        } else if (data.receivedPositive < data.receivedNegative * 3) {
+          boxShadow = `0px 0px ${options.border * data.receivedNegative / 10}px 0px #BF0400`;
+        }
+        pie.style.boxShadow = boxShadow;
       }
       if (data.receivedPositive + data.receivedNegative > 0) {
         if (data.receivedPositive > data.receivedNegative) {
@@ -280,18 +290,17 @@ class Identity {
 
       pie.style.backgroundColor = bgColor;
       pie.style.backgroundImage = bgImage;
-      pie.style.boxShadow = boxShadow;
       pie.style.transform = transform;
       pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
 
-      if (showDistance) {
+      if (options.showDistance) {
         distance.textContent = typeof data.trustDistance === `number` ? Identity._ordinal(data.trustDistance) : `✕`;
       }
     }
 
     function setIdenticonImg(data) {
       const hash = util.getHash(`${encodeURIComponent(data.type)}:${encodeURIComponent(data.value)}`, `hex`);
-      const identiconImg = new Identicon(hash, {width, format: `svg`});
+      const identiconImg = new Identicon(hash, {width: options.width, format: `svg`});
       img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;
     }
 
@@ -303,17 +312,17 @@ class Identity {
 
     this.gun.on(setPie);
 
-    if (ipfs) {
+    if (options.ipfs) {
       Identity.getAttrs(this.gun).then(attrs => {
         const mva = Identity.getMostVerifiedAttributes(attrs);
         if (mva.profilePhoto) {
           const go = () => {
-            ipfs.cat(mva.profilePhoto.attribute.value).then(file => {
-              const f = ipfs.types.Buffer.from(file).toString(`base64`);
+            options.ipfs.cat(mva.profilePhoto.attribute.value).then(file => {
+              const f = options.ipfs.types.Buffer.from(file).toString(`base64`);
               img.src = `data:image;base64,${f}`;
             });
           };
-          ipfs.isOnline() ? go() : ipfs.on(`ready`, go);
+          options.ipfs.isOnline() ? go() : options.ipfs.on(`ready`, go);
         }
       });
     }

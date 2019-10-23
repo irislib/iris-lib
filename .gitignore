@@ -9,3 +9,5 @@ jest-stare
 .iris
 .idea
 .env
+radata
+*.key

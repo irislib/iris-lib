@@ -16,9 +16,9 @@ describe(`Message`, async () => {
         author: {email: `alice@example.com`},
         recipient: {email: `bob@example.com`},
         rating: 5,
-        comment: `Good guy`
+        text: `Good guy`
       });
-      expect(msg).toHaveProperty(`signedData.timestamp`);
+      expect(msg).toHaveProperty(`signedData.time`);
       expect(msg.signedData.type).toEqual(`rating`);
     });
     /*
@@ -32,7 +32,7 @@ describe(`Message`, async () => {
       msg = await Message.createRating({
         recipient: {email: `bob@example.com`},
         rating: 5,
-        comment: `Good guy`
+        text: `Good guy`
       }, defaultKey);
       expect(msg).toHaveProperty(`signedData.author`);
       expect(JSON.stringify(msg.signedData.author)).toEqual(`{"keyID":"${  Key.getId(defaultKey)  }"}`);
@@ -43,9 +43,9 @@ describe(`Message`, async () => {
       msg = await Message.createVerification({
         author: {email: `alice@example.com`},
         recipient: {email: `bob@example.com`, name: `Bob`},
-        comment: `Good guy`
+        text: `Good guy`
       });
-      expect(msg).toHaveProperty(`signedData.timestamp`);
+      expect(msg).toHaveProperty(`signedData.time`);
       expect(msg.signedData.type).toEqual(`verification`);
     });
   });
@@ -54,7 +54,7 @@ describe(`Message`, async () => {
       msg = await Message.createVerification({
         author: {email: `alice@example.com`},
         recipient: {email: `bob@example.com`, name: `Bob`, nickname: [`Bobby`, `Bobbie`]},
-        comment: `Good guy`
+        text: `Good guy`
       });
       const seen = {};
       for (const a of msg.getRecipientIterable()) {
@@ -82,7 +82,7 @@ describe(`Message`, async () => {
         author: {email: `alice@example.com`},
         recipient: {email: `bob@example.com`},
         rating: 5,
-        comment: `Good guy`
+        text: `Good guy`
       });
       key = await Key.generate();
     });

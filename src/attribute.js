@@ -122,28 +122,28 @@ class Attribute {
 
   /**
   * Generate a visually recognizable representation of the attribute
-  * @param {integer} width width of the identicon
+  * @param {object} options {width}
   * @returns {HTMLElement} identicon div element
   */
-  identicon(width) {
+  identicon(options = {width:50}) {
     util.injectCss(); // some other way that is not called on each identicon generation?
 
     const div = document.createElement(`div`);
     div.className = `iris-identicon`;
-    div.style.width = `${width}px`;
-    div.style.height = `${width}px`;
+    div.style.width = `${options.width}px`;
+    div.style.height = `${options.width}px`;
 
     const img = document.createElement(`img`);
     img.alt = ``;
-    img.width = width;
-    img.height = width;
+    img.width = options.width;
+    img.height = options.width;
     const hash = util.getHash(`${encodeURIComponent(this.type)}:${encodeURIComponent(this.value)}`, `hex`);
-    const identicon = new Identicon(hash, {width, format: `svg`});
+    const identicon = new Identicon(hash, {width: options.width, format: `svg`});
     img.src = `data:image/svg+xml;base64,${identicon.toString()}`;
 
     const name = document.createElement(`span`);
     name.className = `iris-distance`;
-    name.style.fontSize = width > 50 ? `${width / 4}px` : `10px`;
+    name.style.fontSize = options.width > 50 ? `${options.width / 4}px` : `10px`;
     name.textContent = this.type.slice(0, 5);
     div.appendChild(name);
 

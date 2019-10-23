@@ -2,6 +2,7 @@ import Message from './message';
 import Key from './key';
 import Identity from './identity';
 import Attribute from './attribute';
+import Chat from './chat';
 import util from './util';
 import Gun from 'gun'; // eslint-disable-line no-unused-vars
 import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
@@ -140,7 +141,6 @@ class Index {
     this.gun = user.get(`iris`);
     const uri = this.viewpoint.uri();
     const g = this.gun.get(`identitiesBySearchKey`).get(uri);
-    g.put({a:1});
     const attrs = {};
     attrs[uri] = this.viewpoint;
     if (this.options.self) {
@@ -160,8 +160,31 @@ class Index {
     }
   }
 
+  /**
+  * Set the user's online status
+  *
+  * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
+  */
+  setOnline(isOnline) {
+    if (!this.writable) {
+      console.error(`setOnline can't be called on a non-writable index`);
+      return;
+    }
+    Chat.setOnline(this.gun, isOnline);
+  }
+
+  /**
+  * Get the online status of a user.
+  *
+  * @param {string} pubKey public key of the user
+  * @param {boolean} callback receives a boolean each time the user's online status changes
+  */
+  getOnline(pubKey, callback) {
+    Chat.getOnline(this.gun, pubKey, callback);
+  }
+
   _subscribeToTrustedIndexes() {
-    if (this.options.indexSync.subscribe.enabled) {
+    if (this.writable && this.options.indexSync.subscribe.enabled) {
       setTimeout(() => {
         this.gun.get(`trustedIndexes`).map().once((val, uri) => {
           if (val) {
@@ -198,7 +221,7 @@ class Index {
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
-    const key = `${distance}:${Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp))}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
+    const key = `${distance}:${Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp))}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
     return key;
   }
 
@@ -208,8 +231,17 @@ class Index {
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
-    const timestamp = Math.floor(Date.parse(msg.timestamp || msg.signedData.timestamp));
+    const timestamp = Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp));
     const hashSlice = msg.getHash().substr(0, 9);
+
+    if (msg.signedData.type === `chat`) {
+      if (msg.signedData.recipient.uuid) {
+        keys.chatMessagesByUuid = {};
+        keys.chatMessagesByUuid[msg.signedData.recipient.uuid] = `${msg.signedData.time}:${hashSlice}`;
+      }
+      return keys;
+    }
+
     keys.messagesByHash = [msg.getHash()];
     keys.messagesByTimestamp = [`${timestamp}:${hashSlice}`];
     keys.messagesByDistance = [`${distance}:${keys.messagesByTimestamp[0]}`];
@@ -456,7 +488,7 @@ class Index {
       console.error(e.stack);
       throw e;
     }
-    const hash = Gun.node.soul(id) || `todo`;
+    const hash = Gun.node.soul(id) || id._ && id._.link || `todo`;
     const indexKeys = await this.getIdentityIndexKeys(id, hash.substr(0, 6));
 
     const indexes = Object.keys(indexKeys);
@@ -494,6 +526,22 @@ class Index {
     }
   }
 
+  async getChatMsgs(uuid, options) {
+    this._getMsgs(this.gun.get(`chatMessagesByUuid`).get(uuid), options.callback, options.limit, options.cursor, true, options.filter);
+    const callback = msg => {
+      if (options.callback) {
+        options.callback(msg);
+      }
+      this.addMessage(msg, {checkIfExists: true});
+    };
+    this.gun.get(`trustedIndexes`).map().once((val, key) => {
+      if (val) {
+        const n = this.gun.user(key).get(`iris`).get(`chatMessagesByUuid`).get(uuid);
+        this._getMsgs(n, callback, options.limit, options.cursor, false, options.filter);
+      }
+    });
+  }
+
   async _getAttributeTrustDistance(a) {
     if (!Attribute.isUniqueType(a.type)) {
       return;
@@ -529,7 +577,7 @@ class Index {
   }
 
   async _updateMsgRecipientIdentity(msg, msgIndexKey, recipient) {
-    const hash = `todo`;
+    const hash = recipient._ && recipient._.link || `todo`;
     const identityIndexKeysBefore = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     const attrs = await Identity.getAttrs(recipient);
     if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
@@ -711,7 +759,7 @@ class Index {
   }
 
   async _updateIdentityIndexesByMsg(msg) {
-    const recipientIdentities = {};
+    let recipientIdentities = {};
     const authorIdentities = {};
     let selfAuthored = false;
     let start;
@@ -755,6 +803,9 @@ class Index {
       }
     }
     this.debug((new Date()) - start, `ms getRecipientArray`);
+    if (!msg.signedData.recipient) { // message to self
+      recipientIdentities = authorIdentities;
+    }
     if (!Object.keys(recipientIdentities).length) { // recipient is previously unknown
       const attrs = {};
       let u;
@@ -927,9 +978,11 @@ class Index {
         console.error(`adding msg ${msg} to ipfs failed: ${e}`);
       }
     }
-    start = new Date();
-    await this._updateIdentityIndexesByMsg(msg);
-    this.debug((new Date()) - start, `ms _updateIdentityIndexesByMsg`);
+    if (msg.signedData.type !== `chat`) {
+      start = new Date();
+      await this._updateIdentityIndexesByMsg(msg);
+      this.debug((new Date()) - start, `ms _updateIdentityIndexesByMsg`);
+    }
     return true;
   }
 
@@ -949,10 +1002,8 @@ class Index {
       if (type && keyType !== type) { return false; }
       return true;
     }
-    this.debug(`search()`, value, type, limit, cursor);
     const node = this.gun.get(`identitiesBySearchKey`);
     node.get({'.': {'*': value, '>': cursor}, '%': 2000}).once().map().on((id, key) => {
-      this.debug(`search(${value}, ${type}, callback, ${limit}, ${cursor}) returned id ${id} key ${key}`);
       if (Object.keys(seen).length >= limit) {
         // TODO: turn off .map cb
         return;
@@ -994,19 +1045,21 @@ class Index {
   getMessageByHash(hash) {
     const isIpfsUri = hash.indexOf(`Qm`) === 0;
     return new Promise(async resolve => {
-      const resolveIfHashMatches = async d => {
+      const resolveIfHashMatches = async (d, fromIpfs) => {
         const obj = typeof d === `object` ? d : JSON.parse(d);
         const m = await Message.fromSig(obj);
         let h;
         let republished = false;
-        if (isIpfsUri && this.options.ipfs) {
+        if (fromIpfs) {
+          return resolve(m);
+        } else if (isIpfsUri && this.options.ipfs) {
           h = await m.saveToIpfs(this.options.ipfs);
           republished = true;
         } else {
           h = m.getHash();
         }
         if (h === hash || (isIpfsUri && !this.options.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
-          if (!isIpfsUri && this.options.ipfs && this.writable && !republished) {
+          if (!fromIpfs && this.options.ipfs && this.writable && !republished) {
             m.saveToIpfs(this.options.ipfs).then(ipfsUri => {
               obj.ipfsUri = ipfsUri;
               this.gun.get(`messagesByHash`).get(hash).put(obj);
@@ -1022,7 +1075,7 @@ class Index {
         this.options.ipfs.cat(hash).then(file => {
           const s = this.options.ipfs.types.Buffer.from(file).toString(`utf8`);
           this.debug(`got msg ${hash} from ipfs`);
-          resolveIfHashMatches(s);
+          resolveIfHashMatches(s, true);
         });
       }
       this.gun.get(`messagesByHash`).get(hash).on(d => {

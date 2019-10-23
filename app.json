@@ -1,0 +1,25 @@
+{
+  "name": "iris-node",
+  "description": "An Iris node that listens to messages from your friends and updates your messages and contacts index accordingly",
+  "repository": "https://github.com/irislib/iris-lib",
+  "logo": "https://raw.githubusercontent.com/irislib/iris-angular/master/dist/assets/images/icon128.png",
+  "keywords": ["node", "p2p"],
+  "env": {
+    "YARN_PRODUCTION": {
+      "value": true,
+      "description": "Skip devDependencies"
+    },
+    "IRIS_PRIVATE_KEY": {
+      "description": "Paste your private key here. If left blank, a new key will be generated",
+      "value": ""
+    },
+    "IRIS_GUN_PEERS": {
+      "description": "Gun peer(s) you want to connect to",
+      "value": "https://gun-eu.herokuapp.com/gun"
+    },
+    "NODE_ENV": {
+      "value": "production",
+      "description": "for iris server.js"
+    }
+  }
+}
