@@ -11208,16 +11208,7 @@
 	// temp method for GUN search
 	async function searchText(node, callback, query, limit, cursor, desc) {
 	  var seen = {};
-	  //console.log(`cursor`, cursor, `query`, query, `desc`, desc);
-	  var q = { '-': desc };
-	  if (cursor) {
-	    if (desc) {
-	      q['<'] = cursor;
-	    } else {
-	      q['>'] = cursor;
-	    }
-	  }
-	  node.get({ '.': q, '%': 20 * 1000 }).once().map().on(function (value, key) {
+	  node.map().once(function (value, key) {
 	    //console.log(`searchText`, value, key, desc);
 	    if (key.indexOf(query) === 0) {
 	      if (typeof limit === 'number' && _Object$keys(seen).length >= limit) {

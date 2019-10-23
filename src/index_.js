@@ -11,16 +11,7 @@ import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 // temp method for GUN search
 async function searchText(node, callback, query, limit, cursor, desc) {
   const seen = {};
-  //console.log(`cursor`, cursor, `query`, query, `desc`, desc);
-  const q = {'-': desc};
-  if (cursor) {
-    if (desc) {
-      q[`<`] = cursor;
-    } else {
-      q[`>`] = cursor;
-    }
-  }
-  node.get({'.': q, '%': 20 * 1000}).once().map().on((value, key) => {
+  node.map().once((value, key) => {
     //console.log(`searchText`, value, key, desc);
     if (key.indexOf(query) === 0) {
       if (typeof limit === `number` && Object.keys(seen).length >= limit) {
