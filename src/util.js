@@ -1,13 +1,50 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 import createHash from 'create-hash';
+import Gun from 'gun';
 
 let isNode = false;
 try {
   isNode = Object.prototype.toString.call(global.process) === `[object process]`;
 } catch (e) { null; }
 
+async function loadGunDepth(chain, maxDepth = 2, opts = {}) {
+  opts.maxBreadth = opts.maxBreadth || 50;
+  opts.cache = opts.cache || {};
+
+  return chain.then().then(layer => {
+
+    if (maxDepth < 1) {
+      return layer;
+    }
+
+    let bcount = 0;
+    const promises = Object.keys(layer).map(key => {
+      // Only fetch links & restrict total search queries to maxBreadth ^ maxDepth requests
+      if (!Gun.val.link.is(layer[key]) || ++ bcount >= opts.maxBreadth) {
+        return;
+      }
+
+      // During one recursive lookup, don't fetch the same key multiple times
+      if (opts.cache[key]) {
+        return opts.cache[key].then(data => {
+          layer[key] = data;
+        });
+      }
+
+      return opts.cache[key] = loadGunDepth(chain.get(key), maxDepth - 1, opts).then(data => {
+        layer[key] = data;
+      });
+    });
+
+    return Promise.all(promises).then(() => layer);
+  });
+}
+
+
 export default {
+  loadGunDepth: loadGunDepth,
+
   getHash: function(str, format = `base64`) {
     if (!str) {
       return undefined;

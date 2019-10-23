@@ -68,6 +68,14 @@ class Identity {
     return mostVerifiedAttributes;
   }
 
+  static async getAttrs(identity) {
+    const attrs = await util.loadGunDepth(identity.get(`attrs`), 2);
+    if (attrs['_'] !== undefined) {
+      delete attrs['_'];
+    }
+    return attrs;
+  }
+
   /**
   * Get sent Messages
   * @param {Object} options
@@ -89,7 +97,7 @@ class Identity {
   * @returns {string} most verified value of the param type
   */
   async verified(attribute: String) {
-    const attrs = await this.gun.get(`attrs`).then();
+    const attrs = await Identity.getAttrs(this.gun).then();
     const mva = Identity.getMostVerifiedAttributes(attrs);
     return Object.prototype.hasOwnProperty.call(mva, attribute) ? mva[attribute].attribute.value : undefined;
   }
@@ -123,7 +131,7 @@ class Identity {
       if (!data) {
         return;
       }
-      const attrs = await new Promise(resolve => { this.gun.get(`attrs`).load(r => resolve(r)); });
+      const attrs = await Identity.getAttrs(this.gun);
       const linkTo = await this.gun.get(`linkTo`).then();
       const link = `https://iris.to/#/identities/${linkTo.type}/${linkTo.value}`;
       const mva = Identity.getMostVerifiedAttributes(attrs);
@@ -296,7 +304,7 @@ class Identity {
     this.gun.on(setPie);
 
     if (ipfs) {
-      this.gun.get(`attrs`).open(attrs => {
+      Identity.getAttrs(this.gun).then(attrs => {
         const mva = Identity.getMostVerifiedAttributes(attrs);
         if (mva.profilePhoto) {
           const go = () => {

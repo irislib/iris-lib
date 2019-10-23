@@ -140,7 +140,7 @@ class Index {
     this.gun = user.get(`iris`);
     const uri = this.viewpoint.uri();
     const g = this.gun.get(`identitiesBySearchKey`).get(uri);
-    g.put({});
+    g.put({a:1});
     const attrs = {};
     attrs[uri] = this.viewpoint;
     if (this.options.self) {
@@ -319,7 +319,9 @@ class Index {
       addIndexKey(identity.linkTo);
     }
 
-    await identity.get(`attrs`).map().once(addIndexKey).then();
+    const attrs = await Identity.getAttrs(identity);
+    Object.values(attrs).map(addIndexKey);
+
     return indexKeys;
   }
 
@@ -462,8 +464,8 @@ class Index {
       const index = indexes[i];
       for (let j = 0;j < indexKeys[index].length;j ++) {
         const key = indexKeys[index][j];
-        // this.debug(`adding to index ${index} key ${key}`);
-        await this.gun.get(index).get(key).put(id);
+        // this.debug(`adding to index ${index} key ${key}, saving data: ${id}`);
+        this.gun.get(index).get(key).put(id); // FIXME: Check, why this can't be `await`ed for in tests? [index.ready promise gets stuck]
       }
     }
   }
@@ -529,7 +531,7 @@ class Index {
   async _updateMsgRecipientIdentity(msg, msgIndexKey, recipient) {
     const hash = `todo`;
     const identityIndexKeysBefore = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
-    const attrs = await new Promise(resolve => { recipient.get(`attrs`).load(r => resolve(r)); });
+    const attrs = await Identity.getAttrs(recipient);
     if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
       const isVerification = msg.signedData.type === `verification`;
       for (const a of msg.getRecipientArray()) {
@@ -583,9 +585,13 @@ class Index {
           id.receivedNeutral ++;
         }
       }
-      recipient.get(`receivedPositive`).put(id.receivedPositive);
-      recipient.get(`receivedNegative`).put(id.receivedNegative);
-      recipient.get(`receivedNeutral`).put(id.receivedNeutral);
+
+      recipient.put({
+        receivedPositive: id.receivedPositive,
+        receivedNegative: id.receivedNegative,
+        receivedNeutral: id.receivedNeutral,
+      });
+
       if (msg.signedData.context === `verifier`) {
         if (msg.distance === 0) {
           if (msg.isPositive) {
@@ -604,8 +610,10 @@ class Index {
     if (msg.ipfsUri) {
       obj.ipfsUri = msg.ipfsUri;
     }
+
     recipient.get(`received`).get(msgIndexKey).put(obj);
     recipient.get(`received`).get(msgIndexKey).put(obj);
+
     const identityIndexKeysAfter = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
     const indexesBefore = Object.keys(identityIndexKeysBefore);
     for (let i = 0;i < indexesBefore.length;i ++) {
@@ -760,10 +768,10 @@ class Index {
       const trustDistance = msg.isPositive() && typeof msg.distance === `number` ? msg.distance + 1 : false;
       const start = new Date();
       const node = this.gun.get(`identitiesBySearchKey`).get(u.uri());
-      node.put({});
+      node.put({a:1}); // {a:1} because inserting {} causes a "no signature on data" error from gun
       const id = Identity.create(node, {attrs, linkTo, trustDistance}, this);
       this.debug((new Date) - start, `ms identity.create`);
-      // {a:1} because inserting {} causes a "no signature on data" error from gun
+
 
       // TODO: take msg author trust into account
       recipientIdentities[id.gun[`_`].link] = id;
