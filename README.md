@@ -7,13 +7,9 @@
 [![Coverage Status](https://img.shields.io/coveralls/irislib/iris-lib.svg?style=flat-square)](https://coveralls.io/github/irislib/iris-lib)
 [![Gitmoji](https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square)](https://gitmoji.carloscuesta.me/)
 
-<a href="https://opencollective.com/iris-social/donate" target="_blank">
-  <img src="https://opencollective.com/iris-social/donate/button@2x.png?color=blue" width=200 />
-</a>
+<a href="https://opencollective.com/iris-social/donate" target="_blank"><img src="https://opencollective.com/iris-social/donate/button@2x.png?color=blue" width=200 /></a>
 
-<sub>
-BTC donations: 3GopC1ijpZktaGLXHb7atugPj9zPGyQeST
-</sub>
+<p><sub>BTC donations: 3GopC1ijpZktaGLXHb7atugPj9zPGyQeST</sub></p>
 
 ### Description
 Iris-lib allows you to integrate __decentralized social networking__ features into your application.
