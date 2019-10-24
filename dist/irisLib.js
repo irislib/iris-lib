@@ -9123,7 +9123,8 @@
 
 	  return chain.then().then(function (layer) {
 
-	    if (maxDepth < 1) {
+	    // Depth limit reached, or non-object, or array value returned
+	    if (maxDepth < 1 || !layer || (typeof layer === 'undefined' ? 'undefined' : _typeof(layer)) !== 'object' || layer.constructor === Array) {
 	      return layer;
 	    }
 
@@ -10611,10 +10612,10 @@
 
 	  Identity.getAttrs = async function getAttrs(identity) {
 	    var attrs = await util$1.loadGunDepth(identity.get('attrs'), 2);
-	    if (attrs['_'] !== undefined) {
+	    if (attrs && attrs['_'] !== undefined) {
 	      delete attrs['_'];
 	    }
-	    return attrs;
+	    return attrs || {};
 	  };
 
 	  /**

@@ -70,10 +70,10 @@ class Identity {
 
   static async getAttrs(identity) {
     const attrs = await util.loadGunDepth(identity.get(`attrs`), 2);
-    if (attrs['_'] !== undefined) {
+    if (attrs && attrs['_'] !== undefined) {
       delete attrs['_'];
     }
-    return attrs;
+    return attrs || {};
   }
 
   /**
