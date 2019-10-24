@@ -14,7 +14,8 @@ async function loadGunDepth(chain, maxDepth = 2, opts = {}) {
 
   return chain.then().then(layer => {
 
-    if (maxDepth < 1) {
+    // Depth limit reached, or non-object, or array value returned
+    if (maxDepth < 1 || !layer || typeof layer !== 'object' || layer.constructor === Array) {
       return layer;
     }
 
