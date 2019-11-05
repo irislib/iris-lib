@@ -33,6 +33,10 @@
       "/node_modules/",
       "/yarn_dev/",
       "/yarn_prod/"
+    ],
+    "modulePaths": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/cjs/"
     ]
   },
   "files": [
@@ -52,7 +56,7 @@
     "lint:flow": "flow --color always",
     "test": "clear && jest",
     "test:coverage": "jest --coverage ",
-    "test:watch": "clear && jest --watchAll",
+    "test:watch": "clear && yarn build:cjs && jest --watchAll",
     "test:debug": "node --inspect node_modules/.bin/jest --runInBand",
     "test:all": "yarn lint:test && yarn lint && yarn test:coverage --runInBand",
     "lint:test": "yarn run lint && npm run test:coverage",
@@ -63,7 +67,9 @@
     "build:umd": "rimraf dist && cross-env BABEL_ENV=es rollup -c & cross-env BABEL_ENV=es NODE_ENV=production rollup -c",
     "build:docs": "documentation build src/** -f html -o docs",
     "build:run": "clear && rimraf cjs && cross-env BABEL_ENV=cjs yarn nodemon src/server.js --watch src --exec babel-node",
-    "dev": "concurrently -n tests,build \"yarn test:watch\" \"yarn build:run\"",
+    "dev": "concurrently -n build,tests \"yarn build:watch\" \"yarn test:watch\"",
+    "dev:server": "concurrently -n build,tests,server \"yarn build:watch\" \"yarn test:watch\" \"yarn build:run\"",
+    "serve": "node cjs/server.js",
     "start": "node cjs/server.js",
     "heroku-postbuild": "echo \"not running build script\""
   },
@@ -114,7 +120,7 @@
   },
   "dependencies": {
     "create-hash": "^1.2.0",
-    "gun": "^0.2019.930",
+    "gun": "0.2019.930",
     "identicon.js": "^2.3.3",
     "text-encoding": "^0.7.0"
   },

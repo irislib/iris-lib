@@ -1,4 +1,4 @@
-const iris = require(`../cjs/index.js`);
+const iris = require(`index.js`);
 const fs = require(`fs`);
 
 jest.setTimeout(30000);

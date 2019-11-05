@@ -1,4 +1,4 @@
-const iris = require(`../cjs/index.js`);
+const iris = require(`index.js`);
 const Attribute = iris.Attribute;
 
 describe(`Constructor`, () => {

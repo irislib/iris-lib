@@ -1,11 +1,11 @@
-const iris = require('../cjs/index.js');
+const iris = require('index.js');
 const Identity = iris.Identity;
 
 const GUN = require(`gun`);
 const load = require(`gun/lib/load`);
 const then = require(`gun/lib/then`);
 const SEA = require(`gun/sea`);
-const radix = require(`gun/lib/radix`);
+const radix = require(`gun/lib/radix`); // Require before instantiating Gun, if running in jsdom mode
 const gun = new GUN({radisk: false});
 const $ = require(`jquery`);
 
@@ -41,11 +41,10 @@ beforeAll(async () => {
 });
 
 describe(`Identity`, () => {
-  test(`verified()`, () => {
-    //expect(vp.verified(`email`)).toBe(undefined);
-    //expect(typeof vp.verified(`keyID`)).toBe(`string`);
+  test(`verified()`, async () => {
+    expect(await vp.verified(`email`)).toBe(undefined);
+    expect(typeof await vp.verified(`keyID`)).toBe(`string`);
   });
-  /*
   test(`identicon()`, () => {
     const identicon = vp.identicon(50);
     expect(identicon.constructor.name).toBe(`HTMLDivElement`);
@@ -65,5 +64,4 @@ describe(`Identity`, () => {
     input.val(`Al`);
     input.keyup();
   });
-  */
 });

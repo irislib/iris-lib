@@ -2,6 +2,7 @@ const iris = require(`../cjs/index.js`);
 const GUN = require(`gun`);
 const load = require(`gun/lib/load`);
 const then = require(`gun/lib/then`);
+const radix = require(`gun/lib/radix`); // Require before instantiating Gun, if running in jsdom mode
 const SEA = require(`gun/sea`);
 
 const gun = new GUN({radisk: false});

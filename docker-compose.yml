@@ -13,6 +13,9 @@ services:
   #   docker-compose build irislib-dev
   # And run, typically using:
   #   docker-compose up irislib-dev
+  # If you are experiencing strange issues with cached modules, try running:
+  #   docker volume prune
+  #   docker-compose build --no-cache irislib-dev
   irislib-dev:
     build:
       context: .

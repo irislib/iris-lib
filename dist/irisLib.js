@@ -9114,7 +9114,48 @@
 	} catch (e) {
 	}
 
+	async function loadGunDepth(chain) {
+	  var maxDepth = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2;
+	  var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+	  opts.maxBreadth = opts.maxBreadth || 50;
+	  opts.cache = opts.cache || {};
+
+	  return chain.then().then(function (layer) {
+
+	    // Depth limit reached, or non-object, or array value returned
+	    if (maxDepth < 1 || !layer || (typeof layer === 'undefined' ? 'undefined' : _typeof(layer)) !== 'object' || layer.constructor === Array) {
+	      return layer;
+	    }
+
+	    var bcount = 0;
+	    var promises = _Object$keys(layer).map(function (key) {
+	      // Only fetch links & restrict total search queries to maxBreadth ^ maxDepth requests
+	      if (!Gun.val.link.is(layer[key]) || ++bcount >= opts.maxBreadth) {
+	        return;
+	      }
+
+	      // During one recursive lookup, don't fetch the same key multiple times
+	      if (opts.cache[key]) {
+	        return opts.cache[key].then(function (data) {
+	          layer[key] = data;
+	        });
+	      }
+
+	      return opts.cache[key] = loadGunDepth(chain.get(key), maxDepth - 1, opts).then(function (data) {
+	        layer[key] = data;
+	      });
+	    });
+
+	    return _Promise.all(promises).then(function () {
+	      return layer;
+	    });
+	  });
+	}
+
 	var util$1 = {
+	  loadGunDepth: loadGunDepth,
+
 	  getHash: function getHash(str) {
 	    var format = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'base64';
 
@@ -10569,6 +10610,14 @@
 	    return mostVerifiedAttributes;
 	  };
 
+	  Identity.getAttrs = async function getAttrs(identity) {
+	    var attrs = await util$1.loadGunDepth(identity.get('attrs'), 2);
+	    if (attrs && attrs['_'] !== undefined) {
+	      delete attrs['_'];
+	    }
+	    return attrs || {};
+	  };
+
 	  /**
 	  * Get sent Messages
 	  * @param {Object} options
@@ -10596,7 +10645,7 @@
 
 
 	  Identity.prototype.verified = async function verified(attribute) {
-	    var attrs = await this.gun.get('attrs').then();
+	    var attrs = await Identity.getAttrs(this.gun).then();
 	    var mva = Identity.getMostVerifiedAttributes(attrs);
 	    return Object.prototype.hasOwnProperty.call(mva, attribute) ? mva[attribute].attribute.value : undefined;
 	  };
@@ -10634,11 +10683,7 @@
 	      if (!data) {
 	        return;
 	      }
-	      var attrs = await new _Promise(function (resolve) {
-	        _this.gun.get('attrs').load(function (r) {
-	          return resolve(r);
-	        });
-	      });
+	      var attrs = await Identity.getAttrs(_this.gun);
 	      var linkTo = await _this.gun.get('linkTo').then();
 	      var link = 'https://iris.to/#/identities/' + linkTo.type + '/' + linkTo.value;
 	      var mva = Identity.getMostVerifiedAttributes(attrs);
@@ -10828,7 +10873,7 @@
 	    this.gun.on(setPie);
 
 	    if (options.ipfs) {
-	      this.gun.get('attrs').open(function (attrs) {
+	      Identity.getAttrs(this.gun).then(function (attrs) {
 	        var mva = Identity.getMostVerifiedAttributes(attrs);
 	        if (mva.profilePhoto) {
 	          var go = function go() {
@@ -11164,16 +11209,7 @@
 	// temp method for GUN search
 	async function searchText(node, callback, query, limit, cursor, desc) {
 	  var seen = {};
-	  //console.log(`cursor`, cursor, `query`, query, `desc`, desc);
-	  var q = { '-': desc };
-	  if (cursor) {
-	    if (desc) {
-	      q['<'] = cursor;
-	    } else {
-	      q['>'] = cursor;
-	    }
-	  }
-	  node.get({ '.': q, '%': 20 * 1000 }).once().map().on(function (value, key) {
+	  node.map().once(function (value, key) {
 	    //console.log(`searchText`, value, key, desc);
 	    if (key.indexOf(query) === 0) {
 	      if (typeof limit === 'number' && _Object$keys(seen).length >= limit) {
@@ -11525,7 +11561,9 @@
 	      addIndexKey(identity.linkTo);
 	    }
 
-	    await identity.get('attrs').map().once(addIndexKey).then();
+	    var attrs = await Identity.getAttrs(identity);
+	    _Object$values(attrs).map(addIndexKey);
+
 	    return indexKeys;
 	  };
 
@@ -11681,8 +11719,8 @@
 	      var index = indexes[i];
 	      for (var j = 0; j < indexKeys[index].length; j++) {
 	        var key = indexKeys[index][j];
-	        // this.debug(`adding to index ${index} key ${key}`);
-	        await this.gun.get(index).get(key).put(id);
+	        // this.debug(`adding to index ${index} key ${key}, saving data: ${id}`);
+	        this.gun.get(index).get(key).put(id); // FIXME: Check, why this can't be `await`ed for in tests? [index.ready promise gets stuck]
 	      }
 	    }
 	  };
@@ -11783,11 +11821,7 @@
 	  Index.prototype._updateMsgRecipientIdentity = async function _updateMsgRecipientIdentity(msg, msgIndexKey, recipient) {
 	    var hash = recipient._ && recipient._.link || 'todo';
 	    var identityIndexKeysBefore = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
-	    var attrs = await new _Promise(function (resolve) {
-	      recipient.get('attrs').load(function (r) {
-	        return resolve(r);
-	      });
-	    });
+	    var attrs = await Identity.getAttrs(recipient);
 	    if (['verification', 'unverification'].indexOf(msg.signedData.type) > -1) {
 	      var isVerification = msg.signedData.type === 'verification';
 
@@ -11861,9 +11895,13 @@
 	          id.receivedNeutral++;
 	        }
 	      }
-	      recipient.get('receivedPositive').put(id.receivedPositive);
-	      recipient.get('receivedNegative').put(id.receivedNegative);
-	      recipient.get('receivedNeutral').put(id.receivedNeutral);
+
+	      recipient.put({
+	        receivedPositive: id.receivedPositive,
+	        receivedNegative: id.receivedNegative,
+	        receivedNeutral: id.receivedNeutral
+	      });
+
 	      if (msg.signedData.context === 'verifier') {
 	        if (msg.distance === 0) {
 	          if (msg.isPositive) {
@@ -11880,8 +11918,10 @@
 	    if (msg.ipfsUri) {
 	      obj.ipfsUri = msg.ipfsUri;
 	    }
+
 	    recipient.get('received').get(msgIndexKey).put(obj);
 	    recipient.get('received').get(msgIndexKey).put(obj);
+
 	    var identityIndexKeysAfter = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
 	    var indexesBefore = _Object$keys(identityIndexKeysBefore);
 	    for (var i = 0; i < indexesBefore.length; i++) {
@@ -12085,10 +12125,9 @@
 	      var trustDistance = msg.isPositive() && typeof msg.distance === 'number' ? msg.distance + 1 : false;
 	      var _start = new Date();
 	      var node = this.gun.get('identitiesBySearchKey').get(u.uri());
-	      node.put({});
+	      node.put({ a: 1 }); // {a:1} because inserting {} causes a "no signature on data" error from gun
 	      var id = Identity.create(node, { attrs: attrs, linkTo: linkTo, trustDistance: trustDistance }, this);
 	      this.debug(new Date() - _start, 'ms identity.create');
-	      // {a:1} because inserting {} causes a "no signature on data" error from gun
 
 	      // TODO: take msg author trust into account
 	      recipientIdentities[id.gun['_'].link] = id;
@@ -12298,7 +12337,6 @@
 	    var _this10 = this;
 
 	    var limit = arguments[3];
-	    var cursor = arguments[4];
 	    // TODO: param 'exact', type param
 	    var seen = {};
 	    function searchTermCheck(key) {
@@ -12317,7 +12355,7 @@
 	      return true;
 	    }
 	    var node = this.gun.get('identitiesBySearchKey');
-	    node.get({ '.': { '*': value, '>': cursor }, '%': 2000 }).once().map().on(function (id, key) {
+	    node.map().on(function (id, key) {
 	      if (_Object$keys(seen).length >= limit) {
 	        // TODO: turn off .map cb
 	        return;
@@ -12336,7 +12374,7 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          _this10.gun.user(key).get('iris').get('identitiesBySearchKey').get({ '.': { '*': value, '%': 2000 } }).once().map().once(function (id, k) {
+	          _this10.gun.user(key).get('iris').get('identitiesBySearchKey').map().on(function (id, k) {
 	            if (_Object$keys(seen).length >= limit) {
 	              // TODO: turn off .map cb
 	              return;
