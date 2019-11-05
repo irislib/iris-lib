@@ -994,7 +994,7 @@ class Index {
       return true;
     }
     const node = this.gun.get(`identitiesBySearchKey`);
-    node.get({'.': {'*': value, '>': cursor}, '%': 2000}).once().map().on((id, key) => {
+    node.map().on((id, key) => {
       if (Object.keys(seen).length >= limit) {
         // TODO: turn off .map cb
         return;
@@ -1011,7 +1011,7 @@ class Index {
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get({'.': {'*': value, '%': 2000}}).once().map().once((id, k) => {
+          this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).map().on((id, k) => {
             if (Object.keys(seen).length >= limit) {
               // TODO: turn off .map cb
               return;

@@ -12337,7 +12337,6 @@
 	    var _this10 = this;
 
 	    var limit = arguments[3];
-	    var cursor = arguments[4];
 	    // TODO: param 'exact', type param
 	    var seen = {};
 	    function searchTermCheck(key) {
@@ -12356,7 +12355,7 @@
 	      return true;
 	    }
 	    var node = this.gun.get('identitiesBySearchKey');
-	    node.get({ '.': { '*': value, '>': cursor }, '%': 2000 }).once().map().on(function (id, key) {
+	    node.map().on(function (id, key) {
 	      if (_Object$keys(seen).length >= limit) {
 	        // TODO: turn off .map cb
 	        return;
@@ -12375,7 +12374,7 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          _this10.gun.user(key).get('iris').get('identitiesBySearchKey').get({ '.': { '*': value, '%': 2000 } }).once().map().once(function (id, k) {
+	          _this10.gun.user(key).get('iris').get('identitiesBySearchKey').map().on(function (id, k) {
 	            if (_Object$keys(seen).length >= limit) {
 	              // TODO: turn off .map cb
 	              return;
