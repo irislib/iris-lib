@@ -8,6 +8,16 @@ import Gun from 'gun'; // eslint-disable-line no-unused-vars
 import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 
+Gun.User.prototype.top = function(key){
+ var gun = this, root = gun.back(-1), user = root.user();
+ if(!user.is){ throw {err: "Not logged in!"} }
+ var top = user.chain(), at = (top._);
+ at.soul = at.get = "~"+user.is.pub+"."+key;
+ var tmp = (root.get(at.soul)._);
+ (tmp.echo || (tmp.echo = {}))[at.id] = at;
+ return top;
+}
+
 // temp method for GUN search
 async function searchText(node, callback, query, limit, cursor, desc) {
   const seen = {};
@@ -129,9 +139,17 @@ class Index {
     this.writable = true;
     this.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
     user.get(`epub`).put(keypair.epub);
-    this.gun = user.get(`iris`);
+    // Initialize indexes with deterministic gun souls (.top)
+    this.gun = user.get(`iris`).put(user.top(`iris`));
+    this.gun.get(`identitiesBySearchKey`).put(user.top(`identitiesBySearchKey`));
+    this.gun.get(`identitiesByTrustDistance`).put(user.top(`identitiesByTrustDistance`));
+    this.gun.get(`messages`).put(user.top(`messages`));
+    this.gun.get(`messagesByTimestamp`).put(user.top(`messagesByTimestamp`));
+    this.gun.get(`messagesByHash`).put(user.top(`messagesByHash`));
+    this.gun.get(`messagesByDistance`).put(user.top(`messagesByDistance`));
+
     const uri = this.viewpoint.uri();
-    const g = this.gun.get(`identitiesBySearchKey`).get(uri);
+    const g = this.gun.get(`identitiesBySearchKey`).get(uri).put(user.top(uri));
     const attrs = {};
     attrs[uri] = this.viewpoint;
     if (this.options.self) {
@@ -599,8 +617,12 @@ class Index {
           }
         }
       }
-      recipient.get(`mostVerifiedAttributes`).put(Identity.getMostVerifiedAttributes(attrs)); // TODO: why this needs to be done twice to register?
-      recipient.get(`mostVerifiedAttributes`).put(Identity.getMostVerifiedAttributes(attrs));
+      const mva = Identity.getMostVerifiedAttributes(attrs);
+      recipient.get(`mostVerifiedAttributes`).put(mva); // TODO: why this needs to be done twice to register?
+      recipient.get(`mostVerifiedAttributes`).put(mva);
+      const k = (mva.keyID && mva.keyID.attribute.value) || (mva.uuid && mva.uuid.attribute.value) || hash;
+      console.log('k', k);
+      recipient.get(`attrs`).put(this.gun.user().top(k + '/attrs'));
       recipient.get(`attrs`).put(attrs);
       recipient.get(`attrs`).put(attrs);
     }
