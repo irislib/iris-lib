@@ -460,6 +460,7 @@ describe(`local index`, async () => {
     test(`public chat messaging`, async () => {
       logger.enable();
       const uuid = iris.Attribute.getUuid().value;
+      console.log('uuid', uuid);
       const m = await iris.Message.create({type: `chat`, recipient: {uuid}, text: `hello world`}, key);
       await i.addMessage(m);
       const response = await new Promise(resolve => {
@@ -473,6 +474,7 @@ describe(`local index`, async () => {
         setTimeout(() => resolve(), 5000);
       });
       logger.disable();
+      expect(response).toBeDefined();
       expect(response.getHash()).toEqual(m.getHash());
     });
   });
