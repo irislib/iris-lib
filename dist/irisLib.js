@@ -11715,20 +11715,16 @@
 	  Index.prototype.getChats = function getChats(callback) {
 	    var _this5 = this;
 
-	    this.gun.user().get('chat').map().on(function (value, key, a, event) {
+	    this.gun.user().get('chat').map().on(function (value, key) {
 	      if (value) {
-	        event.off();
 	        callback(key);
 	      }
 	    });
-	    this.gun.get('trustedIndexes').map().on(function (value, key, a, event) {
+	    this.gun.get('trustedIndexes').map().on(function (value, key) {
 	      if (value) {
-	        event.off();
 	        console.log('trustedIndex', key);
-	        _this5.gun.user(key).get('chat').get(_this5.options.keypair.pub).on(function (v, k, a, event) {
+	        _this5.gun.user(key).get('chat').get(_this5.options.keypair.pub).on(function (v, k) {
 	          if (v) {
-	            console.log('got chat from friend', key);
-	            event.off();
 	            callback(key);
 	          }
 	        });
@@ -12578,7 +12574,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.124";
+	var version$1 = "0.0.125";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
