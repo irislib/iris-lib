@@ -10571,8 +10571,13 @@
 	    } else {
 	      data.linkTo = Identity.getLinkTo(data.attrs);
 	    }
+	    var uri = data.linkTo.uri();
+	    console.log('uri', uri);
+	    var attrs = gun.top(uri + '/attrs').put(data.attrs);
+	    delete data['attrs'];
 	    gun.put(data);
-	    return new Identity(gun, data.linkTo, index);
+	    gun.get('attrs').put(attrs);
+	    return new Identity(gun, uri, index);
 	  };
 
 	  Identity.getLinkTo = function getLinkTo(attrs) {
@@ -11211,18 +11216,19 @@
 	      root = gun.back(-1),
 	      user = root.user();
 	  if (!user.is) {
-	    throw { err: "Not logged in!" };
+	    throw { err: 'Not logged in!' };
 	  }
 	  var top = user.chain(),
 	      at = top._;
-	  at.soul = at.get = "~" + user.is.pub + "." + key;
+	  at.soul = at.get = '~' + user.is.pub + '.' + key;
 	  var tmp = root.get(at.soul)._;
 	  (tmp.echo || (tmp.echo = {}))[at.id] = at;
 	  return top;
 	};
 
 	// temp method for GUN search
-	async function searchText(node, callback, query, limit, cursor, desc) {
+	async function searchText(node, callback, query, limit) {
+	  // , cursor, desc
 	  var seen = {};
 	  node.map().once(function (value, key) {
 	    //console.log(`searchText`, value, key, desc);
@@ -11363,7 +11369,8 @@
 	    this.gun.get('messagesByDistance').put(user.top('messagesByDistance'));
 
 	    var uri = this.viewpoint.uri();
-	    var g = this.gun.get('identitiesBySearchKey').get(uri).put(user.top(uri));
+	    var g = user.top(uri);
+	    this.gun.get('identitiesBySearchKey').get(uri).put(g);
 	    var attrs = {};
 	    attrs[uri] = this.viewpoint;
 	    if (this.options.self) {
@@ -11723,7 +11730,7 @@
 	    this.gun.get('trustedIndexes').map().on(function (value, key) {
 	      if (value) {
 	        console.log('trustedIndex', key);
-	        _this5.gun.user(key).get('chat').get(_this5.options.keypair.pub).on(function (v, k) {
+	        _this5.gun.user(key).get('chat').get(_this5.options.keypair.pub).on(function (v) {
 	          if (v) {
 	            callback(key);
 	          }
@@ -12384,12 +12391,12 @@
 	  Index.prototype.search = async function search() {
 	    var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 	    var type = arguments[1];
-	    var callback = arguments[2];
 
 	    var _this11 = this;
 
+	    var callback = arguments[2];
 	    var limit = arguments[3];
-	    // TODO: param 'exact', type param
+	    // cursor // TODO: param 'exact', type param
 	    var seen = {};
 	    function searchTermCheck(key) {
 	      var arr = key.split(':');
@@ -12574,7 +12581,7 @@
 	  return Index;
 	}();
 
-	var version$1 = "0.0.125";
+	var version$1 = "0.0.126";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

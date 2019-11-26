@@ -29,8 +29,13 @@ class Identity {
     } else {
       data.linkTo = Identity.getLinkTo(data.attrs);
     }
+    const uri = data.linkTo.uri();
+    console.log('uri', uri);
+    const attrs = gun.top(`${uri}/attrs`).put(data.attrs);
+    delete data['attrs'];
     gun.put(data);
-    return new Identity(gun, data.linkTo, index);
+    gun.get(`attrs`).put(attrs);
+    return new Identity(gun, uri, index);
   }
 
   static getLinkTo(attrs) {

@@ -8,18 +8,18 @@ import Gun from 'gun'; // eslint-disable-line no-unused-vars
 import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 
-Gun.User.prototype.top = function(key){
- var gun = this, root = gun.back(-1), user = root.user();
- if(!user.is){ throw {err: "Not logged in!"} }
- var top = user.chain(), at = (top._);
- at.soul = at.get = "~"+user.is.pub+"."+key;
- var tmp = (root.get(at.soul)._);
- (tmp.echo || (tmp.echo = {}))[at.id] = at;
- return top;
-}
+Gun.User.prototype.top = function(key) {
+  const gun = this, root = gun.back(- 1), user = root.user();
+  if (!user.is) { throw {err: 'Not logged in!'}; }
+  const top = user.chain(), at = (top._);
+  at.soul = at.get = `~${user.is.pub  }.${  key}`;
+  const tmp = (root.get(at.soul)._);
+  (tmp.echo || (tmp.echo = {}))[at.id] = at;
+  return top;
+};
 
 // temp method for GUN search
-async function searchText(node, callback, query, limit, cursor, desc) {
+async function searchText(node, callback, query, limit) { // , cursor, desc
   const seen = {};
   node.map().once((value, key) => {
     //console.log(`searchText`, value, key, desc);
@@ -149,7 +149,8 @@ class Index {
     this.gun.get(`messagesByDistance`).put(user.top(`messagesByDistance`));
 
     const uri = this.viewpoint.uri();
-    const g = this.gun.get(`identitiesBySearchKey`).get(uri).put(user.top(uri));
+    const g = user.top(uri);
+    this.gun.get(`identitiesBySearchKey`).get(uri).put(g);
     const attrs = {};
     attrs[uri] = this.viewpoint;
     if (this.options.self) {
@@ -486,7 +487,7 @@ class Index {
     this.gun.get(`trustedIndexes`).map().on((value, key) => {
       if (value) {
         console.log('trustedIndex', key);
-        this.gun.user(key).get(`chat`).get(this.options.keypair.pub).on((v, k) => {
+        this.gun.user(key).get(`chat`).get(this.options.keypair.pub).on(v => {
           if (v) {
             callback(key);
           }
@@ -643,7 +644,7 @@ class Index {
       recipient.get(`mostVerifiedAttributes`).put(mva);
       const k = (mva.keyID && mva.keyID.attribute.value) || (mva.uuid && mva.uuid.attribute.value) || hash;
       console.log('k', k);
-      recipient.get(`attrs`).put(this.gun.user().top(k + '/attrs'));
+      recipient.get(`attrs`).put(this.gun.user().top(`${k  }/attrs`));
       recipient.get(`attrs`).put(attrs);
       recipient.get(`attrs`).put(attrs);
     }
@@ -853,7 +854,7 @@ class Index {
       const trustDistance = msg.isPositive() && typeof msg.distance === `number` ? msg.distance + 1 : false;
       const start = new Date();
       const node = this.gun.get(`identitiesBySearchKey`).get(u.uri());
-      node.put({a:1}); // {a:1} because inserting {} causes a "no signature on data" error from gun
+      node.put({a: 1}); // {a:1} because inserting {} causes a "no signature on data" error from gun
       const id = Identity.create(node, {attrs, linkTo, trustDistance}, this);
       this.debug((new Date) - start, `ms identity.create`);
 
@@ -1025,7 +1026,7 @@ class Index {
   * @param {string} type (optional) type of searched value
   * @returns {Array} list of matching identities
   */
-  async search(value = ``, type, callback, limit, cursor) { // TODO: param 'exact', type param
+  async search(value = ``, type, callback, limit) { // cursor // TODO: param 'exact', type param
     const seen = {};
     function searchTermCheck(key) {
       const arr = key.split(`:`);
