@@ -61,7 +61,9 @@ class Chat {
   }
 
   /**
-  * Return a list of public keys that you have chats with.
+  * Return a list of public keys that you have initiated a chat with or replied to.
+  * (Chats that are initiated by others and unreplied by you don't show up, because
+  * this method doesn't know where to look for them. Use index.getChats() to listen to new chats from friends.)
   * @param {Object} gun user.authed gun instance
   * @param {Object} keypair SEA keypair that the gun instance is authenticated with
   * @param callback callback function that is called for each public key you have a chat with

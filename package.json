@@ -65,7 +65,7 @@
     "build:es": "rimraf es && cross-env BABEL_ENV=es babel src --out-dir es",
     "build:cjs": "rimraf cjs && cross-env BABEL_ENV=cjs babel src --out-dir cjs",
     "build:umd": "rimraf dist && cross-env BABEL_ENV=es rollup -c & cross-env BABEL_ENV=es NODE_ENV=production rollup -c",
-    "build:docs": "documentation build src/** -f html -o docs",
+    "build:docs": "documentation build src/** -f html -o docs --config documentation.yml",
     "build:run": "clear && rimraf cjs && cross-env BABEL_ENV=cjs yarn nodemon src/server.js --watch src --exec babel-node",
     "dev": "concurrently -n build,tests \"yarn build:watch\" \"yarn test:watch\"",
     "dev:server": "concurrently -n build,tests,server \"yarn build:watch\" \"yarn test:watch\" \"yarn build:run\"",
@@ -77,6 +77,7 @@
   "author": "Martti Malmi (martti.malmi@iki.fi)",
   "license": "MIT",
   "repository": "https://github.com/irislib/iris-lib",
+  "homepage": "https://github.com/irislib/iris-lib",
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@babel/node": "^7.4.5",

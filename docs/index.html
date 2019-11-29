@@ -1447,7 +1447,9 @@ who are communicating with each other by looking at Gun timestamps and subscript
 
   
 
-  <p>Return a list of public keys that you have chats with.</p>
+  <p>Return a list of public keys that you have initiated a chat with or replied to.
+(Chats that are initiated by others and unreplied by you don't show up, because
+this method doesn't know where to look for them. Use index.getChats() to listen to new chats from friends.)</p>
 
     <div class='pre p1 fill-light mt0'>getChats(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, callback: any)</div>
   
@@ -2858,7 +2860,7 @@ get(value) - guesses the type or throws an error</p>
 
   
 
-  <p>Return existing chats and listen to new chats initiated by friends</p>
+  <p>Return existing chats and listen to new chats initiated by friends.</p>
 
     <div class='pre p1 fill-light mt0'>getChats(callback: any)</div>
   

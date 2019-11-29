@@ -476,7 +476,7 @@ class Index {
   }
 
   /**
-  * Return existing chats and listen to new chats initiated by friends
+  * Return existing chats and listen to new chats initiated by friends.
   */
   async getChats(callback) {
     Chat.getChats(this.gun, this.options.keypair, callback);
