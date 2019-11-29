@@ -478,18 +478,14 @@ class Index {
   /**
   * Return existing chats and listen to new chats initiated by friends
   */
-  getChats(callback) {
-    this.gun.user().get(`chat`).map().on((value, key) => {
+  async getChats(callback) {
+    Chat.getChats(this.gun, this.options.keypair, callback);
+    this.gun.get(`trustedIndexes`).map().on(async (value, pub) => {
       if (value) {
-        callback(key);
-      }
-    });
-    this.gun.get(`trustedIndexes`).map().on((value, key) => {
-      if (value) {
-        console.log('trustedIndex', key);
-        this.gun.user(key).get(`chat`).get(this.options.keypair.pub).on(v => {
+        const theirSecretChatId = await Chat.getTheirSecretChatId(this.gun, pub, this.options.keypair);
+        this.gun.user(pub).get(`chats`).get(theirSecretChatId).on(v => {
           if (v) {
-            callback(key);
+            callback(pub);
           }
         });
       }
