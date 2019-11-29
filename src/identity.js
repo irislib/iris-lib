@@ -3,7 +3,7 @@ import Attribute from './attribute';
 import util from './util';
 
 /**
-* An Iris identity profile. Usually you don't create them yourself, but get them
+* An Iris identity profile (also known as "contact"). Usually you don't create them yourself, but get them
 * from Index methods such as get() and search().
 */
 class Identity {

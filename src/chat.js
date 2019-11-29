@@ -4,8 +4,8 @@ import Gun from 'gun';
 * Private communication channel between two or more participants. Can be used
 * independently of other Iris stuff.
 *
-* Messages are encrypted, but currently anyone can see which public keys
-* are communicating with each other. This will change in later versions.
+* Messages are encrypted and chat ids obfuscated, but it is possible to guess
+* who are communicating with each other by looking at Gun timestamps and subscriptions.
 *
 * @param {Object} options {key, gun, onMessage, participants}
 */

@@ -1243,8 +1243,8 @@
 
   <p>Private communication channel between two or more participants. Can be used
 independently of other Iris stuff.</p>
-<p>Messages are encrypted, but currently anyone can see which public keys
-are communicating with each other. This will change in later versions.</p>
+<p>Messages are encrypted and chat ids obfuscated, but it is possible to guess
+who are communicating with each other by looking at Gun timestamps and subscriptions.</p>
 
     <div class='pre p1 fill-light mt0'>new Chat(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
@@ -1996,7 +1996,7 @@ are communicating with each other. This will change in later versions.</p>
   </div>
   
 
-  <p>An Iris identity profile. Usually you don't create them yourself, but get them
+  <p>An Iris identity profile (also known as "contact"). Usually you don't create them yourself, but get them
 from Index methods such as get() and search().</p>
 
     <div class='pre p1 fill-light mt0'>new Identity(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, linkTo: any, index: any)</div>
