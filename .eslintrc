@@ -1,4 +1,10 @@
 {
   "parser": "babel-eslint",
-  "extends": "devine"
+  "extends": "devine",
+  "rules": {
+    "space-unary-ops": [
+      "error", { "words": true, "nonwords": false }
+    ],
+    "semi-spacing": "off"
+  }
 }
