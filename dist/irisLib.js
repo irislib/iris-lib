@@ -31,23 +31,11 @@
 
 	var _JSON$stringify = unwrapExports(stringify$1);
 
-	var _iterStep = function (done, value) {
-	  return { value: value, done: !!done };
-	};
-
-	var _iterators = {};
-
-	var toString = {}.toString;
-
-	var _cof = function (it) {
-	  return toString.call(it).slice(8, -1);
-	};
-
-	// fallback for non-array-like ES3 and non-enumerable old V8 strings
-
-	// eslint-disable-next-line no-prototype-builtins
-	var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
-	  return _cof(it) == 'String' ? it.split('') : Object(it);
+	// 7.1.4 ToInteger
+	var ceil = Math.ceil;
+	var floor = Math.floor;
+	var _toInteger = function (it) {
+	  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 	};
 
 	// 7.2.1 RequireObjectCoercible(argument)
@@ -56,11 +44,20 @@
 	  return it;
 	};
 
-	// to indexed object, toObject with fallback for non-array-like ES3 strings
-
-
-	var _toIobject = function (it) {
-	  return _iobject(_defined(it));
+	// true  -> String#at
+	// false -> String#codePointAt
+	var _stringAt = function (TO_STRING) {
+	  return function (that, pos) {
+	    var s = String(_defined(that));
+	    var i = _toInteger(pos);
+	    var l = s.length;
+	    var a, b;
+	    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
+	    a = s.charCodeAt(i);
+	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+	      ? TO_STRING ? s.charAt(i) : a
+	      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+	  };
 	};
 
 	var _library = true;
@@ -245,11 +242,26 @@
 
 	var _redefine = _hide;
 
-	// 7.1.4 ToInteger
-	var ceil = Math.ceil;
-	var floor = Math.floor;
-	var _toInteger = function (it) {
-	  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
+	var _iterators = {};
+
+	var toString = {}.toString;
+
+	var _cof = function (it) {
+	  return toString.call(it).slice(8, -1);
+	};
+
+	// fallback for non-array-like ES3 and non-enumerable old V8 strings
+
+	// eslint-disable-next-line no-prototype-builtins
+	var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
+	  return _cof(it) == 'String' ? it.split('') : Object(it);
+	};
+
+	// to indexed object, toObject with fallback for non-array-like ES3 strings
+
+
+	var _toIobject = function (it) {
+	  return _iobject(_defined(it));
 	};
 
 	// 7.1.15 ToLength
@@ -512,6 +524,27 @@
 	  return methods;
 	};
 
+	var $at = _stringAt(true);
+
+	// 21.1.3.27 String.prototype[@@iterator]()
+	_iterDefine(String, 'String', function (iterated) {
+	  this._t = String(iterated); // target
+	  this._i = 0;                // next index
+	// 21.1.5.2.1 %StringIteratorPrototype%.next()
+	}, function () {
+	  var O = this._t;
+	  var index = this._i;
+	  var point;
+	  if (index >= O.length) return { value: undefined, done: true };
+	  point = $at(O, index);
+	  this._i += point.length;
+	  return { value: point, done: false };
+	});
+
+	var _iterStep = function (done, value) {
+	  return { value: value, done: !!done };
+	};
+
 	// 22.1.3.4 Array.prototype.entries()
 	// 22.1.3.13 Array.prototype.keys()
 	// 22.1.3.29 Array.prototype.values()
@@ -553,39 +586,6 @@
 	  _iterators[NAME] = _iterators.Array;
 	}
 
-	// true  -> String#at
-	// false -> String#codePointAt
-	var _stringAt = function (TO_STRING) {
-	  return function (that, pos) {
-	    var s = String(_defined(that));
-	    var i = _toInteger(pos);
-	    var l = s.length;
-	    var a, b;
-	    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
-	    a = s.charCodeAt(i);
-	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
-	      ? TO_STRING ? s.charAt(i) : a
-	      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
-	  };
-	};
-
-	var $at = _stringAt(true);
-
-	// 21.1.3.27 String.prototype[@@iterator]()
-	_iterDefine(String, 'String', function (iterated) {
-	  this._t = String(iterated); // target
-	  this._i = 0;                // next index
-	// 21.1.5.2.1 %StringIteratorPrototype%.next()
-	}, function () {
-	  var O = this._t;
-	  var index = this._i;
-	  var point;
-	  if (index >= O.length) return { value: undefined, done: true };
-	  point = $at(O, index);
-	  this._i += point.length;
-	  return { value: point, done: false };
-	});
-
 	// getting tag from 19.1.3.6 Object.prototype.toString()
 
 	var TAG$1 = _wks('toStringTag');
@@ -610,13 +610,629 @@
 	    : (B = _cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
 	};
 
+	var _anInstance = function (it, Constructor, name, forbiddenField) {
+	  if (!(it instanceof Constructor) || (forbiddenField !== undefined && forbiddenField in it)) {
+	    throw TypeError(name + ': incorrect invocation!');
+	  } return it;
+	};
+
+	// call something on iterator step with safe closing on error
+
+	var _iterCall = function (iterator, fn, value, entries) {
+	  try {
+	    return entries ? fn(_anObject(value)[0], value[1]) : fn(value);
+	  // 7.4.6 IteratorClose(iterator, completion)
+	  } catch (e) {
+	    var ret = iterator['return'];
+	    if (ret !== undefined) _anObject(ret.call(iterator));
+	    throw e;
+	  }
+	};
+
+	// check on default Array iterator
+
 	var ITERATOR$1 = _wks('iterator');
+	var ArrayProto = Array.prototype;
+
+	var _isArrayIter = function (it) {
+	  return it !== undefined && (_iterators.Array === it || ArrayProto[ITERATOR$1] === it);
+	};
+
+	var ITERATOR$2 = _wks('iterator');
 
 	var core_getIteratorMethod = _core.getIteratorMethod = function (it) {
-	  if (it != undefined) return it[ITERATOR$1]
+	  if (it != undefined) return it[ITERATOR$2]
 	    || it['@@iterator']
 	    || _iterators[_classof(it)];
 	};
+
+	var _forOf = createCommonjsModule(function (module) {
+	var BREAK = {};
+	var RETURN = {};
+	var exports = module.exports = function (iterable, entries, fn, that, ITERATOR) {
+	  var iterFn = ITERATOR ? function () { return iterable; } : core_getIteratorMethod(iterable);
+	  var f = _ctx(fn, that, entries ? 2 : 1);
+	  var index = 0;
+	  var length, step, iterator, result;
+	  if (typeof iterFn != 'function') throw TypeError(iterable + ' is not iterable!');
+	  // fast case for arrays with default iterator
+	  if (_isArrayIter(iterFn)) for (length = _toLength(iterable.length); length > index; index++) {
+	    result = entries ? f(_anObject(step = iterable[index])[0], step[1]) : f(iterable[index]);
+	    if (result === BREAK || result === RETURN) return result;
+	  } else for (iterator = iterFn.call(iterable); !(step = iterator.next()).done;) {
+	    result = _iterCall(iterator, f, step.value, entries);
+	    if (result === BREAK || result === RETURN) return result;
+	  }
+	};
+	exports.BREAK = BREAK;
+	exports.RETURN = RETURN;
+	});
+
+	// 7.3.20 SpeciesConstructor(O, defaultConstructor)
+
+
+	var SPECIES = _wks('species');
+	var _speciesConstructor = function (O, D) {
+	  var C = _anObject(O).constructor;
+	  var S;
+	  return C === undefined || (S = _anObject(C)[SPECIES]) == undefined ? D : _aFunction(S);
+	};
+
+	// fast apply, http://jsperf.lnkit.com/fast-apply/5
+	var _invoke = function (fn, args, that) {
+	  var un = that === undefined;
+	  switch (args.length) {
+	    case 0: return un ? fn()
+	                      : fn.call(that);
+	    case 1: return un ? fn(args[0])
+	                      : fn.call(that, args[0]);
+	    case 2: return un ? fn(args[0], args[1])
+	                      : fn.call(that, args[0], args[1]);
+	    case 3: return un ? fn(args[0], args[1], args[2])
+	                      : fn.call(that, args[0], args[1], args[2]);
+	    case 4: return un ? fn(args[0], args[1], args[2], args[3])
+	                      : fn.call(that, args[0], args[1], args[2], args[3]);
+	  } return fn.apply(that, args);
+	};
+
+	var process = _global.process;
+	var setTask = _global.setImmediate;
+	var clearTask = _global.clearImmediate;
+	var MessageChannel = _global.MessageChannel;
+	var Dispatch = _global.Dispatch;
+	var counter = 0;
+	var queue = {};
+	var ONREADYSTATECHANGE = 'onreadystatechange';
+	var defer, channel, port;
+	var run = function () {
+	  var id = +this;
+	  // eslint-disable-next-line no-prototype-builtins
+	  if (queue.hasOwnProperty(id)) {
+	    var fn = queue[id];
+	    delete queue[id];
+	    fn();
+	  }
+	};
+	var listener = function (event) {
+	  run.call(event.data);
+	};
+	// Node.js 0.9+ & IE10+ has setImmediate, otherwise:
+	if (!setTask || !clearTask) {
+	  setTask = function setImmediate(fn) {
+	    var args = [];
+	    var i = 1;
+	    while (arguments.length > i) args.push(arguments[i++]);
+	    queue[++counter] = function () {
+	      // eslint-disable-next-line no-new-func
+	      _invoke(typeof fn == 'function' ? fn : Function(fn), args);
+	    };
+	    defer(counter);
+	    return counter;
+	  };
+	  clearTask = function clearImmediate(id) {
+	    delete queue[id];
+	  };
+	  // Node.js 0.8-
+	  if (_cof(process) == 'process') {
+	    defer = function (id) {
+	      process.nextTick(_ctx(run, id, 1));
+	    };
+	  // Sphere (JS game engine) Dispatch API
+	  } else if (Dispatch && Dispatch.now) {
+	    defer = function (id) {
+	      Dispatch.now(_ctx(run, id, 1));
+	    };
+	  // Browsers with MessageChannel, includes WebWorkers
+	  } else if (MessageChannel) {
+	    channel = new MessageChannel();
+	    port = channel.port2;
+	    channel.port1.onmessage = listener;
+	    defer = _ctx(port.postMessage, port, 1);
+	  // Browsers with postMessage, skip WebWorkers
+	  // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
+	  } else if (_global.addEventListener && typeof postMessage == 'function' && !_global.importScripts) {
+	    defer = function (id) {
+	      _global.postMessage(id + '', '*');
+	    };
+	    _global.addEventListener('message', listener, false);
+	  // IE8-
+	  } else if (ONREADYSTATECHANGE in _domCreate('script')) {
+	    defer = function (id) {
+	      _html.appendChild(_domCreate('script'))[ONREADYSTATECHANGE] = function () {
+	        _html.removeChild(this);
+	        run.call(id);
+	      };
+	    };
+	  // Rest old browsers
+	  } else {
+	    defer = function (id) {
+	      setTimeout(_ctx(run, id, 1), 0);
+	    };
+	  }
+	}
+	var _task = {
+	  set: setTask,
+	  clear: clearTask
+	};
+
+	var macrotask = _task.set;
+	var Observer = _global.MutationObserver || _global.WebKitMutationObserver;
+	var process$1 = _global.process;
+	var Promise$1 = _global.Promise;
+	var isNode = _cof(process$1) == 'process';
+
+	var _microtask = function () {
+	  var head, last, notify;
+
+	  var flush = function () {
+	    var parent, fn;
+	    if (isNode && (parent = process$1.domain)) parent.exit();
+	    while (head) {
+	      fn = head.fn;
+	      head = head.next;
+	      try {
+	        fn();
+	      } catch (e) {
+	        if (head) notify();
+	        else last = undefined;
+	        throw e;
+	      }
+	    } last = undefined;
+	    if (parent) parent.enter();
+	  };
+
+	  // Node.js
+	  if (isNode) {
+	    notify = function () {
+	      process$1.nextTick(flush);
+	    };
+	  // browsers with MutationObserver, except iOS Safari - https://github.com/zloirock/core-js/issues/339
+	  } else if (Observer && !(_global.navigator && _global.navigator.standalone)) {
+	    var toggle = true;
+	    var node = document.createTextNode('');
+	    new Observer(flush).observe(node, { characterData: true }); // eslint-disable-line no-new
+	    notify = function () {
+	      node.data = toggle = !toggle;
+	    };
+	  // environments with maybe non-completely correct, but existent Promise
+	  } else if (Promise$1 && Promise$1.resolve) {
+	    // Promise.resolve without an argument throws an error in LG WebOS 2
+	    var promise = Promise$1.resolve(undefined);
+	    notify = function () {
+	      promise.then(flush);
+	    };
+	  // for other environments - macrotask based on:
+	  // - setImmediate
+	  // - MessageChannel
+	  // - window.postMessag
+	  // - onreadystatechange
+	  // - setTimeout
+	  } else {
+	    notify = function () {
+	      // strange IE + webpack dev server bug - use .call(global)
+	      macrotask.call(_global, flush);
+	    };
+	  }
+
+	  return function (fn) {
+	    var task = { fn: fn, next: undefined };
+	    if (last) last.next = task;
+	    if (!head) {
+	      head = task;
+	      notify();
+	    } last = task;
+	  };
+	};
+
+	// 25.4.1.5 NewPromiseCapability(C)
+
+
+	function PromiseCapability(C) {
+	  var resolve, reject;
+	  this.promise = new C(function ($$resolve, $$reject) {
+	    if (resolve !== undefined || reject !== undefined) throw TypeError('Bad Promise constructor');
+	    resolve = $$resolve;
+	    reject = $$reject;
+	  });
+	  this.resolve = _aFunction(resolve);
+	  this.reject = _aFunction(reject);
+	}
+
+	var f$1 = function (C) {
+	  return new PromiseCapability(C);
+	};
+
+	var _newPromiseCapability = {
+		f: f$1
+	};
+
+	var _perform = function (exec) {
+	  try {
+	    return { e: false, v: exec() };
+	  } catch (e) {
+	    return { e: true, v: e };
+	  }
+	};
+
+	var navigator = _global.navigator;
+
+	var _userAgent = navigator && navigator.userAgent || '';
+
+	var _promiseResolve = function (C, x) {
+	  _anObject(C);
+	  if (_isObject(x) && x.constructor === C) return x;
+	  var promiseCapability = _newPromiseCapability.f(C);
+	  var resolve = promiseCapability.resolve;
+	  resolve(x);
+	  return promiseCapability.promise;
+	};
+
+	var _redefineAll = function (target, src, safe) {
+	  for (var key in src) {
+	    if (safe && target[key]) target[key] = src[key];
+	    else _hide(target, key, src[key]);
+	  } return target;
+	};
+
+	var SPECIES$1 = _wks('species');
+
+	var _setSpecies = function (KEY) {
+	  var C = typeof _core[KEY] == 'function' ? _core[KEY] : _global[KEY];
+	  if (_descriptors && C && !C[SPECIES$1]) _objectDp.f(C, SPECIES$1, {
+	    configurable: true,
+	    get: function () { return this; }
+	  });
+	};
+
+	var ITERATOR$3 = _wks('iterator');
+	var SAFE_CLOSING = false;
+
+	try {
+	  var riter = [7][ITERATOR$3]();
+	  riter['return'] = function () { SAFE_CLOSING = true; };
+	} catch (e) { /* empty */ }
+
+	var _iterDetect = function (exec, skipClosing) {
+	  if (!skipClosing && !SAFE_CLOSING) return false;
+	  var safe = false;
+	  try {
+	    var arr = [7];
+	    var iter = arr[ITERATOR$3]();
+	    iter.next = function () { return { done: safe = true }; };
+	    arr[ITERATOR$3] = function () { return iter; };
+	    exec(arr);
+	  } catch (e) { /* empty */ }
+	  return safe;
+	};
+
+	var task = _task.set;
+	var microtask = _microtask();
+
+
+
+
+	var PROMISE = 'Promise';
+	var TypeError$1 = _global.TypeError;
+	var process$2 = _global.process;
+	var versions = process$2 && process$2.versions;
+	var v8 = versions && versions.v8 || '';
+	var $Promise = _global[PROMISE];
+	var isNode$1 = _classof(process$2) == 'process';
+	var empty = function () { /* empty */ };
+	var Internal, newGenericPromiseCapability, OwnPromiseCapability, Wrapper;
+	var newPromiseCapability = newGenericPromiseCapability = _newPromiseCapability.f;
+
+	var USE_NATIVE = !!function () {
+	  try {
+	    // correct subclassing with @@species support
+	    var promise = $Promise.resolve(1);
+	    var FakePromise = (promise.constructor = {})[_wks('species')] = function (exec) {
+	      exec(empty, empty);
+	    };
+	    // unhandled rejections tracking support, NodeJS Promise without it fails @@species test
+	    return (isNode$1 || typeof PromiseRejectionEvent == 'function')
+	      && promise.then(empty) instanceof FakePromise
+	      // v8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
+	      // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
+	      // we can't detect it synchronously, so just check versions
+	      && v8.indexOf('6.6') !== 0
+	      && _userAgent.indexOf('Chrome/66') === -1;
+	  } catch (e) { /* empty */ }
+	}();
+
+	// helpers
+	var isThenable = function (it) {
+	  var then;
+	  return _isObject(it) && typeof (then = it.then) == 'function' ? then : false;
+	};
+	var notify = function (promise, isReject) {
+	  if (promise._n) return;
+	  promise._n = true;
+	  var chain = promise._c;
+	  microtask(function () {
+	    var value = promise._v;
+	    var ok = promise._s == 1;
+	    var i = 0;
+	    var run = function (reaction) {
+	      var handler = ok ? reaction.ok : reaction.fail;
+	      var resolve = reaction.resolve;
+	      var reject = reaction.reject;
+	      var domain = reaction.domain;
+	      var result, then, exited;
+	      try {
+	        if (handler) {
+	          if (!ok) {
+	            if (promise._h == 2) onHandleUnhandled(promise);
+	            promise._h = 1;
+	          }
+	          if (handler === true) result = value;
+	          else {
+	            if (domain) domain.enter();
+	            result = handler(value); // may throw
+	            if (domain) {
+	              domain.exit();
+	              exited = true;
+	            }
+	          }
+	          if (result === reaction.promise) {
+	            reject(TypeError$1('Promise-chain cycle'));
+	          } else if (then = isThenable(result)) {
+	            then.call(result, resolve, reject);
+	          } else resolve(result);
+	        } else reject(value);
+	      } catch (e) {
+	        if (domain && !exited) domain.exit();
+	        reject(e);
+	      }
+	    };
+	    while (chain.length > i) run(chain[i++]); // variable length - can't use forEach
+	    promise._c = [];
+	    promise._n = false;
+	    if (isReject && !promise._h) onUnhandled(promise);
+	  });
+	};
+	var onUnhandled = function (promise) {
+	  task.call(_global, function () {
+	    var value = promise._v;
+	    var unhandled = isUnhandled(promise);
+	    var result, handler, console;
+	    if (unhandled) {
+	      result = _perform(function () {
+	        if (isNode$1) {
+	          process$2.emit('unhandledRejection', value, promise);
+	        } else if (handler = _global.onunhandledrejection) {
+	          handler({ promise: promise, reason: value });
+	        } else if ((console = _global.console) && console.error) {
+	          console.error('Unhandled promise rejection', value);
+	        }
+	      });
+	      // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
+	      promise._h = isNode$1 || isUnhandled(promise) ? 2 : 1;
+	    } promise._a = undefined;
+	    if (unhandled && result.e) throw result.v;
+	  });
+	};
+	var isUnhandled = function (promise) {
+	  return promise._h !== 1 && (promise._a || promise._c).length === 0;
+	};
+	var onHandleUnhandled = function (promise) {
+	  task.call(_global, function () {
+	    var handler;
+	    if (isNode$1) {
+	      process$2.emit('rejectionHandled', promise);
+	    } else if (handler = _global.onrejectionhandled) {
+	      handler({ promise: promise, reason: promise._v });
+	    }
+	  });
+	};
+	var $reject = function (value) {
+	  var promise = this;
+	  if (promise._d) return;
+	  promise._d = true;
+	  promise = promise._w || promise; // unwrap
+	  promise._v = value;
+	  promise._s = 2;
+	  if (!promise._a) promise._a = promise._c.slice();
+	  notify(promise, true);
+	};
+	var $resolve = function (value) {
+	  var promise = this;
+	  var then;
+	  if (promise._d) return;
+	  promise._d = true;
+	  promise = promise._w || promise; // unwrap
+	  try {
+	    if (promise === value) throw TypeError$1("Promise can't be resolved itself");
+	    if (then = isThenable(value)) {
+	      microtask(function () {
+	        var wrapper = { _w: promise, _d: false }; // wrap
+	        try {
+	          then.call(value, _ctx($resolve, wrapper, 1), _ctx($reject, wrapper, 1));
+	        } catch (e) {
+	          $reject.call(wrapper, e);
+	        }
+	      });
+	    } else {
+	      promise._v = value;
+	      promise._s = 1;
+	      notify(promise, false);
+	    }
+	  } catch (e) {
+	    $reject.call({ _w: promise, _d: false }, e); // wrap
+	  }
+	};
+
+	// constructor polyfill
+	if (!USE_NATIVE) {
+	  // 25.4.3.1 Promise(executor)
+	  $Promise = function Promise(executor) {
+	    _anInstance(this, $Promise, PROMISE, '_h');
+	    _aFunction(executor);
+	    Internal.call(this);
+	    try {
+	      executor(_ctx($resolve, this, 1), _ctx($reject, this, 1));
+	    } catch (err) {
+	      $reject.call(this, err);
+	    }
+	  };
+	  // eslint-disable-next-line no-unused-vars
+	  Internal = function Promise(executor) {
+	    this._c = [];             // <- awaiting reactions
+	    this._a = undefined;      // <- checked in isUnhandled reactions
+	    this._s = 0;              // <- state
+	    this._d = false;          // <- done
+	    this._v = undefined;      // <- value
+	    this._h = 0;              // <- rejection state, 0 - default, 1 - handled, 2 - unhandled
+	    this._n = false;          // <- notify
+	  };
+	  Internal.prototype = _redefineAll($Promise.prototype, {
+	    // 25.4.5.3 Promise.prototype.then(onFulfilled, onRejected)
+	    then: function then(onFulfilled, onRejected) {
+	      var reaction = newPromiseCapability(_speciesConstructor(this, $Promise));
+	      reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
+	      reaction.fail = typeof onRejected == 'function' && onRejected;
+	      reaction.domain = isNode$1 ? process$2.domain : undefined;
+	      this._c.push(reaction);
+	      if (this._a) this._a.push(reaction);
+	      if (this._s) notify(this, false);
+	      return reaction.promise;
+	    },
+	    // 25.4.5.1 Promise.prototype.catch(onRejected)
+	    'catch': function (onRejected) {
+	      return this.then(undefined, onRejected);
+	    }
+	  });
+	  OwnPromiseCapability = function () {
+	    var promise = new Internal();
+	    this.promise = promise;
+	    this.resolve = _ctx($resolve, promise, 1);
+	    this.reject = _ctx($reject, promise, 1);
+	  };
+	  _newPromiseCapability.f = newPromiseCapability = function (C) {
+	    return C === $Promise || C === Wrapper
+	      ? new OwnPromiseCapability(C)
+	      : newGenericPromiseCapability(C);
+	  };
+	}
+
+	_export(_export.G + _export.W + _export.F * !USE_NATIVE, { Promise: $Promise });
+	_setToStringTag($Promise, PROMISE);
+	_setSpecies(PROMISE);
+	Wrapper = _core[PROMISE];
+
+	// statics
+	_export(_export.S + _export.F * !USE_NATIVE, PROMISE, {
+	  // 25.4.4.5 Promise.reject(r)
+	  reject: function reject(r) {
+	    var capability = newPromiseCapability(this);
+	    var $$reject = capability.reject;
+	    $$reject(r);
+	    return capability.promise;
+	  }
+	});
+	_export(_export.S + _export.F * (_library || !USE_NATIVE), PROMISE, {
+	  // 25.4.4.6 Promise.resolve(x)
+	  resolve: function resolve(x) {
+	    return _promiseResolve(_library && this === Wrapper ? $Promise : this, x);
+	  }
+	});
+	_export(_export.S + _export.F * !(USE_NATIVE && _iterDetect(function (iter) {
+	  $Promise.all(iter)['catch'](empty);
+	})), PROMISE, {
+	  // 25.4.4.1 Promise.all(iterable)
+	  all: function all(iterable) {
+	    var C = this;
+	    var capability = newPromiseCapability(C);
+	    var resolve = capability.resolve;
+	    var reject = capability.reject;
+	    var result = _perform(function () {
+	      var values = [];
+	      var index = 0;
+	      var remaining = 1;
+	      _forOf(iterable, false, function (promise) {
+	        var $index = index++;
+	        var alreadyCalled = false;
+	        values.push(undefined);
+	        remaining++;
+	        C.resolve(promise).then(function (value) {
+	          if (alreadyCalled) return;
+	          alreadyCalled = true;
+	          values[$index] = value;
+	          --remaining || resolve(values);
+	        }, reject);
+	      });
+	      --remaining || resolve(values);
+	    });
+	    if (result.e) reject(result.v);
+	    return capability.promise;
+	  },
+	  // 25.4.4.4 Promise.race(iterable)
+	  race: function race(iterable) {
+	    var C = this;
+	    var capability = newPromiseCapability(C);
+	    var reject = capability.reject;
+	    var result = _perform(function () {
+	      _forOf(iterable, false, function (promise) {
+	        C.resolve(promise).then(capability.resolve, reject);
+	      });
+	    });
+	    if (result.e) reject(result.v);
+	    return capability.promise;
+	  }
+	});
+
+	_export(_export.P + _export.R, 'Promise', { 'finally': function (onFinally) {
+	  var C = _speciesConstructor(this, _core.Promise || _global.Promise);
+	  var isFunction = typeof onFinally == 'function';
+	  return this.then(
+	    isFunction ? function (x) {
+	      return _promiseResolve(C, onFinally()).then(function () { return x; });
+	    } : onFinally,
+	    isFunction ? function (e) {
+	      return _promiseResolve(C, onFinally()).then(function () { throw e; });
+	    } : onFinally
+	  );
+	} });
+
+	// https://github.com/tc39/proposal-promise-try
+
+
+
+
+	_export(_export.S, 'Promise', { 'try': function (callbackfn) {
+	  var promiseCapability = _newPromiseCapability.f(this);
+	  var result = _perform(callbackfn);
+	  (result.e ? promiseCapability.reject : promiseCapability.resolve)(result.v);
+	  return promiseCapability.promise;
+	} });
+
+	var promise = _core.Promise;
+
+	var promise$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": promise, __esModule: true };
+	});
+
+	var _Promise = unwrapExports(promise$1);
 
 	var core_getIterator = _core.getIterator = function (it) {
 	  var iterFn = core_getIteratorMethod(it);
@@ -632,10 +1248,10 @@
 
 	var _getIterator = unwrapExports(getIterator$1);
 
-	var f$1 = _wks;
+	var f$2 = _wks;
 
 	var _wksExt = {
-		f: f$1
+		f: f$2
 	};
 
 	var iterator = _wksExt.f('iterator');
@@ -713,16 +1329,16 @@
 	  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty($Symbol, name, { value: _wksExt.f(name) });
 	};
 
-	var f$2 = Object.getOwnPropertySymbols;
+	var f$3 = Object.getOwnPropertySymbols;
 
 	var _objectGops = {
-		f: f$2
+		f: f$3
 	};
 
-	var f$3 = {}.propertyIsEnumerable;
+	var f$4 = {}.propertyIsEnumerable;
 
 	var _objectPie = {
-		f: f$3
+		f: f$4
 	};
 
 	// all enumerable object keys, includes symbols
@@ -751,12 +1367,12 @@
 
 	var hiddenKeys = _enumBugKeys.concat('length', 'prototype');
 
-	var f$4 = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
+	var f$5 = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
 	  return _objectKeysInternal(O, hiddenKeys);
 	};
 
 	var _objectGopn = {
-		f: f$4
+		f: f$5
 	};
 
 	// fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
@@ -775,17 +1391,17 @@
 	  }
 	};
 
-	var f$5 = function getOwnPropertyNames(it) {
+	var f$6 = function getOwnPropertyNames(it) {
 	  return windowNames && toString$1.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(_toIobject(it));
 	};
 
 	var _objectGopnExt = {
-		f: f$5
+		f: f$6
 	};
 
 	var gOPD = Object.getOwnPropertyDescriptor;
 
-	var f$6 = _descriptors ? gOPD : function getOwnPropertyDescriptor(O, P) {
+	var f$7 = _descriptors ? gOPD : function getOwnPropertyDescriptor(O, P) {
 	  O = _toIobject(O);
 	  P = _toPrimitive(P, true);
 	  if (_ie8DomDefine) try {
@@ -795,7 +1411,7 @@
 	};
 
 	var _objectGopd = {
-		f: f$6
+		f: f$7
 	};
 
 	// ECMAScript 6 symbols shim
@@ -840,7 +1456,7 @@
 	var AllSymbols = _shared('symbols');
 	var OPSymbols = _shared('op-symbols');
 	var ObjectProto$1 = Object[PROTOTYPE$2];
-	var USE_NATIVE = typeof $Symbol == 'function' && !!_objectGops.f;
+	var USE_NATIVE$1 = typeof $Symbol == 'function' && !!_objectGops.f;
 	var QObject = _global.QObject;
 	// Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
 	var setter = !QObject || !QObject[PROTOTYPE$2] || !QObject[PROTOTYPE$2].findChild;
@@ -863,7 +1479,7 @@
 	  return sym;
 	};
 
-	var isSymbol = USE_NATIVE && typeof $Symbol.iterator == 'symbol' ? function (it) {
+	var isSymbol = USE_NATIVE$1 && typeof $Symbol.iterator == 'symbol' ? function (it) {
 	  return typeof it == 'symbol';
 	} : function (it) {
 	  return it instanceof $Symbol;
@@ -930,7 +1546,7 @@
 	};
 
 	// 19.4.1.1 Symbol([description])
-	if (!USE_NATIVE) {
+	if (!USE_NATIVE$1) {
 	  $Symbol = function Symbol() {
 	    if (this instanceof $Symbol) throw TypeError('Symbol is not a constructor!');
 	    var tag = _uid(arguments.length > 0 ? arguments[0] : undefined);
@@ -961,7 +1577,7 @@
 	  };
 	}
 
-	_export(_export.G + _export.W + _export.F * !USE_NATIVE, { Symbol: $Symbol });
+	_export(_export.G + _export.W + _export.F * !USE_NATIVE$1, { Symbol: $Symbol });
 
 	for (var es6Symbols = (
 	  // 19.4.2.2, 19.4.2.3, 19.4.2.4, 19.4.2.6, 19.4.2.8, 19.4.2.9, 19.4.2.10, 19.4.2.11, 19.4.2.12, 19.4.2.13, 19.4.2.14
@@ -970,7 +1586,7 @@
 
 	for (var wellKnownSymbols = _objectKeys(_wks.store), k = 0; wellKnownSymbols.length > k;) _wksDefine(wellKnownSymbols[k++]);
 
-	_export(_export.S + _export.F * !USE_NATIVE, 'Symbol', {
+	_export(_export.S + _export.F * !USE_NATIVE$1, 'Symbol', {
 	  // 19.4.2.1 Symbol.for(key)
 	  'for': function (key) {
 	    return _has(SymbolRegistry, key += '')
@@ -986,7 +1602,7 @@
 	  useSimple: function () { setter = false; }
 	});
 
-	_export(_export.S + _export.F * !USE_NATIVE, 'Object', {
+	_export(_export.S + _export.F * !USE_NATIVE$1, 'Object', {
 	  // 19.1.2.2 Object.create(O [, Properties])
 	  create: $create,
 	  // 19.1.2.4 Object.defineProperty(O, P, Attributes)
@@ -1012,7 +1628,7 @@
 	});
 
 	// 24.3.2 JSON.stringify(value [, replacer [, space]])
-	$JSON$1 && _export(_export.S + _export.F * (!USE_NATIVE || _fails(function () {
+	$JSON$1 && _export(_export.S + _export.F * (!USE_NATIVE$1 || _fails(function () {
 	  var S = $Symbol();
 	  // MS Edge converts symbol values to JSON as {}
 	  // WebKit converts symbol values to JSON as null
@@ -2001,622 +2617,6 @@
 	var global$1 = (typeof global !== "undefined" ? global :
 	            typeof self !== "undefined" ? self :
 	            typeof window !== "undefined" ? window : {});
-
-	var _anInstance = function (it, Constructor, name, forbiddenField) {
-	  if (!(it instanceof Constructor) || (forbiddenField !== undefined && forbiddenField in it)) {
-	    throw TypeError(name + ': incorrect invocation!');
-	  } return it;
-	};
-
-	// call something on iterator step with safe closing on error
-
-	var _iterCall = function (iterator, fn, value, entries) {
-	  try {
-	    return entries ? fn(_anObject(value)[0], value[1]) : fn(value);
-	  // 7.4.6 IteratorClose(iterator, completion)
-	  } catch (e) {
-	    var ret = iterator['return'];
-	    if (ret !== undefined) _anObject(ret.call(iterator));
-	    throw e;
-	  }
-	};
-
-	// check on default Array iterator
-
-	var ITERATOR$2 = _wks('iterator');
-	var ArrayProto = Array.prototype;
-
-	var _isArrayIter = function (it) {
-	  return it !== undefined && (_iterators.Array === it || ArrayProto[ITERATOR$2] === it);
-	};
-
-	var _forOf = createCommonjsModule(function (module) {
-	var BREAK = {};
-	var RETURN = {};
-	var exports = module.exports = function (iterable, entries, fn, that, ITERATOR) {
-	  var iterFn = ITERATOR ? function () { return iterable; } : core_getIteratorMethod(iterable);
-	  var f = _ctx(fn, that, entries ? 2 : 1);
-	  var index = 0;
-	  var length, step, iterator, result;
-	  if (typeof iterFn != 'function') throw TypeError(iterable + ' is not iterable!');
-	  // fast case for arrays with default iterator
-	  if (_isArrayIter(iterFn)) for (length = _toLength(iterable.length); length > index; index++) {
-	    result = entries ? f(_anObject(step = iterable[index])[0], step[1]) : f(iterable[index]);
-	    if (result === BREAK || result === RETURN) return result;
-	  } else for (iterator = iterFn.call(iterable); !(step = iterator.next()).done;) {
-	    result = _iterCall(iterator, f, step.value, entries);
-	    if (result === BREAK || result === RETURN) return result;
-	  }
-	};
-	exports.BREAK = BREAK;
-	exports.RETURN = RETURN;
-	});
-
-	// 7.3.20 SpeciesConstructor(O, defaultConstructor)
-
-
-	var SPECIES = _wks('species');
-	var _speciesConstructor = function (O, D) {
-	  var C = _anObject(O).constructor;
-	  var S;
-	  return C === undefined || (S = _anObject(C)[SPECIES]) == undefined ? D : _aFunction(S);
-	};
-
-	// fast apply, http://jsperf.lnkit.com/fast-apply/5
-	var _invoke = function (fn, args, that) {
-	  var un = that === undefined;
-	  switch (args.length) {
-	    case 0: return un ? fn()
-	                      : fn.call(that);
-	    case 1: return un ? fn(args[0])
-	                      : fn.call(that, args[0]);
-	    case 2: return un ? fn(args[0], args[1])
-	                      : fn.call(that, args[0], args[1]);
-	    case 3: return un ? fn(args[0], args[1], args[2])
-	                      : fn.call(that, args[0], args[1], args[2]);
-	    case 4: return un ? fn(args[0], args[1], args[2], args[3])
-	                      : fn.call(that, args[0], args[1], args[2], args[3]);
-	  } return fn.apply(that, args);
-	};
-
-	var process = _global.process;
-	var setTask = _global.setImmediate;
-	var clearTask = _global.clearImmediate;
-	var MessageChannel = _global.MessageChannel;
-	var Dispatch = _global.Dispatch;
-	var counter = 0;
-	var queue = {};
-	var ONREADYSTATECHANGE = 'onreadystatechange';
-	var defer, channel, port;
-	var run = function () {
-	  var id = +this;
-	  // eslint-disable-next-line no-prototype-builtins
-	  if (queue.hasOwnProperty(id)) {
-	    var fn = queue[id];
-	    delete queue[id];
-	    fn();
-	  }
-	};
-	var listener = function (event) {
-	  run.call(event.data);
-	};
-	// Node.js 0.9+ & IE10+ has setImmediate, otherwise:
-	if (!setTask || !clearTask) {
-	  setTask = function setImmediate(fn) {
-	    var args = [];
-	    var i = 1;
-	    while (arguments.length > i) args.push(arguments[i++]);
-	    queue[++counter] = function () {
-	      // eslint-disable-next-line no-new-func
-	      _invoke(typeof fn == 'function' ? fn : Function(fn), args);
-	    };
-	    defer(counter);
-	    return counter;
-	  };
-	  clearTask = function clearImmediate(id) {
-	    delete queue[id];
-	  };
-	  // Node.js 0.8-
-	  if (_cof(process) == 'process') {
-	    defer = function (id) {
-	      process.nextTick(_ctx(run, id, 1));
-	    };
-	  // Sphere (JS game engine) Dispatch API
-	  } else if (Dispatch && Dispatch.now) {
-	    defer = function (id) {
-	      Dispatch.now(_ctx(run, id, 1));
-	    };
-	  // Browsers with MessageChannel, includes WebWorkers
-	  } else if (MessageChannel) {
-	    channel = new MessageChannel();
-	    port = channel.port2;
-	    channel.port1.onmessage = listener;
-	    defer = _ctx(port.postMessage, port, 1);
-	  // Browsers with postMessage, skip WebWorkers
-	  // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
-	  } else if (_global.addEventListener && typeof postMessage == 'function' && !_global.importScripts) {
-	    defer = function (id) {
-	      _global.postMessage(id + '', '*');
-	    };
-	    _global.addEventListener('message', listener, false);
-	  // IE8-
-	  } else if (ONREADYSTATECHANGE in _domCreate('script')) {
-	    defer = function (id) {
-	      _html.appendChild(_domCreate('script'))[ONREADYSTATECHANGE] = function () {
-	        _html.removeChild(this);
-	        run.call(id);
-	      };
-	    };
-	  // Rest old browsers
-	  } else {
-	    defer = function (id) {
-	      setTimeout(_ctx(run, id, 1), 0);
-	    };
-	  }
-	}
-	var _task = {
-	  set: setTask,
-	  clear: clearTask
-	};
-
-	var macrotask = _task.set;
-	var Observer = _global.MutationObserver || _global.WebKitMutationObserver;
-	var process$1 = _global.process;
-	var Promise$1 = _global.Promise;
-	var isNode = _cof(process$1) == 'process';
-
-	var _microtask = function () {
-	  var head, last, notify;
-
-	  var flush = function () {
-	    var parent, fn;
-	    if (isNode && (parent = process$1.domain)) parent.exit();
-	    while (head) {
-	      fn = head.fn;
-	      head = head.next;
-	      try {
-	        fn();
-	      } catch (e) {
-	        if (head) notify();
-	        else last = undefined;
-	        throw e;
-	      }
-	    } last = undefined;
-	    if (parent) parent.enter();
-	  };
-
-	  // Node.js
-	  if (isNode) {
-	    notify = function () {
-	      process$1.nextTick(flush);
-	    };
-	  // browsers with MutationObserver, except iOS Safari - https://github.com/zloirock/core-js/issues/339
-	  } else if (Observer && !(_global.navigator && _global.navigator.standalone)) {
-	    var toggle = true;
-	    var node = document.createTextNode('');
-	    new Observer(flush).observe(node, { characterData: true }); // eslint-disable-line no-new
-	    notify = function () {
-	      node.data = toggle = !toggle;
-	    };
-	  // environments with maybe non-completely correct, but existent Promise
-	  } else if (Promise$1 && Promise$1.resolve) {
-	    // Promise.resolve without an argument throws an error in LG WebOS 2
-	    var promise = Promise$1.resolve(undefined);
-	    notify = function () {
-	      promise.then(flush);
-	    };
-	  // for other environments - macrotask based on:
-	  // - setImmediate
-	  // - MessageChannel
-	  // - window.postMessag
-	  // - onreadystatechange
-	  // - setTimeout
-	  } else {
-	    notify = function () {
-	      // strange IE + webpack dev server bug - use .call(global)
-	      macrotask.call(_global, flush);
-	    };
-	  }
-
-	  return function (fn) {
-	    var task = { fn: fn, next: undefined };
-	    if (last) last.next = task;
-	    if (!head) {
-	      head = task;
-	      notify();
-	    } last = task;
-	  };
-	};
-
-	// 25.4.1.5 NewPromiseCapability(C)
-
-
-	function PromiseCapability(C) {
-	  var resolve, reject;
-	  this.promise = new C(function ($$resolve, $$reject) {
-	    if (resolve !== undefined || reject !== undefined) throw TypeError('Bad Promise constructor');
-	    resolve = $$resolve;
-	    reject = $$reject;
-	  });
-	  this.resolve = _aFunction(resolve);
-	  this.reject = _aFunction(reject);
-	}
-
-	var f$7 = function (C) {
-	  return new PromiseCapability(C);
-	};
-
-	var _newPromiseCapability = {
-		f: f$7
-	};
-
-	var _perform = function (exec) {
-	  try {
-	    return { e: false, v: exec() };
-	  } catch (e) {
-	    return { e: true, v: e };
-	  }
-	};
-
-	var navigator = _global.navigator;
-
-	var _userAgent = navigator && navigator.userAgent || '';
-
-	var _promiseResolve = function (C, x) {
-	  _anObject(C);
-	  if (_isObject(x) && x.constructor === C) return x;
-	  var promiseCapability = _newPromiseCapability.f(C);
-	  var resolve = promiseCapability.resolve;
-	  resolve(x);
-	  return promiseCapability.promise;
-	};
-
-	var _redefineAll = function (target, src, safe) {
-	  for (var key in src) {
-	    if (safe && target[key]) target[key] = src[key];
-	    else _hide(target, key, src[key]);
-	  } return target;
-	};
-
-	var SPECIES$1 = _wks('species');
-
-	var _setSpecies = function (KEY) {
-	  var C = typeof _core[KEY] == 'function' ? _core[KEY] : _global[KEY];
-	  if (_descriptors && C && !C[SPECIES$1]) _objectDp.f(C, SPECIES$1, {
-	    configurable: true,
-	    get: function () { return this; }
-	  });
-	};
-
-	var ITERATOR$3 = _wks('iterator');
-	var SAFE_CLOSING = false;
-
-	try {
-	  var riter = [7][ITERATOR$3]();
-	  riter['return'] = function () { SAFE_CLOSING = true; };
-	} catch (e) { /* empty */ }
-
-	var _iterDetect = function (exec, skipClosing) {
-	  if (!skipClosing && !SAFE_CLOSING) return false;
-	  var safe = false;
-	  try {
-	    var arr = [7];
-	    var iter = arr[ITERATOR$3]();
-	    iter.next = function () { return { done: safe = true }; };
-	    arr[ITERATOR$3] = function () { return iter; };
-	    exec(arr);
-	  } catch (e) { /* empty */ }
-	  return safe;
-	};
-
-	var task = _task.set;
-	var microtask = _microtask();
-
-
-
-
-	var PROMISE = 'Promise';
-	var TypeError$1 = _global.TypeError;
-	var process$2 = _global.process;
-	var versions = process$2 && process$2.versions;
-	var v8 = versions && versions.v8 || '';
-	var $Promise = _global[PROMISE];
-	var isNode$1 = _classof(process$2) == 'process';
-	var empty = function () { /* empty */ };
-	var Internal, newGenericPromiseCapability, OwnPromiseCapability, Wrapper;
-	var newPromiseCapability = newGenericPromiseCapability = _newPromiseCapability.f;
-
-	var USE_NATIVE$1 = !!function () {
-	  try {
-	    // correct subclassing with @@species support
-	    var promise = $Promise.resolve(1);
-	    var FakePromise = (promise.constructor = {})[_wks('species')] = function (exec) {
-	      exec(empty, empty);
-	    };
-	    // unhandled rejections tracking support, NodeJS Promise without it fails @@species test
-	    return (isNode$1 || typeof PromiseRejectionEvent == 'function')
-	      && promise.then(empty) instanceof FakePromise
-	      // v8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
-	      // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
-	      // we can't detect it synchronously, so just check versions
-	      && v8.indexOf('6.6') !== 0
-	      && _userAgent.indexOf('Chrome/66') === -1;
-	  } catch (e) { /* empty */ }
-	}();
-
-	// helpers
-	var isThenable = function (it) {
-	  var then;
-	  return _isObject(it) && typeof (then = it.then) == 'function' ? then : false;
-	};
-	var notify = function (promise, isReject) {
-	  if (promise._n) return;
-	  promise._n = true;
-	  var chain = promise._c;
-	  microtask(function () {
-	    var value = promise._v;
-	    var ok = promise._s == 1;
-	    var i = 0;
-	    var run = function (reaction) {
-	      var handler = ok ? reaction.ok : reaction.fail;
-	      var resolve = reaction.resolve;
-	      var reject = reaction.reject;
-	      var domain = reaction.domain;
-	      var result, then, exited;
-	      try {
-	        if (handler) {
-	          if (!ok) {
-	            if (promise._h == 2) onHandleUnhandled(promise);
-	            promise._h = 1;
-	          }
-	          if (handler === true) result = value;
-	          else {
-	            if (domain) domain.enter();
-	            result = handler(value); // may throw
-	            if (domain) {
-	              domain.exit();
-	              exited = true;
-	            }
-	          }
-	          if (result === reaction.promise) {
-	            reject(TypeError$1('Promise-chain cycle'));
-	          } else if (then = isThenable(result)) {
-	            then.call(result, resolve, reject);
-	          } else resolve(result);
-	        } else reject(value);
-	      } catch (e) {
-	        if (domain && !exited) domain.exit();
-	        reject(e);
-	      }
-	    };
-	    while (chain.length > i) run(chain[i++]); // variable length - can't use forEach
-	    promise._c = [];
-	    promise._n = false;
-	    if (isReject && !promise._h) onUnhandled(promise);
-	  });
-	};
-	var onUnhandled = function (promise) {
-	  task.call(_global, function () {
-	    var value = promise._v;
-	    var unhandled = isUnhandled(promise);
-	    var result, handler, console;
-	    if (unhandled) {
-	      result = _perform(function () {
-	        if (isNode$1) {
-	          process$2.emit('unhandledRejection', value, promise);
-	        } else if (handler = _global.onunhandledrejection) {
-	          handler({ promise: promise, reason: value });
-	        } else if ((console = _global.console) && console.error) {
-	          console.error('Unhandled promise rejection', value);
-	        }
-	      });
-	      // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
-	      promise._h = isNode$1 || isUnhandled(promise) ? 2 : 1;
-	    } promise._a = undefined;
-	    if (unhandled && result.e) throw result.v;
-	  });
-	};
-	var isUnhandled = function (promise) {
-	  return promise._h !== 1 && (promise._a || promise._c).length === 0;
-	};
-	var onHandleUnhandled = function (promise) {
-	  task.call(_global, function () {
-	    var handler;
-	    if (isNode$1) {
-	      process$2.emit('rejectionHandled', promise);
-	    } else if (handler = _global.onrejectionhandled) {
-	      handler({ promise: promise, reason: promise._v });
-	    }
-	  });
-	};
-	var $reject = function (value) {
-	  var promise = this;
-	  if (promise._d) return;
-	  promise._d = true;
-	  promise = promise._w || promise; // unwrap
-	  promise._v = value;
-	  promise._s = 2;
-	  if (!promise._a) promise._a = promise._c.slice();
-	  notify(promise, true);
-	};
-	var $resolve = function (value) {
-	  var promise = this;
-	  var then;
-	  if (promise._d) return;
-	  promise._d = true;
-	  promise = promise._w || promise; // unwrap
-	  try {
-	    if (promise === value) throw TypeError$1("Promise can't be resolved itself");
-	    if (then = isThenable(value)) {
-	      microtask(function () {
-	        var wrapper = { _w: promise, _d: false }; // wrap
-	        try {
-	          then.call(value, _ctx($resolve, wrapper, 1), _ctx($reject, wrapper, 1));
-	        } catch (e) {
-	          $reject.call(wrapper, e);
-	        }
-	      });
-	    } else {
-	      promise._v = value;
-	      promise._s = 1;
-	      notify(promise, false);
-	    }
-	  } catch (e) {
-	    $reject.call({ _w: promise, _d: false }, e); // wrap
-	  }
-	};
-
-	// constructor polyfill
-	if (!USE_NATIVE$1) {
-	  // 25.4.3.1 Promise(executor)
-	  $Promise = function Promise(executor) {
-	    _anInstance(this, $Promise, PROMISE, '_h');
-	    _aFunction(executor);
-	    Internal.call(this);
-	    try {
-	      executor(_ctx($resolve, this, 1), _ctx($reject, this, 1));
-	    } catch (err) {
-	      $reject.call(this, err);
-	    }
-	  };
-	  // eslint-disable-next-line no-unused-vars
-	  Internal = function Promise(executor) {
-	    this._c = [];             // <- awaiting reactions
-	    this._a = undefined;      // <- checked in isUnhandled reactions
-	    this._s = 0;              // <- state
-	    this._d = false;          // <- done
-	    this._v = undefined;      // <- value
-	    this._h = 0;              // <- rejection state, 0 - default, 1 - handled, 2 - unhandled
-	    this._n = false;          // <- notify
-	  };
-	  Internal.prototype = _redefineAll($Promise.prototype, {
-	    // 25.4.5.3 Promise.prototype.then(onFulfilled, onRejected)
-	    then: function then(onFulfilled, onRejected) {
-	      var reaction = newPromiseCapability(_speciesConstructor(this, $Promise));
-	      reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
-	      reaction.fail = typeof onRejected == 'function' && onRejected;
-	      reaction.domain = isNode$1 ? process$2.domain : undefined;
-	      this._c.push(reaction);
-	      if (this._a) this._a.push(reaction);
-	      if (this._s) notify(this, false);
-	      return reaction.promise;
-	    },
-	    // 25.4.5.1 Promise.prototype.catch(onRejected)
-	    'catch': function (onRejected) {
-	      return this.then(undefined, onRejected);
-	    }
-	  });
-	  OwnPromiseCapability = function () {
-	    var promise = new Internal();
-	    this.promise = promise;
-	    this.resolve = _ctx($resolve, promise, 1);
-	    this.reject = _ctx($reject, promise, 1);
-	  };
-	  _newPromiseCapability.f = newPromiseCapability = function (C) {
-	    return C === $Promise || C === Wrapper
-	      ? new OwnPromiseCapability(C)
-	      : newGenericPromiseCapability(C);
-	  };
-	}
-
-	_export(_export.G + _export.W + _export.F * !USE_NATIVE$1, { Promise: $Promise });
-	_setToStringTag($Promise, PROMISE);
-	_setSpecies(PROMISE);
-	Wrapper = _core[PROMISE];
-
-	// statics
-	_export(_export.S + _export.F * !USE_NATIVE$1, PROMISE, {
-	  // 25.4.4.5 Promise.reject(r)
-	  reject: function reject(r) {
-	    var capability = newPromiseCapability(this);
-	    var $$reject = capability.reject;
-	    $$reject(r);
-	    return capability.promise;
-	  }
-	});
-	_export(_export.S + _export.F * (_library || !USE_NATIVE$1), PROMISE, {
-	  // 25.4.4.6 Promise.resolve(x)
-	  resolve: function resolve(x) {
-	    return _promiseResolve(_library && this === Wrapper ? $Promise : this, x);
-	  }
-	});
-	_export(_export.S + _export.F * !(USE_NATIVE$1 && _iterDetect(function (iter) {
-	  $Promise.all(iter)['catch'](empty);
-	})), PROMISE, {
-	  // 25.4.4.1 Promise.all(iterable)
-	  all: function all(iterable) {
-	    var C = this;
-	    var capability = newPromiseCapability(C);
-	    var resolve = capability.resolve;
-	    var reject = capability.reject;
-	    var result = _perform(function () {
-	      var values = [];
-	      var index = 0;
-	      var remaining = 1;
-	      _forOf(iterable, false, function (promise) {
-	        var $index = index++;
-	        var alreadyCalled = false;
-	        values.push(undefined);
-	        remaining++;
-	        C.resolve(promise).then(function (value) {
-	          if (alreadyCalled) return;
-	          alreadyCalled = true;
-	          values[$index] = value;
-	          --remaining || resolve(values);
-	        }, reject);
-	      });
-	      --remaining || resolve(values);
-	    });
-	    if (result.e) reject(result.v);
-	    return capability.promise;
-	  },
-	  // 25.4.4.4 Promise.race(iterable)
-	  race: function race(iterable) {
-	    var C = this;
-	    var capability = newPromiseCapability(C);
-	    var reject = capability.reject;
-	    var result = _perform(function () {
-	      _forOf(iterable, false, function (promise) {
-	        C.resolve(promise).then(capability.resolve, reject);
-	      });
-	    });
-	    if (result.e) reject(result.v);
-	    return capability.promise;
-	  }
-	});
-
-	_export(_export.P + _export.R, 'Promise', { 'finally': function (onFinally) {
-	  var C = _speciesConstructor(this, _core.Promise || _global.Promise);
-	  var isFunction = typeof onFinally == 'function';
-	  return this.then(
-	    isFunction ? function (x) {
-	      return _promiseResolve(C, onFinally()).then(function () { return x; });
-	    } : onFinally,
-	    isFunction ? function (e) {
-	      return _promiseResolve(C, onFinally()).then(function () { throw e; });
-	    } : onFinally
-	  );
-	} });
-
-	// https://github.com/tc39/proposal-promise-try
-
-
-
-
-	_export(_export.S, 'Promise', { 'try': function (callbackfn) {
-	  var promiseCapability = _newPromiseCapability.f(this);
-	  var result = _perform(callbackfn);
-	  (result.e ? promiseCapability.reject : promiseCapability.resolve)(result.v);
-	  return promiseCapability.promise;
-	} });
-
-	var promise = _core.Promise;
-
-	var promise$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": promise, __esModule: true };
-	});
-
-	var _Promise = unwrapExports(promise$1);
 
 	var inherits_browser = createCommonjsModule(function (module) {
 	if (typeof Object.create === 'function') {
@@ -10413,6 +10413,12 @@
 	  };
 
 	  Message.fromSig = async function fromSig(obj) {
+	    if (!obj.sig) {
+	      throw new Error('Missing signature in object:', obj);
+	    }
+	    if (!obj.pubKey) {
+	      throw new Error('Missing pubKey in object:');
+	    }
 	    var signedData = await Key.verify(obj.sig, obj.pubKey);
 	    var o = { signedData: signedData, sig: obj.sig, pubKey: obj.pubKey };
 	    return new Message(o);
@@ -10466,7 +10472,12 @@
 	  Message.loadFromIpfs = async function loadFromIpfs(ipfs, uri) {
 	    var f = await ipfs.cat(uri);
 	    var s = ipfs.types.Buffer.from(f).toString('utf8');
-	    return Message.fromString(s);
+	    try {
+	      return Message.fromString(s);
+	    } catch (e) {
+	      console.log('loading message from ipfs failed');
+	      return _Promise.reject();
+	    }
 	  };
 
 	  /**
@@ -10542,7 +10553,7 @@
 	var _Object$assign = unwrapExports(assign$1);
 
 	/**
-	* An Iris identity profile. Usually you don't create them yourself, but get them
+	* An Iris identity profile (also known as "contact"). Usually you don't create them yourself, but get them
 	* from Index methods such as get() and search().
 	*/
 
@@ -11008,8 +11019,8 @@
 	* Private communication channel between two or more participants. Can be used
 	* independently of other Iris stuff.
 	*
-	* Messages are encrypted, but currently anyone can see which public keys
-	* are communicating with each other. This will change in later versions.
+	* Messages are encrypted and chat ids obfuscated, but it is possible to guess
+	* who are communicating with each other by looking at Gun timestamps and subscriptions.
 	*
 	* @param {Object} options {key, gun, onMessage, participants}
 	*/
@@ -11049,11 +11060,21 @@
 	    return this.secrets[pub];
 	  };
 
+	  /**
+	  *
+	  */
+
+
 	  Chat.getOurSecretChatId = async function getOurSecretChatId(gun, pub, pair) {
 	    var epub = await gun.user(pub).get("epub").once().then();
 	    var secret = await Gun.SEA.secret(epub, pair);
 	    return Gun.SEA.work(secret + pub, null, null, { name: "SHA-256" });
 	  };
+
+	  /**
+	  *
+	  */
+
 
 	  Chat.getTheirSecretChatId = async function getTheirSecretChatId(gun, pub, pair) {
 	    var epub = await gun.user(pub).get("epub").once().then();
@@ -11062,11 +11083,13 @@
 	  };
 
 	  /**
-	  * Return a list of public keys that you have chats with.
+	  * Return a list of public keys that you have initiated a chat with or replied to.
+	  * (Chats that are initiated by others and unreplied by you don't show up, because
+	  * this method doesn't know where to look for them. Use index.getChats() to listen to new chats from friends.)
 	  * @param {Object} gun user.authed gun instance
 	  * @param {Object} keypair SEA keypair that the gun instance is authenticated with
 	  * @param callback callback function that is called for each public key you have a chat with
-	  **/
+	  */
 
 
 	  Chat.getChats = async function getChats(gun, keypair, callback) {
@@ -11098,13 +11121,40 @@
 	  };
 
 	  Chat.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored) {
-	    var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
-	    if (typeof decrypted !== "object") {
-	      // console.log(`chat data received`, decrypted);
-	      return;
-	    }
 	    if (this.onMessage) {
+	      var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+	      if (typeof decrypted !== "object") {
+	        // console.log(`chat data received`, decrypted);
+	        return;
+	      }
 	      this.onMessage(decrypted, { selfAuthored: selfAuthored });
+	    }
+	  };
+
+	  /**
+	  * Get latest message in this chat. Useful for chat listing.
+	  */
+
+
+	  Chat.prototype.getLatestMsg = async function getLatestMsg(callback) {
+	    var _this = this;
+
+	    var keys = _Object$keys(this.secrets);
+
+	    var _loop = async function _loop(i) {
+	      var ourSecretChatId = await _this.getOurSecretChatId(keys[i]);
+	      _this.user.get("chats").get(ourSecretChatId).get("latestMsg").on(async function (data) {
+	        var decrypted = await Gun.SEA.decrypt(data, (await _this.getSecret(keys[i])));
+	        if (typeof decrypted !== "object") {
+	          // console.log(`chat data received`, decrypted);
+	          return;
+	        }
+	        callback(decrypted, { selfAuthored: selfAuthored });
+	      });
+	    };
+
+	    for (var i = 0; i < keys.length; i++) {
+	      await _loop(i);
 	    }
 	  };
 
@@ -11130,41 +11180,16 @@
 
 
 	  Chat.prototype.getMyMsgsLastSeenTime = async function getMyMsgsLastSeenTime(callback) {
-	    var _this = this;
-
-	    var keys = _Object$keys(this.secrets);
-
-	    var _loop = async function _loop(i) {
-	      var ourSecretChatId = await _this.getOurSecretChatId(keys[i]);
-	      _this.gun.user().get("chats").get(ourSecretChatId).get("msgsLastSeenTime").on(async function (data) {
-	        _this.myMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this.getSecret(keys[i])));
-	        if (callback) {
-	          callback(_this.myMsgsLastSeenTime);
-	        }
-	      });
-	    };
-
-	    for (var i = 0; i < keys.length; i++) {
-	      await _loop(i);
-	    }
-	  };
-
-	  /**
-	  * For "seen" status indicator
-	  */
-
-
-	  Chat.prototype.getTheirMsgsLastSeenTime = async function getTheirMsgsLastSeenTime(callback) {
 	    var _this2 = this;
 
 	    var keys = _Object$keys(this.secrets);
 
 	    var _loop2 = async function _loop2(i) {
-	      var theirSecretChatId = await _this2.getTheirSecretChatId(keys[i]);
-	      _this2.gun.user(keys[i]).get("chats").get(theirSecretChatId).get("msgsLastSeenTime").on(async function (data) {
-	        _this2.theirMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
+	      var ourSecretChatId = await _this2.getOurSecretChatId(keys[i]);
+	      _this2.gun.user().get("chats").get(ourSecretChatId).get("msgsLastSeenTime").on(async function (data) {
+	        _this2.myMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
 	        if (callback) {
-	          callback(_this2.theirMsgsLastSeenTime, keys[i]);
+	          callback(_this2.myMsgsLastSeenTime);
 	        }
 	      });
 	    };
@@ -11175,13 +11200,38 @@
 	  };
 
 	  /**
+	  * For "seen" status indicator
+	  */
+
+
+	  Chat.prototype.getTheirMsgsLastSeenTime = async function getTheirMsgsLastSeenTime(callback) {
+	    var _this3 = this;
+
+	    var keys = _Object$keys(this.secrets);
+
+	    var _loop3 = async function _loop3(i) {
+	      var theirSecretChatId = await _this3.getTheirSecretChatId(keys[i]);
+	      _this3.gun.user(keys[i]).get("chats").get(theirSecretChatId).get("msgsLastSeenTime").on(async function (data) {
+	        _this3.theirMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this3.getSecret(keys[i])));
+	        if (callback) {
+	          callback(_this3.theirMsgsLastSeenTime, keys[i]);
+	        }
+	      });
+	    };
+
+	    for (var i = 0; i < keys.length; i++) {
+	      await _loop3(i);
+	    }
+	  };
+
+	  /**
 	  * Add a public key to the chat
 	  * @param {string} pub
 	  */
 
 
 	  Chat.prototype.addPub = async function addPub(pub) {
-	    var _this3 = this;
+	    var _this4 = this;
 
 	    this.secrets[pub] = null;
 	    this.getSecret(pub);
@@ -11192,11 +11242,11 @@
 	    // Subscribe to their messages
 	    var theirSecretChatId = await this.getTheirSecretChatId(pub);
 	    this.gun.user(pub).get("chats").get(theirSecretChatId).get("msgs").map().once(function (data) {
-	      _this3.messageReceived(data, pub);
+	      _this4.messageReceived(data, pub);
 	    });
 	    // Subscribe to our messages
 	    this.user.get("chats").get(ourSecretChatId).get("msgs").map().once(function (data) {
-	      _this3.messageReceived(data, pub, true);
+	      _this4.messageReceived(data, pub, true);
 	    });
 	  };
 
@@ -11221,6 +11271,7 @@
 	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
 	      var ourSecretChatId = await this.getOurSecretChatId(keys[i]);
 	      this.user.get("chats").get(ourSecretChatId).get("msgs").get("" + msg.time).put(encrypted);
+	      this.user.get("chats").get(ourSecretChatId).get("latestMsg").put(encrypted);
 	    }
 	  };
 
@@ -11774,7 +11825,7 @@
 	  };
 
 	  /**
-	  * Return existing chats and listen to new chats initiated by friends
+	  * Return existing chats and listen to new chats initiated by friends.
 	  */
 
 
@@ -11783,7 +11834,7 @@
 
 	    Chat.getChats(this.gun, this.options.keypair, callback);
 	    this.gun.get('trustedIndexes').map().on(async function (value, pub) {
-	      if (value) {
+	      if (value && pub) {
 	        var theirSecretChatId = await Chat.getTheirSecretChatId(_this5.gun, pub, _this5.options.keypair);
 	        _this5.gun.user(pub).get('chats').get(theirSecretChatId).on(function (v) {
 	          if (v) {
@@ -12626,6 +12677,11 @@
 	    }
 	  };
 
+	  /**
+	  *
+	  */
+
+
 	  Index.prototype.setReaction = function setReaction(msg, reaction) {
 	    this.gun.get('reactions').get(msg.getHash()).put(reaction);
 	    this.gun.get('reactions').get(msg.getHash()).put(reaction);
@@ -12633,10 +12689,28 @@
 	    this.gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.viewpoint.value).put(reaction);
 	  };
 
+	  /**
+	  *
+	  */
+
+
+	  Index.prototype.addContact = async function addContact(attributes) {
+	    var follow = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+	    // TODO: add uuid to attributes
+	    var msg = void 0;
+	    if (follow) {
+	      msg = await Message.createRating({ recipient: attributes, rating: 1 });
+	    } else {
+	      msg = await Message.createVerification({ recipient: attributes });
+	    }
+	    return this.addMessage(msg);
+	  };
+
 	  return Index;
 	}();
 
-	var version$1 = "0.0.127";
+	var version$1 = "0.0.128";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
