@@ -97,15 +97,33 @@ class Chat {
   }
 
   async messageReceived(data, pub, selfAuthored) {
-    const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
-    if (typeof decrypted !== `object`) {
-      // console.log(`chat data received`, decrypted);
-      return;
-    }
     if (this.onMessage) {
+      const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+      if (typeof decrypted !== `object`) {
+        // console.log(`chat data received`, decrypted);
+        return;
+      }
       this.onMessage(decrypted, {selfAuthored});
     } else {
       // console.log(`chat message received`, decrypted);
+    }
+  }
+
+  /**
+  * Get latest message in this chat. Useful for chat listing.
+  */
+  async getLatestMsg(callback) {
+    const keys = Object.keys(this.secrets);
+    for (let i = 0;i < keys.length;i ++) {
+      const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
+      this.user.get(`chats`).get(ourSecretChatId).get(`latestMsg`).on(async data => {
+        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
+        if (typeof decrypted !== `object`) {
+          // console.log(`chat data received`, decrypted);
+          return;
+        }
+        callback(decrypted, {selfAuthored});
+      });
     }
   }
 
@@ -192,6 +210,7 @@ class Chat {
       const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
       const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
       this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).get(`${msg.time}`).put(encrypted);
+      this.user.get(`chats`).get(ourSecretChatId).get(`latestMsg`).put(encrypted);
     }
   }
 

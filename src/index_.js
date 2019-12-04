@@ -481,7 +481,7 @@ class Index {
   async getChats(callback) {
     Chat.getChats(this.gun, this.options.keypair, callback);
     this.gun.get(`trustedIndexes`).map().on(async (value, pub) => {
-      if (value) {
+      if (value && pub) {
         const theirSecretChatId = await Chat.getTheirSecretChatId(this.gun, pub, this.options.keypair);
         this.gun.user(pub).get(`chats`).get(theirSecretChatId).on(v => {
           if (v) {
@@ -1175,11 +1175,28 @@ class Index {
     }
   }
 
+  /**
+  *
+  */
   setReaction(msg: Object, reaction) {
     this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
     this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
     this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
     this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
+  }
+
+  /**
+  *
+  */
+  async addContact(attributes, follow = true) {
+    // TODO: add uuid to attributes
+    let msg;
+    if (follow) {
+      msg = await Message.createRating({recipient: attributes, rating: 1});
+    } else {
+      msg = await Message.createVerification({recipient: attributes});
+    }
+    return this.addMessage(msg);
   }
 }
 

@@ -331,6 +331,12 @@ class Message {
   }
 
   static async fromSig(obj) {
+    if (!obj.sig) {
+      throw new Error(`Missing signature in object:`, obj);
+    }
+    if (!obj.pubKey) {
+      throw new Error(`Missing pubKey in object:`);
+    }
     const signedData = await Key.verify(obj.sig, obj.pubKey);
     const o = {signedData, sig: obj.sig, pubKey: obj.pubKey};
     return new Message(o);
@@ -378,7 +384,12 @@ class Message {
   static async loadFromIpfs(ipfs, uri) {
     const f = await ipfs.cat(uri);
     const s = ipfs.types.Buffer.from(f).toString(`utf8`);
-    return Message.fromString(s);
+    try {
+      return Message.fromString(s);
+    } catch (e) {
+      console.log(`loading message from ipfs failed`);
+      return Promise.reject();
+    }
   }
 
   /**
