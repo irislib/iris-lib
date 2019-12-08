@@ -1,5 +1,5 @@
 const iris = require('index.js');
-const Identity = iris.Identity;
+const Contact = iris.Contact;
 
 const GUN = require(`gun`);
 const load = require(`gun/lib/load`);
@@ -35,12 +35,12 @@ const logger = function()
 let index, vp;
 beforeAll(async () => {
   logger.disable();
-  index = new iris.Index({gun});
+  index = new iris.SocialNetwork({gun});
   await index.ready;
   vp = index.getViewpoint();
 });
 
-describe(`Identity`, () => {
+describe(`Contact`, () => {
   test(`verified()`, async () => {
     expect(await vp.verified(`email`)).toBe(undefined);
     expect(typeof await vp.verified(`keyID`)).toBe(`string`);
@@ -55,7 +55,7 @@ describe(`Identity`, () => {
   });
   test(`appendSearchWidget()`, () => {
     const parent = document.createElement(`div`); // index param
-    const widget = Identity.appendSearchWidget(parent);
+    const widget = Contact.appendSearchWidget(parent);
     expect(parent.hasChildNodes()).toBe(true);
     const input = $(widget).find(`input`).first();
     const results = $(widget).find(`div`).first();

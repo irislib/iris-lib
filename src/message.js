@@ -9,9 +9,11 @@ const errorMsg = `Invalid  message:`;
 class ValidationError extends Error {}
 
 /**
-* Messages are objects containing fields signedData, signer (public key) and signature. Message identifier is the base64 sha256 hash derived from its canonical utf8 string representation.
+* Signed message object.
 *
-* signedData has an author, recipient, signer, type, time and optionally other fields.
+* Fields: signedData, signer (public key) and signature.
+*
+* signedData has an author, signer, type, time and optionally other fields.
 *
 * signature covers the utf8 string representation of signedData. Since messages are digitally signed, users only need to care about the message signer and not who relayed it or whose index it was found from.
 *
@@ -19,7 +21,7 @@ class ValidationError extends Error {}
 *
 * For example, a crawler can import and sign other people's messages from Twitter. Only the users who trust the crawler will see the messages.
 *
-* "Rating" type messages, when added to an Index, can add or remove Identities from the web of trust. Verification/unverification messages can add or remove Attributes from an Identity. Other types of messages such as social media "post" are just indexed by their author, recipient and time.
+* "Rating" type messages, when added to an SocialNetwork, can add or remove Identities from the web of trust. Verification/unverification messages can add or remove Attributes from an Contact. Other types of messages such as social media "post" are just indexed by their author, recipient and time.
 *
 * Constructor: creates a message from the param obj.signedData that must contain at least the mandatory fields: author, recipient, type and time. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.
 * @param obj
@@ -295,7 +297,7 @@ class Message {
 
   /**
   * @param {Index} index index to look up the message author from
-  * @returns {Identity} message author identity
+  * @returns {Contact} message author identity
   */
   getAuthor(index) {
     for (const a of this.getAuthorIterable()) {
@@ -307,7 +309,7 @@ class Message {
 
   /**
   * @param {Index} index index to look up the message recipient from
-  * @returns {Identity} message recipient identity or undefined
+  * @returns {Contact} message recipient identity or undefined
   */
   getRecipient(index) {
     if (!this.signedData.recipient) {
@@ -321,7 +323,7 @@ class Message {
   }
 
   /**
-  * @returns {string} base64 hash of message
+  * @returns {string} base64 sha256 hash of message
   */
   getHash() {
     if (this.sig && !this.hash) {

@@ -128,7 +128,7 @@ describe(`Multinode connections`, async() => {
 
     // Init Iris indexes on one node on each net
     await Promise.all([A, B, C, D, E, F].map(gun => {
-      const index = new iris.Index({gun: gun});
+      const index = new iris.SocialNetwork({gun: gun});
       return index.ready.then(() => {
         console.log(`Node index ready: ${gun.name}:${gun.netPort}`);
         const name = gun.name;

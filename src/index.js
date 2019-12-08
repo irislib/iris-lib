@@ -1,10 +1,10 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 import Message from './message';
-import Identity from './identity';
+import Contact from './contact';
 import Attribute from './attribute';
 import util from './util';
-import Index from './index_';
+import SocialNetwork from './socialNetwork';
 import Key from './key';
 import Chat from './chat';
 import {version} from '../package.json';
@@ -12,9 +12,9 @@ import {version} from '../package.json';
 export default {
   VERSION: version,
   Message,
-  Identity,
+  Contact,
   Attribute,
-  Index,
+  SocialNetwork,
   Key,
   Chat,
   util,

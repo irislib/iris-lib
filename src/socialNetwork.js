@@ -1,6 +1,6 @@
 import Message from './message';
 import Key from './key';
-import Identity from './identity';
+import Contact from './contact';
 import Attribute from './attribute';
 import Chat from './chat';
 import util from './util';
@@ -40,13 +40,13 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 
 // TODO: flush onto IPFS
 /**
-* A database of Messages and Identities within the indexer's web of trust.
+* The essence of Iris: A database of Contacts and Messages within your web of trust.
 *
 * To use someone else's index (read-only): set options.pubKey
 *
 * To use your own index: set options.keypair or omit it to use Key.getDefaultKey().
 *
-* Each added Message updates the Message and Identity indexes and web of trust accordingly.
+* Each added Message updates the Message and Contacts indexes and web of trust accordingly.
 *
 * You can pass options.gun to use custom gun storages and networking settings.
 *
@@ -84,9 +84,9 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 *    debug: false
 *  }
 *}
-* @returns {Index}  index object
+* @returns {SocialNetwork}  index object
 */
-class Index {
+class SocialNetwork {
   constructor(options) {
     this.options = Object.assign({
       ipfs: undefined,
@@ -160,37 +160,14 @@ class Index {
         attrs[a.uri()] = a;
       }
     }
-    const id = Identity.create(g, {trustDistance: 0, linkTo: this.viewpoint, attrs}, this);
-    await this._addIdentityToIndexes(id.gun);
+    const id = Contact.create(g, {trustDistance: 0, linkTo: this.viewpoint, attrs}, this);
+    await this._addContactToIndexes(id.gun);
     if (this.options.self) {
       const recipient = Object.assign(this.options.self, {keyID: this.viewpoint.value});
       Message.createVerification({recipient}, keypair).then(msg => {
         this.addMessage(msg);
       });
     }
-  }
-
-  /**
-  * Set the user's online status
-  *
-  * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
-  */
-  setOnline(isOnline) {
-    if (!this.writable) {
-      console.error(`setOnline can't be called on a non-writable index`);
-      return;
-    }
-    Chat.setOnline(this.gun, isOnline);
-  }
-
-  /**
-  * Get the online status of a user.
-  *
-  * @param {string} pubKey public key of the user
-  * @param {boolean} callback receives a boolean each time the user's online status changes
-  */
-  getOnline(pubKey, callback) {
-    Chat.getOnline(this.gun, pubKey, callback);
   }
 
   _subscribeToTrustedIndexes() {
@@ -306,13 +283,13 @@ class Index {
     return keys;
   }
 
-  async getIdentityIndexKeys(identity, hash) {
+  async getContactIndexKeys(contact, hash) {
     const indexKeys = {identitiesByTrustDistance: [], identitiesBySearchKey: []};
     let d;
-    if (identity.linkTo && this.viewpoint.equals(identity.linkTo)) { // TODO: identity is a gun instance, no linkTo
+    if (contact.linkTo && this.viewpoint.equals(contact.linkTo)) { // TODO: contact is a gun instance, no linkTo
       d = 0;
     } else {
-      d = await identity.get(`trustDistance`).then();
+      d = await contact.get(`trustDistance`).then();
     }
 
     function addIndexKey(a) {
@@ -357,29 +334,96 @@ class Index {
       }
     }
 
-    if (this.viewpoint.equals(identity.linkTo)) {
-      addIndexKey(identity.linkTo);
+    if (this.viewpoint.equals(contact.linkTo)) {
+      addIndexKey(contact.linkTo);
     }
 
-    const attrs = await Identity.getAttrs(identity);
+    const attrs = await Contact.getAttrs(contact);
     Object.values(attrs).map(addIndexKey);
 
     return indexKeys;
   }
 
   /**
-  * @returns {Identity} viewpoint identity (trustDistance == 0) of the index
+  *
   */
-  getViewpoint() {
-    return new Identity(this.gun.get(`identitiesBySearchKey`).get(this.viewpoint.uri()), undefined, this);
+  async addContact(attributes, follow = true) {
+    // TODO: add uuid to attributes
+    let msg;
+    if (follow) {
+      msg = await Message.createRating({recipient: attributes, rating: 1});
+    } else {
+      msg = await Message.createVerification({recipient: attributes});
+    }
+    return this.addMessage(msg);
   }
 
   /**
-  * Get an identity referenced by an identifier.
+  * @param {string} value search string
+  * @param {string} type (optional) type of searched value
+  * @returns {Array} list of matching identities
+  */
+  async search(value = ``, type, callback, limit) { // cursor // TODO: param 'exact', type param
+    const seen = {};
+    function searchTermCheck(key) {
+      const arr = key.split(`:`);
+      if (arr.length < 2) { return false; }
+      const keyValue = arr[0];
+      const keyType = arr[1];
+      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) { return false; }
+      if (type && keyType !== type) { return false; }
+      return true;
+    }
+    const node = this.gun.get(`identitiesBySearchKey`);
+    node.map().on((id, key) => {
+      if (Object.keys(seen).length >= limit) {
+        // TODO: turn off .map cb
+        return;
+      }
+      if (!searchTermCheck(key)) { return; }
+      const soul = Gun.node.soul(id);
+      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
+        seen[soul] = true;
+        const contact = new Contact(node.get(key), undefined, this);
+        contact.cursor = key;
+        callback(contact);
+      }
+    });
+    if (this.options.indexSync.query.enabled) {
+      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+        if (val) {
+          this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).map().on((id, k) => {
+            if (Object.keys(seen).length >= limit) {
+              // TODO: turn off .map cb
+              return;
+            }
+            if (!searchTermCheck(key)) { return; }
+            const soul = Gun.node.soul(id);
+            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
+              seen[soul] = true;
+              callback(
+                new Contact(this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k), undefined, this)
+              );
+            }
+          });
+        }
+      });
+    }
+  }
+
+  /**
+  * @returns {Contact} viewpoint contact (trustDistance == 0) of the index
+  */
+  getViewpoint() {
+    return new Contact(this.gun.get(`identitiesBySearchKey`).get(this.viewpoint.uri()), undefined, this);
+  }
+
+  /**
+  * Get an contact referenced by an identifier.
   * get(type, value)
   * get(Attribute)
   * get(value) - guesses the type or throws an error
-  * @returns {Identity} identity that is connected to the identifier param
+  * @returns {Contact} contact that is connected to the identifier param
   */
   get(a: String, b: String, reload = false) {
     if (!a) {
@@ -402,7 +446,7 @@ class Index {
       // 2) recurse
       // 3) get messages received by this list of attributes
       // 4) calculate stats
-      // 5) update identity index entry
+      // 5) update contact index entry
       const o = {
         attributes: {},
         sent: {},
@@ -415,14 +459,14 @@ class Index {
         sentNegative: 0
       };
       const node = this.gun.get(`identities`).set(o);
-      const updateIdentityByLinkedAttribute = attribute => {
+      const updateContactByLinkedAttribute = attribute => {
         this.gun.get(`verificationsByRecipient`).get(attribute.uri()).map().once(val => {
           const m = Message.fromSig(val);
           const recipients = m.getRecipientArray();
           for (let i = 0;i < recipients.length;i ++) {
             const a2 = recipients[i];
             if (!Object.prototype.hasOwnProperty.call(o.attributes), a2.uri()) {
-              // TODO remove attribute from identity if not enough verifications / too many unverifications
+              // TODO remove attribute from contact if not enough verifications / too many unverifications
               o.attributes[a2.uri()] = a2;
               this.gun.get(`messagesByRecipient`).get(a2.uri()).map().once(val => {
                 const m2 = Message.fromSig(val);
@@ -460,18 +504,18 @@ class Index {
                   node.put(o);
                 }
               });
-              updateIdentityByLinkedAttribute(a2);
+              updateContactByLinkedAttribute(a2);
             }
           }
         });
       };
-      updateIdentityByLinkedAttribute(attr);
+      updateContactByLinkedAttribute(attr);
       if (this.writable) {
-        this._addIdentityToIndexes(node);
+        this._addContactToIndexes(node);
       }
-      return new Identity(node, attr, this);
+      return new Contact(node, attr, this);
     } else {
-      return new Identity(this.gun.get(`identitiesBySearchKey`).get(attr.uri()), attr, this);
+      return new Contact(this.gun.get(`identitiesBySearchKey`).get(attr.uri()), attr, this);
     }
   }
 
@@ -509,14 +553,14 @@ class Index {
     searchText(msgIndex, resultFound, ``, undefined, cursor, desc);
   }
 
-  async _addIdentityToIndexes(id) {
+  async _addContactToIndexes(id) {
     if (typeof id === `undefined`) {
       const e = new Error(`id is undefined`);
       console.error(e.stack);
       throw e;
     }
     const hash = Gun.node.soul(id) || id._ && id._.link || `todo`;
-    const indexKeys = await this.getIdentityIndexKeys(id, hash.substr(0, 6));
+    const indexKeys = await this.getContactIndexKeys(id, hash.substr(0, 6));
 
     const indexes = Object.keys(indexKeys);
     for (let i = 0;i < indexes.length;i ++) {
@@ -529,24 +573,24 @@ class Index {
     }
   }
 
-  async _getSentMsgs(identity, options) {
-    this._getMsgs(identity.gun.get(`sent`), options.callback, options.limit, options.cursor, true, options.filter);
+  async _getSentMsgs(contact, options) {
+    this._getMsgs(contact.gun.get(`sent`), options.callback, options.limit, options.cursor, true, options.filter);
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`iris`).get(`messagesByAuthor`).get(identity.linkTo.uri());
+          const n = this.gun.user(key).get(`iris`).get(`messagesByAuthor`).get(contact.linkTo.uri());
           this._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
         }
       });
     }
   }
 
-  async _getReceivedMsgs(identity, options) {
-    this._getMsgs(identity.gun.get(`received`), options.callback, options.limit, options.cursor, true, options.filter);
+  async _getReceivedMsgs(contact, options) {
+    this._getMsgs(contact.gun.get(`received`), options.callback, options.limit, options.cursor, true, options.filter);
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`iris`).get(`messagesByRecipient`).get(identity.linkTo.uri());
+          const n = this.gun.user(key).get(`iris`).get(`messagesByRecipient`).get(contact.linkTo.uri());
           this._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
         }
       });
@@ -603,10 +647,10 @@ class Index {
     return shortestDistance < Infinity ? shortestDistance : undefined;
   }
 
-  async _updateMsgRecipientIdentity(msg, msgIndexKey, recipient) {
+  async _updateMsgRecipientContact(msg, msgIndexKey, recipient) {
     const hash = recipient._ && recipient._.link || `todo`;
-    const identityIndexKeysBefore = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
-    const attrs = await Identity.getAttrs(recipient);
+    const contactIndexKeysBefore = await this.getContactIndexKeys(recipient, hash.substr(0, 6));
+    const attrs = await Contact.getAttrs(recipient);
     if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
       const isVerification = msg.signedData.type === `verification`;
       for (const a of msg.getRecipientArray()) {
@@ -635,7 +679,7 @@ class Index {
           }
         }
       }
-      const mva = Identity.getMostVerifiedAttributes(attrs);
+      const mva = Contact.getMostVerifiedAttributes(attrs);
       recipient.get(`mostVerifiedAttributes`).put(mva); // TODO: why this needs to be done twice to register?
       recipient.get(`mostVerifiedAttributes`).put(mva);
       const k = (mva.keyID && mva.keyID.attribute.value) || (mva.uuid && mva.uuid.attribute.value) || hash;
@@ -656,7 +700,7 @@ class Index {
         id.receivedPositive ++;
       } else {
         if (msg.distance < id.trustDistance) {
-          recipient.get(`trustDistance`).put(false); // TODO: this should take into account the aggregate score of the identity
+          recipient.get(`trustDistance`).put(false); // TODO: this should take into account the aggregate score of the contact
         }
         if (msg.isNegative()) {
           id.receivedNegative ++;
@@ -693,20 +737,20 @@ class Index {
     recipient.get(`received`).get(msgIndexKey).put(obj);
     recipient.get(`received`).get(msgIndexKey).put(obj);
 
-    const identityIndexKeysAfter = await this.getIdentityIndexKeys(recipient, hash.substr(0, 6));
-    const indexesBefore = Object.keys(identityIndexKeysBefore);
+    const contactIndexKeysAfter = await this.getContactIndexKeys(recipient, hash.substr(0, 6));
+    const indexesBefore = Object.keys(contactIndexKeysBefore);
     for (let i = 0;i < indexesBefore.length;i ++) {
       const index = indexesBefore[i];
-      for (let j = 0;j < identityIndexKeysBefore[index].length;j ++) {
-        const key = identityIndexKeysBefore[index][j];
-        if (!identityIndexKeysAfter[index] || identityIndexKeysAfter[index].indexOf(key) === - 1) {
+      for (let j = 0;j < contactIndexKeysBefore[index].length;j ++) {
+        const key = contactIndexKeysBefore[index][j];
+        if (!contactIndexKeysAfter[index] || contactIndexKeysAfter[index].indexOf(key) === - 1) {
           this.gun.get(index).get(key).put(null);
         }
       }
     }
   }
 
-  async _updateMsgAuthorIdentity(msg, msgIndexKey, author) {
+  async _updateMsgAuthorContact(msg, msgIndexKey, author) {
     if (msg.signedData.type === `rating`) {
       const id = await author.then();
       id.sentPositive = (id.sentPositive || 0);
@@ -732,25 +776,25 @@ class Index {
     return;
   }
 
-  async _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
+  async _updateContactProfilesByMsg(msg, authorIdentities, recipientIdentities) {
     let start;
-    let msgIndexKey = Index.getMsgIndexKey(msg);
+    let msgIndexKey = SocialNetwork.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
-    for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
+    for (let i = 0;i < ids.length;i ++) { // add new identifiers to contact
       if (Object.prototype.hasOwnProperty.call(recipientIdentities, ids[i].gun[`_`].link)) {
         start = new Date();
-        await this._updateMsgRecipientIdentity(msg, msgIndexKey, ids[i].gun);
-        this.debug((new Date()) - start, `ms _updateMsgRecipientIdentity`);
+        await this._updateMsgRecipientContact(msg, msgIndexKey, ids[i].gun);
+        this.debug((new Date()) - start, `ms _updateMsgRecipientContact`);
       }
       if (Object.prototype.hasOwnProperty.call(authorIdentities, ids[i].gun[`_`].link)) {
         start = new Date();
-        await this._updateMsgAuthorIdentity(msg, msgIndexKey, ids[i].gun);
-        this.debug((new Date()) - start, `ms _updateMsgAuthorIdentity`);
+        await this._updateMsgAuthorContact(msg, msgIndexKey, ids[i].gun);
+        this.debug((new Date()) - start, `ms _updateMsgAuthorContact`);
       }
       start = new Date();
-      await this._addIdentityToIndexes(ids[i].gun);
-      this.debug((new Date()) - start, `ms _addIdentityToIndexes`);
+      await this._addContactToIndexes(ids[i].gun);
+      this.debug((new Date()) - start, `ms _addContactToIndexes`);
     }
   }
 
@@ -789,7 +833,7 @@ class Index {
     }
   }
 
-  async _updateIdentityIndexesByMsg(msg) {
+  async _updateContactIndexesByMsg(msg) {
     let recipientIdentities = {};
     const authorIdentities = {};
     let selfAuthored = false;
@@ -846,20 +890,20 @@ class Index {
           u = a;
         }
       }
-      const linkTo = Identity.getLinkTo(attrs);
+      const linkTo = Contact.getLinkTo(attrs);
       const trustDistance = msg.isPositive() && typeof msg.distance === `number` ? msg.distance + 1 : false;
       const start = new Date();
       const node = this.gun.get(`identitiesBySearchKey`).get(u.uri());
       node.put({a: 1}); // {a:1} because inserting {} causes a "no signature on data" error from gun
-      const id = Identity.create(node, {attrs, linkTo, trustDistance}, this);
-      this.debug((new Date) - start, `ms identity.create`);
+      const id = Contact.create(node, {attrs, linkTo, trustDistance}, this);
+      this.debug((new Date) - start, `ms contact.create`);
 
 
       // TODO: take msg author trust into account
       recipientIdentities[id.gun[`_`].link] = id;
     }
 
-    return this._updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities);
+    return this._updateContactProfilesByMsg(msg, authorIdentities, recipientIdentities);
   }
 
   /**
@@ -918,11 +962,11 @@ class Index {
       });
       let i = 0;
       let author = msgAuthors[i];
-      let knownIdentity = knownIdentities.shift();
+      let knownContact = knownIdentities.shift();
       initialMsgCount = msgAuthors.length;
       // sort-merge join identitiesBySearchKey and msgsByAuthor
-      while (author && knownIdentity) {
-        if (author.indexOf(knownIdentity.key) === 0) {
+      while (author && knownContact) {
+        if (author.indexOf(knownContact.key) === 0) {
           try {
             await util.timeoutPromise(this.addMessage(msgsByAuthor[author], {checkIfExists: true}), 10000);
           } catch (e) {
@@ -930,11 +974,11 @@ class Index {
           }
           msgAuthors.splice(i, 1);
           author = i < msgAuthors.length ? msgAuthors[i] : undefined;
-          //knownIdentity = knownIdentities.shift();
-        } else if (author < knownIdentity.key) {
+          //knownContact = knownIdentities.shift();
+        } else if (author < knownContact.key) {
           author = i < msgAuthors.length ? msgAuthors[++ i] : undefined;
         } else {
-          knownIdentity = knownIdentities.shift();
+          knownContact = knownIdentities.shift();
         }
       }
       msgCountAfterwards = msgAuthors.length;
@@ -982,7 +1026,7 @@ class Index {
       this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
     }
     start = new Date();
-    const indexKeys = Index.getMsgIndexKeys(msg);
+    const indexKeys = SocialNetwork.getMsgIndexKeys(msg);
     this.debug((new Date()) - start, `ms getMsgIndexKeys`);
     for (const index in indexKeys) {
       if (Array.isArray(indexKeys[index])) {
@@ -1011,63 +1055,10 @@ class Index {
     }
     if (msg.signedData.type !== `chat`) {
       start = new Date();
-      await this._updateIdentityIndexesByMsg(msg);
-      this.debug((new Date()) - start, `ms _updateIdentityIndexesByMsg`);
+      await this._updateContactIndexesByMsg(msg);
+      this.debug((new Date()) - start, `ms _updateContactIndexesByMsg`);
     }
     return true;
-  }
-
-  /**
-  * @param {string} value search string
-  * @param {string} type (optional) type of searched value
-  * @returns {Array} list of matching identities
-  */
-  async search(value = ``, type, callback, limit) { // cursor // TODO: param 'exact', type param
-    const seen = {};
-    function searchTermCheck(key) {
-      const arr = key.split(`:`);
-      if (arr.length < 2) { return false; }
-      const keyValue = arr[0];
-      const keyType = arr[1];
-      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) { return false; }
-      if (type && keyType !== type) { return false; }
-      return true;
-    }
-    const node = this.gun.get(`identitiesBySearchKey`);
-    node.map().on((id, key) => {
-      if (Object.keys(seen).length >= limit) {
-        // TODO: turn off .map cb
-        return;
-      }
-      if (!searchTermCheck(key)) { return; }
-      const soul = Gun.node.soul(id);
-      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
-        seen[soul] = true;
-        const identity = new Identity(node.get(key), undefined, this);
-        identity.cursor = key;
-        callback(identity);
-      }
-    });
-    if (this.options.indexSync.query.enabled) {
-      this.gun.get(`trustedIndexes`).map().once((val, key) => {
-        if (val) {
-          this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).map().on((id, k) => {
-            if (Object.keys(seen).length >= limit) {
-              // TODO: turn off .map cb
-              return;
-            }
-            if (!searchTermCheck(key)) { return; }
-            const soul = Gun.node.soul(id);
-            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
-              seen[soul] = true;
-              callback(
-                new Identity(this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k), undefined, this)
-              );
-            }
-          });
-        }
-      });
-    }
   }
 
   /**
@@ -1186,18 +1177,27 @@ class Index {
   }
 
   /**
+  * Set the user's online status
   *
+  * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
   */
-  async addContact(attributes, follow = true) {
-    // TODO: add uuid to attributes
-    let msg;
-    if (follow) {
-      msg = await Message.createRating({recipient: attributes, rating: 1});
-    } else {
-      msg = await Message.createVerification({recipient: attributes});
+  setOnline(isOnline) {
+    if (!this.writable) {
+      console.error(`setOnline can't be called on a non-writable index`);
+      return;
     }
-    return this.addMessage(msg);
+    Chat.setOnline(this.gun, isOnline);
+  }
+
+  /**
+  * Get the online status of a user.
+  *
+  * @param {string} pubKey public key of the user
+  * @param {boolean} callback receives a boolean each time the user's online status changes
+  */
+  getOnline(pubKey, callback) {
+    Chat.getOnline(this.gun, pubKey, callback);
   }
 }
 
-export default Index;
+export default SocialNetwork;

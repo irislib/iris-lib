@@ -1,6 +1,6 @@
 /* jshint esversion: 9 */
 
-/**
+/*
  * Stand-alone iris node service wrapper. If NODE_ENV is 'production', uses
  * ../dist/irisLib.js, else uses the version in src or cjs directly. Development version
  * assumes that it is running directly under the checked-out source tree from git,
@@ -122,7 +122,7 @@ let configFile = `${configDir}/config.json`;
 
   // Load default Iris index with given configuration
   config.gun = gun;
-  const index = new Iris.Index(config);
+  const index = new Iris.SocialNetwork(config);
   debug(`index!`, index);
 
   //await index.create(); // Create an index, if one does not exist

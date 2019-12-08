@@ -3,12 +3,13 @@ import Attribute from './attribute';
 import util from './util';
 
 /**
-* An Iris identity profile (also known as "contact"). Usually you don't create them yourself, but get them
-* from Index methods such as get() and search().
+* An Iris Contact, such as person, organization or group.
+* Usually you don't create Contacts yourself, but get them
+* from SocialNetwork methods such as get() and search().
 */
-class Identity {
+class Contact {
   /**
-  * @param {Object} gun node where the Identity data lives
+  * @param {Object} gun node where the Contact data lives
   */
   constructor(gun: Object, linkTo, index) {
     this.gun = gun;
@@ -27,7 +28,7 @@ class Identity {
         data.attrs[linkTo.uri()] = linkTo;
       }
     } else {
-      data.linkTo = Identity.getLinkTo(data.attrs);
+      data.linkTo = Contact.getLinkTo(data.attrs);
     }
     const uri = data.linkTo.uri();
     console.log('uri', uri);
@@ -35,11 +36,11 @@ class Identity {
     delete data['attrs'];
     gun.put(data);
     gun.get(`attrs`).put(attrs);
-    return new Identity(gun, uri, index);
+    return new Contact(gun, uri, index);
   }
 
   static getLinkTo(attrs) {
-    const mva = Identity.getMostVerifiedAttributes(attrs);
+    const mva = Contact.getMostVerifiedAttributes(attrs);
     const keys = Object.keys(mva);
     let linkTo;
     for (let i = 0;i < keys.length;i ++) {
@@ -102,8 +103,8 @@ class Identity {
   * @returns {string} most verified value of the param type
   */
   async verified(attribute: String) {
-    const attrs = await Identity.getAttrs(this.gun).then();
-    const mva = Identity.getMostVerifiedAttributes(attrs);
+    const attrs = await Contact.getAttrs(this.gun).then();
+    const mva = Contact.getMostVerifiedAttributes(attrs);
     return Object.prototype.hasOwnProperty.call(mva, attribute) ? mva[attribute].attribute.value : undefined;
   }
 
@@ -136,10 +137,10 @@ class Identity {
       if (!data) {
         return;
       }
-      const attrs = await Identity.getAttrs(this.gun);
+      const attrs = await Contact.getAttrs(this.gun);
       const linkTo = await this.gun.get(`linkTo`).then();
       const link = `https://iris.to/#/identities/${linkTo.type}/${linkTo.value}`;
-      const mva = Identity.getMostVerifiedAttributes(attrs);
+      const mva = Contact.getMostVerifiedAttributes(attrs);
       linkEl.innerHTML = `<a href="${link}">${(mva.type && mva.type.attribute.value) || (mva.nickname && mva.nickname.attribute.value) || `${linkTo.type}:${linkTo.value}`}</a><br>`;
       linkEl.innerHTML += `<small>Received: <span class="iris-pos">+${data.receivedPositive || 0}</span> / <span class="iris-neg">-${data.receivedNegative || 0}</span></small><br>`;
       links.innerHTML = ``;
@@ -299,7 +300,7 @@ class Identity {
       pie.style.opacity = (data.receivedPositive + data.receivedNegative) / 10 * 0.5 + 0.35;
 
       if (options.showDistance) {
-        distance.textContent = typeof data.trustDistance === `number` ? Identity._ordinal(data.trustDistance) : `✕`;
+        distance.textContent = typeof data.trustDistance === `number` ? Contact._ordinal(data.trustDistance) : `✕`;
       }
     }
 
@@ -318,8 +319,8 @@ class Identity {
     this.gun.on(setPie);
 
     if (options.ipfs) {
-      Identity.getAttrs(this.gun).then(attrs => {
-        const mva = Identity.getMostVerifiedAttributes(attrs);
+      Contact.getAttrs(this.gun).then(attrs => {
+        const mva = Contact.getMostVerifiedAttributes(attrs);
         if (mva.profilePhoto) {
           const go = () => {
             options.ipfs.cat(mva.profilePhoto.attribute.value).then(file => {
@@ -336,4 +337,4 @@ class Identity {
   }
 }
 
-export default Identity;
+export default Contact;

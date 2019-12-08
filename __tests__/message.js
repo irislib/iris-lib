@@ -2,7 +2,7 @@
 const crypto = require(`crypto`);
 const Attribute = require(`attribute.js`);
 const Message = require(`message.js`);
-const Identity = require(`identity.js`);
+const Contact = require(`identity.js`);
 const Key = require(`key.js`);
 
 jest.setTimeout(30000);
@@ -23,8 +23,8 @@ describe(`Message`, async () => {
     });
     /*
     test('should get message author and recipient', async () => {
-      expect(msg.getAuthor()).toBeInstanceOf(Identity);
-      expect(msg.getRecipient()).toBeInstanceOf(Identity);
+      expect(msg.getAuthor()).toBeInstanceOf(Contact);
+      expect(msg.getRecipient()).toBeInstanceOf(Contact);
     });
     */
     test(`should use signing key as author if not defined`, async () => {

@@ -1,4 +1,4 @@
-/*eslint no-useless-escape: "off", camelcase: "off" */
+/* eslint no-useless-escape: "off", camelcase: "off" */
 
 import createHash from 'create-hash';
 import Gun from 'gun';
@@ -43,64 +43,64 @@ async function loadGunDepth(chain, maxDepth = 2, opts = {}) {
   });
 }
 
-/**
- * Helper for managing pools of Gun nodes. Primarily meant to simplify toplogy tracking in Iris tests.
- * For reference, here's a run-through by example. Under each call, is  an explanation of what happens.
- *
- * Instances can be identified by the port they're listening on, which is saved under .netPort for reference.
- *
- * const nets = GunNets();
- *
- * nets.spawnNodes(2):  // net ID: 1, A root, B points to A
- *   - returns [A, B]
- *   - B peers with A
- *   - netId is 1 for both
- *
- * nets.spawnNodes(1):
- *   - returns [C]
- *   - C has no peers
- *   - netId is 2
- *
- * nets.spawnNodes(2, C.netId)
- *   - returns  [D, E]
- *   - D, E both peer with C
- *   - netId is 2
- *
- * nets.spawnNodes(1, E.netId)
- *   - returns [F]
- *   - F peers with C
- *   - netId is 2
- *
- * nets.spawnNodes(2, 'test')
- *   - returns [G, H]
- *   - H peers with G
- *   - netId is 'test'
- *
- * nets.joinNets(B, H)
- *   - A peers with G (and B by proxy), G is root, so peering goes like:
- *      B -> A -> G
- *      H -> G
- *   - All nodes now have G.netID, so 'test' as .netID
- *
- * nets.joinNets(D, H)
- *   - D,E,F still point to C, which now peers with G, meaning:
- *     B -> A -> G
- *     H -> G
- *     D,E,F -> C -> G
- *   - All share netId 'test'
- *
- * @param fromPort
- * @param ip
- * @constructor
- */
+
+// Helper for managing pools of Gun nodes. Primarily meant to simplify toplogy tracking in Iris tests.
+// For reference, here's a run-through by example. Under each call, is  an explanation of what happens.
+//
+// Instances can be identified by the port they're listening on, which is saved under .netPort for reference.
+//
+// const nets = GunNets();
+//
+// nets.spawnNodes(2):  // net ID: 1, A root, B points to A
+//   - returns [A, B]
+//   - B peers with A
+//   - netId is 1 for both
+//
+// nets.spawnNodes(1):
+//   - returns [C]
+//   - C has no peers
+//   - netId is 2
+//
+// nets.spawnNodes(2, C.netId)
+//   - returns  [D, E]
+//   - D, E both peer with C
+//   - netId is 2
+//
+// nets.spawnNodes(1, E.netId)
+//   - returns [F]
+//   - F peers with C
+//   - netId is 2
+//
+// nets.spawnNodes(2, 'test')
+//   - returns [G, H]
+//   - H peers with G
+//   - netId is 'test'
+//
+// nets.joinNets(B, H)
+//   - A peers with G (and B by proxy), G is root, so peering goes like:
+//      B -> A -> G
+//      H -> G
+//   - All nodes now have G.netID, so 'test' as .netID
+//
+// nets.joinNets(D, H)
+//   - D,E,F still point to C, which now peers with G, meaning:
+//     B -> A -> G
+//     H -> G
+//     D,E,F -> C -> G
+//   - All share netId 'test'
+//
+// @param fromPort
+// @param ip
+// @constructor
+//
 function GunNets(fromPort = 12500, ip = '127.0.0.1') {
   const gunNets = {};
   let nextNetId = 1;
   let nextPort = fromPort;
 
-  /**
-   * Small internal helper function. Just adds a new peer to the given gun instance.
-   */
+
+  // Small internal helper function. Just adds a new peer to the given gun instance.
+  //
   function addPeer(gun, ip, port) {
     //const oldPeers = gun.opt()['_'].opt.peers;
     return gun.opt({peers: [`http://${ip}:${port}/gun`]});  // Should these be linked both ways?
@@ -123,16 +123,16 @@ function GunNets(fromPort = 12500, ip = '127.0.0.1') {
     delete gun._.opt.peers[peerUrl];
   }
 
-  /**
-   * When called, creates a number of Gun nodes, all having the root node as their peer. If netId is not given,
-   * next sequential number is used. If netId of an existing net is provided, will use its root node as the
-   * target and add new nodes to the same net.
-   *
-   * Returns the list of newly created nodes.
-   *
-   * @param number
-   * @param netId
-   */
+
+  // When called, creates a number of Gun nodes, all having the root node as their peer. If netId is not given,
+  // next sequential number is used. If netId of an existing net is provided, will use its root node as the
+  // target and add new nodes to the same net.
+  //
+  // Returns the list of newly created nodes.
+  //
+  // @param number
+  // @param netId
+  //
   this.spawnNodes = (number = 1, netId = null) => {
     if (!netId) {
       netId = nextNetId++;
@@ -180,16 +180,16 @@ function GunNets(fromPort = 12500, ip = '127.0.0.1') {
     return newGuns;
   };
 
-  /**
-   * Peer-connects childMember's root node to parentMember's root.
-   *
-   * All childMember's nodes are re-tagged with parentMember's netId and the old child netId ceases to exist.
-   * If netId was already the same between groups, nothing happens.
-   *
-   * @param parentMember
-   * @param childMember
-   * @returns {*}
-   */
+
+  // Peer-connects childMember's root node to parentMember's root.
+  //
+  // All childMember's nodes are re-tagged with parentMember's netId and the old child netId ceases to exist.
+  // If netId was already the same between groups, nothing happens.
+  //
+  // @param parentMember
+  // @param childMember
+  // @returns {*}
+  //
   this.joinNets = (childMember, parentMember) => {
     // If already in the same net, just return the full list of nodes
     if (parentMember.netId === childMember.netId) {
@@ -271,7 +271,7 @@ export default {
     const sheet = document.createElement(`style`);
     sheet.id = elementId;
     sheet.innerHTML = `
-      .iris-identicon * {
+      .iris-identicon// {
         box-sizing: border-box;
       }
 

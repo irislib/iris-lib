@@ -115,8 +115,8 @@ describe(`local index`, async () => {
   beforeAll(async () => {
     key = await iris.Key.getDefault();
     keyID = iris.Key.getId(key);
-    i = new iris.Index({gun, keypair: key, self: {name: `Alice`}, debug: false});
-    r = new iris.Index({gun, pubKey: key.pub, debug: false}); // read-only
+    i = new iris.SocialNetwork({gun, keypair: key, self: {name: `Alice`}, debug: false});
+    r = new iris.SocialNetwork({gun, pubKey: key.pub, debug: false}); // read-only
     await i.ready;
     await new Promise(r => setTimeout(r, 2000));
   });
@@ -126,7 +126,7 @@ describe(`local index`, async () => {
     expect(i.writable).toBe(true);
     expect(r.writable).not.toBe(true);
     const viewpoint = i.getViewpoint();
-    expect(viewpoint).toBeInstanceOf(iris.Identity);
+    expect(viewpoint).toBeInstanceOf(iris.Contact);
     const data = await new Promise(resolve => {
       viewpoint.gun.load(r => {
         resolve(r);
@@ -162,7 +162,7 @@ describe(`local index`, async () => {
         /*p.gun.on(data => {
           console.log('SOMETHING CHANGED', data);
         });*/
-        //expect(q).toBeInstanceOf(iris.Identity);
+        //expect(q).toBeInstanceOf(iris.Contact);
         expect(data.trustDistance).toBe(1);
         expect(data.receivedPositive).toBe(1);
         expect(data.receivedNeutral).toBe(0);
@@ -182,7 +182,7 @@ describe(`local index`, async () => {
       });
       test(`get messages sent by self`, async () => {
         const viewpoint = i.getViewpoint();
-        expect(viewpoint).toBeInstanceOf(iris.Identity);
+        expect(viewpoint).toBeInstanceOf(iris.Contact);
         const results = [];
         viewpoint.sent({callback: result => results.push(result)});
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -282,7 +282,7 @@ describe(`local index`, async () => {
     });
     test(`add name to Bob`, async () => {
       let bob = await i.get(`bob@example.com`);
-      expect(bob).toBeInstanceOf(iris.Identity);
+      expect(bob).toBeInstanceOf(iris.Contact);
       const msg = await iris.Message.createVerification({recipient: {email: `bob@example.com`, name: `Bob`}}, key);
       await i.addMessage(msg);
       bob = await i.get(`bob@example.com`);
@@ -416,7 +416,7 @@ describe(`local index`, async () => {
   describe(`trusted indexes`, async () => {
     test(`create a new index that is linked to the previous`, async () => {
       const k2 = await iris.Key.generate();
-      const i2 = new iris.Index({gun, keypair: k2, debug: false});
+      const i2 = new iris.SocialNetwork({gun, keypair: k2, debug: false});
       await i2.ready;
       let m = await iris.Message.createRating({recipient: {keyID}, rating: 10}, k2);
       await i2.addMessage(m);
@@ -450,7 +450,7 @@ describe(`local index`, async () => {
     test('get identity from linked index', async () => {
       p = i2.get('bob@example.com');
       const data = await p.gun.once().then();
-      //expect(q).toBeInstanceOf(iris.Identity);
+      //expect(q).toBeInstanceOf(iris.Contact);
       expect(data.trustDistance).toBe(1);
       expect(data.receivedPositive).toBe(1);
       expect(data.receivedNeutral).toBe(0);
@@ -484,13 +484,13 @@ describe(`local index`, async () => {
     const defaultKey = await iris.Key.getDefault();
     p = i.get(`keyID`, iris.Key.getId(defaultKey));
     const data = await waitForValue(p.gun);
-    expect(p).toBeInstanceOf(iris.Identity);
+    expect(p).toBeInstanceOf(iris.Contact);
     expect(data.trustDistance).toBe(0);
     expect(data.sentPositive).toBeGreaterThan(4);
   });
   test(`get messages by time`, async () => {
     const k2 = await iris.Key.generate();
-    const i2 = new iris.Index({gun, keypair: k2, debug: false});
+    const i2 = new iris.SocialNetwork({gun, keypair: k2, debug: false});
     await i2.ready;
     for (let i = 0;i < 5;i ++) {
       const m = await iris.Message.createRating({recipient: {uuid: `something`}, rating: 10}, k2);
