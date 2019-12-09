@@ -407,6 +407,16 @@ class Message {
   static async fromString(s) {
     return Message.fromSig(JSON.parse(s));
   }
+
+  /**
+  *
+  */
+  static setReaction(gun, msg: Object, reaction) {
+    gun.get(`reactions`).get(msg.getHash()).put(reaction);
+    gun.get(`reactions`).get(msg.getHash()).put(reaction);
+    gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.rootContact.value).put(reaction);
+    gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.rootContact.value).put(reaction);
+  }
 }
 
 export default Message;

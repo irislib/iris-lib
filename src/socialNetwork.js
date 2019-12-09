@@ -1185,40 +1185,6 @@ class SocialNetwork {
       });
     }
   }
-
-  /**
-  *
-  */
-  setReaction(msg: Object, reaction) {
-    this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
-    this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
-    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.rootContact.value).put(reaction);
-    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.rootContact.value).put(reaction);
-  }
-
-  /**
-  * Set your online status
-  * TODO: move to Chat?
-  *
-  * @param {boolean} isOnline true: update your lastActive time every 3 seconds, false: stop updating
-  */
-  setOnline(isOnline) {
-    if (!this.writable) {
-      console.error(`setOnline can't be called on a non-writable index`);
-      return;
-    }
-    Chat.setOnline(this.gun, isOnline);
-  }
-
-  /**
-  * Get the online status of a user.
-  *
-  * @param {string} pubKey public key of the user
-  * @param {boolean} callback receives a boolean each time the user's online status changes
-  */
-  getOnline(pubKey, callback) {
-    Chat.getOnline(this.gun, pubKey, callback);
-  }
 }
 
 export default SocialNetwork;
