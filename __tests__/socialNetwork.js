@@ -125,10 +125,10 @@ describe(`local index`, async () => {
     expect(r).toBeInstanceOf(iris.Index);
     expect(i.writable).toBe(true);
     expect(r.writable).not.toBe(true);
-    const viewpoint = i.getViewpoint();
-    expect(viewpoint).toBeInstanceOf(iris.Contact);
+    const rootContact = i.getRootContact();
+    expect(rootContact).toBeInstanceOf(iris.Contact);
     const data = await new Promise(resolve => {
-      viewpoint.gun.load(r => {
+      rootContact.gun.load(r => {
         resolve(r);
       });
     });
@@ -153,7 +153,7 @@ describe(`local index`, async () => {
     });
     describe(`check entered info`, async() => {
       test(`get added identity`, async () => {
-        p = i.get(`bob@example.com`); // ,true
+        p = i.getContacts({value:`bob@example.com`}); // ,true
         //await new Promise(resolve => setTimeout(resolve, 800));
         //await gunWaitForAttributes(p.gun, ['trustDistance', 'receivedPositive', 'receivedNeutral', 'receivedNegative'], 1000);
         //const outcome = await gunWaitForPath(p.gun, 'receivedPositive', 2000);
@@ -181,10 +181,10 @@ describe(`local index`, async () => {
         expect(results.length).toBe(0);
       });
       test(`get messages sent by self`, async () => {
-        const viewpoint = i.getViewpoint();
-        expect(viewpoint).toBeInstanceOf(iris.Contact);
+        const rootContact = i.getRootContact();
+        expect(rootContact).toBeInstanceOf(iris.Contact);
         const results = [];
-        viewpoint.sent({callback: result => results.push(result)});
+        rootContact.sent({callback: result => results.push(result)});
         await new Promise(resolve => setTimeout(resolve, 200));
         expect(results.length).toBe(2);
       });
@@ -194,12 +194,12 @@ describe(`local index`, async () => {
     let msg = await iris.Message.createVerification({recipient: {name: `Fabio`, email: `fabio@example.com`}}, key);
     let r = await i.addMessage(msg);
     expect(r).toBe(true);
-    p = i.get(`fabio@example.com`);
+    p = i.getContacts({value:`fabio@example.com`});
     let data = await waitForValue(p.gun);
     expect(data.trustDistance).toBe(false);
     msg = await iris.Message.createRating({recipient: {email: `fabio@example.com`}, rating: 10}, key);
     r = await i.addMessage(msg);
-    p = i.get(`fabio@example.com`);
+    p = i.getContacts({value:`fabio@example.com`});
     data = await waitForValue(p.gun);
     expect(data.trustDistance).toBe(1);
   });
@@ -209,7 +209,7 @@ describe(`local index`, async () => {
       await i.addMessage(msg);
       msg = await iris.Message.createRating({author: {email: `carl@example.com`}, recipient: {email: `david@example.com`}, rating: 10}, key);
       await i.addMessage(msg);
-      p = i.get(`david@example.com`);
+      p = i.getContacts({value:`david@example.com`});
       const data = await waitForValue(p.gun);
       expect(data.trustDistance).toBe(3);
     });
@@ -224,11 +224,11 @@ describe(`local index`, async () => {
       msg = await iris.Message.createRating({author: {email: `bert@example.com`}, recipient: {email: `chris@example.com`}, rating: 10}, key);
       msgs.push(msg);
       await i.addMessages(shuffle(msgs));
-      p = i.get(`bob4@example.com`);
+      p = i.getContacts({value:`bob4@example.com`});
       expect(p).toBeDefined();
-      p = await i.get(`bert@example.com`).gun.then();
+      p = await i.getContacts({value:`bert@example.com`}).gun.then();
       expect(p).toBeUndefined();
-      p = await i.get(`chris@example.com`).gun.then();
+      p = await i.getContacts({value:`chris@example.com`}).gun.then();
       expect(p).toBeUndefined();
     });
   });
@@ -236,8 +236,8 @@ describe(`local index`, async () => {
     test(`up & down`, async () => {
       let msg = await iris.Message.createRating({recipient: {email: `orwell@example.com`}, rating: 1}, key);
       await i.addMessage(msg);
-      let z = i.get(`orwell@example.com`);
-      p = i.get(`orwell@example.com`);
+      let z = i.getContacts({value:`orwell@example.com`});
+      p = i.getContacts({value:`orwell@example.com`});
       //let data = await p.gun.once().then();
       let data = await waitForValue(z.gun);
       expect(data.trustDistance).toBe(1);
@@ -254,15 +254,15 @@ describe(`local index`, async () => {
       u = await iris.Key.generate();
       const msg = await iris.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `angus@example.com`}, rating: 10}, u);
       await i.addMessage(msg);
-      p = await i.get(`angus@example.com`).gun.then();
+      p = await i.getContacts({value:`angus@example.com`}).gun.then();
       expect(p).toBeUndefined();
     });
     test(`should not affect scores`, async () => {
-      p = i.get(`david@example.com`);
+      p = i.getContacts({value:`david@example.com`});
       const pos = await waitForValue(p.gun.get(`receivedPositive`));
       const msg = await iris.Message.createRating({author: {email: `bob@example.com`}, recipient: {email: `david@example.com`}, rating: 10}, u);
       await i.addMessage(msg);
-      p = i.get(`david@example.com`);
+      p = i.getContacts({value:`david@example.com`});
       const pos2 = await waitForValue(p.gun.get(`receivedPositive`));
       expect(pos2).toEqual(pos);
     });
@@ -281,11 +281,11 @@ describe(`local index`, async () => {
       expect(results.length).toBeGreaterThan(1);
     });
     test(`add name to Bob`, async () => {
-      let bob = await i.get(`bob@example.com`);
+      let bob = await i.getContacts({value:`bob@example.com`});
       expect(bob).toBeInstanceOf(iris.Contact);
       const msg = await iris.Message.createVerification({recipient: {email: `bob@example.com`, name: `Bob`}}, key);
       await i.addMessage(msg);
-      bob = await i.get(`bob@example.com`);
+      bob = await i.getContacts({value:`bob@example.com`});
       const data = await new Promise(resolve => {
         bob.gun.load(r => {
           resolve(r);
@@ -305,15 +305,15 @@ describe(`local index`, async () => {
       i.search(``, null, result => r.push(result));
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      let viewpoints = 0;
+      let rootContacts = 0;
       for (let j = 0;j < r.length;j ++) {
         const id = await r[j].gun.then();
         if (id && id.trustDistance === 0) {
           //console.log(r[j]);
-          viewpoints ++;
+          rootContacts ++;
         }
       }
-      expect(viewpoints).toEqual(1);
+      expect(rootContacts).toEqual(1);
     });
   });
   /* TODO: needs GUN fix
@@ -378,7 +378,7 @@ describe(`local index`, async () => {
     test(`create verifier`, async () => {
       const msg = await iris.Message.createRating({recipient: {keyID: verifierKeyID}, rating: 10, context: `verifier`}, key);
       await i.addMessage(msg);
-      const verifier = i.get(`keyID`, verifierKeyID);
+      const verifier = i.getContacts({type:`keyID`, value: verifierKeyID});
       const scores = await new Promise(resolve => {
         verifier.gun.get(`scores`).load(r => {
           resolve(r);
@@ -391,7 +391,7 @@ describe(`local index`, async () => {
       await i.addMessage(msg);
       let msg = await iris.Message.createVerification({recipient: {keyID: verifierKeyID, name: `VerifyBot`, email: `VerifyBot@example.com`}}, key);
       await i.addMessage(msg);
-      const verifier = i.get(`keyID`, verifierKeyID);
+      const verifier = i.getContacts({type:`keyID`, value: verifierKeyID});
       const scores = await new Promise(resolve => {
         verifier.gun.get(`scores`).load(r => {
           resolve(r);
@@ -402,7 +402,7 @@ describe(`local index`, async () => {
     test(`create trusted verification`, async () => {
       const msg = await iris.Message.createVerification({recipient: {email: `david@example.com`, name: `David Attenborough`}}, verifierKey);
       await i.addMessage(msg);
-      p = i.get(`david@example.com`);
+      p = i.getContacts({value:`david@example.com`});
       const attrs = await new Promise(resolve => {
         p.gun.get(`attrs`).load(r => {
           resolve(r);
@@ -433,7 +433,7 @@ describe(`local index`, async () => {
       expect(typeof m2).toBe(`object`);
       expect(m2.getHash()).toEqual(m.getHash());
 
-      const identity = i2.get(`keyID`, keyID);
+      const identity = i2.getContacts({type:`keyID`, keyID});
       const m3 = await new Promise(resolve => {
         i2.getReceivedMsgs(identity, msg => {
           console.log(`found msg`, msg.getHash(), msg);
@@ -448,7 +448,7 @@ describe(`local index`, async () => {
     });
     /*
     test('get identity from linked index', async () => {
-      p = i2.get('bob@example.com');
+      p = i2.getContacts('bob@example.com');
       const data = await p.gun.once().then();
       //expect(q).toBeInstanceOf(iris.Contact);
       expect(data.trustDistance).toBe(1);
@@ -480,9 +480,9 @@ describe(`local index`, async () => {
     });
     */
   });
-  test(`get viewpoint identity by searching the default keyID`, async () => {
+  test(`get rootContact identity by searching the default keyID`, async () => {
     const defaultKey = await iris.Key.getDefault();
-    p = i.get(`keyID`, iris.Key.getId(defaultKey));
+    p = i.getContacts({type:`keyID`, value: iris.Key.getId(defaultKey)});
     const data = await waitForValue(p.gun);
     expect(p).toBeInstanceOf(iris.Contact);
     expect(data.trustDistance).toBe(0);
@@ -519,14 +519,14 @@ describe(`local index`, async () => {
     let msgReactions = await i.gun.get('messagesByHash').get(msg.getHash()).get('reactions').then();
     let myReaction = await i.gun.get('reactions').get(msg.getHash()).then();
     expect(Object.keys(msgReactions).length).toBe(1);
-    expect(msgReactions[i.viewpoint.value]).toBe('like');
+    expect(msgReactions[i.rootContact.value]).toBe('like');
     expect(myReaction).toBe('like');
     i.setReaction(msg, null);
     msgReactions = await i.gun.get('messagesByHash').get(msg.getHash()).get('reactions').once().then();
     myReaction = await i.gun.get('reactions').get(msg.getHash()).once().then();
     expect(Object.keys(msgReactions).length).toBe(1);
     expect(myReaction).toBe(null);
-    expect(msgReactions[i.viewpoint.value]).toBe(null);
+    expect(msgReactions[i.rootContact.value]).toBe(null);
   });*/
 });
 

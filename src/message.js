@@ -81,13 +81,13 @@ class Message {
   static _getArray(authorOrRecipient) {
     const arr = [];
     const keys = Object.keys(authorOrRecipient);
-    for (let i = 0;i < keys.length;i ++) {
+    for (let i = 0;i < keys.length;i++) {
       const type = keys[i];
       const value = authorOrRecipient[keys[i]];
       if (typeof value === `string`) {
         arr.push(new Attribute(type, value));
       } else { // array
-        for (let j = 0;j < value.length;j ++) {
+        for (let j = 0;j < value.length;j++) {
           const elementValue = value[j];
           arr.push(new Attribute(type, elementValue));
         }
@@ -100,13 +100,13 @@ class Message {
     return {
       *[Symbol.iterator]() {
         const keys = Object.keys(authorOrRecipient);
-        for (let i = 0;i < keys.length;i ++) {
+        for (let i = 0;i < keys.length;i++) {
           const type = keys[i];
           const value = authorOrRecipient[keys[i]];
           if (typeof value === `string`) {
             yield new Attribute(type, value);
           } else { // array
-            for (let j = 0;j < value.length;j ++) {
+            for (let j = 0;j < value.length;j++) {
               const elementValue = value[j];
               yield new Attribute(type, elementValue);
             }
@@ -170,7 +170,7 @@ class Message {
       const t = typeof d.author[attr];
       if (t !== `string`) {
         if (Array.isArray(d.author[attr])) {
-          for (let i = 0;i < d.author[attr].length;i ++) {
+          for (let i = 0;i < d.author[attr].length;i++) {
             if (typeof d.author[attr][i] !== `string`) {throw new ValidationError(`${errorMsg} Author attribute must be string, got ${attr}: [${d.author[attr][i]}]`);}
             if (d.author[attr][i].length === 0) {
               throw new ValidationError(`${errorMsg} author ${attr} in array[${i}] is empty`);
@@ -193,7 +193,7 @@ class Message {
         const t = typeof d.recipient[attr];
         if (t !== `string`) {
           if (Array.isArray(d.recipient[attr])) {
-            for (let i = 0;i < d.recipient[attr].length;i ++) {
+            for (let i = 0;i < d.recipient[attr].length;i++) {
               if (typeof d.recipient[attr][i] !== `string`) {throw new ValidationError(`${errorMsg} Recipient attribute must be string, got ${attr}: [${d.recipient[attr][i]}]`);}
               if (d.recipient[attr][i].length === 0) {
                 throw new ValidationError(`${errorMsg} recipient ${attr} in array[${i}] is empty`);
@@ -291,7 +291,7 @@ class Message {
     signedData.type = `rating`;
     signedData.context = signedData.context || `iris`;
     signedData.maxRating = signedData.maxRating || 10;
-    signedData.minRating = signedData.minRating || - 10;
+    signedData.minRating = signedData.minRating || -10;
     return Message.create(signedData, signingKey);
   }
 

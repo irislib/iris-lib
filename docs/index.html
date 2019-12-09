@@ -45,21 +45,15 @@
                       </a></li>
                       
                       <li><a
-                        href='#socialnetworksearch'
+                        href='#socialnetworkgetcontacts'
                         class='regular pre-open'>
-                        #search
+                        #getContacts
                       </a></li>
                       
                       <li><a
-                        href='#socialnetworkgetviewpoint'
+                        href='#socialnetworkgetrootcontact'
                         class='regular pre-open'>
-                        #getViewpoint
-                      </a></li>
-                      
-                      <li><a
-                        href='#socialnetworkget'
-                        class='regular pre-open'>
-                        #get
+                        #getRootContact
                       </a></li>
                       
                       <li><a
@@ -69,33 +63,15 @@
                       </a></li>
                       
                       <li><a
-                        href='#socialnetworkaddmessages'
-                        class='regular pre-open'>
-                        #addMessages
-                      </a></li>
-                      
-                      <li><a
                         href='#socialnetworkaddmessage'
                         class='regular pre-open'>
                         #addMessage
                       </a></li>
                       
                       <li><a
-                        href='#socialnetworkgetmessagebyhash'
+                        href='#socialnetworkgetmessages'
                         class='regular pre-open'>
-                        #getMessageByHash
-                      </a></li>
-                      
-                      <li><a
-                        href='#socialnetworkgetmessagesbytimestamp'
-                        class='regular pre-open'>
-                        #getMessagesByTimestamp
-                      </a></li>
-                      
-                      <li><a
-                        href='#socialnetworkgetmessagesbydistance'
-                        class='regular pre-open'>
-                        #getMessagesByDistance
+                        #getMessages
                       </a></li>
                       
                       <li><a
@@ -754,11 +730,11 @@
       </div>
     </div>
   
-    <div class='border-bottom' id='socialnetworksearch'>
+    <div class='border-bottom' id='socialnetworkgetcontacts'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>search(value, type, callback, limit)</span>
+            <span class='code strong strong truncate'>getContacts(opts)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -767,7 +743,7 @@
   
 
   
-    <div class='pre p1 fill-light mt0'>search(value: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, type: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, callback: any, limit: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
+    <div class='pre p1 fill-light mt0'>getContacts(opts: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
   
   
 
@@ -784,34 +760,8 @@
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>value</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>
-            = <code>``</code>)</code>
-	    search string
-
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>type</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
-	    (optional) type of searched value
-
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>limit</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>opts</span> <code class='quiet'>(any
+            = <code>{}</code>)</code>
 	    
           </div>
           
@@ -848,11 +798,11 @@
       </div>
     </div>
   
-    <div class='border-bottom' id='socialnetworkgetviewpoint'>
+    <div class='border-bottom' id='socialnetworkgetrootcontact'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getViewpoint()</span>
+            <span class='code strong strong truncate'>getRootContact()</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -861,7 +811,7 @@
   
 
   
-    <div class='pre p1 fill-light mt0'>getViewpoint(): <a href="#contact">Contact</a></div>
+    <div class='pre p1 fill-light mt0'>getRootContact(): <a href="#contact">Contact</a></div>
   
   
 
@@ -880,95 +830,7 @@
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
       <code><a href="#contact">Contact</a></code>:
-        viewpoint contact (trustDistance == 0) of the index
-
-      
-    
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-      </div>
-    </div>
-  
-    <div class='border-bottom' id='socialnetworkget'>
-      <div class="clearfix small pointer toggle-sibling">
-        <div class="py1 contain">
-            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>get(a, b, reload)</span>
-        </div>
-      </div>
-      <div class="clearfix display-none toggle-target">
-        <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-
-  <p>Get an contact referenced by an identifier.
-get(type, value)
-get(Attribute)
-get(value) - guesses the type or throws an error</p>
-
-    <div class='pre p1 fill-light mt0'>get(a: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, b: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>, reload: any): <a href="#contact">Contact</a></div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>a</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>b</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a>)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>reload</span> <code class='quiet'>(any
-            = <code>false</code>)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="#contact">Contact</a></code>:
-        contact that is connected to the identifier param
+        root contact (center of the social graph, trustDistance == 0)
 
       
     
@@ -1002,7 +864,8 @@ get(value) - guesses the type or throws an error</p>
 
   
 
-  <p>Return existing chats and listen to new chats initiated by friends.</p>
+  <p>Return existing chats and listen to new chats initiated by friends.
+Like Chat.getChats(), but also listens to chats initiated by friends.</p>
 
     <div class='pre p1 fill-light mt0'>getChats(callback: any)</div>
   
@@ -1032,79 +895,6 @@ get(value) - guesses the type or throws an error</p>
 
   
 
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-      </div>
-    </div>
-  
-    <div class='border-bottom' id='socialnetworkaddmessages'>
-      <div class="clearfix small pointer toggle-sibling">
-        <div class="py1 contain">
-            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>addMessages(msgs)</span>
-        </div>
-      </div>
-      <div class="clearfix display-none toggle-target">
-        <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-
-  <p>Add a list of messages to the index.
-Useful for example when adding a new WoT dataset that contains previously
-unknown authors.</p>
-<p>Iteratively performs sorted merge joins on [previously known identities] and
-[new msgs authors], until all messages from within the WoT have been added.</p>
-
-    <div class='pre p1 fill-light mt0'>addMessages(msgs: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>msgs</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>)</code>
-	    an array of messages.
-
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code>:
-        true on success
-
-      
-    
   
 
   
@@ -1155,7 +945,7 @@ unknown authors.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>msg</span> <code class='quiet'>(<a href="#message">Message</a>)</code>
-	    Message to add to the index
+	    Message (or an array of messages) to add to the index
 
           </div>
           
@@ -1193,11 +983,11 @@ unknown authors.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='socialnetworkgetmessagebyhash'>
+    <div class='border-bottom' id='socialnetworkgetmessages'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getMessageByHash(hash)</span>
+            <span class='code strong strong truncate'>getMessages(opts)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1206,7 +996,7 @@ unknown authors.</p>
   
 
   
-    <div class='pre p1 fill-light mt0'>getMessageByHash(hash: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+    <div class='pre p1 fill-light mt0'>getMessages(opts: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
   
 
@@ -1223,8 +1013,9 @@ unknown authors.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>hash</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>opts</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    {hash, orderBy, callback, limit, cursor, desc, filter}
+
           </div>
           
         </div>
@@ -1234,213 +1025,6 @@ unknown authors.</p>
 
   
 
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>:
-        message matching the hash
-
-      
-    
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-      </div>
-    </div>
-  
-    <div class='border-bottom' id='socialnetworkgetmessagesbytimestamp'>
-      <div class="clearfix small pointer toggle-sibling">
-        <div class="py1 contain">
-            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getMessagesByTimestamp(callback, limit, cursor, desc, filter)</span>
-        </div>
-      </div>
-      <div class="clearfix display-none toggle-target">
-        <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-
-  
-    <div class='pre p1 fill-light mt0'>getMessagesByTimestamp(callback: any, limit: any, cursor: any, desc: any, filter: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>limit</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>cursor</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>desc</span> <code class='quiet'>(any
-            = <code>true</code>)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>filter</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></code>:
-        list of messages
-
-      
-    
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-      </div>
-    </div>
-  
-    <div class='border-bottom' id='socialnetworkgetmessagesbydistance'>
-      <div class="clearfix small pointer toggle-sibling">
-        <div class="py1 contain">
-            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getMessagesByDistance(callback, limit, cursor, desc, filter)</span>
-        </div>
-      </div>
-      <div class="clearfix display-none toggle-target">
-        <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-
-  
-    <div class='pre p1 fill-light mt0'>getMessagesByDistance(callback: any, limit: any, cursor: any, desc: any, filter: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>limit</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>cursor</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>desc</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>filter</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-    
-      <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></code>:
-        list of messages
-
-      
-    
   
 
   
@@ -1538,7 +1122,8 @@ unknown authors.</p>
 
   
 
-  <p>Set the user's online status</p>
+  <p>Set your online status
+TODO: move to Chat?</p>
 
     <div class='pre p1 fill-light mt0'>setOnline(isOnline: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</div>
   
@@ -1558,7 +1143,7 @@ unknown authors.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>isOnline</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
-	    true: update the user's lastActive time every 3 seconds, false: stop updating
+	    true: update your lastActive time every 3 seconds, false: stop updating
 
           </div>
           
@@ -1682,8 +1267,8 @@ unknown authors.</p>
   </div>
   
 
-  <p>An Iris Contact, such as person, organization or group.
-Usually you don't create Contacts yourself, but get them
+  <p>An Iris Contact, such as person, organization or group. More abstractly speaking: an Identity.</p>
+<p>Usually you don't create Contacts yourself, but get them
 from SocialNetwork methods such as get() and search().</p>
 
     <div class='pre p1 fill-light mt0'>new Contact(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, linkTo: any, index: any)</div>
@@ -3704,7 +3289,7 @@ who are communicating with each other by looking at Gun timestamps and subscript
 
   <p>Return a list of public keys that you have initiated a chat with or replied to.
 (Chats that are initiated by others and unreplied by you don't show up, because
-this method doesn't know where to look for them. Use index.getChats() to listen to new chats from friends.)</p>
+this method doesn't know where to look for them. Use socialNetwork.getChats() to listen to new chats from friends.)</p>
 
     <div class='pre p1 fill-light mt0'>getChats(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, callback: any)</div>
   

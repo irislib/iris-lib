@@ -2,7 +2,7 @@
 const crypto = require(`crypto`);
 const Attribute = require(`attribute.js`);
 const Message = require(`message.js`);
-const Contact = require(`identity.js`);
+const Contact = require(`contact.js`);
 const Key = require(`key.js`);
 
 jest.setTimeout(30000);

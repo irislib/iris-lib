@@ -37,7 +37,7 @@ beforeAll(async () => {
   logger.disable();
   index = new iris.SocialNetwork({gun});
   await index.ready;
-  vp = index.getViewpoint();
+  vp = index.getRootContact();
 });
 
 describe(`Contact`, () => {

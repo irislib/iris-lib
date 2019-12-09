@@ -9,7 +9,7 @@ import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 
 Gun.User.prototype.top = function(key) {
-  const gun = this, root = gun.back(- 1), user = root.user();
+  const gun = this, root = gun.back(-1), user = root.user();
   if (!user.is) { throw {err: 'Not logged in!'}; }
   const top = user.chain(), at = (top._);
   at.soul = at.get = `~${user.is.pub  }.${  key}`;
@@ -120,7 +120,7 @@ class SocialNetwork {
       const gun = options.gun || new Gun();
       const user = gun.user(options.pubKey);
       this.gun = user.get(`iris`);
-      this.viewpoint = new Attribute({type: `keyID`, value: options.pubKey});
+      this.rootContact = new Attribute({type: `keyID`, value: options.pubKey});
       this.ready = Promise.resolve();
     } else { // our own index
       this.ready = this._init();
@@ -137,7 +137,7 @@ class SocialNetwork {
     const user = gun.user();
     user.auth(keypair);
     this.writable = true;
-    this.viewpoint = new Attribute(`keyID`, Key.getId(keypair));
+    this.rootContact = new Attribute(`keyID`, Key.getId(keypair));
     user.get(`epub`).put(keypair.epub);
     // Initialize indexes with deterministic gun souls (.top)
     this.gun = user.get(`iris`).put(user.top(`iris`));
@@ -148,22 +148,22 @@ class SocialNetwork {
     this.gun.get(`messagesByHash`).put(user.top(`messagesByHash`));
     this.gun.get(`messagesByDistance`).put(user.top(`messagesByDistance`));
 
-    const uri = this.viewpoint.uri();
+    const uri = this.rootContact.uri();
     const g = user.top(uri);
     this.gun.get(`identitiesBySearchKey`).get(uri).put(g);
     const attrs = {};
-    attrs[uri] = this.viewpoint;
+    attrs[uri] = this.rootContact;
     if (this.options.self) {
       const keys = Object.keys(this.options.self);
-      for (let i = 0;i < keys.length;i ++) {
+      for (let i = 0;i < keys.length;i++) {
         const a = new Attribute(keys[i], this.options.self[keys[i]]);
         attrs[a.uri()] = a;
       }
     }
-    const id = Contact.create(g, {trustDistance: 0, linkTo: this.viewpoint, attrs}, this);
+    const id = Contact.create(g, {trustDistance: 0, linkTo: this.rootContact, attrs}, this);
     await this._addContactToIndexes(id.gun);
     if (this.options.self) {
-      const recipient = Object.assign(this.options.self, {keyID: this.viewpoint.value});
+      const recipient = Object.assign(this.options.self, {keyID: this.rootContact.value});
       Message.createVerification({recipient}, keypair).then(msg => {
         this.addMessage(msg);
       });
@@ -236,27 +236,27 @@ class SocialNetwork {
 
     keys.messagesByAuthor = {};
     const authors = msg.getAuthorArray();
-    for (let i = 0;i < authors.length;i ++) {
+    for (let i = 0;i < authors.length;i++) {
       if (authors[i].isUniqueType()) {
         keys.messagesByAuthor[authors[i].uri()] = `${msg.signedData.timestamp}:${hashSlice}`;
       }
     }
     keys.messagesByRecipient = {};
     const recipients = msg.getRecipientArray();
-    for (let i = 0;i < recipients.length;i ++) {
+    for (let i = 0;i < recipients.length;i++) {
       if (recipients[i].isUniqueType()) {
         keys.messagesByRecipient[recipients[i].uri()] = `${msg.signedData.timestamp}:${hashSlice}`;
       }
     }
 
-    if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
+    if ([`verification`, `unverification`].indexOf(msg.signedData.type) > -1) {
       keys.verificationsByRecipient = {};
-      for (let i = 0;i < recipients.length;i ++) {
+      for (let i = 0;i < recipients.length;i++) {
         const r = recipients[i];
         if (!r.isUniqueType()) {
           continue;
         }
-        for (let j = 0;j < authors.length;j ++) {
+        for (let j = 0;j < authors.length;j++) {
           const a = authors[j];
           if (!a.isUniqueType()) {
             continue;
@@ -266,12 +266,12 @@ class SocialNetwork {
       }
     } else if (msg.signedData.type === `rating`) {
       keys.ratingsByRecipient = {};
-      for (let i = 0;i < recipients.length;i ++) {
+      for (let i = 0;i < recipients.length;i++) {
         const r = recipients[i];
         if (!r.isUniqueType()) {
           continue;
         }
-        for (let j = 0;j < authors.length;j ++) {
+        for (let j = 0;j < authors.length;j++) {
           const a = authors[j];
           if (!a.isUniqueType()) {
             continue;
@@ -286,7 +286,7 @@ class SocialNetwork {
   async getContactIndexKeys(contact, hash) {
     const indexKeys = {identitiesByTrustDistance: [], identitiesBySearchKey: []};
     let d;
-    if (contact.linkTo && this.viewpoint.equals(contact.linkTo)) { // TODO: contact is a gun instance, no linkTo
+    if (contact.linkTo && this.rootContact.equals(contact.linkTo)) { // TODO: contact is a gun instance, no linkTo
       d = 0;
     } else {
       d = await contact.get(`trustDistance`).then();
@@ -316,7 +316,7 @@ class SocialNetwork {
         indexKeys.identitiesBySearchKey.push(lowerCaseKey);
         indexKeys.identitiesByTrustDistance.push(`${distance}:${lowerCaseKey}`);
       }
-      if (v.indexOf(` `) > - 1) {
+      if (v.indexOf(` `) > -1) {
         const words = v.toLowerCase().split(` `);
         for (let l = 0;l < words.length;l += 1) {
           let k = `${encodeURIComponent(words[l])}:${name}`;
@@ -334,7 +334,7 @@ class SocialNetwork {
       }
     }
 
-    if (this.viewpoint.equals(contact.linkTo)) {
+    if (this.rootContact.equals(contact.linkTo)) {
       addIndexKey(contact.linkTo);
     }
 
@@ -358,74 +358,14 @@ class SocialNetwork {
     return this.addMessage(msg);
   }
 
-  /**
-  * @param {string} value search string
-  * @param {string} type (optional) type of searched value
-  * @returns {Array} list of matching identities
-  */
-  async search(value = ``, type, callback, limit) { // cursor // TODO: param 'exact', type param
-    const seen = {};
-    function searchTermCheck(key) {
-      const arr = key.split(`:`);
-      if (arr.length < 2) { return false; }
-      const keyValue = arr[0];
-      const keyType = arr[1];
-      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) { return false; }
-      if (type && keyType !== type) { return false; }
-      return true;
-    }
-    const node = this.gun.get(`identitiesBySearchKey`);
-    node.map().on((id, key) => {
-      if (Object.keys(seen).length >= limit) {
-        // TODO: turn off .map cb
-        return;
-      }
-      if (!searchTermCheck(key)) { return; }
-      const soul = Gun.node.soul(id);
-      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
-        seen[soul] = true;
-        const contact = new Contact(node.get(key), undefined, this);
-        contact.cursor = key;
-        callback(contact);
-      }
-    });
-    if (this.options.indexSync.query.enabled) {
-      this.gun.get(`trustedIndexes`).map().once((val, key) => {
-        if (val) {
-          this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).map().on((id, k) => {
-            if (Object.keys(seen).length >= limit) {
-              // TODO: turn off .map cb
-              return;
-            }
-            if (!searchTermCheck(key)) { return; }
-            const soul = Gun.node.soul(id);
-            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
-              seen[soul] = true;
-              callback(
-                new Contact(this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k), undefined, this)
-              );
-            }
-          });
-        }
-      });
-    }
-  }
-
-  /**
-  * @returns {Contact} viewpoint contact (trustDistance == 0) of the index
-  */
-  getViewpoint() {
-    return new Contact(this.gun.get(`identitiesBySearchKey`).get(this.viewpoint.uri()), undefined, this);
-  }
-
-  /**
+  /*
   * Get an contact referenced by an identifier.
   * get(type, value)
   * get(Attribute)
   * get(value) - guesses the type or throws an error
   * @returns {Contact} contact that is connected to the identifier param
   */
-  get(a: String, b: String, reload = false) {
+  getContact(a: String, b: String, reload = false) {
     if (!a) {
       throw new Error(`get failed: param must be a string, received ${typeof a} ${a}`);
     }
@@ -463,7 +403,7 @@ class SocialNetwork {
         this.gun.get(`verificationsByRecipient`).get(attribute.uri()).map().once(val => {
           const m = Message.fromSig(val);
           const recipients = m.getRecipientArray();
-          for (let i = 0;i < recipients.length;i ++) {
+          for (let i = 0;i < recipients.length;i++) {
             const a2 = recipients[i];
             if (!Object.prototype.hasOwnProperty.call(o.attributes), a2.uri()) {
               // TODO remove attribute from contact if not enough verifications / too many unverifications
@@ -473,7 +413,7 @@ class SocialNetwork {
                 if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2.getHash())) {
                   o.received[m2.getHash()] = m2;
                   if (m2.isPositive()) {
-                    o.receivedPositive ++;
+                    o.receivedPositive++;
                     m2.getAuthor(this).gun.get(`trustDistance`).on(d => {
                       if (typeof d === `number`) {
                         if (typeof o.trustDistance !== `number` || o.trustDistance > d + 1) {
@@ -483,9 +423,9 @@ class SocialNetwork {
                       }
                     });
                   } else if (m2.isNegative()) {
-                    o.receivedNegative ++;
+                    o.receivedNegative++;
                   } else {
-                    o.receivedNeutral ++;
+                    o.receivedNeutral++;
                   }
                   node.put(o);
                 }
@@ -495,11 +435,11 @@ class SocialNetwork {
                 if (!Object.prototype.hasOwnProperty.call(o.sent, m2.getHash())) {
                   o.sent[m2.getHash()] = m2;
                   if (m2.isPositive()) {
-                    o.sentPositive ++;
+                    o.sentPositive++;
                   } else if (m2.isNegative()) {
-                    o.sentNegative ++;
+                    o.sentNegative++;
                   } else {
-                    o.sentNeutral ++;
+                    o.sentNeutral++;
                   }
                   node.put(o);
                 }
@@ -520,7 +460,69 @@ class SocialNetwork {
   }
 
   /**
+  * @returns {Array} list of matching identities
+  */
+  async getContacts(opts = {}) { // cursor // TODO: param 'exact', type param
+    if (opts.value) {
+      return this.getContact(opts.value, opts.type, opts.reload);
+    }
+    const seen = {};
+    function searchTermCheck(key) {
+      const arr = key.split(`:`);
+      if (arr.length < 2) { return false; }
+      const keyValue = arr[0];
+      const keyType = arr[1];
+      if (keyValue.indexOf(encodeURIComponent(opts.query)) !== 0) { return false; }
+      if (opts.type && keyType !== opts.type) { return false; }
+      return true;
+    }
+    const node = this.gun.get(`identitiesBySearchKey`);
+    node.map().on((id, key) => {
+      if (Object.keys(seen).length >= opts.limit) {
+        // TODO: turn off .map cb
+        return;
+      }
+      if (!searchTermCheck(key)) { return; }
+      const soul = Gun.node.soul(id);
+      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
+        seen[soul] = true;
+        const contact = new Contact(node.get(key), undefined, this);
+        contact.cursor = key;
+        opts.callback(contact);
+      }
+    });
+    if (this.options.indexSync.query.enabled) {
+      this.gun.get(`trustedIndexes`).map().once((val, key) => {
+        if (val) {
+          this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).map().on((id, k) => {
+            if (Object.keys(seen).length >= opts.limit) {
+              // TODO: turn off .map cb
+              return;
+            }
+            if (!searchTermCheck(key)) { return; }
+            const soul = Gun.node.soul(id);
+            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
+              seen[soul] = true;
+              opts.callback(
+                new Contact(this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k), undefined, this)
+              );
+            }
+          });
+        }
+      });
+    }
+  }
+
+  /**
+  * @returns {Contact} root contact (center of the social graph, trustDistance == 0)
+  */
+  getRootContact() {
+    return new Contact(this.gun.get(`identitiesBySearchKey`).get(this.rootContact.uri()), undefined, this);
+  }
+
+  /**
   * Return existing chats and listen to new chats initiated by friends.
+  * Like Chat.getChats(), but also listens to chats initiated by friends.
   */
   async getChats(callback) {
     Chat.getChats(this.gun, this.options.keypair, callback);
@@ -542,7 +544,7 @@ class SocialNetwork {
       if (results >= limit) { return; }
       const msg = await Message.fromSig(result.value);
       if (filter && !filter(msg)) { return; }
-      results ++;
+      results++;
       msg.cursor = result.key;
       if (result.value && result.value.ipfsUri) {
         msg.ipfsUri = result.value.ipfsUri;
@@ -563,9 +565,9 @@ class SocialNetwork {
     const indexKeys = await this.getContactIndexKeys(id, hash.substr(0, 6));
 
     const indexes = Object.keys(indexKeys);
-    for (let i = 0;i < indexes.length;i ++) {
+    for (let i = 0;i < indexes.length;i++) {
       const index = indexes[i];
-      for (let j = 0;j < indexKeys[index].length;j ++) {
+      for (let j = 0;j < indexKeys[index].length;j++) {
         const key = indexKeys[index][j];
         // this.debug(`adding to index ${index} key ${key}, saving data: ${id}`);
         this.gun.get(index).get(key).put(id); // FIXME: Check, why this can't be `await`ed for in tests? [index.ready promise gets stuck]
@@ -617,10 +619,10 @@ class SocialNetwork {
     if (!Attribute.isUniqueType(a.type)) {
       return;
     }
-    if (this.viewpoint.equals(a)) {
+    if (this.rootContact.equals(a)) {
       return 0;
     }
-    const id = this.get(a);
+    const id = this.getContact(a);
     let d = await id.gun.get(`trustDistance`).then();
     if (isNaN(d)) {
       d = Infinity;
@@ -631,8 +633,8 @@ class SocialNetwork {
   async _getMsgTrustDistance(msg) {
     let shortestDistance = Infinity;
     const signerAttr = new Attribute(`keyID`, msg.getSignerKeyID());
-    if (!signerAttr.equals(this.viewpoint)) {
-      const signer = this.get(signerAttr);
+    if (!signerAttr.equals(this.rootContact)) {
+      const signer = this.getContact(signerAttr);
       const d = await signer.gun.get(`trustDistance`).then();
       if (isNaN(d)) {
         return;
@@ -651,7 +653,7 @@ class SocialNetwork {
     const hash = recipient._ && recipient._.link || `todo`;
     const contactIndexKeysBefore = await this.getContactIndexKeys(recipient, hash.substr(0, 6));
     const attrs = await Contact.getAttrs(recipient);
-    if ([`verification`, `unverification`].indexOf(msg.signedData.type) > - 1) {
+    if ([`verification`, `unverification`].indexOf(msg.signedData.type) > -1) {
       const isVerification = msg.signedData.type === `verification`;
       for (const a of msg.getRecipientArray()) {
         let hasAttr = false;
@@ -697,15 +699,15 @@ class SocialNetwork {
         if (typeof id.trustDistance !== `number` || msg.distance + 1 < id.trustDistance) {
           recipient.get(`trustDistance`).put(msg.distance + 1);
         }
-        id.receivedPositive ++;
+        id.receivedPositive++;
       } else {
         if (msg.distance < id.trustDistance) {
           recipient.get(`trustDistance`).put(false); // TODO: this should take into account the aggregate score of the contact
         }
         if (msg.isNegative()) {
-          id.receivedNegative ++;
+          id.receivedNegative++;
         } else {
-          id.receivedNeutral ++;
+          id.receivedNeutral++;
         }
       }
 
@@ -722,7 +724,7 @@ class SocialNetwork {
           } else if (msg.isNegative()) {
             recipient.get(`scores`).get(msg.signedData.context).get(`score`).put(0);
           } else {
-            recipient.get(`scores`).get(msg.signedData.context).get(`score`).put(- 10);
+            recipient.get(`scores`).get(msg.signedData.context).get(`score`).put(-10);
           }
         }
       } else {
@@ -739,11 +741,11 @@ class SocialNetwork {
 
     const contactIndexKeysAfter = await this.getContactIndexKeys(recipient, hash.substr(0, 6));
     const indexesBefore = Object.keys(contactIndexKeysBefore);
-    for (let i = 0;i < indexesBefore.length;i ++) {
+    for (let i = 0;i < indexesBefore.length;i++) {
       const index = indexesBefore[i];
-      for (let j = 0;j < contactIndexKeysBefore[index].length;j ++) {
+      for (let j = 0;j < contactIndexKeysBefore[index].length;j++) {
         const key = contactIndexKeysBefore[index][j];
-        if (!contactIndexKeysAfter[index] || contactIndexKeysAfter[index].indexOf(key) === - 1) {
+        if (!contactIndexKeysAfter[index] || contactIndexKeysAfter[index].indexOf(key) === -1) {
           this.gun.get(index).get(key).put(null);
         }
       }
@@ -757,11 +759,11 @@ class SocialNetwork {
       id.sentNegative = (id.sentNegative || 0);
       id.sentNeutral = (id.sentNeutral || 0);
       if (msg.isPositive()) {
-        id.sentPositive ++;
+        id.sentPositive++;
       } else if (msg.isNegative()) {
-        id.sentNegative ++;
+        id.sentNegative++;
       } else {
-        id.sentNeutral ++;
+        id.sentNeutral++;
       }
       author.get(`sentPositive`).put(id.sentPositive);
       author.get(`sentNegative`).put(id.sentNegative);
@@ -781,7 +783,7 @@ class SocialNetwork {
     let msgIndexKey = SocialNetwork.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
-    for (let i = 0;i < ids.length;i ++) { // add new identifiers to contact
+    for (let i = 0;i < ids.length;i++) { // add new identifiers to contact
       if (Object.prototype.hasOwnProperty.call(recipientIdentities, ids[i].gun[`_`].link)) {
         start = new Date();
         await this._updateMsgRecipientContact(msg, msgIndexKey, ids[i].gun);
@@ -805,7 +807,7 @@ class SocialNetwork {
   async addTrustedIndex(gunUri,
     maxMsgsToCrawl = this.options.indexSync.importOnAdd.maxMsgCount,
     maxMsgDistance = this.options.indexSync.importOnAdd.maxMsgDistance) {
-    if (gunUri === this.viewpoint.value) {
+    if (gunUri === this.rootContact.value) {
       return;
     }
     const exists = await this.gun.get(`trustedIndexes`).get(gunUri).then();
@@ -840,7 +842,7 @@ class SocialNetwork {
     let start;
     start = new Date();
     for (const a of msg.getAuthorArray()) {
-      const id = this.get(a);
+      const id = this.getContact(a);
       let start2 = new Date();
       const td = await id.gun.get(`trustDistance`).then();
       this.debug((new Date()) - start2, `ms get trustDistance`);
@@ -863,13 +865,13 @@ class SocialNetwork {
     }
     start = new Date();
     for (const a of msg.getRecipientArray()) {
-      const id = this.get(a);
+      const id = this.getContact(a);
       const td = await id.gun.get(`trustDistance`).then();
 
       if (!isNaN(td)) {
         recipientIdentities[id.gun[`_`].link] = id;
       }
-      if (selfAuthored && a.type === `keyID` && a.value !== this.viewpoint.value) { // TODO: not if already added - causes infinite loop?
+      if (selfAuthored && a.type === `keyID` && a.value !== this.rootContact.value) { // TODO: not if already added - causes infinite loop?
         if (msg.isPositive()) {
           this.addTrustedIndex(a.value);
         } else {
@@ -907,11 +909,104 @@ class SocialNetwork {
   }
 
   /**
+  * Add a message to messagesByTimestamp and other relevant indexes. Update identities in the web of trust according to message data.
+  *
+  * @param msg Message (or an array of messages) to add to the index
+  */
+  async addMessage(msg: Message, options = {}) {
+    if (!this.writable) {
+      throw new Error(`Cannot write to a read-only index (initialized with options.pubKey)`);
+    }
+    if (Array.isArray(msg)) {
+      return this.addMessages(msg, options);
+    }
+    let start;
+    if (msg.constructor.name !== `Message`) {
+      throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
+    }
+    const hash = msg.getHash();
+    if (true === options.checkIfExists) {
+      const exists = await this.gun.get(`messagesByHash`).get(hash).then();
+      if (exists) {
+        return;
+      }
+    }
+    const obj = {sig: msg.sig, pubKey: msg.pubKey};
+    //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
+    const node = this.gun.back(-1).get(`messagesByHash`).get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
+    start = new Date();
+    const d = await this._getMsgTrustDistance(msg);
+    msg.distance = Object.prototype.hasOwnProperty.call(msg, `distance`) ? msg.distance : d;  // eslint-disable-line require-atomic-updates
+    this.debug(`----`);
+    this.debug((new Date()) - start, `ms _getMsgTrustDistance`);
+    if (msg.distance === undefined) {
+      return false; // do not save messages from untrusted author
+    }
+    if (msg.signedData.replyTo) {
+      this.gun.back(-1).get(`messagesByHash`).get(msg.signedData.replyTo).get(`replies`).get(hash).put(node);
+      this.gun.back(-1).get(`messagesByHash`).get(msg.signedData.replyTo).get(`replies`).get(hash).put(node);
+    }
+    if (msg.signedData.sharedMsg) {
+      this.gun.back(-1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
+      this.gun.back(-1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
+    }
+    start = new Date();
+    const indexKeys = SocialNetwork.getMsgIndexKeys(msg);
+    this.debug((new Date()) - start, `ms getMsgIndexKeys`);
+    for (const index in indexKeys) {
+      if (Array.isArray(indexKeys[index])) {
+        for (let i = 0;i < indexKeys[index].length;i++) {
+          const key = indexKeys[index][i];
+          // this.debug(`adding to index ${index} key ${key}`);
+          this.gun.get(index).get(key).put(node);
+          this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
+        }
+      } else if (typeof indexKeys[index] === `object`) {
+        for (const key in indexKeys[index]) {
+          this.gun.get(index).get(key).get(indexKeys[index][key]).put(node);
+          this.gun.get(index).get(key).get(indexKeys[index][key]).put(node);
+        }
+      }
+    }
+    if (this.options.ipfs) {
+      try {
+        const ipfsUri = await msg.saveToIpfs(this.options.ipfs);
+        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
+        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
+        this.gun.get(`messagesByHash`).get(ipfsUri).put({ipfsUri});
+      } catch (e) {
+        console.error(`adding msg ${msg} to ipfs failed: ${e}`);
+      }
+    }
+    if (msg.signedData.type !== `chat`) {
+      start = new Date();
+      await this._updateContactIndexesByMsg(msg);
+      this.debug((new Date()) - start, `ms _updateContactIndexesByMsg`);
+    }
+    return true;
+  }
+
+
+  /**
+  * @param {Object} opts {hash, orderBy, callback, limit, cursor, desc, filter}
+  */
+  async getMessages(opts) {
+    if (opts.hash) {
+      return this.getMessageByHash(opts.hash);
+    }
+    if (opts.orderBy && opts.orderBy === `trustDistance`) {
+      return this.getMessagesByDistance(opts.callback, opts.limit, opts.cursor, opts.desc, opts.filter);
+    }
+    return this.getMessagesByTimestamp(opts.callback, opts.limit, opts.cursor, opts.desc || true, opts.filter);
+  }
+
+
+  /*
   * Add a list of messages to the index.
   * Useful for example when adding a new WoT dataset that contains previously
   * unknown authors.
   *
-  * Iteratively performs sorted merge joins on [previously known identities] and
+  * Iteratively performs sorted merge joins on [previously known contacts] and
   * [new msgs authors], until all messages from within the WoT have been added.
   *
   * @param {Array} msgs an array of messages.
@@ -924,7 +1019,7 @@ class SocialNetwork {
     const msgsByAuthor = {};
     if (Array.isArray(msgs)) {
       this.debug(`sorting ${msgs.length} messages onto a search tree...`);
-      for (let i = 0;i < msgs.length;i ++) {
+      for (let i = 0;i < msgs.length;i++) {
         for (const a of msgs[i].getAuthorArray()) {
           if (a.isUniqueType()) {
             const key = `${a.uri()}:${msgs[i].getHash()}`;
@@ -957,7 +1052,7 @@ class SocialNetwork {
         } else if (a.key > b.key) {
           return 1;
         } else {
-          return - 1;
+          return -1;
         }
       });
       let i = 0;
@@ -976,7 +1071,7 @@ class SocialNetwork {
           author = i < msgAuthors.length ? msgAuthors[i] : undefined;
           //knownContact = knownIdentities.shift();
         } else if (author < knownContact.key) {
-          author = i < msgAuthors.length ? msgAuthors[++ i] : undefined;
+          author = i < msgAuthors.length ? msgAuthors[++i] : undefined;
         } else {
           knownContact = knownIdentities.shift();
         }
@@ -986,82 +1081,7 @@ class SocialNetwork {
     return true;
   }
 
-  /**
-  * Add a message to messagesByTimestamp and other relevant indexes. Update identities in the web of trust according to message data.
-  *
-  * @param msg Message to add to the index
-  */
-  async addMessage(msg: Message, options = {}) {
-    if (!this.writable) {
-      throw new Error(`Cannot write to a read-only index (initialized with options.pubKey)`);
-    }
-    let start;
-    if (msg.constructor.name !== `Message`) {
-      throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
-    }
-    const hash = msg.getHash();
-    if (true === options.checkIfExists) {
-      const exists = await this.gun.get(`messagesByHash`).get(hash).then();
-      if (exists) {
-        return;
-      }
-    }
-    const obj = {sig: msg.sig, pubKey: msg.pubKey};
-    //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
-    const node = this.gun.back(- 1).get(`messagesByHash`).get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
-    start = new Date();
-    const d = await this._getMsgTrustDistance(msg);
-    msg.distance = Object.prototype.hasOwnProperty.call(msg, `distance`) ? msg.distance : d;  // eslint-disable-line require-atomic-updates
-    this.debug(`----`);
-    this.debug((new Date()) - start, `ms _getMsgTrustDistance`);
-    if (msg.distance === undefined) {
-      return false; // do not save messages from untrusted author
-    }
-    if (msg.signedData.replyTo) {
-      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.replyTo).get(`replies`).get(hash).put(node);
-      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.replyTo).get(`replies`).get(hash).put(node);
-    }
-    if (msg.signedData.sharedMsg) {
-      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
-      this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
-    }
-    start = new Date();
-    const indexKeys = SocialNetwork.getMsgIndexKeys(msg);
-    this.debug((new Date()) - start, `ms getMsgIndexKeys`);
-    for (const index in indexKeys) {
-      if (Array.isArray(indexKeys[index])) {
-        for (let i = 0;i < indexKeys[index].length;i ++) {
-          const key = indexKeys[index][i];
-          // this.debug(`adding to index ${index} key ${key}`);
-          this.gun.get(index).get(key).put(node);
-          this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
-        }
-      } else if (typeof indexKeys[index] === `object`) {
-        for (const key in indexKeys[index]) {
-          this.gun.get(index).get(key).get(indexKeys[index][key]).put(node);
-          this.gun.get(index).get(key).get(indexKeys[index][key]).put(node);
-        }
-      }
-    }
-    if (this.options.ipfs) {
-      try {
-        const ipfsUri = await msg.saveToIpfs(this.options.ipfs);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put({ipfsUri});
-      } catch (e) {
-        console.error(`adding msg ${msg} to ipfs failed: ${e}`);
-      }
-    }
-    if (msg.signedData.type !== `chat`) {
-      start = new Date();
-      await this._updateContactIndexesByMsg(msg);
-      this.debug((new Date()) - start, `ms _updateContactIndexesByMsg`);
-    }
-    return true;
-  }
-
-  /**
+  /*
   * @returns {Object} message matching the hash
   */
   getMessageByHash(hash) {
@@ -1117,7 +1137,7 @@ class SocialNetwork {
     });
   }
 
-  /**
+  /*
   * @returns {Array} list of messages
   */
   getMessagesByTimestamp(callback, limit, cursor, desc = true, filter) {
@@ -1142,7 +1162,7 @@ class SocialNetwork {
     }
   }
 
-  /**
+  /*
   * @returns {Array} list of messages
   */
   getMessagesByDistance(callback, limit, cursor, desc, filter) {
@@ -1172,14 +1192,15 @@ class SocialNetwork {
   setReaction(msg: Object, reaction) {
     this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
     this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
-    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
-    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
+    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.rootContact.value).put(reaction);
+    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.rootContact.value).put(reaction);
   }
 
   /**
-  * Set the user's online status
+  * Set your online status
+  * TODO: move to Chat?
   *
-  * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
+  * @param {boolean} isOnline true: update your lastActive time every 3 seconds, false: stop updating
   */
   setOnline(isOnline) {
     if (!this.writable) {

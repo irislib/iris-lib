@@ -3,7 +3,8 @@ import Attribute from './attribute';
 import util from './util';
 
 /**
-* An Iris Contact, such as person, organization or group.
+* An Iris Contact, such as person, organization or group. More abstractly speaking: an Identity.
+*
 * Usually you don't create Contacts yourself, but get them
 * from SocialNetwork methods such as get() and search().
 */
@@ -43,7 +44,7 @@ class Contact {
     const mva = Contact.getMostVerifiedAttributes(attrs);
     const keys = Object.keys(mva);
     let linkTo;
-    for (let i = 0;i < keys.length;i ++) {
+    for (let i = 0;i < keys.length;i++) {
       if (keys[i] === `keyID`) {
         linkTo = mva[keys[i]].attribute;
         break;
@@ -58,7 +59,7 @@ class Contact {
     const mostVerifiedAttributes = {};
     Object.keys(attrs).forEach(k => {
       const a = attrs[k];
-      const keyExists = Object.keys(mostVerifiedAttributes).indexOf(a.type) > - 1;
+      const keyExists = Object.keys(mostVerifiedAttributes).indexOf(a.type) > -1;
       a.verifications = isNaN(a.verifications) ? 1 : a.verifications;
       a.unverifications = isNaN(a.unverifications) ? 0 : a.unverifications;
       if (a.verifications * 2 > a.unverifications * 3 && (!keyExists || a.verifications - a.unverifications > mostVerifiedAttributes[a.type].verificationScore)) {
@@ -157,7 +158,7 @@ class Contact {
     <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
       <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
       <td>
-        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>
+        <span ng-if="result.distance == 0" class="label label-default pull-right">rootContact</span>
         <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>
         <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>
         <small ng-if="!result.name" class="list-group-item-text">
@@ -284,11 +285,11 @@ class Contact {
       }
       if (data.receivedPositive + data.receivedNegative > 0) {
         if (data.receivedPositive > data.receivedNegative) {
-          transform = `rotate(${((- data.receivedPositive / (data.receivedPositive + data.receivedNegative) * 360 - 180) / 2)}deg)`;
+          transform = `rotate(${((-data.receivedPositive / (data.receivedPositive + data.receivedNegative) * 360 - 180) / 2)}deg)`;
           bgColor = `#A94442`;
           bgImage = `linear-gradient(${data.receivedPositive / (data.receivedPositive + data.receivedNegative) * 360}deg, transparent 50%, #3C763D 50%), linear-gradient(0deg, #3C763D 50%, transparent 50%)`;
         } else {
-          transform = `rotate(${((- data.receivedNegative / (data.receivedPositive + data.receivedNegative) * 360 - 180) / 2) + 180}deg)`;
+          transform = `rotate(${((-data.receivedNegative / (data.receivedPositive + data.receivedNegative) * 360 - 180) / 2) + 180}deg)`;
           bgColor = `#3C763D`;
           bgImage = `linear-gradient(${data.receivedNegative / (data.receivedPositive + data.receivedNegative) * 360}deg, transparent 50%, #A94442 50%), linear-gradient(0deg, #A94442 50%, transparent 50%)`;
         }
