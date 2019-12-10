@@ -1,12 +1,12 @@
-/**
-  @jest-environment node
-*/
 const Collection = require(`collection.js`);
 const Gun = require(`gun`);
 const open = require(`gun/lib/open`);
+const radix = require(`gun/lib/radix`); // Require before instantiating Gun, if running in jsdom mode
 
 class Animal {
   constructor(name, species) {
+    if (!name || name.length === 0) { throw new Error(`Invalid name`); }
+    if (!species || species.length === 0) { throw new Error(`Invalid species`); }
     this.name = name;
     this.species = species;
   }
@@ -21,22 +21,68 @@ class Animal {
 }
 
 describe(`Collection`, () => {
-  test(`write & read`, (done) => {
-    const gun = new Gun();
-    const animals = new Collection({gun, class: Animal, indexes: ['name', 'species']});
-    animals.put(new Animal('Moisture', 'cat'));
-    animals.put(new Animal('Petard', 'cat'));
-    animals.put(new Animal('Pete', 'cat'));
-    animals.put(new Animal('Oilbag', 'cat'));
-    animals.put(new Animal('Scumbag', 'dog'));
-    animals.put(new Animal('Deadbolt', 'parrot'));
+  let gun, animals, n = 0;
+  beforeAll(() => {
+    gun = new Gun({radisk: false});
+    animals = new Collection({gun, class: Animal, indexes: ['name', 'species']});
+  });
+  test(`put`, () => {
+    animals.put(new Animal('Moisture', 'cat'));n++;
+    animals.put(new Animal('Petard', 'cat'));n++;
+    animals.put(new Animal('Petunia', 'cat'));n++;
+    animals.put(new Animal('Petrol', 'cat'));n++;
+    animals.put(new Animal('Parsley', 'cat'));n++;
+    animals.put(new Animal('proton', 'cat'));n++;
+    animals.put(new Animal('Oilbag', 'cat'));n++;
+    animals.put(new Animal('Scumbag', 'dog'));n++;
+    animals.put(new Animal('Deadbolt', 'parrot'));n++;
+    animals.put(new Animal('Moisture', 'dog'));n++;
+  });
+  test(`get all`, done => {
     let timesCalled = 0;
     function callback(animal) {
-      console.log('got', animal);
-      if (timesCalled++ === 5) {
+      expect(animal).toBeInstanceOf(Animal);
+      timesCalled++;
+      if (timesCalled === n) {
         done();
       }
     }
     animals.get({callback});
+  });
+  test(`search (case sensitive)`, done => {
+    let timesCalled = 0;
+    function callback(animal) {
+      expect(animal).toBeInstanceOf(Animal);
+      expect(animal.name.indexOf('P')).toBe(0);
+      timesCalled++;
+      if (timesCalled === 4) {
+        done();
+      }
+    }
+    animals.get({callback, query: {name: 'P'}});
+  });
+  test(`search (case insensitive)`, done => {
+    let timesCalled = 0;
+    function callback(animal) {
+      expect(animal).toBeInstanceOf(Animal);
+      expect(animal.name.toLowerCase().indexOf('p')).toBe(0);
+      timesCalled++;
+      if (timesCalled === 5) {
+        done();
+      }
+    }
+    animals.get({callback, query: {name: 'P'}, caseSensitive: false});
+  });
+  test(`selector`, done => {
+    let timesCalled = 0;
+    function callback(animal) {
+      expect(animal).toBeInstanceOf(Animal);
+      expect(animal.name).toBe(`Moisture`);
+      timesCalled++;
+      if (timesCalled === 2) {
+        done();
+      }
+    }
+    animals.get({callback, selector: {name: 'Moisture'}});
   });
 });

@@ -14,22 +14,42 @@
 		return module = { exports: {} }, fn(module, module.exports), module.exports;
 	}
 
-	var _core = createCommonjsModule(function (module) {
-	var core = module.exports = { version: '2.6.9' };
-	if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
-	});
-	var _core_1 = _core.version;
-
-	var $JSON = _core.JSON || (_core.JSON = { stringify: JSON.stringify });
-	var stringify = function stringify(it) { // eslint-disable-line no-unused-vars
-	  return $JSON.stringify.apply($JSON, arguments);
+	// 7.2.1 RequireObjectCoercible(argument)
+	var _defined = function (it) {
+	  if (it == undefined) throw TypeError("Can't call method on  " + it);
+	  return it;
 	};
 
-	var stringify$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": stringify, __esModule: true };
-	});
+	// 7.1.13 ToObject(argument)
 
-	var _JSON$stringify = unwrapExports(stringify$1);
+	var _toObject = function (it) {
+	  return Object(_defined(it));
+	};
+
+	var hasOwnProperty = {}.hasOwnProperty;
+	var _has = function (it, key) {
+	  return hasOwnProperty.call(it, key);
+	};
+
+	var toString = {}.toString;
+
+	var _cof = function (it) {
+	  return toString.call(it).slice(8, -1);
+	};
+
+	// fallback for non-array-like ES3 and non-enumerable old V8 strings
+
+	// eslint-disable-next-line no-prototype-builtins
+	var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
+	  return _cof(it) == 'String' ? it.split('') : Object(it);
+	};
+
+	// to indexed object, toObject with fallback for non-array-like ES3 strings
+
+
+	var _toIobject = function (it) {
+	  return _iobject(_defined(it));
+	};
 
 	// 7.1.4 ToInteger
 	var ceil = Math.ceil;
@@ -38,29 +58,49 @@
 	  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 	};
 
-	// 7.2.1 RequireObjectCoercible(argument)
-	var _defined = function (it) {
-	  if (it == undefined) throw TypeError("Can't call method on  " + it);
-	  return it;
+	// 7.1.15 ToLength
+
+	var min = Math.min;
+	var _toLength = function (it) {
+	  return it > 0 ? min(_toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 	};
 
-	// true  -> String#at
-	// false -> String#codePointAt
-	var _stringAt = function (TO_STRING) {
-	  return function (that, pos) {
-	    var s = String(_defined(that));
-	    var i = _toInteger(pos);
-	    var l = s.length;
-	    var a, b;
-	    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
-	    a = s.charCodeAt(i);
-	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
-	      ? TO_STRING ? s.charAt(i) : a
-	      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+	var max = Math.max;
+	var min$1 = Math.min;
+	var _toAbsoluteIndex = function (index, length) {
+	  index = _toInteger(index);
+	  return index < 0 ? max(index + length, 0) : min$1(index, length);
+	};
+
+	// false -> Array#indexOf
+	// true  -> Array#includes
+
+
+
+	var _arrayIncludes = function (IS_INCLUDES) {
+	  return function ($this, el, fromIndex) {
+	    var O = _toIobject($this);
+	    var length = _toLength(O.length);
+	    var index = _toAbsoluteIndex(fromIndex, length);
+	    var value;
+	    // Array#includes uses SameValueZero equality algorithm
+	    // eslint-disable-next-line no-self-compare
+	    if (IS_INCLUDES && el != el) while (length > index) {
+	      value = O[index++];
+	      // eslint-disable-next-line no-self-compare
+	      if (value != value) return true;
+	    // Array#indexOf ignores holes, Array#includes - not
+	    } else for (;length > index; index++) if (IS_INCLUDES || index in O) {
+	      if (O[index] === el) return IS_INCLUDES || index || 0;
+	    } return !IS_INCLUDES && -1;
 	  };
 	};
 
-	var _library = true;
+	var _core = createCommonjsModule(function (module) {
+	var core = module.exports = { version: '2.6.9' };
+	if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
+	});
+	var _core_1 = _core.version;
 
 	var _global = createCommonjsModule(function (module) {
 	// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
@@ -70,6 +110,62 @@
 	  : Function('return this')();
 	if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
 	});
+
+	var _library = true;
+
+	var _shared = createCommonjsModule(function (module) {
+	var SHARED = '__core-js_shared__';
+	var store = _global[SHARED] || (_global[SHARED] = {});
+
+	(module.exports = function (key, value) {
+	  return store[key] || (store[key] = value !== undefined ? value : {});
+	})('versions', []).push({
+	  version: _core.version,
+	  mode: 'pure',
+	  copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
+	});
+	});
+
+	var id = 0;
+	var px = Math.random();
+	var _uid = function (key) {
+	  return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
+	};
+
+	var shared = _shared('keys');
+
+	var _sharedKey = function (key) {
+	  return shared[key] || (shared[key] = _uid(key));
+	};
+
+	var arrayIndexOf = _arrayIncludes(false);
+	var IE_PROTO = _sharedKey('IE_PROTO');
+
+	var _objectKeysInternal = function (object, names) {
+	  var O = _toIobject(object);
+	  var i = 0;
+	  var result = [];
+	  var key;
+	  for (key in O) if (key != IE_PROTO) _has(O, key) && result.push(key);
+	  // Don't enum bug & hidden keys
+	  while (names.length > i) if (_has(O, key = names[i++])) {
+	    ~arrayIndexOf(result, key) || result.push(key);
+	  }
+	  return result;
+	};
+
+	// IE 8- don't enum bug keys
+	var _enumBugKeys = (
+	  'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
+	).split(',');
+
+	// 19.1.2.14 / 15.2.3.14 Object.keys(O)
+
+
+
+	var _objectKeys = Object.keys || function keys(O) {
+	  return _objectKeysInternal(O, _enumBugKeys);
+	};
 
 	var _aFunction = function (it) {
 	  if (typeof it != 'function') throw TypeError(it + ' is not a function!');
@@ -177,11 +273,6 @@
 	  return object;
 	};
 
-	var hasOwnProperty = {}.hasOwnProperty;
-	var _has = function (it, key) {
-	  return hasOwnProperty.call(it, key);
-	};
-
 	var PROTOTYPE = 'prototype';
 
 	var $export = function (type, name, source) {
@@ -240,121 +331,235 @@
 	$export.R = 128; // real proto method for `library`
 	var _export = $export;
 
-	var _redefine = _hide;
+	// most Object methods by ES6 should accept primitives
 
-	var _iterators = {};
 
-	var toString = {}.toString;
 
-	var _cof = function (it) {
-	  return toString.call(it).slice(8, -1);
+	var _objectSap = function (KEY, exec) {
+	  var fn = (_core.Object || {})[KEY] || Object[KEY];
+	  var exp = {};
+	  exp[KEY] = exec(fn);
+	  _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
 	};
 
-	// fallback for non-array-like ES3 and non-enumerable old V8 strings
+	// 19.1.2.14 Object.keys(O)
 
-	// eslint-disable-next-line no-prototype-builtins
-	var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
-	  return _cof(it) == 'String' ? it.split('') : Object(it);
+
+
+	_objectSap('keys', function () {
+	  return function keys(it) {
+	    return _objectKeys(_toObject(it));
+	  };
+	});
+
+	var keys = _core.Object.keys;
+
+	var keys$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": keys, __esModule: true };
+	});
+
+	var _Object$keys = unwrapExports(keys$1);
+
+	var classCallCheck = createCommonjsModule(function (module, exports) {
+
+	exports.__esModule = true;
+
+	exports.default = function (instance, Constructor) {
+	  if (!(instance instanceof Constructor)) {
+	    throw new TypeError("Cannot call a class as a function");
+	  }
+	};
+	});
+
+	var _classCallCheck = unwrapExports(classCallCheck);
+
+	/**
+	* Gun object collection that provides tools for indexing and search. Decentralize everything!
+	*
+	* If opt.class is passed, object.serialize() and opt.class.deserialize() must be defined.
+	*
+	* Supports search from multiple indexes.
+	* For example, retrieve message feed from your own index and your friends' indexes.
+	*
+	* TODO: aggregation
+	* TODO: example
+	* @param {Object} opt {gun, class, indexes = [], askPeers = true, name = class.name}
+	*/
+	var Collection = function () {
+	  function Collection() {
+	    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+	    _classCallCheck(this, Collection);
+
+	    if (!opt.gun) {
+	      throw new Error("Missing opt.gun");
+	    }
+	    if (!(opt.class || opt.name)) {
+	      throw new Error("You must supply either opt.name or opt.class");
+	    }
+	    this.class = opt.class;
+	    if (this.class && !this.class.deserialize) {
+	      throw new Error("opt.class must have deserialize() method");
+	    }
+	    this.name = opt.name || opt.class.name;
+	    this.gun = opt.gun;
+	    this.indexes = opt.indexes || [];
+	    this.askPeers = typeof opt.askPeers === "undefined" ? true : opt.askPeers;
+	  }
+
+	  /**
+	  *
+	  */
+
+
+	  Collection.prototype.put = function put(object) {
+	    var data = object;
+	    if (this.class) {
+	      data = object.serialize();
+	    }
+	    // TODO: optionally use gun hash table
+	    var node = void 0;
+	    if (data.id) {
+	      node = this.gun.get(this.name).get("id").get(data.id).put(data); // TODO: use .top()
+	    } else {
+	      node = this.gun.get(this.name).get("id").set(data);
+	    }
+	    this._addToIndexes(data, node);
+	  };
+
+	  Collection.prototype._addToIndexes = function _addToIndexes(serializedObject, node) {
+	    for (var i = 0; i < this.indexes.length; i++) {
+	      if (Object.prototype.hasOwnProperty.call(serializedObject, this.indexes[i])) {
+	        var indexName = this.indexes[i];
+	        this.gun.get(this.name).get(indexName).get(serializedObject[indexName]).put(node);
+	      }
+	    }
+	  };
+
+	  // TODO: method for terminating the query
+	  // TODO: query ttl. https://mongodb.github.io/node-mongodb-native/2.0/api/Collection.html
+	  /**
+	  * @param {Object} opt {callback, id, selector, limit, orderBy}
+	  */
+
+
+	  Collection.prototype.get = function get() {
+	    var _this = this;
+
+	    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+	    if (!opt.callback) {
+	      return;
+	    }
+	    var results = 0;
+	    var matcher = function matcher(data) {
+	      if (opt.limit && results++ >= opt.limit) {
+	        return; // TODO: terminate query
+	      }
+	      if (opt.selector) {
+	        // TODO: deep compare selector object?
+	        var keys = _Object$keys(opt.selector);
+	        for (var i = 0; i < keys.length; i++) {
+	          var key = keys[i];
+	          if (!Object.prototype.hasOwnProperty.call(data, key)) {
+	            return;
+	          }
+	          var v1 = void 0,
+	              v2 = void 0;
+	          if (opt.caseSensitive === false) {
+	            v1 = data[key].toLowerCase();
+	            v2 = opt.selector[key].toLowerCase();
+	          } else {
+	            v1 = data[key];
+	            v2 = opt.selector[key];
+	          }
+	          if (v1 !== v2) {
+	            return;
+	          }
+	        }
+	      }
+	      if (opt.query) {
+	        // TODO: deep compare selector object?
+	        var _keys = _Object$keys(opt.query);
+	        for (var _i = 0; _i < _keys.length; _i++) {
+	          var _key = _keys[_i];
+	          if (!Object.prototype.hasOwnProperty.call(data, _key)) {
+	            return;
+	          }
+	          var _v = void 0,
+	              _v2 = void 0;
+	          if (opt.caseSensitive === false) {
+	            _v = data[_key].toLowerCase();
+	            _v2 = opt.query[_key].toLowerCase();
+	          } else {
+	            _v = data[_key];
+	            _v2 = opt.query[_key];
+	          }
+	          if (_v.indexOf(_v2) !== 0) {
+	            return;
+	          }
+	        }
+	      }
+	      if (_this.class) {
+	        opt.callback(_this.class.deserialize(data));
+	      } else {
+	        opt.callback(data);
+	      }
+	    };
+
+	    if (opt.id) {
+	      opt.limit = 1;
+	      this.gun.get(this.name).get("id").get(opt.id).on(matcher);
+	      return;
+	    }
+
+	    var indexName = "id";
+	    if (opt.orderBy && this.indexes.indexOf(opt.orderBy) > -1) {
+	      indexName = opt.orderBy;
+	    }
+
+	    // TODO: query from indexes
+	    this.gun.get(this.name).get(indexName).map().on(matcher); // TODO: limit .open recursion
+	    if (this.askPeers) {
+	      this.gun.get("trustedIndexes").on(function (val, key) {
+	        _this.gun.user(key).get(_this.name).get(indexName).map().on(matcher);
+	      });
+	    }
+	  };
+
+	  return Collection;
+	}();
+
+	var $JSON = _core.JSON || (_core.JSON = { stringify: JSON.stringify });
+	var stringify = function stringify(it) { // eslint-disable-line no-unused-vars
+	  return $JSON.stringify.apply($JSON, arguments);
 	};
 
-	// to indexed object, toObject with fallback for non-array-like ES3 strings
+	var stringify$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": stringify, __esModule: true };
+	});
 
+	var _JSON$stringify = unwrapExports(stringify$1);
 
-	var _toIobject = function (it) {
-	  return _iobject(_defined(it));
-	};
-
-	// 7.1.15 ToLength
-
-	var min = Math.min;
-	var _toLength = function (it) {
-	  return it > 0 ? min(_toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
-	};
-
-	var max = Math.max;
-	var min$1 = Math.min;
-	var _toAbsoluteIndex = function (index, length) {
-	  index = _toInteger(index);
-	  return index < 0 ? max(index + length, 0) : min$1(index, length);
-	};
-
-	// false -> Array#indexOf
-	// true  -> Array#includes
-
-
-
-	var _arrayIncludes = function (IS_INCLUDES) {
-	  return function ($this, el, fromIndex) {
-	    var O = _toIobject($this);
-	    var length = _toLength(O.length);
-	    var index = _toAbsoluteIndex(fromIndex, length);
-	    var value;
-	    // Array#includes uses SameValueZero equality algorithm
-	    // eslint-disable-next-line no-self-compare
-	    if (IS_INCLUDES && el != el) while (length > index) {
-	      value = O[index++];
-	      // eslint-disable-next-line no-self-compare
-	      if (value != value) return true;
-	    // Array#indexOf ignores holes, Array#includes - not
-	    } else for (;length > index; index++) if (IS_INCLUDES || index in O) {
-	      if (O[index] === el) return IS_INCLUDES || index || 0;
-	    } return !IS_INCLUDES && -1;
+	// true  -> String#at
+	// false -> String#codePointAt
+	var _stringAt = function (TO_STRING) {
+	  return function (that, pos) {
+	    var s = String(_defined(that));
+	    var i = _toInteger(pos);
+	    var l = s.length;
+	    var a, b;
+	    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
+	    a = s.charCodeAt(i);
+	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+	      ? TO_STRING ? s.charAt(i) : a
+	      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
 	  };
 	};
 
-	var _shared = createCommonjsModule(function (module) {
-	var SHARED = '__core-js_shared__';
-	var store = _global[SHARED] || (_global[SHARED] = {});
+	var _redefine = _hide;
 
-	(module.exports = function (key, value) {
-	  return store[key] || (store[key] = value !== undefined ? value : {});
-	})('versions', []).push({
-	  version: _core.version,
-	  mode: 'pure',
-	  copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
-	});
-	});
-
-	var id = 0;
-	var px = Math.random();
-	var _uid = function (key) {
-	  return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
-	};
-
-	var shared = _shared('keys');
-
-	var _sharedKey = function (key) {
-	  return shared[key] || (shared[key] = _uid(key));
-	};
-
-	var arrayIndexOf = _arrayIncludes(false);
-	var IE_PROTO = _sharedKey('IE_PROTO');
-
-	var _objectKeysInternal = function (object, names) {
-	  var O = _toIobject(object);
-	  var i = 0;
-	  var result = [];
-	  var key;
-	  for (key in O) if (key != IE_PROTO) _has(O, key) && result.push(key);
-	  // Don't enum bug & hidden keys
-	  while (names.length > i) if (_has(O, key = names[i++])) {
-	    ~arrayIndexOf(result, key) || result.push(key);
-	  }
-	  return result;
-	};
-
-	// IE 8- don't enum bug keys
-	var _enumBugKeys = (
-	  'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
-	).split(',');
-
-	// 19.1.2.14 / 15.2.3.14 Object.keys(O)
-
-
-
-	var _objectKeys = Object.keys || function keys(O) {
-	  return _objectKeysInternal(O, _enumBugKeys);
-	};
+	var _iterators = {};
 
 	var _objectDps = _descriptors ? Object.defineProperties : function defineProperties(O, Properties) {
 	  _anObject(O);
@@ -441,12 +646,6 @@
 	var _iterCreate = function (Constructor, NAME, next) {
 	  Constructor.prototype = _objectCreate(IteratorPrototype, { next: _propertyDesc(1, next) });
 	  _setToStringTag(Constructor, NAME + ' Iterator');
-	};
-
-	// 7.1.13 ToObject(argument)
-
-	var _toObject = function (it) {
-	  return Object(_defined(it));
 	};
 
 	// 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
@@ -580,8 +779,8 @@
 
 	for (var i = 0; i < DOMIterables.length; i++) {
 	  var NAME = DOMIterables[i];
-	  var Collection = _global[NAME];
-	  var proto = Collection && Collection.prototype;
+	  var Collection$1 = _global[NAME];
+	  var proto = Collection$1 && Collection$1.prototype;
 	  if (proto && !proto[TO_STRING_TAG]) _hide(proto, TO_STRING_TAG, NAME);
 	  _iterators[NAME] = _iterators.Array;
 	}
@@ -2461,48 +2660,6 @@
 	}
 
 	var regenerator = runtimeModule;
-
-	// most Object methods by ES6 should accept primitives
-
-
-
-	var _objectSap = function (KEY, exec) {
-	  var fn = (_core.Object || {})[KEY] || Object[KEY];
-	  var exp = {};
-	  exp[KEY] = exec(fn);
-	  _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
-	};
-
-	// 19.1.2.14 Object.keys(O)
-
-
-
-	_objectSap('keys', function () {
-	  return function keys(it) {
-	    return _objectKeys(_toObject(it));
-	  };
-	});
-
-	var keys = _core.Object.keys;
-
-	var keys$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": keys, __esModule: true };
-	});
-
-	var _Object$keys = unwrapExports(keys$1);
-
-	var classCallCheck = createCommonjsModule(function (module, exports) {
-
-	exports.__esModule = true;
-
-	exports.default = function (instance, Constructor) {
-	  if (!(instance instanceof Constructor)) {
-	    throw new TypeError("Cannot call a class as a function");
-	  }
-	};
-	});
-
-	var _classCallCheck = unwrapExports(classCallCheck);
 
 	var possibleConstructorReturn = createCommonjsModule(function (module, exports) {
 
@@ -10980,55 +11137,56 @@
 	  });
 	}
 
-	// Helper for managing pools of Gun nodes. Primarily meant to simplify toplogy tracking in Iris tests.
-	// For reference, here's a run-through by example. Under each call, is  an explanation of what happens.
-	//
-	// Instances can be identified by the port they're listening on, which is saved under .netPort for reference.
-	//
-	// const nets = GunNets();
-	//
-	// nets.spawnNodes(2):  // net ID: 1, A root, B points to A
-	//   - returns [A, B]
-	//   - B peers with A
-	//   - netId is 1 for both
-	//
-	// nets.spawnNodes(1):
-	//   - returns [C]
-	//   - C has no peers
-	//   - netId is 2
-	//
-	// nets.spawnNodes(2, C.netId)
-	//   - returns  [D, E]
-	//   - D, E both peer with C
-	//   - netId is 2
-	//
-	// nets.spawnNodes(1, E.netId)
-	//   - returns [F]
-	//   - F peers with C
-	//   - netId is 2
-	//
-	// nets.spawnNodes(2, 'test')
-	//   - returns [G, H]
-	//   - H peers with G
-	//   - netId is 'test'
-	//
-	// nets.joinNets(B, H)
-	//   - A peers with G (and B by proxy), G is root, so peering goes like:
-	//      B -> A -> G
-	//      H -> G
-	//   - All nodes now have G.netID, so 'test' as .netID
-	//
-	// nets.joinNets(D, H)
-	//   - D,E,F still point to C, which now peers with G, meaning:
-	//     B -> A -> G
-	//     H -> G
-	//     D,E,F -> C -> G
-	//   - All share netId 'test'
-	//
-	// @param fromPort
-	// @param ip
-	// @constructor
-	//
+	/*
+	 * Helper for managing pools of Gun nodes. Primarily meant to simplify toplogy tracking in Iris tests.
+	 * For reference, here's a run-through by example. Under each call, is  an explanation of what happens.
+	 *
+	 * Instances can be identified by the port they're listening on, which is saved under .netPort for reference.
+	 *
+	 * const nets = GunNets();
+	 *
+	 * nets.spawnNodes(2):   * net ID: 1, A root, B points to A
+	 *   - returns [A, B]
+	 *   - B peers with A
+	 *   - netId is 1 for both
+	 *
+	 * nets.spawnNodes(1):
+	 *   - returns [C]
+	 *   - C has no peers
+	 *   - netId is 2
+	 *
+	 * nets.spawnNodes(2, C.netId)
+	 *   - returns  [D, E]
+	 *   - D, E both peer with C
+	 *   - netId is 2
+	 *
+	 * nets.spawnNodes(1, E.netId)
+	 *   - returns [F]
+	 *   - F peers with C
+	 *   - netId is 2
+	 *
+	 * nets.spawnNodes(2, 'test')
+	 *   - returns [G, H]
+	 *   - H peers with G
+	 *   - netId is 'test'
+	 *
+	 * nets.joinNets(B, H)
+	 *   - A peers with G (and B by proxy), G is root, so peering goes like:
+	 *      B -> A -> G
+	 *      H -> G
+	 *   - All nodes now have G.netID, so 'test' as .netID
+	 *
+	 * nets.joinNets(D, H)
+	 *   - D,E,F still point to C, which now peers with G, meaning:
+	 *     B -> A -> G
+	 *     H -> G
+	 *     D,E,F -> C -> G
+	 *   - All share netId 'test'
+	 *
+	 * @param fromPort
+	 * @param ip
+	 * @constructor
+	 */
 	function GunNets() {
 	  var _this = this;
 
@@ -11040,10 +11198,9 @@
 	  var nextPort = fromPort;
 
 	  // Small internal helper function. Just adds a new peer to the given gun instance.
-	  //
 	  function addPeer(gun, ip, port) {
 	    //const oldPeers = gun.opt()['_'].opt.peers;
-	    return gun.opt({ peers: ['http://' + ip + ':' + port + '/gun'] }); // Should these be linked both ways?
+	    return gun.opt({ peers: ['http: *' + ip + ':' + port + '/gun'] }); // Should these be linked both ways?
 	  }
 
 	  async function dropPeer(gun, peerUrl) {
@@ -11065,15 +11222,17 @@
 	    delete gun._.opt.peers[peerUrl];
 	  }
 
-	  // When called, creates a number of Gun nodes, all having the root node as their peer. If netId is not given,
-	  // next sequential number is used. If netId of an existing net is provided, will use its root node as the
-	  // target and add new nodes to the same net.
-	  //
-	  // Returns the list of newly created nodes.
-	  //
-	  // @param number
-	  // @param netId
-	  //
+	  /*
+	   * When called, creates a number of Gun nodes, all having the root node as their peer. If netId is not given,
+	   * next sequential number is used. If netId of an existing net is provided, will use its root node as the
+	   * target and add new nodes to the same net.
+	   *
+	   * Returns the list of newly created nodes.
+	   *
+	   * @param number
+	   * @param netId
+	   *
+	   */
 	  this.spawnNodes = function () {
 	    var number = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 	    var netId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
@@ -11095,7 +11254,7 @@
 	        port: port,
 	        multicast: false,
 	        peers: {},
-	        //file: `${configDir}/${gunDBName}.${port}`,
+	        // file: `${configDir}/${gunDBName}.${port}`,
 	        web: server
 	      });
 	      g.netPort = port;
@@ -11126,15 +11285,16 @@
 	    return newGuns;
 	  };
 
-	  // Peer-connects childMember's root node to parentMember's root.
-	  //
-	  // All childMember's nodes are re-tagged with parentMember's netId and the old child netId ceases to exist.
-	  // If netId was already the same between groups, nothing happens.
-	  //
-	  // @param parentMember
-	  // @param childMember
-	  // @returns {*}
-	  //
+	  /*
+	   * Peer-connects childMember's root node to parentMember's root.
+	   *
+	   * All childMember's nodes are re-tagged with parentMember's netId and the old child netId ceases to exist.
+	   * If netId was already the same between groups, nothing happens.
+	   *
+	   * @param parentMember
+	   * @param childMember
+	   * @returns {*}
+	   */
 	  this.joinNets = function (childMember, parentMember) {
 	    var _gunNets$root$netId;
 
@@ -11217,7 +11377,7 @@
 	    }
 	    var sheet = document.createElement('style');
 	    sheet.id = elementId;
-	    sheet.innerHTML = '\n      .iris-identicon// {\n        box-sizing: border-box;\n      }\n\n      .iris-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .iris-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .iris-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .iris-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .iris-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .iris-card a:hover, .iris-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .iris-pos {\n        color: #3c763d;\n      }\n\n      .iris-neg {\n        color: #a94442;\n      }\n\n      .iris-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
+	    sheet.innerHTML = '\n      .iris-identicon * {\n        box-sizing: border-box;\n      }\n\n      .iris-identicon {\n        vertical-align: middle;\n        margin: auto;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        margin: auto;\n        max-width: 100%;\n      }\n\n      .iris-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .iris-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .iris-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .iris-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .iris-card a:hover, .iris-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .iris-pos {\n        color: #3c763d;\n      }\n\n      .iris-neg {\n        color: #a94442;\n      }\n\n      .iris-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }';
 	    document.body.appendChild(sheet);
 	  },
 
@@ -12536,6 +12696,18 @@
 	    return Message.fromSig(JSON.parse(s));
 	  };
 
+	  /**
+	  *
+	  */
+
+
+	  Message.setReaction = function setReaction(gun, msg, reaction) {
+	    gun.get('reactions').get(msg.getHash()).put(reaction);
+	    gun.get('reactions').get(msg.getHash()).put(reaction);
+	    gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.rootContact.value).put(reaction);
+	    gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.rootContact.value).put(reaction);
+	  };
+
 	  return Message;
 	}();
 
@@ -12591,7 +12763,8 @@
 	var _Object$assign = unwrapExports(assign$1);
 
 	/**
-	* An Iris Contact, such as person, organization or group.
+	* An Iris Contact, such as person, organization or group. More abstractly speaking: an Identity.
+	*
 	* Usually you don't create Contacts yourself, but get them
 	* from SocialNetwork methods such as get() and search().
 	*/
@@ -12758,7 +12931,7 @@
 	    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
 	      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
 	      <td>
-	        <span ng-if="result.distance == 0" class="label label-default pull-right">viewpoint</span>
+	        <span ng-if="result.distance == 0" class="label label-default pull-right">rootContact</span>
 	        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>
 	        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>
 	        <small ng-if="!result.name" class="list-group-item-text">
@@ -13041,14 +13214,14 @@
 	    this.theirSecretChatIds = {}; // maps participant public key to their secret chat id
 	    this.onMessage = options.onMessage;
 
-	    if (typeof options.participants === "string") {
+	    if (typeof options.participants === 'string') {
 	      this.addPub(options.participants);
 	    } else if (Array.isArray(options.participants)) {
 	      for (var i = 0; i < options.participants.length; i++) {
-	        if (typeof options.participants[i] === "string") {
+	        if (typeof options.participants[i] === 'string') {
 	          this.addPub(options.participants[i]);
 	        } else {
-	          console.log("participant public key must be string, got", _typeof(options.participants[i]), options.participants[i]);
+	          console.log('participant public key must be string, got', _typeof(options.participants[i]), options.participants[i]);
 	        }
 	      }
 	    }
@@ -13056,7 +13229,7 @@
 
 	  Chat.prototype.getSecret = async function getSecret(pub) {
 	    if (!this.secrets[pub]) {
-	      var epub = await this.gun.user(pub).get("epub").once().then();
+	      var epub = await this.gun.user(pub).get('epub').once().then();
 	      this.secrets[pub] = await Gun.SEA.secret(epub, this.key);
 	    }
 	    return this.secrets[pub];
@@ -13068,9 +13241,9 @@
 
 
 	  Chat.getOurSecretChatId = async function getOurSecretChatId(gun, pub, pair) {
-	    var epub = await gun.user(pub).get("epub").once().then();
+	    var epub = await gun.user(pub).get('epub').once().then();
 	    var secret = await Gun.SEA.secret(epub, pair);
-	    return Gun.SEA.work(secret + pub, null, null, { name: "SHA-256" });
+	    return Gun.SEA.work(secret + pub, null, null, { name: 'SHA-256' });
 	  };
 
 	  /**
@@ -13079,15 +13252,15 @@
 
 
 	  Chat.getTheirSecretChatId = async function getTheirSecretChatId(gun, pub, pair) {
-	    var epub = await gun.user(pub).get("epub").once().then();
+	    var epub = await gun.user(pub).get('epub').once().then();
 	    var secret = await Gun.SEA.secret(epub, pair);
-	    return Gun.SEA.work(secret + pair.pub, null, null, { name: "SHA-256" });
+	    return Gun.SEA.work(secret + pair.pub, null, null, { name: 'SHA-256' });
 	  };
 
 	  /**
 	  * Return a list of public keys that you have initiated a chat with or replied to.
 	  * (Chats that are initiated by others and unreplied by you don't show up, because
-	  * this method doesn't know where to look for them. Use index.getChats() to listen to new chats from friends.)
+	  * this method doesn't know where to look for them. Use socialNetwork.getChats() to listen to new chats from friends.)
 	  * @param {Object} gun user.authed gun instance
 	  * @param {Object} keypair SEA keypair that the gun instance is authenticated with
 	  * @param callback callback function that is called for each public key you have a chat with
@@ -13096,9 +13269,9 @@
 
 	  Chat.getChats = async function getChats(gun, keypair, callback) {
 	    var mySecret = await Gun.SEA.secret(keypair.epub, keypair);
-	    gun.user().get("chats").map().on(async function (value, ourSecretChatId) {
+	    gun.user().get('chats').map().on(async function (value, ourSecretChatId) {
 	      if (value) {
-	        gun.user().get("chats").get(ourSecretChatId).get("pub").once(async function (encryptedPub) {
+	        gun.user().get('chats').get(ourSecretChatId).get('pub').once(async function (encryptedPub) {
 	          var pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
 	          callback(pub);
 	        });
@@ -13109,7 +13282,7 @@
 	  Chat.prototype.getOurSecretChatId = async function getOurSecretChatId(pub) {
 	    if (!this.ourSecretChatIds[pub]) {
 	      var secret = await this.getSecret(pub);
-	      this.ourSecretChatIds[pub] = await Gun.SEA.work(secret + pub, null, null, { name: "SHA-256" });
+	      this.ourSecretChatIds[pub] = await Gun.SEA.work(secret + pub, null, null, { name: 'SHA-256' });
 	    }
 	    return this.ourSecretChatIds[pub];
 	  };
@@ -13117,7 +13290,7 @@
 	  Chat.prototype.getTheirSecretChatId = async function getTheirSecretChatId(pub) {
 	    if (!this.theirSecretChatIds[pub]) {
 	      var secret = await this.getSecret(pub);
-	      this.theirSecretChatIds[pub] = await Gun.SEA.work(secret + this.key.pub, null, null, { name: "SHA-256" });
+	      this.theirSecretChatIds[pub] = await Gun.SEA.work(secret + this.key.pub, null, null, { name: 'SHA-256' });
 	    }
 	    return this.theirSecretChatIds[pub];
 	  };
@@ -13125,7 +13298,7 @@
 	  Chat.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored) {
 	    if (this.onMessage) {
 	      var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
-	      if (typeof decrypted !== "object") {
+	      if (typeof decrypted !== 'object') {
 	        // console.log(`chat data received`, decrypted);
 	        return;
 	      }
@@ -13145,13 +13318,13 @@
 
 	    var _loop = async function _loop(i) {
 	      var ourSecretChatId = await _this.getOurSecretChatId(keys[i]);
-	      _this.user.get("chats").get(ourSecretChatId).get("latestMsg").on(async function (data) {
+	      _this.user.get('chats').get(ourSecretChatId).get('latestMsg').on(async function (data) {
 	        var decrypted = await Gun.SEA.decrypt(data, (await _this.getSecret(keys[i])));
-	        if (typeof decrypted !== "object") {
+	        if (typeof decrypted !== 'object') {
 	          // console.log(`chat data received`, decrypted);
 	          return;
 	        }
-	        callback(decrypted, { selfAuthored: selfAuthored });
+	        callback(decrypted, {});
 	      });
 	    };
 
@@ -13172,7 +13345,7 @@
 	    for (var i = 0; i < keys.length; i++) {
 	      var encrypted = await Gun.SEA.encrypt(time, (await this.getSecret(keys[i])));
 	      var ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-	      this.user.get("chats").get(ourSecretChatId).get("msgsLastSeenTime").put(encrypted);
+	      this.user.get('chats').get(ourSecretChatId).get('msgsLastSeenTime').put(encrypted);
 	    }
 	  };
 
@@ -13188,7 +13361,7 @@
 
 	    var _loop2 = async function _loop2(i) {
 	      var ourSecretChatId = await _this2.getOurSecretChatId(keys[i]);
-	      _this2.gun.user().get("chats").get(ourSecretChatId).get("msgsLastSeenTime").on(async function (data) {
+	      _this2.gun.user().get('chats').get(ourSecretChatId).get('msgsLastSeenTime').on(async function (data) {
 	        _this2.myMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
 	        if (callback) {
 	          callback(_this2.myMsgsLastSeenTime);
@@ -13213,7 +13386,7 @@
 
 	    var _loop3 = async function _loop3(i) {
 	      var theirSecretChatId = await _this3.getTheirSecretChatId(keys[i]);
-	      _this3.gun.user(keys[i]).get("chats").get(theirSecretChatId).get("msgsLastSeenTime").on(async function (data) {
+	      _this3.gun.user(keys[i]).get('chats').get(theirSecretChatId).get('msgsLastSeenTime').on(async function (data) {
 	        _this3.theirMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this3.getSecret(keys[i])));
 	        if (callback) {
 	          callback(_this3.theirMsgsLastSeenTime, keys[i]);
@@ -13240,14 +13413,14 @@
 	    // Save their public key in encrypted format, so in chat listing we know who we are chatting with
 	    var ourSecretChatId = await this.getOurSecretChatId(pub);
 	    var mySecret = await Gun.SEA.secret(this.key.epub, this.key);
-	    this.gun.user().get("chats").get(ourSecretChatId).get("pub").put((await Gun.SEA.encrypt(pub, mySecret)));
+	    this.gun.user().get('chats').get(ourSecretChatId).get('pub').put((await Gun.SEA.encrypt(pub, mySecret)));
 	    // Subscribe to their messages
 	    var theirSecretChatId = await this.getTheirSecretChatId(pub);
-	    this.gun.user(pub).get("chats").get(theirSecretChatId).get("msgs").map().once(function (data) {
+	    this.gun.user(pub).get('chats').get(theirSecretChatId).get('msgs').map().once(function (data) {
 	      _this4.messageReceived(data, pub);
 	    });
 	    // Subscribe to our messages
-	    this.user.get("chats").get(ourSecretChatId).get("msgs").map().once(function (data) {
+	    this.user.get('chats').get(ourSecretChatId).get('msgs').map().once(function (data) {
 	      _this4.messageReceived(data, pub, true);
 	    });
 	  };
@@ -13259,10 +13432,10 @@
 
 
 	  Chat.prototype.send = async function send(msg) {
-	    if (typeof msg === "string") {
+	    if (typeof msg === 'string') {
 	      msg = {
 	        time: new Date().toISOString(),
-	        author: "anonymous",
+	        author: 'anonymous',
 	        text: msg
 	      };
 	    }
@@ -13272,8 +13445,8 @@
 	    for (var i = 0; i < keys.length; i++) {
 	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
 	      var ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-	      this.user.get("chats").get(ourSecretChatId).get("msgs").get("" + msg.time).put(encrypted);
-	      this.user.get("chats").get(ourSecretChatId).get("latestMsg").put(encrypted);
+	      this.user.get('chats').get(ourSecretChatId).get('msgs').get('' + msg.time).put(encrypted);
+	      this.user.get('chats').get(ourSecretChatId).get('latestMsg').put(encrypted);
 	    }
 	  };
 
@@ -13287,7 +13460,7 @@
 	  Chat.setOnline = function setOnline(gun, isOnline) {
 	    if (isOnline) {
 	      var update = function update() {
-	        gun.user().get("lastActive").put(Math.round(Gun.state() / 1000));
+	        gun.user().get('lastActive').put(Math.round(Gun.state() / 1000));
 	      };
 	      update();
 	      gun.setOnlineInterval = setInterval(update, 3000);
@@ -13307,7 +13480,7 @@
 
 	  Chat.getOnline = function getOnline(gun, pubKey, callback) {
 	    var timeout = void 0;
-	    gun.user(pubKey).get("lastActive").on(function (lastActive) {
+	    gun.user(pubKey).get('lastActive').on(function (lastActive) {
 	      clearTimeout(timeout);
 	      var now = Math.round(Gun.state() / 1000);
 	      var isOnline = lastActive > now - 10 && lastActive < now + 30;
@@ -13447,7 +13620,7 @@
 	      var gun = options.gun || new Gun();
 	      var user = gun.user(options.pubKey);
 	      this.gun = user.get('iris');
-	      this.viewpoint = new Attribute({ type: 'keyID', value: options.pubKey });
+	      this.rootContact = new Attribute({ type: 'keyID', value: options.pubKey });
 	      this.ready = _Promise.resolve();
 	    } else {
 	      // our own index
@@ -13469,7 +13642,7 @@
 	    var user = gun.user();
 	    user.auth(keypair);
 	    this.writable = true;
-	    this.viewpoint = new Attribute('keyID', Key.getId(keypair));
+	    this.rootContact = new Attribute('keyID', Key.getId(keypair));
 	    user.get('epub').put(keypair.epub);
 	    // Initialize indexes with deterministic gun souls (.top)
 	    this.gun = user.get('iris').put(user.top('iris'));
@@ -13480,11 +13653,11 @@
 	    this.gun.get('messagesByHash').put(user.top('messagesByHash'));
 	    this.gun.get('messagesByDistance').put(user.top('messagesByDistance'));
 
-	    var uri = this.viewpoint.uri();
+	    var uri = this.rootContact.uri();
 	    var g = user.top(uri);
 	    this.gun.get('identitiesBySearchKey').get(uri).put(g);
 	    var attrs = {};
-	    attrs[uri] = this.viewpoint;
+	    attrs[uri] = this.rootContact;
 	    if (this.options.self) {
 	      var keys = _Object$keys(this.options.self);
 	      for (var i = 0; i < keys.length; i++) {
@@ -13492,10 +13665,10 @@
 	        attrs[a.uri()] = a;
 	      }
 	    }
-	    var id = Contact.create(g, { trustDistance: 0, linkTo: this.viewpoint, attrs: attrs }, this);
+	    var id = Contact.create(g, { trustDistance: 0, linkTo: this.rootContact, attrs: attrs }, this);
 	    await this._addContactToIndexes(id.gun);
 	    if (this.options.self) {
-	      var recipient = _Object$assign(this.options.self, { keyID: this.viewpoint.value });
+	      var recipient = _Object$assign(this.options.self, { keyID: this.rootContact.value });
 	      Message.createVerification({ recipient: recipient }, keypair).then(function (msg) {
 	        _this2.addMessage(msg);
 	      });
@@ -13621,7 +13794,7 @@
 	  SocialNetwork.prototype.getContactIndexKeys = async function getContactIndexKeys(contact, hash) {
 	    var indexKeys = { identitiesByTrustDistance: [], identitiesBySearchKey: [] };
 	    var d = void 0;
-	    if (contact.linkTo && this.viewpoint.equals(contact.linkTo)) {
+	    if (contact.linkTo && this.rootContact.equals(contact.linkTo)) {
 	      // TODO: contact is a gun instance, no linkTo
 	      d = 0;
 	    } else {
@@ -13672,7 +13845,7 @@
 	      }
 	    }
 
-	    if (this.viewpoint.equals(contact.linkTo)) {
+	    if (this.rootContact.equals(contact.linkTo)) {
 	      addIndexKey(contact.linkTo);
 	    }
 
@@ -13700,87 +13873,7 @@
 	    return this.addMessage(msg);
 	  };
 
-	  /**
-	  * @param {string} value search string
-	  * @param {string} type (optional) type of searched value
-	  * @returns {Array} list of matching identities
-	  */
-
-
-	  SocialNetwork.prototype.search = async function search() {
-	    var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-	    var type = arguments[1];
-
-	    var _this4 = this;
-
-	    var callback = arguments[2];
-	    var limit = arguments[3];
-	    // cursor // TODO: param 'exact', type param
-	    var seen = {};
-	    function searchTermCheck(key) {
-	      var arr = key.split(':');
-	      if (arr.length < 2) {
-	        return false;
-	      }
-	      var keyValue = arr[0];
-	      var keyType = arr[1];
-	      if (keyValue.indexOf(encodeURIComponent(value)) !== 0) {
-	        return false;
-	      }
-	      if (type && keyType !== type) {
-	        return false;
-	      }
-	      return true;
-	    }
-	    var node = this.gun.get('identitiesBySearchKey');
-	    node.map().on(function (id, key) {
-	      if (_Object$keys(seen).length >= limit) {
-	        // TODO: turn off .map cb
-	        return;
-	      }
-	      if (!searchTermCheck(key)) {
-	        return;
-	      }
-	      var soul = Gun.node.soul(id);
-	      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
-	        seen[soul] = true;
-	        var contact = new Contact(node.get(key), undefined, _this4);
-	        contact.cursor = key;
-	        callback(contact);
-	      }
-	    });
-	    if (this.options.indexSync.query.enabled) {
-	      this.gun.get('trustedIndexes').map().once(function (val, key) {
-	        if (val) {
-	          _this4.gun.user(key).get('iris').get('identitiesBySearchKey').map().on(function (id, k) {
-	            if (_Object$keys(seen).length >= limit) {
-	              // TODO: turn off .map cb
-	              return;
-	            }
-	            if (!searchTermCheck(key)) {
-	              return;
-	            }
-	            var soul = Gun.node.soul(id);
-	            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
-	              seen[soul] = true;
-	              callback(new Contact(_this4.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this4));
-	            }
-	          });
-	        }
-	      });
-	    }
-	  };
-
-	  /**
-	  * @returns {Contact} viewpoint contact (trustDistance == 0) of the index
-	  */
-
-
-	  SocialNetwork.prototype.getViewpoint = function getViewpoint() {
-	    return new Contact(this.gun.get('identitiesBySearchKey').get(this.viewpoint.uri()), undefined, this);
-	  };
-
-	  /**
+	  /*
 	  * Get an contact referenced by an identifier.
 	  * get(type, value)
 	  * get(Attribute)
@@ -13789,8 +13882,8 @@
 	  */
 
 
-	  SocialNetwork.prototype.get = function get(a, b) {
-	    var _this5 = this;
+	  SocialNetwork.prototype.getContact = function getContact(a, b) {
+	    var _this4 = this;
 
 	    var reload = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
@@ -13829,7 +13922,7 @@
 	      };
 	      var node = this.gun.get('identities').set(o);
 	      var updateContactByLinkedAttribute = function updateContactByLinkedAttribute(attribute) {
-	        _this5.gun.get('verificationsByRecipient').get(attribute.uri()).map().once(function (val) {
+	        _this4.gun.get('verificationsByRecipient').get(attribute.uri()).map().once(function (val) {
 	          var m = Message.fromSig(val);
 	          var recipients = m.getRecipientArray();
 	          for (var i = 0; i < recipients.length; i++) {
@@ -13837,13 +13930,13 @@
 	            if (!Object.prototype.hasOwnProperty.call(o.attributes), a2.uri()) {
 	              // TODO remove attribute from contact if not enough verifications / too many unverifications
 	              o.attributes[a2.uri()] = a2;
-	              _this5.gun.get('messagesByRecipient').get(a2.uri()).map().once(function (val) {
+	              _this4.gun.get('messagesByRecipient').get(a2.uri()).map().once(function (val) {
 	                var m2 = Message.fromSig(val);
 	                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2.getHash())) {
 	                  o.received[m2.getHash()] = m2;
 	                  if (m2.isPositive()) {
 	                    o.receivedPositive++;
-	                    m2.getAuthor(_this5).gun.get('trustDistance').on(function (d) {
+	                    m2.getAuthor(_this4).gun.get('trustDistance').on(function (d) {
 	                      if (typeof d === 'number') {
 	                        if (typeof o.trustDistance !== 'number' || o.trustDistance > d + 1) {
 	                          o.trustDistance = d + 1;
@@ -13859,7 +13952,7 @@
 	                  node.put(o);
 	                }
 	              });
-	              _this5.gun.get('messagesByAuthor').get(a2.uri()).map().once(function (val) {
+	              _this4.gun.get('messagesByAuthor').get(a2.uri()).map().once(function (val) {
 	                var m2 = Message.fromSig(val);
 	                if (!Object.prototype.hasOwnProperty.call(o.sent, m2.getHash())) {
 	                  o.sent[m2.getHash()] = m2;
@@ -13889,7 +13982,85 @@
 	  };
 
 	  /**
+	  * @returns {Array} list of matching identities
+	  */
+
+
+	  SocialNetwork.prototype.getContacts = async function getContacts() {
+	    var _this5 = this;
+
+	    var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	    // cursor // TODO: param 'exact', type param
+	    if (opts.value) {
+	      return this.getContact(opts.value, opts.type, opts.reload);
+	    }
+	    var seen = {};
+	    function searchTermCheck(key) {
+	      var arr = key.split(':');
+	      if (arr.length < 2) {
+	        return false;
+	      }
+	      var keyValue = arr[0];
+	      var keyType = arr[1];
+	      if (keyValue.indexOf(encodeURIComponent(opts.query)) !== 0) {
+	        return false;
+	      }
+	      if (opts.type && keyType !== opts.type) {
+	        return false;
+	      }
+	      return true;
+	    }
+	    var node = this.gun.get('identitiesBySearchKey');
+	    node.map().on(function (id, key) {
+	      if (_Object$keys(seen).length >= opts.limit) {
+	        // TODO: turn off .map cb
+	        return;
+	      }
+	      if (!searchTermCheck(key)) {
+	        return;
+	      }
+	      var soul = Gun.node.soul(id);
+	      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
+	        seen[soul] = true;
+	        var contact = new Contact(node.get(key), undefined, _this5);
+	        contact.cursor = key;
+	        opts.callback(contact);
+	      }
+	    });
+	    if (this.options.indexSync.query.enabled) {
+	      this.gun.get('trustedIndexes').map().once(function (val, key) {
+	        if (val) {
+	          _this5.gun.user(key).get('iris').get('identitiesBySearchKey').map().on(function (id, k) {
+	            if (_Object$keys(seen).length >= opts.limit) {
+	              // TODO: turn off .map cb
+	              return;
+	            }
+	            if (!searchTermCheck(key)) {
+	              return;
+	            }
+	            var soul = Gun.node.soul(id);
+	            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
+	              seen[soul] = true;
+	              opts.callback(new Contact(_this5.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this5));
+	            }
+	          });
+	        }
+	      });
+	    }
+	  };
+
+	  /**
+	  * @returns {Contact} root contact (center of the social graph, trustDistance == 0)
+	  */
+
+
+	  SocialNetwork.prototype.getRootContact = function getRootContact() {
+	    return new Contact(this.gun.get('identitiesBySearchKey').get(this.rootContact.uri()), undefined, this);
+	  };
+
+	  /**
 	  * Return existing chats and listen to new chats initiated by friends.
+	  * Like Chat.getChats(), but also listens to chats initiated by friends.
 	  */
 
 
@@ -14000,10 +14171,10 @@
 	    if (!Attribute.isUniqueType(a.type)) {
 	      return;
 	    }
-	    if (this.viewpoint.equals(a)) {
+	    if (this.rootContact.equals(a)) {
 	      return 0;
 	    }
-	    var id = this.get(a);
+	    var id = this.getContact(a);
 	    var d = await id.gun.get('trustDistance').then();
 	    if (isNaN(d)) {
 	      d = Infinity;
@@ -14014,8 +14185,8 @@
 	  SocialNetwork.prototype._getMsgTrustDistance = async function _getMsgTrustDistance(msg) {
 	    var shortestDistance = Infinity;
 	    var signerAttr = new Attribute('keyID', msg.getSignerKeyID());
-	    if (!signerAttr.equals(this.viewpoint)) {
-	      var signer = this.get(signerAttr);
+	    if (!signerAttr.equals(this.rootContact)) {
+	      var signer = this.getContact(signerAttr);
 	      var d = await signer.gun.get('trustDistance').then();
 	      if (isNaN(d)) {
 	        return;
@@ -14223,7 +14394,7 @@
 	    var maxMsgsToCrawl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.options.indexSync.importOnAdd.maxMsgCount;
 	    var maxMsgDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.options.indexSync.importOnAdd.maxMsgDistance;
 
-	    if (gunUri === this.viewpoint.value) {
+	    if (gunUri === this.rootContact.value) {
 	      return;
 	    }
 	    var exists = await this.gun.get('trustedIndexes').get(gunUri).then();
@@ -14271,7 +14442,7 @@
 
 	      var _a3 = _ref3;
 
-	      var _id = this.get(_a3);
+	      var _id = this.getContact(_a3);
 	      var start2 = new Date();
 	      var td = await _id.gun.get('trustDistance').then();
 	      this.debug(new Date() - start2, 'ms get trustDistance');
@@ -14307,13 +14478,13 @@
 
 	      var _a4 = _ref4;
 
-	      var _id2 = this.get(_a4);
+	      var _id2 = this.getContact(_a4);
 	      var _td = await _id2.gun.get('trustDistance').then();
 
 	      if (!isNaN(_td)) {
 	        recipientIdentities[_id2.gun['_'].link] = _id2;
 	      }
-	      if (selfAuthored && _a4.type === 'keyID' && _a4.value !== this.viewpoint.value) {
+	      if (selfAuthored && _a4.type === 'keyID' && _a4.value !== this.rootContact.value) {
 	        // TODO: not if already added - causes infinite loop?
 	        if (msg.isPositive()) {
 	          this.addTrustedIndex(_a4.value);
@@ -14366,11 +14537,108 @@
 	  };
 
 	  /**
+	  * Add a message to messagesByTimestamp and other relevant indexes. Update identities in the web of trust according to message data.
+	  *
+	  * @param msg Message (or an array of messages) to add to the index
+	  */
+
+
+	  SocialNetwork.prototype.addMessage = async function addMessage(msg) {
+	    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+	    if (!this.writable) {
+	      throw new Error('Cannot write to a read-only index (initialized with options.pubKey)');
+	    }
+	    if (Array.isArray(msg)) {
+	      return this.addMessages(msg, options);
+	    }
+	    var start = void 0;
+	    if (msg.constructor.name !== 'Message') {
+	      throw new Error('addMessage failed: param must be a Message, received ' + msg.constructor.name);
+	    }
+	    var hash = msg.getHash();
+	    if (true === options.checkIfExists) {
+	      var exists = await this.gun.get('messagesByHash').get(hash).then();
+	      if (exists) {
+	        return;
+	      }
+	    }
+	    var obj = { sig: msg.sig, pubKey: msg.pubKey };
+	    //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
+	    var node = this.gun.back(-1).get('messagesByHash').get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
+	    start = new Date();
+	    var d = await this._getMsgTrustDistance(msg);
+	    msg.distance = Object.prototype.hasOwnProperty.call(msg, 'distance') ? msg.distance : d; // eslint-disable-line require-atomic-updates
+	    this.debug('----');
+	    this.debug(new Date() - start, 'ms _getMsgTrustDistance');
+	    if (msg.distance === undefined) {
+	      return false; // do not save messages from untrusted author
+	    }
+	    if (msg.signedData.replyTo) {
+	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.replyTo).get('replies').get(hash).put(node);
+	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.replyTo).get('replies').get(hash).put(node);
+	    }
+	    if (msg.signedData.sharedMsg) {
+	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.sharedMsg).get('shares').get(hash).put(node);
+	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.sharedMsg).get('shares').get(hash).put(node);
+	    }
+	    start = new Date();
+	    var indexKeys = SocialNetwork.getMsgIndexKeys(msg);
+	    this.debug(new Date() - start, 'ms getMsgIndexKeys');
+	    for (var index in indexKeys) {
+	      if (Array.isArray(indexKeys[index])) {
+	        for (var i = 0; i < indexKeys[index].length; i++) {
+	          var key = indexKeys[index][i];
+	          // this.debug(`adding to index ${index} key ${key}`);
+	          this.gun.get(index).get(key).put(node);
+	          this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
+	        }
+	      } else if (typeof indexKeys[index] === 'object') {
+	        for (var _key in indexKeys[index]) {
+	          this.gun.get(index).get(_key).get(indexKeys[index][_key]).put(node);
+	          this.gun.get(index).get(_key).get(indexKeys[index][_key]).put(node);
+	        }
+	      }
+	    }
+	    if (this.options.ipfs) {
+	      try {
+	        var ipfsUri = await msg.saveToIpfs(this.options.ipfs);
+	        this.gun.get('messagesByHash').get(ipfsUri).put(node);
+	        this.gun.get('messagesByHash').get(ipfsUri).put(node);
+	        this.gun.get('messagesByHash').get(ipfsUri).put({ ipfsUri: ipfsUri });
+	      } catch (e) {
+	        console.error('adding msg ' + msg + ' to ipfs failed: ' + e);
+	      }
+	    }
+	    if (msg.signedData.type !== 'chat') {
+	      start = new Date();
+	      await this._updateContactIndexesByMsg(msg);
+	      this.debug(new Date() - start, 'ms _updateContactIndexesByMsg');
+	    }
+	    return true;
+	  };
+
+	  /**
+	  * @param {Object} opts {hash, orderBy, callback, limit, cursor, desc, filter}
+	  */
+
+
+	  SocialNetwork.prototype.getMessages = async function getMessages(opts) {
+	    if (opts.hash) {
+	      return this.getMessageByHash(opts.hash);
+	    }
+	    if (opts.orderBy && opts.orderBy === 'trustDistance') {
+	      return this.getMessagesByDistance(opts.callback, opts.limit, opts.cursor, opts.desc, opts.filter);
+	    }
+	    return this.getMessagesByTimestamp(opts.callback, opts.limit, opts.cursor, opts.desc || true, opts.filter);
+	  };
+
+	  /*
 	  * Add a list of messages to the index.
 	  * Useful for example when adding a new WoT dataset that contains previously
 	  * unknown authors.
 	  *
-	  * Iteratively performs sorted merge joins on [previously known identities] and
+	  * Iteratively performs sorted merge joins on [previously known contacts] and
 	  * [new msgs authors], until all messages from within the WoT have been added.
 	  *
 	  * @param {Array} msgs an array of messages.
@@ -14472,86 +14740,7 @@
 	    return true;
 	  };
 
-	  /**
-	  * Add a message to messagesByTimestamp and other relevant indexes. Update identities in the web of trust according to message data.
-	  *
-	  * @param msg Message to add to the index
-	  */
-
-
-	  SocialNetwork.prototype.addMessage = async function addMessage(msg) {
-	    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-	    if (!this.writable) {
-	      throw new Error('Cannot write to a read-only index (initialized with options.pubKey)');
-	    }
-	    var start = void 0;
-	    if (msg.constructor.name !== 'Message') {
-	      throw new Error('addMessage failed: param must be a Message, received ' + msg.constructor.name);
-	    }
-	    var hash = msg.getHash();
-	    if (true === options.checkIfExists) {
-	      var exists = await this.gun.get('messagesByHash').get(hash).then();
-	      if (exists) {
-	        return;
-	      }
-	    }
-	    var obj = { sig: msg.sig, pubKey: msg.pubKey };
-	    //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
-	    var node = this.gun.back(-1).get('messagesByHash').get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
-	    start = new Date();
-	    var d = await this._getMsgTrustDistance(msg);
-	    msg.distance = Object.prototype.hasOwnProperty.call(msg, 'distance') ? msg.distance : d; // eslint-disable-line require-atomic-updates
-	    this.debug('----');
-	    this.debug(new Date() - start, 'ms _getMsgTrustDistance');
-	    if (msg.distance === undefined) {
-	      return false; // do not save messages from untrusted author
-	    }
-	    if (msg.signedData.replyTo) {
-	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.replyTo).get('replies').get(hash).put(node);
-	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.replyTo).get('replies').get(hash).put(node);
-	    }
-	    if (msg.signedData.sharedMsg) {
-	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.sharedMsg).get('shares').get(hash).put(node);
-	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.sharedMsg).get('shares').get(hash).put(node);
-	    }
-	    start = new Date();
-	    var indexKeys = SocialNetwork.getMsgIndexKeys(msg);
-	    this.debug(new Date() - start, 'ms getMsgIndexKeys');
-	    for (var index in indexKeys) {
-	      if (Array.isArray(indexKeys[index])) {
-	        for (var i = 0; i < indexKeys[index].length; i++) {
-	          var key = indexKeys[index][i];
-	          // this.debug(`adding to index ${index} key ${key}`);
-	          this.gun.get(index).get(key).put(node);
-	          this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
-	        }
-	      } else if (typeof indexKeys[index] === 'object') {
-	        for (var _key in indexKeys[index]) {
-	          this.gun.get(index).get(_key).get(indexKeys[index][_key]).put(node);
-	          this.gun.get(index).get(_key).get(indexKeys[index][_key]).put(node);
-	        }
-	      }
-	    }
-	    if (this.options.ipfs) {
-	      try {
-	        var ipfsUri = await msg.saveToIpfs(this.options.ipfs);
-	        this.gun.get('messagesByHash').get(ipfsUri).put(node);
-	        this.gun.get('messagesByHash').get(ipfsUri).put(node);
-	        this.gun.get('messagesByHash').get(ipfsUri).put({ ipfsUri: ipfsUri });
-	      } catch (e) {
-	        console.error('adding msg ' + msg + ' to ipfs failed: ' + e);
-	      }
-	    }
-	    if (msg.signedData.type !== 'chat') {
-	      start = new Date();
-	      await this._updateContactIndexesByMsg(msg);
-	      this.debug(new Date() - start, 'ms _updateContactIndexesByMsg');
-	    }
-	    return true;
-	  };
-
-	  /**
+	  /*
 	  * @returns {Object} message matching the hash
 	  */
 
@@ -14612,7 +14801,7 @@
 	    });
 	  };
 
-	  /**
+	  /*
 	  * @returns {Array} list of messages
 	  */
 
@@ -14642,7 +14831,7 @@
 	    }
 	  };
 
-	  /**
+	  /*
 	  * @returns {Array} list of messages
 	  */
 
@@ -14670,54 +14859,16 @@
 	    }
 	  };
 
-	  /**
-	  *
-	  */
-
-
-	  SocialNetwork.prototype.setReaction = function setReaction(msg, reaction) {
-	    this.gun.get('reactions').get(msg.getHash()).put(reaction);
-	    this.gun.get('reactions').get(msg.getHash()).put(reaction);
-	    this.gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.viewpoint.value).put(reaction);
-	    this.gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.viewpoint.value).put(reaction);
-	  };
-
-	  /**
-	  * Set the user's online status
-	  *
-	  * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
-	  */
-
-
-	  SocialNetwork.prototype.setOnline = function setOnline(isOnline) {
-	    if (!this.writable) {
-	      console.error('setOnline can\'t be called on a non-writable index');
-	      return;
-	    }
-	    Chat.setOnline(this.gun, isOnline);
-	  };
-
-	  /**
-	  * Get the online status of a user.
-	  *
-	  * @param {string} pubKey public key of the user
-	  * @param {boolean} callback receives a boolean each time the user's online status changes
-	  */
-
-
-	  SocialNetwork.prototype.getOnline = function getOnline(pubKey, callback) {
-	    Chat.getOnline(this.gun, pubKey, callback);
-	  };
-
 	  return SocialNetwork;
 	}();
 
-	var version$2 = "0.0.129";
+	var version$2 = "0.0.130";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
 	var index = {
 	  VERSION: version$2,
+	  Collection: Collection,
 	  Message: Message,
 	  Contact: Contact,
 	  Attribute: Attribute,

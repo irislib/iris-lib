@@ -5006,7 +5006,8 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
 <p>If opt.class is passed, object.serialize() and opt.class.deserialize() must be defined.</p>
 <p>Supports search from multiple indexes.
 For example, retrieve message feed from your own index and your friends' indexes.</p>
-<p>TODO: aggregation</p>
+<p>TODO: aggregation
+TODO: example</p>
 
     <div class='pre p1 fill-light mt0'>new Collection(opt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
@@ -5027,7 +5028,7 @@ For example, retrieve message feed from your own index and your friends' indexes
           <div>
             <span class='code bold'>opt</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
             = <code>{}</code>)</code>
-	    {gun, class, name, indexes = [], askPeers = true}
+	    {gun, class, indexes = [], askPeers = true, name = class.name}
 
           </div>
           

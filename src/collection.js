@@ -71,8 +71,33 @@ class Collection {
       if (opt.selector) { // TODO: deep compare selector object?
         const keys = Object.keys(opt.selector);
         for (let i = 0;i < keys.length;i++) {
-          if (!Object.prototype.hasOwnproperty.call(data, keys[i])) { return; }
-          if (data[keys[i]] !== opt.selector[keys[i]]) { return; }
+          const key = keys[i];
+          if (!Object.prototype.hasOwnProperty.call(data, key)) { return; }
+          let v1, v2;
+          if (opt.caseSensitive === false) {
+            v1 = data[key].toLowerCase();
+            v2 = opt.selector[key].toLowerCase();
+          } else {
+            v1 = data[key];
+            v2 = opt.selector[key];
+          }
+          if (v1 !== v2) { return; }
+        }
+      }
+      if (opt.query) { // TODO: deep compare selector object?
+        const keys = Object.keys(opt.query);
+        for (let i = 0;i < keys.length;i++) {
+          const key = keys[i];
+          if (!Object.prototype.hasOwnProperty.call(data, key)) { return; }
+          let v1, v2;
+          if (opt.caseSensitive === false) {
+            v1 = data[key].toLowerCase();
+            v2 = opt.query[key].toLowerCase();
+          } else {
+            v1 = data[key];
+            v2 = opt.query[key];
+          }
+          if (v1.indexOf(v2) !== 0) { return; }
         }
       }
       if (this.class) {
