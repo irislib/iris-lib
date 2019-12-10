@@ -7,7 +7,8 @@
 * For example, retrieve message feed from your own index and your friends' indexes.
 *
 * TODO: aggregation
-* @param {Object} opt {gun, class, name, indexes = [], askPeers = true}
+* TODO: example
+* @param {Object} opt {gun, class, indexes = [], askPeers = true, name = class.name}
 */
 class Collection {
   constructor(opt = {}) {
@@ -21,10 +22,10 @@ class Collection {
     if (this.class && !this.class.deserialize) {
       throw new Error(`opt.class must have deserialize() method`);
     }
-    this.name = opt.name || opt.class.constructor.name;
+    this.name = opt.name || opt.class.name;
     this.gun = opt.gun;
-    this.opt.indexes = this.opt.indexes || [];
-    this.opt.askPeers = typeof this.opt.askPeers === `undefined` ? true : this.opt.askPeers;
+    this.indexes = opt.indexes || [];
+    this.askPeers = typeof opt.askPeers === `undefined` ? true : opt.askPeers;
   }
 
   /**
@@ -49,7 +50,7 @@ class Collection {
     for (let i = 0;i < this.indexes.length; i++) {
       if (Object.prototype.hasOwnProperty.call(serializedObject, this.indexes[i])) {
         const indexName = this.indexes[i];
-        this.gun.get(this.name).get(indexName).get(serializedObject[this.indexes[i]]).put(node);
+        this.gun.get(this.name).get(indexName).get(serializedObject[indexName]).put(node);
       }
     }
   }
@@ -84,18 +85,19 @@ class Collection {
     if (opt.id) {
       opt.limit = 1;
       this.gun.get(this.name).get(`id`).get(opt.id).on(matcher);
+      return;
     }
 
-    let indexName = this.name;
-    if (opt.orderBy && this.opt.indexes.indexOf(opt.orderBy) > -1) {
+    let indexName = `id`;
+    if (opt.orderBy && this.indexes.indexOf(opt.orderBy) > -1) {
       indexName = opt.orderBy;
     }
 
     // TODO: query from indexes
-    this.gun.get(indexName).map().open(matcher); // TODO: limit .open recursion
-    if (this.opt.askPeers) {
+    this.gun.get(this.name).get(indexName).map().on(matcher); // TODO: limit .open recursion
+    if (this.askPeers) {
       this.gun.get(`trustedIndexes`).on((val, key) => {
-        this.gun.user(key).get(indexName).map().open(matcher);
+        this.gun.user(key).get(this.name).get(indexName).map().on(matcher);
       });
     }
   }
