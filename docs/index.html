@@ -5007,7 +5007,8 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
 <p>Supports search from multiple indexes.
 For example, retrieve message feed from your own index and your friends' indexes.</p>
 <p>TODO: aggregation
-TODO: example</p>
+TODO: example
+TODO: scrollable and stretchable "search result window"</p>
 
     <div class='pre p1 fill-light mt0'>new Collection(opt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
@@ -5064,7 +5065,7 @@ TODO: example</p>
   
 
   
-    <div class='pre p1 fill-light mt0'>put(object: any)</div>
+    <div class='pre p1 fill-light mt0'>put(object: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
   
   
 
@@ -5092,6 +5093,14 @@ TODO: example</p>
 
   
 
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code>:
+        id of added object, which can be used for collection.get(id)
+
+      
+    
   
 
   

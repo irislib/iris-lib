@@ -9,6 +9,7 @@
   "jest": {
     "testURL": "http://localhost/",
     "bail": true,
+    "forceExit": true,
     "testEnvironment": "jsdom",
     "verbose": true,
     "collectCoverage": true,

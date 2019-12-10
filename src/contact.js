@@ -32,7 +32,6 @@ class Contact {
       data.linkTo = Contact.getLinkTo(data.attrs);
     }
     const uri = data.linkTo.uri();
-    console.log('uri', uri);
     const attrs = gun.top(`${uri}/attrs`).put(data.attrs);
     delete data['attrs'];
     gun.put(data);

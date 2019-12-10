@@ -367,7 +367,7 @@ class SocialNetwork {
   */
   getContact(a: String, b: String, reload = false) {
     if (!a) {
-      throw new Error(`get failed: param must be a string, received ${typeof a} ${a}`);
+      throw new Error(`getContact failed: first param must be defined`);
     }
     let attr = a;
     if (a.constructor.name !== `Attribute`) {
@@ -464,7 +464,11 @@ class SocialNetwork {
   */
   async getContacts(opts = {}) { // cursor // TODO: param 'exact', type param
     if (opts.value) {
-      return this.getContact(opts.value, opts.type, opts.reload);
+      if (opts.type) {
+        return this.getContact(opts.type, opts.value, opts.reload);
+      } else {
+        return this.getContact(opts.value);
+      }
     }
     const seen = {};
     function searchTermCheck(key) {

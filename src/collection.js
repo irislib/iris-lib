@@ -8,6 +8,7 @@
 *
 * TODO: aggregation
 * TODO: example
+* TODO: scrollable and stretchable "search result window"
 * @param {Object} opt {gun, class, indexes = [], askPeers = true, name = class.name}
 */
 class Collection {
@@ -29,7 +30,7 @@ class Collection {
   }
 
   /**
-  *
+  * @return {String} id of added object, which can be used for collection.get(id)
   */
   put(object) {
     let data = object;
@@ -44,6 +45,7 @@ class Collection {
       node = this.gun.get(this.name).get(`id`).set(data);
     }
     this._addToIndexes(data, node);
+    return data.id || Gun.node.soul(node) || node._.link;
   }
 
   _addToIndexes(serializedObject, node) {
@@ -65,6 +67,7 @@ class Collection {
     if (!opt.callback) { return; }
     let results = 0;
     const matcher = data => {
+      if (!data) { return; }
       if (opt.limit && results++ >= opt.limit) {
         return; // TODO: terminate query
       }
@@ -84,7 +87,7 @@ class Collection {
           if (v1 !== v2) { return; }
         }
       }
-      if (opt.query) { // TODO: deep compare selector object?
+      if (opt.query) { // TODO: use gun.get() lt / gt operators
         const keys = Object.keys(opt.query);
         for (let i = 0;i < keys.length;i++) {
           const key = keys[i];
@@ -125,6 +128,10 @@ class Collection {
         this.gun.user(key).get(this.name).get(indexName).map().on(matcher);
       });
     }
+  }
+
+  delete(opt = {}) {
+    // gun.unset()
   }
 }
 

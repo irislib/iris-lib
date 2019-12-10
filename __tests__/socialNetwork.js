@@ -76,7 +76,7 @@ beforeAll(() => {
 */
 
 beforeAll(() => {
-  logger.disable();
+  //logger.disable();
 });
 
 function gunWaitForPath(gun, path, timeout) {
@@ -121,8 +121,8 @@ describe(`local index`, async () => {
     await new Promise(r => setTimeout(r, 2000));
   });
   test(`create new Index`, async () => {
-    expect(i).toBeInstanceOf(iris.Index);
-    expect(r).toBeInstanceOf(iris.Index);
+    expect(i).toBeInstanceOf(iris.SocialNetwork);
+    expect(r).toBeInstanceOf(iris.SocialNetwork);
     expect(i.writable).toBe(true);
     expect(r.writable).not.toBe(true);
     const rootContact = i.getRootContact();
