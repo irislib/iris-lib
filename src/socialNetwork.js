@@ -40,6 +40,8 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 
 // TODO: flush onto IPFS
 /**
+* NOTE: these docs reflect the latest commit at https://github.com/irislib/iris-lib
+*
 * The essence of Iris: A database of Contacts and Messages within your web of trust.
 *
 * To use someone else's index (read-only): set options.pubKey
@@ -460,9 +462,9 @@ class SocialNetwork {
   }
 
   /**
-  * @returns {Array} list of matching identities
+  *
   */
-  async getContacts(opts = {}) { // cursor // TODO: param 'exact', type param
+  getContacts(opts = {}) { // cursor // TODO: param 'exact', type param
     if (opts.value) {
       if (opts.type) {
         return this.getContact(opts.type, opts.value, opts.reload);

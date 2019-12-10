@@ -2,9 +2,9 @@
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('gun')) :
 	typeof define === 'function' && define.amd ? define(['gun'], factory) :
 	(global.irisLib = factory(global.Gun));
-}(this, (function (Gun$1) { 'use strict';
+}(this, (function (Gun) { 'use strict';
 
-	Gun$1 = Gun$1 && Gun$1.hasOwnProperty('default') ? Gun$1['default'] : Gun$1;
+	Gun = Gun && Gun.hasOwnProperty('default') ? Gun['default'] : Gun;
 
 	function unwrapExports (x) {
 		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
@@ -386,6 +386,7 @@
 	* TODO: scrollable and stretchable "search result window"
 	* @param {Object} opt {gun, class, indexes = [], askPeers = true, name = class.name}
 	*/
+
 	var Collection = function () {
 	  function Collection() {
 	    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -393,19 +394,19 @@
 	    _classCallCheck(this, Collection);
 
 	    if (!opt.gun) {
-	      throw new Error("Missing opt.gun");
+	      throw new Error('Missing opt.gun');
 	    }
 	    if (!(opt.class || opt.name)) {
-	      throw new Error("You must supply either opt.name or opt.class");
+	      throw new Error('You must supply either opt.name or opt.class');
 	    }
 	    this.class = opt.class;
 	    if (this.class && !this.class.deserialize) {
-	      throw new Error("opt.class must have deserialize() method");
+	      throw new Error('opt.class must have deserialize() method');
 	    }
 	    this.name = opt.name || opt.class.name;
 	    this.gun = opt.gun;
 	    this.indexes = opt.indexes || [];
-	    this.askPeers = typeof opt.askPeers === "undefined" ? true : opt.askPeers;
+	    this.askPeers = typeof opt.askPeers === 'undefined' ? true : opt.askPeers;
 	  }
 
 	  /**
@@ -421,9 +422,9 @@
 	    // TODO: optionally use gun hash table
 	    var node = void 0;
 	    if (data.id) {
-	      node = this.gun.get(this.name).get("id").get(data.id).put(data); // TODO: use .top()
+	      node = this.gun.get(this.name).get('id').get(data.id).put(data); // TODO: use .top()
 	    } else {
-	      node = this.gun.get(this.name).get("id").set(data);
+	      node = this.gun.get(this.name).get('id').set(data);
 	    }
 	    this._addToIndexes(data, node);
 	    return data.id || Gun.node.soul(node) || node._.link;
@@ -514,11 +515,11 @@
 
 	    if (opt.id) {
 	      opt.limit = 1;
-	      this.gun.get(this.name).get("id").get(opt.id).on(matcher);
+	      this.gun.get(this.name).get('id').get(opt.id).on(matcher);
 	      return;
 	    }
 
-	    var indexName = "id";
+	    var indexName = 'id';
 	    if (opt.orderBy && this.indexes.indexOf(opt.orderBy) > -1) {
 	      indexName = opt.orderBy;
 	    }
@@ -526,13 +527,14 @@
 	    // TODO: query from indexes
 	    this.gun.get(this.name).get(indexName).map().on(matcher); // TODO: limit .open recursion
 	    if (this.askPeers) {
-	      this.gun.get("trustedIndexes").on(function (val, key) {
+	      this.gun.get('trustedIndexes').on(function (val, key) {
 	        _this.gun.user(key).get(_this.name).get(indexName).map().on(matcher);
 	      });
 	    }
 	  };
 
 	  Collection.prototype.delete = function _delete() {
+	    // gun.unset()
 	  };
 
 	  return Collection;
@@ -11123,7 +11125,7 @@
 	    var bcount = 0;
 	    var promises = _Object$keys(layer).map(function (key) {
 	      // Only fetch links & restrict total search queries to maxBreadth ^ maxDepth requests
-	      if (!Gun$1.val.link.is(layer[key]) || ++bcount >= opts.maxBreadth) {
+	      if (!Gun.val.link.is(layer[key]) || ++bcount >= opts.maxBreadth) {
 	        return;
 	      }
 
@@ -11256,8 +11258,8 @@
 
 	    // Spawn guns, connect them to each other
 	    var newGuns = ports.map(function (port) {
-	      var server = http.createServer(Gun$1.serve).listen(port, ip);
-	      var g = new Gun$1({
+	      var server = http.createServer(Gun.serve).listen(port, ip);
+	      var g = new Gun({
 	        radisk: false,
 	        port: port,
 	        multicast: false,
@@ -12098,7 +12100,7 @@
 
 
 	  Key.generate = function generate() {
-	    return Gun$1.SEA.pair();
+	    return Gun.SEA.pair();
 	  };
 
 	  /**
@@ -12110,7 +12112,7 @@
 
 
 	  Key.sign = async function sign(msg, pair) {
-	    var sig = await Gun$1.SEA.sign(msg, pair);
+	    var sig = await Gun.SEA.sign(msg, pair);
 	    return 'a' + sig;
 	  };
 
@@ -12123,7 +12125,7 @@
 
 
 	  Key.verify = function verify(msg, pubKey) {
-	    return Gun$1.SEA.verify(msg.slice(1), pubKey);
+	    return Gun.SEA.verify(msg.slice(1), pubKey);
 	  };
 
 	  return Key;
@@ -13237,7 +13239,7 @@
 	  Chat.prototype.getSecret = async function getSecret(pub) {
 	    if (!this.secrets[pub]) {
 	      var epub = await this.gun.user(pub).get('epub').once().then();
-	      this.secrets[pub] = await Gun$1.SEA.secret(epub, this.key);
+	      this.secrets[pub] = await Gun.SEA.secret(epub, this.key);
 	    }
 	    return this.secrets[pub];
 	  };
@@ -13249,8 +13251,8 @@
 
 	  Chat.getOurSecretChatId = async function getOurSecretChatId(gun, pub, pair) {
 	    var epub = await gun.user(pub).get('epub').once().then();
-	    var secret = await Gun$1.SEA.secret(epub, pair);
-	    return Gun$1.SEA.work(secret + pub, null, null, { name: 'SHA-256' });
+	    var secret = await Gun.SEA.secret(epub, pair);
+	    return Gun.SEA.work(secret + pub, null, null, { name: 'SHA-256' });
 	  };
 
 	  /**
@@ -13260,8 +13262,8 @@
 
 	  Chat.getTheirSecretChatId = async function getTheirSecretChatId(gun, pub, pair) {
 	    var epub = await gun.user(pub).get('epub').once().then();
-	    var secret = await Gun$1.SEA.secret(epub, pair);
-	    return Gun$1.SEA.work(secret + pair.pub, null, null, { name: 'SHA-256' });
+	    var secret = await Gun.SEA.secret(epub, pair);
+	    return Gun.SEA.work(secret + pair.pub, null, null, { name: 'SHA-256' });
 	  };
 
 	  /**
@@ -13275,11 +13277,11 @@
 
 
 	  Chat.getChats = async function getChats(gun, keypair, callback) {
-	    var mySecret = await Gun$1.SEA.secret(keypair.epub, keypair);
+	    var mySecret = await Gun.SEA.secret(keypair.epub, keypair);
 	    gun.user().get('chats').map().on(async function (value, ourSecretChatId) {
 	      if (value) {
 	        gun.user().get('chats').get(ourSecretChatId).get('pub').once(async function (encryptedPub) {
-	          var pub = await Gun$1.SEA.decrypt(encryptedPub, mySecret);
+	          var pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
 	          callback(pub);
 	        });
 	      }
@@ -13289,7 +13291,7 @@
 	  Chat.prototype.getOurSecretChatId = async function getOurSecretChatId(pub) {
 	    if (!this.ourSecretChatIds[pub]) {
 	      var secret = await this.getSecret(pub);
-	      this.ourSecretChatIds[pub] = await Gun$1.SEA.work(secret + pub, null, null, { name: 'SHA-256' });
+	      this.ourSecretChatIds[pub] = await Gun.SEA.work(secret + pub, null, null, { name: 'SHA-256' });
 	    }
 	    return this.ourSecretChatIds[pub];
 	  };
@@ -13297,14 +13299,14 @@
 	  Chat.prototype.getTheirSecretChatId = async function getTheirSecretChatId(pub) {
 	    if (!this.theirSecretChatIds[pub]) {
 	      var secret = await this.getSecret(pub);
-	      this.theirSecretChatIds[pub] = await Gun$1.SEA.work(secret + this.key.pub, null, null, { name: 'SHA-256' });
+	      this.theirSecretChatIds[pub] = await Gun.SEA.work(secret + this.key.pub, null, null, { name: 'SHA-256' });
 	    }
 	    return this.theirSecretChatIds[pub];
 	  };
 
 	  Chat.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored) {
 	    if (this.onMessage) {
-	      var decrypted = await Gun$1.SEA.decrypt(data, (await this.getSecret(pub)));
+	      var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
 	      if (typeof decrypted !== 'object') {
 	        // console.log(`chat data received`, decrypted);
 	        return;
@@ -13326,7 +13328,7 @@
 	    var _loop = async function _loop(i) {
 	      var ourSecretChatId = await _this.getOurSecretChatId(keys[i]);
 	      _this.user.get('chats').get(ourSecretChatId).get('latestMsg').on(async function (data) {
-	        var decrypted = await Gun$1.SEA.decrypt(data, (await _this.getSecret(keys[i])));
+	        var decrypted = await Gun.SEA.decrypt(data, (await _this.getSecret(keys[i])));
 	        if (typeof decrypted !== 'object') {
 	          // console.log(`chat data received`, decrypted);
 	          return;
@@ -13350,7 +13352,7 @@
 	    var keys = _Object$keys(this.secrets);
 	    time = time || new Date().toISOString();
 	    for (var i = 0; i < keys.length; i++) {
-	      var encrypted = await Gun$1.SEA.encrypt(time, (await this.getSecret(keys[i])));
+	      var encrypted = await Gun.SEA.encrypt(time, (await this.getSecret(keys[i])));
 	      var ourSecretChatId = await this.getOurSecretChatId(keys[i]);
 	      this.user.get('chats').get(ourSecretChatId).get('msgsLastSeenTime').put(encrypted);
 	    }
@@ -13369,7 +13371,7 @@
 	    var _loop2 = async function _loop2(i) {
 	      var ourSecretChatId = await _this2.getOurSecretChatId(keys[i]);
 	      _this2.gun.user().get('chats').get(ourSecretChatId).get('msgsLastSeenTime').on(async function (data) {
-	        _this2.myMsgsLastSeenTime = await Gun$1.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
+	        _this2.myMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
 	        if (callback) {
 	          callback(_this2.myMsgsLastSeenTime);
 	        }
@@ -13394,7 +13396,7 @@
 	    var _loop3 = async function _loop3(i) {
 	      var theirSecretChatId = await _this3.getTheirSecretChatId(keys[i]);
 	      _this3.gun.user(keys[i]).get('chats').get(theirSecretChatId).get('msgsLastSeenTime').on(async function (data) {
-	        _this3.theirMsgsLastSeenTime = await Gun$1.SEA.decrypt(data, (await _this3.getSecret(keys[i])));
+	        _this3.theirMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this3.getSecret(keys[i])));
 	        if (callback) {
 	          callback(_this3.theirMsgsLastSeenTime, keys[i]);
 	        }
@@ -13419,8 +13421,8 @@
 	    this.getSecret(pub);
 	    // Save their public key in encrypted format, so in chat listing we know who we are chatting with
 	    var ourSecretChatId = await this.getOurSecretChatId(pub);
-	    var mySecret = await Gun$1.SEA.secret(this.key.epub, this.key);
-	    this.gun.user().get('chats').get(ourSecretChatId).get('pub').put((await Gun$1.SEA.encrypt(pub, mySecret)));
+	    var mySecret = await Gun.SEA.secret(this.key.epub, this.key);
+	    this.gun.user().get('chats').get(ourSecretChatId).get('pub').put((await Gun.SEA.encrypt(pub, mySecret)));
 	    // Subscribe to their messages
 	    var theirSecretChatId = await this.getTheirSecretChatId(pub);
 	    this.gun.user(pub).get('chats').get(theirSecretChatId).get('msgs').map().once(function (data) {
@@ -13450,7 +13452,7 @@
 	    //this.gun.user().get('message').set(temp);
 	    var keys = _Object$keys(this.secrets);
 	    for (var i = 0; i < keys.length; i++) {
-	      var encrypted = await Gun$1.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
+	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
 	      var ourSecretChatId = await this.getOurSecretChatId(keys[i]);
 	      this.user.get('chats').get(ourSecretChatId).get('msgs').get('' + msg.time).put(encrypted);
 	      this.user.get('chats').get(ourSecretChatId).get('latestMsg').put(encrypted);
@@ -13467,7 +13469,7 @@
 	  Chat.setOnline = function setOnline(gun, isOnline) {
 	    if (isOnline) {
 	      var update = function update() {
-	        gun.user().get('lastActive').put(Math.round(Gun$1.state() / 1000));
+	        gun.user().get('lastActive').put(Math.round(Gun.state() / 1000));
 	      };
 	      update();
 	      gun.setOnlineInterval = setInterval(update, 3000);
@@ -13489,7 +13491,7 @@
 	    var timeout = void 0;
 	    gun.user(pubKey).get('lastActive').on(function (lastActive) {
 	      clearTimeout(timeout);
-	      var now = Math.round(Gun$1.state() / 1000);
+	      var now = Math.round(Gun.state() / 1000);
 	      var isOnline = lastActive > now - 10 && lastActive < now + 30;
 	      callback({ isOnline: isOnline, lastActive: lastActive });
 	      if (isOnline) {
@@ -13503,7 +13505,7 @@
 	  return Chat;
 	}();
 
-	Gun$1.User.prototype.top = function (key) {
+	Gun.User.prototype.top = function (key) {
 	  var gun = this,
 	      root = gun.back(-1),
 	      user = root.user();
@@ -13624,7 +13626,7 @@
 
 	    if (options.pubKey) {
 	      // someone else's index
-	      var gun = options.gun || new Gun$1();
+	      var gun = options.gun || new Gun();
 	      var user = gun.user(options.pubKey);
 	      this.gun = user.get('iris');
 	      this.rootContact = new Attribute({ type: 'keyID', value: options.pubKey });
@@ -13645,7 +13647,7 @@
 	    if (!keypair) {
 	      keypair = await Key.getDefault();
 	    }
-	    var gun = this.options.gun || new Gun$1();
+	    var gun = this.options.gun || new Gun();
 	    var user = gun.user();
 	    user.auth(keypair);
 	    this.writable = true;
@@ -13989,11 +13991,11 @@
 	  };
 
 	  /**
-	  * @returns {Array} list of matching identities
+	  *
 	  */
 
 
-	  SocialNetwork.prototype.getContacts = async function getContacts() {
+	  SocialNetwork.prototype.getContacts = function getContacts() {
 	    var _this5 = this;
 
 	    var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -14030,7 +14032,7 @@
 	      if (!searchTermCheck(key)) {
 	        return;
 	      }
-	      var soul = Gun$1.node.soul(id);
+	      var soul = Gun.node.soul(id);
 	      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	        seen[soul] = true;
 	        var contact = new Contact(node.get(key), undefined, _this5);
@@ -14049,7 +14051,7 @@
 	            if (!searchTermCheck(key)) {
 	              return;
 	            }
-	            var soul = Gun$1.node.soul(id);
+	            var soul = Gun.node.soul(id);
 	            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	              seen[soul] = true;
 	              opts.callback(new Contact(_this5.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this5));
@@ -14118,7 +14120,7 @@
 	      console.error(e.stack);
 	      throw e;
 	    }
-	    var hash = Gun$1.node.soul(id) || id._ && id._.link || 'todo';
+	    var hash = Gun.node.soul(id) || id._ && id._.link || 'todo';
 	    var indexKeys = await this.getContactIndexKeys(id, hash.substr(0, 6));
 
 	    var indexes = _Object$keys(indexKeys);

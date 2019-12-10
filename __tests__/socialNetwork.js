@@ -76,7 +76,7 @@ beforeAll(() => {
 */
 
 beforeAll(() => {
-  //logger.disable();
+  logger.disable();
 });
 
 function gunWaitForPath(gun, path, timeout) {
@@ -154,6 +154,7 @@ describe(`local index`, async () => {
     describe(`check entered info`, async() => {
       test(`get added identity`, async () => {
         p = i.getContacts({value:`bob@example.com`}); // ,true
+        expect(p).toBeDefined();
         //await new Promise(resolve => setTimeout(resolve, 800));
         //await gunWaitForAttributes(p.gun, ['trustDistance', 'receivedPositive', 'receivedNeutral', 'receivedNegative'], 1000);
         //const outcome = await gunWaitForPath(p.gun, 'receivedPositive', 2000);
@@ -271,21 +272,21 @@ describe(`local index`, async () => {
     let c;
     test(`get identity count`, async () => {
       let results = [];
-      i.search(``, null, result => results.push(result));
+      i.getContacts({query: ``, callback: result => results.push(result)});
       await new Promise(resolve => setTimeout(resolve, 200));
       c = results.length;
       expect(results.length).toBeGreaterThan(1);
       results = [];
-      r.search(``, null, result => results.push(result));
+      r.getContacts({query: ``, callback: result => results.push(result)});
       await new Promise(resolve => setTimeout(resolve, 200));
       expect(results.length).toBeGreaterThan(1);
     });
     test(`add name to Bob`, async () => {
-      let bob = await i.getContacts({value:`bob@example.com`});
+      let bob = i.getContacts({value:`bob@example.com`});
       expect(bob).toBeInstanceOf(iris.Contact);
       const msg = await iris.Message.createVerification({recipient: {email: `bob@example.com`, name: `Bob`}}, key);
       await i.addMessage(msg);
-      bob = await i.getContacts({value:`bob@example.com`});
+      bob = i.getContacts({value:`bob@example.com`});
       const data = await new Promise(resolve => {
         bob.gun.load(r => {
           resolve(r);
@@ -296,13 +297,13 @@ describe(`local index`, async () => {
     });
     test(`identity count should remain the same`, async () => {
       const results = [];
-      i.search(``, null, result => results.push(result));
+      i.getContacts({query: ``, callback: result => results.push(result)});
       await new Promise(resolve => setTimeout(resolve, 200));
       expect(results.length).toEqual(c);
     });
     test(`there should be only one identity with distance 0`, async () => {
       const r = [];
-      i.search(``, null, result => r.push(result));
+      i.getContacts({query: ``, callback: result => r.push(result)});
       await new Promise(resolve => setTimeout(resolve, 200));
 
       let rootContacts = 0;

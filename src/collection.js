@@ -1,3 +1,5 @@
+import Gun from 'gun';
+
 /**
 * Gun object collection that provides tools for indexing and search. Decentralize everything!
 *
@@ -130,7 +132,7 @@ class Collection {
     }
   }
 
-  delete(opt = {}) {
+  delete() {
     // gun.unset()
   }
 }
