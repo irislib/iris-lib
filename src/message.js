@@ -27,6 +27,8 @@ class ValidationError extends Error {}
 * @param obj
 *
 * @example
+* https://github.com/irislib/iris-lib/blob/master/__tests__/message.js
+*
 * Rating message:
 * {
 *   signedData: {
@@ -397,13 +399,21 @@ class Message {
   /**
   * @returns {string} JSON string of signature and public key
   */
+  serialize() {
+    return {sig: this.sig, pubKey: this.pubKey};
+  }
+
   toString() {
-    return JSON.stringify({sig: this.sig, pubKey: this.pubKey});
+    return JSON.stringify(this.serialize());
   }
 
   /**
   * @returns {Promise<Message>} message from JSON string produced by toString
   */
+  static async deserialize(s) {
+    return Message.fromSig(s);
+  }
+
   static async fromString(s) {
     return Message.fromSig(JSON.parse(s));
   }

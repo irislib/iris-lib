@@ -8,6 +8,7 @@ import Gun from 'gun';
 * who are communicating with each other by looking at Gun timestamps and subscriptions.
 *
 * @param {Object} options {key, gun, onMessage, participants}
+* @example https://github.com/irislib/iris-lib/blob/master/__tests__/chat.js
 */
 class Chat {
   constructor(options) {

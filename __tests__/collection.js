@@ -85,4 +85,7 @@ describe(`Collection`, () => {
     }
     animals.get({callback, selector: {name: 'Moisture'}});
   });
+  // TODO: test multiple index search
+  // TODO: unique vs non-unique indexes
+  // TODO: delete from collection and indexes
 });

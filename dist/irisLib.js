@@ -12164,6 +12164,8 @@
 	* @param obj
 	*
 	* @example
+	* https://github.com/irislib/iris-lib/blob/master/__tests__/message.js
+	*
 	* Rating message:
 	* {
 	*   signedData: {
@@ -12693,14 +12695,22 @@
 	  */
 
 
+	  Message.prototype.serialize = function serialize() {
+	    return { sig: this.sig, pubKey: this.pubKey };
+	  };
+
 	  Message.prototype.toString = function toString() {
-	    return _JSON$stringify({ sig: this.sig, pubKey: this.pubKey });
+	    return _JSON$stringify(this.serialize());
 	  };
 
 	  /**
 	  * @returns {Promise<Message>} message from JSON string produced by toString
 	  */
 
+
+	  Message.deserialize = async function deserialize(s) {
+	    return Message.fromSig(s);
+	  };
 
 	  Message.fromString = async function fromString(s) {
 	    return Message.fromSig(JSON.parse(s));
@@ -12777,54 +12787,48 @@
 	*
 	* Usually you don't create Contacts yourself, but get them
 	* from SocialNetwork methods such as get() and search().
+	* @example https://github.com/irislib/iris-lib/blob/master/__tests__/contact.js
 	*/
 
 	var Contact = function () {
 	  /**
 	  * @param {Object} gun node where the Contact data lives
 	  */
-	  function Contact(gun, linkTo, index) {
+	  function Contact(gun, uuid, index) {
 	    _classCallCheck(this, Contact);
 
 	    this.gun = gun;
-	    this.linkTo = linkTo;
+	    this.id = uuid || Attribute.getUuid().value;
 	    this.index = index;
 	  }
 
+	  Contact.prototype.serialize = function serialize() {
+	    return { id: this.id };
+	  };
+
+	  Contact.deserialize = function deserialize(data, gun) {
+	    return new Contact(gun, data.id);
+	  };
+
 	  Contact.create = function create(gun, data, index) {
-	    if (!data.linkTo && !data.attrs) {
-	      throw new Error('You must specify either data.linkTo or data.attrs');
+	    if (!data.uuid && !data.attrs) {
+	      throw new Error('You must specify either data.uuid or data.attrs');
 	    }
-	    if (data.linkTo && !data.attrs) {
-	      var linkTo = new Attribute(data.linkTo);
+	    if (data.uuid && !data.attrs) {
+	      var uuid = new Attribute(data.uuid);
 	      data.attrs = {};
-	      if (!Object.prototype.hasOwnProperty.call(data.attrs, linkTo.uri())) {
-	        data.attrs[linkTo.uri()] = linkTo;
+	      if (!Object.prototype.hasOwnProperty.call(data.attrs, uuid.uri())) {
+	        data.attrs[uuid.uri()] = uuid;
 	      }
 	    } else {
-	      data.linkTo = Contact.getLinkTo(data.attrs);
+	      data.uuid = Attribute.getUuid();
 	    }
-	    var uri = data.linkTo.uri();
+	    var uri = data.uuid.uri();
 	    var attrs = gun.top(uri + '/attrs').put(data.attrs);
 	    delete data['attrs'];
 	    gun.put(data);
 	    gun.get('attrs').put(attrs);
 	    return new Contact(gun, uri, index);
-	  };
-
-	  Contact.getLinkTo = function getLinkTo(attrs) {
-	    var mva = Contact.getMostVerifiedAttributes(attrs);
-	    var keys = _Object$keys(mva);
-	    var linkTo = void 0;
-	    for (var i = 0; i < keys.length; i++) {
-	      if (keys[i] === 'keyID') {
-	        linkTo = mva[keys[i]].attribute;
-	        break;
-	      } else if (Attribute.isUniqueType(keys[i])) {
-	        linkTo = mva[keys[i]].attribute;
-	      }
-	    }
-	    return linkTo;
 	  };
 
 	  Contact.getMostVerifiedAttributes = function getMostVerifiedAttributes(attrs) {
@@ -12921,10 +12925,10 @@
 	        return;
 	      }
 	      var attrs = await Contact.getAttrs(_this.gun);
-	      var linkTo = await _this.gun.get('linkTo').then();
-	      var link = 'https://iris.to/#/identities/' + linkTo.type + '/' + linkTo.value;
+	      var uuid = await _this.gun.get('uuid').then();
+	      var link = 'https://iris.to/#/identities/' + uuid.type + '/' + uuid.value;
 	      var mva = Contact.getMostVerifiedAttributes(attrs);
-	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.type && mva.type.attribute.value || mva.nickname && mva.nickname.attribute.value || linkTo.type + ':' + linkTo.value) + '</a><br>';
+	      linkEl.innerHTML = '<a href="' + link + '">' + (mva.type && mva.type.attribute.value || mva.nickname && mva.nickname.attribute.value || uuid.type + ':' + uuid.value) + '</a><br>';
 	      linkEl.innerHTML += '<small>Received: <span class="iris-pos">+' + (data.receivedPositive || 0) + '</span> / <span class="iris-neg">-' + (data.receivedNegative || 0) + '</span></small><br>';
 	      links.innerHTML = '';
 	      _Object$keys(attrs).forEach(function (k) {
@@ -12937,12 +12941,12 @@
 
 	    /*
 	    const template = ```
-	    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
+	    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.uuid" ui-sref="identities.show({ type: result.uuid.type, value: result.uuid.value })" class="search-result-row" ng-class="{active: result.active}">
 	      <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
 	      <td>
 	        <span ng-if="result.distance == 0" class="label label-default pull-right">rootContact</span>
 	        <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>
-	        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>
+	        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.uuid.type, value: result.uuid.value })"></a>
 	        <small ng-if="!result.name" class="list-group-item-text">
 	          <span ng-bind-html="result[0][0]|highlight:query.term"></span>
 	        </small><br>
@@ -13101,10 +13105,10 @@
 	      img.src = img.src || 'data:image/svg+xml;base64,' + identiconImg.toString();
 	    }
 
-	    if (this.linkTo) {
-	      setIdenticonImg(this.linkTo);
+	    if (this.uuid) {
+	      setIdenticonImg(this.uuid);
 	    } else {
-	      this.gun.get('linkTo').on(setIdenticonImg);
+	      this.gun.get('uuid').on(setIdenticonImg);
 	    }
 
 	    this.gun.on(setPie);
@@ -13207,6 +13211,7 @@
 	* who are communicating with each other by looking at Gun timestamps and subscriptions.
 	*
 	* @param {Object} options {key, gun, onMessage, participants}
+	* @example https://github.com/irislib/iris-lib/blob/master/__tests__/chat.js
 	*/
 
 	var Chat = function () {
@@ -13545,6 +13550,8 @@
 	/**
 	* The essence of Iris: A database of Contacts and Messages within your web of trust.
 	*
+	* NOTE: these docs reflect the latest commit at https://github.com/irislib/iris-lib
+	*
 	* To use someone else's index (read-only): set options.pubKey
 	*
 	* To use your own index: set options.keypair or omit it to use Key.getDefaultKey().
@@ -13558,6 +13565,8 @@
 	* Wait for index.ready promise to resolve before calling instance methods.
 	* @param {Object} options see default options in example
 	* @example
+	* Usage: https://github.com/irislib/iris-lib/blob/master/__tests__/socialNetwork.js
+	*
 	* Default options:
 	*{
 	*  ipfs: undefined,
@@ -13662,6 +13671,9 @@
 	    this.gun.get('messagesByHash').put(user.top('messagesByHash'));
 	    this.gun.get('messagesByDistance').put(user.top('messagesByDistance'));
 
+	    this.messages = new Collection({ gun: this.gun, class: Message });
+	    this.contacts = new Collection({ gun: this.gun, class: Contact });
+
 	    var uri = this.rootContact.uri();
 	    var g = user.top(uri);
 	    this.gun.get('identitiesBySearchKey').get(uri).put(g);
@@ -13674,7 +13686,7 @@
 	        attrs[a.uri()] = a;
 	      }
 	    }
-	    var id = Contact.create(g, { trustDistance: 0, linkTo: this.rootContact, attrs: attrs }, this);
+	    var id = Contact.create(g, { trustDistance: 0, uuid: this.rootContact, attrs: attrs }, this);
 	    await this._addContactToIndexes(id.gun);
 	    if (this.options.self) {
 	      var recipient = _Object$assign(this.options.self, { keyID: this.rootContact.value });
@@ -13803,7 +13815,7 @@
 	  SocialNetwork.prototype.getContactIndexKeys = async function getContactIndexKeys(contact, hash) {
 	    var indexKeys = { identitiesByTrustDistance: [], identitiesBySearchKey: [] };
 	    var d = void 0;
-	    if (contact.linkTo && this.rootContact.equals(contact.linkTo)) {
+	    if (contact.keyID && this.rootContact.equals(contact.keyID)) {
 	      // TODO: contact is a gun instance, no linkTo
 	      d = 0;
 	    } else {
@@ -13854,8 +13866,8 @@
 	      }
 	    }
 
-	    if (this.rootContact.equals(contact.linkTo)) {
-	      addIndexKey(contact.linkTo);
+	    if (this.rootContact.equals(contact.keyID)) {
+	      addIndexKey(contact.keyID);
 	    }
 
 	    var attrs = await Contact.getAttrs(contact);
@@ -14141,7 +14153,7 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this7.gun.user(key).get('iris').get('messagesByAuthor').get(contact.linkTo.uri());
+	          var n = _this7.gun.user(key).get('iris').get('messagesByAuthor').get(contact.uuid.uri());
 	          _this7._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
 	        }
 	      });
@@ -14155,7 +14167,7 @@
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
-	          var n = _this8.gun.user(key).get('iris').get('messagesByRecipient').get(contact.linkTo.uri());
+	          var n = _this8.gun.user(key).get('iris').get('messagesByRecipient').get(contact.uuid.uri());
 	          _this8._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
 	        }
 	      });
@@ -14534,12 +14546,12 @@
 	          u = _a2;
 	        }
 	      }
-	      var linkTo = Contact.getLinkTo(attrs);
+	      var uuid = Attribute.getUuid();
 	      var trustDistance = msg.isPositive() && typeof msg.distance === 'number' ? msg.distance + 1 : false;
 	      var _start = new Date();
 	      var node = this.gun.get('identitiesBySearchKey').get(u.uri());
 	      node.put({ a: 1 }); // {a:1} because inserting {} causes a "no signature on data" error from gun
-	      var id = Contact.create(node, { attrs: attrs, linkTo: linkTo, trustDistance: trustDistance }, this);
+	      var id = Contact.create(node, { attrs: attrs, uuid: uuid, trustDistance: trustDistance }, this);
 	      this.debug(new Date() - _start, 'ms contact.create');
 
 	      // TODO: take msg author trust into account
@@ -14875,7 +14887,7 @@
 	  return SocialNetwork;
 	}();
 
-	var version$2 = "0.0.130";
+	var version$2 = "0.0.131";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

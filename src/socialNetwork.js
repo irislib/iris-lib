@@ -3,6 +3,7 @@ import Key from './key';
 import Contact from './contact';
 import Attribute from './attribute';
 import Chat from './chat';
+import Collection from './collection';
 import util from './util';
 import Gun from 'gun'; // eslint-disable-line no-unused-vars
 import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
@@ -40,9 +41,9 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 
 // TODO: flush onto IPFS
 /**
-* NOTE: these docs reflect the latest commit at https://github.com/irislib/iris-lib
-*
 * The essence of Iris: A database of Contacts and Messages within your web of trust.
+*
+* NOTE: these docs reflect the latest commit at https://github.com/irislib/iris-lib
 *
 * To use someone else's index (read-only): set options.pubKey
 *
@@ -57,6 +58,8 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 * Wait for index.ready promise to resolve before calling instance methods.
 * @param {Object} options see default options in example
 * @example
+* Usage: https://github.com/irislib/iris-lib/blob/master/__tests__/socialNetwork.js
+*
 * Default options:
 *{
 *  ipfs: undefined,
@@ -150,6 +153,9 @@ class SocialNetwork {
     this.gun.get(`messagesByHash`).put(user.top(`messagesByHash`));
     this.gun.get(`messagesByDistance`).put(user.top(`messagesByDistance`));
 
+    this.messages = new Collection({gun: this.gun, class: Message});
+    this.contacts = new Collection({gun: this.gun, class: Contact});
+
     const uri = this.rootContact.uri();
     const g = user.top(uri);
     this.gun.get(`identitiesBySearchKey`).get(uri).put(g);
@@ -162,7 +168,7 @@ class SocialNetwork {
         attrs[a.uri()] = a;
       }
     }
-    const id = Contact.create(g, {trustDistance: 0, linkTo: this.rootContact, attrs}, this);
+    const id = Contact.create(g, {trustDistance: 0, uuid: this.rootContact, attrs}, this);
     await this._addContactToIndexes(id.gun);
     if (this.options.self) {
       const recipient = Object.assign(this.options.self, {keyID: this.rootContact.value});
@@ -288,7 +294,7 @@ class SocialNetwork {
   async getContactIndexKeys(contact, hash) {
     const indexKeys = {identitiesByTrustDistance: [], identitiesBySearchKey: []};
     let d;
-    if (contact.linkTo && this.rootContact.equals(contact.linkTo)) { // TODO: contact is a gun instance, no linkTo
+    if (contact.keyID && this.rootContact.equals(contact.keyID)) { // TODO: contact is a gun instance, no linkTo
       d = 0;
     } else {
       d = await contact.get(`trustDistance`).then();
@@ -336,8 +342,8 @@ class SocialNetwork {
       }
     }
 
-    if (this.rootContact.equals(contact.linkTo)) {
-      addIndexKey(contact.linkTo);
+    if (this.rootContact.equals(contact.keyID)) {
+      addIndexKey(contact.keyID);
     }
 
     const attrs = await Contact.getAttrs(contact);
@@ -586,7 +592,7 @@ class SocialNetwork {
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`iris`).get(`messagesByAuthor`).get(contact.linkTo.uri());
+          const n = this.gun.user(key).get(`iris`).get(`messagesByAuthor`).get(contact.uuid.uri());
           this._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
         }
       });
@@ -598,7 +604,7 @@ class SocialNetwork {
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
-          const n = this.gun.user(key).get(`iris`).get(`messagesByRecipient`).get(contact.linkTo.uri());
+          const n = this.gun.user(key).get(`iris`).get(`messagesByRecipient`).get(contact.uuid.uri());
           this._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
         }
       });
@@ -898,12 +904,12 @@ class SocialNetwork {
           u = a;
         }
       }
-      const linkTo = Contact.getLinkTo(attrs);
+      const uuid = Attribute.getUuid();
       const trustDistance = msg.isPositive() && typeof msg.distance === `number` ? msg.distance + 1 : false;
       const start = new Date();
       const node = this.gun.get(`identitiesBySearchKey`).get(u.uri());
       node.put({a: 1}); // {a:1} because inserting {} causes a "no signature on data" error from gun
-      const id = Contact.create(node, {attrs, linkTo, trustDistance}, this);
+      const id = Contact.create(node, {attrs, uuid, trustDistance}, this);
       this.debug((new Date) - start, `ms contact.create`);
 
 
