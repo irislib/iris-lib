@@ -58,7 +58,7 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 * Wait for index.ready promise to resolve before calling instance methods.
 * @param {Object} options see default options in example
 * @example
-* Usage: https://github.com/irislib/iris-lib/blob/master/__tests__/socialNetwork.js
+* https://github.com/irislib/iris-lib/blob/master/__tests__/socialNetwork.js
 *
 * Default options:
 *{
@@ -478,6 +478,7 @@ class SocialNetwork {
         return this.getContact(opts.value);
       }
     }
+    opts.query = opts.query || '';
     const seen = {};
     function searchTermCheck(key) {
       const arr = key.split(`:`);

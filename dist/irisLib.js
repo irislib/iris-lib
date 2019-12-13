@@ -13565,7 +13565,7 @@
 	* Wait for index.ready promise to resolve before calling instance methods.
 	* @param {Object} options see default options in example
 	* @example
-	* Usage: https://github.com/irislib/iris-lib/blob/master/__tests__/socialNetwork.js
+	* https://github.com/irislib/iris-lib/blob/master/__tests__/socialNetwork.js
 	*
 	* Default options:
 	*{
@@ -14019,6 +14019,7 @@
 	        return this.getContact(opts.value);
 	      }
 	    }
+	    opts.query = opts.query || '';
 	    var seen = {};
 	    function searchTermCheck(key) {
 	      var arr = key.split(':');
