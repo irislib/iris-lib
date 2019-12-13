@@ -7,45 +7,51 @@ import util from './util';
 *
 * Usually you don't create Contacts yourself, but get them
 * from SocialNetwork methods such as get() and search().
-* @example https://github.com/irislib/iris-lib/blob/master/__tests__/contact.js
 */
 class Contact {
   /**
   * @param {Object} gun node where the Contact data lives
   */
-  constructor(gun: Object, uuid, index) {
+  constructor(gun: Object, linkTo, index) {
     this.gun = gun;
-    this.id = uuid || Attribute.getUuid().value;
+    this.linkTo = linkTo;
     this.index = index;
   }
 
-  serialize() {
-    return {id: this.id};
-  }
-
-  static deserialize(data, gun) {
-    return new Contact(gun, data.id);
-  }
-
   static create(gun, data, index) {
-    if (!data.uuid && !data.attrs) {
-      throw new Error(`You must specify either data.uuid or data.attrs`);
+    if (!data.linkTo && !data.attrs) {
+      throw new Error(`You must specify either data.linkTo or data.attrs`);
     }
-    if (data.uuid && !data.attrs) {
-      const uuid = new Attribute(data.uuid);
+    if (data.linkTo && !data.attrs) {
+      const linkTo = new Attribute(data.linkTo);
       data.attrs = {};
-      if (!Object.prototype.hasOwnProperty.call(data.attrs, uuid.uri())) {
-        data.attrs[uuid.uri()] = uuid;
+      if (!Object.prototype.hasOwnProperty.call(data.attrs, linkTo.uri())) {
+        data.attrs[linkTo.uri()] = linkTo;
       }
     } else {
-      data.uuid = Attribute.getUuid();
+      data.linkTo = Contact.getLinkTo(data.attrs);
     }
-    const uri = data.uuid.uri();
+    const uri = data.linkTo.uri();
     const attrs = gun.top(`${uri}/attrs`).put(data.attrs);
     delete data['attrs'];
     gun.put(data);
     gun.get(`attrs`).put(attrs);
     return new Contact(gun, uri, index);
+  }
+
+  static getLinkTo(attrs) {
+    const mva = Contact.getMostVerifiedAttributes(attrs);
+    const keys = Object.keys(mva);
+    let linkTo;
+    for (let i = 0;i < keys.length;i++) {
+      if (keys[i] === `keyID`) {
+        linkTo = mva[keys[i]].attribute;
+        break;
+      } else if (Attribute.isUniqueType(keys[i])) {
+        linkTo = mva[keys[i]].attribute;
+      }
+    }
+    return linkTo;
   }
 
   static getMostVerifiedAttributes(attrs) {
@@ -132,10 +138,10 @@ class Contact {
         return;
       }
       const attrs = await Contact.getAttrs(this.gun);
-      const uuid = await this.gun.get(`uuid`).then();
-      const link = `https://iris.to/#/identities/${uuid.type}/${uuid.value}`;
+      const linkTo = await this.gun.get(`linkTo`).then();
+      const link = `https://iris.to/#/identities/${linkTo.type}/${linkTo.value}`;
       const mva = Contact.getMostVerifiedAttributes(attrs);
-      linkEl.innerHTML = `<a href="${link}">${(mva.type && mva.type.attribute.value) || (mva.nickname && mva.nickname.attribute.value) || `${uuid.type}:${uuid.value}`}</a><br>`;
+      linkEl.innerHTML = `<a href="${link}">${(mva.type && mva.type.attribute.value) || (mva.nickname && mva.nickname.attribute.value) || `${linkTo.type}:${linkTo.value}`}</a><br>`;
       linkEl.innerHTML += `<small>Received: <span class="iris-pos">+${data.receivedPositive || 0}</span> / <span class="iris-neg">-${data.receivedNegative || 0}</span></small><br>`;
       links.innerHTML = ``;
       Object.keys(attrs).forEach(k => {
@@ -148,12 +154,12 @@ class Contact {
 
     /*
     const template = ```
-    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.uuid" ui-sref="identities.show({ type: result.uuid.type, value: result.uuid.value })" class="search-result-row" ng-class="{active: result.active}">
+    <tr ng-repeat="result in ids.list" id="result{$index}" ng-hide="!result.linkTo" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })" class="search-result-row" ng-class="{active: result.active}">
       <td class="gravatar-col"><identicon id="result" border="3" width="46" positive-score="result.pos" negative-score="result.neg"></identicon></td>
       <td>
         <span ng-if="result.distance == 0" class="label label-default pull-right">rootContact</span>
         <span ng-if="result.distance > 0" ng-bind="result.distance | ordinal" class="label label-default pull-right"></span>
-        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.uuid.type, value: result.uuid.value })"></a>
+        <a ng-bind-html="result.name|highlight:query.term" ui-sref="identities.show({ type: result.linkTo.type, value: result.linkTo.value })"></a>
         <small ng-if="!result.name" class="list-group-item-text">
           <span ng-bind-html="result[0][0]|highlight:query.term"></span>
         </small><br>
@@ -304,10 +310,10 @@ class Contact {
       img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;
     }
 
-    if (this.uuid) {
-      setIdenticonImg(this.uuid);
+    if (this.linkTo) {
+      setIdenticonImg(this.linkTo);
     } else {
-      this.gun.get(`uuid`).on(setIdenticonImg);
+      this.gun.get(`linkTo`).on(setIdenticonImg);
     }
 
     this.gun.on(setPie);

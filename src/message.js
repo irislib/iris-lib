@@ -304,7 +304,7 @@ class Message {
   getAuthor(index) {
     for (const a of this.getAuthorIterable()) {
       if (a.isUniqueType()) {
-        return index.get(a);
+        return index.getContacts(a);
       }
     }
   }
@@ -319,7 +319,7 @@ class Message {
     }
     for (const a of this.getRecipientIterable()) {
       if (a.isUniqueType()) {
-        return index.get(a);
+        return index.getContacts(a);
       }
     }
   }
