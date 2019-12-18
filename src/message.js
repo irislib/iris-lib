@@ -334,6 +334,10 @@ class Message {
     return this.hash;
   }
 
+  getId() {
+    return this.getHash();
+  }
+
   static async fromSig(obj) {
     if (!obj.sig) {
       throw new Error(`Missing signature in object:`, obj);

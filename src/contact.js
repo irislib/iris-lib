@@ -1,3 +1,4 @@
+import Gun from 'gun';
 import Identicon from 'identicon.js';
 import Attribute from './attribute';
 import util from './util';
@@ -12,10 +13,9 @@ class Contact {
   /**
   * @param {Object} gun node where the Contact data lives
   */
-  constructor(gun: Object, linkTo, index) {
+  constructor(gun: Object, linkTo) {
     this.gun = gun;
     this.linkTo = linkTo;
-    this.index = index;
   }
 
   static create(gun, data, index) {
@@ -82,20 +82,24 @@ class Contact {
     return attrs || {};
   }
 
+  getId() {
+    return this.linkTo.value;
+  }
+
   /**
   * Get sent Messages
   * @param {Object} options
   */
-  sent(options) {
-    this.index._getSentMsgs(this, options);
+  sent(index, options) {
+    index._getSentMsgs(this, options);
   }
 
   /**
   * Get received Messages
   * @param {Object} options
   */
-  received(options) {
-    this.index._getReceivedMsgs(this, options);
+  received(index, options) {
+    index._getReceivedMsgs(this, options);
   }
 
   /**
@@ -334,6 +338,15 @@ class Contact {
     }
 
     return identicon;
+  }
+
+  serialize() {
+    return this.gun;
+  }
+
+  static deserialize(data, opt) {
+    const linkTo = new Attribute({type: `uuid`, value: opt.id});
+    return new Contact(opt.gun, linkTo);
   }
 }
 

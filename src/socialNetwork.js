@@ -157,8 +157,7 @@ class SocialNetwork {
     this.contacts = new Collection({gun: this.gun, class: Contact});
 
     const uri = this.rootContact.uri();
-    const g = user.top(uri);
-    this.gun.get(`identitiesBySearchKey`).get(uri).put(g);
+    const g = this.gun.get(`identitiesBySearchKey`).get(uri).put(user.top(uri));
     const attrs = {};
     attrs[uri] = this.rootContact;
     if (this.options.self) {
@@ -964,6 +963,11 @@ class SocialNetwork {
       this.gun.back(-1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
     }
     start = new Date();
+
+    this.messages.put(msg);
+
+
+    // TODO: this should be moved to Collection
     const indexKeys = SocialNetwork.getMsgIndexKeys(msg);
     this.debug((new Date()) - start, `ms getMsgIndexKeys`);
     for (const index in indexKeys) {
@@ -981,6 +985,8 @@ class SocialNetwork {
         }
       }
     }
+
+
     if (this.options.ipfs) {
       try {
         const ipfsUri = await msg.saveToIpfs(this.options.ipfs);
@@ -1005,7 +1011,7 @@ class SocialNetwork {
   */
   async getMessages(opts) {
     if (opts.hash) {
-      return this.getMessageByHash(opts.hash);
+      return this.messages.get({id: opts.hash});
     }
     if (opts.orderBy && opts.orderBy === `trustDistance`) {
       return this.getMessagesByDistance(opts.callback, opts.limit, opts.cursor, opts.desc, opts.filter);

@@ -22,8 +22,9 @@ class Collection {
       throw new Error(`You must supply either opt.name or opt.class`);
     }
     this.class = opt.class;
-    if (this.class && !this.class.deserialize) {
-      throw new Error(`opt.class must have deserialize() method`);
+    this.serializer = opt.serializer;
+    if (this.class && !this.class.deserialize && !this.serializer) {
+      throw new Error(`opt.class must have deserialize() method or opt.serializer must be defined`);
     }
     this.name = opt.name || opt.class.name;
     this.gun = opt.gun;
@@ -34,15 +35,19 @@ class Collection {
   /**
   * @return {String} id of added object, which can be used for collection.get(id)
   */
-  put(object) {
+  put(object, opt = {}) {
     let data = object;
-    if (this.class) {
+    if (this.serializer) {
+      data = this.serializer.serialize(object);
+    } if (this.class) {
       data = object.serialize();
     }
     // TODO: optionally use gun hash table
     let node;
-    if (data.id) {
-      node = this.gun.get(this.name).get(`id`).get(data.id).put(data); // TODO: use .top()
+    if (opt.id || data.id) {
+      node = this.gun.get(this.name).get(`id`).get(opt.id || data.id).put(data); // TODO: use .top()
+    } else if (object.getId) {
+      node = this.gun.get(this.name).get(`id`).get(object.getId()).put(data);
     } else {
       node = this.gun.get(this.name).get(`id`).set(data);
     }
@@ -50,7 +55,10 @@ class Collection {
     return data.id || Gun.node.soul(node) || node._.link;
   }
 
-  _addToIndexes(serializedObject, node) {
+  async _addToIndexes(serializedObject, node) {
+    if (Gun.node.is(serializedObject)) {
+      serializedObject = await serializedObject.open();
+    }
     for (let i = 0;i < this.indexes.length; i++) {
       if (Object.prototype.hasOwnProperty.call(serializedObject, this.indexes[i])) {
         const indexName = this.indexes[i];
@@ -68,7 +76,7 @@ class Collection {
   get(opt = {}) {
     if (!opt.callback) { return; }
     let results = 0;
-    const matcher = data => {
+    const matcher = (data, id, node) => {
       if (!data) { return; }
       if (opt.limit && results++ >= opt.limit) {
         return; // TODO: terminate query
@@ -105,8 +113,10 @@ class Collection {
           if (v1.indexOf(v2) !== 0) { return; }
         }
       }
-      if (this.class) {
-        opt.callback(this.class.deserialize(data));
+      if (this.serializer) {
+        opt.callback(this.serializer.deserialize(data, {id, gun: node.$}));
+      } else if (this.class) {
+        opt.callback(this.class.deserialize(data, {id, gun: node.$}));
       } else {
         opt.callback(data);
       }

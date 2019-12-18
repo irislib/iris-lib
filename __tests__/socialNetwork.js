@@ -171,13 +171,13 @@ describe(`local index`, async () => {
       });
       test(`get messages received by bob`, async () => {
         const results = [];
-        p.received({callback: result => results.push(result)});
+        p.received(i, {callback: result => results.push(result)});
         await new Promise(resolve => setTimeout(resolve, 200));
         expect(results.length).toBe(1);
       });
       test(`get messages sent by bob`, async () => {
         const results = [];
-        p.sent({callback: result => results.push(result)});
+        p.sent(i, {callback: result => results.push(result)});
         await new Promise(resolve => setTimeout(resolve, 200));
         expect(results.length).toBe(0);
       });
@@ -185,7 +185,7 @@ describe(`local index`, async () => {
         const rootContact = i.getRootContact();
         expect(rootContact).toBeInstanceOf(iris.Contact);
         const results = [];
-        rootContact.sent({callback: result => results.push(result)});
+        rootContact.sent(i, {callback: result => results.push(result)});
         await new Promise(resolve => setTimeout(resolve, 200));
         expect(results.length).toBe(2);
       });
