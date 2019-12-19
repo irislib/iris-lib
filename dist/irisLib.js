@@ -407,6 +407,7 @@
 	    this.name = opt.name || opt.class.name;
 	    this.gun = opt.gun;
 	    this.indexes = opt.indexes || [];
+	    this.indexer = opt.indexer;
 	    this.askPeers = typeof opt.askPeers === 'undefined' ? true : opt.askPeers;
 	  }
 
@@ -438,13 +439,26 @@
 	  };
 
 	  Collection.prototype._addToIndexes = async function _addToIndexes(serializedObject, node) {
+	    var _this = this;
+
 	    if (Gun.node.is(serializedObject)) {
 	      serializedObject = await serializedObject.open();
 	    }
-	    for (var i = 0; i < this.indexes.length; i++) {
-	      if (Object.prototype.hasOwnProperty.call(serializedObject, this.indexes[i])) {
-	        var indexName = this.indexes[i];
-	        this.gun.get(this.name).get(indexName).get(serializedObject[indexName]).put(node);
+	    var addToIndex = function addToIndex(indexName, indexKey) {
+	      _this.gun.get(_this.name).get(indexName).get(indexKey).put(node);
+	    };
+	    if (this.indexer) {
+	      var customIndexes = await this.indexer(serializedObject);
+	      var customIndexKeys = _Object$keys(customIndexes);
+	      for (var i = 0; i < customIndexKeys; i++) {
+	        var key = customIndexKeys[i];
+	        addToIndex(key, customIndexes[key]);
+	      }
+	    }
+	    for (var _i = 0; _i < this.indexes.length; _i++) {
+	      var indexName = this.indexes[_i];
+	      if (Object.prototype.hasOwnProperty.call(serializedObject, indexName)) {
+	        addToIndex(indexName, serializedObject[indexName]);
 	      }
 	    }
 	  };
@@ -457,7 +471,7 @@
 
 
 	  Collection.prototype.get = function get() {
-	    var _this = this;
+	    var _this2 = this;
 
 	    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -497,8 +511,8 @@
 	      if (opt.query) {
 	        // TODO: use gun.get() lt / gt operators
 	        var _keys = _Object$keys(opt.query);
-	        for (var _i = 0; _i < _keys.length; _i++) {
-	          var _key = _keys[_i];
+	        for (var _i2 = 0; _i2 < _keys.length; _i2++) {
+	          var _key = _keys[_i2];
 	          if (!Object.prototype.hasOwnProperty.call(data, _key)) {
 	            return;
 	          }
@@ -516,10 +530,10 @@
 	          }
 	        }
 	      }
-	      if (_this.serializer) {
-	        opt.callback(_this.serializer.deserialize(data, { id: id, gun: node.$ }));
-	      } else if (_this.class) {
-	        opt.callback(_this.class.deserialize(data, { id: id, gun: node.$ }));
+	      if (_this2.serializer) {
+	        opt.callback(_this2.serializer.deserialize(data, { id: id, gun: node.$ }));
+	      } else if (_this2.class) {
+	        opt.callback(_this2.class.deserialize(data, { id: id, gun: node.$ }));
 	      } else {
 	        opt.callback(data);
 	      }
@@ -540,7 +554,7 @@
 	    this.gun.get(this.name).get(indexName).map().on(matcher); // TODO: limit .open recursion
 	    if (this.askPeers) {
 	      this.gun.get('trustedIndexes').on(function (val, key) {
-	        _this.gun.user(key).get(_this.name).get(indexName).map().on(matcher);
+	        _this2.gun.user(key).get(_this2.name).get(indexName).map().on(matcher);
 	      });
 	    }
 	  };
@@ -13705,7 +13719,7 @@
 	    this.gun.get('messagesByHash').put(user.top('messagesByHash'));
 	    this.gun.get('messagesByDistance').put(user.top('messagesByDistance'));
 
-	    this.messages = new Collection({ gun: this.gun, class: Message });
+	    this.messages = new Collection({ gun: this.gun, class: Message, indexes: ['time', 'trustDistance'] });
 	    this.contacts = new Collection({ gun: this.gun, class: Contact });
 
 	    var uri = this.rootContact.uri();
@@ -14044,16 +14058,16 @@
 	  SocialNetwork.prototype.getContacts = function getContacts() {
 	    var _this5 = this;
 
-	    var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 	    // cursor // TODO: param 'exact', type param
-	    if (opts.value) {
-	      if (opts.type) {
-	        return this.getContact(opts.type, opts.value, opts.reload);
+	    if (opt.value) {
+	      if (opt.type) {
+	        return this.getContact(opt.type, opt.value, opt.reload);
 	      } else {
-	        return this.getContact(opts.value);
+	        return this.getContact(opt.value);
 	      }
 	    }
-	    opts.query = opts.query || '';
+	    opt.query = opt.query || '';
 	    var seen = {};
 	    function searchTermCheck(key) {
 	      var arr = key.split(':');
@@ -14062,17 +14076,17 @@
 	      }
 	      var keyValue = arr[0];
 	      var keyType = arr[1];
-	      if (keyValue.indexOf(encodeURIComponent(opts.query)) !== 0) {
+	      if (keyValue.indexOf(encodeURIComponent(opt.query)) !== 0) {
 	        return false;
 	      }
-	      if (opts.type && keyType !== opts.type) {
+	      if (opt.type && keyType !== opt.type) {
 	        return false;
 	      }
 	      return true;
 	    }
 	    var node = this.gun.get('identitiesBySearchKey');
 	    node.map().on(function (id, key) {
-	      if (_Object$keys(seen).length >= opts.limit) {
+	      if (_Object$keys(seen).length >= opt.limit) {
 	        // TODO: turn off .map cb
 	        return;
 	      }
@@ -14084,14 +14098,14 @@
 	        seen[soul] = true;
 	        var contact = new Contact(node.get(key), undefined, _this5);
 	        contact.cursor = key;
-	        opts.callback(contact);
+	        opt.callback(contact);
 	      }
 	    });
 	    if (this.options.indexSync.query.enabled) {
 	      this.gun.get('trustedIndexes').map().once(function (val, key) {
 	        if (val) {
 	          _this5.gun.user(key).get('iris').get('identitiesBySearchKey').map().on(function (id, k) {
-	            if (_Object$keys(seen).length >= opts.limit) {
+	            if (_Object$keys(seen).length >= opt.limit) {
 	              // TODO: turn off .map cb
 	              return;
 	            }
@@ -14101,7 +14115,7 @@
 	            var soul = Gun.node.soul(id);
 	            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	              seen[soul] = true;
-	              opts.callback(new Contact(_this5.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this5));
+	              opt.callback(new Contact(_this5.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this5));
 	            }
 	          });
 	        }
@@ -14452,8 +14466,7 @@
 	    var _this10 = this;
 
 	    var maxMsgsToCrawl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.options.indexSync.importOnAdd.maxMsgCount;
-	    var maxMsgDistance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.options.indexSync.importOnAdd.maxMsgDistance;
-
+	    // maxMsgDistance = this.options.indexSync.importOnAdd.maxMsgDistance
 	    if (gunUri === this.rootContact.value) {
 	      return;
 	    }
@@ -14465,17 +14478,15 @@
 	    var msgs = [];
 	    if (this.options.indexSync.importOnAdd.enabled) {
 	      await util$1.timeoutPromise(new _Promise(function (resolve) {
-	        _this10.gun.user(gunUri).get('iris').get('messagesByDistance').map(function (val, key) {
-	          var d = _Number$parseInt(key.split(':')[0]);
-	          if (!isNaN(d) && d <= maxMsgDistance) {
-	            Message.fromSig(val).then(function (msg) {
-	              msgs.push(msg);
-	              if (msgs.length >= maxMsgsToCrawl) {
-	                resolve();
-	              }
-	            });
+	        var gun = _this10.gun.user(gunUri).get('iris');
+	        var callback = function callback(msg) {
+	          msgs.push(msg);
+	          if (msgs.length >= maxMsgsToCrawl) {
+	            resolve();
 	          }
-	        });
+	        };
+	        var messages = new Collection({ gun: gun, class: Message, indexes: ['trustDistance'] });
+	        messages.get({ callback: callback, orderBy: 'trustDistance', desc: false });
 	      }), 10000);
 	      this.debug('adding', msgs.length, 'msgs');
 	      this.addMessages(msgs);
@@ -14684,18 +14695,17 @@
 	  };
 
 	  /**
-	  * @param {Object} opts {hash, orderBy, callback, limit, cursor, desc, filter}
+	  * Alias to socialNetwork.messages.get(opt) (but with opt.orderBy = 'time')
+	  * @param {Object} opt {hash, orderBy, callback, limit, cursor, desc, filter}
 	  */
 
 
-	  SocialNetwork.prototype.getMessages = async function getMessages(opts) {
-	    if (opts.hash) {
-	      return this.messages.get({ id: opts.hash });
+	  SocialNetwork.prototype.getMessages = async function getMessages(opt) {
+	    if (opt.hash) {
+	      return this.messages.get({ id: opt.hash });
 	    }
-	    if (opts.orderBy && opts.orderBy === 'trustDistance') {
-	      return this.getMessagesByDistance(opts.callback, opts.limit, opts.cursor, opts.desc, opts.filter);
-	    }
-	    return this.getMessagesByTimestamp(opts.callback, opts.limit, opts.cursor, opts.desc || true, opts.filter);
+	    opt.orderBy = opt.orderBy || 'time';
+	    return this.messages.get(opt);
 	  };
 
 	  /*

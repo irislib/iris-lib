@@ -153,7 +153,7 @@ class SocialNetwork {
     this.gun.get(`messagesByHash`).put(user.top(`messagesByHash`));
     this.gun.get(`messagesByDistance`).put(user.top(`messagesByDistance`));
 
-    this.messages = new Collection({gun: this.gun, class: Message});
+    this.messages = new Collection({gun: this.gun, class: Message, indexes: [`time`, `trustDistance`]});
     this.contacts = new Collection({gun: this.gun, class: Contact});
 
     const uri = this.rootContact.uri();
@@ -470,28 +470,28 @@ class SocialNetwork {
   /**
   *
   */
-  getContacts(opts = {}) { // cursor // TODO: param 'exact', type param
-    if (opts.value) {
-      if (opts.type) {
-        return this.getContact(opts.type, opts.value, opts.reload);
+  getContacts(opt = {}) { // cursor // TODO: param 'exact', type param
+    if (opt.value) {
+      if (opt.type) {
+        return this.getContact(opt.type, opt.value, opt.reload);
       } else {
-        return this.getContact(opts.value);
+        return this.getContact(opt.value);
       }
     }
-    opts.query = opts.query || '';
+    opt.query = opt.query || '';
     const seen = {};
     function searchTermCheck(key) {
       const arr = key.split(`:`);
       if (arr.length < 2) { return false; }
       const keyValue = arr[0];
       const keyType = arr[1];
-      if (keyValue.indexOf(encodeURIComponent(opts.query)) !== 0) { return false; }
-      if (opts.type && keyType !== opts.type) { return false; }
+      if (keyValue.indexOf(encodeURIComponent(opt.query)) !== 0) { return false; }
+      if (opt.type && keyType !== opt.type) { return false; }
       return true;
     }
     const node = this.gun.get(`identitiesBySearchKey`);
     node.map().on((id, key) => {
-      if (Object.keys(seen).length >= opts.limit) {
+      if (Object.keys(seen).length >= opt.limit) {
         // TODO: turn off .map cb
         return;
       }
@@ -501,14 +501,14 @@ class SocialNetwork {
         seen[soul] = true;
         const contact = new Contact(node.get(key), undefined, this);
         contact.cursor = key;
-        opts.callback(contact);
+        opt.callback(contact);
       }
     });
     if (this.options.indexSync.query.enabled) {
       this.gun.get(`trustedIndexes`).map().once((val, key) => {
         if (val) {
           this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).map().on((id, k) => {
-            if (Object.keys(seen).length >= opts.limit) {
+            if (Object.keys(seen).length >= opt.limit) {
               // TODO: turn off .map cb
               return;
             }
@@ -516,7 +516,7 @@ class SocialNetwork {
             const soul = Gun.node.soul(id);
             if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
               seen[soul] = true;
-              opts.callback(
+              opt.callback(
                 new Contact(this.gun.user(key).get(`iris`).get(`identitiesBySearchKey`).get(k), undefined, this)
               );
             }
@@ -819,7 +819,7 @@ class SocialNetwork {
 
   async addTrustedIndex(gunUri,
     maxMsgsToCrawl = this.options.indexSync.importOnAdd.maxMsgCount,
-    maxMsgDistance = this.options.indexSync.importOnAdd.maxMsgDistance) {
+  ) { // maxMsgDistance = this.options.indexSync.importOnAdd.maxMsgDistance
     if (gunUri === this.rootContact.value) {
       return;
     }
@@ -831,17 +831,15 @@ class SocialNetwork {
     const msgs = [];
     if (this.options.indexSync.importOnAdd.enabled) {
       await util.timeoutPromise(new Promise(resolve => {
-        this.gun.user(gunUri).get(`iris`).get(`messagesByDistance`).map((val, key) => {
-          const d = Number.parseInt(key.split(`:`)[0]);
-          if (!isNaN(d) && d <= maxMsgDistance) {
-            Message.fromSig(val).then(msg => {
-              msgs.push(msg);
-              if (msgs.length >= maxMsgsToCrawl) {
-                resolve();
-              }
-            });
+        const gun = this.gun.user(gunUri).get(`iris`);
+        const callback = msg => {
+          msgs.push(msg);
+          if (msgs.length >= maxMsgsToCrawl) {
+            resolve();
           }
-        });
+        };
+        const messages = new Collection({gun, class: Message, indexes: [`trustDistance`]});
+        messages.get({callback, orderBy: `trustDistance`, desc: false});
       }), 10000);
       this.debug(`adding`, msgs.length, `msgs`);
       this.addMessages(msgs);
@@ -1008,16 +1006,15 @@ class SocialNetwork {
 
 
   /**
-  * @param {Object} opts {hash, orderBy, callback, limit, cursor, desc, filter}
+  * Alias to socialNetwork.messages.get(opt) (but with opt.orderBy = 'time')
+  * @param {Object} opt {hash, orderBy, callback, limit, cursor, desc, filter}
   */
-  async getMessages(opts) {
-    if (opts.hash) {
-      return this.messages.get({id: opts.hash});
+  async getMessages(opt) {
+    if (opt.hash) {
+      return this.messages.get({id: opt.hash});
     }
-    if (opts.orderBy && opts.orderBy === `trustDistance`) {
-      return this.getMessagesByDistance(opts.callback, opts.limit, opts.cursor, opts.desc, opts.filter);
-    }
-    return this.getMessagesByTimestamp(opts.callback, opts.limit, opts.cursor, opts.desc || true, opts.filter);
+    opt.orderBy = opt.orderBy || `time`;
+    return this.messages.get(opt);
   }
 
 

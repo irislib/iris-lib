@@ -759,7 +759,7 @@ Default options:
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getContacts(opts)</span>
+            <span class='code strong strong truncate'>getContacts(opt)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -768,7 +768,7 @@ Default options:
   
 
   
-    <div class='pre p1 fill-light mt0'>getContacts(opts: any)</div>
+    <div class='pre p1 fill-light mt0'>getContacts(opt: any)</div>
   
   
 
@@ -785,7 +785,7 @@ Default options:
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>opts</span> <code class='quiet'>(any
+            <span class='code bold'>opt</span> <code class='quiet'>(any
             = <code>{}</code>)</code>
 	    
           </div>
@@ -1004,7 +1004,7 @@ Like Chat.getChats(), but also listens to chats initiated by friends.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getMessages(opts)</span>
+            <span class='code strong strong truncate'>getMessages(opt)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1012,8 +1012,9 @@ Like Chat.getChats(), but also listens to chats initiated by friends.</p>
 
   
 
-  
-    <div class='pre p1 fill-light mt0'>getMessages(opts: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+  <p>Alias to socialNetwork.messages.get(opt) (but with opt.orderBy = 'time')</p>
+
+    <div class='pre p1 fill-light mt0'>getMessages(opt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
   
 
@@ -1030,7 +1031,7 @@ Like Chat.getChats(), but also listens to chats initiated by friends.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>opts</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+            <span class='code bold'>opt</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    {hash, orderBy, callback, limit, cursor, desc, filter}
 
           </div>
@@ -1228,7 +1229,7 @@ from SocialNetwork methods such as get() and search().</p>
 
   <p>Get sent Messages</p>
 
-    <div class='pre p1 fill-light mt0'>sent(index: any, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+    <div class='pre p1 fill-light mt0'>sent(index: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
   
 
@@ -1245,7 +1246,7 @@ from SocialNetwork methods such as get() and search().</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>index</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>index</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    
           </div>
           
@@ -1296,7 +1297,7 @@ from SocialNetwork methods such as get() and search().</p>
 
   <p>Get received Messages</p>
 
-    <div class='pre p1 fill-light mt0'>received(index: any, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+    <div class='pre p1 fill-light mt0'>received(index: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
   
 
@@ -1313,7 +1314,7 @@ from SocialNetwork methods such as get() and search().</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>index</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>index</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
 	    
           </div>
           

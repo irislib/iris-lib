@@ -29,6 +29,7 @@ class Collection {
     this.name = opt.name || opt.class.name;
     this.gun = opt.gun;
     this.indexes = opt.indexes || [];
+    this.indexer = opt.indexer;
     this.askPeers = typeof opt.askPeers === `undefined` ? true : opt.askPeers;
   }
 
@@ -59,10 +60,21 @@ class Collection {
     if (Gun.node.is(serializedObject)) {
       serializedObject = await serializedObject.open();
     }
+    const addToIndex = (indexName, indexKey) => {
+      this.gun.get(this.name).get(indexName).get(indexKey).put(node);
+    };
+    if (this.indexer) {
+      const customIndexes = await this.indexer(serializedObject);
+      const customIndexKeys = Object.keys(customIndexes);
+      for (let i = 0;i < customIndexKeys;i++) {
+        const key = customIndexKeys[i];
+        addToIndex(key, customIndexes[key]);
+      }
+    }
     for (let i = 0;i < this.indexes.length; i++) {
-      if (Object.prototype.hasOwnProperty.call(serializedObject, this.indexes[i])) {
-        const indexName = this.indexes[i];
-        this.gun.get(this.name).get(indexName).get(serializedObject[indexName]).put(node);
+      const indexName = this.indexes[i];
+      if (Object.prototype.hasOwnProperty.call(serializedObject, indexName)) {
+        addToIndex(indexName, serializedObject[indexName]);
       }
     }
   }

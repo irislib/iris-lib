@@ -24,7 +24,11 @@ describe(`Collection`, () => {
   let gun, animals, n = 0;
   beforeAll(() => {
     gun = new Gun({radisk: false});
-    animals = new Collection({gun, class: Animal, indexes: ['name', 'species']});
+    const indexer = animal => {
+      const reversedName = animal.name.split(``).reverse().join(``).toLowerCase();
+      return {reversedName};
+    };
+    animals = new Collection({gun, class: Animal, indexes: ['name', 'species'], indexer});
   });
   test(`put`, () => {
     animals.put(new Animal('Moisture', 'cat'));n++;

@@ -87,6 +87,7 @@ class Contact {
 
   /**
   * Get sent Messages
+  * @param {Object} index
   * @param {Object} options
   */
   sent(index, options) {
@@ -95,6 +96,7 @@ class Contact {
 
   /**
   * Get received Messages
+  * @param {Object} index
   * @param {Object} options
   */
   received(index, options) {
