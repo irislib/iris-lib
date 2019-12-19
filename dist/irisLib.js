@@ -13709,7 +13709,8 @@
 	    this.contacts = new Collection({ gun: this.gun, class: Contact });
 
 	    var uri = this.rootContact.uri();
-	    var g = this.gun.get('identitiesBySearchKey').get(uri).put(user.top(uri));
+	    var g = user.top(uri);
+	    this.gun.get('identitiesBySearchKey').get(uri).put(g);
 	    var attrs = {};
 	    attrs[uri] = this.rootContact;
 	    if (this.options.self) {

@@ -1,4 +1,3 @@
-import Gun from 'gun';
 import Identicon from 'identicon.js';
 import Attribute from './attribute';
 import util from './util';
