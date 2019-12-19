@@ -157,7 +157,8 @@ class SocialNetwork {
     this.contacts = new Collection({gun: this.gun, class: Contact});
 
     const uri = this.rootContact.uri();
-    const g = this.gun.get(`identitiesBySearchKey`).get(uri).put(user.top(uri));
+    const g = user.top(uri);
+    this.gun.get(`identitiesBySearchKey`).get(uri).put(g);
     const attrs = {};
     attrs[uri] = this.rootContact;
     if (this.options.self) {
