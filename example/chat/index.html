@@ -26,7 +26,7 @@
         <p><input id="paste-chat-link" type="text" placeholder="Paste someone's chat link"></p>
         <p><button class="copy-chat-link">Copy your chat link</button></p>
       </div>
-      <div class="message-form">
+      <div class="message-form" style="display:none">
         <form autocomplete="off">
           <input id="new-msg" type="text" placeholder="Type a message">
           <button>Send</button>
@@ -35,10 +35,10 @@
     </section>
   </div>
 
-  <script src="./jquery.js"></script>
-  <script src="./gun.js"></script>
-  <script src="./sea.js"></script>
-  <script src="./nts.js"></script>
+  <script src="/jquery.js"></script>
+  <script src="/gun.js"></script>
+  <script src="/gun/sea.js"></script>
+  <script src="/gun/nts.js"></script>
   <script src="./irisLib.js"></script>
   <script>
     var gun = Gun([location.origin + '/gun', 'https://gun-us.herokuapp.com/gun']);
@@ -68,7 +68,7 @@
       var chatWith = getUrlParameter('chatWith');
       if (chatWith) {
         addChat(chatWith);
-        showChat(pub);
+        showChat(chatWith);
       }
     });
 
@@ -133,7 +133,13 @@
       $(".online-user-list").append(chats[pub].identicon.clone());
       var msgs = Object.values(chats[pub].messages);
       msgs.forEach(addMessage);
+      sortMessagesByTime();
       $('#message-list').scrollTop($('#message-list')[0].scrollHeight - $('#message-list')[0].clientHeight);
+    }
+
+    function sortMessagesByTime() {
+      var sorted = $(".msg").sort((a, b) => $(a).data('time') - $(b).data('time'));
+      $("#message-list").append(sorted);
     }
 
     function addMessage(msg) {
@@ -144,8 +150,6 @@
       msgEl.toggleClass('our', msg.selfAuthored ? true : false);
       msgEl.data('time', msg.time);
       $("#message-list").append(msgEl); // TODO: jquery insertAfter element with smaller timestamp
-      var sorted = $(".msg").sort((a, b) => $(a).data('time') - $(b).data('time')); // TODO: more efficient sort
-      $("#message-list").append(sorted);
       $('#message-list').scrollTop($('#message-list')[0].scrollHeight - $('#message-list')[0].clientHeight);
     }
 
@@ -167,6 +171,7 @@
         }
         if (activeChat === pub) {
           addMessage(msg);
+          sortMessagesByTime(); // this is slow if message history is loaded while chat active
         }
       }});
       chats[pub].identicon = $(new irisLib.Attribute({type: 'keyID', value: pub}).identicon({width:40}));
