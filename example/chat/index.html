@@ -3,6 +3,7 @@
 
 <head>
   <title>Iris Chat</title>
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
   <link rel="stylesheet" type="text/css" href="./style.css">
   <link rel="shortcut icon" href="./favicon.ico">
@@ -25,7 +26,7 @@
 
       </div>
       <div id="not-seen-by-them" style="display: none">
-        <p>The other person hasn't seen this chat yet. Please give them your chat link through some other channel:</p>
+        <p>The other person hasn't seen this chat yet. Give them your chat link through some other channel:</p>
         <p><button class="copy-chat-link">Copy your chat link</button></p>
       </div>
       <div class="message-list" id="new-chat">
@@ -36,16 +37,16 @@
       <div class="message-form" style="display:none">
         <form autocomplete="off">
           <input id="new-msg" type="text" placeholder="Type a message">
-          <button>Send</button>
+          <button>▶</button>
         </form>
       </div>
     </section>
   </div>
 
-  <script src="./jquery.js"></script>
-  <script src="./gun.js"></script>
-  <script src="./sea.js"></script>
-  <script src="./nts.js"></script>
+  <script src="/jquery.js"></script>
+  <script src="/gun.js"></script>
+  <script src="/gun/sea.js"></script>
+  <script src="/gun/nts.js"></script>
   <script src="./irisLib.js"></script>
   <script src="./script.js"></script>
 </body>

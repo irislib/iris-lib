@@ -113,8 +113,12 @@ button:hover, button:active, button:focus {
   width: auto;
 }
 
-.message-form button {
+.message-form button, .message-form button:hover, .message-form button:active, .message-form button:focus {
   flex: none;
+  color: #999;
+  background-color: transparent;
+  font-size: 30px;
+  padding: 5px;
 }
 
 /*----- Sidebar------- */

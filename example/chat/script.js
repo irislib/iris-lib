@@ -18,7 +18,7 @@ var key, myIdenticon;
 getKey.then(k => {
   key = k;
   gun.user().auth(key);
-  myIdenticon = $(new irisLib.Attribute({type:'keyID', value: key.pub}).identicon({width:40}));
+  myIdenticon = $(new irisLib.Attribute({type:'keyID', value: key.pub}).identicon({width:40, showType: false}));
   $(".user-info").append(myIdenticon);
   irisLib.Chat.getChats(gun, key, addChat);
   irisLib.Chat.setOnline(gun, true);
@@ -169,7 +169,7 @@ function addChat(pub) {
     }
   }});
   chats[pub].messages = chats[pub].messages || [];
-  chats[pub].identicon = $(new irisLib.Attribute({type: 'keyID', value: pub}).identicon({width:40}));
+  chats[pub].identicon = $(new irisLib.Attribute({type: 'keyID', value: pub}).identicon({width:40, showType: false}));
   el.prepend(chats[pub].identicon);
   el.click(() => showChat(pub));
   $(".chat-list").append(el);
