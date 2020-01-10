@@ -26,7 +26,7 @@
         <p><input id="paste-chat-link" type="text" placeholder="Paste someone's chat link"></p>
         <p><button class="copy-chat-link">Copy your chat link</button></p>
       </div>
-      <div class="message-form" style="display:none">
+      <div class="message-form">
         <form autocomplete="off">
           <input id="new-msg" type="text" placeholder="Type a message">
           <button>Send</button>
@@ -35,10 +35,10 @@
     </section>
   </div>
 
-  <script src="/jquery.js"></script>
-  <script src="/gun.js"></script>
-  <script src="/gun/sea.js"></script>
-  <script src="/gun/nts.js"></script>
+  <script src="./jquery.js"></script>
+  <script src="./gun.js"></script>
+  <script src="./sea.js"></script>
+  <script src="./nts.js"></script>
   <script src="./irisLib.js"></script>
   <script>
     var gun = Gun([location.origin + '/gun', 'https://gun-us.herokuapp.com/gun']);
