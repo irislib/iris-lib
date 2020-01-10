@@ -277,12 +277,10 @@ export default {
 
       .iris-identicon {
         vertical-align: middle;
-        margin: auto;
         border-radius: 50%;
         text-align: center;
         display: inline-block;
         position: relative;
-        margin: auto;
         max-width: 100%;
       }
 

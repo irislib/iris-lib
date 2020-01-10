@@ -2989,6 +2989,8 @@ Verification message:
 independently of other Iris stuff.</p>
 <p>Messages are encrypted and chat ids obfuscated, but it is possible to guess
 who are communicating with each other by looking at Gun timestamps and subscriptions.</p>
+<p>options.onMessage callback is not guaranteed to receive messages ordered by timestamp.
+You should sort them in the presentation layer.</p>
 
     <div class='pre p1 fill-light mt0'>new Chat(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
@@ -4951,7 +4953,7 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">object</a>
-            = <code>{width:50}</code>)</code>
+            = <code>{}</code>)</code>
 	    {width}
 
           </div>

@@ -7,6 +7,9 @@ import Gun from 'gun';
 * Messages are encrypted and chat ids obfuscated, but it is possible to guess
 * who are communicating with each other by looking at Gun timestamps and subscriptions.
 *
+* options.onMessage callback is not guaranteed to receive messages ordered by timestamp.
+* You should sort them in the presentation layer.
+*
 * @param {Object} options {key, gun, onMessage, participants}
 * @example https://github.com/irislib/iris-lib/blob/master/__tests__/chat.js
 */
