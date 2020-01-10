@@ -114,10 +114,10 @@ function showChat(pub) {
     $('#new-msg').val('');
   });
   var nameEl = $('<span class="name"></span>');
-  gun.user(pub).get('profile').get('name').on(name => {
-    nameEl.text(name);
+  if (chats[pub].name) {
+    nameEl.text(chats[pub].name);
     nameEl.show();
-  });
+  }
   $("#topbar").append(chats[pub].identicon.clone());
   $("#topbar").append(nameEl);
   $("#topbar").append($('<small class="last-seen"></small>'));
@@ -173,7 +173,7 @@ function addChat(pub) {
   if (!pub || Object.prototype.hasOwnProperty.call(chats, pub)) {
     return;
   }
-  var el = $('<div class="chat-item"><small class="latest"></small></div>');
+  var el = $('<div class="chat-item"><span class="name"></span> <small class="latest"></small></div>');
   el.attr('data-pub', pub);
   chats[pub] = new irisLib.Chat({gun, key, participants: pub, onMessage: (msg, info) => {
     msg.selfAuthored = info.selfAuthored;
@@ -200,6 +200,15 @@ function addChat(pub) {
   }});
   chats[pub].messages = chats[pub].messages || [];
   chats[pub].identicon = $(new irisLib.Attribute({type: 'keyID', value: pub}).identicon({width:40, showType: false}));
+  gun.user(pub).get('profile').get('name').on(name => {
+    if (name && typeof name === 'string') {
+      chats[pub].name = name;
+      el.find('.name').text(name);
+      if (pub === activeChat) {
+        $('#topbar .name').text(name);
+      }
+    }
+  });
   el.prepend(chats[pub].identicon);
   el.click(() => showChat(pub));
   $(".chat-list").append(el);
