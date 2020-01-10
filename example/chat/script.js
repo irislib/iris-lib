@@ -90,12 +90,31 @@ function showChat(pub) {
   });
   $(".online-user-list").empty();
   $(".online-user-list").append(chats[pub].identicon.clone());
+  $(".online-user-list").append($('<small class="last-seen"></small>'));
   var msgs = Object.values(chats[pub].messages);
   msgs.forEach(addMessage);
   sortMessagesByTime();
   lastSeenTimeChanged(pub);
   $('#message-list').scrollTop($('#message-list')[0].scrollHeight - $('#message-list')[0].clientHeight);
   chats[pub].setMyMsgsLastSeenTime();
+  function setOnlineStatus() {
+    var online = chats[pub].online;
+    if (activeChat === pub) {
+      if (online.isOnline) {
+        $('.online-user-list .last-seen').text('online');
+      } else if (online.lastActive) {
+        $('.online-user-list .last-seen').text('last seen ' + formatDate(new Date(online.lastActive * 1000)));
+      }
+    }
+  }
+  if (!chats[pub].online) {
+    chats[pub].online = {};
+    irisLib.Chat.getOnline(gun, pub, (online) => {
+      chats[pub].online = online;
+      setOnlineStatus();
+    });
+  }
+  setOnlineStatus();
 }
 
 function sortChatsByLatest() {
@@ -110,8 +129,9 @@ function sortMessagesByTime() {
 
 function addMessage(msg) {
   var msgEl = $(
-  '<div class="msg"><div class="text">' + msg.text + '</div><div class="time">' +
-    formatDate(msg.time) + '</div></div>'
+    '<div class="msg"><div class="text">' +
+    msg.text + '</div>' +
+    '<div class="time"><span class="seen">✔</span> ' + formatDate(msg.time) + '</div></div>'
   );
   msgEl.toggleClass('our', msg.selfAuthored ? true : false);
   msgEl.data('time', msg.time);
@@ -123,7 +143,7 @@ function addChat(pub) {
   if (!pub || Object.prototype.hasOwnProperty.call(chats, pub)) {
     return;
   }
-  var el = $('<div class="chat-item"><span class="latest"></span></div>');
+  var el = $('<div class="chat-item"><small class="latest"></small></div>');
   el.attr('data-pub', pub);
   chats[pub] = new irisLib.Chat({gun, key, participants: pub, onMessage: (msg, info) => {
     msg.selfAuthored = info.selfAuthored;
@@ -163,7 +183,12 @@ function lastSeenTimeChanged(pub) {
   if (pub === activeChat) {
     if (chats[pub].theirLastSeenTime) {
       $('#not-seen-by-them').hide();
-      $('.msg.our').toggleClass('')
+      $('.msg.our').each(function() {
+        var el = $(this);
+        if (el.data('time') <= chats[pub].theirLastSeenTime) {
+          el.find('.seen').show();
+        }
+      });
       // set seen msgs
     } else {
       $('#not-seen-by-them').show();
