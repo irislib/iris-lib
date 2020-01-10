@@ -17,7 +17,7 @@ var getKey = new Promise(resolve => {
 var key, myIdenticon;
 getKey.then(k => {
   key = k;
-  gun.user().auth(key);
+  irisLib.Chat.initUser(gun, key);
   myIdenticon = $(new irisLib.Attribute({type:'keyID', value: key.pub}).identicon({width:40, showType: false}));
   $(".user-info").append(myIdenticon);
   myIdenticon.click(showSettings);

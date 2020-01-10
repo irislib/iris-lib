@@ -13566,6 +13566,24 @@
 	    });
 	  };
 
+	  /**
+	  * In order to receive messages from others, this method must be called for newly created
+	  * users that have not started a chat with an existing user yet.
+	  *
+	  * It saves the user's key.epub (public key for encryption) into their gun user space,
+	  * so others can find it and write encrypted messages to them.
+	  *
+	  * If you start a chat with an existing user, key.epub is saved automatically and you don't need
+	  * to call this method.
+	  */
+
+
+	  Chat.initUser = function initUser(gun, key) {
+	    var user = gun.user();
+	    user.auth(key);
+	    user.put({ epub: key.epub });
+	  };
+
 	  return Chat;
 	}();
 

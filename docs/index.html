@@ -341,6 +341,12 @@
                         .getOnline
                       </a></li>
                     
+                      <li><a
+                        href='#chatinituser'
+                        class='regular pre-open'>
+                        .initUser
+                      </a></li>
+                    
                     </ul>
                   
                   
@@ -3388,6 +3394,79 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
             <span class='code bold'>callback</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
 	    receives a boolean each time the user's online status changes
 
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='chatinituser'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>initUser(gun, key)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>In order to receive messages from others, this method must be called for newly created
+users that have not started a chat with an existing user yet.</p>
+<p>It saves the user's key.epub (public key for encryption) into their gun user space,
+so others can find it and write encrypted messages to them.</p>
+<p>If you start a chat with an existing user, key.epub is saved automatically and you don't need
+to call this method.</p>
+
+    <div class='pre p1 fill-light mt0'>initUser(gun: any, key: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>gun</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+	    
           </div>
           
         </div>
