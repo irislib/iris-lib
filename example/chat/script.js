@@ -95,6 +95,21 @@ $('.copy-chat-link').click(event => {
   }, 2000);
 });
 
+$('#copy-private-key').click(event => {
+  copyToClipboard(JSON.stringify(key));
+  var t = $(event.target);
+  var originalText = t.text();
+  var originalWidth = t.width();
+  t.width(originalWidth);
+  t.text('Copied');
+  setTimeout(() => {
+    t.text(originalText);
+    t.css('width', '');
+  }, 2000);
+});
+
+$('#download-private-key').click(downloadKey);
+
 function showChat(pub) {
   if (!pub || !Object.prototype.hasOwnProperty.call(chats, pub)) {
     return;
@@ -278,4 +293,20 @@ function getUrlParameter(sParam, sParams) {
             return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
         }
     }
+};
+
+function download(filename, data, type, charset, href) {
+  var hiddenElement;
+  if (charset == null) {
+    charset = 'utf-8';
+  }
+  hiddenElement = document.createElement('a');
+  hiddenElement.href = href || ("data:" + type + ";charset=" + charset + "," + (encodeURI(data)));
+  hiddenElement.target = '_blank';
+  hiddenElement.download = filename;
+  return hiddenElement.click();
+};
+
+function downloadKey() {
+  return download('iris_private_key.txt', JSON.stringify(key), 'text/csv', 'utf-8');
 };

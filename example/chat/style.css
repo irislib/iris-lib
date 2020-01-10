@@ -65,6 +65,7 @@ button:hover, button:active, button:focus {
   background-color: #efefef;
   max-height:60px;
   padding: 10px 15px;
+  border-bottom: 1px solid rgba(0,0,0,.08);
 }
 
 #topbar .name {
