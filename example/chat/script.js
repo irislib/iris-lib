@@ -46,6 +46,8 @@ $('#paste-chat-link').on('keyup paste', event => {
 $('.chat-item.new').click(showNewChat);
 
 function showNewChat() {
+  $('.chat-item').toggleClass('active', false);
+  $('.chat-item.new').toggleClass('active', true);
   $('#not-seen-by-them').hide();
   $(".message-form").hide();
   $('#message-list').hide();
