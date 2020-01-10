@@ -179,6 +179,7 @@ function addMessage(msg) {
     '<div class="time"><span class="seen">✔</span> ' + formatDate(msg.time) + '</div></div>'
   );
   msgEl.toggleClass('our', msg.selfAuthored ? true : false);
+  msgEl.toggleClass('their', msg.selfAuthored ? false : true);
   msgEl.data('time', msg.time);
   $("#message-list").append(msgEl); // TODO: jquery insertAfter element with smaller timestamp
   $('#message-list').scrollTop($('#message-list')[0].scrollHeight - $('#message-list')[0].clientHeight);
