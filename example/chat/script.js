@@ -254,8 +254,7 @@ function lastSeenTimeChanged(pub) {
 /* Helpers */
 
 function formatDate(date) {
-  var s = date.toISOString().split('T');
-  return s[0] + ' ' + s[1].slice(0,5);
+  return date.toLocaleString(undefined, {dateStyle:"short", timeStyle:"short"});
 }
 
 function copyToClipboard(text) {
