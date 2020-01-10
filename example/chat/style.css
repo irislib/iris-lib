@@ -22,11 +22,11 @@ input {
 
 button {
   background: #ddd;
+  cursor: pointer;
 }
 
 button:hover, button:active, button:focus {
   background: #ccc;
-  cursor: pointer;
 }
 
 .iris-identicon {
@@ -162,4 +162,17 @@ button:hover, button:active, button:focus {
 
 #new-chat input {
   width: 200px;
+}
+
+#not-seen-by-them {
+  padding: 10px 15px;
+  background-color: #9ee8ff;
+}
+
+#not-seen-by-them button {
+  background: #fff;
+}
+
+#not-seen-by-them button:hover, #not-seen-by-them button:active, #not-seen-by-them button:focus {
+  background: #eee;
 }
