@@ -20,6 +20,7 @@ getKey.then(k => {
   gun.user().auth(key);
   myIdenticon = $(new irisLib.Attribute({type:'keyID', value: key.pub}).identicon({width:40, showType: false}));
   $(".user-info").append(myIdenticon);
+  myIdenticon.click(showSettings);
   irisLib.Chat.getChats(gun, key, addChat);
   irisLib.Chat.setOnline(gun, true);
   var chatWith = getUrlParameter('chatWith');
@@ -28,6 +29,14 @@ getKey.then(k => {
     showChat(chatWith);
     window.history.pushState({}, "Iris Chat", "/"+window.location.href.substring(window.location.href.lastIndexOf('/') + 1).split("?")[0]); // remove param
   }
+  gun.user().get('profile').get('name').on(name => {
+    if (name && typeof name === 'string') {
+      var el = $('#settings-name');
+      if (!el.is(':focus')) {
+        $('#settings-name').val(name);
+      }
+    }
+  });
 });
 
 $('#paste-chat-link').on('keyup paste', event => {
@@ -45,15 +54,30 @@ $('#paste-chat-link').on('keyup paste', event => {
 
 $('.chat-item.new').click(showNewChat);
 
-function showNewChat() {
+$('#settings-name').on('keyup paste', event => {
+  var name = $(event.target).val().trim();
+  gun.user().get('profile').get('name').put(name);
+});
+
+function hideStuff() {
   $('.chat-item').toggleClass('active', false);
-  $('.chat-item.new').toggleClass('active', true);
+  $('.main-view').hide();
   $('#not-seen-by-them').hide();
   $(".message-form").hide();
-  $('#message-list').hide();
+  $("#topbar").empty();
+}
+
+function showSettings() {
+  hideStuff();
+  $('#topbar').text('Settings');
+  $('#settings').show();
+}
+
+function showNewChat() {
+  hideStuff();
+  $('.chat-item.new').toggleClass('active', true);
   $('#new-chat').show();
-  $(".online-user-list").empty();
-  $(".online-user-list").text('Start new chat');
+  $("#topbar").text('Start new chat');
 }
 
 showNewChat();
@@ -76,11 +100,10 @@ function showChat(pub) {
     return;
   }
   activeChat = pub;
-  $(".chat-item").toggleClass('active', false);
+  hideStuff();
   $('.chat-item[data-pub="' + pub +'"]').toggleClass('active', true);
   $("#message-list").empty();
   $("#message-list").show();
-  $("#new-chat").hide();
   $(".message-form").show();
   $(".message-form form").off('submit');
   $(".message-form form").on('submit', event => {
@@ -90,9 +113,14 @@ function showChat(pub) {
     chats[pub].send(text);
     $('#new-msg').val('');
   });
-  $(".online-user-list").empty();
-  $(".online-user-list").append(chats[pub].identicon.clone());
-  $(".online-user-list").append($('<small class="last-seen"></small>'));
+  var nameEl = $('<span class="name"></span>');
+  gun.user(pub).get('profile').get('name').on(name => {
+    nameEl.text(name);
+    nameEl.show();
+  });
+  $("#topbar").append(chats[pub].identicon.clone());
+  $("#topbar").append(nameEl);
+  $("#topbar").append($('<small class="last-seen"></small>'));
   var msgs = Object.values(chats[pub].messages);
   msgs.forEach(addMessage);
   sortMessagesByTime();
@@ -103,9 +131,9 @@ function showChat(pub) {
     var online = chats[pub].online;
     if (activeChat === pub) {
       if (online.isOnline) {
-        $('.online-user-list .last-seen').text('online');
+        $('#topbar .last-seen').text('online');
       } else if (online.lastActive) {
-        $('.online-user-list .last-seen').text('last seen ' + formatDate(new Date(online.lastActive * 1000)));
+        $('#topbar .last-seen').text('last seen ' + formatDate(new Date(online.lastActive * 1000)));
       }
     }
   }

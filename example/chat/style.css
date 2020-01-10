@@ -33,6 +33,10 @@ button:hover, button:active, button:focus {
   margin-right: 15px !important;
 }
 
+.user-info .iris-identicon {
+  cursor: pointer;
+}
+
 .chat {
   display: flex;
   flex-direction: row;
@@ -56,14 +60,19 @@ button:hover, button:active, button:focus {
 
 /*----- Main------- */
 
-.online-user-list {
+#topbar {
   flex:1;
   background-color: #efefef;
   max-height:60px;
   padding: 10px 15px;
 }
 
-.message-list {
+#topbar .name {
+  margin-right: 15px;
+  display: none;
+}
+
+.main-view {
   flex:1;
   overflow-y: scroll;
   padding: 10px 15px;
