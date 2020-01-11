@@ -3,6 +3,7 @@
 
 <head>
   <title>Iris Chat</title>
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
   <link rel="stylesheet" type="text/css" href="./style.css">
   <link rel="shortcut icon" href="./favicon.ico">
@@ -20,18 +21,30 @@
     </section>
 
     <section class="main">
-      <div id="topbar"></div>
-      <div class="main-view" id="message-list" style="display: none"></div>
+      <header></header>
+
+      <!-- Chat view -->
+      <div class="main-view" id="message-list"></div>
       <div id="not-seen-by-them" style="display: none">
         <p>The other person hasn't seen this chat yet. Give them your chat link through some other channel:</p>
         <p><button class="copy-chat-link">Copy your chat link</button></p>
       </div>
+      <div class="message-form" style="display:none">
+        <form autocomplete="off">
+          <input id="new-msg" type="text" placeholder="Type a message">
+          <button>▶</button>
+        </form>
+      </div>
+
+      <!-- New chat view -->
       <div class="main-view" id="new-chat">
         <p><input id="paste-chat-link" type="text" placeholder="Paste someone's chat link"></p>
         <p><button class="copy-chat-link">Copy your chat link</button></p>
         <p>Give your chat link to someone you want to chat with!</p>
       </div>
-      <div class="main-view" id="settings" style="display: none">
+
+      <!-- Settings view -->
+      <div class="main-view" id="settings">
         <h3>Profile</h3>
         <p>
           Your name:
@@ -44,10 +57,10 @@
           <b>Save a backup of your private key first!</b> Otherwise you can't log in back to this account.
         </p>
         <p>
-          <button>Log out</button>
+          <button class="show-logout-confirmation">Log out</button>
         </p>
         <p>
-          <button>Switch account</button>
+          <button class="show-switch-account">Switch account</button>
         </p>
         <h3>Private key</h3>
         <p>
@@ -58,19 +71,32 @@
           <button id="copy-private-key">Copy private key</button>
         </p>
       </div>
-      <div class="message-form" style="display:none">
-        <form autocomplete="off">
-          <input id="new-msg" type="text" placeholder="Type a message">
-          <button>▶</button>
-        </form>
+
+      <!-- Logout confirmation -->
+      <div class="main-view" id="logout-confirmation">
+        <p>
+          You cannot log back in unless you have saved a copy of your private key.
+        </p>
+        <p>
+          <button class="open-settings-button">Go back</button>
+        </p>
+        <p>
+          <button class="logout-button">Log out</button>
+        </p>
       </div>
+
+      <!-- Login view -->
+      <div class="main-view" id="switch-account">
+        <input id="paste-privkey" placeholder="Paste a private key">
+      </div>
+
     </section>
   </div>
 
-  <script src="./jquery.js"></script>
-  <script src="./gun.js"></script>
-  <script src="./sea.js"></script>
-  <script src="./nts.js"></script>
+  <script src="/jquery.js"></script>
+  <script src="/gun.js"></script>
+  <script src="/gun/sea.js"></script>
+  <script src="/gun/nts.js"></script>
   <script src="./irisLib.js"></script>
   <script src="./script.js"></script>
 </body>

@@ -60,7 +60,7 @@ button:hover, button:active, button:focus {
 
 /*----- Main------- */
 
-#topbar {
+header {
   flex:1;
   background-color: #efefef;
   max-height:60px;
@@ -68,12 +68,13 @@ button:hover, button:active, button:focus {
   border-bottom: 1px solid rgba(0,0,0,.08);
 }
 
-#topbar .name {
+header .name {
   margin-right: 15px;
   display: none;
 }
 
 .main-view {
+  display: none;
   flex:1;
   overflow-y: scroll;
   padding: 10px 15px;
