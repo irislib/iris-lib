@@ -12,6 +12,26 @@ if (localStorageKey) {
   Gun.SEA.pair().then(k => login(k));
 }
 
+function updatePeerList() {
+  $('#peers').empty();
+  var o = gun['_'].opt.peers;
+  console.log(o);
+  Object.keys(o).forEach(k => {
+    var text = ' ' + o[k].url;
+    var el = $('<div></div>');
+    if (o[k].wire && o[k].wire.hied) {
+      text = '+' + text;
+    } else {
+      text = '-' + text;
+    }
+    el.text(text);
+    $('#peers').append(el);
+  });
+}
+
+updatePeerList();
+setInterval(updatePeerList, 5000);
+
 function login(k) {
   key = k;
   localStorage.setItem('chatKeyPair', JSON.stringify(k));
