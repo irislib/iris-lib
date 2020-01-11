@@ -250,7 +250,7 @@ class Chat {
       const isOnline = lastActive > now - 10 && lastActive < now + 30;
       callback({isOnline, lastActive});
       if (isOnline) {
-        timeout = setTimeout(() => callback(false), 10000);
+        timeout = setTimeout(() => callback({isOnline: false, lastActive}), 10000);
       }
     });
   }

@@ -2,6 +2,7 @@ var gun = Gun([location.origin + '/gun', 'https://gun-us.herokuapp.com/gun']);
 var chat = gun.get('converse/' + location.hash.slice(1));
 var chats = {};
 var activeChat;
+var onlineTimeout;
 
 var getKey = new Promise(resolve => {
   var pair = localStorage.getItem('chatKeyPair');
@@ -21,8 +22,8 @@ getKey.then(k => {
   myIdenticon = $(new irisLib.Attribute({type:'keyID', value: key.pub}).identicon({width:40, showType: false}));
   $(".user-info").append(myIdenticon);
   myIdenticon.click(showSettings);
+  setOurOnlineStatus();
   irisLib.Chat.getChats(gun, key, addChat);
-  irisLib.Chat.setOnline(gun, true);
   var chatWith = getUrlParameter('chatWith');
   if (chatWith) {
     addChat(chatWith);
@@ -58,6 +59,22 @@ $('#settings-name').on('keyup paste', event => {
   var name = $(event.target).val().trim();
   gun.user().get('profile').get('name').put(name);
 });
+
+function setOurOnlineStatus() {
+  irisLib.Chat.setOnline(gun, true);
+  document.addEventListener("mousemove", () => {
+    irisLib.Chat.setOnline(gun, true);
+    clearTimeout(onlineTimeout);
+    onlineTimeout = setTimeout(() => irisLib.Chat.setOnline(gun, false), 60000); // TODO: setOnline false not working?
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === 'visible') {
+      irisLib.Chat.setOnline(gun, true);
+    } else {
+      irisLib.Chat.setOnline(gun, false);
+    }
+  });
+}
 
 function hideStuff() {
   $('.chat-item').toggleClass('active', false);
@@ -142,7 +159,7 @@ function showChat(pub) {
   lastSeenTimeChanged(pub);
   $('#message-list').scrollTop($('#message-list')[0].scrollHeight - $('#message-list')[0].clientHeight);
   chats[pub].setMyMsgsLastSeenTime();
-  function setOnlineStatus() {
+  function setTheirOnlineStatus() {
     var online = chats[pub].online;
     if (activeChat === pub) {
       if (online.isOnline) {
@@ -155,11 +172,12 @@ function showChat(pub) {
   if (!chats[pub].online) {
     chats[pub].online = {};
     irisLib.Chat.getOnline(gun, pub, (online) => {
+      console.log(333, online)
       chats[pub].online = online;
-      setOnlineStatus();
+      setTheirOnlineStatus();
     });
   }
-  setOnlineStatus();
+  setTheirOnlineStatus();
 }
 
 function sortChatsByLatest() {

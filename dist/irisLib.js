@@ -13560,7 +13560,7 @@
 	      callback({ isOnline: isOnline, lastActive: lastActive });
 	      if (isOnline) {
 	        timeout = setTimeout(function () {
-	          return callback(false);
+	          return callback({ isOnline: false, lastActive: lastActive });
 	        }, 10000);
 	      }
 	    });
