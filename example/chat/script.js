@@ -12,26 +12,6 @@ if (localStorageKey) {
   Gun.SEA.pair().then(k => login(k));
 }
 
-function updatePeerList() {
-  $('#peers').empty();
-  var o = gun['_'].opt.peers;
-  console.log(o);
-  Object.keys(o).forEach(k => {
-    var text = ' ' + o[k].url;
-    var el = $('<div></div>');
-    if (o[k].wire && o[k].wire.hied) {
-      text = '+' + text;
-    } else {
-      text = '-' + text;
-    }
-    el.text(text);
-    $('#peers').append(el);
-  });
-}
-
-updatePeerList();
-setInterval(updatePeerList, 5000);
-
 function login(k) {
   key = k;
   localStorage.setItem('chatKeyPair', JSON.stringify(k));
@@ -60,6 +40,38 @@ function login(k) {
     }
   });
 }
+
+function updatePeerList() {
+  $('#peers').empty();
+  var o = gun['_'].opt.peers;
+  console.log(o);
+  Object.keys(o).forEach(k => {
+    var text = ' ' + o[k].url;
+    var el = $('<div></div>');
+    if (o[k].wire && o[k].wire.hied) {
+      text = '+' + text;
+    } else {
+      text = '-' + text;
+    }
+    el.text(text);
+    $('#peers').append(el);
+  });
+}
+updatePeerList();
+setInterval(updatePeerList, 5000);
+
+var emojiButton = $('#emoji-picker');
+var picker = new EmojiButton({position: 'top-start'});
+
+picker.on('emoji', emoji => {
+  $('#new-msg').val($('#new-msg').val() + emoji);
+  $('#new-msg').focus();
+});
+
+emojiButton.click(event => {
+  event.preventDefault();
+  picker.pickerVisible ? picker.hidePicker() : picker.showPicker(emojiButton);
+});
 
 $('#paste-chat-link').on('keyup paste', event => {
   var val = $(event.target).val();
