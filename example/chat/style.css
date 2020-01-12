@@ -81,12 +81,24 @@ header .name {
   background-color: #e5ddd5;
 }
 
+.msg-wrap {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+}
+
 .msg {
   background-color: #ffffff;
   margin-bottom: 5px;
   padding: 8px 10px;
   border-radius: 15px;
   box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
+  flex: none;
+}
+
+.msg .emoji-only {
+  font-size: 3em;
+  margin: 0 5px;
 }
 
 .msg .seen {
