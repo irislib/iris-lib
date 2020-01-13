@@ -258,16 +258,17 @@ function sortMessagesByTime() {
 
 function addMessage(msg) {
   var textEl = $('<div class="text"></div>').text(msg.text);
-  var msgEl = $(
-    '<div class="msg"><div class="time"><span class="seen">✔</span> ' + formatDate(msg.time) + '</div></div>'
+  var msgContent = $(
+    '<div class="msg-content"><div class="time"><span class="seen">✔</span> ' + formatDate(msg.time) + '</div></div>'
   );
-  msgEl.prepend(textEl);
+  msgContent.prepend(textEl);
   if (msg.text.length === 2 && msg.text.match(emojiRegex)) {
     textEl.toggleClass('emoji-only', true);
   }
+  msgEl = $('<div class="msg"></div>').append(msgContent);
+  msgEl.data('time', msg.time);
   msgEl.toggleClass('our', msg.selfAuthored ? true : false);
   msgEl.toggleClass('their', msg.selfAuthored ? false : true);
-  msgEl.data('time', msg.time);
   $("#message-list").append(msgEl); // TODO: jquery insertAfter element with smaller timestamp
   $('#message-list').scrollTop($('#message-list')[0].scrollHeight - $('#message-list')[0].clientHeight);
 }

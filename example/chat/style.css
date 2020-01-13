@@ -81,24 +81,24 @@ header .name {
   background-color: #e5ddd5;
 }
 
-.msg-wrap {
+.msg {
   display: flex;
-  align-items: flex-end;
   flex-direction: column;
 }
 
-.msg {
+.msg-content {
   background-color: #ffffff;
   margin-bottom: 5px;
   padding: 8px 10px;
   border-radius: 15px;
   box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
   flex: none;
+  max-width: 75%;
 }
 
 .msg .emoji-only {
   font-size: 3em;
-  margin: 0 5px;
+  text-align: center;
 }
 
 .msg .seen {
@@ -108,30 +108,33 @@ header .name {
 }
 
 .msg.their {
-  margin-right: 90px;
+  align-items: flex-start;
 }
 
-.msg.their + .msg.our {
+.msg.their + .msg.our .msg-content {
   margin-top: 15px;
   border-radius: 15px 0px 15px 15px;
 }
 
-.msg.their:first-of-type {
+.msg.their:first-of-type .msg-content {
   border-radius: 0px 15px 15px 15px;
 }
 
-.msg.our:first-of-type {
+.msg.our:first-of-type .msg-content {
   border-radius: 15px 0px 15px 15px;
 }
 
-.msg.our + .msg.their {
+.msg.our + .msg.their .msg-content {
   margin-top: 15px;
   border-radius: 0px 15px 15px 15px;
 }
 
 .msg.our {
+  align-items: flex-end;
+}
+
+.msg.our .msg-content {
   background-color: #d7f7c5;
-  margin-left: 90px;
 }
 
 .msg .time {
