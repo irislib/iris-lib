@@ -52,6 +52,10 @@ button:hover, button:active, button:focus {
   border-right: 1px solid #dfdfdf;
 }
 
+.sidebar * {
+  user-select: none;
+}
+
 .main {
   display: flex;
   flex-direction: column;
@@ -232,4 +236,24 @@ small {
 
 #not-seen-by-them button:hover, #not-seen-by-them button:active, #not-seen-by-them button:focus {
   background: #eee;
+}
+
+#enable-notifications-prompt {
+  background: #9ee8ff;
+  padding: 22px 15px;
+  cursor: pointer;
+  overflow-y: hidden;
+}
+
+#enable-notifications-prompt .title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+#enable-notifications-prompt a {
+  text-decoration: none;
+}
+
+#enable-notifications-prompt:hover a, #enable-notifications-prompt:focus a {
+  text-decoration: underline;
 }
