@@ -123,16 +123,31 @@ function setOurOnlineStatus() {
 
 function resetView() {
   activeChat = null;
+  showMenu(false);
   $('.chat-item').toggleClass('active', false);
   $('.main-view').hide();
   $('#not-seen-by-them').hide();
   $(".message-form").hide();
-  $("header").empty();
+  $("#header-content").empty();
 }
+
+function showMenu(show = true) {
+  $('.sidebar').toggleClass('hidden-xs', !show);
+  $('.main').toggleClass('hidden-xs', show);
+}
+$('#back-button').click(() => {
+  resetView();
+  showMenu(true);
+});
+$(window).resize(() => { // if resizing up from mobile size menu view
+  if ($(window).width() > 565 && $('.main-view:visible').length === 0) {
+    showNewChat();
+  }
+});
 
 function showSettings() {
   resetView();
-  $('header').text('Settings');
+  $('#header-content').text('Settings');
   $('#settings').show();
 }
 
@@ -140,7 +155,7 @@ function showNewChat() {
   resetView();
   $('.chat-item.new').toggleClass('active', true);
   $('#new-chat').show();
-  $("header").text('Start new chat');
+  $("#header-content").text('Start new chat');
 }
 
 $('.copy-chat-link').click(event => {
@@ -174,14 +189,14 @@ $('#download-private-key').click(downloadKey);
 $('.show-logout-confirmation').click(showLogoutConfirmation);
 function showLogoutConfirmation() {
   resetView();
-  $('header').text('Log out?');
+  $('#header-content').text('Log out?');
   $('#logout-confirmation').show();
 }
 
 $('.show-switch-account').click(showSwitchAccount);
 function showSwitchAccount() {
   resetView();
-  $('header').text('Switch account');
+  $('#header-content').text('Switch account');
   $('#switch-account').show();
 }
 
@@ -273,9 +288,9 @@ function showChat(pub) {
     nameEl.text(chats[pub].name);
     nameEl.show();
   }
-  $("header").append(chats[pub].identicon.clone());
-  $("header").append(nameEl);
-  $("header").append($('<small class="last-seen"></small>'));
+  $("#header-content").append(chats[pub].identicon.clone());
+  $("#header-content").append(nameEl);
+  $("#header-content").append($('<small class="last-seen"></small>'));
   var msgs = Object.values(chats[pub].messages);
   msgs.forEach(addMessage);
   sortMessagesByTime();
@@ -287,9 +302,9 @@ function showChat(pub) {
     var online = chats[pub].online;
     if (activeChat === pub) {
       if (online.isOnline) {
-        $('header .last-seen').text('online');
+        $('#header-content .last-seen').text('online');
       } else if (online.lastActive) {
-        $('header .last-seen').text('last seen ' + formatDate(new Date(online.lastActive * 1000)));
+        $('#header-content .last-seen').text('last seen ' + formatDate(new Date(online.lastActive * 1000)));
       }
     }
   }
@@ -367,7 +382,7 @@ function addChat(pub) {
       chats[pub].name = name;
       el.find('.name').text(name);
       if (pub === activeChat) {
-        $('header .name').text(name);
+        $('#header-content .name').text(name);
       }
     }
   });

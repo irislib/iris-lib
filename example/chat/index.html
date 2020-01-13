@@ -11,7 +11,7 @@
 
 <body>
   <div class="chat">
-    <section class="sidebar">
+    <section class="sidebar hidden-xs">
       <div class="user-info"></div>
       <div id="enable-notifications-prompt">
         <div class="title">Get notified of new messages</div>
@@ -25,7 +25,10 @@
     </section>
 
     <section class="main">
-      <header></header>
+      <header>
+        <div id="back-button" class="visible-xs">‹</div>
+        <div id="header-content"></div>
+      </header>
 
       <!-- Chat view -->
       <div class="main-view" id="message-list"></div>

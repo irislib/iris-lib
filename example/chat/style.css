@@ -29,6 +29,21 @@ button:hover, button:active, button:focus {
   background: #ccc;
 }
 
+@media (max-width: 575px) {
+  .hidden-xs {
+    display: none !important;
+  }
+  .visible-xs {
+    display: initial !important;
+  }
+}
+
+@media (min-width: 576px) {
+  .visible-xs {
+    display: none !important;
+  }
+}
+
 .iris-identicon {
   margin-right: 15px !important;
 }
@@ -65,16 +80,28 @@ button:hover, button:active, button:focus {
 /*----- Main------- */
 
 header {
+  display: flex;
   flex:1;
   background-color: #efefef;
   max-height:60px;
-  padding: 10px 15px;
   border-bottom: 1px solid rgba(0,0,0,.08);
 }
 
 header .name {
   margin-right: 15px;
   display: none;
+}
+
+header #header-content {
+  flex: 1;
+  padding: 10px 15px;
+  align-self: center;
+}
+
+header #back-button {
+  align-self: center;
+  padding: 10px 15px;
+  cursor: pointer;
 }
 
 .main-view {
