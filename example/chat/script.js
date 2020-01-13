@@ -1,5 +1,5 @@
 var gun = Gun({
-  peers: [location.origin + '/gun', 'https://gun-us.herokuapp.com/gun'],
+  peers: [location.origin + '/gun', 'https://gun-us.herokuapp.com/gun', 'https://gunjs.herokuapp.com/gun'],
   localStorage: false
 });
 var notificationSound = new Audio('./notification.mp3');
@@ -20,6 +20,7 @@ if (localStorageKey) {
 }
 
 function login(k) {
+  chats = {};
   key = k;
   localStorage.setItem('chatKeyPair', JSON.stringify(k));
   irisLib.Chat.initUser(gun, key);
