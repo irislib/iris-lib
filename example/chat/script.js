@@ -2,6 +2,7 @@ var gun = Gun({
   peers: [location.origin + '/gun', 'https://gun-us.herokuapp.com/gun'],
   localStorage: false
 });
+var notificationSound = new Audio('./notification.mp3');
 var chat = gun.get('converse/' + location.hash.slice(1));
 var chats = {};
 var activeChat;
@@ -108,6 +109,9 @@ function setOurOnlineStatus() {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === 'visible') {
       irisLib.Chat.setOnline(gun, true);
+      if (activeChat) {
+        chats[pub].setMyMsgsLastSeenTime();
+      }
     } else {
       irisLib.Chat.setOnline(gun, false);
     }
@@ -115,6 +119,7 @@ function setOurOnlineStatus() {
 }
 
 function resetView() {
+  activeChat = null;
   $('.chat-item').toggleClass('active', false);
   $('.main-view').hide();
   $('#not-seen-by-them').hide();
@@ -219,9 +224,17 @@ function notify(msg, info, pub) {
     if (document.visibilityState === 'visible') { return false; }
     return true;
   }
-  console.log(111, shouldNotify(), desktopNotificationsEnabled);
-  if (shouldNotify() && desktopNotificationsEnabled) {
-    console.log('notifying');
+  function shouldDesktopNotify() {
+    if (!desktopNotificationsEnabled) { return false; }
+    return shouldNotify();
+  }
+  function shouldAudioNotify() {
+    return shouldNotify();
+  }
+  if (shouldAudioNotify()) {
+    notificationSound.play();
+  }
+  if (shouldDesktopNotify()) {
     var desktopNotification = new Notification(msg.author, {
       icon: 'icon128.png',
       body: msg.text && msg.text.length > 50 ? msg.text.slice(0,50) + '...' : msg.text,
@@ -238,8 +251,8 @@ function showChat(pub) {
   if (!pub || !Object.prototype.hasOwnProperty.call(chats, pub)) {
     return;
   }
-  activeChat = pub;
   resetView();
+  activeChat = pub;
   $('.chat-item[data-pub="' + pub +'"]').toggleClass('active', true);
   $("#message-list").empty();
   $("#message-list").show();
@@ -264,6 +277,7 @@ function showChat(pub) {
   msgs.forEach(addMessage);
   sortMessagesByTime();
   lastSeenTimeChanged(pub);
+  chats[pub].setMyMsgsLastSeenTime();
   $('#message-list').scrollTop($('#message-list')[0].scrollHeight - $('#message-list')[0].clientHeight);
   chats[pub].setMyMsgsLastSeenTime();
   function setTheirOnlineStatus() {
@@ -337,7 +351,7 @@ function addChat(pub) {
     if (activeChat === pub) {
       addMessage(msg);
       sortMessagesByTime(); // this is slow if message history is loaded while chat active
-      if (chats[pub].latest.time === msg.time) {
+      if (chats[pub].latest.time === msg.time && document.visibilityState === 'visible') {
         chats[pub].setMyMsgsLastSeenTime();
       }
     }
