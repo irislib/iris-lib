@@ -150,6 +150,7 @@ header .name {
 #emoji-picker {
   outline: 1px;
   margin-right: 5px;
+  display: none;
 }
 
 .message-form {
@@ -243,6 +244,7 @@ small {
   padding: 22px 15px;
   cursor: pointer;
   overflow-y: hidden;
+  display: none;
 }
 
 #enable-notifications-prompt .title {
