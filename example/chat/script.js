@@ -116,7 +116,7 @@ function setOurOnlineStatus() {
     if (document.visibilityState === 'visible') {
       irisLib.Chat.setOnline(gun, true);
       if (activeChat) {
-        chats[pub].setMyMsgsLastSeenTime();
+        chats[activeChat].setMyMsgsLastSeenTime();
       }
     } else {
       irisLib.Chat.setOnline(gun, false);
