@@ -353,5 +353,18 @@ export default {
     document.body.appendChild(sheet);
   },
 
+  getUrlParameter(sParam, sParams) {
+    const sPageURL = sParams || window.location.search.substring(1);
+    const sURLVariables = sPageURL.split('&');
+    let sParameterName, i;
+
+    for (i = 0; i < sURLVariables.length; i++) {
+      sParameterName = sURLVariables[i].split('=');
+      if (sParameterName[0] === sParam) {
+        return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+      }
+    }
+  },
+
   isNode,
 };

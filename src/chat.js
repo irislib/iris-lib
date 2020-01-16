@@ -1,4 +1,5 @@
 import Gun from 'gun';
+import util from './util';
 
 /**
 * Private communication channel between two or more participants. Can be used
@@ -24,6 +25,31 @@ class Chat {
     this.ourSecretChatIds = {}; // maps participant public key to our secret chat id
     this.theirSecretChatIds = {}; // maps participant public key to their secret chat id
     this.onMessage = options.onMessage;
+
+    console.log('Chat() options', options);
+    if (options.chatLink) {
+      console.log('initializing with chatLink', options.chatLink);
+      const s = options.chatLink.split('?');
+      console.log('s', s);
+      if (s.length === 2) {
+        const pub = util.getUrlParameter('chatWith', s[1]);
+        options.participants = pub;
+        const sharedSecret = util.getUrlParameter('s', s[1]);
+        const linkId = util.getUrlParameter('k', s[1]);
+        if (sharedSecret && linkId) {
+          console.log('getting shared key from chat link');
+          this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
+            console.log('encrypted shared key', encrypted, 'trying to decrypt with sharedSecret', sharedSecret);
+            const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
+            const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret);
+            const chatRequestId = await Gun.SEA.work(encryptedChatRequest, null, null, {name: 'SHA-256'});
+            this.gun.user().auth(sharedKey);
+            this.gun.user().get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest);
+            this.gun.user().auth(this.key);
+          });
+        }
+      }
+    }
 
     if (typeof options.participants === `string`) {
       this.addPub(options.participants);
@@ -269,6 +295,72 @@ class Chat {
     const user = gun.user();
     user.auth(key);
     user.put({epub: key.epub});
+  }
+
+  static formatChatLink(urlRoot, pub, sharedSecret, linkId) {
+    return `${urlRoot}?chatWith=${encodeURIComponent(pub)}&s=${encodeURIComponent(sharedSecret)}&k=${encodeURIComponent(linkId)}`;
+  }
+
+  /**
+  * Creates a chat link that can be used for two-way communication, i.e. only one link needs to be exchanged.
+  */
+  static async createChatLink(gun, key, urlRoot = 'https://chat.iris.to/') {
+    const user = gun.user();
+    user.auth(key);
+
+    const sharedKey = await Gun.SEA.pair();
+    const sharedKeyString = JSON.stringify(sharedKey);
+    const sharedSecret = await Gun.SEA.secret(sharedKey.epub, key);
+    const encryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, sharedSecret);
+    const ownerSecret = await Gun.SEA.secret(key.epub, key);
+    console.log('encrypting mySecret', ownerSecret);
+    const ownerEncryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, ownerSecret);
+    let linkId = await Gun.SEA.work(encryptedSharedKey, undefined, undefined, {name: `SHA-256`});
+    linkId = linkId.slice(0, 12);
+
+    user.get('chatLinks').get(linkId).get('encryptedSharedKey').put(encryptedSharedKey);
+    user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').put(ownerEncryptedSharedKey);
+
+    return Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
+  }
+
+  static async getMyChatLinks(gun, key, urlRoot = 'https://chat.iris.to/', callback, subscribe = true) {
+    const user = gun.user();
+    user.auth(key);
+    const mySecret = await Gun.SEA.secret(key.epub, key);
+    user.get('chatLinks').map().once((data, linkId) => {
+      if (!data) { return; }
+      const chats = [];
+      console.log('got linkId', linkId, data);
+      user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').on(async enc => {
+        console.log(linkId, 'ownerEncryptedSharedKey', enc);
+        if (!enc) { return; }
+        const sharedKey = await Gun.SEA.decrypt(enc, mySecret);
+        const sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
+        const chatLink = Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
+        if (callback) {
+          callback(chatLink);
+        }
+        if (subscribe) {
+          gun.user(sharedKey.pub).get('chatRequests').map().once(async encPub => {
+            console.log('chat request from encPub', encPub);
+            const s = JSON.stringify(encPub);
+            if (chats.indexOf(s) === -1) {
+              chats.push(s);
+              const pub = await Gun.SEA.decrypt(encPub, sharedSecret);
+              console.log('hey!',pub, 'followed our chat link!');
+              const chat = new Chat({gun, key, participants: pub});
+              chat.send(`thanks for following my chat link!`); // TODO: save the chat without sending a msg
+            }
+          });
+        }
+      });
+    });
+  }
+
+  static removeChatLink(gun, key, linkId) {
+    gun.user().auth(key);
+    gun.user().get('chatLinks').get(linkId).put(null);
   }
 }
 
