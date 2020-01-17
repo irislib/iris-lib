@@ -13302,28 +13302,22 @@
 	    this.theirSecretChatIds = {}; // maps participant public key to their secret chat id
 	    this.onMessage = options.onMessage;
 
-	    console.log('Chat() options', options);
 	    if (options.chatLink) {
-	      console.log('initializing with chatLink', options.chatLink);
 	      var s = options.chatLink.split('?');
-	      console.log('s', s);
 	      if (s.length === 2) {
 	        var pub = util$1.getUrlParameter('chatWith', s[1]);
 	        options.participants = pub;
 	        var sharedSecret = util$1.getUrlParameter('s', s[1]);
 	        var linkId = util$1.getUrlParameter('k', s[1]);
 	        if (sharedSecret && linkId) {
-	          console.log('getting shared key from chat link');
 	          this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async function (encrypted) {
-	            console.log('encrypted shared key', encrypted, 'trying to decrypt with sharedSecret', sharedSecret);
 	            var sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
-	            console.log('shared key is', sharedKey);
 	            var encryptedChatRequest = await Gun.SEA.encrypt(_this.key.pub, sharedSecret);
 	            var chatRequestId = await Gun.SEA.work(encryptedChatRequest, null, null, { name: 'SHA-256' });
 	            var u = _this.gun.user();
 	            u.auth(sharedKey);
 	            u.get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest).then(function () {
-	              u.auth(_this.key);
+	              u.auth(_this.key); // this may be somewhat buggy
 	            });
 	          });
 	        }
@@ -13567,6 +13561,19 @@
 	  };
 
 	  /**
+	  * Save the chat to our chats list without sending a message
+	  */
+
+
+	  Chat.prototype.save = async function save() {
+	    var keys = _Object$keys(this.secrets);
+	    for (var i = 0; i < keys.length; i++) {
+	      var ourSecretChatId = await this.getOurSecretChatId(keys[i]);
+	      this.user.get('chats').get(ourSecretChatId).put({ a: 1 });
+	    }
+	  };
+
+	  /**
 	  * Set the user's online status
 	  * @param {object} gun
 	  * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
@@ -13647,16 +13654,11 @@
 	    var sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
 	    var encryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, sharedSecret);
 	    var ownerSecret = await Gun.SEA.secret(key.epub, key);
-	    console.log('encrypting mySecret', ownerSecret);
 	    var ownerEncryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, ownerSecret);
 	    var linkId = await Gun.SEA.work(encryptedSharedKey, undefined, undefined, { name: 'SHA-256' });
 	    linkId = linkId.slice(0, 12);
 
-	    console.log('shared key is', sharedKey);
-	    console.log('shared secret is', sharedSecret);
-	    console.log('saving encryptedSharedKey', encryptedSharedKey, 'encrypted with secret', sharedSecret);
 	    user.get('chatLinks').get(linkId).get('encryptedSharedKey').put(encryptedSharedKey);
-	    console.log('saving ownerEncryptedSharedKey', ownerEncryptedSharedKey, 'encrypted with secret', ownerSecret);
 	    user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').put(ownerEncryptedSharedKey);
 
 	    return Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
@@ -13675,30 +13677,24 @@
 	        return;
 	      }
 	      var chats = [];
-	      console.log('got linkId', linkId, data);
 	      user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').on(async function (enc) {
-	        console.log(linkId, 'ownerEncryptedSharedKey', enc);
 	        if (!enc) {
 	          return;
 	        }
 	        var sharedKey = await Gun.SEA.decrypt(enc, mySecret);
-	        console.log('getMyChatLinks: got sharedKey', sharedKey, 'decrypted with', mySecret);
 	        var sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
-	        console.log('getMyChatLinks: got sharedSecret', sharedSecret, 'derived from', sharedKey);
 	        var chatLink = Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
 	        if (callback) {
 	          callback(chatLink);
 	        }
 	        if (subscribe) {
 	          gun.user(sharedKey.pub).get('chatRequests').map().once(async function (encPub) {
-	            console.log('chat request from encPub', encPub);
 	            var s = _JSON$stringify(encPub);
 	            if (chats.indexOf(s) === -1) {
 	              chats.push(s);
 	              var pub = await Gun.SEA.decrypt(encPub, sharedSecret);
-	              console.log('hey!', pub, 'followed our chat link!');
 	              var chat = new Chat({ gun: gun, key: key, participants: pub });
-	              chat.send('thanks for following my chat link!'); // TODO: save the chat without sending a msg
+	              chat.save();
 	            }
 	          });
 	        }
