@@ -13282,7 +13282,7 @@
 	* options.onMessage callback is not guaranteed to receive messages ordered by timestamp.
 	* You should sort them in the presentation layer.
 	*
-	* @param {Object} options {key, gun, onMessage, participants}
+	* @param {Object} options {key, gun, chatLink, onMessage, participants}
 	* @example https://github.com/irislib/iris-lib/blob/master/__tests__/chat.js
 	*/
 
@@ -13317,11 +13317,14 @@
 	          this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async function (encrypted) {
 	            console.log('encrypted shared key', encrypted, 'trying to decrypt with sharedSecret', sharedSecret);
 	            var sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
+	            console.log('shared key is', sharedKey);
 	            var encryptedChatRequest = await Gun.SEA.encrypt(_this.key.pub, sharedSecret);
 	            var chatRequestId = await Gun.SEA.work(encryptedChatRequest, null, null, { name: 'SHA-256' });
-	            _this.gun.user().auth(sharedKey);
-	            _this.gun.user().get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest);
-	            _this.gun.user().auth(_this.key);
+	            var u = _this.gun.user();
+	            u.auth(sharedKey);
+	            u.get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest).then(function () {
+	              u.auth(_this.key);
+	            });
 	          });
 	        }
 	      }
@@ -13641,7 +13644,7 @@
 
 	    var sharedKey = await Gun.SEA.pair();
 	    var sharedKeyString = _JSON$stringify(sharedKey);
-	    var sharedSecret = await Gun.SEA.secret(sharedKey.epub, key);
+	    var sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
 	    var encryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, sharedSecret);
 	    var ownerSecret = await Gun.SEA.secret(key.epub, key);
 	    console.log('encrypting mySecret', ownerSecret);
@@ -13649,7 +13652,11 @@
 	    var linkId = await Gun.SEA.work(encryptedSharedKey, undefined, undefined, { name: 'SHA-256' });
 	    linkId = linkId.slice(0, 12);
 
+	    console.log('shared key is', sharedKey);
+	    console.log('shared secret is', sharedSecret);
+	    console.log('saving encryptedSharedKey', encryptedSharedKey, 'encrypted with secret', sharedSecret);
 	    user.get('chatLinks').get(linkId).get('encryptedSharedKey').put(encryptedSharedKey);
+	    console.log('saving ownerEncryptedSharedKey', ownerEncryptedSharedKey, 'encrypted with secret', ownerSecret);
 	    user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').put(ownerEncryptedSharedKey);
 
 	    return Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
@@ -13675,7 +13682,9 @@
 	          return;
 	        }
 	        var sharedKey = await Gun.SEA.decrypt(enc, mySecret);
+	        console.log('getMyChatLinks: got sharedKey', sharedKey, 'decrypted with', mySecret);
 	        var sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
+	        console.log('getMyChatLinks: got sharedSecret', sharedSecret, 'derived from', sharedKey);
 	        var chatLink = Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
 	        if (callback) {
 	          callback(chatLink);
