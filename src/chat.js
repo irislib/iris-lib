@@ -59,6 +59,7 @@ class Chat {
         }
       }
     }
+    this.save();
   }
 
   async getSecret(pub) {
@@ -335,11 +336,13 @@ class Chat {
     const user = gun.user();
     user.auth(key);
     const mySecret = await Gun.SEA.secret(key.epub, key);
-    user.get('chatLinks').map().once((data, linkId) => {
-      if (!data) { return; }
+    const chatLinks = [];
+    user.get('chatLinks').map().on((data, linkId) => {
+      if (!data || chatLinks.indexOf(linkId) !== -1) { return; }
       const chats = [];
       user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').on(async enc => {
-        if (!enc) { return; }
+        if (!enc || chatLinks.indexOf(linkId) !== -1) { return; }
+        chatLinks.push(linkId);
         const sharedKey = await Gun.SEA.decrypt(enc, mySecret);
         const sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
         const chatLink = Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
@@ -347,7 +350,7 @@ class Chat {
           callback(chatLink);
         }
         if (subscribe) {
-          gun.user(sharedKey.pub).get('chatRequests').map().once(async encPub => {
+          gun.user(sharedKey.pub).get('chatRequests').map().on(async encPub => {
             const s = JSON.stringify(encPub);
             if (chats.indexOf(s) === -1) {
               chats.push(s);
