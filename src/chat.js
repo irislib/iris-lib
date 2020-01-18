@@ -345,9 +345,9 @@ class Chat {
         chatLinks.push(linkId);
         const sharedKey = await Gun.SEA.decrypt(enc, mySecret);
         const sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
-        const chatLink = Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
+        const url = Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
         if (callback) {
-          callback(chatLink);
+          callback({url, id: linkId});
         }
         if (subscribe) {
           gun.user(sharedKey.pub).get('chatRequests').map().on(async encPub => {
