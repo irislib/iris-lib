@@ -258,13 +258,16 @@ class Chat {
   * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
   */
   static setOnline(gun, isOnline) {
-    clearInterval(gun.setOnlineInterval);
     if (isOnline) {
+      if (gun.setOnlineInterval) { return; }
       const update = () => {
         gun.user().get(`lastActive`).put(Math.round(Gun.state() / 1000));
       };
       update();
       gun.setOnlineInterval = setInterval(update, 3000);
+    } else {
+      clearInterval(gun.setOnlineInterval);
+      gun.setOnlineInterval = undefined;
     }
   }
 
