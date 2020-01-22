@@ -15108,7 +15108,7 @@
 	  return SocialNetwork;
 	}();
 
-	var version$2 = "0.0.132";
+	var version$2 = "0.0.133";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
