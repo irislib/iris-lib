@@ -64,7 +64,7 @@ class Chat {
 
   async getSecret(pub) {
     if (!this.secrets[pub]) {
-      const epub = await this.gun.user(pub).get(`epub`).once().then();
+      const epub = await util.gunOnceDefined(this.gun.user(pub).get(`epub`));
       this.secrets[pub] = await Gun.SEA.secret(epub, this.key);
     }
     return this.secrets[pub];
@@ -74,7 +74,7 @@ class Chat {
   *
   */
   static async getOurSecretChatId(gun, pub, pair) {
-    const epub = await gun.user(pub).get(`epub`).once().then();
+    const epub = await util.gunOnceDefined(gun.user(pub).get(`epub`));
     const secret = await Gun.SEA.secret(epub, pair);
     return Gun.SEA.work(secret + pub, null, null, {name: 'SHA-256'});
   }
@@ -83,7 +83,7 @@ class Chat {
   *
   */
   static async getTheirSecretChatId(gun, pub, pair) {
-    const epub = await gun.user(pub).get(`epub`).once().then();
+    const epub = await util.gunOnceDefined(gun.user(pub).get(`epub`));
     const secret = await Gun.SEA.secret(epub, pair);
     return Gun.SEA.work(secret + pair.pub, null, null, {name: 'SHA-256'});
   }
@@ -100,10 +100,9 @@ class Chat {
     const mySecret = await Gun.SEA.secret(keypair.epub, keypair);
     gun.user().get(`chats`).map().on(async (value, ourSecretChatId) => {
       if (value) {
-        gun.user().get(`chats`).get(ourSecretChatId).get(`pub`).once(async encryptedPub => {
-          const pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
-          callback(pub);
-        });
+        const encryptedPub = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChatId).get(`pub`));
+        const pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
+        callback(pub);
       }
     });
   }
@@ -249,7 +248,7 @@ class Chat {
     const keys = Object.keys(this.secrets);
     for (let i = 0;i < keys.length;i++) {
       const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChatId).put({a:1});
+      this.user.get(`chats`).get(ourSecretChatId).put({a: 1});
     }
   }
 
@@ -259,14 +258,13 @@ class Chat {
   * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
   */
   static setOnline(gun, isOnline) {
+    clearInterval(gun.setOnlineInterval);
     if (isOnline) {
       const update = () => {
         gun.user().get(`lastActive`).put(Math.round(Gun.state() / 1000));
       };
       update();
       gun.setOnlineInterval = setInterval(update, 3000);
-    } else {
-      clearInterval(gun.setOnlineInterval);
     }
   }
 

@@ -9,6 +9,17 @@ try {
   isNode = Object.prototype.toString.call(global.process) === `[object process]`;
 } catch (e) { null; }
 
+function gunOnceDefined(node) {
+  return new Promise(resolve => {
+    node.on((val, k, a, eve) => {
+      if (val) {
+        eve.off();
+        resolve(val);
+      }
+    });
+  });
+}
+
 async function loadGunDepth(chain, maxDepth = 2, opts = {}) {
   opts.maxBreadth = opts.maxBreadth || 50;
   opts.cache = opts.cache || {};
@@ -240,6 +251,8 @@ function GunNets(fromPort = 12500, ip = '127.0.0.1') {
 
 export default {
   loadGunDepth: loadGunDepth,
+
+  gunOnceDefined: gunOnceDefined,
 
   GunNets: GunNets,
 
