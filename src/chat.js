@@ -31,19 +31,21 @@ class Chat {
       if (s.length === 2) {
         const pub = util.getUrlParameter('chatWith', s[1]);
         options.participants = pub;
-        const sharedSecret = util.getUrlParameter('s', s[1]);
-        const linkId = util.getUrlParameter('k', s[1]);
-        if (sharedSecret && linkId) {
-          this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
-            const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
-            const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret);
-            const chatRequestId = await Gun.SEA.work(encryptedChatRequest, null, null, {name: 'SHA-256'});
-            const u = this.gun.user();
-            u.auth(sharedKey);
-            u.get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest).then(() => {
-              u.auth(this.key); // this may be somewhat buggy
+        if (pub !== this.key.pub) {
+          const sharedSecret = util.getUrlParameter('s', s[1]);
+          const linkId = util.getUrlParameter('k', s[1]);
+          if (sharedSecret && linkId) {
+            this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
+              const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
+              const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret);
+              const chatRequestId = await Gun.SEA.work(encryptedChatRequest, null, null, {name: 'SHA-256'});
+              const u = this.gun.user();
+              u.auth(sharedKey);
+              u.get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest).then(() => {
+                u.auth(this.key); // this may be somewhat buggy
+              });
             });
-          });
+          }
         }
       }
     }
@@ -211,9 +213,11 @@ class Chat {
     const ourSecretChatId = await this.getOurSecretChatId(pub);
     const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
     this.gun.user().get(`chats`).get(ourSecretChatId).get(`pub`).put(await Gun.SEA.encrypt(pub, mySecret));
-    // Subscribe to their messages
-    const theirSecretChatId = await this.getTheirSecretChatId(pub);
-    this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once(data => {this.messageReceived(data, pub);});
+    if (pub !== this.key.pub) {
+      // Subscribe to their messages
+      const theirSecretChatId = await this.getTheirSecretChatId(pub);
+      this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once(data => {this.messageReceived(data, pub);});
+    }
     // Subscribe to our messages
     this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once(data => {this.messageReceived(data, pub, true);});
   }
@@ -314,7 +318,7 @@ class Chat {
   /**
   * Creates a chat link that can be used for two-way communication, i.e. only one link needs to be exchanged.
   */
-  static async createChatLink(gun, key, urlRoot = 'https://chat.iris.to/') {
+  static async createChatLink(gun, key, urlRoot = 'https://iris.to/') {
     const user = gun.user();
     user.auth(key);
 
@@ -333,7 +337,7 @@ class Chat {
     return Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
   }
 
-  static async getMyChatLinks(gun, key, urlRoot = 'https://chat.iris.to/', callback, subscribe = true) {
+  static async getMyChatLinks(gun, key, urlRoot = 'https://iris.to/', callback, subscribe = true) {
     const user = gun.user();
     user.auth(key);
     const mySecret = await Gun.SEA.secret(key.epub, key);

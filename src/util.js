@@ -12,7 +12,7 @@ try {
 function gunOnceDefined(node) {
   return new Promise(resolve => {
     node.on((val, k, a, eve) => {
-      if (val) {
+      if (val !== undefined) {
         eve.off();
         resolve(val);
       }
