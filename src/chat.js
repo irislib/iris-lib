@@ -26,6 +26,7 @@ class Chat {
     this.theirSecretChatIds = {}; // maps participant public key to their secret chat id
     this.onMessage = options.onMessage;
 
+    let saved;
     if (options.chatLink) {
       const s = options.chatLink.split('?');
       if (s.length === 2) {
@@ -35,14 +36,14 @@ class Chat {
           const sharedSecret = util.getUrlParameter('s', s[1]);
           const linkId = util.getUrlParameter('k', s[1]);
           if (sharedSecret && linkId) {
+            this.save(); // save the chat first so it's there before inviter subscribes to it
+            saved = true;
             this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
               const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
               const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret);
               const chatRequestId = await Gun.SEA.work(encryptedChatRequest, null, null, {name: 'SHA-256'});
-              const u = this.gun.user();
-              u.auth(sharedKey);
-              u.get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest).then(() => {
-                u.auth(this.key); // this may be somewhat buggy
+              util.gunAsAnotherUser(this.gun, sharedKey, user => {
+                user.get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest);
               });
             });
           }
@@ -61,7 +62,9 @@ class Chat {
         }
       }
     }
-    this.save();
+    if (!saved) {
+      this.save();
+    }
   }
 
   async getSecret(pub) {
@@ -252,7 +255,7 @@ class Chat {
     const keys = Object.keys(this.secrets);
     for (let i = 0;i < keys.length;i++) {
       const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChatId).put({a: 1});
+      this.user.get(`chats`).get(ourSecretChatId).get('msgs').get('a').put(null);
     }
   }
 
@@ -330,6 +333,10 @@ class Chat {
     const ownerEncryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, ownerSecret);
     let linkId = await Gun.SEA.work(encryptedSharedKey, undefined, undefined, {name: `SHA-256`});
     linkId = linkId.slice(0, 12);
+
+    util.gunAsAnotherUser(gun, sharedKey, user => {
+      user.get('chatRequests').put({a: 1}); // doesn't seem to help
+    });
 
     user.get('chatLinks').get(linkId).get('encryptedSharedKey').put(encryptedSharedKey);
     user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').put(ownerEncryptedSharedKey);

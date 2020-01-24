@@ -9,6 +9,19 @@ try {
   isNode = Object.prototype.toString.call(global.process) === `[object process]`;
 } catch (e) { null; }
 
+function gunAsAnotherUser(gun, key, f) { // Hacky way to use multiple users with gun
+  const gun2 = new Gun({peers: Object.keys(gun._.opt.peers)});
+  const user = gun2.user();
+  user.auth(key);
+  f(user);
+  setTimeout(() => {
+    const peers = Object.values(gun2.back('opt.peers'));
+    peers.forEach(peer => {
+      gun2.on('bye', peer);
+    });
+  }, 20000);
+}
+
 function gunOnceDefined(node) {
   return new Promise(resolve => {
     node.on((val, k, a, eve) => {
@@ -253,6 +266,8 @@ export default {
   loadGunDepth: loadGunDepth,
 
   gunOnceDefined: gunOnceDefined,
+
+  gunAsAnotherUser: gunAsAnotherUser,
 
   GunNets: GunNets,
 
