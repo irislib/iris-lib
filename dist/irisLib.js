@@ -13748,9 +13748,25 @@
 	    });
 	  };
 
+	  /**
+	  *
+	  */
+
+
 	  Chat.removeChatLink = function removeChatLink(gun, key, linkId) {
 	    gun.user().auth(key);
 	    gun.user().get('chatLinks').get(linkId).put(null);
+	  };
+
+	  /**
+	  *
+	  */
+
+
+	  Chat.deleteChat = async function deleteChat(gun, key, pub) {
+	    gun.user().auth(key);
+	    var chatId = await Chat.getOurSecretChatId(gun, pub, key);
+	    gun.user().get('chats').get(chatId).put(null);
 	  };
 
 	  return Chat;

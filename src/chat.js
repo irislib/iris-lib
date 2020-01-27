@@ -376,9 +376,22 @@ class Chat {
     });
   }
 
+  /**
+  *
+  */
   static removeChatLink(gun, key, linkId) {
     gun.user().auth(key);
     gun.user().get('chatLinks').get(linkId).put(null);
+  }
+
+  /**
+  *
+  */
+  static async deleteChat(gun, key, pub) {
+    gun.user().auth(key);
+    const chatId = await Chat.getOurSecretChatId(gun, pub, key);
+    gun.user().get('chats').get(chatId).put(null);
+    gun.user().get('chats').get(chatId).off();
   }
 }
 
