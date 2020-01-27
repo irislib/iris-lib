@@ -96,7 +96,7 @@ class Chat {
   /**
   * Return a list of public keys that you have initiated a chat with or replied to.
   * (Chats that are initiated by others and unreplied by you don't show up, because
-  * this method doesn't know where to look for them. Use socialNetwork.getChats() to listen to new chats from friends.)
+  * this method doesn't know where to look for them. Use socialNetwork.getChats() to listen to new chats from friends. Or create chat invite links with Chat.createChatLink(). )
   * @param {Object} gun user.authed gun instance
   * @param {Object} keypair SEA keypair that the gun instance is authenticated with
   * @param callback callback function that is called for each public key you have a chat with
@@ -362,7 +362,8 @@ class Chat {
           callback({url, id: linkId});
         }
         if (subscribe) {
-          gun.user(sharedKey.pub).get('chatRequests').map().on(async encPub => {
+          gun.user(sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId) => {
+            if (!encPub) { return; }
             const s = JSON.stringify(encPub);
             if (chats.indexOf(s) === -1) {
               chats.push(s);
@@ -370,6 +371,9 @@ class Chat {
               const chat = new Chat({gun, key, participants: pub});
               chat.save();
             }
+            util.gunAsAnotherUser(gun, sharedKey, user => { // remove the chat request after reading
+              user.get('chatRequests').get(requestId).put(null);
+            });
           });
         }
       });
