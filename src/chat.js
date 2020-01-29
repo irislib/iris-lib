@@ -334,12 +334,12 @@ class Chat {
     let linkId = await Gun.SEA.work(encryptedSharedKey, undefined, undefined, {name: `SHA-256`});
     linkId = linkId.slice(0, 12);
 
-    util.gunAsAnotherUser(gun, sharedKey, user => {
-      user.get('chatRequests').put({a: 1}); // doesn't seem to help
+    // User has to exist, in order for .get(chatRequests).on() to be ever triggered
+    await util.gunAsAnotherUser(gun, sharedKey, user => {
+      return user.get('chatRequests').put({a: 1}).then();
     });
 
-    user.get('chatLinks').get(linkId).get('encryptedSharedKey').put(encryptedSharedKey);
-    user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').put(ownerEncryptedSharedKey);
+    user.get('chatLinks').get(linkId).put({encryptedSharedKey, ownerEncryptedSharedKey});
 
     return Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
   }

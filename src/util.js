@@ -13,13 +13,13 @@ function gunAsAnotherUser(gun, key, f) { // Hacky way to use multiple users with
   const gun2 = new Gun({peers: Object.keys(gun._.opt.peers)});
   const user = gun2.user();
   user.auth(key);
-  f(user);
   setTimeout(() => {
     const peers = Object.values(gun2.back('opt.peers'));
     peers.forEach(peer => {
       gun2.on('bye', peer);
     });
   }, 20000);
+  return f(user);
 }
 
 function gunOnceDefined(node) {
