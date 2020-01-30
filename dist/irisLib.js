@@ -11139,13 +11139,13 @@
 	  var gun2 = new Gun({ peers: _Object$keys(gun._.opt.peers) });
 	  var user = gun2.user();
 	  user.auth(key);
-	  f(user);
 	  setTimeout(function () {
 	    var peers = _Object$values(gun2.back('opt.peers'));
 	    peers.forEach(function (peer) {
 	      gun2.on('bye', peer);
 	    });
 	  }, 20000);
+	  return f(user);
 	}
 
 	function gunOnceDefined(node) {
@@ -13558,17 +13558,19 @@
 	    var ourSecretChatId = await this.getOurSecretChatId(pub);
 	    var mySecret = await Gun.SEA.secret(this.key.epub, this.key);
 	    this.gun.user().get('chats').get(ourSecretChatId).get('pub').put((await Gun.SEA.encrypt(pub, mySecret)));
-	    if (pub !== this.key.pub) {
-	      // Subscribe to their messages
-	      var theirSecretChatId = await this.getTheirSecretChatId(pub);
-	      this.gun.user(pub).get('chats').get(theirSecretChatId).get('msgs').map().once(function (data) {
-	        _this5.messageReceived(data, pub);
+	    if (this.messageReceived) {
+	      if (pub !== this.key.pub) {
+	        // Subscribe to their messages
+	        var theirSecretChatId = await this.getTheirSecretChatId(pub);
+	        this.gun.user(pub).get('chats').get(theirSecretChatId).get('msgs').map().once(function (data) {
+	          _this5.messageReceived(data, pub);
+	        });
+	      }
+	      // Subscribe to our messages
+	      this.user.get('chats').get(ourSecretChatId).get('msgs').map().once(function (data) {
+	        _this5.messageReceived(data, pub, true);
 	      });
 	    }
-	    // Subscribe to our messages
-	    this.user.get('chats').get(ourSecretChatId).get('msgs').map().once(function (data) {
-	      _this5.messageReceived(data, pub, true);
-	    });
 	  };
 
 	  /**
@@ -13698,12 +13700,12 @@
 	    var linkId = await Gun.SEA.work(encryptedSharedKey, undefined, undefined, { name: 'SHA-256' });
 	    linkId = linkId.slice(0, 12);
 
-	    util$1.gunAsAnotherUser(gun, sharedKey, function (user) {
-	      user.get('chatRequests').put({ a: 1 }); // doesn't seem to help
+	    // User has to exist, in order for .get(chatRequests).on() to be ever triggered
+	    await util$1.gunAsAnotherUser(gun, sharedKey, function (user) {
+	      return user.get('chatRequests').put({ a: 1 }).then();
 	    });
 
-	    user.get('chatLinks').get(linkId).get('encryptedSharedKey').put(encryptedSharedKey);
-	    user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').put(ownerEncryptedSharedKey);
+	    user.get('chatLinks').get(linkId).put({ encryptedSharedKey: encryptedSharedKey, ownerEncryptedSharedKey: ownerEncryptedSharedKey });
 
 	    return Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
 	  };
