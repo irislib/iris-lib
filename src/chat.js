@@ -164,29 +164,20 @@ class Chat {
   * @param {integer} time last seen msg time (default: now)
   */
   async setMyMsgsLastSeenTime(time) {
-    const keys = Object.keys(this.secrets);
     time = time || new Date().toISOString();
-    for (let i = 0;i < keys.length;i++) {
-      const encrypted = await Gun.SEA.encrypt(time, (await this.getSecret(keys[i])));
-      const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChatId).get(`msgsLastSeenTime`).put(encrypted);
-    }
+    return this.putEncrypted(`msgsLastSeenTime`, time);
   }
 
   /**
   * Useful for notifications
   */
   async getMyMsgsLastSeenTime(callback) {
-    const keys = Object.keys(this.secrets);
-    for (let i = 0;i < keys.length;i++) {
-      const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-      this.gun.user().get(`chats`).get(ourSecretChatId).get(`msgsLastSeenTime`).on(async data => {
-        this.myMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
-        if (callback) {
-          callback(this.myMsgsLastSeenTime);
-        }
-      });
-    }
+    this.onMyEncrypted(`msgsLastSeenTime`, time => {
+      this.myMsgsLastSeenTime = time;
+      if (callback) {
+        callback(this.myMsgsLastSeenTime);
+      }
+    });
   }
 
   /**
@@ -239,7 +230,6 @@ class Chat {
         text: msg
       };
     }
-
     //this.gun.user().get('message').set(temp);
     const keys = Object.keys(this.secrets);
     for (let i = 0;i < keys.length;i++) {
@@ -259,6 +249,88 @@ class Chat {
       const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
       this.user.get(`chats`).get(ourSecretChatId).get('msgs').get('a').put(null);
     }
+  }
+
+  /**
+  * Save a key-value pair, encrypt value
+  */
+  async putEncrypted(key, value, salt) {
+    const keys = Object.keys(this.secrets);
+    salt = salt || Gun.SEA.random(32).toString();
+    const obj = {v: value, s: salt};
+    for (let i = 0;i < keys.length;i++) {
+      const encrypted = await Gun.SEA.encrypt(JSON.stringify(obj), (await this.getSecret(keys[i])));
+      const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
+      this.user.get(`chats`).get(ourSecretChatId).get(key).put(encrypted);
+    }
+  }
+
+  /**
+  * Subscribe to key from us, decrypt value
+  */
+  async onMyEncrypted(key, callback) {
+    if (typeof callback !== 'function') {
+      throw new Error(`onMyEncrypted callback must be a function, got ${typeof callback}`);
+    }
+    const keys = Object.keys(this.secrets);
+    for (let i = 0;i < keys.length;i++) {
+      const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
+      this.gun.user().get(`chats`).get(ourSecretChatId).get(key).on(async data => {
+        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
+        if (decrypted) {
+          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
+        }
+      });
+      break;
+    }
+  }
+
+  /**
+  * Subscribe to key from other participants, decrypt value
+  */
+  async onTheirEncrypted(key, callback) {
+    if (typeof callback !== 'function') {
+      throw new Error(`onTheirEncrypted callback must be a function, got ${typeof callback}`);
+    }
+    const keys = Object.keys(this.secrets);
+    for (let i = 0;i < keys.length;i++) {
+      const theirSecretChatId = await this.getTheirSecretChatId(keys[i]);
+      this.gun.user(keys[i]).get(`chats`).get(theirSecretChatId).get(key).on(async data => {
+        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
+        if (decrypted) {
+          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
+        }
+      });
+    }
+  }
+
+  /**
+  * Set typing status
+  */
+  setTyping(isTyping, timeout = 5) {
+    isTyping = typeof isTyping === `undefined` ? true : isTyping;
+    timeout = timeout * 1000;
+    this.putEncrypted(`typing`, isTyping ? new Date().toISOString() : false);
+    clearTimeout(this.setTypingTimeout);
+    this.setTypingTimeout = setTimeout(() => this.putEncrypted(`isTyping`, false), timeout);
+  }
+
+  /**
+  * Get typing status
+  */
+  getTyping(callback, timeout = 5) {
+    timeout = timeout * 1000;
+    this.onTheirEncrypted(`typing`, (typing, key, pub) => {
+      if (callback) {
+        const isTyping = typing && new Date() - new Date(typing) <= timeout;
+        callback(isTyping, pub);
+        this.getTypingTimeouts = this.getTypingTimeouts || {};
+        clearTimeout(this.getTypingTimeouts[pub]);
+        if (isTyping) {
+          this.getTypingTimeouts[pub] = setTimeout(() => callback(false, pub), timeout);
+        }
+      }
+    });
   }
 
   /**
