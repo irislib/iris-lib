@@ -184,16 +184,12 @@ class Chat {
   * For "seen" status indicator
   */
   async getTheirMsgsLastSeenTime(callback) {
-    const keys = Object.keys(this.secrets);
-    for (let i = 0;i < keys.length;i++) {
-      const theirSecretChatId = await this.getTheirSecretChatId(keys[i]);
-      this.gun.user(keys[i]).get(`chats`).get(theirSecretChatId).get(`msgsLastSeenTime`).on(async data => {
-        this.theirMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
-        if (callback) {
-          callback(this.theirMsgsLastSeenTime, keys[i]);
-        }
-      });
-    }
+    this.onTheirEncrypted(`msgsLastSeenTime`, time => {
+      this.myMsgsLastSeenTime = time;
+      if (callback) {
+        callback(this.myMsgsLastSeenTime);
+      }
+    });
   }
 
   /**

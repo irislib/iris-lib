@@ -23,6 +23,21 @@ test(`We say hi`, async (done) => {
   });
   myChat.send(`hi`);
 });
+test(`Set and get msgsLastSeenTime`, async (done) => {
+  const myself = await iris.Key.generate();
+  const myChat = new iris.Chat({
+    gun,
+    key: myself,
+    participants: myself.pub
+  });
+  const t = new Date();
+  myChat.setMyMsgsLastSeenTime();
+  myChat.getMyMsgsLastSeenTime(time => {
+    expect(time).toBeDefined();
+    expect(new Date(time).getTime()).toBeGreaterThanOrEqual(t.getTime());
+    done();
+  });
+});
 /* probably fails because chats use the same gun
 test(`Friend says hi`, async (done) => {
   const myself = await iris.Key.generate();
