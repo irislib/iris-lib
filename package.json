@@ -1,6 +1,6 @@
 {
   "name": "iris-lib",
-  "version": "0.0.135",
+  "version": "0.0.136",
   "description": "Basic tools for reading and writing Iris messages and identities.",
   "main": "src/index.js",
   "browser": "dist/irisLib.js",
