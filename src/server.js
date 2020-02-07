@@ -2,7 +2,7 @@
 
 /*
  * Stand-alone iris node service wrapper. If NODE_ENV is 'production', uses
- * ../dist/irisLib.js, else uses the version in src or cjs directly. Development version
+ * ../dist/iris.js, else uses the version in src or cjs directly. Development version
  * assumes that it is running directly under the checked-out source tree from git,
  * or in an `irisnode-dev` container, built with `docker-compose build irisnode`.
  *
@@ -27,8 +27,8 @@ import Gun from 'gun';
 // Iris import depends on whether we're in dev mode or not
 let Iris;
 if (process.env.NODE_ENV === `production`) {
-  console.log(`Loading irisLib.js!`);
-  Iris = require(`../dist/irisLib.js`);
+  console.log(`Loading iris.js!`);
+  Iris = require(`../dist/iris.js`);
 } else {
   console.log(`Loading src as Iris!`);
   Iris = require(`./index.js`);

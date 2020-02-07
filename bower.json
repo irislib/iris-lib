@@ -1,7 +1,7 @@
 {
   "name": "iris-lib",
   "description": "Basic tools for reading and writing Iris messages and identities.",
-  "main": "dist/irisLib.js",
+  "main": "dist/iris.js",
   "authors": [
     "Martti Malmi (martti.malmi@iki.fi)"
   ],

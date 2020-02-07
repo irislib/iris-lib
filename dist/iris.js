@@ -1,7 +1,7 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('gun')) :
 	typeof define === 'function' && define.amd ? define(['gun'], factory) :
-	(global.irisLib = factory(global.Gun));
+	(global.iris = factory(global.Gun));
 }(this, (function (Gun) { 'use strict';
 
 	Gun = Gun && Gun.hasOwnProperty('default') ? Gun['default'] : Gun;
@@ -13330,6 +13330,7 @@
 	    this.ourSecretChatIds = {}; // maps participant public key to our secret chat id
 	    this.theirSecretChatIds = {}; // maps participant public key to their secret chat id
 	    this.onMessage = options.onMessage;
+	    this.messages = {};
 
 	    var saved = void 0;
 	    if (options.chatLink) {
@@ -13439,14 +13440,19 @@
 	    return this.theirSecretChatIds[pub];
 	  };
 
-	  Chat.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored) {
+	  Chat.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored, key) {
+	    if (this.messages[key]) {
+	      return;
+	    }
 	    if (this.onMessage) {
 	      var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
 	      if (typeof decrypted !== 'object') {
 	        // console.log(`chat data received`, decrypted);
 	        return;
 	      }
-	      this.onMessage(decrypted, { selfAuthored: selfAuthored });
+	      decrypted._info = { selfAuthored: selfAuthored, pub: pub };
+	      this.messages[key] = decrypted;
+	      this.onMessage(decrypted, decrypted._info);
 	    }
 	  };
 
@@ -13539,13 +13545,13 @@
 	      if (pub !== this.key.pub) {
 	        // Subscribe to their messages
 	        var theirSecretChatId = await this.getTheirSecretChatId(pub);
-	        this.gun.user(pub).get('chats').get(theirSecretChatId).get('msgs').map().once(function (data) {
-	          _this5.messageReceived(data, pub);
+	        this.gun.user(pub).get('chats').get(theirSecretChatId).get('msgs').map().once(function (data, key) {
+	          _this5.messageReceived(data, pub, false, key);
 	        });
 	      }
 	      // Subscribe to our messages
-	      this.user.get('chats').get(ourSecretChatId).get('msgs').map().once(function (data) {
-	        _this5.messageReceived(data, pub, true);
+	      this.user.get('chats').get(ourSecretChatId).get('msgs').map().once(function (data, key) {
+	        _this5.messageReceived(data, pub, true, key);
 	      });
 	    }
 	  };
@@ -15257,7 +15263,7 @@
 	  return SocialNetwork;
 	}();
 
-	var version$2 = "0.0.135";
+	var version$2 = "0.0.136";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

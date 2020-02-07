@@ -25,6 +25,7 @@ class Chat {
     this.ourSecretChatIds = {}; // maps participant public key to our secret chat id
     this.theirSecretChatIds = {}; // maps participant public key to their secret chat id
     this.onMessage = options.onMessage;
+    this.messages = {};
 
     let saved;
     if (options.chatLink) {
@@ -128,14 +129,19 @@ class Chat {
     return this.theirSecretChatIds[pub];
   }
 
-  async messageReceived(data, pub, selfAuthored) {
+  async messageReceived(data, pub, selfAuthored, key) {
+    if (this.messages[key]) {
+      return;
+    }
     if (this.onMessage) {
       const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
       if (typeof decrypted !== `object`) {
         // console.log(`chat data received`, decrypted);
         return;
       }
-      this.onMessage(decrypted, {selfAuthored});
+      decrypted._info = {selfAuthored, pub};
+      this.messages[key] = decrypted;
+      this.onMessage(decrypted, decrypted._info);
     } else {
       // console.log(`chat message received`, decrypted);
     }
@@ -207,10 +213,10 @@ class Chat {
       if (pub !== this.key.pub) {
         // Subscribe to their messages
         const theirSecretChatId = await this.getTheirSecretChatId(pub);
-        this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once(data => {this.messageReceived(data, pub);});
+        this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key);});
       }
       // Subscribe to our messages
-      this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once(data => {this.messageReceived(data, pub, true);});
+      this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key);});
     }
   }
 

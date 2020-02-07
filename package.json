@@ -3,7 +3,7 @@
   "version": "0.0.136",
   "description": "Basic tools for reading and writing Iris messages and identities.",
   "main": "src/index.js",
-  "browser": "dist/irisLib.js",
+  "browser": "dist/iris.js",
   "module": "es/index.js",
   "jsxnext:main": "es/index.js",
   "jest": {
@@ -100,6 +100,7 @@
     "eslint-config-devine": "^2.1.1",
     "eslint-plugin-babel": "^5.1.0",
     "flow-bin": "^0.79.1",
+    "http-server": "^0.12.1",
     "jest": "^23.5.0",
     "jest-html-reporter": "^2.5.0",
     "jest-stare": "^1.16.0",
