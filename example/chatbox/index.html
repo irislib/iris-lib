@@ -3,7 +3,6 @@
     <title>Live Chat Example</title>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
-    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
     <script src="../iris.js"></script>
   </head>
   <body>
@@ -16,8 +15,7 @@
           chatLink: 'https://iris.to/?chatWith=4JhaYuPVcq4y2Sp6sRAGkbwM5FdhsMih3b4E6tvd5W4.ULpD5dhra5ojHtKFEdcTZ80UZEmZnRl4dfM2JCEzj2M&s=ZaUbkxPsQeSSdSP1ety7y19eTjPq1gHu15s1v8cbGX4&k=26vMMto5xufO'
           // replace chatLink with your own chat link from iris.to
         });
-        $('body').prepend(chat.getChatBox());
-        var i = 0;
+        document.body.appendChild(chat.getChatBox());
       });
     </script>
   </body>
