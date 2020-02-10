@@ -402,13 +402,25 @@ class Chat {
       Chat.getOnline(this.gun, pub, status => {
         const cls = `iris-online-indicator${  status.isOnline ? ' yes' : ''}`;
         onlineIndicator.setAttribute('class', cls);
+        const undelivered = messages.querySelectorAll('.iris-chat-message:not(.delivered)');
+        undelivered.forEach(msg => {
+          if (msg.getAttribute('data-time') <= status.lastActive) {
+            const c = msg.getAttribute('class');
+            msg.setAttribute('class', `${c  } delivered`);
+          }
+        });
       });
     }
 
     this.getTheirMsgsLastSeenTime(time => {
       const unseen = messages.querySelectorAll('.seen:not(.yes)');
       unseen.forEach(indicator => {
-        if (indicator.parentElement.parentElement.parentElement.getAttribute('data-time') <= time) {
+        const msgEl = indicator.parentElement.parentElement.parentElement;
+        if (msgEl.getAttribute('data-time') <= time) {
+          const msgClass = msgEl.getAttribute('class');
+          if (msgClass.indexOf('delivered') === -1) {
+            msgEl.setAttribute('class', `${msgClass  } delivered`);
+          }
           indicator.setAttribute('class', 'seen yes');
         }
       });
@@ -425,7 +437,7 @@ class Chat {
         const seenIndicator = document.createElement('span');
         const cls = this.theirMsgsLastSeenTime >= msg.time ? 'seen yes' : 'seen';
         seenIndicator.setAttribute('class', cls);
-        seenIndicator.innerHTML = ' <svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 40"><polygon fill="currentColor" points="40.6,12.1 17,35.7 7.4,26.1 4.6,29 17,41.3 43.4,14.9"/></svg>';
+        seenIndicator.innerHTML = ' <svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 59 42"><polygon fill="currentColor" points="40.6,12.1 17,35.7 7.4,26.1 4.6,29 17,41.3 43.4,14.9"></polygon><polygon class="iris-delivered-checkmark" fill="currentColor" points="55.6,12.1 32,35.7 29.4,33.1 26.6,36 32,41.3 58.4,14.9"></polygon></svg>';
         time.appendChild(seenIndicator);
       }
       msgContent.appendChild(time);
@@ -481,7 +493,7 @@ class Chat {
     if (isOnline) {
       if (gun.setOnlineInterval) { return; }
       const update = () => {
-        gun.user().get(`lastActive`).put(Math.round(Gun.state() / 1000));
+        gun.user().get(`lastActive`).put(new Date(Gun.state()).toISOString());
       };
       update();
       gun.setOnlineInterval = setInterval(update, 3000);
@@ -502,8 +514,13 @@ class Chat {
     let timeout;
     gun.user(pubKey).get(`lastActive`).on(lastActive => {
       clearTimeout(timeout);
-      const now = Math.round(Gun.state() / 1000);
-      const isOnline = lastActive > now - 10 && lastActive < now + 30;
+      const now = new Date(Gun.state());
+      let lastActiveDate = new Date(lastActive);
+      if (lastActiveDate.getFullYear() === 1970) { // lol, format changed from seconds to iso string
+        lastActiveDate = new Date(lastActiveDate.getTime() * 1000);
+        lastActive = lastActiveDate.toISOString();
+      }
+      const isOnline = lastActiveDate > now - 10 * 1000 && lastActive < now + 30 * 1000;
       callback({isOnline, lastActive});
       if (isOnline) {
         timeout = setTimeout(() => callback({isOnline: false, lastActive}), 10000);

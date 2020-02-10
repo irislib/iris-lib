@@ -552,7 +552,15 @@ export default {
       }
 
       .seen svg {
-        width: 15px;
+        width: 18px;
+      }
+
+      .iris-delivered-checkmark {
+        display: none;
+      }
+
+      .delivered .iris-delivered-checkmark {
+        display: initial;
       }
 
       .iris-chat-message.their {
