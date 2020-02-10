@@ -232,6 +232,9 @@ class Chat {
   */
   async send(msg) {
     if (typeof msg === `string`) {
+      if (msg.length === 0) {
+        return;
+      }
       msg = {
         time: (new Date()).toISOString(),
         author: `anonymous`,
@@ -378,6 +381,18 @@ class Chat {
     textArea.setAttribute('rows', '1');
     textArea.setAttribute('placeholder', 'Type a message');
     inputWrapper.appendChild(textArea);
+    if (util.isMobile) {
+      const sendBtn = document.createElement('button');
+      sendBtn.innerHTML = `
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 486.736 486.736" style="enable-background:new 0 0 486.736 486.736;" xml:space="preserve" width="100px" height="100px" fill="#000000" stroke="#000000" stroke-width="0"><path fill="currentColor" d="M481.883,61.238l-474.3,171.4c-8.8,3.2-10.3,15-2.6,20.2l70.9,48.4l321.8-169.7l-272.4,203.4v82.4c0,5.6,6.3,9,11,5.9 l60-39.8l59.1,40.3c5.4,3.7,12.8,2.1,16.3-3.5l214.5-353.7C487.983,63.638,485.083,60.038,481.883,61.238z"></path></svg>
+      `;
+      inputWrapper.appendChild(sendBtn);
+      sendBtn.addEventListener('click', () => {
+        this.send(textArea.value);
+        textArea.value = '';
+        this.setTyping(false);
+      });
+    }
 
     const participants = Object.keys(this.secrets);
     if (participants.length) {
