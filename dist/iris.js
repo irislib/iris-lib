@@ -13640,6 +13640,7 @@
 
 	  Chat.prototype.send = async function send(msg) {
 	    if (typeof msg === 'string') {
+	      msg = msg.trim();
 	      if (msg.length === 0) {
 	        return;
 	      }

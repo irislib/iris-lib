@@ -232,6 +232,7 @@ class Chat {
   */
   async send(msg) {
     if (typeof msg === `string`) {
+      msg = msg.trim();
       if (msg.length === 0) {
         return;
       }
