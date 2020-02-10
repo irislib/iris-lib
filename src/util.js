@@ -291,6 +291,23 @@ export default {
     ]);
   },
 
+  getCaret(el) {
+    if (el.selectionStart) {
+      return el.selectionStart;
+    } else if (document.selection) {
+      el.focus();
+      const r = document.selection.createRange();
+      if (r == null) {
+        return 0;
+      }
+      const re = el.createTextRange(), rc = re.duplicate();
+      re.moveToBookmark(r.getBookmark());
+      rc.setEndPoint('EndToStart', re);
+      return rc.text.length;
+    }
+    return 0;
+  },
+
   injectCss() {
     const elementId = `irisStyle`;
     if (document.getElementById(elementId)) {
@@ -377,7 +394,165 @@ export default {
         border-radius: 50%;
         border-color: transparent;
         border-style: solid;
-      }`;
+      }
+
+      .iris-chat-box {
+        position: fixed;
+        bottom: 0.5rem;
+        right: 0.5rem;
+        border-radius: 8px;
+        background-color: #fff;
+        max-height: 25rem;
+        box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
+        height: calc(100% - 44px);
+        display: flex;
+        flex-direction: column;
+        width: 320px;
+        font-family: system-ui;
+        font-size: 15px;
+        color: rgb(38, 38, 38);
+      }
+
+      .iris-chat-header {
+        background-color: #1e1e1e;
+        height: 44px;
+        color: #fff;
+        border-radius: 8px 8px 0 0;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: none;
+      }
+
+      .iris-chat-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: scroll;
+      }
+
+      .iris-chat-input-wrapper {
+        flex: none;
+        padding: 15px;
+        background-color: #efefef;
+      }
+
+      .iris-chat-input-wrapper form {
+        margin: 0;
+      }
+
+      .iris-chat-input-wrapper textarea {
+        padding: 15px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(0,0,0,0);
+        width: 100%;
+        font-size: 15px;
+        resize: none;
+      }
+
+      .iris-chat-input-wrapper textarea:focus {
+        outline: none;
+        border: 1px solid #6dd0ed;
+      }
+
+      .iris-chat-message {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 2px;
+        overflow-wrap: break-word;
+      }
+
+      .iris-msg-content {
+        background-color: #efefef;
+        padding: 6px 10px;
+        border-radius: 8px;
+        box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
+        flex: none;
+        max-width: 75%;
+      }
+
+      .emoji {
+        font-size: 1.3em;
+        line-height: 1em;
+      }
+
+      .iris-chat-message .emoji-only {
+        font-size: 3em;
+        text-align: center;
+      }
+
+      .chat-list .seen {
+        margin-right: 5px;
+      }
+
+      .seen {
+        color: rgba(0, 0, 0, 0.45);
+        user-select: none;
+      }
+
+      .seen.yes {
+        color: #4fc3f7;
+      }
+
+      .seen svg {
+        width: 15px;
+      }
+
+      .iris-chat-message.their {
+        align-items: flex-start;
+      }
+
+      .iris-chat-message.their + .iris-chat-message.our .iris-msg-content, .day-separator + .iris-chat-message.our .iris-msg-content {
+        margin-top: 15px;
+        border-radius: 8px 0px 8px 8px;
+      }
+
+      .iris-chat-message.their:first-of-type .iris-msg-content {
+        border-radius: 0px 8px 8px 8px;
+      }
+
+      .iris-chat-message.our:first-of-type .iris-msg-content {
+        border-radius: 8px 0px 8px 8px;
+      }
+
+      .iris-chat-message.our + .iris-chat-message.their .iris-msg-content, .day-separator + .iris-chat-message.their .iris-msg-content {
+        margin-top: 15px;
+        border-radius: 0px 8px 8px 8px;
+      }
+
+      .iris-chat-message.our {
+        align-items: flex-end;
+      }
+
+      .iris-chat-message.our .iris-msg-content {
+        background-color: #c5ecf7;
+      }
+
+      .iris-chat-message .time {
+        text-align: right;
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.45);
+      }
+
+      .day-separator {
+        display: inline-block;
+        border-radius: 8px;
+        background-color: rgba(227, 249, 255, 0.91);
+        padding: 6px 10px;
+        margin-top: 15px;
+        margin-left: auto;
+        margin-right: auto;
+        text-transform: uppercase;
+        font-size: 13px;
+        color: rgba(74, 74, 74, 0.88);
+        box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
+        user-select: none;
+      }
+
+      .day-separator:first-of-type {
+        margin-top: 0;
+      }
+      `;
     document.body.appendChild(sheet);
   },
 
@@ -392,6 +567,42 @@ export default {
         return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
       }
     }
+  },
+
+  formatTime(date) {
+    const t = date.toLocaleTimeString(undefined, {timeStyle: 'short'});
+    const s = t.split(':');
+    if (s.length === 3) { // safari tries to display seconds
+      return `${s[0]  }:${  s[1]  }${s[2].slice(2)}`;
+    }
+    return t;
+  },
+
+  formatDate(date) {
+    const t = date.toLocaleString(undefined, {dateStyle: 'short', timeStyle: 'short'});
+    const s = t.split(':');
+    if (s.length === 3) { // safari tries to display seconds
+      return `${s[0]  }:${  s[1]  }${s[2].slice(2)}`;
+    }
+    return t;
+  },
+
+  getDaySeparatorText(date, dateStr, now, nowStr) {
+    if (!now) {
+      now = new Date();
+      nowStr = now.toLocaleDateString({dateStyle: 'short'});
+    }
+    if (dateStr === nowStr) {
+      return 'today';
+    }
+    const dayDifference = Math.round((now - date) / (1000 * 60 * 60 * 24));
+    if (dayDifference <= 1) {
+      return 'yesterday';
+    }
+    if (dayDifference <= 5) {
+      return date.toLocaleDateString(undefined, {weekday: 'long'});
+    }
+    return dateStr;
   },
 
   isNode,

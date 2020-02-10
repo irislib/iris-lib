@@ -336,6 +336,45 @@ class Chat {
   }
 
   /**
+  * Get a chat box element that you can add to your page
+  */
+  getChatBox() {
+    util.injectCss();
+    const chatBox = document.createElement('div');
+    chatBox.setAttribute('class', 'iris-chat-box');
+    const header = document.createElement('div');
+    header.setAttribute('class', 'iris-chat-header');
+    chatBox.appendChild(header);
+    const messages = document.createElement('div');
+    messages.setAttribute('class', 'iris-chat-messages');
+    chatBox.appendChild(messages);
+    const inputWrapper = document.createElement('div');
+    inputWrapper.setAttribute('class', 'iris-chat-input-wrapper');
+    chatBox.appendChild(inputWrapper);
+    const textArea = document.createElement('textarea');
+    textArea.setAttribute('rows', '1');
+    textArea.setAttribute('placeholder', 'Type a message');
+    inputWrapper.appendChild(textArea);
+
+    textArea.addEventListener('keyup', event => {
+      if (event.keyCode === 13) {
+        event.preventDefault();
+        const content = textArea.value;
+        const caret = util.getCaret(textArea);
+        if (event.shiftKey) {
+          textArea.value = `${content.substring(0, caret - 1)  }\n${  content.substring(caret, content.length)}`;
+        } else {
+          textArea.value = content.substring(0, caret - 1) + content.substring(caret, content.length);
+          this.send(textArea.value);
+          textArea.value = '';
+        }
+      }
+    });
+
+    return chatBox;
+  }
+
+  /**
   * Set the user's online status
   * @param {object} gun
   * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating

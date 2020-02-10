@@ -12,6 +12,7 @@
   width: 320px;
   font-family: system-ui;
   font-size: 15px;
+  color: rgb(38, 38, 38);
 }
 
 .iris-chat-header {
@@ -64,7 +65,7 @@
 }
 
 .iris-msg-content {
-  background-color: #ffffff;
+  background-color: #efefef;
   padding: 6px 10px;
   border-radius: 8px;
   box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
