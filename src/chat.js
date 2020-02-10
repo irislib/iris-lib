@@ -348,12 +348,29 @@ class Chat {
     util.injectCss();
     const chatBox = document.createElement('div');
     chatBox.setAttribute('class', 'iris-chat-box');
+
     const header = document.createElement('div');
     header.setAttribute('class', 'iris-chat-header');
     chatBox.appendChild(header);
+    const onlineIndicator = document.createElement('span');
+    onlineIndicator.innerHTML = '&#x25cf;';
+    onlineIndicator.setAttribute('class', 'iris-online-indicator');
+    header.appendChild(onlineIndicator);
+    const nameEl = document.createElement('span');
+    header.appendChild(nameEl);
+
     const messages = document.createElement('div');
     messages.setAttribute('class', 'iris-chat-messages');
     chatBox.appendChild(messages);
+
+    const typingIndicator = document.createElement('div');
+    typingIndicator.setAttribute('class', 'iris-typing-indicator');
+    typingIndicator.innerText = 'typing...';
+    chatBox.appendChild(typingIndicator);
+    this.getTyping(isTyping => {
+      typingIndicator.setAttribute('class', `iris-typing-indicator${  isTyping ? ' yes' : ''}`);
+    });
+
     const inputWrapper = document.createElement('div');
     inputWrapper.setAttribute('class', 'iris-chat-input-wrapper');
     chatBox.appendChild(inputWrapper);
@@ -364,7 +381,12 @@ class Chat {
 
     const participants = Object.keys(this.secrets);
     if (participants.length) {
-      this.gun.user(participants[0]).get('profile').get('name').on(name => header.innerText = name);
+      const pub = participants[0];
+      this.gun.user(pub).get('profile').get('name').on(name => nameEl.innerText = name);
+      Chat.getOnline(this.gun, pub, status => {
+        const cls = `iris-online-indicator${  status.isOnline ? ' yes' : ''}`;
+        onlineIndicator.setAttribute('class', cls);
+      });
     }
 
     this.onMessage.push((msg, info) => {
@@ -380,11 +402,11 @@ class Chat {
       msgEl.setAttribute('class', `${info.selfAuthored ? 'our' : 'their'} iris-chat-message`);
       msgEl.appendChild(msgContent);
       msgEl.setAttribute('data-time', msg.time);
-      for (var i = messages.children.length; i >= 0; i--) {
+      for (let i = messages.children.length; i >= 0; i--) {
         if (i === 0) {
           messages.insertBefore(msgEl, messages.firstChild);
         } else {
-          var t = messages.children[i - 1].getAttribute('data-time')
+          const t = messages.children[i - 1].getAttribute('data-time');
           if (t && t < msg.time) {
             messages.children[i - 1].insertAdjacentElement('afterend', msgEl);
             break;
@@ -395,6 +417,7 @@ class Chat {
     });
 
     textArea.addEventListener('keyup', event => {
+      this.setTyping();
       if (event.keyCode === 13) {
         event.preventDefault();
         const content = textArea.value;

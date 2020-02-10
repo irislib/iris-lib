@@ -428,6 +428,29 @@ export default {
         overflow: hidden;
       }
 
+      .iris-online-indicator {
+        color: #bfbfbf;
+        margin-right: 5px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .iris-online-indicator.yes {
+        color: #80bf5f;
+      }
+
+      .iris-typing-indicator {
+        display: none;
+        background-color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        padding: 2px;
+        color: #777;
+      }
+
+      .iris-typing-indicator.yes {
+        display: block;
+      }
+
       .iris-chat-messages {
         flex: 1;
         padding: 15px;
