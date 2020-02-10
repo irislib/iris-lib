@@ -9,13 +9,11 @@
     <script type="text/javascript">
       iris.Key.getDefault().then(key => {
         var gun = new Gun({peers: ['https://gun-eu.herokuapp.com/gun']});
-        var chat = new iris.Chat({
-          gun,
-          key,
-          chatLink: 'https://iris.to/?chatWith=4JhaYuPVcq4y2Sp6sRAGkbwM5FdhsMih3b4E6tvd5W4.ULpD5dhra5ojHtKFEdcTZ80UZEmZnRl4dfM2JCEzj2M&s=ZaUbkxPsQeSSdSP1ety7y19eTjPq1gHu15s1v8cbGX4&k=26vMMto5xufO'
-          // replace chatLink with your own chat link from iris.to
-        });
-        document.body.appendChild(chat.getChatBox());
+        // replace chatLink with your own chat link from iris.to
+        var chatLink = 'https://iris.to/?chatWith=4JhaYuPVcq4y2Sp6sRAGkbwM5FdhsMih3b4E6tvd5W4.ULpD5dhra5ojHtKFEdcTZ80UZEmZnRl4dfM2JCEzj2M&s=ZaUbkxPsQeSSdSP1ety7y19eTjPq1gHu15s1v8cbGX4&k=26vMMto5xufO';
+        var chat = new iris.Chat({gun, key, chatLink});
+        var box = chat.getChatBox();
+        document.body.appendChild(box);
       });
     </script>
   </body>
