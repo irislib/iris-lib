@@ -423,6 +423,9 @@ export default {
         justify-content: center;
         align-items: center;
         flex: none;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
       }
 
       .iris-chat-messages {
@@ -553,7 +556,7 @@ export default {
         margin-top: 0;
       }
       `;
-    document.body.appendChild(sheet);
+    document.head.prepend(sheet);
   },
 
   getUrlParameter(sParam, sParams) {

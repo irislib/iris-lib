@@ -5,19 +5,17 @@
     <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
     <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
     <script src="../iris.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
   </head>
   <body>
     <script type="text/javascript">
       iris.Key.getDefault().then(key => {
-        var gun = new Gun(['https://gun-eu.herokuapp.com/gun']);
-        var chat = new iris.Chat({gun, key, participants: key.pub, onMessage: (msg, info) => {
-          var msgContent = $('<div>').addClass('iris-msg-content').text(msg.text);
-          msgContent.append($('<div>').text(iris.util.formatTime(new Date(msg.time))).addClass('time'));
-          msgContent.html(msgContent.html().replace(/\n/g, '<br>\n'));
-          var msgEl = $('<div>').toggleClass('our', info.selfAuthored).addClass('iris-chat-message').append(msgContent);
-          $('.iris-chat-messages').append(msgEl);
-        }});
+        var gun = new Gun({peers: ['https://gun-eu.herokuapp.com/gun']});
+        var chat = new iris.Chat({
+          gun,
+          key,
+          chatLink: 'https://iris.to/?chatWith=WsBap22cg-SENXKNQ1Hh01xd-bgSEfAJubaXRw_mzss.vjrNZN_8TwEn-wkoTW8Raab7FpipUQ2Ii6-xKhbgBzo&s=rY5_4YKDl2b5Hj3LYI5146zPvsrOqFkgngunTVcuF-0&k=ZdlBz1Nfna3L'
+          // replace chatLink with your own chat link from iris.to
+        });
         $('body').prepend(chat.getChatBox());
         var i = 0;
       });

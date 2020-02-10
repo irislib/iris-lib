@@ -24,7 +24,10 @@ class Chat {
     this.secrets = {}; // maps participant public key to shared secret
     this.ourSecretChatIds = {}; // maps participant public key to our secret chat id
     this.theirSecretChatIds = {}; // maps participant public key to their secret chat id
-    this.onMessage = options.onMessage;
+    this.onMessage = [];
+    if (options.onMessage) {
+      this.onMessage.push(options.onMessage);
+    }
     this.messages = {};
 
     let saved;
@@ -103,14 +106,17 @@ class Chat {
   * @param callback callback function that is called for each public key you have a chat with
   */
   static async getChats(gun, keypair, callback) {
+    const chats = {};
     const mySecret = await Gun.SEA.secret(keypair.epub, keypair);
     gun.user().get(`chats`).map().on(async (value, ourSecretChatId) => {
       if (value) {
         const encryptedPub = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChatId).get(`pub`));
         const pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
+        chats[pub] = {};
         callback(pub);
       }
     });
+    return chats;
   }
 
   async getOurSecretChatId(pub) {
@@ -133,7 +139,7 @@ class Chat {
     if (this.messages[key]) {
       return;
     }
-    if (this.onMessage) {
+    if (this.onMessage.length) {
       const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
       if (typeof decrypted !== `object`) {
         // console.log(`chat data received`, decrypted);
@@ -141,7 +147,7 @@ class Chat {
       }
       decrypted._info = {selfAuthored, pub};
       this.messages[key] = decrypted;
-      this.onMessage(decrypted, decrypted._info);
+      this.onMessage.forEach(f => f(decrypted, decrypted._info));
     } else {
       // console.log(`chat message received`, decrypted);
     }
@@ -355,6 +361,38 @@ class Chat {
     textArea.setAttribute('rows', '1');
     textArea.setAttribute('placeholder', 'Type a message');
     inputWrapper.appendChild(textArea);
+
+    const participants = Object.keys(this.secrets);
+    if (participants.length) {
+      this.gun.user(participants[0]).get('profile').get('name').on(name => header.innerText = name);
+    }
+
+    this.onMessage.push((msg, info) => {
+      const msgContent = document.createElement('div');
+      msgContent.setAttribute('class', 'iris-msg-content');
+      msgContent.innerText = msg.text;
+      const time = document.createElement('div');
+      time.setAttribute('class', 'time');
+      time.innerText = util.formatTime(new Date(msg.time));
+      msgContent.appendChild(time);
+      msgContent.innerHTML = msgContent.innerHTML.replace(/\n/g, '<br>\n');
+      const msgEl = document.createElement('div');
+      msgEl.setAttribute('class', `${info.selfAuthored ? 'our' : 'their'} iris-chat-message`);
+      msgEl.appendChild(msgContent);
+      msgEl.setAttribute('data-time', msg.time);
+      for (var i = messages.children.length; i >= 0; i--) {
+        if (i === 0) {
+          messages.insertBefore(msgEl, messages.firstChild);
+        } else {
+          var t = messages.children[i - 1].getAttribute('data-time')
+          if (t && t < msg.time) {
+            messages.children[i - 1].insertAdjacentElement('afterend', msgEl);
+            break;
+          }
+        }
+      }
+      messages.scrollTop = messages.scrollHeight;
+    });
 
     textArea.addEventListener('keyup', event => {
       if (event.keyCode === 13) {
