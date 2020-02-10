@@ -432,7 +432,7 @@ export default {
         color: #bfbfbf;
         margin-right: 5px;
         font-size: 12px;
-        cursor: pointer;
+        user-select: none;
       }
 
       .iris-online-indicator.yes {
@@ -505,10 +505,6 @@ export default {
       .iris-chat-message .emoji-only {
         font-size: 3em;
         text-align: center;
-      }
-
-      .chat-list .seen {
-        margin-right: 5px;
       }
 
       .seen {

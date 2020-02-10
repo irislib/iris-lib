@@ -197,9 +197,9 @@ class Chat {
   */
   async getTheirMsgsLastSeenTime(callback) {
     this.onTheirEncrypted(`msgsLastSeenTime`, time => {
-      this.myMsgsLastSeenTime = time;
+      this.theirMsgsLastSeenTime = time;
       if (callback) {
-        callback(this.myMsgsLastSeenTime);
+        callback(this.theirMsgsLastSeenTime);
       }
     });
   }
@@ -389,6 +389,15 @@ class Chat {
       });
     }
 
+    this.getTheirMsgsLastSeenTime(time => {
+      const unseen = messages.querySelectorAll('.seen:not(.yes)');
+      unseen.forEach(indicator => {
+        if (indicator.parentElement.parentElement.parentElement.getAttribute('data-time') <= time) {
+          indicator.setAttribute('class', 'seen yes');
+        }
+      });
+    });
+
     this.onMessage.push((msg, info) => {
       const msgContent = document.createElement('div');
       msgContent.setAttribute('class', 'iris-msg-content');
@@ -396,8 +405,16 @@ class Chat {
       const time = document.createElement('div');
       time.setAttribute('class', 'time');
       time.innerText = util.formatTime(new Date(msg.time));
+      if (info.selfAuthored) {
+        const seenIndicator = document.createElement('span');
+        const cls = this.theirMsgsLastSeenTime >= msg.time ? 'seen yes' : 'seen';
+        seenIndicator.setAttribute('class', cls);
+        seenIndicator.innerHTML = ' <svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 40"><polygon fill="currentColor" points="40.6,12.1 17,35.7 7.4,26.1 4.6,29 17,41.3 43.4,14.9"/></svg>';
+        time.appendChild(seenIndicator);
+      }
       msgContent.appendChild(time);
       msgContent.innerHTML = msgContent.innerHTML.replace(/\n/g, '<br>\n');
+
       const msgEl = document.createElement('div');
       msgEl.setAttribute('class', `${info.selfAuthored ? 'our' : 'their'} iris-chat-message`);
       msgEl.appendChild(msgContent);
@@ -417,7 +434,8 @@ class Chat {
     });
 
     textArea.addEventListener('keyup', event => {
-      this.setTyping();
+      Chat.setOnline(this.gun, true); // TODO
+      this.setMyMsgsLastSeenTime(); // TODO
       if (event.keyCode === 13) {
         event.preventDefault();
         const content = textArea.value;
@@ -428,7 +446,10 @@ class Chat {
           textArea.value = content.substring(0, caret - 1) + content.substring(caret, content.length);
           this.send(textArea.value);
           textArea.value = '';
+          this.setTyping(false);
         }
+      } else {
+        this.setTyping(!!textArea.value.length);
       }
     });
 
