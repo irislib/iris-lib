@@ -350,44 +350,56 @@ class Chat {
   */
   getChatBox() {
     util.injectCss();
-    const chatBox = document.createElement('div');
-    chatBox.setAttribute('class', 'iris-chat-box');
+    let minimized = false;
 
-    const header = document.createElement('div');
-    header.setAttribute('class', 'iris-chat-header');
-    chatBox.appendChild(header);
-    const onlineIndicator = document.createElement('span');
+    function createElement(type, cls, parent) {
+      const el = document.createElement(type);
+      if (cls) {
+        el.setAttribute('class', cls);
+      }
+      if (parent) {
+        parent.appendChild(el);
+      }
+      return el;
+    }
+
+    const chatBox = createElement('div', 'iris-chat-box');
+    const header = createElement('div', 'iris-chat-header', chatBox);
+    const minimize = createElement('span', 'iris-chat-minimize', header);
+    minimize.innerText = '—';
+    minimize.addEventListener('click', e => {
+      e.stopPropagation();
+      chatBox.setAttribute('class', 'iris-chat-box minimized');
+      minimized = true;
+    });
+    const headerText = createElement('div', 'iris-chat-header-text', header);
+    const onlineIndicator = createElement('span', 'iris-online-indicator', headerText);
     onlineIndicator.innerHTML = '&#x25cf;';
-    onlineIndicator.setAttribute('class', 'iris-online-indicator');
-    header.appendChild(onlineIndicator);
-    const nameEl = document.createElement('span');
-    header.appendChild(nameEl);
+    const nameEl = createElement('span', undefined, headerText);
+    header.addEventListener('click', () => {
+      if (minimized) {
+        chatBox.setAttribute('class', 'iris-chat-box');
+        minimized = false;
+      }
+    });
 
-    const messages = document.createElement('div');
-    messages.setAttribute('class', 'iris-chat-messages');
-    chatBox.appendChild(messages);
+    const messages = createElement('div', 'iris-chat-messages', chatBox);
 
-    const typingIndicator = document.createElement('div');
-    typingIndicator.setAttribute('class', 'iris-typing-indicator');
+    const typingIndicator = createElement('div', 'iris-typing-indicator', chatBox);
     typingIndicator.innerText = 'typing...';
-    chatBox.appendChild(typingIndicator);
     this.getTyping(isTyping => {
       typingIndicator.setAttribute('class', `iris-typing-indicator${  isTyping ? ' yes' : ''}`);
     });
 
-    const inputWrapper = document.createElement('div');
-    inputWrapper.setAttribute('class', 'iris-chat-input-wrapper');
-    chatBox.appendChild(inputWrapper);
-    const textArea = document.createElement('textarea');
+    const inputWrapper = createElement('div', 'iris-chat-input-wrapper', chatBox);
+    const textArea = createElement('textarea', undefined, inputWrapper);
     textArea.setAttribute('rows', '1');
     textArea.setAttribute('placeholder', 'Type a message');
-    inputWrapper.appendChild(textArea);
     if (util.isMobile) {
-      const sendBtn = document.createElement('button');
+      const sendBtn = createElement('button', undefined, inputWrapper);
       sendBtn.innerHTML = `
         <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 486.736 486.736" style="enable-background:new 0 0 486.736 486.736;" xml:space="preserve" width="100px" height="100px" fill="#000000" stroke="#000000" stroke-width="0"><path fill="currentColor" d="M481.883,61.238l-474.3,171.4c-8.8,3.2-10.3,15-2.6,20.2l70.9,48.4l321.8-169.7l-272.4,203.4v82.4c0,5.6,6.3,9,11,5.9 l60-39.8l59.1,40.3c5.4,3.7,12.8,2.1,16.3-3.5l214.5-353.7C487.983,63.638,485.083,60.038,481.883,61.238z"></path></svg>
       `;
-      inputWrapper.appendChild(sendBtn);
       sendBtn.addEventListener('click', () => {
         this.send(textArea.value);
         textArea.value = '';
@@ -427,24 +439,18 @@ class Chat {
     });
 
     this.onMessage.push((msg, info) => {
-      const msgContent = document.createElement('div');
-      msgContent.setAttribute('class', 'iris-msg-content');
+      const msgContent = createElement('div', 'iris-msg-content');
       msgContent.innerText = msg.text;
-      const time = document.createElement('div');
-      time.setAttribute('class', 'time');
+      const time = createElement('div', 'time', msgContent);
       time.innerText = util.formatTime(new Date(msg.time));
       if (info.selfAuthored) {
-        const seenIndicator = document.createElement('span');
         const cls = this.theirMsgsLastSeenTime >= msg.time ? 'seen yes' : 'seen';
-        seenIndicator.setAttribute('class', cls);
+        const seenIndicator = createElement('span', cls, time);
         seenIndicator.innerHTML = ' <svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 59 42"><polygon fill="currentColor" points="40.6,12.1 17,35.7 7.4,26.1 4.6,29 17,41.3 43.4,14.9"></polygon><polygon class="iris-delivered-checkmark" fill="currentColor" points="55.6,12.1 32,35.7 29.4,33.1 26.6,36 32,41.3 58.4,14.9"></polygon></svg>';
-        time.appendChild(seenIndicator);
       }
-      msgContent.appendChild(time);
       msgContent.innerHTML = msgContent.innerHTML.replace(/\n/g, '<br>\n');
 
-      const msgEl = document.createElement('div');
-      msgEl.setAttribute('class', `${info.selfAuthored ? 'our' : 'their'} iris-chat-message`);
+      const msgEl = createElement('div', `${info.selfAuthored ? 'our' : 'their'} iris-chat-message`);
       msgEl.appendChild(msgContent);
       msgEl.setAttribute('data-time', msg.time);
       for (let i = messages.children.length; i >= 0; i--) {

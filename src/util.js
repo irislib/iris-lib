@@ -423,6 +423,19 @@ export default {
         color: rgb(38, 38, 38);
       }
 
+      .iris-chat-box.minimized {
+        height: auto;
+      }
+
+      .iris-chat-box.minimized .iris-chat-header {
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      .iris-chat-box.minimized .iris-chat-messages, .iris-chat-box.minimized .iris-typing-indicator, .iris-chat-box.minimized .iris-chat-input-wrapper, .iris-chat-box.minimized .iris-chat-minimize {
+        display: none;
+      }
+
       .iris-chat-header {
         background-color: #1e1e1e;
         height: 44px;
@@ -430,6 +443,7 @@ export default {
         border-radius: 8px 8px 0 0;
         text-align: center;
         display: flex;
+        flex-direction: row;
         justify-content: center;
         align-items: center;
         flex: none;
@@ -438,11 +452,21 @@ export default {
         overflow: hidden;
       }
 
+      .iris-chat-header-text {
+        flex: 1;
+        padding-right: 45px;
+      }
+
+      .iris-chat-box.minimized .iris-chat-header-text {
+        padding-right: 0;
+      }
+
       .iris-online-indicator {
         color: #bfbfbf;
         margin-right: 5px;
         font-size: 12px;
         user-select: none;
+        flex: none;
       }
 
       .iris-online-indicator.yes {
@@ -561,6 +585,13 @@ export default {
 
       .delivered .iris-delivered-checkmark {
         display: initial;
+      }
+
+      .iris-chat-minimize {
+        user-select: none;
+        cursor: pointer;
+        width: 45px;
+        line-height: 44px;
       }
 
       .iris-chat-message.their {
