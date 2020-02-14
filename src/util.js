@@ -406,11 +406,28 @@ export default {
         border-style: solid;
       }
 
-      .iris-chat-box {
+      .iris-chat-open-button {
+        background-color: #1e1e1e;
+        color: #fff;
+        padding: 15px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .iris-chat-open-button svg {
+        width: 1em;
+      }
+
+      .iris-chat-open-button, .iris-chat-box {
         position: fixed;
         bottom: 0.5rem;
         right: 0.5rem;
         border-radius: 8px;
+        font-family: system-ui;
+        font-size: 15px;
+      }
+
+      .iris-chat-box {
         background-color: #fff;
         max-height: 25rem;
         box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);
@@ -418,8 +435,6 @@ export default {
         display: flex;
         flex-direction: column;
         width: 320px;
-        font-family: system-ui;
-        font-size: 15px;
         color: rgb(38, 38, 38);
       }
 
@@ -432,7 +447,7 @@ export default {
         cursor: pointer;
       }
 
-      .iris-chat-box.minimized .iris-chat-messages, .iris-chat-box.minimized .iris-typing-indicator, .iris-chat-box.minimized .iris-chat-input-wrapper, .iris-chat-box.minimized .iris-chat-minimize {
+      .iris-chat-box.minimized .iris-chat-messages, .iris-chat-box.minimized .iris-typing-indicator, .iris-chat-box.minimized .iris-chat-input-wrapper, .iris-chat-box.minimized .iris-chat-minimize, .iris-chat-box.minimized .iris-chat-close {
         display: none;
       }
 
@@ -454,11 +469,6 @@ export default {
 
       .iris-chat-header-text {
         flex: 1;
-        padding-right: 45px;
-      }
-
-      .iris-chat-box.minimized .iris-chat-header-text {
-        padding-right: 0;
       }
 
       .iris-online-indicator {
@@ -587,7 +597,7 @@ export default {
         display: initial;
       }
 
-      .iris-chat-minimize {
+      .iris-chat-minimize, .iris-chat-close {
         user-select: none;
         cursor: pointer;
         width: 45px;
@@ -699,6 +709,17 @@ export default {
       return date.toLocaleDateString(undefined, {weekday: 'long'});
     }
     return dateStr;
+  },
+
+  createElement(type, cls, parent) {
+    const el = document.createElement(type);
+    if (cls) {
+      el.setAttribute('class', cls);
+    }
+    if (parent) {
+      parent.appendChild(el);
+    }
+    return el;
   },
 
   isNode,
