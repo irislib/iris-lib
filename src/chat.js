@@ -45,7 +45,7 @@ class Chat {
             this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
               const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
               const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret);
-              const chatRequestId = await Gun.SEA.work(encryptedChatRequest, undefined, undefined, {name: 'SHA-256'});
+              const chatRequestId = await util.getHash(encryptedChatRequest);
               util.gunAsAnotherUser(this.gun, sharedKey, user => {
                 user.get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest);
               });
@@ -85,7 +85,7 @@ class Chat {
   static async getOurSecretChatId(gun, pub, pair) {
     const epub = await util.gunOnceDefined(gun.user(pub).get(`epub`));
     const secret = await Gun.SEA.secret(epub, pair);
-    return Gun.SEA.work(secret + pub, undefined, undefined, {name: 'SHA-256'});
+    return util.getHash(secret + pub);
   }
 
   /**
@@ -94,7 +94,7 @@ class Chat {
   static async getTheirSecretChatId(gun, pub, pair) {
     const epub = await util.gunOnceDefined(gun.user(pub).get(`epub`));
     const secret = await Gun.SEA.secret(epub, pair);
-    return Gun.SEA.work(secret + pair.pub, undefined, undefined, {name: 'SHA-256'});
+    return util.getHash(secret + pair.pub);
   }
 
   /**
@@ -122,7 +122,7 @@ class Chat {
   async getOurSecretChatId(pub) {
     if (!this.ourSecretChatIds[pub]) {
       const secret = await this.getSecret(pub);
-      this.ourSecretChatIds[pub] = await Gun.SEA.work(secret + pub, undefined, undefined, {name: 'SHA-256'});
+      this.ourSecretChatIds[pub] = await util.getHash(secret + pub);
     }
     return this.ourSecretChatIds[pub];
   }
@@ -130,7 +130,7 @@ class Chat {
   async getTheirSecretChatId(pub) {
     if (!this.theirSecretChatIds[pub]) {
       const secret = await this.getSecret(pub);
-      this.theirSecretChatIds[pub] = await Gun.SEA.work(secret + this.key.pub, undefined, undefined, {name: 'SHA-256'});
+      this.theirSecretChatIds[pub] = await util.getHash(secret + this.key.pub);
     }
     return this.theirSecretChatIds[pub];
   }
@@ -591,7 +591,7 @@ class Chat {
     const encryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, sharedSecret);
     const ownerSecret = await Gun.SEA.secret(key.epub, key);
     const ownerEncryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, ownerSecret);
-    let linkId = await Gun.SEA.work(encryptedSharedKey, undefined, undefined, {name: `SHA-256`});
+    let linkId = await util.getHash(encryptedSharedKey);
     linkId = linkId.slice(0, 12);
 
     // User has to exist, in order for .get(chatRequests).on() to be ever triggered

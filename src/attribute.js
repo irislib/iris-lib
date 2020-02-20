@@ -141,9 +141,11 @@ class Attribute {
     img.alt = ``;
     img.width = options.width;
     img.height = options.width;
-    const hash = util.getHash(`${encodeURIComponent(this.type)}:${encodeURIComponent(this.value)}`, `hex`);
-    const identicon = new Identicon(hash, {width: options.width, format: `svg`});
-    img.src = `data:image/svg+xml;base64,${identicon.toString()}`;
+    util.getHash(`${encodeURIComponent(this.type)}:${encodeURIComponent(this.value)}`, `hex`)
+      .then(hash => {
+        const identicon = new Identicon(hash, {width: options.width, format: `svg`});
+        img.src = `data:image/svg+xml;base64,${identicon.toString()}`;
+      });
 
     if (options.showType) {
       const name = document.createElement(`span`);
