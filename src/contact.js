@@ -310,9 +310,11 @@ class Contact {
     }
 
     function setIdenticonImg(data) {
-      const hash = util.getHash(`${encodeURIComponent(data.type)}:${encodeURIComponent(data.value)}`, `hex`);
-      const identiconImg = new Identicon(hash, {width: options.width, format: `svg`});
-      img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;
+      util.getHash(`${encodeURIComponent(data.type)}:${encodeURIComponent(data.value)}`, `hex`)
+        .then(hash => {
+          const identiconImg = new Identicon(hash, {width: options.width, format: `svg`});
+          img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;        
+        });
     }
 
     if (this.linkTo) {

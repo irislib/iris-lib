@@ -122,10 +122,8 @@
     "rollup-plugin-terser": "^1.0.1"
   },
   "dependencies": {
-    "create-hash": "^1.2.0",
     "gun": "0.2019.930",
-    "identicon.js": "^2.3.3",
-    "text-encoding": "^0.7.0"
+    "identicon.js": "^2.3.3"
   },
   "react-native": {
     "fs": false,
