@@ -221,13 +221,14 @@ class SocialNetwork {
   }
 
   // TODO: GUN indexing module that does this automatically
-  static getMsgIndexKeys(msg) {
+  static async getMsgIndexKeys(msg) {
     const keys = {};
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
     const timestamp = Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp));
-    const hashSlice = msg.getHash().substr(0, 9);
+    const hash = await msg.getHash();
+    const hashSlice = hash.substr(0, 9);
 
     if (msg.signedData.type === `chat`) {
       if (msg.signedData.recipient.uuid) {
@@ -237,7 +238,7 @@ class SocialNetwork {
       return keys;
     }
 
-    keys.messagesByHash = [msg.getHash()];
+    keys.messagesByHash = [hash];
     keys.messagesByTimestamp = [`${timestamp}:${hashSlice}`];
     keys.messagesByDistance = [`${distance}:${keys.messagesByTimestamp[0]}`];
     keys.messagesByType = [`${msg.signedData.type}:${timestamp}:${hashSlice}`];
@@ -416,10 +417,11 @@ class SocialNetwork {
             if (!Object.prototype.hasOwnProperty.call(o.attributes), a2.uri()) {
               // TODO remove attribute from contact if not enough verifications / too many unverifications
               o.attributes[a2.uri()] = a2;
-              this.gun.get(`messagesByRecipient`).get(a2.uri()).map().once(val => {
+              this.gun.get(`messagesByRecipient`).get(a2.uri()).map().once(async val => {
                 const m2 = Message.fromSig(val);
-                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2.getHash())) {
-                  o.received[m2.getHash()] = m2;
+                const m2hash = await m2.getHash();
+                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2hash)) {
+                  o.received[m2hash] = m2;
                   if (m2.isPositive()) {
                     o.receivedPositive++;
                     m2.getAuthor(this).gun.get(`trustDistance`).on(d => {
@@ -438,10 +440,11 @@ class SocialNetwork {
                   node.put(o);
                 }
               });
-              this.gun.get(`messagesByAuthor`).get(a2.uri()).map().once(val => {
+              this.gun.get(`messagesByAuthor`).get(a2.uri()).map().once(async val => {
                 const m2 = Message.fromSig(val);
-                if (!Object.prototype.hasOwnProperty.call(o.sent, m2.getHash())) {
-                  o.sent[m2.getHash()] = m2;
+                const m2hash = await m2.getHash();
+                if (!Object.prototype.hasOwnProperty.call(o.sent, m2hash)) {
+                  o.sent[m2hash] = m2;
                   if (m2.isPositive()) {
                     o.sentPositive++;
                   } else if (m2.isNegative()) {
@@ -935,7 +938,7 @@ class SocialNetwork {
     if (msg.constructor.name !== `Message`) {
       throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
     }
-    const hash = msg.getHash();
+    const hash = await msg.getHash();
     if (true === options.checkIfExists) {
       const exists = await this.gun.get(`messagesByHash`).get(hash).then();
       if (exists) {
@@ -1039,7 +1042,8 @@ class SocialNetwork {
       for (let i = 0;i < msgs.length;i++) {
         for (const a of msgs[i].getAuthorArray()) {
           if (a.isUniqueType()) {
-            const key = `${a.uri()}:${msgs[i].getHash()}`;
+            const hash = msgs[i].getHash();
+            const key = `${a.uri()}:${hash}`;
             msgsByAuthor[key] = msgs[i];
           }
         }
@@ -1103,7 +1107,7 @@ class SocialNetwork {
   */
   getMessageByHash(hash) {
     const isIpfsUri = hash.indexOf(`Qm`) === 0;
-    return new Promise(async resolve => {
+    return new Promise(resolve => {
       const resolveIfHashMatches = async (d, fromIpfs) => {
         const obj = typeof d === `object` ? d : JSON.parse(d);
         const m = await Message.fromSig(obj);
@@ -1115,7 +1119,7 @@ class SocialNetwork {
           h = await m.saveToIpfs(this.options.ipfs);
           republished = true;
         } else {
-          h = m.getHash();
+          h = await m.getHash();
         }
         if (h === hash || (isIpfsUri && !this.options.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
           if (!fromIpfs && this.options.ipfs && this.writable && !republished) {
@@ -1159,14 +1163,12 @@ class SocialNetwork {
   */
   getMessagesByTimestamp(callback, limit, cursor, desc = true, filter) {
     const seen = {};
-    const cb = msg => {
+    const cb = async msg => {
       if ((!limit || Object.keys(seen).length < limit) && !Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
-        seen[msg.getHash()] = true;
+        seen[msg.hash] = true;
         callback(msg);
       }
     };
-
-
 
     this._getMsgs(this.gun.get(`messagesByTimestamp`), cb, limit, cursor, desc, filter);
     if (this.options.indexSync.query.enabled) {

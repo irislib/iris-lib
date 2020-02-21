@@ -140,7 +140,7 @@ describe(`local index`, async () => {
     describe(`add new info`, async () => {
       test(`add trust rating to bob`, async () => {
         const msg = await iris.Message.createRating({recipient: {email: `bob@example.com`}, rating: 10}, key);
-        h = msg.getHash();
+        h = await msg.getHash();
         const r = await i.addMessage(msg);
         expect(r).toBe(true);
       });
@@ -428,24 +428,24 @@ describe(`local index`, async () => {
       await i.addMessage(m);
       return; // TODO
 
-      console.log(`looking for message ${m.getHash()}`);
-      const m2 = await i2.getMessageByHash(m.getHash());
+      console.log(`looking for message ${await m.getHash()}`);
+      const m2 = await i2.getMessageByHash(await m.getHash());
 
       expect(typeof m2).toBe(`object`);
-      expect(m2.getHash()).toEqual(m.getHash());
+      expect(await m2.getHash()).toEqual(await m.getHash());
 
       const identity = i2.getContacts({type:`keyID`, keyID});
       const m3 = await new Promise(resolve => {
-        i2.getReceivedMsgs(identity, msg => {
+        i2.getReceivedMsgs(identity, async msg => {
           console.log(`found msg`, msg.getHash(), msg);
-          if (msg.getHash() === m.getHash()) {
+          if (await msg.getHash() === await m.getHash()) {
             resolve(msg);
           }
         });
         setTimeout(() => resolve(), 5000);
       });
       expect(typeof m3).toBe(`object`); // TODO
-      expect(m3.getHash()).toEqual(m.getHash());
+      expect(await m3.getHash()).toEqual(await m.getHash());
     });
     /*
     test('get identity from linked index', async () => {

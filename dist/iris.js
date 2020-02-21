@@ -2854,7 +2854,7 @@
 	} catch (e) {
 	}
 
-	var userAgent = navigator.userAgent.toLowerCase();
+	var userAgent = navigator && navigator.userAgent && navigator.userAgent.toLowerCase();
 	var isElectron = userAgent && userAgent.indexOf(' electron/') > -1;
 
 	var isMobile = function () {
@@ -2864,7 +2864,7 @@
 	  var check = false;
 	  (function (a) {
 	    if (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4))) check = true;
-	  })(navigator.userAgent || navigator.vendor || window.opera);
+	  })(navigator.userAgent || navigator.vendor || window.opera || '');
 	  return check;
 	}();
 
@@ -6188,7 +6188,7 @@
 	  Message.prototype.sign = async function sign(key) {
 	    this.sig = await Key.sign(this.signedData, key);
 	    this.pubKey = key.pub;
-	    this.getHash();
+	    await this.getHash();
 	    return true;
 	  };
 
@@ -6339,7 +6339,7 @@
 	      throw new ValidationError(errorMsg + ' Invalid signature');
 	    }
 	    if (this.hash) {
-	      if (this.hash !== util.getHash(this.sig)) {
+	      if (this.hash !== (await util.getHash(this.sig))) {
 	        throw new ValidationError(errorMsg + ' Invalid message hash');
 	      }
 	    } else {
@@ -6409,11 +6409,12 @@
 	  */
 
 
-	  Message.setReaction = function setReaction(gun, msg, reaction) {
-	    gun.get('reactions').get(msg.getHash()).put(reaction);
-	    gun.get('reactions').get(msg.getHash()).put(reaction);
-	    gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.rootContact.value).put(reaction);
-	    gun.get('messagesByHash').get(msg.getHash()).get('reactions').get(this.rootContact.value).put(reaction);
+	  Message.setReaction = async function setReaction(gun, msg, reaction) {
+	    var hash = await msg.getHash();
+	    gun.get('reactions').get(hash).put(reaction);
+	    gun.get('reactions').get(hash).put(reaction);
+	    gun.get('messagesByHash').get(hash).get('reactions').get(this.rootContact.value).put(reaction);
+	    gun.get('messagesByHash').get(hash).get('reactions').get(this.rootContact.value).put(reaction);
 	  };
 
 	  return Message;
@@ -8094,13 +8095,18 @@
 	  // TODO: GUN indexing module that does this automatically
 
 
-	  SocialNetwork.getMsgIndexKeys = function getMsgIndexKeys(msg) {
+	  SocialNetwork.getMsgIndexKeys = async function getMsgIndexKeys(msg) {
 	    var keys = {};
 	    var distance = parseInt(msg.distance);
 	    distance = _Number$isNaN(distance) ? 99 : distance;
 	    distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
 	    var timestamp = Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp));
-	    var hashSlice = msg.getHash().substr(0, 9);
+	    var hash = await msg.getHash();
+	    var hashSlice = hash.substr(0, 9);
+
+	    if (!hash || hash.length === 0) {
+	      throw new Error('message hashing failed', hash);
+	    }
 
 	    if (msg.signedData.type === 'chat') {
 	      if (msg.signedData.recipient.uuid) {
@@ -8110,7 +8116,7 @@
 	      return keys;
 	    }
 
-	    keys.messagesByHash = [msg.getHash()];
+	    keys.messagesByHash = [hash];
 	    keys.messagesByTimestamp = [timestamp + ':' + hashSlice];
 	    keys.messagesByDistance = [distance + ':' + keys.messagesByTimestamp[0]];
 	    keys.messagesByType = [msg.signedData.type + ':' + timestamp + ':' + hashSlice];
@@ -8303,10 +8309,11 @@
 	            if (!Object.prototype.hasOwnProperty.call(o.attributes), a2.uri()) {
 	              // TODO remove attribute from contact if not enough verifications / too many unverifications
 	              o.attributes[a2.uri()] = a2;
-	              _this4.gun.get('messagesByRecipient').get(a2.uri()).map().once(function (val) {
+	              _this4.gun.get('messagesByRecipient').get(a2.uri()).map().once(async function (val) {
 	                var m2 = Message.fromSig(val);
-	                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2.getHash())) {
-	                  o.received[m2.getHash()] = m2;
+	                var m2hash = await m2.getHash();
+	                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2hash)) {
+	                  o.received[m2hash] = m2;
 	                  if (m2.isPositive()) {
 	                    o.receivedPositive++;
 	                    m2.getAuthor(_this4).gun.get('trustDistance').on(function (d) {
@@ -8325,10 +8332,11 @@
 	                  node.put(o);
 	                }
 	              });
-	              _this4.gun.get('messagesByAuthor').get(a2.uri()).map().once(function (val) {
+	              _this4.gun.get('messagesByAuthor').get(a2.uri()).map().once(async function (val) {
 	                var m2 = Message.fromSig(val);
-	                if (!Object.prototype.hasOwnProperty.call(o.sent, m2.getHash())) {
-	                  o.sent[m2.getHash()] = m2;
+	                var m2hash = await m2.getHash();
+	                if (!Object.prototype.hasOwnProperty.call(o.sent, m2hash)) {
+	                  o.sent[m2hash] = m2;
 	                  if (m2.isPositive()) {
 	                    o.sentPositive++;
 	                  } else if (m2.isNegative()) {
@@ -8931,7 +8939,7 @@
 	    if (msg.constructor.name !== 'Message') {
 	      throw new Error('addMessage failed: param must be a Message, received ' + msg.constructor.name);
 	    }
-	    var hash = msg.getHash();
+	    var hash = await msg.getHash();
 	    if (true === options.checkIfExists) {
 	      var exists = await this.gun.get('messagesByHash').get(hash).then();
 	      if (exists) {
@@ -9050,7 +9058,8 @@
 	          var _a5 = _ref6;
 
 	          if (_a5.isUniqueType()) {
-	            var key = _a5.uri() + ':' + msgs[i].getHash();
+	            var hash = msgs[i].getHash();
+	            var key = _a5.uri() + ':' + hash;
 	            msgsByAuthor[key] = msgs[i];
 	          }
 	        }
@@ -9128,7 +9137,7 @@
 	    var _this12 = this;
 
 	    var isIpfsUri = hash.indexOf('Qm') === 0;
-	    return new _Promise(async function (resolve) {
+	    return new _Promise(function (resolve) {
 	      var resolveIfHashMatches = async function resolveIfHashMatches(d, fromIpfs) {
 	        var obj = typeof d === 'object' ? d : JSON.parse(d);
 	        var m = await Message.fromSig(obj);
@@ -9140,7 +9149,7 @@
 	          h = await m.saveToIpfs(_this12.options.ipfs);
 	          republished = true;
 	        } else {
-	          h = m.getHash();
+	          h = await m.getHash();
 	        }
 	        if (h === hash || isIpfsUri && !_this12.options.ipfs) {
 	          // does not check hash validity if it's an ipfs uri and we don't have ipfs
@@ -9192,9 +9201,9 @@
 	    var filter = arguments[4];
 
 	    var seen = {};
-	    var cb = function cb(msg) {
+	    var cb = async function cb(msg) {
 	      if ((!limit || _Object$keys(seen).length < limit) && !Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
-	        seen[msg.getHash()] = true;
+	        seen[msg.hash] = true;
 	        callback(msg);
 	      }
 	    };

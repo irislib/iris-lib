@@ -254,7 +254,7 @@ class Message {
   async sign(key: Object) {
     this.sig = await Key.sign(this.signedData, key);
     this.pubKey = key.pub;
-    this.getHash();
+    await this.getHash();
     return true;
   }
 
@@ -365,7 +365,7 @@ class Message {
       throw new ValidationError(`${errorMsg} Invalid signature`);
     }
     if (this.hash) {
-      if (this.hash !== util.getHash(this.sig)) {
+      if (this.hash !== (await util.getHash(this.sig))) {
         throw new ValidationError(`${errorMsg} Invalid message hash`);
       }
     } else {
@@ -425,11 +425,12 @@ class Message {
   /**
   *
   */
-  static setReaction(gun, msg: Object, reaction) {
-    gun.get(`reactions`).get(msg.getHash()).put(reaction);
-    gun.get(`reactions`).get(msg.getHash()).put(reaction);
-    gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.rootContact.value).put(reaction);
-    gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.rootContact.value).put(reaction);
+  static async setReaction(gun, msg: Object, reaction) {
+    const hash = await msg.getHash();
+    gun.get(`reactions`).get(hash).put(reaction);
+    gun.get(`reactions`).get(hash).put(reaction);
+    gun.get(`messagesByHash`).get(hash).get(`reactions`).get(this.rootContact.value).put(reaction);
+    gun.get(`messagesByHash`).get(hash).get(`reactions`).get(this.rootContact.value).put(reaction);
   }
 }
 
