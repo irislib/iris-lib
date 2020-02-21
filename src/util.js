@@ -1,6 +1,6 @@
 /* eslint no-useless-escape: "off", camelcase: "off" */
 
-import Gun from 'gun';
+import {Gun, SEA} from 'gun'; // eslint-disable-line no-unused-vars
 
 let isNode = false;
 try {
@@ -86,7 +86,7 @@ export default {
     if (!str) {
       return undefined;
     }
-    const hash = await Gun.SEA.work(str, undefined, undefined, {name: `SHA-256`});
+    const hash = await SEA.work(str, undefined, undefined, {name: `SHA-256`});
     if (format === `hex`) {
       return this.base64ToHex(hash);
     }

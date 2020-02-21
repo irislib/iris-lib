@@ -2,9 +2,7 @@
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('gun')) :
 	typeof define === 'function' && define.amd ? define(['gun'], factory) :
 	(global.iris = factory(global.Gun));
-}(this, (function (Gun) { 'use strict';
-
-	Gun = Gun && Gun.hasOwnProperty('default') ? Gun['default'] : Gun;
+}(this, (function (gun) { 'use strict';
 
 	function unwrapExports (x) {
 		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
@@ -435,13 +433,13 @@
 	      node = this.gun.get(this.name).get('id').set(data);
 	    }
 	    this._addToIndexes(data, node);
-	    return data.id || Gun.node.soul(node) || node._.link;
+	    return data.id || gun.Gun.node.soul(node) || node._.link;
 	  };
 
 	  Collection.prototype._addToIndexes = async function _addToIndexes(serializedObject, node) {
 	    var _this = this;
 
-	    if (Gun.node.is(serializedObject)) {
+	    if (gun.Gun.node.is(serializedObject)) {
 	      serializedObject = await serializedObject.open();
 	    }
 	    var addToIndex = function addToIndex(indexName, indexKey) {
@@ -2868,9 +2866,9 @@
 	  return check;
 	}();
 
-	function gunAsAnotherUser(gun, key, f) {
+	function gunAsAnotherUser(gun$$1, key, f) {
 	  // Hacky way to use multiple users with gun
-	  var gun2 = new Gun({ peers: _Object$keys(gun._.opt.peers) });
+	  var gun2 = new gun.Gun({ peers: _Object$keys(gun$$1._.opt.peers) });
 	  var user = gun2.user();
 	  user.auth(key);
 	  setTimeout(function () {
@@ -2910,7 +2908,7 @@
 	    var bcount = 0;
 	    var promises = _Object$keys(layer).map(function (key) {
 	      // Only fetch links & restrict total search queries to maxBreadth ^ maxDepth requests
-	      if (!Gun.val.link.is(layer[key]) || ++bcount >= opts.maxBreadth) {
+	      if (!gun.Gun.val.link.is(layer[key]) || ++bcount >= opts.maxBreadth) {
 	        return;
 	      }
 
@@ -2945,7 +2943,7 @@
 	    if (!str) {
 	      return undefined;
 	    }
-	    var hash = await Gun.SEA.work(str, undefined, undefined, { name: 'SHA-256' });
+	    var hash = await gun.Gun.SEA.work(str, undefined, undefined, { name: 'SHA-256' });
 	    if (format === 'hex') {
 	      return this.base64ToHex(hash);
 	    }
@@ -5784,7 +5782,7 @@
 
 
 	  Key.generate = function generate() {
-	    return Gun.SEA.pair();
+	    return gun.Gun.SEA.pair();
 	  };
 
 	  /**
@@ -5796,7 +5794,7 @@
 
 
 	  Key.sign = async function sign(msg, pair) {
-	    var sig = await Gun.SEA.sign(msg, pair);
+	    var sig = await gun.Gun.SEA.sign(msg, pair);
 	    return 'a' + sig;
 	  };
 
@@ -5809,7 +5807,7 @@
 
 
 	  Key.verify = function verify(msg, pubKey) {
-	    return Gun.SEA.verify(msg.slice(1), pubKey);
+	    return gun.Gun.SEA.verify(msg.slice(1), pubKey);
 	  };
 
 	  return Key;
@@ -6409,12 +6407,12 @@
 	  */
 
 
-	  Message.setReaction = async function setReaction(gun, msg, reaction) {
+	  Message.setReaction = async function setReaction(gun$$1, msg, reaction) {
 	    var hash = await msg.getHash();
-	    gun.get('reactions').get(hash).put(reaction);
-	    gun.get('reactions').get(hash).put(reaction);
-	    gun.get('messagesByHash').get(hash).get('reactions').get(this.rootContact.value).put(reaction);
-	    gun.get('messagesByHash').get(hash).get('reactions').get(this.rootContact.value).put(reaction);
+	    gun$$1.get('reactions').get(hash).put(reaction);
+	    gun$$1.get('reactions').get(hash).put(reaction);
+	    gun$$1.get('messagesByHash').get(hash).get('reactions').get(this.rootContact.value).put(reaction);
+	    gun$$1.get('messagesByHash').get(hash).get('reactions').get(this.rootContact.value).put(reaction);
 	  };
 
 	  return Message;
@@ -6431,14 +6429,14 @@
 	  /**
 	  * @param {Object} gun node where the Contact data lives
 	  */
-	  function Contact(gun, linkTo) {
+	  function Contact(gun$$1, linkTo) {
 	    _classCallCheck(this, Contact);
 
-	    this.gun = gun;
+	    this.gun = gun$$1;
 	    this.linkTo = linkTo;
 	  }
 
-	  Contact.create = function create(gun, data, index) {
+	  Contact.create = function create(gun$$1, data, index) {
 	    if (!data.linkTo && !data.attrs) {
 	      throw new Error('You must specify either data.linkTo or data.attrs');
 	    }
@@ -6452,11 +6450,11 @@
 	      data.linkTo = Contact.getLinkTo(data.attrs);
 	    }
 	    var uri = data.linkTo.uri();
-	    var attrs = gun.top(uri + '/attrs').put(data.attrs);
+	    var attrs = gun$$1.top(uri + '/attrs').put(data.attrs);
 	    delete data['attrs'];
-	    gun.put(data);
-	    gun.get('attrs').put(attrs);
-	    return new Contact(gun, uri, index);
+	    gun$$1.put(data);
+	    gun$$1.get('attrs').put(attrs);
+	    return new Contact(gun$$1, uri, index);
 	  };
 
 	  Contact.getLinkTo = function getLinkTo(attrs) {
@@ -7131,8 +7129,8 @@
 	            this.save(); // save the chat first so it's there before inviter subscribes to it
 	            saved = true;
 	            this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async function (encrypted) {
-	              var sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
-	              var encryptedChatRequest = await Gun.SEA.encrypt(_this.key.pub, sharedSecret);
+	              var sharedKey = await gun.Gun.SEA.decrypt(encrypted, sharedSecret);
+	              var encryptedChatRequest = await gun.Gun.SEA.encrypt(_this.key.pub, sharedSecret);
 	              var chatRequestId = await util.getHash(encryptedChatRequest);
 	              util.gunAsAnotherUser(_this.gun, sharedKey, function (user) {
 	                user.get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest);
@@ -7162,7 +7160,7 @@
 	  Chat.prototype.getSecret = async function getSecret(pub) {
 	    if (!this.secrets[pub]) {
 	      var epub = await util.gunOnceDefined(this.gun.user(pub).get('epub'));
-	      this.secrets[pub] = await Gun.SEA.secret(epub, this.key);
+	      this.secrets[pub] = await gun.Gun.SEA.secret(epub, this.key);
 	    }
 	    return this.secrets[pub];
 	  };
@@ -7172,9 +7170,9 @@
 	  */
 
 
-	  Chat.getOurSecretChatId = async function getOurSecretChatId(gun, pub, pair) {
-	    var epub = await util.gunOnceDefined(gun.user(pub).get('epub'));
-	    var secret = await Gun.SEA.secret(epub, pair);
+	  Chat.getOurSecretChatId = async function getOurSecretChatId(gun$$1, pub, pair) {
+	    var epub = await util.gunOnceDefined(gun$$1.user(pub).get('epub'));
+	    var secret = await gun.Gun.SEA.secret(epub, pair);
 	    return util.getHash(secret + pub);
 	  };
 
@@ -7183,9 +7181,9 @@
 	  */
 
 
-	  Chat.getTheirSecretChatId = async function getTheirSecretChatId(gun, pub, pair) {
-	    var epub = await util.gunOnceDefined(gun.user(pub).get('epub'));
-	    var secret = await Gun.SEA.secret(epub, pair);
+	  Chat.getTheirSecretChatId = async function getTheirSecretChatId(gun$$1, pub, pair) {
+	    var epub = await util.gunOnceDefined(gun$$1.user(pub).get('epub'));
+	    var secret = await gun.Gun.SEA.secret(epub, pair);
 	    return util.getHash(secret + pair.pub);
 	  };
 
@@ -7199,13 +7197,13 @@
 	  */
 
 
-	  Chat.getChats = async function getChats(gun, keypair, callback) {
+	  Chat.getChats = async function getChats(gun$$1, keypair, callback) {
 	    var chats = {};
-	    var mySecret = await Gun.SEA.secret(keypair.epub, keypair);
-	    gun.user().get('chats').map().on(async function (value, ourSecretChatId) {
+	    var mySecret = await gun.Gun.SEA.secret(keypair.epub, keypair);
+	    gun$$1.user().get('chats').map().on(async function (value, ourSecretChatId) {
 	      if (value) {
-	        var encryptedPub = await util.gunOnceDefined(gun.user().get('chats').get(ourSecretChatId).get('pub'));
-	        var pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
+	        var encryptedPub = await util.gunOnceDefined(gun$$1.user().get('chats').get(ourSecretChatId).get('pub'));
+	        var pub = await gun.Gun.SEA.decrypt(encryptedPub, mySecret);
 	        chats[pub] = {};
 	        callback(pub);
 	      }
@@ -7234,7 +7232,7 @@
 	      return;
 	    }
 	    if (this.onMessage.length) {
-	      var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+	      var decrypted = await gun.Gun.SEA.decrypt(data, (await this.getSecret(pub)));
 	      if (typeof decrypted !== 'object') {
 	        // console.log(`chat data received`, decrypted);
 	        return;
@@ -7260,7 +7258,7 @@
 	    var _loop = async function _loop(i) {
 	      var ourSecretChatId = await _this2.getOurSecretChatId(keys[i]);
 	      _this2.user.get('chats').get(ourSecretChatId).get('latestMsg').on(async function (data) {
-	        var decrypted = await Gun.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
+	        var decrypted = await gun.Gun.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
 	        if (typeof decrypted !== 'object') {
 	          // console.log(`chat data received`, decrypted);
 	          return;
@@ -7330,8 +7328,8 @@
 	    this.getSecret(pub);
 	    // Save their public key in encrypted format, so in chat listing we know who we are chatting with
 	    var ourSecretChatId = await this.getOurSecretChatId(pub);
-	    var mySecret = await Gun.SEA.secret(this.key.epub, this.key);
-	    this.gun.user().get('chats').get(ourSecretChatId).get('pub').put((await Gun.SEA.encrypt(pub, mySecret)));
+	    var mySecret = await gun.Gun.SEA.secret(this.key.epub, this.key);
+	    this.gun.user().get('chats').get(ourSecretChatId).get('pub').put((await gun.Gun.SEA.encrypt(pub, mySecret)));
 	    if (this.messageReceived) {
 	      if (pub !== this.key.pub) {
 	        // Subscribe to their messages
@@ -7368,7 +7366,7 @@
 	    //this.gun.user().get('message').set(temp);
 	    var keys = _Object$keys(this.secrets);
 	    for (var i = 0; i < keys.length; i++) {
-	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
+	      var encrypted = await gun.Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
 	      var ourSecretChatId = await this.getOurSecretChatId(keys[i]);
 	      this.user.get('chats').get(ourSecretChatId).get('msgs').get('' + msg.time).put(encrypted);
 	      this.user.get('chats').get(ourSecretChatId).get('latestMsg').put(encrypted);
@@ -7395,10 +7393,10 @@
 
 	  Chat.prototype.putEncrypted = async function putEncrypted(key, value, salt) {
 	    var keys = _Object$keys(this.secrets);
-	    salt = salt || Gun.SEA.random(32).toString();
+	    salt = salt || gun.Gun.SEA.random(32).toString();
 	    var obj = { v: value, s: salt };
 	    for (var i = 0; i < keys.length; i++) {
-	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(obj), (await this.getSecret(keys[i])));
+	      var encrypted = await gun.Gun.SEA.encrypt(_JSON$stringify(obj), (await this.getSecret(keys[i])));
 	      var ourSecretChatId = await this.getOurSecretChatId(keys[i]);
 	      this.user.get('chats').get(ourSecretChatId).get(key).put(encrypted);
 	    }
@@ -7420,7 +7418,7 @@
 	    var _loop2 = async function _loop2(i) {
 	      var ourSecretChatId = await _this6.getOurSecretChatId(keys[i]);
 	      _this6.gun.user().get('chats').get(ourSecretChatId).get(key).on(async function (data) {
-	        var decrypted = await Gun.SEA.decrypt(data, (await _this6.getSecret(keys[i])));
+	        var decrypted = await gun.Gun.SEA.decrypt(data, (await _this6.getSecret(keys[i])));
 	        if (decrypted) {
 	          callback(typeof decrypted.v !== 'undefined' ? decrypted.v : decrypted, key);
 	        }
@@ -7451,7 +7449,7 @@
 	    var _loop3 = async function _loop3(i) {
 	      var theirSecretChatId = await _this7.getTheirSecretChatId(keys[i]);
 	      _this7.gun.user(keys[i]).get('chats').get(theirSecretChatId).get(key).on(async function (data) {
-	        var decrypted = await Gun.SEA.decrypt(data, (await _this7.getSecret(keys[i])));
+	        var decrypted = await gun.Gun.SEA.decrypt(data, (await _this7.getSecret(keys[i])));
 	        if (decrypted) {
 	          callback(typeof decrypted.v !== 'undefined' ? decrypted.v : decrypted, key);
 	        }
@@ -7693,19 +7691,19 @@
 	  */
 
 
-	  Chat.setOnline = function setOnline(gun, isOnline) {
+	  Chat.setOnline = function setOnline(gun$$1, isOnline) {
 	    if (isOnline) {
-	      if (gun.setOnlineInterval) {
+	      if (gun$$1.setOnlineInterval) {
 	        return;
 	      }
 	      var update = function update() {
-	        gun.user().get('lastActive').put(new Date(Gun.state()).toISOString());
+	        gun$$1.user().get('lastActive').put(new Date(gun.Gun.state()).toISOString());
 	      };
 	      update();
-	      gun.setOnlineInterval = setInterval(update, 3000);
+	      gun$$1.setOnlineInterval = setInterval(update, 3000);
 	    } else {
-	      clearInterval(gun.setOnlineInterval);
-	      gun.setOnlineInterval = undefined;
+	      clearInterval(gun$$1.setOnlineInterval);
+	      gun$$1.setOnlineInterval = undefined;
 	    }
 	  };
 
@@ -7718,11 +7716,11 @@
 	  */
 
 
-	  Chat.getOnline = function getOnline(gun, pubKey, callback) {
+	  Chat.getOnline = function getOnline(gun$$1, pubKey, callback) {
 	    var timeout = void 0;
-	    gun.user(pubKey).get('lastActive').on(function (lastActive) {
+	    gun$$1.user(pubKey).get('lastActive').on(function (lastActive) {
 	      clearTimeout(timeout);
-	      var now = new Date(Gun.state());
+	      var now = new Date(gun.Gun.state());
 	      var lastActiveDate = new Date(lastActive);
 	      if (lastActiveDate.getFullYear() === 1970) {
 	        // lol, format changed from seconds to iso string
@@ -7751,8 +7749,8 @@
 	  */
 
 
-	  Chat.initUser = function initUser(gun, key) {
-	    var user = gun.user();
+	  Chat.initUser = function initUser(gun$$1, key) {
+	    var user = gun$$1.user();
 	    user.auth(key);
 	    user.put({ epub: key.epub });
 	  };
@@ -7766,23 +7764,23 @@
 	  */
 
 
-	  Chat.createChatLink = async function createChatLink(gun, key) {
+	  Chat.createChatLink = async function createChatLink(gun$$1, key) {
 	    var urlRoot = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'https://iris.to/';
 
-	    var user = gun.user();
+	    var user = gun$$1.user();
 	    user.auth(key);
 
-	    var sharedKey = await Gun.SEA.pair();
+	    var sharedKey = await gun.Gun.SEA.pair();
 	    var sharedKeyString = _JSON$stringify(sharedKey);
-	    var sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
-	    var encryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, sharedSecret);
-	    var ownerSecret = await Gun.SEA.secret(key.epub, key);
-	    var ownerEncryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, ownerSecret);
+	    var sharedSecret = await gun.Gun.SEA.secret(sharedKey.epub, sharedKey);
+	    var encryptedSharedKey = await gun.Gun.SEA.encrypt(sharedKeyString, sharedSecret);
+	    var ownerSecret = await gun.Gun.SEA.secret(key.epub, key);
+	    var ownerEncryptedSharedKey = await gun.Gun.SEA.encrypt(sharedKeyString, ownerSecret);
 	    var linkId = await util.getHash(encryptedSharedKey);
 	    linkId = linkId.slice(0, 12);
 
 	    // User has to exist, in order for .get(chatRequests).on() to be ever triggered
-	    await util.gunAsAnotherUser(gun, sharedKey, function (user) {
+	    await util.gunAsAnotherUser(gun$$1, sharedKey, function (user) {
 	      return user.get('chatRequests').put({ a: 1 }).then();
 	    });
 
@@ -7791,14 +7789,14 @@
 	    return Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
 	  };
 
-	  Chat.getMyChatLinks = async function getMyChatLinks(gun, key) {
+	  Chat.getMyChatLinks = async function getMyChatLinks(gun$$1, key) {
 	    var urlRoot = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'https://iris.to/';
 	    var callback = arguments[3];
 	    var subscribe = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
 
-	    var user = gun.user();
+	    var user = gun$$1.user();
 	    user.auth(key);
-	    var mySecret = await Gun.SEA.secret(key.epub, key);
+	    var mySecret = await gun.Gun.SEA.secret(key.epub, key);
 	    var chatLinks = [];
 	    user.get('chatLinks').map().on(function (data, linkId) {
 	      if (!data || chatLinks.indexOf(linkId) !== -1) {
@@ -7810,25 +7808,25 @@
 	          return;
 	        }
 	        chatLinks.push(linkId);
-	        var sharedKey = await Gun.SEA.decrypt(enc, mySecret);
-	        var sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
+	        var sharedKey = await gun.Gun.SEA.decrypt(enc, mySecret);
+	        var sharedSecret = await gun.Gun.SEA.secret(sharedKey.epub, sharedKey);
 	        var url = Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
 	        if (callback) {
 	          callback({ url: url, id: linkId });
 	        }
 	        if (subscribe) {
-	          gun.user(sharedKey.pub).get('chatRequests').map().on(async function (encPub, requestId) {
+	          gun$$1.user(sharedKey.pub).get('chatRequests').map().on(async function (encPub, requestId) {
 	            if (!encPub) {
 	              return;
 	            }
 	            var s = _JSON$stringify(encPub);
 	            if (chats.indexOf(s) === -1) {
 	              chats.push(s);
-	              var pub = await Gun.SEA.decrypt(encPub, sharedSecret);
-	              var chat = new Chat({ gun: gun, key: key, participants: pub });
+	              var pub = await gun.Gun.SEA.decrypt(encPub, sharedSecret);
+	              var chat = new Chat({ gun: gun$$1, key: key, participants: pub });
 	              chat.save();
 	            }
-	            util.gunAsAnotherUser(gun, sharedKey, function (user) {
+	            util.gunAsAnotherUser(gun$$1, sharedKey, function (user) {
 	              // remove the chat request after reading
 	              user.get('chatRequests').get(requestId).put(null);
 	            });
@@ -7843,9 +7841,9 @@
 	  */
 
 
-	  Chat.removeChatLink = function removeChatLink(gun, key, linkId) {
-	    gun.user().auth(key);
-	    gun.user().get('chatLinks').get(linkId).put(null);
+	  Chat.removeChatLink = function removeChatLink(gun$$1, key, linkId) {
+	    gun$$1.user().auth(key);
+	    gun$$1.user().get('chatLinks').get(linkId).put(null);
 	  };
 
 	  /**
@@ -7853,19 +7851,19 @@
 	  */
 
 
-	  Chat.deleteChat = async function deleteChat(gun, key, pub) {
-	    gun.user().auth(key);
-	    var chatId = await Chat.getOurSecretChatId(gun, pub, key);
-	    gun.user().get('chats').get(chatId).put(null);
-	    gun.user().get('chats').get(chatId).off();
+	  Chat.deleteChat = async function deleteChat(gun$$1, key, pub) {
+	    gun$$1.user().auth(key);
+	    var chatId = await Chat.getOurSecretChatId(gun$$1, pub, key);
+	    gun$$1.user().get('chats').get(chatId).put(null);
+	    gun$$1.user().get('chats').get(chatId).off();
 	  };
 
 	  return Chat;
 	}();
 
-	Gun.User.prototype.top = function (key) {
-	  var gun = this,
-	      root = gun.back(-1),
+	gun.Gun.User.prototype.top = function (key) {
+	  var gun$$1 = this,
+	      root = gun$$1.back(-1),
 	      user = root.user();
 	  if (!user.is) {
 	    throw { err: 'Not logged in!' };
@@ -7988,8 +7986,8 @@
 
 	    if (options.pubKey) {
 	      // someone else's index
-	      var gun = options.gun || new Gun();
-	      var user = gun.user(options.pubKey);
+	      var gun$$1 = options.gun || new gun.Gun();
+	      var user = gun$$1.user(options.pubKey);
 	      this.gun = user.get('iris');
 	      this.rootContact = new Attribute({ type: 'keyID', value: options.pubKey });
 	      this.ready = _Promise.resolve();
@@ -8009,8 +8007,8 @@
 	    if (!keypair) {
 	      keypair = await Key.getDefault();
 	    }
-	    var gun = this.options.gun || new Gun();
-	    var user = gun.user();
+	    var gun$$1 = this.options.gun || new gun.Gun();
+	    var user = gun$$1.user();
 	    user.auth(keypair);
 	    this.writable = true;
 	    this.rootContact = new Attribute('keyID', Key.getId(keypair));
@@ -8103,10 +8101,6 @@
 	    var timestamp = Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp));
 	    var hash = await msg.getHash();
 	    var hashSlice = hash.substr(0, 9);
-
-	    if (!hash || hash.length === 0) {
-	      throw new Error('message hashing failed', hash);
-	    }
 
 	    if (msg.signedData.type === 'chat') {
 	      if (msg.signedData.recipient.uuid) {
@@ -8405,7 +8399,7 @@
 	      if (!searchTermCheck(key)) {
 	        return;
 	      }
-	      var soul = Gun.node.soul(id);
+	      var soul = gun.Gun.node.soul(id);
 	      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	        seen[soul] = true;
 	        var contact = new Contact(node.get(key), undefined, _this5);
@@ -8424,7 +8418,7 @@
 	            if (!searchTermCheck(key)) {
 	              return;
 	            }
-	            var soul = Gun.node.soul(id);
+	            var soul = gun.Gun.node.soul(id);
 	            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	              seen[soul] = true;
 	              opt.callback(new Contact(_this5.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this5));
@@ -8493,7 +8487,7 @@
 	      console.error(e.stack);
 	      throw e;
 	    }
-	    var hash = Gun.node.soul(id) || id._ && id._.link || 'todo';
+	    var hash = gun.Gun.node.soul(id) || id._ && id._.link || 'todo';
 	    var indexKeys = await this.getContactIndexKeys(id, hash.substr(0, 6));
 
 	    var indexes = _Object$keys(indexKeys);
@@ -8790,14 +8784,14 @@
 	    var msgs = [];
 	    if (this.options.indexSync.importOnAdd.enabled) {
 	      await util.timeoutPromise(new _Promise(function (resolve) {
-	        var gun = _this10.gun.user(gunUri).get('iris');
+	        var gun$$1 = _this10.gun.user(gunUri).get('iris');
 	        var callback = function callback(msg) {
 	          msgs.push(msg);
 	          if (msgs.length >= maxMsgsToCrawl) {
 	            resolve();
 	          }
 	        };
-	        var messages = new Collection({ gun: gun, class: Message, indexes: ['trustDistance'] });
+	        var messages = new Collection({ gun: gun$$1, class: Message, indexes: ['trustDistance'] });
 	        messages.get({ callback: callback, orderBy: 'trustDistance', desc: false });
 	      }), 10000);
 	      this.debug('adding', msgs.length, 'msgs');

@@ -3,7 +3,7 @@
   "version": "0.0.139",
   "description": "Basic tools for reading and writing Iris messages and identities.",
   "main": "src/index.js",
-  "browser": "dist/iris.js",
+  "browser": "src/index.js",
   "module": "es/index.js",
   "jsxnext:main": "es/index.js",
   "jest": {
@@ -126,7 +126,6 @@
     "identicon.js": "^2.3.3"
   },
   "react-native": {
-    "fs": false,
-    "create-hash": false
+    "fs": false
   }
 }
