@@ -1,7 +1,7 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 import util from './util';
-import Gun from 'gun';
+import {Gun} from 'gun'; // eslint-disable-line no-unused-vars
 
 let myKey;
 

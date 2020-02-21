@@ -1,4 +1,4 @@
-import Gun from 'gun';
+import {Gun} from 'gun'; // eslint-disable-line no-unused-vars
 
 /**
 * Gun object collection that provides tools for indexing and search. Decentralize everything!
