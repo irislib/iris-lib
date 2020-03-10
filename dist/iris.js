@@ -5640,6 +5640,15 @@
 	    return encodeURIComponent(this.value) + ':' + encodeURIComponent(this.type);
 	  };
 
+	  Attribute.prototype.identiconXml = function identiconXml() {
+	    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+	    return util.getHash(encodeURIComponent(this.type) + ':' + encodeURIComponent(this.value), 'hex').then(function (hash) {
+	      var identicon$$1 = new identicon(hash, { width: options.width, format: 'svg' });
+	      return identicon$$1.toString(true);
+	    });
+	  };
+
 	  Attribute.prototype.identiconSrc = function identiconSrc() {
 	    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
