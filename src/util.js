@@ -1,6 +1,7 @@
 /* eslint no-useless-escape: "off", camelcase: "off" */
 
-import {Gun, SEA} from 'gun'; // eslint-disable-line no-unused-vars
+import {Gun, SEA} from 'gun/browser.ios.js'; // eslint-disable-line no-unused-vars
+ // eslint-disable-line no-unused-vars
 
 let isNode = false;
 try {
