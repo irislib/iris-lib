@@ -120,6 +120,14 @@ class Attribute {
     return `${encodeURIComponent(this.value)}:${encodeURIComponent(this.type)}`;
   }
 
+  identiconXml(options = {}) {
+    return util.getHash(`${encodeURIComponent(this.type)}:${encodeURIComponent(this.value)}`, `hex`)
+      .then(hash => {
+        const identicon = new Identicon(hash, {width: options.width, format: `svg`});
+        return identicon.toString(true);
+      });
+  }
+
   identiconSrc(options = {}) {
     return util.getHash(`${encodeURIComponent(this.type)}:${encodeURIComponent(this.value)}`, `hex`)
       .then(hash => {
