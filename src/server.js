@@ -21,7 +21,8 @@
 import {exists, mkdir, readFile} from 'fs';
 import {promisify} from 'util';
 
-import {Gun} from 'gun'; // eslint-disable-line no-unused-vars
+import {Gun, SEA} from 'gun/browser.ios.js'; // eslint-disable-line no-unused-vars
+ // eslint-disable-line no-unused-vars
 //require('gun/sea');
 
 // Iris import depends on whether we're in dev mode or not

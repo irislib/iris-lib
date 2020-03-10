@@ -1,7 +1,8 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 import util from './util';
-import {Gun} from 'gun'; // eslint-disable-line no-unused-vars
+import {Gun, SEA} from 'gun/browser.ios.js'; // eslint-disable-line no-unused-vars
+ // eslint-disable-line no-unused-vars
 
 let myKey;
 

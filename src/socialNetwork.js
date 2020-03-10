@@ -5,19 +5,22 @@ import Attribute from './attribute';
 import Chat from './chat';
 import Collection from './collection';
 import util from './util';
-import {Gun} from 'gun'; // eslint-disable-line no-unused-vars
+import {Gun} from 'gun/browser.ios.js'; // eslint-disable-line no-unused-vars
+ // eslint-disable-line no-unused-vars
 import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 
-Gun.User.prototype.top = function(key) {
-  const gun = this, root = gun.back(-1), user = root.user();
-  if (!user.is) { throw {err: 'Not logged in!'}; }
-  const top = user.chain(), at = (top._);
-  at.soul = at.get = `~${user.is.pub  }.${  key}`;
-  const tmp = (root.get(at.soul)._);
-  (tmp.echo || (tmp.echo = {}))[at.id] = at;
-  return top;
-};
+if (Gun && Gun.User) {
+  Gun.User.prototype.top = function(key) {
+    const gun = this, root = gun.back(-1), user = root.user();
+    if (!user.is) { throw {err: 'Not logged in!'}; }
+    const top = user.chain(), at = (top._);
+    at.soul = at.get = `~${user.is.pub  }.${  key}`;
+    const tmp = (root.get(at.soul)._);
+    (tmp.echo || (tmp.echo = {}))[at.id] = at;
+    return top;
+  };
+}
 
 // temp method for GUN search
 async function searchText(node, callback, query, limit) { // , cursor, desc

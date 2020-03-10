@@ -1,4 +1,4 @@
-import {Gun, SEA} from 'gun'; // eslint-disable-line no-unused-vars
+import {Gun, SEA} from 'gun/browser.ios.js'; // eslint-disable-line no-unused-vars
 import util from './util';
 
 /**
@@ -604,6 +604,9 @@ class Chat {
     return Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
   }
 
+  /**
+  *
+  */
   static async getMyChatLinks(gun, key, urlRoot = 'https://iris.to/', callback, subscribe = true) {
     const user = gun.user();
     user.auth(key);

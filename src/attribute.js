@@ -120,6 +120,14 @@ class Attribute {
     return `${encodeURIComponent(this.value)}:${encodeURIComponent(this.type)}`;
   }
 
+  identiconSrc(options = {}) {
+    return util.getHash(`${encodeURIComponent(this.type)}:${encodeURIComponent(this.value)}`, `hex`)
+      .then(hash => {
+        const identicon = new Identicon(hash, {width: options.width, format: `svg`});
+        return `data:image/svg+xml;base64,${identicon.toString()}`;
+      });
+  }
+
   /**
   * Generate a visually recognizable representation of the attribute
   * @param {object} options {width}
@@ -141,11 +149,7 @@ class Attribute {
     img.alt = ``;
     img.width = options.width;
     img.height = options.width;
-    util.getHash(`${encodeURIComponent(this.type)}:${encodeURIComponent(this.value)}`, `hex`)
-      .then(hash => {
-        const identicon = new Identicon(hash, {width: options.width, format: `svg`});
-        img.src = `data:image/svg+xml;base64,${identicon.toString()}`;
-      });
+    this.identiconSrc(options).then(src => img.src = src);
 
     if (options.showType) {
       const name = document.createElement(`span`);
