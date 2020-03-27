@@ -2,7 +2,7 @@
 
 import util from './util';
 import {Gun, SEA} from 'gun/browser.ios.js'; // eslint-disable-line no-unused-vars
- // eslint-disable-line no-unused-vars
+// eslint-disable-line no-unused-vars
 
 let myKey;
 
