@@ -135,6 +135,19 @@ class Chat {
     return this.theirSecretChatIds[pub];
   }
 
+  async getMessages(callback) {
+    Object.keys(this.secrets).forEach(async pub => {
+      if (pub !== this.key.pub) {
+        // Subscribe to their messages
+        const theirSecretChatId = await this.getTheirSecretChatId(pub);
+        this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, this.key);});
+      }
+    });
+    // Subscribe to our messages
+    const ourSecretChatId = await this.getOurSecretChatId(pub);
+    this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, this.key.pub, true, this.key);});
+  }
+
   async messageReceived(data, pub, selfAuthored, key) {
     if (this.messages[key]) {
       return;
@@ -157,18 +170,14 @@ class Chat {
   * Get latest message in this chat. Useful for chat listing.
   */
   async getLatestMsg(callback) {
-    const keys = Object.keys(this.secrets);
-    for (let i = 0;i < keys.length;i++) {
-      const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChatId).get(`latestMsg`).on(async data => {
-        const decrypted = await SEA.decrypt(data, (await this.getSecret(keys[i])));
-        if (typeof decrypted !== `object`) {
-          // console.log(`chat data received`, decrypted);
-          return;
-        }
-        callback(decrypted, {});
-      });
-    }
+    const callbackIfLatest = async (msg, info) => {
+      if (!this.latest || this.latest.time < msg.time) {
+        callback(msg, info);
+        this.latest = msg;
+      }
+    };
+    this.onMyEncrypted('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: true}));
+    this.onTheirEncrypted('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: false}));
   }
 
   /**

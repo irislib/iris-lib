@@ -7143,15 +7143,15 @@
 	    if (options.chatLink) {
 	      var s = options.chatLink.split('?');
 	      if (s.length === 2) {
-	        var pub = util.getUrlParameter('chatWith', s[1]);
-	        options.participants = pub;
-	        if (pub !== this.key.pub) {
+	        var _pub = util.getUrlParameter('chatWith', s[1]);
+	        options.participants = _pub;
+	        if (_pub !== this.key.pub) {
 	          var sharedSecret = util.getUrlParameter('s', s[1]);
 	          var linkId = util.getUrlParameter('k', s[1]);
 	          if (sharedSecret && linkId) {
 	            this.save(); // save the chat first so it's there before inviter subscribes to it
 	            saved = true;
-	            this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async function (encrypted) {
+	            this.gun.user(_pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async function (encrypted) {
 	              var sharedKey = await browser_ios_js.SEA.decrypt(encrypted, sharedSecret);
 	              var encryptedChatRequest = await browser_ios_js.SEA.encrypt(_this.key.pub, sharedSecret);
 	              var chatRequestId = await util.getHash(encryptedChatRequest);
@@ -7226,9 +7226,9 @@
 	    gun.user().get('chats').map().on(async function (value, ourSecretChatId) {
 	      if (value) {
 	        var encryptedPub = await util.gunOnceDefined(gun.user().get('chats').get(ourSecretChatId).get('pub'));
-	        var pub = await browser_ios_js.SEA.decrypt(encryptedPub, mySecret);
-	        chats[pub] = {};
-	        callback(pub);
+	        var _pub2 = await browser_ios_js.SEA.decrypt(encryptedPub, mySecret);
+	        chats[_pub2] = {};
+	        callback(_pub2);
 	      }
 	    });
 	    return chats;
@@ -7248,6 +7248,25 @@
 	      this.theirSecretChatIds[pub] = await util.getHash(secret + this.key.pub);
 	    }
 	    return this.theirSecretChatIds[pub];
+	  };
+
+	  Chat.prototype.getMessages = async function getMessages(callback) {
+	    var _this2 = this;
+
+	    _Object$keys(this.secrets).forEach(async function (pub) {
+	      if (pub !== _this2.key.pub) {
+	        // Subscribe to their messages
+	        var theirSecretChatId = await _this2.getTheirSecretChatId(pub);
+	        _this2.gun.user(pub).get('chats').get(theirSecretChatId).get('msgs').map().once(function (data, key) {
+	          _this2.messageReceived(data, pub, false, _this2.key);
+	        });
+	      }
+	    });
+	    // Subscribe to our messages
+	    var ourSecretChatId = await this.getOurSecretChatId(pub);
+	    this.user.get('chats').get(ourSecretChatId).get('msgs').map().once(function (data, key) {
+	      _this2.messageReceived(data, _this2.key.pub, true, _this2.key);
+	    });
 	  };
 
 	  Chat.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored, key) {
@@ -7274,25 +7293,20 @@
 
 
 	  Chat.prototype.getLatestMsg = async function getLatestMsg(callback) {
-	    var _this2 = this;
+	    var _this3 = this;
 
-	    var keys = _Object$keys(this.secrets);
-
-	    var _loop = async function _loop(i) {
-	      var ourSecretChatId = await _this2.getOurSecretChatId(keys[i]);
-	      _this2.user.get('chats').get(ourSecretChatId).get('latestMsg').on(async function (data) {
-	        var decrypted = await browser_ios_js.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
-	        if (typeof decrypted !== 'object') {
-	          // console.log(`chat data received`, decrypted);
-	          return;
-	        }
-	        callback(decrypted, {});
-	      });
+	    var callbackIfLatest = async function callbackIfLatest(msg, info) {
+	      if (!_this3.latest || _this3.latest.time < msg.time) {
+	        callback(msg, info);
+	        _this3.latest = msg;
+	      }
 	    };
-
-	    for (var i = 0; i < keys.length; i++) {
-	      await _loop(i);
-	    }
+	    this.onMyEncrypted('latestMsg', function (msg) {
+	      return callbackIfLatest(msg, { selfAuthored: true });
+	    });
+	    this.onTheirEncrypted('latestMsg', function (msg) {
+	      return callbackIfLatest(msg, { selfAuthored: false });
+	    });
 	  };
 
 	  /**
@@ -7312,12 +7326,12 @@
 
 
 	  Chat.prototype.getMyMsgsLastSeenTime = async function getMyMsgsLastSeenTime(callback) {
-	    var _this3 = this;
+	    var _this4 = this;
 
 	    this.onMyEncrypted('msgsLastSeenTime', function (time) {
-	      _this3.myMsgsLastSeenTime = time;
+	      _this4.myMsgsLastSeenTime = time;
 	      if (callback) {
-	        callback(_this3.myMsgsLastSeenTime);
+	        callback(_this4.myMsgsLastSeenTime);
 	      }
 	    });
 	  };
@@ -7328,12 +7342,12 @@
 
 
 	  Chat.prototype.getTheirMsgsLastSeenTime = async function getTheirMsgsLastSeenTime(callback) {
-	    var _this4 = this;
+	    var _this5 = this;
 
 	    this.onTheirEncrypted('msgsLastSeenTime', function (time) {
-	      _this4.theirMsgsLastSeenTime = time;
+	      _this5.theirMsgsLastSeenTime = time;
 	      if (callback) {
-	        callback(_this4.theirMsgsLastSeenTime);
+	        callback(_this5.theirMsgsLastSeenTime);
 	      }
 	    });
 	  };
@@ -7345,7 +7359,7 @@
 
 
 	  Chat.prototype.addPub = async function addPub(pub) {
-	    var _this5 = this;
+	    var _this6 = this;
 
 	    this.secrets[pub] = null;
 	    this.getSecret(pub);
@@ -7358,12 +7372,12 @@
 	        // Subscribe to their messages
 	        var theirSecretChatId = await this.getTheirSecretChatId(pub);
 	        this.gun.user(pub).get('chats').get(theirSecretChatId).get('msgs').map().once(function (data, key) {
-	          _this5.messageReceived(data, pub, false, key);
+	          _this6.messageReceived(data, pub, false, key);
 	        });
 	      }
 	      // Subscribe to our messages
 	      this.user.get('chats').get(ourSecretChatId).get('msgs').map().once(function (data, key) {
-	        _this5.messageReceived(data, pub, true, key);
+	        _this6.messageReceived(data, pub, true, key);
 	      });
 	    }
 	  };
@@ -7431,17 +7445,17 @@
 
 
 	  Chat.prototype.onMyEncrypted = async function onMyEncrypted(key, callback) {
-	    var _this6 = this;
+	    var _this7 = this;
 
 	    if (typeof callback !== 'function') {
 	      throw new Error('onMyEncrypted callback must be a function, got ' + (typeof callback === 'undefined' ? 'undefined' : _typeof(callback)));
 	    }
 	    var keys = _Object$keys(this.secrets);
 
-	    var _loop2 = async function _loop2(i) {
-	      var ourSecretChatId = await _this6.getOurSecretChatId(keys[i]);
-	      _this6.gun.user().get('chats').get(ourSecretChatId).get(key).on(async function (data) {
-	        var decrypted = await browser_ios_js.SEA.decrypt(data, (await _this6.getSecret(keys[i])));
+	    var _loop = async function _loop(i) {
+	      var ourSecretChatId = await _this7.getOurSecretChatId(keys[i]);
+	      _this7.gun.user().get('chats').get(ourSecretChatId).get(key).on(async function (data) {
+	        var decrypted = await browser_ios_js.SEA.decrypt(data, (await _this7.getSecret(keys[i])));
 	        if (decrypted) {
 	          callback(typeof decrypted.v !== 'undefined' ? decrypted.v : decrypted, key);
 	        }
@@ -7450,9 +7464,9 @@
 	    };
 
 	    for (var i = 0; i < keys.length; i++) {
-	      var _ret2 = await _loop2(i);
+	      var _ret = await _loop(i);
 
-	      if (_ret2 === 'break') break;
+	      if (_ret === 'break') break;
 	    }
 	  };
 
@@ -7462,17 +7476,17 @@
 
 
 	  Chat.prototype.onTheirEncrypted = async function onTheirEncrypted(key, callback) {
-	    var _this7 = this;
+	    var _this8 = this;
 
 	    if (typeof callback !== 'function') {
 	      throw new Error('onTheirEncrypted callback must be a function, got ' + (typeof callback === 'undefined' ? 'undefined' : _typeof(callback)));
 	    }
 	    var keys = _Object$keys(this.secrets);
 
-	    var _loop3 = async function _loop3(i) {
-	      var theirSecretChatId = await _this7.getTheirSecretChatId(keys[i]);
-	      _this7.gun.user(keys[i]).get('chats').get(theirSecretChatId).get(key).on(async function (data) {
-	        var decrypted = await browser_ios_js.SEA.decrypt(data, (await _this7.getSecret(keys[i])));
+	    var _loop2 = async function _loop2(i) {
+	      var theirSecretChatId = await _this8.getTheirSecretChatId(keys[i]);
+	      _this8.gun.user(keys[i]).get('chats').get(theirSecretChatId).get(key).on(async function (data) {
+	        var decrypted = await browser_ios_js.SEA.decrypt(data, (await _this8.getSecret(keys[i])));
 	        if (decrypted) {
 	          callback(typeof decrypted.v !== 'undefined' ? decrypted.v : decrypted, key);
 	        }
@@ -7480,7 +7494,7 @@
 	    };
 
 	    for (var i = 0; i < keys.length; i++) {
-	      await _loop3(i);
+	      await _loop2(i);
 	    }
 	  };
 
@@ -7490,7 +7504,7 @@
 
 
 	  Chat.prototype.setTyping = function setTyping(isTyping) {
-	    var _this8 = this;
+	    var _this9 = this;
 
 	    var timeout = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 5;
 
@@ -7499,7 +7513,7 @@
 	    this.putEncrypted('typing', isTyping ? new Date().toISOString() : false);
 	    clearTimeout(this.setTypingTimeout);
 	    this.setTypingTimeout = setTimeout(function () {
-	      return _this8.putEncrypted('isTyping', false);
+	      return _this9.putEncrypted('isTyping', false);
 	    }, timeout);
 	  };
 
@@ -7509,7 +7523,7 @@
 
 
 	  Chat.prototype.getTyping = function getTyping(callback) {
-	    var _this9 = this;
+	    var _this10 = this;
 
 	    var timeout = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 5;
 
@@ -7518,10 +7532,10 @@
 	      if (callback) {
 	        var isTyping = typing && new Date() - new Date(typing) <= timeout;
 	        callback(isTyping, pub);
-	        _this9.getTypingTimeouts = _this9.getTypingTimeouts || {};
-	        clearTimeout(_this9.getTypingTimeouts[pub]);
+	        _this10.getTypingTimeouts = _this10.getTypingTimeouts || {};
+	        clearTimeout(_this10.getTypingTimeouts[pub]);
 	        if (isTyping) {
-	          _this9.getTypingTimeouts[pub] = setTimeout(function () {
+	          _this10.getTypingTimeouts[pub] = setTimeout(function () {
 	            return callback(false, pub);
 	          }, timeout);
 	        }
@@ -7566,7 +7580,7 @@
 
 
 	  Chat.prototype.getChatBox = function getChatBox() {
-	    var _this10 = this;
+	    var _this11 = this;
 
 	    util.injectCss();
 	    var minimized = false;
@@ -7616,19 +7630,19 @@
 	      var sendBtn = util.createElement('button', undefined, inputWrapper);
 	      sendBtn.innerHTML = '\n        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 486.736 486.736" style="enable-background:new 0 0 486.736 486.736;" xml:space="preserve" width="100px" height="100px" fill="#000000" stroke="#000000" stroke-width="0"><path fill="currentColor" d="M481.883,61.238l-474.3,171.4c-8.8,3.2-10.3,15-2.6,20.2l70.9,48.4l321.8-169.7l-272.4,203.4v82.4c0,5.6,6.3,9,11,5.9 l60-39.8l59.1,40.3c5.4,3.7,12.8,2.1,16.3-3.5l214.5-353.7C487.983,63.638,485.083,60.038,481.883,61.238z"></path></svg>\n      ';
 	      sendBtn.addEventListener('click', function () {
-	        _this10.send(textArea.value);
+	        _this11.send(textArea.value);
 	        textArea.value = '';
-	        _this10.setTyping(false);
+	        _this11.setTyping(false);
 	      });
 	    }
 
 	    var participants = _Object$keys(this.secrets);
 	    if (participants.length) {
-	      var pub = participants[0];
-	      this.gun.user(pub).get('profile').get('name').on(function (name) {
+	      var _pub3 = participants[0];
+	      this.gun.user(_pub3).get('profile').get('name').on(function (name) {
 	        return nameEl.innerText = name;
 	      });
-	      Chat.getOnline(this.gun, pub, function (status) {
+	      Chat.getOnline(this.gun, _pub3, function (status) {
 	        var cls = 'iris-online-indicator' + (status.isOnline ? ' yes' : '');
 	        onlineIndicator.setAttribute('class', cls);
 	        var undelivered = messages.querySelectorAll('.iris-chat-message:not(.delivered)');
@@ -7661,7 +7675,7 @@
 	      var time = util.createElement('div', 'time', msgContent);
 	      time.innerText = util.formatTime(new Date(msg.time));
 	      if (info.selfAuthored) {
-	        var cls = _this10.theirMsgsLastSeenTime >= msg.time ? 'seen yes' : 'seen';
+	        var cls = _this11.theirMsgsLastSeenTime >= msg.time ? 'seen yes' : 'seen';
 	        var seenIndicator = util.createElement('span', cls, time);
 	        seenIndicator.innerHTML = ' <svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 59 42"><polygon fill="currentColor" points="40.6,12.1 17,35.7 7.4,26.1 4.6,29 17,41.3 43.4,14.9"></polygon><polygon class="iris-delivered-checkmark" fill="currentColor" points="55.6,12.1 32,35.7 29.4,33.1 26.6,36 32,41.3 58.4,14.9"></polygon></svg>';
 	      }
@@ -7685,8 +7699,8 @@
 	    });
 
 	    textArea.addEventListener('keyup', function (event) {
-	      Chat.setOnline(_this10.gun, true); // TODO
-	      _this10.setMyMsgsLastSeenTime(); // TODO
+	      Chat.setOnline(_this11.gun, true); // TODO
+	      _this11.setMyMsgsLastSeenTime(); // TODO
 	      if (event.keyCode === 13) {
 	        event.preventDefault();
 	        var content = textArea.value;
@@ -7695,12 +7709,12 @@
 	          textArea.value = content.substring(0, caret - 1) + '\n' + content.substring(caret, content.length);
 	        } else {
 	          textArea.value = content.substring(0, caret - 1) + content.substring(caret, content.length);
-	          _this10.send(textArea.value);
+	          _this11.send(textArea.value);
 	          textArea.value = '';
-	          _this10.setTyping(false);
+	          _this11.setTyping(false);
 	        }
 	      } else {
-	        _this10.setTyping(!!textArea.value.length);
+	        _this11.setTyping(!!textArea.value.length);
 	      }
 	    });
 
@@ -7850,8 +7864,8 @@
 	            var s = _JSON$stringify(encPub);
 	            if (chats.indexOf(s) === -1) {
 	              chats.push(s);
-	              var pub = await browser_ios_js.SEA.decrypt(encPub, sharedSecret);
-	              var chat = new Chat({ gun: gun, key: key, participants: pub });
+	              var _pub4 = await browser_ios_js.SEA.decrypt(encPub, sharedSecret);
+	              var chat = new Chat({ gun: gun, key: key, participants: _pub4 });
 	              chat.save();
 	            }
 	            util.gunAsAnotherUser(gun, sharedKey, function (user) {
