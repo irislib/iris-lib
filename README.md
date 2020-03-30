@@ -62,6 +62,12 @@ If you don't use a package manager, you can [access `iris-lib` via unpkg (CDN)](
 
 The `iris-lib` package includes precompiled production and development [UMD](https://github.com/umdjs/umd) builds in the [`dist` folder](https://unpkg.com/iris-lib/dist/). They can be used directly without a bundler and are thus compatible with many popular JavaScript module loaders and environments. You can drop a UMD build as a [`<script>` tag](https://unpkg.com/iris-lib) on your page. The UMD builds make `iris-lib` available as a `window.iris` global variable. Be sure to include [gun.js and sea.js](https://github.com/amark/gun) first.
 
+```
+<script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/iris-lib@latest/dist/iris.min.js"></script>
+```
+
 ### License
 
 The code is available under the [MIT](LICENSE) license.
