@@ -7297,8 +7297,8 @@
 
 	    var callbackIfLatest = async function callbackIfLatest(msg, info) {
 	      if (!_this3.latest || _this3.latest.time < msg.time) {
-	        callback(msg, info);
 	        _this3.latest = msg;
+	        callback(msg, info);
 	      }
 	    };
 	    this.onMyEncrypted('latestMsg', function (msg) {

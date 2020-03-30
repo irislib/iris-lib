@@ -171,9 +171,9 @@ class Chat {
   */
   async getLatestMsg(callback) {
     const callbackIfLatest = async (msg, info) => {
-      if (!this.latest || this.latest.time < msg.time) {
-        callback(msg, info);
+      if (!this.latest || (this.latest.time < msg.time)) {
         this.latest = msg;
+        callback(msg, info);
       }
     };
     this.onMyEncrypted('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: true}));
