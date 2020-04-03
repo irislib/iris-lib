@@ -88,6 +88,9 @@ export default {
       return undefined;
     }
     const hash = await Gun.SEA.work(str, undefined, undefined, {name: `SHA-256`});
+    if (hash.length > 44) {
+      throw new Error(`Gun.SEA.work returned an invalid SHA-256 hash longer than 44 chars: ${hash}. This is probably due to a sea.js bug on Safari.`);
+    }
     if (format === `hex`) {
       return this.base64ToHex(hash);
     }

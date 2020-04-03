@@ -110,6 +110,7 @@ class Chat {
     gun.user().get(`chats`).map().on(async (value, ourSecretChatId) => {
       if (value) {
         if (ourSecretChatId.length > 44) {
+          gun.user().get(`chats`).get(ourSecretChatId).put(null);
           return;
         }
         const encryptedPub = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChatId).get(`pub`));

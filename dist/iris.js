@@ -2950,6 +2950,9 @@
 	      return undefined;
 	    }
 	    var hash = await Gun.SEA.work(str, undefined, undefined, { name: 'SHA-256' });
+	    if (hash.length > 44) {
+	      throw new Error('Gun.SEA.work returned an invalid SHA-256 hash longer than 44 chars: ' + hash + '. This is probably due to a sea.js bug on Safari.');
+	    }
 	    if (format === 'hex') {
 	      return this.base64ToHex(hash);
 	    }
@@ -7233,6 +7236,7 @@
 	    gun.user().get('chats').map().on(async function (value, ourSecretChatId) {
 	      if (value) {
 	        if (ourSecretChatId.length > 44) {
+	          gun.user().get('chats').get(ourSecretChatId).put(null);
 	          return;
 	        }
 	        var encryptedPub = await util.gunOnceDefined(gun.user().get('chats').get(ourSecretChatId).get('pub'));
