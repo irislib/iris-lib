@@ -7229,17 +7229,17 @@
 
 
 	  Chat.getChats = async function getChats(gun, keypair, callback) {
-	    var chats = {};
 	    var mySecret = await Gun.SEA.secret(keypair.epub, keypair);
 	    gun.user().get('chats').map().on(async function (value, ourSecretChatId) {
 	      if (value) {
+	        if (ourSecretChatId.length > 44) {
+	          return;
+	        }
 	        var encryptedPub = await util.gunOnceDefined(gun.user().get('chats').get(ourSecretChatId).get('pub'));
 	        var pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
-	        chats[pub] = {};
 	        callback(pub);
 	      }
 	    });
-	    return chats;
 	  };
 
 	  Chat.prototype.getOurSecretChatId = async function getOurSecretChatId(pub) {
@@ -7267,13 +7267,13 @@
 	        // Subscribe to their messages
 	        var theirSecretChatId = await _this2.getTheirSecretChatId(pub);
 	        _this2.gun.user(pub).get('chats').get(theirSecretChatId).get('msgs').map().once(function (data, key) {
-	          _this2.messageReceived(data, pub, false, _this2.key);
+	          _this2.messageReceived(data, pub, false, key);
 	        });
 	      }
 	      // Subscribe to our messages
 	      var ourSecretChatId = await _this2.getOurSecretChatId(pub);
 	      _this2.user.get('chats').get(ourSecretChatId).get('msgs').map().once(function (data, key) {
-	        _this2.messageReceived(data, _this2.key.pub, true, _this2.key);
+	        _this2.messageReceived(data, pub, true, key);
 	      });
 	    });
 	  };
@@ -7307,9 +7307,12 @@
 	    var callbackIfLatest = async function callbackIfLatest(msg, info) {
 	      if (!_this3.latest) {
 	        _this3.latest = msg;
-	      } else if ((typeof _this3.latest.time === 'string' ? _this3.latest.time : _this3.latest.time.toISOString()) < msg.time) {
-	        _this3.latest = msg;
-	        callback(msg, info);
+	      } else {
+	        var t = typeof _this3.latest.time === 'string' ? _this3.latest.time : _this3.latest.time.toISOString();
+	        if (t < msg.time) {
+	          _this3.latest = msg;
+	          callback(msg, info);
+	        }
 	      }
 	    };
 	    this.onMyEncrypted('latestMsg', function (msg) {

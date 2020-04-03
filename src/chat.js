@@ -106,17 +106,17 @@ class Chat {
   * @param callback callback function that is called for each public key you have a chat with
   */
   static async getChats(gun, keypair, callback) {
-    const chats = {};
     const mySecret = await Gun.SEA.secret(keypair.epub, keypair);
     gun.user().get(`chats`).map().on(async (value, ourSecretChatId) => {
       if (value) {
+        if (ourSecretChatId.length > 44) {
+          return;
+        }
         const encryptedPub = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChatId).get(`pub`));
         const pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
-        chats[pub] = {};
         callback(pub);
       }
     });
-    return chats;
   }
 
   async getOurSecretChatId(pub) {
@@ -141,11 +141,11 @@ class Chat {
       if (pub !== this.key.pub) {
         // Subscribe to their messages
         const theirSecretChatId = await this.getTheirSecretChatId(pub);
-        this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, this.key);});
+        this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key);});
       }
       // Subscribe to our messages
       const ourSecretChatId = await this.getOurSecretChatId(pub);
-      this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, this.key.pub, true, this.key);});
+      this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key);});
     });
   }
 
@@ -174,9 +174,12 @@ class Chat {
     const callbackIfLatest = async (msg, info) => {
       if (!this.latest) {
         this.latest = msg;
-      } else if ((typeof this.latest.time === `string` ? this.latest.time : this.latest.time.toISOString()) < msg.time) {
-        this.latest = msg;
-        callback(msg, info);
+      } else {
+        const t = (typeof this.latest.time === `string` ? this.latest.time : this.latest.time.toISOString());
+        if (t < msg.time) {
+          this.latest = msg;
+          callback(msg, info);
+        }
       }
     };
     this.onMyEncrypted('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: true}));

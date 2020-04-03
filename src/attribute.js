@@ -31,8 +31,8 @@ class Attribute {
   */
   constructor(a, b) {
     if (typeof a === `object`) {
-      if (typeof a.value !== `string`) { throw new Error(`param1.value must be a string, got ${typeof a.value}: ${JSON.stringify(a.value)}`) }
-      if (typeof a.type !== `string`) { throw new Error(`param1.type must be a string, got ${typeof a.type}: ${JSON.stringify(a.type)}`) }
+      if (typeof a.value !== `string`) { throw new Error(`param1.value must be a string, got ${typeof a.value}: ${JSON.stringify(a.value)}`); }
+      if (typeof a.type !== `string`) { throw new Error(`param1.type must be a string, got ${typeof a.type}: ${JSON.stringify(a.type)}`); }
       b = a.value;
       a = a.type;
     }
