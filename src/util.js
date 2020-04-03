@@ -1,6 +1,6 @@
 /* eslint no-useless-escape: "off", camelcase: "off" */
 
-import {Gun, SEA} from 'gun/browser.ios.js'; // eslint-disable-line no-unused-vars
+import Gun from 'gun'; // eslint-disable-line no-unused-vars
 // eslint-disable-line no-unused-vars
 
 let isNode = false;
@@ -87,7 +87,7 @@ export default {
     if (!str) {
       return undefined;
     }
-    const hash = await SEA.work(str, undefined, undefined, {name: `SHA-256`});
+    const hash = await Gun.SEA.work(str, undefined, undefined, {name: `SHA-256`});
     if (format === `hex`) {
       return this.base64ToHex(hash);
     }

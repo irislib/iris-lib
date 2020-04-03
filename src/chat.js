@@ -1,4 +1,4 @@
-import {Gun, SEA} from 'gun/browser.ios.js'; // eslint-disable-line no-unused-vars
+import Gun from 'gun';
 import util from './util';
 
 /**
@@ -43,8 +43,8 @@ class Chat {
             this.save(); // save the chat first so it's there before inviter subscribes to it
             saved = true;
             this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
-              const sharedKey = await SEA.decrypt(encrypted, sharedSecret);
-              const encryptedChatRequest = await SEA.encrypt(this.key.pub, sharedSecret);
+              const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
+              const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret);
               const chatRequestId = await util.getHash(encryptedChatRequest);
               util.gunAsAnotherUser(this.gun, sharedKey, user => {
                 user.get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest);
@@ -74,7 +74,7 @@ class Chat {
   async getSecret(pub) {
     if (!this.secrets[pub]) {
       const epub = await util.gunOnceDefined(this.gun.user(pub).get(`epub`));
-      this.secrets[pub] = await SEA.secret(epub, this.key);
+      this.secrets[pub] = await Gun.SEA.secret(epub, this.key);
     }
     return this.secrets[pub];
   }
@@ -84,7 +84,7 @@ class Chat {
   */
   static async getOurSecretChatId(gun, pub, pair) {
     const epub = await util.gunOnceDefined(gun.user(pub).get(`epub`));
-    const secret = await SEA.secret(epub, pair);
+    const secret = await Gun.SEA.secret(epub, pair);
     return util.getHash(secret + pub);
   }
 
@@ -93,7 +93,7 @@ class Chat {
   */
   static async getTheirSecretChatId(gun, pub, pair) {
     const epub = await util.gunOnceDefined(gun.user(pub).get(`epub`));
-    const secret = await SEA.secret(epub, pair);
+    const secret = await Gun.SEA.secret(epub, pair);
     return util.getHash(secret + pair.pub);
   }
 
@@ -102,16 +102,16 @@ class Chat {
   * (Chats that are initiated by others and unreplied by you don't show up, because
   * this method doesn't know where to look for them. Use socialNetwork.getChats() to listen to new chats from friends. Or create chat invite links with Chat.createChatLink(). )
   * @param {Object} gun user.authed gun instance
-  * @param {Object} keypair SEA keypair that the gun instance is authenticated with
+  * @param {Object} keypair Gun.SEA keypair that the gun instance is authenticated with
   * @param callback callback function that is called for each public key you have a chat with
   */
   static async getChats(gun, keypair, callback) {
     const chats = {};
-    const mySecret = await SEA.secret(keypair.epub, keypair);
+    const mySecret = await Gun.SEA.secret(keypair.epub, keypair);
     gun.user().get(`chats`).map().on(async (value, ourSecretChatId) => {
       if (value) {
         const encryptedPub = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChatId).get(`pub`));
-        const pub = await SEA.decrypt(encryptedPub, mySecret);
+        const pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
         chats[pub] = {};
         callback(pub);
       }
@@ -136,16 +136,17 @@ class Chat {
   }
 
   async getMessages(callback) {
+    this.onMessage.push(callback);
     Object.keys(this.secrets).forEach(async pub => {
       if (pub !== this.key.pub) {
         // Subscribe to their messages
         const theirSecretChatId = await this.getTheirSecretChatId(pub);
         this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, this.key);});
       }
+      // Subscribe to our messages
+      const ourSecretChatId = await this.getOurSecretChatId(pub);
+      this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, this.key.pub, true, this.key);});
     });
-    // Subscribe to our messages
-    const ourSecretChatId = await this.getOurSecretChatId(pub);
-    this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, this.key.pub, true, this.key);});
   }
 
   async messageReceived(data, pub, selfAuthored, key) {
@@ -153,7 +154,7 @@ class Chat {
       return;
     }
     if (this.onMessage.length) {
-      const decrypted = await SEA.decrypt(data, (await this.getSecret(pub)));
+      const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
       if (typeof decrypted !== `object`) {
         // console.log(`chat data received`, decrypted);
         return;
@@ -171,7 +172,9 @@ class Chat {
   */
   async getLatestMsg(callback) {
     const callbackIfLatest = async (msg, info) => {
-      if (!this.latest || (this.latest.time < msg.time)) {
+      if (!this.latest) {
+        this.latest = msg;
+      } else if ((typeof this.latest.time === `string` ? this.latest.time : this.latest.time.toISOString()) < msg.time) {
         this.latest = msg;
         callback(msg, info);
       }
@@ -222,17 +225,15 @@ class Chat {
     this.getSecret(pub);
     // Save their public key in encrypted format, so in chat listing we know who we are chatting with
     const ourSecretChatId = await this.getOurSecretChatId(pub);
-    const mySecret = await SEA.secret(this.key.epub, this.key);
-    this.gun.user().get(`chats`).get(ourSecretChatId).get(`pub`).put(await SEA.encrypt(pub, mySecret));
-    if (this.messageReceived) {
-      if (pub !== this.key.pub) {
-        // Subscribe to their messages
-        const theirSecretChatId = await this.getTheirSecretChatId(pub);
-        this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key);});
-      }
-      // Subscribe to our messages
-      this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key);});
+    const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
+    this.gun.user().get(`chats`).get(ourSecretChatId).get(`pub`).put(await Gun.SEA.encrypt(pub, mySecret));
+    if (pub !== this.key.pub) {
+      // Subscribe to their messages
+      const theirSecretChatId = await this.getTheirSecretChatId(pub);
+      this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key);});
     }
+    // Subscribe to our messages
+    this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key);});
   }
 
   /**
@@ -254,7 +255,7 @@ class Chat {
     //this.gun.user().get('message').set(temp);
     const keys = Object.keys(this.secrets);
     for (let i = 0;i < keys.length;i++) {
-      const encrypted = await SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
+      const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
       const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
       this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).get(`${msg.time}`).put(encrypted);
       this.user.get(`chats`).get(ourSecretChatId).get(`latestMsg`).put(encrypted);
@@ -277,10 +278,10 @@ class Chat {
   */
   async putEncrypted(key, value, salt) {
     const keys = Object.keys(this.secrets);
-    salt = salt || SEA.random(32).toString();
+    salt = salt || Gun.SEA.random(32).toString();
     const obj = {v: value, s: salt};
     for (let i = 0;i < keys.length;i++) {
-      const encrypted = await SEA.encrypt(JSON.stringify(obj), (await this.getSecret(keys[i])));
+      const encrypted = await Gun.SEA.encrypt(JSON.stringify(obj), (await this.getSecret(keys[i])));
       const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
       this.user.get(`chats`).get(ourSecretChatId).get(key).put(encrypted);
     }
@@ -297,7 +298,7 @@ class Chat {
     for (let i = 0;i < keys.length;i++) {
       const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
       this.gun.user().get(`chats`).get(ourSecretChatId).get(key).on(async data => {
-        const decrypted = await SEA.decrypt(data, (await this.getSecret(keys[i])));
+        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
         if (decrypted) {
           callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
         }
@@ -317,7 +318,7 @@ class Chat {
     for (let i = 0;i < keys.length;i++) {
       const theirSecretChatId = await this.getTheirSecretChatId(keys[i]);
       this.gun.user(keys[i]).get(`chats`).get(theirSecretChatId).get(key).on(async data => {
-        const decrypted = await SEA.decrypt(data, (await this.getSecret(keys[i])));
+        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
         if (decrypted) {
           callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
         }
@@ -594,12 +595,12 @@ class Chat {
     const user = gun.user();
     user.auth(key);
 
-    const sharedKey = await SEA.pair();
+    const sharedKey = await Gun.SEA.pair();
     const sharedKeyString = JSON.stringify(sharedKey);
-    const sharedSecret = await SEA.secret(sharedKey.epub, sharedKey);
-    const encryptedSharedKey = await SEA.encrypt(sharedKeyString, sharedSecret);
-    const ownerSecret = await SEA.secret(key.epub, key);
-    const ownerEncryptedSharedKey = await SEA.encrypt(sharedKeyString, ownerSecret);
+    const sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
+    const encryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, sharedSecret);
+    const ownerSecret = await Gun.SEA.secret(key.epub, key);
+    const ownerEncryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, ownerSecret);
     let linkId = await util.getHash(encryptedSharedKey);
     linkId = linkId.slice(0, 12);
 
@@ -619,7 +620,7 @@ class Chat {
   static async getMyChatLinks(gun, key, urlRoot = 'https://iris.to/', callback, subscribe = true) {
     const user = gun.user();
     user.auth(key);
-    const mySecret = await SEA.secret(key.epub, key);
+    const mySecret = await Gun.SEA.secret(key.epub, key);
     const chatLinks = [];
     user.get('chatLinks').map().on((data, linkId) => {
       if (!data || chatLinks.indexOf(linkId) !== -1) { return; }
@@ -627,8 +628,8 @@ class Chat {
       user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').on(async enc => {
         if (!enc || chatLinks.indexOf(linkId) !== -1) { return; }
         chatLinks.push(linkId);
-        const sharedKey = await SEA.decrypt(enc, mySecret);
-        const sharedSecret = await SEA.secret(sharedKey.epub, sharedKey);
+        const sharedKey = await Gun.SEA.decrypt(enc, mySecret);
+        const sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
         const url = Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
         if (callback) {
           callback({url, id: linkId});
@@ -639,7 +640,7 @@ class Chat {
             const s = JSON.stringify(encPub);
             if (chats.indexOf(s) === -1) {
               chats.push(s);
-              const pub = await SEA.decrypt(encPub, sharedSecret);
+              const pub = await Gun.SEA.decrypt(encPub, sharedSecret);
               const chat = new Chat({gun, key, participants: pub});
               chat.save();
             }
