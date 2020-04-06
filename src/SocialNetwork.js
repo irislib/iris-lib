@@ -61,7 +61,7 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 * Wait for index.ready promise to resolve before calling instance methods.
 * @param {Object} options see default options in example
 * @example
-* https://github.com/irislib/iris-lib/blob/master/__tests__/socialNetwork.js
+* https://github.com/irislib/iris-lib/blob/master/__tests__/SocialNetwork.js
 *
 * Default options:
 *{

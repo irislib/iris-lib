@@ -2,7 +2,7 @@ import Gun from 'gun';
 import util from './util';
 
 /**
-* Private communication channel between two participants (gun public keys). (You can specify more than two participants, but it causes unscalable data replication - better implementation to be done.) Can be used independently of other Iris stuff.
+* Private communication channel between two participants (gun public keys). (You can specify more than two participants, but it causes unscalable data replication - better group channel implementation to be done.) Can be used independently of other Iris stuff.
 *
 * You can use **1)** channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or **2)** channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.
 *
@@ -13,7 +13,7 @@ import util from './util';
 * You should sort them in the presentation layer.
 *
 * @param {Object} options {key, gun, chatLink, onMessage, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys
-* @example https://github.com/irislib/iris-lib/blob/master/__tests__/channel.js
+* @example https://github.com/irislib/iris-lib/blob/master/__tests__/Channel.js
 */
 class Channel {
   constructor(options) {
