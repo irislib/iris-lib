@@ -193,7 +193,7 @@ class Chat {
   */
   async setMyMsgsLastSeenTime(time) {
     time = time || new Date().toISOString();
-    return this.putEncrypted(`msgsLastSeenTime`, time);
+    return this.putMyEncrypted(`msgsLastSeenTime`, time);
   }
 
   /**
@@ -280,7 +280,7 @@ class Chat {
   /**
   * Save a key-value pair, encrypt value
   */
-  async putEncrypted(key, value, salt) {
+  async putMyEncrypted(key, value, salt) {
     const keys = Object.keys(this.secrets);
     salt = salt || Gun.SEA.random(32).toString();
     const obj = {v: value, s: salt};
@@ -336,9 +336,9 @@ class Chat {
   setTyping(isTyping, timeout = 5) {
     isTyping = typeof isTyping === `undefined` ? true : isTyping;
     timeout = timeout * 1000;
-    this.putEncrypted(`typing`, isTyping ? new Date().toISOString() : false);
+    this.putMyEncrypted(`typing`, isTyping ? new Date().toISOString() : false);
     clearTimeout(this.setTypingTimeout);
-    this.setTypingTimeout = setTimeout(() => this.putEncrypted(`isTyping`, false), timeout);
+    this.setTypingTimeout = setTimeout(() => this.putMyEncrypted(`isTyping`, false), timeout);
   }
 
   /**
