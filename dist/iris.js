@@ -7117,7 +7117,7 @@
 	var _Number$parseInt = unwrapExports(_parseInt$2);
 
 	/**
-	* Private communication channel between two participants (gun public keys). (You can specify more than two participants, but it causes unscalable data replication - better implementation to be done.) Can be used independently of other Iris stuff.
+	* Private communication channel between two participants (gun public keys). (You can specify more than two participants, but it causes unscalable data replication - better group channel implementation to be done.) Can be used independently of other Iris stuff.
 	*
 	* You can use **1)** channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or **2)** channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.
 	*
@@ -7128,7 +7128,7 @@
 	* You should sort them in the presentation layer.
 	*
 	* @param {Object} options {key, gun, chatLink, onMessage, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys
-	* @example https://github.com/irislib/iris-lib/blob/master/__tests__/channel.js
+	* @example https://github.com/irislib/iris-lib/blob/master/__tests__/Channel.js
 	*/
 
 	var Channel = function () {
@@ -7177,17 +7177,17 @@
 	    }
 
 	    if (typeof options.participants === 'string') {
-	      this.addPub(options.participants);
+	      this.addPub(options.participants, options.save);
 	    } else if (Array.isArray(options.participants)) {
 	      for (var i = 0; i < options.participants.length; i++) {
 	        if (typeof options.participants[i] === 'string') {
-	          this.addPub(options.participants[i]);
+	          this.addPub(options.participants[i], options.save);
 	        } else {
 	          console.log('participant public key must be string, got', _typeof(options.participants[i]), options.participants[i]);
 	        }
 	      }
 	    }
-	    if (!saved && (options.save === undefined || options.save === false)) {
+	    if (!saved && (options.save === undefined || options.save === true)) {
 	      this.save();
 	    }
 	  }
@@ -7232,13 +7232,12 @@
 	  };
 
 	  /**
-	  * Return a list of public keys that you have initiated a channel with or replied to.
-	  * (Channels that are initiated by others and unreplied by you don't show up, because
-	  * this method doesn't know where to look for them. Use socialNetwork.getChannels() to listen to new channels from friends. Or create channel invite links with Channel.createChatLink(). )
+	  * Calls back with Channels that you have initiated or written to.
 	  * @param {Object} gun user.authed gun instance
 	  * @param {Object} keypair Gun.SEA keypair that the gun instance is authenticated with
 	  * @param callback callback function that is called for each public key you have a channel with
 	  */
+	  // TODO: subscribe to chat links in this method
 
 
 	  Channel.getChannels = async function getChannels(gun, keypair, callback) {
@@ -7251,7 +7250,7 @@
 	        }
 	        var encryptedPub = await util.gunOnceDefined(gun.user().get('chats').get(ourSecretChannelId).get('pub'));
 	        var pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
-	        callback(pub);
+	        callback(new Channel({ key: keypair, gun: gun, participants: pub, save: false }));
 	      }
 	    });
 	  };
@@ -7286,18 +7285,18 @@
 	        // Subscribe to their messages
 	        var theirSecretChannelId = await _this2.getTheirSecretChannelId(pub);
 	        _this2.gun.user(pub).get('chats').get(theirSecretChannelId).get('msgs').map().once(function (data, key) {
-	          _this2.messageReceived(data, pub, false, key);
+	          _this2.messageReceived(data, pub, false, key, pub);
 	        });
 	      }
 	      // Subscribe to our messages
 	      var ourSecretChannelId = await _this2.getOurSecretChannelId(pub);
 	      _this2.user.get('chats').get(ourSecretChannelId).get('msgs').map().once(function (data, key) {
-	        _this2.messageReceived(data, pub, true, key);
+	        _this2.messageReceived(data, pub, true, key, _this2.key.pub);
 	      });
 	    });
 	  };
 
-	  Channel.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored, key) {
+	  Channel.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored, key, from) {
 	    if (this.messages[key]) {
 	      return;
 	    }
@@ -7307,7 +7306,7 @@
 	        // console.log(`channel data received`, decrypted);
 	        return;
 	      }
-	      decrypted._info = { selfAuthored: selfAuthored, pub: pub };
+	      decrypted._info = { selfAuthored: selfAuthored, pub: pub, from: from };
 	      this.messages[key] = decrypted;
 	      this.onMessage.forEach(function (f) {
 	        return f(decrypted, decrypted._info);
@@ -7394,12 +7393,16 @@
 	  Channel.prototype.addPub = async function addPub(pub) {
 	    var _this6 = this;
 
+	    var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
 	    this.secrets[pub] = null;
 	    this.getSecret(pub);
-	    // Save their public key in encrypted format, so in channel listing we know who we are channelting with
 	    var ourSecretChannelId = await this.getOurSecretChannelId(pub);
-	    var mySecret = await Gun.SEA.secret(this.key.epub, this.key);
-	    this.gun.user().get('chats').get(ourSecretChannelId).get('pub').put((await Gun.SEA.encrypt(pub, mySecret)));
+	    if (save) {
+	      // Save their public key in encrypted format, so in channel listing we know who we are channelting with
+	      var mySecret = await Gun.SEA.secret(this.key.epub, this.key);
+	      this.gun.user().get('chats').get(ourSecretChannelId).get('pub').put((await Gun.SEA.encrypt(pub, mySecret)));
+	    }
 	    if (pub !== this.key.pub) {
 	      // Subscribe to their messages
 	      var theirSecretChannelId = await this.getTheirSecretChannelId(pub);
@@ -8206,7 +8209,7 @@
 	* Wait for index.ready promise to resolve before calling instance methods.
 	* @param {Object} options see default options in example
 	* @example
-	* https://github.com/irislib/iris-lib/blob/master/__tests__/socialNetwork.js
+	* https://github.com/irislib/iris-lib/blob/master/__tests__/SocialNetwork.js
 	*
 	* Default options:
 	*{
@@ -9534,7 +9537,7 @@
 	  return SocialNetwork;
 	}();
 
-	var version$1 = "0.0.140";
+	var version$1 = "0.0.141";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

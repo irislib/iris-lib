@@ -57,17 +57,17 @@ class Channel {
     }
 
     if (typeof options.participants === `string`) {
-      this.addPub(options.participants);
+      this.addPub(options.participants, options.save);
     } else if (Array.isArray(options.participants)) {
       for (let i = 0;i < options.participants.length;i++) {
         if (typeof options.participants[i] === `string`) {
-          this.addPub(options.participants[i]);
+          this.addPub(options.participants[i], options.save);
         } else {
           console.log(`participant public key must be string, got`, typeof options.participants[i], options.participants[i]);
         }
       }
     }
-    if (!saved && (options.save === undefined || options.save === false)) {
+    if (!saved && (options.save === undefined || options.save === true)) {
       this.save();
     }
   }
@@ -106,13 +106,12 @@ class Channel {
   }
 
   /**
-  * Return a list of public keys that you have initiated a channel with or replied to.
-  * (Channels that are initiated by others and unreplied by you don't show up, because
-  * this method doesn't know where to look for them. Use socialNetwork.getChannels() to listen to new channels from friends. Or create channel invite links with Channel.createChatLink(). )
+  * Calls back with Channels that you have initiated or written to.
   * @param {Object} gun user.authed gun instance
   * @param {Object} keypair Gun.SEA keypair that the gun instance is authenticated with
   * @param callback callback function that is called for each public key you have a channel with
   */
+  // TODO: subscribe to chat links in this method
   static async getChannels(gun, keypair, callback) {
     const mySecret = await Gun.SEA.secret(keypair.epub, keypair);
     gun.user().get(`chats`).map().on(async (value, ourSecretChannelId) => {
@@ -123,7 +122,7 @@ class Channel {
         }
         const encryptedPub = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`));
         const pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
-        callback(pub);
+        callback(new Channel({key: keypair, gun, participants: pub, save: false}));
       }
     });
   }
@@ -153,15 +152,15 @@ class Channel {
       if (pub !== this.key.pub) {
         // Subscribe to their messages
         const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
-        this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key);});
+        this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key, pub);});
       }
       // Subscribe to our messages
       const ourSecretChannelId = await this.getOurSecretChannelId(pub);
-      this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key);});
+      this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key, this.key.pub);});
     });
   }
 
-  async messageReceived(data, pub, selfAuthored, key) {
+  async messageReceived(data, pub, selfAuthored, key, from) {
     if (this.messages[key]) {
       return;
     }
@@ -171,7 +170,7 @@ class Channel {
         // console.log(`channel data received`, decrypted);
         return;
       }
-      decrypted._info = {selfAuthored, pub};
+      decrypted._info = {selfAuthored, pub, from};
       this.messages[key] = decrypted;
       this.onMessage.forEach(f => f(decrypted, decrypted._info));
     } else {
@@ -235,13 +234,15 @@ class Channel {
   * Add a public key to the channel
   * @param {string} pub
   */
-  async addPub(pub) {
+  async addPub(pub, save = true) {
     this.secrets[pub] = null;
     this.getSecret(pub);
-    // Save their public key in encrypted format, so in channel listing we know who we are channelting with
     const ourSecretChannelId = await this.getOurSecretChannelId(pub);
-    const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
-    this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt(pub, mySecret));
+    if (save) {
+      // Save their public key in encrypted format, so in channel listing we know who we are channelting with
+      const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
+      this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt(pub, mySecret));
+    }
     if (pub !== this.key.pub) {
       // Subscribe to their messages
       const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
