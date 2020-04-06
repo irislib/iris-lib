@@ -80,21 +80,21 @@
                       </a></li>
                     
                       <li><a
-                        href='#channelcreatechannellink'
+                        href='#channelcreatechatlink'
                         class='regular pre-open'>
-                        .createChannelLink
+                        .createChatLink
                       </a></li>
                     
                       <li><a
-                        href='#channelgetmychannellinks'
+                        href='#channelgetmychatlinks'
                         class='regular pre-open'>
-                        .getMyChannelLinks
+                        .getMyChatLinks
                       </a></li>
                     
                       <li><a
-                        href='#channelremovechannellink'
+                        href='#channelremovechatlink'
                         class='regular pre-open'>
-                        .removeChannelLink
+                        .removeChatLink
                       </a></li>
                     
                       <li><a
@@ -735,7 +735,7 @@
   </div>
   
 
-  <p>Private communication channel between two participants. (You can specify more than two participants, but it causes unscalable data replication - better implementation to be done.) Can be used independently of other Iris stuff.</p>
+  <p>Private communication channel between two participants (gun public keys). (You can specify more than two participants, but it causes unscalable data replication - better implementation to be done.) Can be used independently of other Iris stuff.</p>
 <p>You can use <strong>1)</strong> channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or <strong>2)</strong> channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.</p>
 <p>Channel ids and data values are obfuscated, but it is possible to guess
 who are communicating with each other by looking at Gun timestamps and subscriptions.</p>
@@ -760,7 +760,15 @@ You should sort them in the presentation layer.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    {key, gun, channelLink, onMessage, participants}
+	    {key, gun, chatLink, onMessage, participants} 
+<strong>key</strong>
+: your keypair, 
+<strong>gun</strong>
+: gun instance, 
+<strong>chatLink</strong>
+: (optional) chat link instead of participants list, 
+<strong>participants</strong>
+: (optional) string or string array of participant public keys
 
           </div>
           
@@ -951,7 +959,7 @@ You should sort them in the presentation layer.</p>
 
   <p>Return a list of public keys that you have initiated a channel with or replied to.
 (Channels that are initiated by others and unreplied by you don't show up, because
-this method doesn't know where to look for them. Use socialNetwork.getChannels() to listen to new channels from friends. Or create channel invite links with Channel.createChannelLink(). )</p>
+this method doesn't know where to look for them. Use socialNetwork.getChannels() to listen to new channels from friends. Or create channel invite links with Channel.createChatLink(). )</p>
 
     <div class='pre p1 fill-light mt0'>getChannels(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, callback: any)</div>
   
@@ -1299,11 +1307,11 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='channelcreatechannellink'>
+    <div class='border-bottom' id='channelcreatechatlink'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>createChannelLink(gun, key, urlRoot)</span>
+            <span class='code strong strong truncate'>createChatLink(gun, key, urlRoot)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1313,7 +1321,7 @@ to call this method.</p>
 
   <p>Creates a channel link that can be used for two-way communication, i.e. only one link needs to be exchanged.</p>
 
-    <div class='pre p1 fill-light mt0'>createChannelLink(gun: any, key: any, urlRoot: any)</div>
+    <div class='pre p1 fill-light mt0'>createChatLink(gun: any, key: any, urlRoot: any)</div>
   
   
 
@@ -1376,11 +1384,11 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='channelgetmychannellinks'>
+    <div class='border-bottom' id='channelgetmychatlinks'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getMyChannelLinks(gun, key, urlRoot, callback, subscribe)</span>
+            <span class='code strong strong truncate'>getMyChatLinks(gun, key, urlRoot, callback, subscribe)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1389,7 +1397,7 @@ to call this method.</p>
   
 
   
-    <div class='pre p1 fill-light mt0'>getMyChannelLinks(gun: any, key: any, urlRoot: any, callback: any, subscribe: any)</div>
+    <div class='pre p1 fill-light mt0'>getMyChatLinks(gun: any, key: any, urlRoot: any, callback: any, subscribe: any)</div>
   
   
 
@@ -1469,11 +1477,11 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='channelremovechannellink'>
+    <div class='border-bottom' id='channelremovechatlink'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>removeChannelLink(gun, key, linkId)</span>
+            <span class='code strong strong truncate'>removeChatLink(gun, key, linkId)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1482,7 +1490,7 @@ to call this method.</p>
   
 
   
-    <div class='pre p1 fill-light mt0'>removeChannelLink(gun: any, key: any, linkId: any)</div>
+    <div class='pre p1 fill-light mt0'>removeChatLink(gun: any, key: any, linkId: any)</div>
   
   
 
