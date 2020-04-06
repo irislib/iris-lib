@@ -957,9 +957,7 @@ You should sort them in the presentation layer.</p>
 
   
 
-  <p>Return a list of public keys that you have initiated a channel with or replied to.
-(Channels that are initiated by others and unreplied by you don't show up, because
-this method doesn't know where to look for them. Use socialNetwork.getChannels() to listen to new channels from friends. Or create channel invite links with Channel.createChatLink(). )</p>
+  <p>Calls back with Channels that you have initiated or written to.</p>
 
     <div class='pre p1 fill-light mt0'>getChannels(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, callback: any)</div>
   
@@ -1447,8 +1445,7 @@ to call this method.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>subscribe</span> <code class='quiet'>(any
-            = <code>true</code>)</code>
+            <span class='code bold'>subscribe</span> <code class='quiet'>(any)</code>
 	    
           </div>
           
@@ -1987,7 +1984,7 @@ to call this method.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>addPub(pub)</span>
+            <span class='code strong strong truncate'>addPub(pub, save)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1997,7 +1994,7 @@ to call this method.</p>
 
   <p>Add a public key to the channel</p>
 
-    <div class='pre p1 fill-light mt0'>addPub(pub: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
+    <div class='pre p1 fill-light mt0'>addPub(pub: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, save: any)</div>
   
   
 
@@ -2015,6 +2012,15 @@ to call this method.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>pub</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>save</span> <code class='quiet'>(any
+            = <code>true</code>)</code>
 	    
           </div>
           

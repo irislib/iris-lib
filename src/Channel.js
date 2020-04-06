@@ -111,11 +111,15 @@ class Channel {
   * @param {Object} keypair Gun.SEA keypair that the gun instance is authenticated with
   * @param callback callback function that is called for each public key you have a channel with
   */
-  // TODO: subscribe to chat links in this method
-  static async getChannels(gun, keypair, callback) {
+  static async getChannels(gun, keypair, callback, listenToChatLinks = true) {
     const mySecret = await Gun.SEA.secret(keypair.epub, keypair);
+    if (listenToChatLinks) {
+      Channel.getMyChatLinks(gun, keypair, undefined, undefined, true);
+    }
+    const seen = {};
     gun.user().get(`chats`).map().on(async (value, ourSecretChannelId) => {
-      if (value) {
+      if (value && !seen[ourSecretChannelId]) {
+        seen[ourSecretChannelId] = true;
         if (ourSecretChannelId.length > 44) {
           gun.user().get(`chats`).get(ourSecretChannelId).put(null);
           return;
@@ -649,7 +653,7 @@ class Channel {
   /**
   *
   */
-  static async getMyChatLinks(gun, key, urlRoot = 'https://iris.to/', callback, subscribe = true) {
+  static async getMyChatLinks(gun, key, urlRoot = 'https://iris.to/', callback, subscribe) {
     const user = gun.user();
     user.auth(key);
     const mySecret = await Gun.SEA.secret(key.epub, key);
