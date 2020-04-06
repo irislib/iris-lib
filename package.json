@@ -1,9 +1,11 @@
 {
   "name": "iris-lib",
-  "version": "0.0.140",
+  "version": "0.0.141",
   "description": "Basic tools for reading and writing Iris messages and identities.",
   "main": "src/index.js",
-  "react-native": "dist/iris.js",
+  "react-native": {
+    "fs": false
+  },
   "browser": "dist/iris.js",
   "module": "es/index.js",
   "jsxnext:main": "es/index.js",
@@ -125,8 +127,5 @@
   "dependencies": {
     "gun": "0.2019.930",
     "identicon.js": "^2.3.3"
-  },
-  "react-native": {
-    "fs": false
   }
 }
