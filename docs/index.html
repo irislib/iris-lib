@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset='utf-8' />
-  <title>iris-lib 0.0.138 | Documentation</title>
+  <title>iris-lib 0.0.140 | Documentation</title>
   <meta name='description' content='Basic tools for reading and writing Iris messages and identities.'>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
   <link href='assets/bass.css' rel='stylesheet' />
@@ -15,7 +15,7 @@
       <div id='split-left' class='overflow-auto fs0 height-viewport-100'>
         <div class='py1 px2'>
           <h3 class='mb0 no-anchor'>iris-lib</h3>
-          <div class='mb1'><code>0.0.138</code></div>
+          <div class='mb1'><code>0.0.140</code></div>
           <input
             placeholder='Filter'
             id='filter-input'
@@ -57,9 +57,9 @@
                       </a></li>
                       
                       <li><a
-                        href='#socialnetworkgetchats'
+                        href='#socialnetworkgetchannels'
                         class='regular pre-open'>
-                        #getChats
+                        #getChannels
                       </a></li>
                       
                       <li><a
@@ -147,9 +147,9 @@
               
                 
                 <li><a
-                  href='#message'
+                  href='#signedmessage'
                   class=" toggle-sibling">
-                  Message
+                  SignedMessage
                   <span class='icon'>▸</span>
                 </a>
                 
@@ -159,37 +159,37 @@
                     <li class='h5'><span>Static members</span></li>
                     
                       <li><a
-                        href='#messagecreate'
+                        href='#signedmessagecreate'
                         class='regular pre-open'>
                         .create
                       </a></li>
                     
                       <li><a
-                        href='#messagecreateverification'
+                        href='#signedmessagecreateverification'
                         class='regular pre-open'>
                         .createVerification
                       </a></li>
                     
                       <li><a
-                        href='#messagecreaterating'
+                        href='#signedmessagecreaterating'
                         class='regular pre-open'>
                         .createRating
                       </a></li>
                     
                       <li><a
-                        href='#messageloadfromipfs'
+                        href='#signedmessageloadfromipfs'
                         class='regular pre-open'>
                         .loadFromIpfs
                       </a></li>
                     
                       <li><a
-                        href='#messagedeserialize'
+                        href='#signedmessagedeserialize'
                         class='regular pre-open'>
                         .deserialize
                       </a></li>
                     
                       <li><a
-                        href='#messagesetreaction'
+                        href='#signedmessagesetreaction'
                         class='regular pre-open'>
                         .setReaction
                       </a></li>
@@ -201,91 +201,91 @@
                       <li class='h5'><span>Instance members</span></li>
                       
                       <li><a
-                        href='#messagegetauthoriterable'
+                        href='#signedmessagegetauthoriterable'
                         class='regular pre-open'>
                         #getAuthorIterable
                       </a></li>
                       
                       <li><a
-                        href='#messagegetrecipientiterable'
+                        href='#signedmessagegetrecipientiterable'
                         class='regular pre-open'>
                         #getRecipientIterable
                       </a></li>
                       
                       <li><a
-                        href='#messagegetauthorarray'
+                        href='#signedmessagegetauthorarray'
                         class='regular pre-open'>
                         #getAuthorArray
                       </a></li>
                       
                       <li><a
-                        href='#messagegetrecipientarray'
+                        href='#signedmessagegetrecipientarray'
                         class='regular pre-open'>
                         #getRecipientArray
                       </a></li>
                       
                       <li><a
-                        href='#messagegetsignerkeyid'
+                        href='#signedmessagegetsignerkeyid'
                         class='regular pre-open'>
                         #getSignerKeyID
                       </a></li>
                       
                       <li><a
-                        href='#messageispositive'
+                        href='#signedmessageispositive'
                         class='regular pre-open'>
                         #isPositive
                       </a></li>
                       
                       <li><a
-                        href='#messageisnegative'
+                        href='#signedmessageisnegative'
                         class='regular pre-open'>
                         #isNegative
                       </a></li>
                       
                       <li><a
-                        href='#messageisneutral'
+                        href='#signedmessageisneutral'
                         class='regular pre-open'>
                         #isNeutral
                       </a></li>
                       
                       <li><a
-                        href='#messagesign'
+                        href='#signedmessagesign'
                         class='regular pre-open'>
                         #sign
                       </a></li>
                       
                       <li><a
-                        href='#messagegetauthor'
+                        href='#signedmessagegetauthor'
                         class='regular pre-open'>
                         #getAuthor
                       </a></li>
                       
                       <li><a
-                        href='#messagegetrecipient'
+                        href='#signedmessagegetrecipient'
                         class='regular pre-open'>
                         #getRecipient
                       </a></li>
                       
                       <li><a
-                        href='#messagegethash'
+                        href='#signedmessagegethash'
                         class='regular pre-open'>
                         #getHash
                       </a></li>
                       
                       <li><a
-                        href='#messageverify'
+                        href='#signedmessageverify'
                         class='regular pre-open'>
                         #verify
                       </a></li>
                       
                       <li><a
-                        href='#messagesavetoipfs'
+                        href='#signedmessagesavetoipfs'
                         class='regular pre-open'>
                         #saveToIpfs
                       </a></li>
                       
                       <li><a
-                        href='#messageserialize'
+                        href='#signedmessageserialize'
                         class='regular pre-open'>
                         #serialize
                       </a></li>
@@ -300,9 +300,9 @@
               
                 
                 <li><a
-                  href='#chat'
+                  href='#channel'
                   class=" toggle-sibling">
-                  Chat
+                  Channel
                   <span class='icon'>▸</span>
                 </a>
                 
@@ -312,63 +312,69 @@
                     <li class='h5'><span>Static members</span></li>
                     
                       <li><a
-                        href='#chatgetoursecretchatid'
+                        href='#channelgetoursecretchannelid'
                         class='regular pre-open'>
-                        .getOurSecretChatId
+                        .getOurSecretChannelId
                       </a></li>
                     
                       <li><a
-                        href='#chatgettheirsecretchatid'
+                        href='#channelgettheirsecretchannelid'
                         class='regular pre-open'>
-                        .getTheirSecretChatId
+                        .getTheirSecretChannelId
                       </a></li>
                     
                       <li><a
-                        href='#chatgetchats'
+                        href='#channelgetchannels'
                         class='regular pre-open'>
-                        .getChats
+                        .getChannels
                       </a></li>
                     
                       <li><a
-                        href='#chataddchatbutton'
+                        href='#channeladdchatbutton'
                         class='regular pre-open'>
                         .addChatButton
                       </a></li>
                     
                       <li><a
-                        href='#chatsetonline'
+                        href='#channelsetonline'
                         class='regular pre-open'>
                         .setOnline
                       </a></li>
                     
                       <li><a
-                        href='#chatgetonline'
+                        href='#channelgetonline'
                         class='regular pre-open'>
                         .getOnline
                       </a></li>
                     
                       <li><a
-                        href='#chatinituser'
+                        href='#channelinituser'
                         class='regular pre-open'>
                         .initUser
                       </a></li>
                     
                       <li><a
-                        href='#chatcreatechatlink'
+                        href='#channelcreatechannellink'
                         class='regular pre-open'>
-                        .createChatLink
+                        .createChannelLink
                       </a></li>
                     
                       <li><a
-                        href='#chatremovechatlink'
+                        href='#channelgetmychannellinks'
                         class='regular pre-open'>
-                        .removeChatLink
+                        .getMyChannelLinks
                       </a></li>
                     
                       <li><a
-                        href='#chatdeletechat'
+                        href='#channelremovechannellink'
                         class='regular pre-open'>
-                        .deleteChat
+                        .removeChannelLink
+                      </a></li>
+                    
+                      <li><a
+                        href='#channeldeletechannel'
+                        class='regular pre-open'>
+                        .deleteChannel
                       </a></li>
                     
                     </ul>
@@ -378,79 +384,85 @@
                       <li class='h5'><span>Instance members</span></li>
                       
                       <li><a
-                        href='#chatgetlatestmsg'
+                        href='#channelgetparticipants'
+                        class='regular pre-open'>
+                        #getParticipants
+                      </a></li>
+                      
+                      <li><a
+                        href='#channelgetmessages'
+                        class='regular pre-open'>
+                        #getMessages
+                      </a></li>
+                      
+                      <li><a
+                        href='#channelgetlatestmsg'
                         class='regular pre-open'>
                         #getLatestMsg
                       </a></li>
                       
                       <li><a
-                        href='#chatsetmymsgslastseentime'
+                        href='#channelsetmymsgslastseentime'
                         class='regular pre-open'>
                         #setMyMsgsLastSeenTime
                       </a></li>
                       
                       <li><a
-                        href='#chatgetmymsgslastseentime'
+                        href='#channelgetmymsgslastseentime'
                         class='regular pre-open'>
                         #getMyMsgsLastSeenTime
                       </a></li>
                       
                       <li><a
-                        href='#chatgettheirmsgslastseentime'
+                        href='#channelgettheirmsgslastseentime'
                         class='regular pre-open'>
                         #getTheirMsgsLastSeenTime
                       </a></li>
                       
                       <li><a
-                        href='#chataddpub'
+                        href='#channeladdpub'
                         class='regular pre-open'>
                         #addPub
                       </a></li>
                       
                       <li><a
-                        href='#chatsend'
+                        href='#channelsend'
                         class='regular pre-open'>
                         #send
                       </a></li>
                       
                       <li><a
-                        href='#chatsave'
+                        href='#channelsave'
                         class='regular pre-open'>
                         #save
                       </a></li>
                       
                       <li><a
-                        href='#chatputencrypted'
+                        href='#channelput'
                         class='regular pre-open'>
-                        #putEncrypted
+                        #put
                       </a></li>
                       
                       <li><a
-                        href='#chatonmyencrypted'
+                        href='#channelon'
                         class='regular pre-open'>
-                        #onMyEncrypted
+                        #on
                       </a></li>
                       
                       <li><a
-                        href='#chatontheirencrypted'
-                        class='regular pre-open'>
-                        #onTheirEncrypted
-                      </a></li>
-                      
-                      <li><a
-                        href='#chatsettyping'
+                        href='#channelsettyping'
                         class='regular pre-open'>
                         #setTyping
                       </a></li>
                       
                       <li><a
-                        href='#chatgettyping'
+                        href='#channelgettyping'
                         class='regular pre-open'>
                         #getTyping
                       </a></li>
                       
                       <li><a
-                        href='#chatgetchatbox'
+                        href='#channelgetchatbox'
                         class='regular pre-open'>
                         #getChatBox
                       </a></li>
@@ -629,6 +641,64 @@
                       </a></li>
                       
                       <li><a
+                        href='#collectionput'
+                        class='regular pre-open'>
+                        #put
+                      </a></li>
+                      
+                      <li><a
+                        href='#collectionget'
+                        class='regular pre-open'>
+                        #get
+                      </a></li>
+                      
+                      <li><a
+                        href='#collectionget'
+                        class='regular pre-open'>
+                        #get
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#collection'
+                  class=" toggle-sibling">
+                  Collection
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#collectionput'
+                        class='regular pre-open'>
+                        #put
+                      </a></li>
+                      
+                      <li><a
+                        href='#collectionput'
+                        class='regular pre-open'>
+                        #put
+                      </a></li>
+                      
+                      <li><a
+                        href='#collectionget'
+                        class='regular pre-open'>
+                        #get
+                      </a></li>
+                      
+                      <li><a
                         href='#collectionget'
                         class='regular pre-open'>
                         #get
@@ -665,11 +735,11 @@
   </div>
   
 
-  <p>The essence of Iris: A database of Contacts and Messages within your web of trust.</p>
+  <p>The essence of Iris: A database of Contacts and SignedMessages within your web of trust.</p>
 <p>NOTE: these docs reflect the latest commit at <a href="https://github.com/irislib/iris-lib">https://github.com/irislib/iris-lib</a></p>
 <p>To use someone else's index (read-only): set options.pubKey</p>
 <p>To use your own index: set options.keypair or omit it to use Key.getDefaultKey().</p>
-<p>Each added Message updates the Message and Contacts indexes and web of trust accordingly.</p>
+<p>Each added SignedMessage updates the SignedMessage and Contacts indexes and web of trust accordingly.</p>
 <p>You can pass options.gun to use custom gun storages and networking settings.</p>
 <p>If you want messages saved to IPFS, pass options.ipfs = instance.</p>
 <p>Wait for index.ready promise to resolve before calling instance methods.</p>
@@ -941,11 +1011,11 @@ Default options:
       </div>
     </div>
   
-    <div class='border-bottom' id='socialnetworkgetchats'>
+    <div class='border-bottom' id='socialnetworkgetchannels'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getChats(callback)</span>
+            <span class='code strong strong truncate'>getChannels(callback)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -954,9 +1024,9 @@ Default options:
   
 
   <p>Return existing chats and listen to new chats initiated by friends.
-Like Chat.getChats(), but also listens to chats initiated by friends.</p>
+Like Channel.getChannels(), but also listens to chats initiated by friends.</p>
 
-    <div class='pre p1 fill-light mt0'>getChats(callback: any)</div>
+    <div class='pre p1 fill-light mt0'>getChannels(callback: any)</div>
   
   
 
@@ -1016,7 +1086,7 @@ Like Chat.getChats(), but also listens to chats initiated by friends.</p>
 
   <p>Add a message to messagesByTimestamp and other relevant indexes. Update identities in the web of trust according to message data.</p>
 
-    <div class='pre p1 fill-light mt0'>addMessage(msg: <a href="#message">Message</a>, options: any)</div>
+    <div class='pre p1 fill-light mt0'>addMessage(msg: <a href="#signedmessage">SignedMessage</a>, options: any)</div>
   
   
 
@@ -1033,8 +1103,8 @@ Like Chat.getChats(), but also listens to chats initiated by friends.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>msg</span> <code class='quiet'>(<a href="#message">Message</a>)</code>
-	    Message (or an array of messages) to add to the index
+            <span class='code bold'>msg</span> <code class='quiet'>(<a href="#signedmessage">SignedMessage</a>)</code>
+	    SignedMessage (or an array of messages) to add to the index
 
           </div>
           
@@ -1645,15 +1715,15 @@ from SocialNetwork methods such as get() and search().</p>
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='message'>
-      Message
+    <h3 class='fl m0' id='signedmessage'>
+      SignedMessage
     </h3>
     
     
   </div>
   
 
-  <p>Signed message object.</p>
+  <p>Signed message object. Your friends can index and relay your messages, while others can still verify that they were signed by you.</p>
 <p>Fields: signedData, signer (public key) and signature.</p>
 <p>signedData has an author, signer, type, time and optionally other fields.</p>
 <p>signature covers the utf8 string representation of signedData. Since messages are digitally signed, users only need to care about the message signer and not who relayed it or whose index it was found from.</p>
@@ -1662,7 +1732,7 @@ from SocialNetwork methods such as get() and search().</p>
 <p>"Rating" type messages, when added to an SocialNetwork, can add or remove Identities from the web of trust. Verification/unverification messages can add or remove Attributes from an Contact. Other types of messages such as social media "post" are just indexed by their author, recipient and time.</p>
 <p>Constructor: creates a message from the param obj.signedData that must contain at least the mandatory fields: author, recipient, type and time. You can use createRating() and createVerification() to automatically populate some of these fields and optionally sign the message.</p>
 
-    <div class='pre p1 fill-light mt0'>new Message(obj: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+    <div class='pre p1 fill-light mt0'>new SignedMessage(obj: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
   
 
@@ -1736,7 +1806,7 @@ Verification message:
     <div class='py1 quiet mt1 prose-big'>Static Members</div>
     <div class="clearfix">
   
-    <div class='border-bottom' id='messagecreate'>
+    <div class='border-bottom' id='signedmessagecreate'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -1748,9 +1818,9 @@ Verification message:
 
   
 
-  <p>Create an iris message. Message time is automatically set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
+  <p>Create an iris message. SignedMessage time is automatically set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
 
-    <div class='pre p1 fill-light mt0'>create(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#message">Message</a>></div>
+    <div class='pre p1 fill-light mt0'>create(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#signedmessage">SignedMessage</a>></div>
   
   
 
@@ -1791,7 +1861,7 @@ Verification message:
   
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#message">Message</a>></code>:
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#signedmessage">SignedMessage</a>></code>:
         message
 
       
@@ -1814,7 +1884,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagecreateverification'>
+    <div class='border-bottom' id='signedmessagecreateverification'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -1826,7 +1896,7 @@ Verification message:
 
   
 
-  <p>Create an  verification message. Message signedData's type and time are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
+  <p>Create an  verification message. SignedMessage signedData's type and time are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
 
     <div class='pre p1 fill-light mt0'>createVerification(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
   
@@ -1890,7 +1960,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagecreaterating'>
+    <div class='border-bottom' id='signedmessagecreaterating'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -1902,7 +1972,7 @@ Verification message:
 
   
 
-  <p>Create an  rating message. Message signedData's type, maxRating, minRating, time and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
+  <p>Create an  rating message. SignedMessage signedData's type, maxRating, minRating, time and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.</p>
 
     <div class='pre p1 fill-light mt0'>createRating(signedData: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, signingKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
   
@@ -1966,7 +2036,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messageloadfromipfs'>
+    <div class='border-bottom' id='signedmessageloadfromipfs'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2033,7 +2103,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagedeserialize'>
+    <div class='border-bottom' id='signedmessagedeserialize'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2046,7 +2116,7 @@ Verification message:
   
 
   
-    <div class='pre p1 fill-light mt0'>deserialize(s: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#message">Message</a>></div>
+    <div class='pre p1 fill-light mt0'>deserialize(s: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#signedmessage">SignedMessage</a>></div>
   
   
 
@@ -2077,7 +2147,7 @@ Verification message:
   
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
-      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#message">Message</a>></code>:
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#signedmessage">SignedMessage</a>></code>:
         message from JSON string produced by toString
 
       
@@ -2100,7 +2170,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagesetreaction'>
+    <div class='border-bottom' id='signedmessagesetreaction'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2183,7 +2253,7 @@ Verification message:
     <div class='py1 quiet mt1 prose-big'>Instance Members</div>
     <div class="clearfix">
   
-    <div class='border-bottom' id='messagegetauthoriterable'>
+    <div class='border-bottom' id='signedmessagegetauthoriterable'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2237,7 +2307,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagegetrecipientiterable'>
+    <div class='border-bottom' id='signedmessagegetrecipientiterable'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2291,7 +2361,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagegetauthorarray'>
+    <div class='border-bottom' id='signedmessagegetauthorarray'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2345,7 +2415,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagegetrecipientarray'>
+    <div class='border-bottom' id='signedmessagegetrecipientarray'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2399,7 +2469,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagegetsignerkeyid'>
+    <div class='border-bottom' id='signedmessagegetsignerkeyid'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2431,7 +2501,7 @@ Verification message:
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
       <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>:
-        Message signer keyID, i.e. base64 hash of public key
+        SignedMessage signer keyID, i.e. base64 hash of public key
 
       
     
@@ -2453,7 +2523,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messageispositive'>
+    <div class='border-bottom' id='signedmessageispositive'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2507,7 +2577,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messageisnegative'>
+    <div class='border-bottom' id='signedmessageisnegative'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2561,7 +2631,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messageisneutral'>
+    <div class='border-bottom' id='signedmessageisneutral'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2615,7 +2685,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagesign'>
+    <div class='border-bottom' id='signedmessagesign'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2646,7 +2716,7 @@ Verification message:
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>key</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    Gun.SEA keypair to sign the message with
+	    Gun.Gun.SEA keypair to sign the message with
 
           </div>
           
@@ -2675,7 +2745,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagegetauthor'>
+    <div class='border-bottom' id='signedmessagegetauthor'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2743,7 +2813,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagegetrecipient'>
+    <div class='border-bottom' id='signedmessagegetrecipient'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2811,7 +2881,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagegethash'>
+    <div class='border-bottom' id='signedmessagegethash'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2865,7 +2935,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messageverify'>
+    <div class='border-bottom' id='signedmessageverify'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2919,7 +2989,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messagesavetoipfs'>
+    <div class='border-bottom' id='signedmessagesavetoipfs'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -2978,7 +3048,7 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='messageserialize'>
+    <div class='border-bottom' id='signedmessageserialize'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -3049,22 +3119,22 @@ Verification message:
   
   <div class='clearfix'>
     
-    <h3 class='fl m0' id='chat'>
-      Chat
+    <h3 class='fl m0' id='channel'>
+      Channel
     </h3>
     
     
   </div>
   
 
-  <p>Private communication channel between two or more participants. Can be used
-independently of other Iris stuff.</p>
-<p>Messages are encrypted and chat ids obfuscated, but it is possible to guess
+  <p>Private communication channel between two participants. (You can specify more than two participants, but it causes unscalable data replication - better implementation to be done.) Can be used independently of other Iris stuff.</p>
+<p>You can use <strong>1)</strong> channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or <strong>2)</strong> channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.</p>
+<p>Channel ids and data values are obfuscated, but it is possible to guess
 who are communicating with each other by looking at Gun timestamps and subscriptions.</p>
 <p>options.onMessage callback is not guaranteed to receive messages ordered by timestamp.
 You should sort them in the presentation layer.</p>
 
-    <div class='pre p1 fill-light mt0'>new Chat(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+    <div class='pre p1 fill-light mt0'>new Channel(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
   
 
@@ -3082,7 +3152,7 @@ You should sort them in the presentation layer.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    {key, gun, chatLink, onMessage, participants}
+	    {key, gun, channelLink, onMessage, participants}
 
           </div>
           
@@ -3101,7 +3171,7 @@ You should sort them in the presentation layer.</p>
     <div class='py1 quiet mt1 prose-big'>Example</div>
     
       
-      <pre class='p1 overflow-auto round fill-light'>https:<span class="hljs-comment">//github.com/irislib/iris-lib/blob/master/__tests__/chat.js</span></pre>
+      <pre class='p1 overflow-auto round fill-light'>https:<span class="hljs-comment">//github.com/irislib/iris-lib/blob/master/__tests__/channel.js</span></pre>
     
   
 
@@ -3109,11 +3179,11 @@ You should sort them in the presentation layer.</p>
     <div class='py1 quiet mt1 prose-big'>Static Members</div>
     <div class="clearfix">
   
-    <div class='border-bottom' id='chatgetoursecretchatid'>
+    <div class='border-bottom' id='channelgetoursecretchannelid'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getOurSecretChatId(gun, pub, pair)</span>
+            <span class='code strong strong truncate'>getOurSecretChannelId(gun, pub, pair)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -3122,7 +3192,7 @@ You should sort them in the presentation layer.</p>
   
 
   
-    <div class='pre p1 fill-light mt0'>getOurSecretChatId(gun: any, pub: any, pair: any)</div>
+    <div class='pre p1 fill-light mt0'>getOurSecretChannelId(gun: any, pub: any, pair: any)</div>
   
   
 
@@ -3184,11 +3254,11 @@ You should sort them in the presentation layer.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatgettheirsecretchatid'>
+    <div class='border-bottom' id='channelgettheirsecretchannelid'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getTheirSecretChatId(gun, pub, pair)</span>
+            <span class='code strong strong truncate'>getTheirSecretChannelId(gun, pub, pair)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -3197,7 +3267,7 @@ You should sort them in the presentation layer.</p>
   
 
   
-    <div class='pre p1 fill-light mt0'>getTheirSecretChatId(gun: any, pub: any, pair: any)</div>
+    <div class='pre p1 fill-light mt0'>getTheirSecretChannelId(gun: any, pub: any, pair: any)</div>
   
   
 
@@ -3259,11 +3329,11 @@ You should sort them in the presentation layer.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatgetchats'>
+    <div class='border-bottom' id='channelgetchannels'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getChats(gun, keypair, callback)</span>
+            <span class='code strong strong truncate'>getChannels(gun, keypair, callback)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -3271,11 +3341,11 @@ You should sort them in the presentation layer.</p>
 
   
 
-  <p>Return a list of public keys that you have initiated a chat with or replied to.
-(Chats that are initiated by others and unreplied by you don't show up, because
-this method doesn't know where to look for them. Use socialNetwork.getChats() to listen to new chats from friends. Or create chat invite links with Chat.createChatLink(). )</p>
+  <p>Return a list of public keys that you have initiated a channel with or replied to.
+(Channels that are initiated by others and unreplied by you don't show up, because
+this method doesn't know where to look for them. Use socialNetwork.getChannels() to listen to new channels from friends. Or create channel invite links with Channel.createChannelLink(). )</p>
 
-    <div class='pre p1 fill-light mt0'>getChats(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, callback: any)</div>
+    <div class='pre p1 fill-light mt0'>getChannels(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, callback: any)</div>
   
   
 
@@ -3302,7 +3372,7 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>keypair</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    SEA keypair that the gun instance is authenticated with
+	    Gun.SEA keypair that the gun instance is authenticated with
 
           </div>
           
@@ -3311,7 +3381,7 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
-	    callback function that is called for each public key you have a chat with
+	    callback function that is called for each public key you have a channel with
 
           </div>
           
@@ -3340,7 +3410,7 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
       </div>
     </div>
   
-    <div class='border-bottom' id='chataddchatbutton'>
+    <div class='border-bottom' id='channeladdchatbutton'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -3372,7 +3442,7 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>options</span> <code class='quiet'>(any)</code>
-	    {label, chatOptions}
+	    {label, channelOptions}
 
           </div>
           
@@ -3401,7 +3471,7 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
       </div>
     </div>
   
-    <div class='border-bottom' id='chatsetonline'>
+    <div class='border-bottom' id='channelsetonline'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -3470,7 +3540,7 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
       </div>
     </div>
   
-    <div class='border-bottom' id='chatgetonline'>
+    <div class='border-bottom' id='channelgetonline'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -3548,7 +3618,7 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
       </div>
     </div>
   
-    <div class='border-bottom' id='chatinituser'>
+    <div class='border-bottom' id='channelinituser'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -3561,10 +3631,10 @@ this method doesn't know where to look for them. Use socialNetwork.getChats() to
   
 
   <p>In order to receive messages from others, this method must be called for newly created
-users that have not started a chat with an existing user yet.</p>
+users that have not started a channel with an existing user yet.</p>
 <p>It saves the user's key.epub (public key for encryption) into their gun user space,
 so others can find it and write encrypted messages to them.</p>
-<p>If you start a chat with an existing user, key.epub is saved automatically and you don't need
+<p>If you start a channel with an existing user, key.epub is saved automatically and you don't need
 to call this method.</p>
 
     <div class='pre p1 fill-light mt0'>initUser(gun: any, key: any)</div>
@@ -3621,11 +3691,11 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatcreatechatlink'>
+    <div class='border-bottom' id='channelcreatechannellink'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>createChatLink(gun, key, urlRoot)</span>
+            <span class='code strong strong truncate'>createChannelLink(gun, key, urlRoot)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -3633,9 +3703,9 @@ to call this method.</p>
 
   
 
-  <p>Creates a chat link that can be used for two-way communication, i.e. only one link needs to be exchanged.</p>
+  <p>Creates a channel link that can be used for two-way communication, i.e. only one link needs to be exchanged.</p>
 
-    <div class='pre p1 fill-light mt0'>createChatLink(gun: any, key: any, urlRoot: any)</div>
+    <div class='pre p1 fill-light mt0'>createChannelLink(gun: any, key: any, urlRoot: any)</div>
   
   
 
@@ -3698,11 +3768,11 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatremovechatlink'>
+    <div class='border-bottom' id='channelgetmychannellinks'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>removeChatLink(gun, key, linkId)</span>
+            <span class='code strong strong truncate'>getMyChannelLinks(gun, key, urlRoot, callback, subscribe)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -3711,7 +3781,100 @@ to call this method.</p>
   
 
   
-    <div class='pre p1 fill-light mt0'>removeChatLink(gun: any, key: any, linkId: any)</div>
+    <div class='pre p1 fill-light mt0'>getMyChannelLinks(gun: any, key: any, urlRoot: any, callback: any, subscribe: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>gun</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>urlRoot</span> <code class='quiet'>(any
+            = <code>&#39;https://iris.to/&#39;</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>subscribe</span> <code class='quiet'>(any
+            = <code>true</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='channelremovechannellink'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>removeChannelLink(gun, key, linkId)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>removeChannelLink(gun: any, key: any, linkId: any)</div>
   
   
 
@@ -3773,11 +3936,11 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatdeletechat'>
+    <div class='border-bottom' id='channeldeletechannel'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>deleteChat(gun, key, pub)</span>
+            <span class='code strong strong truncate'>deleteChannel(gun, key, pub)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -3786,7 +3949,7 @@ to call this method.</p>
   
 
   
-    <div class='pre p1 fill-light mt0'>deleteChat(gun: any, key: any, pub: any)</div>
+    <div class='pre p1 fill-light mt0'>deleteChannel(gun: any, key: any, pub: any)</div>
   
   
 
@@ -3856,7 +4019,114 @@ to call this method.</p>
     <div class='py1 quiet mt1 prose-big'>Instance Members</div>
     <div class="clearfix">
   
-    <div class='border-bottom' id='chatgetlatestmsg'>
+    <div class='border-bottom' id='channelgetparticipants'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>getParticipants()</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>List participants of the channel (other than you)</p>
+
+    <div class='pre p1 fill-light mt0'>getParticipants()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='channelgetmessages'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>getMessages(callback)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Get messages from the channel</p>
+
+    <div class='pre p1 fill-light mt0'>getMessages(callback: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='channelgetlatestmsg'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -3868,7 +4138,7 @@ to call this method.</p>
 
   
 
-  <p>Get latest message in this chat. Useful for chat listing.</p>
+  <p>Get latest message in this channel. Useful for channel listing.</p>
 
     <div class='pre p1 fill-light mt0'>getLatestMsg(callback: any)</div>
   
@@ -3916,7 +4186,7 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatsetmymsgslastseentime'>
+    <div class='border-bottom' id='channelsetmymsgslastseentime'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -3977,7 +4247,7 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatgetmymsgslastseentime'>
+    <div class='border-bottom' id='channelgetmymsgslastseentime'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -4037,7 +4307,7 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatgettheirmsgslastseentime'>
+    <div class='border-bottom' id='channelgettheirmsgslastseentime'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -4097,7 +4367,7 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chataddpub'>
+    <div class='border-bottom' id='channeladdpub'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -4109,7 +4379,7 @@ to call this method.</p>
 
   
 
-  <p>Add a public key to the chat</p>
+  <p>Add a public key to the channel</p>
 
     <div class='pre p1 fill-light mt0'>addPub(pub: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
   
@@ -4157,7 +4427,7 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatsend'>
+    <div class='border-bottom' id='channelsend'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -4169,7 +4439,7 @@ to call this method.</p>
 
   
 
-  <p>Send a message to the chat</p>
+  <p>Send a message to the channel</p>
 
     <div class='pre p1 fill-light mt0'>send(msg: any)</div>
   
@@ -4189,7 +4459,7 @@ to call this method.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>msg</span> <code class='quiet'>(any)</code>
-	    string or {time, author, text} object
+	    string or {time, text, ...} object
 
           </div>
           
@@ -4218,7 +4488,7 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatsave'>
+    <div class='border-bottom' id='channelsave'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -4230,7 +4500,7 @@ to call this method.</p>
 
   
 
-  <p>Save the chat to our chats list without sending a message</p>
+  <p>Save the channel to our channels list without sending a message</p>
 
     <div class='pre p1 fill-light mt0'>save()</div>
   
@@ -4265,11 +4535,11 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatputencrypted'>
+    <div class='border-bottom' id='channelput'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>putEncrypted(key, value, salt)</span>
+            <span class='code strong strong truncate'>put(key, value, salt)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -4277,9 +4547,9 @@ to call this method.</p>
 
   
 
-  <p>Save a key-value pair, encrypt value</p>
+  <p>Save a key-value pair, encrypt value. Each participant in the Channel writes to their own version of the key-value pair — they don't overwrite the same one.</p>
 
-    <div class='pre p1 fill-light mt0'>putEncrypted(key: any, value: any, salt: any)</div>
+    <div class='pre p1 fill-light mt0'>put(key: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, value: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, salt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
   
   
 
@@ -4296,7 +4566,7 @@ to call this method.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>key</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
 	    
           </div>
           
@@ -4304,7 +4574,7 @@ to call this method.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>value</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>value</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
 	    
           </div>
           
@@ -4312,8 +4582,9 @@ to call this method.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>salt</span> <code class='quiet'>(any)</code>
-	    
+            <span class='code bold'>salt</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
+	    (optional) custom salt for encrypting the value
+
           </div>
           
         </div>
@@ -4341,11 +4612,11 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatonmyencrypted'>
+    <div class='border-bottom' id='channelon'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>onMyEncrypted(key, callback)</span>
+            <span class='code strong strong truncate'>on(key, callback, from)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -4353,9 +4624,9 @@ to call this method.</p>
 
   
 
-  <p>Subscribe to key from us, decrypt value</p>
+  <p>Subscribe to a key-value pair. Callback returns every participant's value unless you limit it with <em>from</em> param.</p>
 
-    <div class='pre p1 fill-light mt0'>onMyEncrypted(key: any, callback: any)</div>
+    <div class='pre p1 fill-light mt0'>on(key: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, callback: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function">function</a>, from: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
   
   
 
@@ -4372,7 +4643,7 @@ to call this method.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>key</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
 	    
           </div>
           
@@ -4380,8 +4651,21 @@ to call this method.</p>
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
+            <span class='code bold'>callback</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function">function</a>)</code>
 	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>from</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
+	    public key whose value you want, or 
+<em>"me"</em>
+ for your value only, or 
+<em>"them"</em>
+ for the value of others only
+
           </div>
           
         </div>
@@ -4409,75 +4693,7 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatontheirencrypted'>
-      <div class="clearfix small pointer toggle-sibling">
-        <div class="py1 contain">
-            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>onTheirEncrypted(key, callback)</span>
-        </div>
-      </div>
-      <div class="clearfix display-none toggle-target">
-        <section class='p2 mb2 clearfix bg-white minishadow'>
-
-  
-
-  <p>Subscribe to key from other participants, decrypt value</p>
-
-    <div class='pre p1 fill-light mt0'>onTheirEncrypted(key: any, callback: any)</div>
-  
-  
-
-  
-  
-  
-  
-  
-  
-
-  
-    <div class='py1 quiet mt1 prose-big'>Parameters</div>
-    <div class='prose'>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-        <div class='space-bottom0'>
-          <div>
-            <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
-	    
-          </div>
-          
-        </div>
-      
-    </div>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-</section>
-
-      </div>
-    </div>
-  
-    <div class='border-bottom' id='chatsettyping'>
+    <div class='border-bottom' id='channelsettyping'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -4546,7 +4762,7 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatgettyping'>
+    <div class='border-bottom' id='channelgettyping'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -4615,7 +4831,7 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='chatgetchatbox'>
+    <div class='border-bottom' id='channelgetchatbox'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
@@ -4627,7 +4843,7 @@ to call this method.</p>
 
   
 
-  <p>Get a chat box element that you can add to your page</p>
+  <p>Get a channel box element that you can add to your page</p>
 
     <div class='pre p1 fill-light mt0'>getChatBox()</div>
   
@@ -4687,7 +4903,7 @@ to call this method.</p>
   </div>
   
 
-  <p>Key management utils. Wraps GUN's SEA. <a href="https://gun.eco/docs/SEA">https://gun.eco/docs/SEA</a></p>
+  <p>Key management utils. Wraps GUN's Gun.SEA. <a href="https://gun.eco/docs/Gun.SEA">https://gun.eco/docs/Gun.SEA</a></p>
 
     <div class='pre p1 fill-light mt0'>new Key()</div>
   
@@ -4979,7 +5195,7 @@ to call this method.</p>
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
       <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>:
-        Gun.SEA keypair object
+        Gun.Gun.SEA keypair object
 
       
     
@@ -5034,7 +5250,7 @@ to call this method.</p>
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
       <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></code>:
-        Gun.SEA keypair object
+        Gun.Gun.SEA keypair object
 
       
     
@@ -6001,6 +6217,492 @@ TODO: scrollable and stretchable "search result window"</p>
 
       
     
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='collectionput'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>put(object, opt)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>put(object: any, opt: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>object</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>opt</span> <code class='quiet'>(any
+            = <code>{}</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code>:
+        id of added object, which can be used for collection.get(id)
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='collectionget'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>get(opt)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>get(opt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>opt</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+            = <code>{}</code>)</code>
+	    {callback, id, selector, limit, orderBy}
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='collectionget'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>get(opt)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>get(opt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>opt</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+            = <code>{}</code>)</code>
+	    {callback, id, selector, limit, orderBy}
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='collection'>
+      Collection
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Gun object collection that provides tools for indexing and search. Decentralize everything!</p>
+<p>If opt.class is passed, object.serialize() and opt.class.deserialize() must be defined.</p>
+<p>Supports search from multiple indexes.
+For example, retrieve message feed from your own index and your friends' indexes.</p>
+<p>TODO: aggregation
+TODO: example
+TODO: scrollable and stretchable "search result window"</p>
+
+    <div class='pre p1 fill-light mt0'>new Collection(opt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>opt</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+            = <code>{}</code>)</code>
+	    {gun, class, indexes = [], askPeers = true, name = class.name}
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='collectionput'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>put(object, opt)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>put(object: any, opt: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>object</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>opt</span> <code class='quiet'>(any
+            = <code>{}</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code>:
+        id of added object, which can be used for collection.get(id)
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='collectionput'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>put(object, opt)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>put(object: any, opt: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>object</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>opt</span> <code class='quiet'>(any
+            = <code>{}</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code>:
+        id of added object, which can be used for collection.get(id)
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='collectionget'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>get(opt)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>get(opt: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>opt</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+            = <code>{}</code>)</code>
+	    {callback, id, selector, limit, orderBy}
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
   
 
   

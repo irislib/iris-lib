@@ -25,7 +25,7 @@ test(`Get default key and sign a message with it`, async () => {
   expect(i).toBeDefined();
   const j = await iris.Key.getDefault(`.`);
   expect(i).toEqual(j);
-  const msg = await iris.Message.createRating({
+  const msg = await iris.SignedMessage.createRating({
     author: {email: `alice@example.com`},
     recipient: {email: `bob@example.com`},
     rating: 5,

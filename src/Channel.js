@@ -2,19 +2,20 @@ import Gun from 'gun';
 import util from './util';
 
 /**
-* Private communication channel between two or more participants. Can be used
-* independently of other Iris stuff.
+* Private communication channel between two participants. (You can specify more than two participants, but it causes unscalable data replication - better implementation to be done.) Can be used independently of other Iris stuff.
 *
-* Messages are encrypted and chat ids obfuscated, but it is possible to guess
+* You can use **1)** channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or **2)** channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.
+*
+* Channel ids and data values are obfuscated, but it is possible to guess
 * who are communicating with each other by looking at Gun timestamps and subscriptions.
 *
 * options.onMessage callback is not guaranteed to receive messages ordered by timestamp.
 * You should sort them in the presentation layer.
 *
-* @param {Object} options {key, gun, chatLink, onMessage, participants}
-* @example https://github.com/irislib/iris-lib/blob/master/__tests__/chat.js
+* @param {Object} options {key, gun, channelLink, onMessage, participants}
+* @example https://github.com/irislib/iris-lib/blob/master/__tests__/channel.js
 */
-class Chat {
+class Channel {
   constructor(options) {
     this.key = options.key;
     this.gun = options.gun;
@@ -22,8 +23,8 @@ class Chat {
     this.user.auth(this.key);
     this.user.put({epub: this.key.epub});
     this.secrets = {}; // maps participant public key to shared secret
-    this.ourSecretChatIds = {}; // maps participant public key to our secret chat id
-    this.theirSecretChatIds = {}; // maps participant public key to their secret chat id
+    this.ourSecretChannelIds = {}; // maps participant public key to our secret channel id
+    this.theirSecretChannelIds = {}; // maps participant public key to their secret channel id
     this.onMessage = [];
     if (options.onMessage) {
       this.onMessage.push(options.onMessage);
@@ -31,8 +32,8 @@ class Chat {
     this.messages = {};
 
     let saved;
-    if (options.chatLink) {
-      const s = options.chatLink.split('?');
+    if (options.channelLink) {
+      const s = options.channelLink.split('?');
       if (s.length === 2) {
         const pub = util.getUrlParameter('chatWith', s[1]);
         options.participants = pub;
@@ -40,14 +41,14 @@ class Chat {
           const sharedSecret = util.getUrlParameter('s', s[1]);
           const linkId = util.getUrlParameter('k', s[1]);
           if (sharedSecret && linkId) {
-            this.save(); // save the chat first so it's there before inviter subscribes to it
+            this.save(); // save the channel first so it's there before inviter subscribes to it
             saved = true;
-            this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
+            this.gun.user(pub).get('channelLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
               const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
-              const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret);
-              const chatRequestId = await util.getHash(encryptedChatRequest);
+              const encryptedChannelRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret);
+              const channelRequestId = await util.getHash(encryptedChannelRequest);
               util.gunAsAnotherUser(this.gun, sharedKey, user => {
-                user.get('chatRequests').get(chatRequestId.slice(0, 12)).put(encryptedChatRequest);
+                user.get('channelRequests').get(channelRequestId.slice(0, 12)).put(encryptedChannelRequest);
               });
             });
           }
@@ -66,9 +67,16 @@ class Chat {
         }
       }
     }
-    if (!saved) {
+    if (!saved && (options.save === undefined || options.save === false)) {
       this.save();
     }
+  }
+
+  /**
+  * List participants of the channel (other than you)
+  */
+  getParticipants() {
+    return Object.keys(this.secrets);
   }
 
   async getSecret(pub) {
@@ -82,7 +90,7 @@ class Chat {
   /**
   *
   */
-  static async getOurSecretChatId(gun, pub, pair) {
+  static async getOurSecretChannelId(gun, pub, pair) {
     const epub = await util.gunOnceDefined(gun.user(pub).get(`epub`));
     const secret = await Gun.SEA.secret(epub, pair);
     return util.getHash(secret + pub);
@@ -91,62 +99,65 @@ class Chat {
   /**
   *
   */
-  static async getTheirSecretChatId(gun, pub, pair) {
+  static async getTheirSecretChannelId(gun, pub, pair) {
     const epub = await util.gunOnceDefined(gun.user(pub).get(`epub`));
     const secret = await Gun.SEA.secret(epub, pair);
     return util.getHash(secret + pair.pub);
   }
 
   /**
-  * Return a list of public keys that you have initiated a chat with or replied to.
-  * (Chats that are initiated by others and unreplied by you don't show up, because
-  * this method doesn't know where to look for them. Use socialNetwork.getChats() to listen to new chats from friends. Or create chat invite links with Chat.createChatLink(). )
+  * Return a list of public keys that you have initiated a channel with or replied to.
+  * (Channels that are initiated by others and unreplied by you don't show up, because
+  * this method doesn't know where to look for them. Use socialNetwork.getChannels() to listen to new channels from friends. Or create channel invite links with Channel.createChannelLink(). )
   * @param {Object} gun user.authed gun instance
   * @param {Object} keypair Gun.SEA keypair that the gun instance is authenticated with
-  * @param callback callback function that is called for each public key you have a chat with
+  * @param callback callback function that is called for each public key you have a channel with
   */
-  static async getChats(gun, keypair, callback) {
+  static async getChannels(gun, keypair, callback) {
     const mySecret = await Gun.SEA.secret(keypair.epub, keypair);
-    gun.user().get(`chats`).map().on(async (value, ourSecretChatId) => {
+    gun.user().get(`chats`).map().on(async (value, ourSecretChannelId) => {
       if (value) {
-        if (ourSecretChatId.length > 44) {
-          gun.user().get(`chats`).get(ourSecretChatId).put(null);
+        if (ourSecretChannelId.length > 44) {
+          gun.user().get(`chats`).get(ourSecretChannelId).put(null);
           return;
         }
-        const encryptedPub = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChatId).get(`pub`));
+        const encryptedPub = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`));
         const pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
         callback(pub);
       }
     });
   }
 
-  async getOurSecretChatId(pub) {
-    if (!this.ourSecretChatIds[pub]) {
+  async getOurSecretChannelId(pub) {
+    if (!this.ourSecretChannelIds[pub]) {
       const secret = await this.getSecret(pub);
-      this.ourSecretChatIds[pub] = await util.getHash(secret + pub);
+      this.ourSecretChannelIds[pub] = await util.getHash(secret + pub);
     }
-    return this.ourSecretChatIds[pub];
+    return this.ourSecretChannelIds[pub];
   }
 
-  async getTheirSecretChatId(pub) {
-    if (!this.theirSecretChatIds[pub]) {
+  async getTheirSecretChannelId(pub) {
+    if (!this.theirSecretChannelIds[pub]) {
       const secret = await this.getSecret(pub);
-      this.theirSecretChatIds[pub] = await util.getHash(secret + this.key.pub);
+      this.theirSecretChannelIds[pub] = await util.getHash(secret + this.key.pub);
     }
-    return this.theirSecretChatIds[pub];
+    return this.theirSecretChannelIds[pub];
   }
 
+  /**
+  * Get messages from the channel
+  */
   async getMessages(callback) {
     this.onMessage.push(callback);
-    Object.keys(this.secrets).forEach(async pub => {
+    this.getParticipants().forEach(async pub => {
       if (pub !== this.key.pub) {
         // Subscribe to their messages
-        const theirSecretChatId = await this.getTheirSecretChatId(pub);
-        this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key);});
+        const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
+        this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key);});
       }
       // Subscribe to our messages
-      const ourSecretChatId = await this.getOurSecretChatId(pub);
-      this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key);});
+      const ourSecretChannelId = await this.getOurSecretChannelId(pub);
+      this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key);});
     });
   }
 
@@ -157,19 +168,19 @@ class Chat {
     if (this.onMessage.length) {
       const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
       if (typeof decrypted !== `object`) {
-        // console.log(`chat data received`, decrypted);
+        // console.log(`channel data received`, decrypted);
         return;
       }
       decrypted._info = {selfAuthored, pub};
       this.messages[key] = decrypted;
       this.onMessage.forEach(f => f(decrypted, decrypted._info));
     } else {
-      // console.log(`chat message received`, decrypted);
+      // console.log(`channel message received`, decrypted);
     }
   }
 
   /**
-  * Get latest message in this chat. Useful for chat listing.
+  * Get latest message in this channel. Useful for channel listing.
   */
   async getLatestMsg(callback) {
     const callbackIfLatest = async (msg, info) => {
@@ -183,8 +194,8 @@ class Chat {
         }
       }
     };
-    this.onMyEncrypted('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: true}));
-    this.onTheirEncrypted('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: false}));
+    this.onMy('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: true}));
+    this.onTheir('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: false}));
   }
 
   /**
@@ -193,14 +204,14 @@ class Chat {
   */
   async setMyMsgsLastSeenTime(time) {
     time = time || new Date().toISOString();
-    return this.putMyEncrypted(`msgsLastSeenTime`, time);
+    return this.put(`msgsLastSeenTime`, time);
   }
 
   /**
   * Useful for notifications
   */
   async getMyMsgsLastSeenTime(callback) {
-    this.onMyEncrypted(`msgsLastSeenTime`, time => {
+    this.onMy(`msgsLastSeenTime`, time => {
       this.myMsgsLastSeenTime = time;
       if (callback) {
         callback(this.myMsgsLastSeenTime);
@@ -212,7 +223,7 @@ class Chat {
   * For "seen" status indicator
   */
   async getTheirMsgsLastSeenTime(callback) {
-    this.onTheirEncrypted(`msgsLastSeenTime`, time => {
+    this.onTheir(`msgsLastSeenTime`, time => {
       this.theirMsgsLastSeenTime = time;
       if (callback) {
         callback(this.theirMsgsLastSeenTime);
@@ -221,28 +232,28 @@ class Chat {
   }
 
   /**
-  * Add a public key to the chat
+  * Add a public key to the channel
   * @param {string} pub
   */
   async addPub(pub) {
     this.secrets[pub] = null;
     this.getSecret(pub);
-    // Save their public key in encrypted format, so in chat listing we know who we are chatting with
-    const ourSecretChatId = await this.getOurSecretChatId(pub);
+    // Save their public key in encrypted format, so in channel listing we know who we are channelting with
+    const ourSecretChannelId = await this.getOurSecretChannelId(pub);
     const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
-    this.gun.user().get(`chats`).get(ourSecretChatId).get(`pub`).put(await Gun.SEA.encrypt(pub, mySecret));
+    this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt(pub, mySecret));
     if (pub !== this.key.pub) {
       // Subscribe to their messages
-      const theirSecretChatId = await this.getTheirSecretChatId(pub);
-      this.gun.user(pub).get(`chats`).get(theirSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key);});
+      const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
+      this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key);});
     }
     // Subscribe to our messages
-    this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key);});
+    this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key);});
   }
 
   /**
-  * Send a message to the chat
-  * @param msg string or {time, author, text} object
+  * Send a message to the channel
+  * @param msg string or {time, text, ...} object
   */
   async send(msg) {
     if (typeof msg === `string`) {
@@ -252,56 +263,75 @@ class Chat {
       }
       msg = {
         time: (new Date()).toISOString(),
-        author: `anonymous`,
         text: msg
       };
+    } else if (typeof msg === `object`) {
+      msg.time = msg.time || (new Date()).toISOString();
+    } else {
+      throw new Error(`msg param must be a string or an object`);
     }
     //this.gun.user().get('message').set(temp);
-    const keys = Object.keys(this.secrets);
+    const keys = this.getParticipants();
     for (let i = 0;i < keys.length;i++) {
       const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
-      const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChatId).get(`msgs`).get(`${msg.time}`).put(encrypted);
-      this.user.get(`chats`).get(ourSecretChatId).get(`latestMsg`).put(encrypted);
+      const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
+      this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).get(`${msg.time}`).put(encrypted);
+      this.user.get(`chats`).get(ourSecretChannelId).get(`latestMsg`).put(encrypted);
     }
   }
 
   /**
-  * Save the chat to our chats list without sending a message
+  * Save the channel to our channels list without sending a message
   */
   async save() {
-    const keys = Object.keys(this.secrets);
+    const keys = this.getParticipants();
     for (let i = 0;i < keys.length;i++) {
-      const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChatId).get('msgs').get('a').put(null);
+      const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
+      this.user.get(`chats`).get(ourSecretChannelId).get('msgs').get('a').put(null);
     }
   }
 
   /**
-  * Save a key-value pair, encrypt value
+  * Save a key-value pair, encrypt value. Each participant in the Channel writes to their own version of the key-value pair — they don't overwrite the same one.
+  * @param {string} key
+  * @param {string} value
+  * @param {string} salt (optional) custom salt for encrypting the value
   */
-  async putMyEncrypted(key, value, salt) {
-    const keys = Object.keys(this.secrets);
+  async put(key, value, salt) {
+    if (key === `msgs`) { throw new Error(`Sorry, you can't overwrite the msgs field which is used for .send()`); }
+    const keys = this.getParticipants();
     salt = salt || Gun.SEA.random(32).toString();
     const obj = {v: value, s: salt};
     for (let i = 0;i < keys.length;i++) {
       const encrypted = await Gun.SEA.encrypt(JSON.stringify(obj), (await this.getSecret(keys[i])));
-      const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChatId).get(key).put(encrypted);
+      const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
+      this.user.get(`chats`).get(ourSecretChannelId).get(key).put(encrypted);
     }
   }
 
   /**
-  * Subscribe to key from us, decrypt value
+  * Subscribe to a key-value pair. Callback returns every participant's value unless you limit it with *from* param.
+  * @param {string} key
+  * @param {function} callback
+  * @param {string} from public key whose value you want, or *"me"* for your value only, or *"them"* for the value of others only
   */
-  async onMyEncrypted(key, callback) {
-    if (typeof callback !== 'function') {
-      throw new Error(`onMyEncrypted callback must be a function, got ${typeof callback}`);
+  async on(key, callback, from) {
+    if (!from || from === `me` || from === this.key.pub) {
+      this.onMy(key, val => callback(val, from));
     }
-    const keys = Object.keys(this.secrets);
+    if (!from || (from !== `me` && from !== this.key.pub)) {
+      this.onTheir(key, val => callback(val, from));
+    }
+  }
+
+  async onMy(key, callback) {
+    if (typeof callback !== 'function') {
+      throw new Error(`onMy callback must be a function, got ${typeof callback}`);
+    }
+    const keys = this.getParticipants();
     for (let i = 0;i < keys.length;i++) {
-      const ourSecretChatId = await this.getOurSecretChatId(keys[i]);
-      this.gun.user().get(`chats`).get(ourSecretChatId).get(key).on(async data => {
+      const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
+      this.gun.user().get(`chats`).get(ourSecretChannelId).get(key).on(async data => {
         const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
         if (decrypted) {
           callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
@@ -311,17 +341,14 @@ class Chat {
     }
   }
 
-  /**
-  * Subscribe to key from other participants, decrypt value
-  */
-  async onTheirEncrypted(key, callback) {
+  async onTheir(key, callback) {
     if (typeof callback !== 'function') {
-      throw new Error(`onTheirEncrypted callback must be a function, got ${typeof callback}`);
+      throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
-    const keys = Object.keys(this.secrets);
+    const keys = this.getParticipants();
     for (let i = 0;i < keys.length;i++) {
-      const theirSecretChatId = await this.getTheirSecretChatId(keys[i]);
-      this.gun.user(keys[i]).get(`chats`).get(theirSecretChatId).get(key).on(async data => {
+      const theirSecretChannelId = await this.getTheirSecretChannelId(keys[i]);
+      this.gun.user(keys[i]).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
         const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
         if (decrypted) {
           callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
@@ -336,9 +363,9 @@ class Chat {
   setTyping(isTyping, timeout = 5) {
     isTyping = typeof isTyping === `undefined` ? true : isTyping;
     timeout = timeout * 1000;
-    this.putMyEncrypted(`typing`, isTyping ? new Date().toISOString() : false);
+    this.put(`typing`, isTyping ? new Date().toISOString() : false);
     clearTimeout(this.setTypingTimeout);
-    this.setTypingTimeout = setTimeout(() => this.putMyEncrypted(`isTyping`, false), timeout);
+    this.setTypingTimeout = setTimeout(() => this.put(`isTyping`, false), timeout);
   }
 
   /**
@@ -346,7 +373,7 @@ class Chat {
   */
   getTyping(callback, timeout = 5) {
     timeout = timeout * 1000;
-    this.onTheirEncrypted(`typing`, (typing, key, pub) => {
+    this.onTheir(`typing`, (typing, key, pub) => {
       if (callback) {
         const isTyping = typing && new Date() - new Date(typing) <= timeout;
         callback(isTyping, pub);
@@ -361,23 +388,23 @@ class Chat {
 
   /**
   * Add a chat button to page
-  * @param options {label, chatOptions}
+  * @param options {label, channelOptions}
   */
   static addChatButton(options = {}) {
     options = Object.assign({label: 'Chat'}, options);
-    if (!options.chatOptions) {
-      throw new Error('addChatButton missing options.chatOptions param');
+    if (!options.channelOptions) {
+      throw new Error('addChatButton missing options.channelOptions param');
     }
     util.injectCss();
-    let chat, box;
+    let channel, box;
     const btn = util.createElement('div', 'iris-chat-open-button', document.body);
     btn.setAttribute('id', 'iris-chat-open-button');
     btn.innerHTML = `<svg style="margin-right:7px;margin-bottom: -0.2em" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 510 510" xml:space="preserve"><path fill="currentColor" d="M459,0H51C22.95,0,0,22.95,0,51v459l102-102h357c28.05,0,51-22.95,51-51V51C510,22.95,487.05,0,459,0z M102,178.5h306v51 H102V178.5z M306,306H102v-51h204V306z M408,153H102v-51h306V153z"></path></svg> ${options.label}`;
     btn.addEventListener('click', () => {
       btn.setAttribute('style', 'display: none');
-      if (!chat) {
-        chat = new Chat(options.chatOptions);
-        box = chat.getChatBox();
+      if (!channel) {
+        channel = new Channel(options.channelOptions);
+        box = channel.getChatBox();
         document.body.appendChild(box);
       } else {
         box.setAttribute('style', ''); // show
@@ -386,7 +413,7 @@ class Chat {
   }
 
   /**
-  * Get a chat box element that you can add to your page
+  * Get a channel box element that you can add to your page
   */
   getChatBox() {
     util.injectCss();
@@ -445,11 +472,11 @@ class Chat {
       });
     }
 
-    const participants = Object.keys(this.secrets);
+    const participants = this.getParticipants();
     if (participants.length) {
       const pub = participants[0];
       this.gun.user(pub).get('profile').get('name').on(name => nameEl.innerText = name);
-      Chat.getOnline(this.gun, pub, status => {
+      Channel.getOnline(this.gun, pub, status => {
         const cls = `iris-online-indicator${  status.isOnline ? ' yes' : ''}`;
         onlineIndicator.setAttribute('class', cls);
         const undelivered = messages.querySelectorAll('.iris-chat-message:not(.delivered)');
@@ -506,7 +533,7 @@ class Chat {
     });
 
     textArea.addEventListener('keyup', event => {
-      Chat.setOnline(this.gun, true); // TODO
+      Channel.setOnline(this.gun, true); // TODO
       this.setMyMsgsLastSeenTime(); // TODO
       if (event.keyCode === 13) {
         event.preventDefault();
@@ -574,12 +601,12 @@ class Chat {
 
   /**
   * In order to receive messages from others, this method must be called for newly created
-  * users that have not started a chat with an existing user yet.
+  * users that have not started a channel with an existing user yet.
   *
   * It saves the user's key.epub (public key for encryption) into their gun user space,
   * so others can find it and write encrypted messages to them.
   *
-  * If you start a chat with an existing user, key.epub is saved automatically and you don't need
+  * If you start a channel with an existing user, key.epub is saved automatically and you don't need
   * to call this method.
   */
   static initUser(gun, key) {
@@ -588,14 +615,14 @@ class Chat {
     user.put({epub: key.epub});
   }
 
-  static formatChatLink(urlRoot, pub, sharedSecret, linkId) {
+  static formatChannelLink(urlRoot, pub, sharedSecret, linkId) {
     return `${urlRoot}?chatWith=${encodeURIComponent(pub)}&s=${encodeURIComponent(sharedSecret)}&k=${encodeURIComponent(linkId)}`;
   }
 
   /**
-  * Creates a chat link that can be used for two-way communication, i.e. only one link needs to be exchanged.
+  * Creates a channel link that can be used for two-way communication, i.e. only one link needs to be exchanged.
   */
-  static async createChatLink(gun, key, urlRoot = 'https://iris.to/') {
+  static async createChannelLink(gun, key, urlRoot = 'https://iris.to/') {
     const user = gun.user();
     user.auth(key);
 
@@ -608,48 +635,48 @@ class Chat {
     let linkId = await util.getHash(encryptedSharedKey);
     linkId = linkId.slice(0, 12);
 
-    // User has to exist, in order for .get(chatRequests).on() to be ever triggered
+    // User has to exist, in order for .get(channelRequests).on() to be ever triggered
     await util.gunAsAnotherUser(gun, sharedKey, user => {
-      return user.get('chatRequests').put({a: 1}).then();
+      return user.get('channelRequests').put({a: 1}).then();
     });
 
-    user.get('chatLinks').get(linkId).put({encryptedSharedKey, ownerEncryptedSharedKey});
+    user.get('channelLinks').get(linkId).put({encryptedSharedKey, ownerEncryptedSharedKey});
 
-    return Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
+    return Channel.formatChannelLink(urlRoot, key.pub, sharedSecret, linkId);
   }
 
   /**
   *
   */
-  static async getMyChatLinks(gun, key, urlRoot = 'https://iris.to/', callback, subscribe = true) {
+  static async getMyChannelLinks(gun, key, urlRoot = 'https://iris.to/', callback, subscribe = true) {
     const user = gun.user();
     user.auth(key);
     const mySecret = await Gun.SEA.secret(key.epub, key);
-    const chatLinks = [];
-    user.get('chatLinks').map().on((data, linkId) => {
-      if (!data || chatLinks.indexOf(linkId) !== -1) { return; }
-      const chats = [];
-      user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').on(async enc => {
-        if (!enc || chatLinks.indexOf(linkId) !== -1) { return; }
-        chatLinks.push(linkId);
+    const channelLinks = [];
+    user.get('channelLinks').map().on((data, linkId) => {
+      if (!data || channelLinks.indexOf(linkId) !== -1) { return; }
+      const channels = [];
+      user.get('channelLinks').get(linkId).get('ownerEncryptedSharedKey').on(async enc => {
+        if (!enc || channelLinks.indexOf(linkId) !== -1) { return; }
+        channelLinks.push(linkId);
         const sharedKey = await Gun.SEA.decrypt(enc, mySecret);
         const sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
-        const url = Chat.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
+        const url = Channel.formatChannelLink(urlRoot, key.pub, sharedSecret, linkId);
         if (callback) {
           callback({url, id: linkId});
         }
         if (subscribe) {
-          gun.user(sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId) => {
+          gun.user(sharedKey.pub).get('channelRequests').map().on(async (encPub, requestId) => {
             if (!encPub) { return; }
             const s = JSON.stringify(encPub);
-            if (chats.indexOf(s) === -1) {
-              chats.push(s);
+            if (channels.indexOf(s) === -1) {
+              channels.push(s);
               const pub = await Gun.SEA.decrypt(encPub, sharedSecret);
-              const chat = new Chat({gun, key, participants: pub});
-              chat.save();
+              const channel = new Channel({gun, key, participants: pub});
+              channel.save();
             }
-            util.gunAsAnotherUser(gun, sharedKey, user => { // remove the chat request after reading
-              user.get('chatRequests').get(requestId).put(null);
+            util.gunAsAnotherUser(gun, sharedKey, user => { // remove the channel request after reading
+              user.get('channelRequests').get(requestId).put(null);
             });
           });
         }
@@ -660,20 +687,20 @@ class Chat {
   /**
   *
   */
-  static removeChatLink(gun, key, linkId) {
+  static removeChannelLink(gun, key, linkId) {
     gun.user().auth(key);
-    gun.user().get('chatLinks').get(linkId).put(null);
+    gun.user().get('channelLinks').get(linkId).put(null);
   }
 
   /**
   *
   */
-  static async deleteChat(gun, key, pub) {
+  static async deleteChannel(gun, key, pub) {
     gun.user().auth(key);
-    const chatId = await Chat.getOurSecretChatId(gun, pub, key);
-    gun.user().get('chats').get(chatId).put(null);
-    gun.user().get('chats').get(chatId).off();
+    const channelId = await Channel.getOurSecretChannelId(gun, pub, key);
+    gun.user().get('channels').get(channelId).put(null);
+    gun.user().get('channels').get(channelId).off();
   }
 }
 
-export default Chat;
+export default Channel;

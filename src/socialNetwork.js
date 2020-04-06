@@ -1,8 +1,8 @@
-import Message from './message';
-import Key from './key';
-import Contact from './contact';
-import Attribute from './attribute';
-import Chat from './chat';
+import SignedMessage from './SignedMessage';
+import Key from './Key';
+import Contact from './Contact';
+import Attribute from './Attribute';
+import Channel from './Channel';
 import Collection from './collection';
 import util from './util';
 import Gun from 'gun'; // eslint-disable-line no-unused-vars
@@ -44,7 +44,7 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 
 // TODO: flush onto IPFS
 /**
-* The essence of Iris: A database of Contacts and Messages within your web of trust.
+* The essence of Iris: A database of Contacts and SignedMessages within your web of trust.
 *
 * NOTE: these docs reflect the latest commit at https://github.com/irislib/iris-lib
 *
@@ -52,7 +52,7 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 *
 * To use your own index: set options.keypair or omit it to use Key.getDefaultKey().
 *
-* Each added Message updates the Message and Contacts indexes and web of trust accordingly.
+* Each added SignedMessage updates the SignedMessage and Contacts indexes and web of trust accordingly.
 *
 * You can pass options.gun to use custom gun storages and networking settings.
 *
@@ -156,7 +156,7 @@ class SocialNetwork {
     this.gun.get(`messagesByHash`).put(user.top(`messagesByHash`));
     this.gun.get(`messagesByDistance`).put(user.top(`messagesByDistance`));
 
-    this.messages = new Collection({gun: this.gun, class: Message, indexes: [`time`, `trustDistance`]});
+    this.messages = new Collection({gun: this.gun, class: SignedMessage, indexes: [`time`, `trustDistance`]});
     this.contacts = new Collection({gun: this.gun, class: Contact});
 
     const uri = this.rootContact.uri();
@@ -175,7 +175,7 @@ class SocialNetwork {
     await this._addContactToIndexes(id.gun);
     if (this.options.self) {
       const recipient = Object.assign(this.options.self, {keyID: this.rootContact.value});
-      Message.createVerification({recipient}, keypair).then(msg => {
+      SignedMessage.createVerification({recipient}, keypair).then(msg => {
         this.addMessage(msg);
       });
     }
@@ -190,7 +190,7 @@ class SocialNetwork {
             this.gun.user(uri).get(`iris`).get(`messagesByDistance`).map((val, key) => {
               const d = Number.parseInt(key.split(`:`)[0]);
               if (!isNaN(d) && d <= this.options.indexSync.subscribe.maxMsgDistance) {
-                Message.fromSig(val).then(msg => {
+                SignedMessage.fromSig(val).then(msg => {
                   if (this.options.indexSync.msgTypes.all ||
                     Object.prototype.hasOwnProperty.call(this.options.indexSync.msgTypes, msg.signedData.type)) {
                     this.addMessage(msg, {checkIfExists: true});
@@ -363,9 +363,9 @@ class SocialNetwork {
     // TODO: add uuid to attributes
     let msg;
     if (follow) {
-      msg = await Message.createRating({recipient: attributes, rating: 1});
+      msg = await SignedMessage.createRating({recipient: attributes, rating: 1});
     } else {
-      msg = await Message.createVerification({recipient: attributes});
+      msg = await SignedMessage.createVerification({recipient: attributes});
     }
     return this.addMessage(msg);
   }
@@ -413,7 +413,7 @@ class SocialNetwork {
       const node = this.gun.get(`identities`).set(o);
       const updateContactByLinkedAttribute = attribute => {
         this.gun.get(`verificationsByRecipient`).get(attribute.uri()).map().once(val => {
-          const m = Message.fromSig(val);
+          const m = SignedMessage.fromSig(val);
           const recipients = m.getRecipientArray();
           for (let i = 0;i < recipients.length;i++) {
             const a2 = recipients[i];
@@ -421,7 +421,7 @@ class SocialNetwork {
               // TODO remove attribute from contact if not enough verifications / too many unverifications
               o.attributes[a2.uri()] = a2;
               this.gun.get(`messagesByRecipient`).get(a2.uri()).map().once(async val => {
-                const m2 = Message.fromSig(val);
+                const m2 = SignedMessage.fromSig(val);
                 const m2hash = await m2.getHash();
                 if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2hash)) {
                   o.received[m2hash] = m2;
@@ -444,7 +444,7 @@ class SocialNetwork {
                 }
               });
               this.gun.get(`messagesByAuthor`).get(a2.uri()).map().once(async val => {
-                const m2 = Message.fromSig(val);
+                const m2 = SignedMessage.fromSig(val);
                 const m2hash = await m2.getHash();
                 if (!Object.prototype.hasOwnProperty.call(o.sent, m2hash)) {
                   o.sent[m2hash] = m2;
@@ -541,14 +541,14 @@ class SocialNetwork {
 
   /**
   * Return existing chats and listen to new chats initiated by friends.
-  * Like Chat.getChats(), but also listens to chats initiated by friends.
+  * Like Channel.getChannels(), but also listens to chats initiated by friends.
   */
-  async getChats(callback) {
-    Chat.getChats(this.gun, this.options.keypair, callback);
+  async getChannels(callback) {
+    Channel.getChannels(this.gun, this.options.keypair, callback);
     this.gun.get(`trustedIndexes`).map().on(async (value, pub) => {
       if (value && pub) {
-        const theirSecretChatId = await Chat.getTheirSecretChatId(this.gun, pub, this.options.keypair);
-        this.gun.user(pub).get(`chats`).get(theirSecretChatId).on(v => {
+        const theirSecretChannelId = await Channel.getTheirSecretChannelId(this.gun, pub, this.options.keypair);
+        this.gun.user(pub).get(`chats`).get(theirSecretChannelId).on(v => {
           if (v) {
             callback(pub);
           }
@@ -561,7 +561,7 @@ class SocialNetwork {
     let results = 0;
     async function resultFound(result) {
       if (results >= limit) { return; }
-      const msg = await Message.fromSig(result.value);
+      const msg = await SignedMessage.fromSig(result.value);
       if (filter && !filter(msg)) { return; }
       results++;
       msg.cursor = result.key;
@@ -844,7 +844,7 @@ class SocialNetwork {
             resolve();
           }
         };
-        const messages = new Collection({gun, class: Message, indexes: [`trustDistance`]});
+        const messages = new Collection({gun, class: SignedMessage, indexes: [`trustDistance`]});
         messages.get({callback, orderBy: `trustDistance`, desc: false});
       }), 10000);
       this.debug(`adding`, msgs.length, `msgs`);
@@ -928,9 +928,9 @@ class SocialNetwork {
   /**
   * Add a message to messagesByTimestamp and other relevant indexes. Update identities in the web of trust according to message data.
   *
-  * @param msg Message (or an array of messages) to add to the index
+  * @param msg SignedMessage (or an array of messages) to add to the index
   */
-  async addMessage(msg: Message, options = {}) {
+  async addMessage(msg: SignedMessage, options = {}) {
     if (!this.writable) {
       throw new Error(`Cannot write to a read-only index (initialized with options.pubKey)`);
     }
@@ -938,8 +938,8 @@ class SocialNetwork {
       return this.addMessages(msg, options);
     }
     let start;
-    if (msg.constructor.name !== `Message`) {
-      throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
+    if (msg.constructor.name !== `SignedMessage`) {
+      throw new Error(`addMessage failed: param must be a SignedMessage, received ${msg.constructor.name}`);
     }
     const hash = await msg.getHash();
     if (true === options.checkIfExists) {
@@ -1113,7 +1113,7 @@ class SocialNetwork {
     return new Promise(resolve => {
       const resolveIfHashMatches = async (d, fromIpfs) => {
         const obj = typeof d === `object` ? d : JSON.parse(d);
-        const m = await Message.fromSig(obj);
+        const m = await SignedMessage.fromSig(obj);
         let h;
         let republished = false;
         if (fromIpfs) {

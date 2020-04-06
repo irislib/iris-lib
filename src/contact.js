@@ -1,5 +1,5 @@
 import Identicon from 'identicon.js';
-import Attribute from './attribute';
+import Attribute from './Attribute';
 import util from './util';
 
 /**

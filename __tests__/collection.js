@@ -1,4 +1,4 @@
-const Collection = require(`collection.js`);
+const Collection = require(`Collection.js`);
 const Gun = require(`gun`);
 const open = require(`gun/lib/open`);
 const radix = require(`gun/lib/radix`); // Require before instantiating Gun, if running in jsdom mode

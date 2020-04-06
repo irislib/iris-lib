@@ -1,15 +1,15 @@
 /*jshint unused: false */
 `use strict`;
 import util from './util';
-import Attribute from './attribute';
-import Key from './key';
+import Attribute from './Attribute';
+import Key from './Key';
 
 const errorMsg = `Invalid  message:`;
 
 class ValidationError extends Error {}
 
 /**
-* Signed message object.
+* Signed message object. Your friends can index and relay your messages, while others can still verify that they were signed by you.
 *
 * Fields: signedData, signer (public key) and signature.
 *
@@ -27,7 +27,7 @@ class ValidationError extends Error {}
 * @param obj
 *
 * @example
-* https://github.com/irislib/iris-lib/blob/master/__tests__/message.js
+* https://github.com/irislib/iris-lib/blob/master/__tests__/SignedMessage.js
 *
 * Rating message:
 * {
@@ -59,7 +59,7 @@ class ValidationError extends Error {}
 *   signature: '1234ABCD'
 * }
 */
-class Message {
+class SignedMessage {
   constructor(obj: Object) {
     if (obj.signedData) {
       this.signedData = obj.signedData;
@@ -72,7 +72,7 @@ class Message {
     }
     if (obj.sig) {
       if (typeof obj.sig !== `string`) {
-        throw new ValidationError(`Message signature must be a string`);
+        throw new ValidationError(`SignedMessage signature must be a string`);
       }
       this.sig = obj.sig;
       this.getHash();
@@ -122,33 +122,33 @@ class Message {
   * @returns {object} Javascript iterator over author attributes
   */
   getAuthorIterable() {
-    return Message._getIterable(this.signedData.author);
+    return SignedMessage._getIterable(this.signedData.author);
   }
 
   /**
   * @returns {object} Javascript iterator over recipient attributes
   */
   getRecipientIterable() {
-    return Message._getIterable(this.signedData.recipient);
+    return SignedMessage._getIterable(this.signedData.recipient);
   }
 
   /**
   * @returns {array} Array containing author attributes
   */
   getAuthorArray() {
-    return Message._getArray(this.signedData.author);
+    return SignedMessage._getArray(this.signedData.author);
   }
 
   /**
   * @returns {array} Array containing recipient attributes
   */
   getRecipientArray() {
-    return this.signedData.recipient ? Message._getArray(this.signedData.recipient) : [];
+    return this.signedData.recipient ? SignedMessage._getArray(this.signedData.recipient) : [];
   }
 
 
   /**
-  * @returns {string} Message signer keyID, i.e. base64 hash of public key
+  * @returns {string} SignedMessage signer keyID, i.e. base64 hash of public key
   */
   getSignerKeyID() {
     return this.pubKey; // hack until gun supports keyID lookups
@@ -249,7 +249,7 @@ class Message {
   }
 
   /**
-  * @param {Object} key Gun.Gun.SEA keypair to sign the message with
+  * @param {Object} key Gun.SEA keypair to sign the message with
   */
   async sign(key: Object) {
     this.sig = await Key.sign(this.signedData, key);
@@ -259,17 +259,17 @@ class Message {
   }
 
   /**
-  * Create an iris message. Message time is automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an iris message. SignedMessage time is automatically set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @param {Object} signedData message data object including author, recipient and other possible attributes
   * @param {Object} signingKey optionally, you can set the key to sign the message with
-  * @returns {Promise<Message>}  message
+  * @returns {Promise<SignedMessage>}  message
   */
   static async create(signedData: Object, signingKey: Object) {
     if (!signedData.author && signingKey) {
       signedData.author = {keyID: Key.getId(signingKey)};
     }
     signedData.time = signedData.time || (new Date()).toISOString();
-    const m = new Message({signedData});
+    const m = new SignedMessage({signedData});
     if (signingKey) {
       await m.sign(signingKey);
     }
@@ -277,16 +277,16 @@ class Message {
   }
 
   /**
-  * Create an  verification message. Message signedData's type and time are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an  verification message. SignedMessage signedData's type and time are automatically set. Recipient must be set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @returns {Promise<Object>} message object promise
   */
   static createVerification(signedData: Object, signingKey: Object) {
     signedData.type = `verification`;
-    return Message.create(signedData, signingKey);
+    return SignedMessage.create(signedData, signingKey);
   }
 
   /**
-  * Create an  rating message. Message signedData's type, maxRating, minRating, time and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
+  * Create an  rating message. SignedMessage signedData's type, maxRating, minRating, time and context are set automatically. Recipient and rating must be set. If signingKey is specified and author omitted, signingKey will be used as author.
   * @returns {Promise<Object>} message object promise
   */
   static createRating(signedData: Object, signingKey: Object) {
@@ -294,7 +294,7 @@ class Message {
     signedData.context = signedData.context || `iris`;
     signedData.maxRating = signedData.maxRating || 10;
     signedData.minRating = signedData.minRating || -10;
-    return Message.create(signedData, signingKey);
+    return SignedMessage.create(signedData, signingKey);
   }
 
   /**
@@ -347,7 +347,7 @@ class Message {
     }
     const signedData = await Key.verify(obj.sig, obj.pubKey);
     const o = {signedData, sig: obj.sig, pubKey: obj.pubKey};
-    return new Message(o);
+    return new SignedMessage(o);
   }
 
   /**
@@ -355,10 +355,10 @@ class Message {
   */
   async verify() {
     if (!this.pubKey) {
-      throw new ValidationError(`${errorMsg} Message has no .pubKey`);
+      throw new ValidationError(`${errorMsg} SignedMessage has no .pubKey`);
     }
     if (!this.sig) {
-      throw new ValidationError(`${errorMsg} Message has no .sig`);
+      throw new ValidationError(`${errorMsg} SignedMessage has no .sig`);
     }
     this.signedData = await Key.verify(this.sig, this.pubKey);
     if (!this.signedData) {
@@ -393,7 +393,7 @@ class Message {
     const f = await ipfs.cat(uri);
     const s = ipfs.types.Buffer.from(f).toString(`utf8`);
     try {
-      return Message.fromString(s);
+      return SignedMessage.fromString(s);
     } catch (e) {
       console.log(`loading message from ipfs failed`);
       return Promise.reject();
@@ -412,14 +412,14 @@ class Message {
   }
 
   /**
-  * @returns {Promise<Message>} message from JSON string produced by toString
+  * @returns {Promise<SignedMessage>} message from JSON string produced by toString
   */
   static async deserialize(s) {
-    return Message.fromSig(s);
+    return SignedMessage.fromSig(s);
   }
 
   static async fromString(s) {
-    return Message.fromSig(JSON.parse(s));
+    return SignedMessage.fromSig(JSON.parse(s));
   }
 
   /**
@@ -434,4 +434,4 @@ class Message {
   }
 }
 
-export default Message;
+export default SignedMessage;

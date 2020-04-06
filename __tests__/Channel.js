@@ -10,8 +10,8 @@ const gun = new GUN({radisk: false});
 test(`We say hi`, async (done) => {
   const myself = await iris.Key.generate();
   const friend = await iris.Key.generate();
-  const friendsChat = new iris.Chat({ gun, key: friend, participants: myself.pub });
-  const myChat = new iris.Chat({
+  const friendsChannel = new iris.Channel({ gun, key: friend, participants: myself.pub });
+  const myChannel = new iris.Channel({
     gun,
     key: myself,
     participants: friend.pub,
@@ -21,18 +21,18 @@ test(`We say hi`, async (done) => {
       done();
     }
   });
-  myChat.send(`hi`);
+  myChannel.send(`hi`);
 });
 test(`Set and get msgsLastSeenTime`, async (done) => {
   const myself = await iris.Key.generate();
-  const myChat = new iris.Chat({
+  const myChannel = new iris.Channel({
     gun,
     key: myself,
     participants: myself.pub
   });
   const t = new Date();
-  myChat.setMyMsgsLastSeenTime();
-  myChat.getMyMsgsLastSeenTime(time => {
+  myChannel.setMyMsgsLastSeenTime();
+  myChannel.getMyMsgsLastSeenTime(time => {
     expect(time).toBeDefined();
     expect(new Date(time).getTime()).toBeGreaterThanOrEqual(t.getTime());
     done();
@@ -42,8 +42,8 @@ test(`Set and get msgsLastSeenTime`, async (done) => {
 test(`Friend says hi`, async (done) => {
   const myself = await iris.Key.generate();
   const friend = await iris.Key.generate();
-  const friendsChat = new iris.Chat({ gun, key: friend, participants: myself.pub });
-  const myChat = new iris.Chat({
+  const friendsChannel = new iris.Channel({ gun, key: friend, participants: myself.pub });
+  const myChannel = new iris.Channel({
     gun,
     key: myself,
     participants: friend.pub,
@@ -52,6 +52,6 @@ test(`Friend says hi`, async (done) => {
       done();
     }
   });
-  friendsChat.send(`hi`);
+  friendsChannel.send(`hi`);
 });
 */

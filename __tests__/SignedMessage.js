@@ -1,18 +1,18 @@
 /*global describe, it, after, before */
 const crypto = require(`crypto`);
-const Attribute = require(`attribute.js`);
-const Message = require(`message.js`);
-const Contact = require(`contact.js`);
-const Key = require(`key.js`);
+const Attribute = require(`Attribute.js`);
+const SignedMessage = require(`SignedMessage.js`);
+const Contact = require(`Contact.js`);
+const Key = require(`Key.js`);
 
 jest.setTimeout(30000);
 
-describe(`Message`, async () => {
+describe(`SignedMessage`, async () => {
   let msg;
   msg = void 0;
   describe(`createRating method`, async () => {
     test(`should create a rating message`, async () => {
-      msg = await Message.createRating({
+      msg = await SignedMessage.createRating({
         author: {email: `alice@example.com`},
         recipient: {email: `bob@example.com`},
         rating: 5,
@@ -29,7 +29,7 @@ describe(`Message`, async () => {
     */
     test(`should use signing key as author if not defined`, async () => {
       const defaultKey = await Key.getDefault(`.`);
-      msg = await Message.createRating({
+      msg = await SignedMessage.createRating({
         recipient: {email: `bob@example.com`},
         rating: 5,
         text: `Good guy`
@@ -40,7 +40,7 @@ describe(`Message`, async () => {
   });
   describe(`createVerification method`, async () => {
     test(`should create a verification message`, async () => {
-      msg = await Message.createVerification({
+      msg = await SignedMessage.createVerification({
         author: {email: `alice@example.com`},
         recipient: {email: `bob@example.com`, name: `Bob`},
         text: `Good guy`
@@ -51,7 +51,7 @@ describe(`Message`, async () => {
   });
   describe(`Recipient iterator`, async () => {
     test(`should go over recipient attributes`, async () => {
-      msg = await Message.createVerification({
+      msg = await SignedMessage.createVerification({
         author: {email: `alice@example.com`},
         recipient: {email: `bob@example.com`, name: `Bob`, nickname: [`Bobby`, `Bobbie`]},
         text: `Good guy`
@@ -69,7 +69,7 @@ describe(`Message`, async () => {
   describe(`Validation`, async () => {
     test(`should not accept a message without signedData`, async () => {
       const f = () => {
-        new Message({});
+        new SignedMessage({});
       };
       expect(f).toThrow(Error);
     });
@@ -78,7 +78,7 @@ describe(`Message`, async () => {
     let key;
     msg = void 0;
     beforeAll(async () => {
-      msg = await Message.createRating({
+      msg = await SignedMessage.createRating({
         author: {email: `alice@example.com`},
         recipient: {email: `bob@example.com`},
         rating: 5,
@@ -98,7 +98,7 @@ describe(`Message`, async () => {
     test(`serialize & deserialize`, async () => {
       const h = msg.getHash();
       const s = msg.toString();
-      const m = await Message.fromString(s);
+      const m = await SignedMessage.fromString(s);
       expect(m.getHash()).toEqual(h);
     });
   });

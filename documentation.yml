@@ -1,7 +1,7 @@
 toc:
   - SocialNetwork
   - Contact
-  - Message
-  - Chat
+  - SignedMessage
+  - Channel
   - Key
   - Attribute
