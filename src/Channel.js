@@ -10,6 +10,42 @@ import util from './util';
 * who are communicating with each other by looking at Gun timestamps and subscriptions.
 *
 * @param {Object} options {key, gun, chatLink, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys
+* @example
+* // Copy & paste this to console at https://iris.to or other page that has gun and iris-lib
+* // Due to an unsolved bug, someoneElse's messages only start showing up after a reload
+*
+* var gun1 = new Gun('https://gun-us.herokuapp.com/gun');
+* var gun2 = new Gun('https://gun-us.herokuapp.com/gun');
+* var myKey = await iris.Key.getDefault();
+* var someoneElse = localStorage.getItem('someoneElsesKey');
+* if (someoneElse) {
+*  someoneElse = JSON.parse(someoneElse);
+* } else {
+*  someoneElse = await iris.Key.generate();
+*  localStorage.setItem('someoneElsesKey', JSON.stringify(someoneElse));
+* }
+*
+* var ourChannel = new iris.Channel({key: myKey, gun: gun1, participants: someoneElse.pub});
+* var theirChannel = new iris.Channel({key: someoneElse, gun: gun2, participants: myKey.pub});
+*
+* var myChannels = {}; // you can list them in a user interface
+* function printMessage(msg, info) {
+*  console.log(`[${new Date(msg.time).toLocaleString()}] ${info.from.slice(0,8)}: ${msg.text}`)
+* }
+* iris.Channel.getChannels(gun1, myKey, channel => {
+*  var pub = channel.getParticipants()[0];
+*  gun1.user(pub).get('profile').get('name').on(name => channel.name = name);
+*  myChannels[pub] = channel;
+*  channel.getMessages(printMessage);
+*  channel.on('mood', (mood, from) => console.log(from.slice(0,8) + ' is feeling ' + mood));
+* });
+*
+* // you can play with these in the console:
+* ourChannel.send('message from myKey');
+* theirChannel.send('message from someoneElse');
+* ourChannel.put('mood', 'blessed');
+* theirChannel.put('mood', 'happy');
+*
 * @example https://github.com/irislib/iris-lib/blob/master/__tests__/Channel.js
 */
 class Channel {
@@ -302,10 +338,10 @@ class Channel {
   */
   async on(key, callback, from) {
     if (!from || from === `me` || from === this.key.pub) {
-      this.onMy(key, val => callback(val, from));
+      this.onMy(key, val => callback(val, this.key.pub));
     }
     if (!from || (from !== `me` && from !== this.key.pub)) {
-      this.onTheir(key, val => callback(val, from));
+      this.onTheir(key, (val, k, pub) => callback(val, pub));
     }
   }
 
@@ -336,7 +372,7 @@ class Channel {
       this.gun.user(keys[i]).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
         const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
         if (decrypted) {
-          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
+          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, keys[i]);
         }
       });
     }

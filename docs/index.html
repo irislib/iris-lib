@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset='utf-8' />
-  <title>iris-lib 0.0.142 | Documentation</title>
+  <title>iris-lib 0.0.143 | Documentation</title>
   <meta name='description' content='Basic tools for reading and writing Iris messages and identities.'>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
   <link href='assets/bass.css' rel='stylesheet' />
@@ -15,7 +15,7 @@
       <div id='split-left' class='overflow-auto fs0 height-viewport-100'>
         <div class='py1 px2'>
           <h3 class='mb0 no-anchor'>iris-lib</h3>
-          <div class='mb1'><code>0.0.142</code></div>
+          <div class='mb1'><code>0.0.143</code></div>
           <input
             placeholder='Filter'
             id='filter-input'
@@ -783,6 +783,42 @@ who are communicating with each other by looking at Gun timestamps and subscript
 
   
     <div class='py1 quiet mt1 prose-big'>Example</div>
+    
+      
+      <pre class='p1 overflow-auto round fill-light'><span class="hljs-comment">// Copy &amp; paste this to console at https://iris.to or other page that has gun and iris-lib</span>
+<span class="hljs-comment">// Due to an unsolved bug, someoneElse's messages only start showing up after a reload</span>
+
+<span class="hljs-keyword">var</span> gun1 = <span class="hljs-keyword">new</span> Gun(<span class="hljs-string">'https://gun-us.herokuapp.com/gun'</span>);
+<span class="hljs-keyword">var</span> gun2 = <span class="hljs-keyword">new</span> Gun(<span class="hljs-string">'https://gun-us.herokuapp.com/gun'</span>);
+<span class="hljs-keyword">var</span> myKey = <span class="hljs-keyword">await</span> iris.Key.getDefault();
+<span class="hljs-keyword">var</span> someoneElse = localStorage.getItem(<span class="hljs-string">'someoneElsesKey'</span>);
+<span class="hljs-keyword">if</span> (someoneElse) {
+ someoneElse = <span class="hljs-built_in">JSON</span>.parse(someoneElse);
+} <span class="hljs-keyword">else</span> {
+ someoneElse = <span class="hljs-keyword">await</span> iris.Key.generate();
+ localStorage.setItem(<span class="hljs-string">'someoneElsesKey'</span>, <span class="hljs-built_in">JSON</span>.stringify(someoneElse));
+}
+
+<span class="hljs-keyword">var</span> ourChannel = <span class="hljs-keyword">new</span> iris.Channel({<span class="hljs-attr">key</span>: myKey, <span class="hljs-attr">gun</span>: gun1, <span class="hljs-attr">participants</span>: someoneElse.pub});
+<span class="hljs-keyword">var</span> theirChannel = <span class="hljs-keyword">new</span> iris.Channel({<span class="hljs-attr">key</span>: someoneElse, <span class="hljs-attr">gun</span>: gun2, <span class="hljs-attr">participants</span>: myKey.pub});
+
+<span class="hljs-keyword">var</span> myChannels = {}; <span class="hljs-comment">// you can list them in a user interface</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">printMessage</span>(<span class="hljs-params">msg, info</span>) </span>{
+ <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`[<span class="hljs-subst">${<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(msg.time).toLocaleString()}</span>] <span class="hljs-subst">${info.<span class="hljs-keyword">from</span>.slice(<span class="hljs-number">0</span>,<span class="hljs-number">8</span>)}</span>: <span class="hljs-subst">${msg.text}</span>`</span>)
+}
+iris.Channel.getChannels(gun1, myKey, channel =&gt; {
+ <span class="hljs-keyword">var</span> pub = channel.getParticipants()[<span class="hljs-number">0</span>];
+ gun1.user(pub).get(<span class="hljs-string">'profile'</span>).get(<span class="hljs-string">'name'</span>).on(<span class="hljs-function"><span class="hljs-params">name</span> =&gt;</span> channel.name = name);
+ myChannels[pub] = channel;
+ channel.getMessages(printMessage);
+ channel.on(<span class="hljs-string">'mood'</span>, (mood, <span class="hljs-keyword">from</span>) =&gt; <span class="hljs-built_in">console</span>.log(<span class="hljs-keyword">from</span>.slice(<span class="hljs-number">0</span>,<span class="hljs-number">8</span>) + <span class="hljs-string">' is feeling '</span> + mood));
+});
+
+<span class="hljs-comment">// you can play with these in the console:</span>
+ourChannel.send(<span class="hljs-string">'message from myKey'</span>);
+theirChannel.send(<span class="hljs-string">'message from someoneElse'</span>);
+ourChannel.put(<span class="hljs-string">'mood'</span>, <span class="hljs-string">'blessed'</span>);
+theirChannel.put(<span class="hljs-string">'mood'</span>, <span class="hljs-string">'happy'</span>);</pre>
     
       
       <pre class='p1 overflow-auto round fill-light'>https:<span class="hljs-comment">//github.com/irislib/iris-lib/blob/master/__tests__/Channel.js</span></pre>
