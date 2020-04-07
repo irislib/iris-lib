@@ -9,6 +9,8 @@ import util from './util';
 * Channel ids and data values are obfuscated, but it is possible to guess
 * who are communicating with each other by looking at Gun timestamps and subscriptions.
 *
+* **You can open a channel with yourself** for a private key-value space (or chat with yourself for timestamped notes).
+*
 * @param {Object} options {key, gun, chatLink, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys
 * @example
 * // Copy & paste this to console at https://iris.to or other page that has gun, sea and iris-lib
@@ -24,6 +26,9 @@ import util from './util';
 *  someoneElse = await iris.Key.generate();
 *  localStorage.setItem('someoneElsesKey', JSON.stringify(someoneElse));
 * }
+*
+* iris.Channel.initUser(gun1, myKey); // saves myKey.epub to gun.user().get('epub')
+* iris.Channel.initUser(gun2, someoneElse);
 *
 * var ourChannel = new iris.Channel({key: myKey, gun: gun1, participants: someoneElse.pub});
 * var theirChannel = new iris.Channel({key: someoneElse, gun: gun2, participants: myKey.pub});

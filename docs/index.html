@@ -739,6 +739,7 @@
 <p>You can use <strong>1)</strong> channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or <strong>2)</strong> channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.</p>
 <p>Channel ids and data values are obfuscated, but it is possible to guess
 who are communicating with each other by looking at Gun timestamps and subscriptions.</p>
+<p><strong>You can open a channel with yourself</strong> for a private key-value space (or chat with yourself for timestamped notes).</p>
 
     <div class='pre p1 fill-light mt0'>new Channel(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
@@ -798,6 +799,9 @@ who are communicating with each other by looking at Gun timestamps and subscript
  someoneElse = <span class="hljs-keyword">await</span> iris.Key.generate();
  localStorage.setItem(<span class="hljs-string">'someoneElsesKey'</span>, <span class="hljs-built_in">JSON</span>.stringify(someoneElse));
 }
+
+iris.Channel.initUser(gun1, myKey); <span class="hljs-comment">// saves myKey.epub to gun.user().get('epub')</span>
+iris.Channel.initUser(gun2, someoneElse);
 
 <span class="hljs-keyword">var</span> ourChannel = <span class="hljs-keyword">new</span> iris.Channel({<span class="hljs-attr">key</span>: myKey, <span class="hljs-attr">gun</span>: gun1, <span class="hljs-attr">participants</span>: someoneElse.pub});
 <span class="hljs-keyword">var</span> theirChannel = <span class="hljs-keyword">new</span> iris.Channel({<span class="hljs-attr">key</span>: someoneElse, <span class="hljs-attr">gun</span>: gun2, <span class="hljs-attr">participants</span>: myKey.pub});
