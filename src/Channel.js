@@ -2,16 +2,31 @@ import Gun from 'gun';
 import util from './util';
 
 /**
-* Private communication channel between two participants ([Gun](https://github.com/amark/gun) public keys). (You can specify more than two participants, but it causes unscalable data replication - better group channel implementation to be done.) Can be used independently of other Iris stuff.
+* Private communication channel between two participants ([Gun](https://github.com/amark/gun) public keys). Can be used independently of other Iris stuff.
 *
-* You can use **1)** channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or **2)** channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.
+* ---
 *
-* Channel ids and data values are obfuscated, but it is possible to guess
-* who are communicating with each other by looking at Gun timestamps and subscriptions.
+* #### Key-value API
+* `channel.put(key, value)` and `channel.on(key, callback)`.
 *
-* **You can open a channel with yourself** for a private key-value space (or chat with yourself for timestamped notes).
+* Note that each participant has their own versions of each key-value — they don't overwrite each other. `channel.on()` callback returns them all by default and has a parameter that indicates whose value you got.
 *
-* @param {Object} options {key, gun, chatLink, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys
+* While values are encrypted, encryption of keys is not implemented yet.
+*
+* #### Message API
+* `channel.send()` and `channel.getMessages()` for timestamp-indexed chat-style messaging.
+*
+* Message data is encrypted, but timestamps are public so that peers can return your messages in a sequential order.
+*
+* ---
+*
+* You can open a channel with yourself for a private key-value space or a "note to self" type chat with yourself.
+*
+* You can specify more than one participant key (your own key is included by default), but it's not guaranteed to work and causes unscalable data replication - better group channel implementation to be done.
+*
+* **Privacy disclaimer:** Channel ids, data values and messages are encrypted, but message timestamps are unencrypted so that peers can return them to you in a sequential order. By looking at the unencrypted timestamps (or Gun subscriptions), it is possible to guess who are communicating with each other.
+*
+* @param {Object} options {key, gun, chatLink, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys (your own key is included by default)
 * @example
 * // Copy & paste this to console at https://iris.to or other page that has gun, sea and iris-lib
 * // Due to an unsolved bug, someoneElse's messages only start showing up after a reload

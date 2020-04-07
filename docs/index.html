@@ -735,11 +735,19 @@
   </div>
   
 
-  <p>Private communication channel between two participants (<a href="https://github.com/amark/gun">Gun</a> public keys). (You can specify more than two participants, but it causes unscalable data replication - better group channel implementation to be done.) Can be used independently of other Iris stuff.</p>
-<p>You can use <strong>1)</strong> channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or <strong>2)</strong> channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.</p>
-<p>Channel ids and data values are obfuscated, but it is possible to guess
-who are communicating with each other by looking at Gun timestamps and subscriptions.</p>
-<p><strong>You can open a channel with yourself</strong> for a private key-value space (or chat with yourself for timestamped notes).</p>
+  <p>Private communication channel between two participants (<a href="https://github.com/amark/gun">Gun</a> public keys). Can be used independently of other Iris stuff.</p>
+<hr>
+<h4>Key-value API</h4>
+<p><code>channel.put(key, value)</code> and <code>channel.on(key, callback)</code>.</p>
+<p>Note that each participant has their own versions of each key-value — they don't overwrite each other. <code>channel.on()</code> callback returns them all by default and has a parameter that indicates whose value you got.</p>
+<p>While values are encrypted, encryption of keys is not implemented yet.</p>
+<h4>Message API</h4>
+<p><code>channel.send()</code> and <code>channel.getMessages()</code> for timestamp-indexed chat-style messaging.</p>
+<p>Message data is encrypted, but timestamps are public so that peers can return your messages in a sequential order.</p>
+<hr>
+<p>You can open a channel with yourself for a private key-value space or a "note to self" type chat with yourself.</p>
+<p>You can specify more than one participant key (your own key is included by default), but it's not guaranteed to work and causes unscalable data replication - better group channel implementation to be done.</p>
+<p><strong>Privacy disclaimer:</strong> Channel ids, data values and messages are encrypted, but message timestamps are unencrypted so that peers can return them to you in a sequential order. By looking at the unencrypted timestamps (or Gun subscriptions), it is possible to guess who are communicating with each other.</p>
 
     <div class='pre p1 fill-light mt0'>new Channel(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
@@ -767,7 +775,7 @@ who are communicating with each other by looking at Gun timestamps and subscript
 <strong>chatLink</strong>
 : (optional) chat link instead of participants list, 
 <strong>participants</strong>
-: (optional) string or string array of participant public keys
+: (optional) string or string array of participant public keys (your own key is included by default)
 
           </div>
           
