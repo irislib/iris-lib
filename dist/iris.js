@@ -7124,10 +7124,7 @@
 	* Channel ids and data values are obfuscated, but it is possible to guess
 	* who are communicating with each other by looking at Gun timestamps and subscriptions.
 	*
-	* options.onMessage callback is not guaranteed to receive messages ordered by timestamp.
-	* You should sort them in the presentation layer.
-	*
-	* @param {Object} options {key, gun, chatLink, onMessage, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys
+	* @param {Object} options {key, gun, chatLink, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys
 	* @example https://github.com/irislib/iris-lib/blob/master/__tests__/Channel.js
 	*/
 
@@ -7145,10 +7142,6 @@
 	    this.secrets = {}; // maps participant public key to shared secret
 	    this.ourSecretChannelIds = {}; // maps participant public key to our secret channel id
 	    this.theirSecretChannelIds = {}; // maps participant public key to their secret channel id
-	    this.onMessage = [];
-	    if (options.onMessage) {
-	      this.onMessage.push(options.onMessage);
-	    }
 	    this.messages = {};
 
 	    var saved = void 0;
@@ -7285,39 +7278,34 @@
 	  Channel.prototype.getMessages = async function getMessages(callback) {
 	    var _this2 = this;
 
-	    this.onMessage.push(callback);
+	    // TODO: save callback and apply it when new participants are added to channel
 	    this.getParticipants().forEach(async function (pub) {
 	      if (pub !== _this2.key.pub) {
 	        // Subscribe to their messages
 	        var theirSecretChannelId = await _this2.getTheirSecretChannelId(pub);
 	        _this2.gun.user(pub).get('chats').get(theirSecretChannelId).get('msgs').map().once(function (data, key) {
-	          _this2.messageReceived(data, pub, false, key, pub);
+	          _this2.messageReceived(callback, data, pub, false, key, pub);
 	        });
 	      }
 	      // Subscribe to our messages
 	      var ourSecretChannelId = await _this2.getOurSecretChannelId(pub);
 	      _this2.user.get('chats').get(ourSecretChannelId).get('msgs').map().once(function (data, key) {
-	        _this2.messageReceived(data, pub, true, key, _this2.key.pub);
+	        _this2.messageReceived(callback, data, pub, true, key, _this2.key.pub);
 	      });
 	    });
 	  };
 
-	  Channel.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored, key, from) {
+	  Channel.prototype.messageReceived = async function messageReceived(callback, data, pub, selfAuthored, key, from) {
 	    if (this.messages[key]) {
 	      return;
 	    }
-	    if (this.onMessage.length) {
-	      var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
-	      if (typeof decrypted !== 'object') {
-	        // console.log(`channel data received`, decrypted);
-	        return;
-	      }
-	      decrypted._info = { selfAuthored: selfAuthored, pub: pub, from: from };
-	      this.messages[key] = decrypted;
-	      this.onMessage.forEach(function (f) {
-	        return f(decrypted, decrypted._info);
-	      });
+	    var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+	    if (typeof decrypted !== 'object') {
+	      return;
 	    }
+	    var info = { selfAuthored: selfAuthored, pub: pub, from: from };
+	    this.messages[key] = decrypted;
+	    callback(decrypted, info);
 	  };
 
 	  /**
@@ -7397,8 +7385,6 @@
 
 
 	  Channel.prototype.addPub = async function addPub(pub) {
-	    var _this6 = this;
-
 	    var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
 	    this.secrets[pub] = null;
@@ -7409,17 +7395,6 @@
 	      var mySecret = await Gun.SEA.secret(this.key.epub, this.key);
 	      this.gun.user().get('chats').get(ourSecretChannelId).get('pub').put((await Gun.SEA.encrypt(pub, mySecret)));
 	    }
-	    if (pub !== this.key.pub) {
-	      // Subscribe to their messages
-	      var theirSecretChannelId = await this.getTheirSecretChannelId(pub);
-	      this.gun.user(pub).get('chats').get(theirSecretChannelId).get('msgs').map().once(function (data, key) {
-	        _this6.messageReceived(data, pub, false, key);
-	      });
-	    }
-	    // Subscribe to our messages
-	    this.user.get('chats').get(ourSecretChannelId).get('msgs').map().once(function (data, key) {
-	      _this6.messageReceived(data, pub, true, key);
-	    });
 	  };
 
 	  /**
@@ -7510,7 +7485,7 @@
 	  };
 
 	  Channel.prototype.onMy = async function onMy(key, callback) {
-	    var _this7 = this;
+	    var _this6 = this;
 
 	    if (typeof callback !== 'function') {
 	      throw new Error('onMy callback must be a function, got ' + (typeof callback === 'undefined' ? 'undefined' : _typeof(callback)));
@@ -7518,9 +7493,9 @@
 	    var keys = this.getParticipants();
 
 	    var _loop = async function _loop(i) {
-	      var ourSecretChannelId = await _this7.getOurSecretChannelId(keys[i]);
-	      _this7.gun.user().get('chats').get(ourSecretChannelId).get(key).on(async function (data) {
-	        var decrypted = await Gun.SEA.decrypt(data, (await _this7.getSecret(keys[i])));
+	      var ourSecretChannelId = await _this6.getOurSecretChannelId(keys[i]);
+	      _this6.gun.user().get('chats').get(ourSecretChannelId).get(key).on(async function (data) {
+	        var decrypted = await Gun.SEA.decrypt(data, (await _this6.getSecret(keys[i])));
 	        if (decrypted) {
 	          callback(typeof decrypted.v !== 'undefined' ? decrypted.v : decrypted, key);
 	        }
@@ -7536,7 +7511,7 @@
 	  };
 
 	  Channel.prototype.onTheir = async function onTheir(key, callback) {
-	    var _this8 = this;
+	    var _this7 = this;
 
 	    if (typeof callback !== 'function') {
 	      throw new Error('onTheir callback must be a function, got ' + (typeof callback === 'undefined' ? 'undefined' : _typeof(callback)));
@@ -7544,9 +7519,9 @@
 	    var keys = this.getParticipants();
 
 	    var _loop2 = async function _loop2(i) {
-	      var theirSecretChannelId = await _this8.getTheirSecretChannelId(keys[i]);
-	      _this8.gun.user(keys[i]).get('chats').get(theirSecretChannelId).get(key).on(async function (data) {
-	        var decrypted = await Gun.SEA.decrypt(data, (await _this8.getSecret(keys[i])));
+	      var theirSecretChannelId = await _this7.getTheirSecretChannelId(keys[i]);
+	      _this7.gun.user(keys[i]).get('chats').get(theirSecretChannelId).get(key).on(async function (data) {
+	        var decrypted = await Gun.SEA.decrypt(data, (await _this7.getSecret(keys[i])));
 	        if (decrypted) {
 	          callback(typeof decrypted.v !== 'undefined' ? decrypted.v : decrypted, key);
 	        }
@@ -7564,7 +7539,7 @@
 
 
 	  Channel.prototype.setTyping = function setTyping(isTyping) {
-	    var _this9 = this;
+	    var _this8 = this;
 
 	    var timeout = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 5;
 
@@ -7573,7 +7548,7 @@
 	    this.put('typing', isTyping ? new Date().toISOString() : false);
 	    clearTimeout(this.setTypingTimeout);
 	    this.setTypingTimeout = setTimeout(function () {
-	      return _this9.put('isTyping', false);
+	      return _this8.put('isTyping', false);
 	    }, timeout);
 	  };
 
@@ -7583,7 +7558,7 @@
 
 
 	  Channel.prototype.getTyping = function getTyping(callback) {
-	    var _this10 = this;
+	    var _this9 = this;
 
 	    var timeout = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 5;
 
@@ -7592,10 +7567,10 @@
 	      if (callback) {
 	        var isTyping = typing && new Date() - new Date(typing) <= timeout;
 	        callback(isTyping, pub);
-	        _this10.getTypingTimeouts = _this10.getTypingTimeouts || {};
-	        clearTimeout(_this10.getTypingTimeouts[pub]);
+	        _this9.getTypingTimeouts = _this9.getTypingTimeouts || {};
+	        clearTimeout(_this9.getTypingTimeouts[pub]);
 	        if (isTyping) {
-	          _this10.getTypingTimeouts[pub] = setTimeout(function () {
+	          _this9.getTypingTimeouts[pub] = setTimeout(function () {
 	            return callback(false, pub);
 	          }, timeout);
 	        }
@@ -7640,7 +7615,7 @@
 
 
 	  Channel.prototype.getChatBox = function getChatBox() {
-	    var _this11 = this;
+	    var _this10 = this;
 
 	    util.injectCss();
 	    var minimized = false;
@@ -7690,9 +7665,9 @@
 	      var sendBtn = util.createElement('button', undefined, inputWrapper);
 	      sendBtn.innerHTML = '\n        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 486.736 486.736" style="enable-background:new 0 0 486.736 486.736;" xml:space="preserve" width="100px" height="100px" fill="#000000" stroke="#000000" stroke-width="0"><path fill="currentColor" d="M481.883,61.238l-474.3,171.4c-8.8,3.2-10.3,15-2.6,20.2l70.9,48.4l321.8-169.7l-272.4,203.4v82.4c0,5.6,6.3,9,11,5.9 l60-39.8l59.1,40.3c5.4,3.7,12.8,2.1,16.3-3.5l214.5-353.7C487.983,63.638,485.083,60.038,481.883,61.238z"></path></svg>\n      ';
 	      sendBtn.addEventListener('click', function () {
-	        _this11.send(textArea.value);
+	        _this10.send(textArea.value);
 	        textArea.value = '';
-	        _this11.setTyping(false);
+	        _this10.setTyping(false);
 	      });
 	    }
 
@@ -7729,13 +7704,13 @@
 	      });
 	    });
 
-	    this.onMessage.push(function (msg, info) {
+	    this.getMessages(function (msg, info) {
 	      var msgContent = util.createElement('div', 'iris-msg-content');
 	      msgContent.innerText = msg.text;
 	      var time = util.createElement('div', 'time', msgContent);
 	      time.innerText = util.formatTime(new Date(msg.time));
 	      if (info.selfAuthored) {
-	        var cls = _this11.theirMsgsLastSeenTime >= msg.time ? 'seen yes' : 'seen';
+	        var cls = _this10.theirMsgsLastSeenTime >= msg.time ? 'seen yes' : 'seen';
 	        var seenIndicator = util.createElement('span', cls, time);
 	        seenIndicator.innerHTML = ' <svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 59 42"><polygon fill="currentColor" points="40.6,12.1 17,35.7 7.4,26.1 4.6,29 17,41.3 43.4,14.9"></polygon><polygon class="iris-delivered-checkmark" fill="currentColor" points="55.6,12.1 32,35.7 29.4,33.1 26.6,36 32,41.3 58.4,14.9"></polygon></svg>';
 	      }
@@ -7759,8 +7734,8 @@
 	    });
 
 	    textArea.addEventListener('keyup', function (event) {
-	      Channel.setOnline(_this11.gun, true); // TODO
-	      _this11.setMyMsgsLastSeenTime(); // TODO
+	      Channel.setOnline(_this10.gun, true); // TODO
+	      _this10.setMyMsgsLastSeenTime(); // TODO
 	      if (event.keyCode === 13) {
 	        event.preventDefault();
 	        var content = textArea.value;
@@ -7769,12 +7744,12 @@
 	          textArea.value = content.substring(0, caret - 1) + '\n' + content.substring(caret, content.length);
 	        } else {
 	          textArea.value = content.substring(0, caret - 1) + content.substring(caret, content.length);
-	          _this11.send(textArea.value);
+	          _this10.send(textArea.value);
 	          textArea.value = '';
-	          _this11.setTyping(false);
+	          _this10.setTyping(false);
 	        }
 	      } else {
-	        _this11.setTyping(!!textArea.value.length);
+	        _this10.setTyping(!!textArea.value.length);
 	      }
 	    });
 
@@ -9543,7 +9518,7 @@
 	  return SocialNetwork;
 	}();
 
-	var version$1 = "0.0.141";
+	var version$1 = "0.0.142";
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

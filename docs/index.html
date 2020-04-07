@@ -739,8 +739,6 @@
 <p>You can use <strong>1)</strong> channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or <strong>2)</strong> channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.</p>
 <p>Channel ids and data values are obfuscated, but it is possible to guess
 who are communicating with each other by looking at Gun timestamps and subscriptions.</p>
-<p>options.onMessage callback is not guaranteed to receive messages ordered by timestamp.
-You should sort them in the presentation layer.</p>
 
     <div class='pre p1 fill-light mt0'>new Channel(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
   
@@ -760,7 +758,7 @@ You should sort them in the presentation layer.</p>
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    {key, gun, chatLink, onMessage, participants} 
+	    {key, gun, chatLink, participants} 
 <strong>key</strong>
 : your keypair, 
 <strong>gun</strong>
@@ -949,7 +947,7 @@ You should sort them in the presentation layer.</p>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getChannels(gun, keypair, callback)</span>
+            <span class='code strong strong truncate'>getChannels(gun, keypair, callback, listenToChatLinks)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -959,7 +957,7 @@ You should sort them in the presentation layer.</p>
 
   <p>Calls back with Channels that you have initiated or written to.</p>
 
-    <div class='pre p1 fill-light mt0'>getChannels(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, callback: any)</div>
+    <div class='pre p1 fill-light mt0'>getChannels(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, keypair: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>, callback: any, listenToChatLinks: any)</div>
   
   
 
@@ -997,6 +995,15 @@ You should sort them in the presentation layer.</p>
             <span class='code bold'>callback</span> <code class='quiet'>(any)</code>
 	    callback function that is called for each public key you have a channel with
 
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>listenToChatLinks</span> <code class='quiet'>(any
+            = <code>true</code>)</code>
+	    
           </div>
           
         </div>

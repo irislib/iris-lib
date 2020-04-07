@@ -9,10 +9,7 @@ import util from './util';
 * Channel ids and data values are obfuscated, but it is possible to guess
 * who are communicating with each other by looking at Gun timestamps and subscriptions.
 *
-* options.onMessage callback is not guaranteed to receive messages ordered by timestamp.
-* You should sort them in the presentation layer.
-*
-* @param {Object} options {key, gun, chatLink, onMessage, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys
+* @param {Object} options {key, gun, chatLink, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys
 * @example https://github.com/irislib/iris-lib/blob/master/__tests__/Channel.js
 */
 class Channel {
@@ -25,10 +22,6 @@ class Channel {
     this.secrets = {}; // maps participant public key to shared secret
     this.ourSecretChannelIds = {}; // maps participant public key to our secret channel id
     this.theirSecretChannelIds = {}; // maps participant public key to their secret channel id
-    this.onMessage = [];
-    if (options.onMessage) {
-      this.onMessage.push(options.onMessage);
-    }
     this.messages = {};
 
     let saved;
@@ -150,36 +143,30 @@ class Channel {
   /**
   * Get messages from the channel
   */
-  async getMessages(callback) {
-    this.onMessage.push(callback);
+  async getMessages(callback) { // TODO: save callback and apply it when new participants are added to channel
     this.getParticipants().forEach(async pub => {
       if (pub !== this.key.pub) {
         // Subscribe to their messages
         const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
-        this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key, pub);});
+        this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, pub, false, key, pub);});
       }
       // Subscribe to our messages
       const ourSecretChannelId = await this.getOurSecretChannelId(pub);
-      this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key, this.key.pub);});
+      this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, pub, true, key, this.key.pub);});
     });
   }
 
-  async messageReceived(data, pub, selfAuthored, key, from) {
+  async messageReceived(callback, data, pub, selfAuthored, key, from) {
     if (this.messages[key]) {
       return;
     }
-    if (this.onMessage.length) {
-      const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
-      if (typeof decrypted !== `object`) {
-        // console.log(`channel data received`, decrypted);
-        return;
-      }
-      decrypted._info = {selfAuthored, pub, from};
-      this.messages[key] = decrypted;
-      this.onMessage.forEach(f => f(decrypted, decrypted._info));
-    } else {
-      // console.log(`channel message received`, decrypted);
+    const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+    if (typeof decrypted !== `object`) {
+      return;
     }
+    var info = {selfAuthored, pub, from};
+    this.messages[key] = decrypted;
+    callback(decrypted, info);
   }
 
   /**
@@ -247,13 +234,6 @@ class Channel {
       const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
       this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt(pub, mySecret));
     }
-    if (pub !== this.key.pub) {
-      // Subscribe to their messages
-      const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
-      this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, false, key);});
-    }
-    // Subscribe to our messages
-    this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(data, pub, true, key);});
   }
 
   /**
@@ -508,7 +488,7 @@ class Channel {
       });
     });
 
-    this.onMessage.push((msg, info) => {
+    this.getMessages((msg, info) => {
       const msgContent = util.createElement('div', 'iris-msg-content');
       msgContent.innerText = msg.text;
       const time = util.createElement('div', 'time', msgContent);
