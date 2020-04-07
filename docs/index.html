@@ -735,7 +735,7 @@
   </div>
   
 
-  <p>Private communication channel between two participants (gun public keys). (You can specify more than two participants, but it causes unscalable data replication - better group channel implementation to be done.) Can be used independently of other Iris stuff.</p>
+  <p>Private communication channel between two participants (<a href="https://github.com/amark/gun">Gun</a> public keys). (You can specify more than two participants, but it causes unscalable data replication - better group channel implementation to be done.) Can be used independently of other Iris stuff.</p>
 <p>You can use <strong>1)</strong> channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or <strong>2)</strong> channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.</p>
 <p>Channel ids and data values are obfuscated, but it is possible to guess
 who are communicating with each other by looking at Gun timestamps and subscriptions.</p>
@@ -785,7 +785,7 @@ who are communicating with each other by looking at Gun timestamps and subscript
     <div class='py1 quiet mt1 prose-big'>Example</div>
     
       
-      <pre class='p1 overflow-auto round fill-light'><span class="hljs-comment">// Copy &amp; paste this to console at https://iris.to or other page that has gun and iris-lib</span>
+      <pre class='p1 overflow-auto round fill-light'><span class="hljs-comment">// Copy &amp; paste this to console at https://iris.to or other page that has gun, sea and iris-lib</span>
 <span class="hljs-comment">// Due to an unsolved bug, someoneElse's messages only start showing up after a reload</span>
 
 <span class="hljs-keyword">var</span> gun1 = <span class="hljs-keyword">new</span> Gun(<span class="hljs-string">'https://gun-us.herokuapp.com/gun'</span>);
@@ -817,6 +817,7 @@ iris.Channel.getChannels(gun1, myKey, channel =&gt; {
 <span class="hljs-comment">// you can play with these in the console:</span>
 ourChannel.send(<span class="hljs-string">'message from myKey'</span>);
 theirChannel.send(<span class="hljs-string">'message from someoneElse'</span>);
+
 ourChannel.put(<span class="hljs-string">'mood'</span>, <span class="hljs-string">'blessed'</span>);
 theirChannel.put(<span class="hljs-string">'mood'</span>, <span class="hljs-string">'happy'</span>);</pre>
     

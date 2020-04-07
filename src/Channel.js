@@ -2,7 +2,7 @@ import Gun from 'gun';
 import util from './util';
 
 /**
-* Private communication channel between two participants (gun public keys). (You can specify more than two participants, but it causes unscalable data replication - better group channel implementation to be done.) Can be used independently of other Iris stuff.
+* Private communication channel between two participants ([Gun](https://github.com/amark/gun) public keys). (You can specify more than two participants, but it causes unscalable data replication - better group channel implementation to be done.) Can be used independently of other Iris stuff.
 *
 * You can use **1)** channel.send() and channel.getMessages() for timestamp-indexed chat-style messaging or **2)** channel.put(key, value) and the corresponding channel.on(key, callback) methods to write key-value pairs where values are encrypted.
 *
@@ -11,7 +11,7 @@ import util from './util';
 *
 * @param {Object} options {key, gun, chatLink, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys
 * @example
-* // Copy & paste this to console at https://iris.to or other page that has gun and iris-lib
+* // Copy & paste this to console at https://iris.to or other page that has gun, sea and iris-lib
 * // Due to an unsolved bug, someoneElse's messages only start showing up after a reload
 *
 * var gun1 = new Gun('https://gun-us.herokuapp.com/gun');
@@ -43,6 +43,7 @@ import util from './util';
 * // you can play with these in the console:
 * ourChannel.send('message from myKey');
 * theirChannel.send('message from someoneElse');
+*
 * ourChannel.put('mood', 'blessed');
 * theirChannel.put('mood', 'happy');
 *
