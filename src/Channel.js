@@ -336,7 +336,7 @@ class Channel {
   /**
   * Save a key-value pair, encrypt value. Each participant in the Channel writes to their own version of the key-value pair — they don't overwrite the same one.
   * @param {string} key
-  * @param {string} value
+  * @param value
   * @param {string} salt (optional) custom salt for encrypting the value
   */
   async put(key, value, salt) {
