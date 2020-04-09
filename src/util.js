@@ -393,16 +393,16 @@ export default {
         text-align: center;
       }
 
-      .seen {
+      .iris-seen {
         color: rgba(0, 0, 0, 0.45);
         user-select: none;
       }
 
-      .seen.yes {
+      .iris-seen.yes {
         color: #4fc3f7;
       }
 
-      .seen svg {
+      .iris-seen svg {
         width: 18px;
       }
 

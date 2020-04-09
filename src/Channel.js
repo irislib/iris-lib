@@ -534,7 +534,7 @@ class Channel {
     }
 
     this.getTheirMsgsLastSeenTime(time => {
-      const unseen = messages.querySelectorAll('.seen:not(.yes)');
+      const unseen = messages.querySelectorAll('.iris-seen:not(.yes)');
       unseen.forEach(indicator => {
         const msgEl = indicator.parentElement.parentElement.parentElement;
         if (msgEl.getAttribute('data-time') <= time) {
@@ -542,7 +542,7 @@ class Channel {
           if (msgClass.indexOf('delivered') === -1) {
             msgEl.setAttribute('class', `${msgClass  } delivered`);
           }
-          indicator.setAttribute('class', 'seen yes');
+          indicator.setAttribute('class', 'iris-seen yes');
         }
       });
     });
@@ -553,7 +553,7 @@ class Channel {
       const time = util.createElement('div', 'time', msgContent);
       time.innerText = util.formatTime(new Date(msg.time));
       if (info.selfAuthored) {
-        const cls = this.theirMsgsLastSeenTime >= msg.time ? 'seen yes' : 'seen';
+        const cls = this.theirMsgsLastSeenTime >= msg.time ? 'iris-seen yes' : 'iris-seen';
         const seenIndicator = util.createElement('span', cls, time);
         seenIndicator.innerHTML = ' <svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 59 42"><polygon fill="currentColor" points="40.6,12.1 17,35.7 7.4,26.1 4.6,29 17,41.3 43.4,14.9"></polygon><polygon class="iris-delivered-checkmark" fill="currentColor" points="55.6,12.1 32,35.7 29.4,33.1 26.6,36 32,41.3 58.4,14.9"></polygon></svg>';
       }
