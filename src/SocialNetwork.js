@@ -44,6 +44,8 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 
 // TODO: flush onto IPFS
 /**
+* **Experimental.** Unlike Channel, this is probably not the most useful class yet.
+*
 * The essence of Iris: A database of Contacts and SignedMessages within your web of trust.
 *
 * NOTE: these docs reflect the latest commit at https://github.com/irislib/iris-lib
