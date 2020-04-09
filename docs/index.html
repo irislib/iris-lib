@@ -747,6 +747,7 @@
 <hr>
 <p>You can open a channel with yourself for a private key-value space or a "note to self" type chat with yourself.</p>
 <p>You can specify more than one participant key (your own key is included by default), but it's not guaranteed to work and causes unscalable data replication - better group channel implementation to be done.</p>
+<p><strong>Note!</strong> As of April 2020 Gun.SEA hashing function <a href="https://github.com/amark/gun/issues/892">is broken on Safari</a>. Channels don't work on Safari unless you patch sea.js <a href="https://github.com/irislib/iris-messenger/blob/1e012581793485e6b8b5ed3c2ad0629716709366/src/js/sea.js#L270">like this</a>.</p>
 <p><strong>Privacy disclaimer:</strong> Channel ids, data values and messages are encrypted, but message timestamps are unencrypted so that peers can return them to you in a sequential order. By looking at the unencrypted timestamps (or Gun subscriptions), it is possible to guess who are communicating with each other. This could be improved by indexing messages by <em>day</em> only, so making the guess would be more difficult, while you could still return them in a semi-sequential order.</p>
 
     <div class='pre p1 fill-light mt0'>new Channel(options: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
