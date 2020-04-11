@@ -4,6 +4,8 @@ import util from './util';
 /**
 * Private communication channel between two participants ([Gun](https://github.com/amark/gun) public keys). Can be used independently of other Iris stuff.
 *
+* Used as a core element of [iris-messenger](https://github.com/irislib/iris-messenger).
+*
 * ---
 *
 * #### Key-value API
