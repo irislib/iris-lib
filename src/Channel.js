@@ -30,7 +30,13 @@ import util from './util';
 *
 * **Privacy disclaimer:** Channel ids, data values and messages are encrypted, but message timestamps are unencrypted so that peers can return them to you in a sequential order. By looking at the unencrypted timestamps (or Gun subscriptions), it is possible to guess who are communicating with each other. This could be improved by indexing messages by *day* only, so making the guess would be more difficult, while you could still return them in a semi-sequential order.
 *
-* @param {Object} options {key, gun, chatLink, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys (your own key is included by default)
+* @param {Object} options
+* @param {string} options.key your keypair
+* @param {Object} options.gun [gun](https://github.com/amark/gun) instance
+* @param options.participants (optional) string or string array of participant public keys (your own key is included by default)
+* @param {string} options.chatLink (optional) chat link instead of participants list
+* @param {string} options.uuid (group channels only) unique channel identifier
+* @param {string} options.name (group channels only) channel name
 * @example
 * // Copy & paste this to console at https://iris.to or other page that has gun, sea and iris-lib
 * // Due to an unsolved bug, someoneElse's messages only start showing up after a reload
@@ -81,8 +87,8 @@ class Channel {
     this.user.auth(this.key);
     this.user.put({epub: this.key.epub});
     this.secrets = {}; // maps participant public key to shared secret
-    this.ourSecretChannelIds = {}; // maps participant public key to our secret channel id
-    this.theirSecretChannelIds = {}; // maps participant public key to their secret channel id
+    this.ourSecretChannelIds = {}; // maps participant public key to our secret mutual channel id
+    this.theirSecretChannelIds = {}; // maps participant public key to their secret mutual channel id
     this.messages = {};
 
     let saved;
@@ -124,6 +130,33 @@ class Channel {
     if (!saved && (options.save === undefined || options.save === true)) {
       this.save();
     }
+    if (options.uuid) { // It's a group channel
+      this.uuid = options.uuid;
+      this.name = options.name;
+      this.theirSecretUuids = {};
+      // share secret uuid with other participants. since secret is already non-deterministic, maybe uuid could also be?
+      // generate channel-specific secret and share it with other participants
+      // put() keys should be encrypted first? so you could do put(uuid, secret)
+      // what if you join the channel with 2 unconnected devices? on reconnect, the older secret would be overwritten and messages unreadable. maybe participants should store each others' old keys? or maybe you should store them and re-encrypt old stuff when key changes? return them with map() instead?
+      getMySecretUuid().then(s => {
+        this.put(this.uuid, s);
+      });
+      this.onTheir(this.uuid, (s, from) => {
+        this.theirSecretUuids[from] = s;
+        // subscribe to messages and keys
+      });
+      // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
+    }
+  }
+
+  async getMySecretUuid() {
+    if (!this.mySecretUuid) {
+      const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
+      const encryptedUuid = await Gun.SEA.encrypt(this.uuid, this.key);
+      const encryptedUuidHash = await util.getHash(encryptedUuid);
+      this.mySecretUuid = encryptedUuidHash;
+    }
+    return this.mySecretUuid;
   }
 
   /**

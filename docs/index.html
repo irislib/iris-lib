@@ -736,6 +736,7 @@
   
 
   <p>Private communication channel between two participants (<a href="https://github.com/amark/gun">Gun</a> public keys). Can be used independently of other Iris stuff.</p>
+<p>Used as a core element of <a href="https://github.com/irislib/iris-messenger">iris-messenger</a>.</p>
 <hr>
 <h4>Key-value API</h4>
 <p><code>channel.put(key, value)</code> and <code>channel.on(key, callback)</code>.</p>
@@ -768,17 +769,79 @@
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>options</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
-	    {key, gun, chatLink, participants} 
-<strong>key</strong>
-: your keypair, 
-<strong>gun</strong>
-: gun instance, 
-<strong>chatLink</strong>
-: (optional) chat link instead of participants list, 
-<strong>participants</strong>
-: (optional) string or string array of participant public keys (your own key is included by default)
-
+	    
           </div>
+          
+          <table class='mt1 mb2 fixed-table h5 col-12'>
+            <colgroup>
+              <col width='30%' />
+              <col width='70%' />
+            </colgroup>
+            <thead>
+              <tr class='bold fill-light'>
+                <th>Name</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody class='mt1'>
+              
+                <tr>
+  <td class='break-word'><span class='code bold'>options.key</span> <code class='quiet'><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>
+  </td>
+  <td class='break-word'><span>your keypair
+</span></td>
+</tr>
+
+
+              
+                <tr>
+  <td class='break-word'><span class='code bold'>options.gun</span> <code class='quiet'><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>
+  </td>
+  <td class='break-word'><span><a href="https://github.com/amark/gun">gun</a>
+ instance
+</span></td>
+</tr>
+
+
+              
+                <tr>
+  <td class='break-word'><span class='code bold'>options.participants</span> <code class='quiet'>any</code>
+  </td>
+  <td class='break-word'><span>(optional) string or string array of participant public keys (your own key is included by default)
+</span></td>
+</tr>
+
+
+              
+                <tr>
+  <td class='break-word'><span class='code bold'>options.chatLink</span> <code class='quiet'><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>
+  </td>
+  <td class='break-word'><span>(optional) chat link instead of participants list
+</span></td>
+</tr>
+
+
+              
+                <tr>
+  <td class='break-word'><span class='code bold'>options.uuid</span> <code class='quiet'><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>
+  </td>
+  <td class='break-word'><span>(group channels only) unique channel identifier
+</span></td>
+</tr>
+
+
+              
+                <tr>
+  <td class='break-word'><span class='code bold'>options.name</span> <code class='quiet'><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>
+  </td>
+  <td class='break-word'><span>(group channels only) channel name
+</span></td>
+</tr>
+
+
+              
+            </tbody>
+          </table>
           
         </div>
       
