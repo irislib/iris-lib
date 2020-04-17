@@ -10,23 +10,23 @@ const gun = new GUN({radisk: false});
 test(`We say hi`, async (done) => {
   const myself = await iris.Key.generate();
   const friend = await iris.Key.generate();
-  const friendsChannel = new iris.Channel({ gun, key: friend, participants: myself.pub });
+  const friendsChannel = new iris.Channel({ gun: gun, key: friend, participants: myself.pub });
   const myChannel = new iris.Channel({
-    gun,
+    gun: gun,
     key: myself,
-    participants: friend.pub,
-    onMessage: (msg, info) => {
-      expect(msg.text).toEqual(`hi`);
-      expect(info.selfAuthored).toBe(true);
-      done();
-    }
+    participants: friend.pub
+  });
+  myChannel.getMessages((msg, info) => {
+    expect(msg.text).toEqual(`hi`);
+    expect(info.selfAuthored).toBe(true);
+    done();
   });
   myChannel.send(`hi`);
 });
 test(`Set and get msgsLastSeenTime`, async (done) => {
   const myself = await iris.Key.generate();
   const myChannel = new iris.Channel({
-    gun,
+    gun: gun,
     key: myself,
     participants: myself.pub
   });
@@ -38,20 +38,21 @@ test(`Set and get msgsLastSeenTime`, async (done) => {
     done();
   });
 });
-/* probably fails because chats use the same gun
+
 test(`Friend says hi`, async (done) => {
   const myself = await iris.Key.generate();
   const friend = await iris.Key.generate();
-  const friendsChannel = new iris.Channel({ gun, key: friend, participants: myself.pub });
   const myChannel = new iris.Channel({
-    gun,
+    gun: gun,
     key: myself,
     participants: friend.pub,
-    onMessage: (msg) => {
-      expect(msg.text).toEqual(`hi`);
+  });
+
+  const friendsChannel = new iris.Channel({ gun: gun, key: friend, participants: myself.pub });
+  friendsChannel.send(`hi`);
+  myChannel.getMessages((msg) => {
+    if (msg.text === `hi`) {
       done();
     }
   });
-  friendsChannel.send(`hi`);
 });
-*/
