@@ -1,5 +1,6 @@
 import Gun from 'gun';
 import util from './util';
+import Attribute from './attribute';
 
 /**
 * Private communication channel between two participants ([Gun](https://github.com/amark/gun) public keys). Can be used independently of other Iris stuff.
@@ -130,6 +131,9 @@ class Channel {
     if (!saved && (options.save === undefined || options.save === true)) {
       this.save();
     }
+    if (options.newGroup) {
+      options.uuid = Attribute.getUuid();
+    }
     if (options.uuid) { // It's a group channel
       this.uuid = options.uuid;
       this.name = options.name;
@@ -139,10 +143,13 @@ class Channel {
       // put() keys should be encrypted first? so you could do put(uuid, secret)
       // what if you join the channel with 2 unconnected devices? on reconnect, the older secret would be overwritten and messages unreadable. maybe participants should store each others' old keys? or maybe you should store them and re-encrypt old stuff when key changes? return them with map() instead?
       getMySecretUuid().then(s => {
-        this.put(this.uuid, s);
+        this.put(this.uuid, s); // TODO: encrypt keys in put()
       });
       this.onTheir(this.uuid, (s, from) => {
         this.theirSecretUuids[from] = s;
+        gun.user(from).get(s).get(`msgs`).map().once(msg => {
+
+        });
         // subscribe to messages and keys
       });
       // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
@@ -377,6 +384,20 @@ class Channel {
   * @param {string} salt (optional) custom salt for encrypting the value
   */
   async put(key, value, salt) {
+    (this.uuid ? this.putGroup : this.putDirect)(key, value, salt);
+  }
+
+  async putGroup(key, value, salt) {
+    if (key === `msgs`) { throw new Error(`Sorry, you can't overwrite the msgs field which is used for .send()`); }
+    const keys = this.getParticipants();
+    salt = salt || Gun.SEA.random(32).toString();
+    const obj = {v: value, s: salt};
+    const encrypted = await Gun.SEA.encrypt(JSON.stringify(obj), (await this.getGroupSecret()));
+    const mySecretUuid = await this.getMySecretUuid();
+    this.user.get(`chats`).get(mySecretUuid).get(key).put(encrypted);
+  }
+
+  async putDirect(key, value, salt) {
     if (key === `msgs`) { throw new Error(`Sorry, you can't overwrite the msgs field which is used for .send()`); }
     const keys = this.getParticipants();
     salt = salt || Gun.SEA.random(32).toString();
@@ -395,6 +416,10 @@ class Channel {
   * @param {string} from public key whose value you want, or *"me"* for your value only, or *"them"* for the value of others only
   */
   async on(key, callback, from) {
+    (this.uuid ? this.onGroup : this.onDirect)(key, callback, from);
+  }
+
+  async onDirect(key, callback, from) {
     if (!from || from === `me` || from === this.key.pub) {
       this.onMy(key, val => callback(val, this.key.pub));
     }
@@ -404,6 +429,10 @@ class Channel {
   }
 
   async onMy(key, callback) {
+    (this.uuid ? this.onMyGroup : this.onMyDirect)(key, callback);
+  }
+
+  async onMyDirect(key, callback) {
     if (typeof callback !== 'function') {
       throw new Error(`onMy callback must be a function, got ${typeof callback}`);
     }
@@ -421,6 +450,10 @@ class Channel {
   }
 
   async onTheir(key, callback) {
+    (this.uuid ? this.onTheirGroup : this.onTheirDirect)(key, callback);
+  }
+
+  async onTheirDirect(key, callback) {
     if (typeof callback !== 'function') {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }

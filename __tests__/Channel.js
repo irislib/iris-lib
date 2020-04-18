@@ -56,3 +56,29 @@ test(`Friend says hi`, async (done) => {
     }
   });
 });
+
+test(`Friends say hi in a group chat`, async (done) => {
+  const myself = await iris.Key.generate();
+  const friend1 = await iris.Key.generate();
+  const friend2 = await iris.Key.generate();
+  const myChannel = new iris.Channel({
+    gun: gun,
+    key: myself,
+    participants: [friend1.pub, friend2.pub],
+    newGroup: true
+  });
+  myChannel.send('1')
+
+  const friend1Channel = new iris.Channel({ gun: gun, key: friend1, participants: [myself.pub, friend2.pub], uuid: myChannel.uuid });
+  friend1Channel.send('2');
+  const friend2Channel = new iris.Channel({ gun: gun, key: friend2, participants: [myself.pub, friend1.pub], uuid: myChannel.uuid });
+  friend2Channel.send('3');
+  const r = [];
+  myChannel.getMessages((msg) => {
+    console.log('got msg', msg.text);
+    r.push(msg.text);
+    if (r.indexOf('1') >= 0 &&  r.indexOf('3') >= 0) {
+      done();
+    }
+  });
+});
