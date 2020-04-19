@@ -133,6 +133,7 @@ class Channel {
     }
     if (options.newGroup) {
       options.uuid = Attribute.getUuid();
+      this.changeMyGroupSecret();
     }
     if (options.uuid) { // It's a group channel
       this.uuid = options.uuid;
@@ -143,7 +144,7 @@ class Channel {
       // put() keys should be encrypted first? so you could do put(uuid, secret)
       // what if you join the channel with 2 unconnected devices? on reconnect, the older secret would be overwritten and messages unreadable. maybe participants should store each others' old keys? or maybe you should store them and re-encrypt old stuff when key changes? return them with map() instead?
       getMySecretUuid().then(s => {
-        this.put(this.uuid, s); // TODO: encrypt keys in put()
+        this.putDirect(this.uuid, s); // TODO: encrypt keys in put()
       });
       this.onTheir(this.uuid, (s, from) => {
         this.theirSecretUuids[from] = s;
@@ -154,6 +155,38 @@ class Channel {
       });
       // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
     }
+  }
+
+  changeMyGroupSecret() {
+    this.myGroupSecret = Gun.SEA.random(32);
+    this.participants.forEach(pub => {
+      this.putDirect(this.uuid + 'secret', this.myGroupSecret);
+    });
+  }
+
+  /**
+  * Unsubscribe messages from a channel participants
+  *
+  * @param {string} participant public key
+  */
+  async mute(participant) {
+    this.gun.user(participant).get(this.theirSecretUuids[participant]).off();
+    // TODO: persist
+  }
+
+  /**
+  * Mute user and prevent them from seeing your further messages
+  *
+  * @param {string} participant public key
+  */
+  async block(participant) {
+    this.mute(participant);
+    for (let i = 0; i < this.participants.length; i++) {
+      if (this.participants[i] === participant) {
+        this.participants.splice(i, 1);
+      }
+    }
+    this.changeMyGroupSecret();
   }
 
   async getMySecretUuid() {
@@ -392,7 +425,7 @@ class Channel {
     const keys = this.getParticipants();
     salt = salt || Gun.SEA.random(32).toString();
     const obj = {v: value, s: salt};
-    const encrypted = await Gun.SEA.encrypt(JSON.stringify(obj), (await this.getGroupSecret()));
+    const encrypted = await Gun.SEA.encrypt(JSON.stringify(obj), (await this.getMyGroupSecret()));
     const mySecretUuid = await this.getMySecretUuid();
     this.user.get(`chats`).get(mySecretUuid).get(key).put(encrypted);
   }
