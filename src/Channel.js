@@ -160,9 +160,7 @@ class Channel {
   changeMyGroupSecret() {
     this.myGroupSecret = Gun.SEA.random(32);
     // TODO: secret should be archived and probably messages should include the encryption key id so past messages don't become unreadable
-    this.participants.forEach(pub => {
-      this.putDirect(`${this.uuid}secret`, this.myGroupSecret);
-    });
+    this.putDirect(`${this.uuid}secret`, this.myGroupSecret);
   }
 
   /**
@@ -193,7 +191,7 @@ class Channel {
   async getMySecretUuid() {
     if (!this.mySecretUuid) {
       const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
-      const encryptedUuid = await Gun.SEA.encrypt(this.uuid, this.key);
+      const encryptedUuid = await Gun.SEA.encrypt(this.uuid, mySecret);
       const encryptedUuidHash = await util.getHash(encryptedUuid);
       this.mySecretUuid = encryptedUuidHash;
     }
@@ -420,29 +418,23 @@ class Channel {
   * Save a key-value pair, encrypt value. Each participant in the Channel writes to their own version of the key-value pair — they don't overwrite the same one.
   * @param {string} key
   * @param value
-  * @param {string} salt (optional) custom salt for encrypting the value
   */
-  async put(key, value, salt) {
-    (this.uuid ? this.putGroup : this.putDirect)(key, value, salt);
+  async put(key, value) {
+    (this.uuid ? this.putGroup : this.putDirect)(key, value);
   }
 
-  async putGroup(key, value, salt) {
+  async putGroup(key, value) {
     if (key === `msgs`) { throw new Error(`Sorry, you can't overwrite the msgs field which is used for .send()`); }
-    const keys = this.getParticipants();
-    salt = salt || Gun.SEA.random(32).toString();
-    const obj = {v: value, s: salt};
-    const encrypted = await Gun.SEA.encrypt(JSON.stringify(obj), (await this.getMyGroupSecret()));
+    const encrypted = await Gun.SEA.encrypt(JSON.stringify(value), (await this.getMyGroupSecret()));
     const mySecretUuid = await this.getMySecretUuid();
     this.user.get(`chats`).get(mySecretUuid).get(key).put(encrypted);
   }
 
-  async putDirect(key, value, salt) {
+  async putDirect(key, value) {
     if (key === `msgs`) { throw new Error(`Sorry, you can't overwrite the msgs field which is used for .send()`); }
     const keys = this.getParticipants();
-    salt = salt || Gun.SEA.random(32).toString();
-    const obj = {v: value, s: salt};
     for (let i = 0;i < keys.length;i++) {
-      const encrypted = await Gun.SEA.encrypt(JSON.stringify(obj), (await this.getSecret(keys[i])));
+      const encrypted = await Gun.SEA.encrypt(JSON.stringify(value), (await this.getSecret(keys[i])));
       const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
       this.user.get(`chats`).get(ourSecretChannelId).get(key).put(encrypted);
     }
