@@ -157,6 +157,32 @@ class Channel {
     }
   }
 
+  getTheirSecretUuid(pub) {
+    return new Promise(resolve => {
+      if (!this.theirSecretUuids[pub]) {
+        this.onTheirDirect(this.uuid, s => {
+          this.theirSecretUuids[pub] = s;
+          resolve(this.theirSecretUuids[pub]);
+        }, pub);
+      } else {
+        resolve(this.theirSecretUuids[pub]);
+      }
+    });
+  }
+
+  getTheirGroupSecret(pub) {
+    return new Promise(resolve => {
+      if (!this.theirGroupSecrets[pub]) {
+        this.onTheirDirect(this.uuid, s => {
+          this.theirGroupSecrets[pub] = s;
+          resolve(this.theirGroupSecrets[pub]);
+        }, pub);
+      } else {
+        resolve(this.theirGroupSecrets[pub]);
+      }
+    });
+  }
+
   changeMyGroupSecret() {
     this.myGroupSecret = Gun.SEA.random(32);
     // TODO: secret should be archived and probably messages should include the encryption key id so past messages don't become unreadable
@@ -282,7 +308,7 @@ class Channel {
         // Subscribe to their messages
         let theirSecretChannelId;
         if (this.uuid) {
-          theirSecretChannelId = this.theirSecretUuids[pub];
+          theirSecretChannelId = await this.getTheirSecretUuid(pub);
         } else {
           theirSecretChannelId = await this.getTheirSecretChannelId(pub);
         }
@@ -298,7 +324,8 @@ class Channel {
     if (this.messages[key]) {
       return;
     }
-    const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+    const secret = this.uuid ? (await this.getTheirGroupSecret(pub)) : (await this.getSecret(pub));
+    const decrypted = await Gun.SEA.decrypt(data, secret);
     if (typeof decrypted !== `object`) {
       return;
     }
@@ -493,17 +520,14 @@ class Channel {
     if (typeof callback !== 'function') {
       throw new Error(`onMy callback must be a function, got ${typeof callback}`);
     }
-    const keys = this.getParticipants();
-    for (let i = 0;i < keys.length;i++) {
-      const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
-      this.gun.user().get(`chats`).get(ourSecretChannelId).get(key).on(async data => {
-        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
-        if (decrypted) {
-          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
-        }
-      });
-      break;
-    }
+    const mySecretUuid = await this.getMySecretUuid();
+    const mySecret = await this.getMySecret();
+    this.gun.user().get(`chats`).get(mySecretUuid).get(key).on(async data => {
+      const decrypted = await Gun.SEA.decrypt(data, mySecret);
+      if (decrypted) {
+        callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
+      }
+    });
   }
 
   async onTheir(key, callback) {
@@ -515,15 +539,15 @@ class Channel {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
     const keys = this.getParticipants();
-    for (let i = 0;i < keys.length;i++) {
-      const theirSecretChannelId = await this.getTheirSecretChannelId(keys[i]);
-      this.gun.user(keys[i]).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
-        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
+    keys.forEach(async pub => {
+      const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
+      this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
+        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
         if (decrypted) {
-          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, keys[i]);
+          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, pub);
         }
       });
-    }
+    });
   }
 
   async onTheirGroup(key, callback) {
@@ -531,15 +555,15 @@ class Channel {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
     const keys = this.getParticipants();
-    for (let i = 0;i < keys.length;i++) {
-      const theirSecretChannelId = await this.getTheirSecretChannelId(keys[i]);
-      this.gun.user(keys[i]).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
-        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
+    keys.forEach(async pub => {
+      const theirSecretUuid = await this.getTheirSecretUuid(pub);
+      this.gun.user(pub).get(`chats`).get(theirSecretUuid).get(key).on(async data => {
+        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
         if (decrypted) {
-          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, keys[i]);
+          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, pub);
         }
       });
-    }
+    });
   }
 
   /**
