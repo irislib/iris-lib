@@ -136,6 +136,7 @@ class Channel {
       this.save();
     }
     if (options.uuid) { // It's a group channel
+      if (!this.myGroupSecret) { this.changeMyGroupSecret(); }
       this.uuid = options.uuid;
       this.name = options.name;
       this.theirSecretUuids = {};
@@ -148,9 +149,17 @@ class Channel {
         this.putDirect(this.uuid, s); // TODO: encrypt keys in put()
       });
       this.onTheirDirect(this.uuid, (s, from) => {
+        console.log('got their secret uuid', s);
+        console.log('got their secret uuid', s);
+        console.log('got their secret uuid', s);
+        console.log('got their secret uuid', s);
         this.theirSecretUuids[from] = s;
       });
       this.onTheirDirect(`${this.uuid}secret`, (s, from) => {
+        console.log('got their group secret', s);
+        console.log('got their group secret', s);
+        console.log('got their group secret', s);
+        console.log('got their group secret', s);
         this.theirGroupSecrets[from] = s;
       });
       // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
@@ -184,7 +193,7 @@ class Channel {
   }
 
   changeMyGroupSecret() {
-    this.myGroupSecret = Gun.SEA.random(32);
+    this.myGroupSecret = Gun.SEA.random(32).toString();
     // TODO: secret should be archived and probably messages should include the encryption key id so past messages don't become unreadable
     this.putDirect(`${this.uuid}secret`, this.myGroupSecret);
   }
@@ -281,6 +290,13 @@ class Channel {
         callback(new Channel({key: keypair, gun, participants: pub, save: false}));
       }
     });
+  }
+
+  async getMyGroupSecret() { // group secret could be deterministic: hash(encryptToSelf(uuid + iterator))
+    if (!this.myGroupSecret) {
+      this.changeMyGroupSecret();
+    }
+    return this.myGroupSecret;
   }
 
   async getOurSecretChannelId(pub) {
@@ -421,12 +437,23 @@ class Channel {
       throw new Error(`msg param must be a string or an object`);
     }
     //this.gun.user().get('message').set(temp);
-    const keys = this.getParticipants();
-    for (let i = 0;i < keys.length;i++) {
-      const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
-      const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).get(`${msg.time}`).put(encrypted);
-      this.user.get(`chats`).get(ourSecretChannelId).get(`latestMsg`).put(encrypted);
+    if (this.uuid) {
+      const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getMyGroupSecret()));
+      const mySecretUuid = await this.getMySecretUuid();
+      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
+      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
+      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
+      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
+      this.user.get(`chats`).get(mySecretUuid).get(`msgs`).get(`${msg.time}`).put(encrypted);
+      this.user.get(`chats`).get(mySecretUuid).get(`latestMsg`).put(encrypted);
+    } else {
+      const keys = this.getParticipants();
+      for (let i = 0;i < keys.length;i++) {
+        const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
+        const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
+        this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).get(`${msg.time}`).put(encrypted);
+        this.user.get(`chats`).get(ourSecretChannelId).get(`latestMsg`).put(encrypted);
+      }
     }
   }
 
@@ -530,16 +557,17 @@ class Channel {
     });
   }
 
-  async onTheir(key, callback) {
-    return (this.uuid ? this.onTheirGroup : this.onTheirDirect).call(this, key, callback);
+  async onTheir(key, callback, from) {
+    return (this.uuid ? this.onTheirGroup : this.onTheirDirect).call(this, key, callback, from);
   }
 
-  async onTheirDirect(key, callback) {
+  async onTheirDirect(key, callback, from) {
     if (typeof callback !== 'function') {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
     const keys = this.getParticipants();
     keys.forEach(async pub => {
+      if (from && pub !== from) { return; }
       const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
       this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
         const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
@@ -550,12 +578,13 @@ class Channel {
     });
   }
 
-  async onTheirGroup(key, callback) {
+  async onTheirGroup(key, callback, from) {
     if (typeof callback !== 'function') {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
     const keys = this.getParticipants();
     keys.forEach(async pub => {
+      if (from && pub !== from) { return; }
       const theirSecretUuid = await this.getTheirSecretUuid(pub);
       this.gun.user(pub).get(`chats`).get(theirSecretUuid).get(key).on(async data => {
         const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));

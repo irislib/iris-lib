@@ -7473,6 +7473,9 @@
 	    }
 	    if (options.uuid) {
 	      // It's a group channel
+	      if (!this.myGroupSecret) {
+	        this.changeMyGroupSecret();
+	      }
 	      this.uuid = options.uuid;
 	      this.name = options.name;
 	      this.theirSecretUuids = {};
@@ -7485,9 +7488,17 @@
 	        _this.putDirect(_this.uuid, s); // TODO: encrypt keys in put()
 	      });
 	      this.onTheirDirect(this.uuid, function (s, from) {
+	        console.log('got their secret uuid', s);
+	        console.log('got their secret uuid', s);
+	        console.log('got their secret uuid', s);
+	        console.log('got their secret uuid', s);
 	        _this.theirSecretUuids[from] = s;
 	      });
 	      this.onTheirDirect(this.uuid + 'secret', function (s, from) {
+	        console.log('got their group secret', s);
+	        console.log('got their group secret', s);
+	        console.log('got their group secret', s);
+	        console.log('got their group secret', s);
 	        _this.theirGroupSecrets[from] = s;
 	      });
 	      // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
@@ -7525,7 +7536,7 @@
 	  };
 
 	  Channel.prototype.changeMyGroupSecret = function changeMyGroupSecret() {
-	    this.myGroupSecret = Gun.SEA.random(32);
+	    this.myGroupSecret = Gun.SEA.random(32).toString();
 	    // TODO: secret should be archived and probably messages should include the encryption key id so past messages don't become unreadable
 	    this.putDirect(this.uuid + 'secret', this.myGroupSecret);
 	  };
@@ -7636,6 +7647,14 @@
 	        callback(new Channel({ key: keypair, gun: gun, participants: pub, save: false }));
 	      }
 	    });
+	  };
+
+	  Channel.prototype.getMyGroupSecret = async function getMyGroupSecret() {
+	    // group secret could be deterministic: hash(encryptToSelf(uuid + iterator))
+	    if (!this.myGroupSecret) {
+	      this.changeMyGroupSecret();
+	    }
+	    return this.myGroupSecret;
 	  };
 
 	  Channel.prototype.getOurSecretChannelId = async function getOurSecretChannelId(pub) {
@@ -7809,12 +7828,23 @@
 	      throw new Error('msg param must be a string or an object');
 	    }
 	    //this.gun.user().get('message').set(temp);
-	    var keys = this.getParticipants();
-	    for (var i = 0; i < keys.length; i++) {
-	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
-	      var ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
-	      this.user.get('chats').get(ourSecretChannelId).get('msgs').get('' + msg.time).put(encrypted);
-	      this.user.get('chats').get(ourSecretChannelId).get('latestMsg').put(encrypted);
+	    if (this.uuid) {
+	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getMyGroupSecret()));
+	      var mySecretUuid = await this.getMySecretUuid();
+	      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
+	      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
+	      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
+	      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
+	      this.user.get('chats').get(mySecretUuid).get('msgs').get('' + msg.time).put(encrypted);
+	      this.user.get('chats').get(mySecretUuid).get('latestMsg').put(encrypted);
+	    } else {
+	      var keys = this.getParticipants();
+	      for (var i = 0; i < keys.length; i++) {
+	        var _encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
+	        var ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
+	        this.user.get('chats').get(ourSecretChannelId).get('msgs').get('' + msg.time).put(_encrypted);
+	        this.user.get('chats').get(ourSecretChannelId).get('latestMsg').put(_encrypted);
+	      }
 	    }
 	  };
 
@@ -7949,11 +7979,11 @@
 	    });
 	  };
 
-	  Channel.prototype.onTheir = async function onTheir(key, callback) {
-	    return (this.uuid ? this.onTheirGroup : this.onTheirDirect).call(this, key, callback);
+	  Channel.prototype.onTheir = async function onTheir(key, callback, from) {
+	    return (this.uuid ? this.onTheirGroup : this.onTheirDirect).call(this, key, callback, from);
 	  };
 
-	  Channel.prototype.onTheirDirect = async function onTheirDirect(key, callback) {
+	  Channel.prototype.onTheirDirect = async function onTheirDirect(key, callback, from) {
 	    var _this11 = this;
 
 	    if (typeof callback !== 'function') {
@@ -7961,6 +7991,9 @@
 	    }
 	    var keys = this.getParticipants();
 	    keys.forEach(async function (pub) {
+	      if (from && pub !== from) {
+	        return;
+	      }
 	      var theirSecretChannelId = await _this11.getTheirSecretChannelId(pub);
 	      _this11.gun.user(pub).get('chats').get(theirSecretChannelId).get(key).on(async function (data) {
 	        var decrypted = await Gun.SEA.decrypt(data, (await _this11.getSecret(pub)));
@@ -7971,7 +8004,7 @@
 	    });
 	  };
 
-	  Channel.prototype.onTheirGroup = async function onTheirGroup(key, callback) {
+	  Channel.prototype.onTheirGroup = async function onTheirGroup(key, callback, from) {
 	    var _this12 = this;
 
 	    if (typeof callback !== 'function') {
@@ -7979,6 +8012,9 @@
 	    }
 	    var keys = this.getParticipants();
 	    keys.forEach(async function (pub) {
+	      if (from && pub !== from) {
+	        return;
+	      }
 	      var theirSecretUuid = await _this12.getTheirSecretUuid(pub);
 	      _this12.gun.user(pub).get('chats').get(theirSecretUuid).get(key).on(async function (data) {
 	        var decrypted = await Gun.SEA.decrypt(data, (await _this12.getSecret(pub)));

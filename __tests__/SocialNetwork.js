@@ -7,7 +7,7 @@ const SEA = require(`gun/sea`);
 //SEA.throw = true;
 
 //let ipfsNode = new IPFS({repo: './ipfs_repo'});
-const gun = new GUN({radisk: false});
+const gun = new GUN({radisk: false, multicast: false});
 
 const waitForValue = function(gunNode, timeout = 100) {
   let value;

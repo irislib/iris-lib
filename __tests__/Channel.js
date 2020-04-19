@@ -5,7 +5,7 @@ const then = require(`gun/lib/then`);
 const radix = require(`gun/lib/radix`); // Require before instantiating Gun, if running in jsdom mode
 const SEA = require(`gun/sea`);
 
-const gun = new GUN({radisk: false});
+const gun = new GUN({radisk: false, multicast: false});
 
 test(`We say hi`, async (done) => {
   const myself = await iris.Key.generate();
@@ -61,19 +61,37 @@ test(`Friends say hi in a group chat`, async (done) => {
   const myself = await iris.Key.generate();
   const friend1 = await iris.Key.generate();
   const friend2 = await iris.Key.generate();
+
   const myChannel = new iris.Channel({
     gun: gun,
     key: myself,
     participants: [friend1.pub, friend2.pub]
   });
   expect(typeof myChannel.uuid).toBe('string');
+  expect(typeof myChannel.myGroupSecret).toBe('string');
   expect(myChannel.uuid.length).toBe(36);
   myChannel.send('1')
+  console.log('myChannel uuid', myChannel.mySecretUuid);
 
-  const friend1Channel = new iris.Channel({ gun: gun, key: friend1, participants: [myself.pub, friend2.pub], uuid: myChannel.uuid });
-  friend1Channel.send('2');
-  const friend2Channel = new iris.Channel({ gun: gun, key: friend2, participants: [myself.pub, friend1.pub], uuid: myChannel.uuid });
-  friend2Channel.send('3');
+  setTimeout(() => {
+    const friend1Channel = new iris.Channel({ gun: gun, key: friend1, participants: [myself.pub, friend2.pub], uuid: myChannel.uuid });
+    friend1Channel.send('2');
+    expect(friend1Channel.uuid).toEqual(myChannel.uuid);
+    expect(typeof friend1Channel.myGroupSecret).toBe('string');
+    console.log('friend1Channel uuid', friend1Channel.mySecretUuid);
+
+  }, 500);
+
+  setTimeout(() => {
+    const friend2Channel = new iris.Channel({ gun: gun, key: friend2, participants: [myself.pub, friend1.pub], uuid: myChannel.uuid });
+    friend2Channel.send('3');
+    expect(friend2Channel.uuid).toEqual(myChannel.uuid);
+    expect(typeof friend2Channel.myGroupSecret).toBe('string');
+    console.log('friend2Channel uuid', friend2Channel.mySecretUuid);
+
+  }, 1000);
+
+
   const r = [];
   myChannel.getMessages((msg) => {
     console.log('got msg', msg.text);
@@ -82,4 +100,6 @@ test(`Friends say hi in a group chat`, async (done) => {
       done();
     }
   });
+
+  console.log()
 });
