@@ -7487,18 +7487,12 @@
 	      this.getMySecretUuid().then(function (s) {
 	        _this.putDirect(_this.uuid, s); // TODO: encrypt keys in put()
 	      });
-	      this.onTheirDirect(this.uuid, function (s, from) {
-	        console.log('got their secret uuid', s);
-	        console.log('got their secret uuid', s);
-	        console.log('got their secret uuid', s);
-	        console.log('got their secret uuid', s);
+	      this.onTheirDirect(this.uuid, function (s, k, from) {
+	        console.log(from, 'secret uuid', s);
 	        _this.theirSecretUuids[from] = s;
 	      });
-	      this.onTheirDirect(this.uuid + 'secret', function (s, from) {
-	        console.log('got their group secret', s);
-	        console.log('got their group secret', s);
-	        console.log('got their group secret', s);
-	        console.log('got their group secret', s);
+	      this.onTheirDirect(this.uuid + 'secret', function (s, k, from) {
+	        console.log(from, 'group secret', s);
 	        _this.theirGroupSecrets[from] = s;
 	      });
 	      // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
@@ -7831,9 +7825,6 @@
 	    if (this.uuid) {
 	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getMyGroupSecret()));
 	      var mySecretUuid = await this.getMySecretUuid();
-	      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
-	      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
-	      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
 	      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
 	      this.user.get('chats').get(mySecretUuid).get('msgs').get('' + msg.time).put(encrypted);
 	      this.user.get('chats').get(mySecretUuid).get('latestMsg').put(encrypted);

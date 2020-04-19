@@ -61,6 +61,9 @@ test(`Friends say hi in a group chat`, async (done) => {
   const myself = await iris.Key.generate();
   const friend1 = await iris.Key.generate();
   const friend2 = await iris.Key.generate();
+  iris.Channel.initUser(gun, myself);
+  iris.Channel.initUser(gun, friend1);
+  iris.Channel.initUser(gun, friend2);
 
   const myChannel = new iris.Channel({
     gun: gun,
@@ -71,14 +74,14 @@ test(`Friends say hi in a group chat`, async (done) => {
   expect(typeof myChannel.myGroupSecret).toBe('string');
   expect(myChannel.uuid.length).toBe(36);
   myChannel.send('1')
-  console.log('myChannel uuid', myChannel.mySecretUuid);
+  console.log('myChannel uuid', myChannel.uuid);
 
   setTimeout(() => {
     const friend1Channel = new iris.Channel({ gun: gun, key: friend1, participants: [myself.pub, friend2.pub], uuid: myChannel.uuid });
     friend1Channel.send('2');
     expect(friend1Channel.uuid).toEqual(myChannel.uuid);
     expect(typeof friend1Channel.myGroupSecret).toBe('string');
-    console.log('friend1Channel uuid', friend1Channel.mySecretUuid);
+    console.log('friend1Channel uuid', friend1Channel.uuid);
 
   }, 500);
 
@@ -87,7 +90,7 @@ test(`Friends say hi in a group chat`, async (done) => {
     friend2Channel.send('3');
     expect(friend2Channel.uuid).toEqual(myChannel.uuid);
     expect(typeof friend2Channel.myGroupSecret).toBe('string');
-    console.log('friend2Channel uuid', friend2Channel.mySecretUuid);
+    console.log('friend2Channel uuid', friend2Channel.uuid);
 
   }, 1000);
 
