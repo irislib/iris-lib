@@ -119,7 +119,11 @@ class Channel {
 
     if (typeof options.participants === `string`) {
       this.addPub(options.participants, options.save);
-    } else if (Array.isArray(options.participants)) {
+    } else if (Array.isArray(options.participants)) { // it's a group channel
+      if (!options.uuid) {
+        options.uuid = Attribute.getUuid().value;
+        this.changeMyGroupSecret();
+      }
       for (let i = 0;i < options.participants.length;i++) {
         if (typeof options.participants[i] === `string`) {
           this.addPub(options.participants[i], options.save);
@@ -130,10 +134,6 @@ class Channel {
     }
     if (!saved && (options.save === undefined || options.save === true)) {
       this.save();
-    }
-    if (options.newGroup) {
-      options.uuid = Attribute.getUuid();
-      this.changeMyGroupSecret();
     }
     if (options.uuid) { // It's a group channel
       this.uuid = options.uuid;
@@ -447,7 +447,7 @@ class Channel {
   * @param value
   */
   async put(key, value) {
-    (this.uuid ? this.putGroup : this.putDirect)(key, value);
+    return (this.uuid ? this.putGroup : this.putDirect).call(this, key, value);
   }
 
   async putGroup(key, value) {
@@ -474,7 +474,7 @@ class Channel {
   * @param {string} from public key whose value you want, or *"me"* for your value only, or *"them"* for the value of others only
   */
   async on(key, callback, from) {
-    (this.uuid ? this.onGroup : this.onDirect)(key, callback, from);
+    return (this.uuid ? this.onGroup : this.onDirect).call(this, key, callback, from);
   }
 
   async onDirect(key, callback, from) {
@@ -496,7 +496,7 @@ class Channel {
   }
 
   async onMy(key, callback) {
-    (this.uuid ? this.onMyGroup : this.onMyDirect)(key, callback);
+    return (this.uuid ? this.onMyGroup : this.onMyDirect).call(this, key, callback);
   }
 
   async onMyDirect(key, callback) {
@@ -531,7 +531,7 @@ class Channel {
   }
 
   async onTheir(key, callback) {
-    (this.uuid ? this.onTheirGroup : this.onTheirDirect)(key, callback);
+    return (this.uuid ? this.onTheirGroup : this.onTheirDirect).call(this, key, callback);
   }
 
   async onTheirDirect(key, callback) {

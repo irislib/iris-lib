@@ -64,9 +64,10 @@ test(`Friends say hi in a group chat`, async (done) => {
   const myChannel = new iris.Channel({
     gun: gun,
     key: myself,
-    participants: [friend1.pub, friend2.pub],
-    newGroup: true
+    participants: [friend1.pub, friend2.pub]
   });
+  expect(typeof myChannel.uuid).toBe('string');
+  expect(myChannel.uuid.length).toBe(36);
   myChannel.send('1')
 
   const friend1Channel = new iris.Channel({ gun: gun, key: friend1, participants: [myself.pub, friend2.pub], uuid: myChannel.uuid });
@@ -77,7 +78,7 @@ test(`Friends say hi in a group chat`, async (done) => {
   myChannel.getMessages((msg) => {
     console.log('got msg', msg.text);
     r.push(msg.text);
-    if (r.indexOf('1') >= 0 &&  r.indexOf('3') >= 0) {
+    if (r.indexOf('1') >= 0 && r.indexOf('2') >= 0 && r.indexOf('3') >= 0) {
       done();
     }
   });
