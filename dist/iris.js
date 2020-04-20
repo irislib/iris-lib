@@ -7518,6 +7518,9 @@
 	  Channel.prototype.getTheirGroupSecret = function getTheirGroupSecret(pub) {
 	    var _this3 = this;
 
+	    if (pub === this.key.pub) {
+	      return this.getMyGroupSecret();
+	    }
 	    return new _Promise(function (resolve) {
 	      if (!_this3.theirGroupSecrets[pub]) {
 	        _this3.onTheirDirect('S' + _this3.uuid, function (s) {
@@ -7688,32 +7691,36 @@
 	          theirSecretChannelId = await _this4.getTheirSecretChannelId(pub);
 	        }
 	        _this4.gun.user(pub).get('chats').get(theirSecretChannelId).get('msgs').map().once(function (data, key) {
-	          _this4.messageReceived(callback, data, pub, false, key, pub);
+	          _this4.messageReceived(callback, data, _this4.uuid || pub, false, key, pub);
 	        });
 	      }
-	      // Subscribe to our messages
-	      var ourSecretChannelId = void 0;
-	      if (_this4.uuid) {
-	        ourSecretChannelId = await _this4.getMySecretUuid();
-	      } else {
-	        ourSecretChannelId = await _this4.getOurSecretChannelId(pub);
+	      if (!_this4.uuid) {
+	        // Subscribe to our messages
+	        var ourSecretChannelId = await _this4.getOurSecretChannelId(pub);
+	        _this4.user.get('chats').get(ourSecretChannelId).get('msgs').map().once(function (data, key) {
+	          _this4.messageReceived(callback, data, pub, true, key, _this4.key.pub);
+	        });
 	      }
-	      _this4.user.get('chats').get(ourSecretChannelId).get('msgs').map().once(function (data, key) {
-	        _this4.messageReceived(callback, data, pub, true, key, _this4.key.pub);
-	      });
 	    });
+	    if (this.uuid) {
+	      // Subscribe to our messages
+	      var mySecretUuid = await this.getMySecretUuid();
+	      this.user.get('chats').get(mySecretUuid).get('msgs').map().once(function (data, key) {
+	        _this4.messageReceived(callback, data, _this4.uuid, true, key, _this4.key.pub);
+	      });
+	    }
 	  };
 
-	  Channel.prototype.messageReceived = async function messageReceived(callback, data, pub, selfAuthored, key, from) {
+	  Channel.prototype.messageReceived = async function messageReceived(callback, data, channelId, selfAuthored, key, from) {
 	    if (this.messages[key]) {
 	      return;
 	    }
-	    var secret = this.uuid ? await this.getTheirGroupSecret(pub) : await this.getSecret(pub);
+	    var secret = this.uuid ? await this.getTheirGroupSecret(from) : await this.getSecret(channelId);
 	    var decrypted = await Gun.SEA.decrypt(data, secret);
 	    if (typeof decrypted !== 'object') {
 	      return;
 	    }
-	    var info = { selfAuthored: selfAuthored, pub: pub, from: from };
+	    var info = { selfAuthored: selfAuthored, channelId: channelId, from: from };
 	    this.messages[key] = decrypted;
 	    callback(decrypted, info);
 	  };
