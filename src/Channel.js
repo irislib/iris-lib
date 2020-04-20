@@ -84,6 +84,7 @@ class Channel {
   constructor(options) {
     this.key = options.key;
     this.gun = options.gun;
+    this.myGroupSecret = options.myGroupSecret;
     this.user = this.gun.user();
     this.user.auth(this.key);
     this.user.put({epub: this.key.epub});
@@ -282,9 +283,26 @@ class Channel {
           gun.user().get(`chats`).get(ourSecretChannelId).put(null);
           return;
         }
-        const encryptedPub = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`));
-        const pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
-        callback(new Channel({key: keypair, gun, participants: pub, save: false}));
+        const encryptedChatId = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`));
+        const chatId = await Gun.SEA.decrypt(encryptedChatId, mySecret);
+        if (chatId.pub || typeof chatId === `string`) {
+          callback(new Channel({
+            key: keypair,
+            gun,
+            participants: chatId.pub || chatId,
+            save: false
+          }));
+        } else {
+          if (chatId.uuid && chatId.participants && chatId.myGroupSecret) {
+            callback(new Channel({
+              key: keypair,
+              gun,
+              uuid: chatId.uuid,
+              myGroupSecret: chatId.myGroupSecret,
+              save: false
+            }));
+          }
+        }
       }
     });
   }
@@ -417,7 +435,7 @@ class Channel {
     if (save) {
       // Save their public key in encrypted format, so in channel listing we know who we are channelting with
       const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
-      this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt(pub, mySecret));
+      this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt({pub}, mySecret));
     }
   }
 
@@ -462,10 +480,23 @@ class Channel {
   * Save the channel to our channels list without sending a message
   */
   async save() {
-    const keys = this.getParticipants();
-    for (let i = 0;i < keys.length;i++) {
-      const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChannelId).get('msgs').get('a').put(null);
+    if (this.uuid) {
+      const mySecretUuid = await this.getMySecretUuid();
+      this.user.get(`chats`).get(mySecretUuid).get('msgs').get('a').put(null);
+      this.put(`participants`, this.getParticipants()); // public participants list
+
+      const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
+      this.user.get(`chats`).get(mySecretUuid).get(`pub`).put(await Gun.SEA.encrypt({
+        uuid: this.uuid,
+        myGroupSecret: this.getMyGroupSecret(),
+        participants: this.getParticipants() // private participants list
+      }, mySecret));
+    } else {
+      const keys = this.getParticipants();
+      for (let i = 0;i < keys.length;i++) {
+        const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
+        this.user.get(`chats`).get(ourSecretChannelId).get('msgs').get('a').put(null);
+      }
     }
   }
 
