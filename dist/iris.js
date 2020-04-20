@@ -7473,10 +7473,10 @@
 	    }
 	    if (options.uuid) {
 	      // It's a group channel
+	      this.uuid = options.uuid;
 	      if (!this.myGroupSecret) {
 	        this.changeMyGroupSecret();
 	      }
-	      this.uuid = options.uuid;
 	      this.name = options.name;
 	      this.theirSecretUuids = {};
 	      this.theirGroupSecrets = {};
@@ -7486,13 +7486,14 @@
 	      // what if you join the channel with 2 unconnected devices? on reconnect, the older secret would be overwritten and messages unreadable. maybe participants should store each others' old keys? or maybe you should store them and re-encrypt old stuff when key changes? return them with map() instead?
 	      this.getMySecretUuid().then(function (s) {
 	        _this.putDirect(_this.uuid, s); // TODO: encrypt keys in put()
+	        console.log(_this.key.pub.slice(0, 6), 'set secret uuid:', s);
 	      });
 	      this.onTheirDirect(this.uuid, function (s, k, from) {
-	        console.log(from, 'secret uuid', s);
+	        console.log(_this.key.pub.slice(0, 6), 'got secret uuid from', from.slice(0, 6), ':', s);
 	        _this.theirSecretUuids[from] = s;
 	      });
-	      this.onTheirDirect(this.uuid + 'secret', function (s, k, from) {
-	        console.log(from, 'group secret', s);
+	      this.onTheirDirect('S' + this.uuid, function (s, k, from) {
+	        console.log(_this.key.pub.slice(0, 6), 'got group secret from', from.slice(0, 6), ':', s);
 	        _this.theirGroupSecrets[from] = s;
 	      });
 	      // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
@@ -7519,7 +7520,8 @@
 
 	    return new _Promise(function (resolve) {
 	      if (!_this3.theirGroupSecrets[pub]) {
-	        _this3.onTheirDirect(_this3.uuid, function (s) {
+	        _this3.onTheirDirect('S' + _this3.uuid, function (s) {
+	          console.log(_this3.key.pub.slice(0, 6), 'got group secret from', pub.slice(0, 6), ':', s);
 	          _this3.theirGroupSecrets[pub] = s;
 	          resolve(_this3.theirGroupSecrets[pub]);
 	        }, pub);
@@ -7530,9 +7532,10 @@
 	  };
 
 	  Channel.prototype.changeMyGroupSecret = function changeMyGroupSecret() {
-	    this.myGroupSecret = Gun.SEA.random(32).toString();
+	    this.myGroupSecret = Gun.SEA.random(32).toString('base64');
 	    // TODO: secret should be archived and probably messages should include the encryption key id so past messages don't become unreadable
-	    this.putDirect(this.uuid + 'secret', this.myGroupSecret);
+	    this.putDirect('S' + this.uuid, this.myGroupSecret);
+	    console.log(this.key.pub.slice(0, 6), 'set group secret', this.myGroupSecret);
 	  };
 
 	  /**
@@ -7557,7 +7560,7 @@
 	  Channel.prototype.block = async function block(participant) {
 	    this.mute(participant);
 	    this.putDirect(this.uuid, null);
-	    this.putDirect(this.uuid + 'secret', null);
+	    this.putDirect('S' + this.uuid, null);
 	    delete this.secrets[participant];
 	    delete this.ourSecretChannelIds[participant];
 	    delete this.theirSecretChannelIds[participant];
@@ -7567,9 +7570,8 @@
 	  Channel.prototype.getMySecretUuid = async function getMySecretUuid() {
 	    if (!this.mySecretUuid) {
 	      var mySecret = await Gun.SEA.secret(this.key.epub, this.key);
-	      var encryptedUuid = await Gun.SEA.encrypt(this.uuid, mySecret);
-	      var encryptedUuidHash = await util.getHash(encryptedUuid);
-	      this.mySecretUuid = encryptedUuidHash;
+	      var mySecretHash = await util.getHash(mySecret);
+	      this.mySecretUuid = await util.getHash(mySecretHash + this.uuid);
 	    }
 	    return this.mySecretUuid;
 	  };
@@ -7643,7 +7645,7 @@
 	    });
 	  };
 
-	  Channel.prototype.getMyGroupSecret = async function getMyGroupSecret() {
+	  Channel.prototype.getMyGroupSecret = function getMyGroupSecret() {
 	    // group secret could be deterministic: hash(encryptToSelf(uuid + iterator))
 	    if (!this.myGroupSecret) {
 	      this.changeMyGroupSecret();
@@ -7690,7 +7692,12 @@
 	        });
 	      }
 	      // Subscribe to our messages
-	      var ourSecretChannelId = await _this4.getOurSecretChannelId(pub);
+	      var ourSecretChannelId = void 0;
+	      if (_this4.uuid) {
+	        ourSecretChannelId = await _this4.getMySecretUuid();
+	      } else {
+	        ourSecretChannelId = await _this4.getOurSecretChannelId(pub);
+	      }
 	      _this4.user.get('chats').get(ourSecretChannelId).get('msgs').map().once(function (data, key) {
 	        _this4.messageReceived(callback, data, pub, true, key, _this4.key.pub);
 	      });
@@ -7823,9 +7830,9 @@
 	    }
 	    //this.gun.user().get('message').set(temp);
 	    if (this.uuid) {
-	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getMyGroupSecret()));
+	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), this.getMyGroupSecret());
 	      var mySecretUuid = await this.getMySecretUuid();
-	      console.log('sending msg', msg, 'to secret uuid', mySecretUuid, 'encrypted with', (await this.getMyGroupSecret()), 'encrypted result', encrypted);
+	      console.log(this.key.pub.slice(0, 6), 'sending msg', msg, 'to their secret uuid', mySecretUuid, 'encrypted with', this.getMyGroupSecret());
 	      this.user.get('chats').get(mySecretUuid).get('msgs').get('' + msg.time).put(encrypted);
 	      this.user.get('chats').get(mySecretUuid).get('latestMsg').put(encrypted);
 	    } else {
@@ -7867,7 +7874,7 @@
 	    if (key === 'msgs') {
 	      throw new Error('Sorry, you can\'t overwrite the msgs field which is used for .send()');
 	    }
-	    var encrypted = await Gun.SEA.encrypt(_JSON$stringify(value), (await this.getMyGroupSecret()));
+	    var encrypted = await Gun.SEA.encrypt(_JSON$stringify(value), this.getMyGroupSecret());
 	    var mySecretUuid = await this.getMySecretUuid();
 	    this.user.get('chats').get(mySecretUuid).get(key).put(encrypted);
 	  };
