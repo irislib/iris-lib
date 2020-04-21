@@ -114,10 +114,8 @@ test(`Save and retrieve channels`, async (done) => {
     key: myself,
     participants: [friend1.pub, friend2.pub]
   });
-  groupChannel.save(); // TODO: should be saved automatically
   let direct, group;
   iris.Channel.getChannels(gun, myself, channel => {
-    console.log('got channel', channel.getId());
     if (channel.uuid) {
       group = channel;
     } else {

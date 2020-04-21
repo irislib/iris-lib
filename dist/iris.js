@@ -7469,9 +7469,6 @@
 	        }
 	      }
 	    }
-	    if (!saved && (options.save === undefined || options.save === true)) {
-	      this.save();
-	    }
 	    if (options.uuid) {
 	      // It's a group channel
 	      this.uuid = options.uuid;
@@ -7498,6 +7495,9 @@
 	        _this.theirGroupSecrets[from] = s;
 	      });
 	      // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
+	    }
+	    if (!saved && (options.save === undefined || options.save === true)) {
+	      this.save();
 	    }
 	  }
 
@@ -7665,6 +7665,7 @@
 	            callback(new Channel({
 	              key: keypair,
 	              gun: gun,
+	              participants: chatId.participants,
 	              uuid: chatId.uuid,
 	              myGroupSecret: chatId.myGroupSecret,
 	              save: false
