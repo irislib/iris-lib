@@ -7461,20 +7461,24 @@
 	    }
 
 	    if (typeof options.participants === 'string') {
-	      this.addPub(options.participants, options.save);
+	      this.addParticipant(options.participants, options.save);
 	    } else if (Array.isArray(options.participants)) {
+	      var o = {};
+	      options.participants.forEach(function (p) {
+	        return o[p] = Channel.DEFAULT_PERMISSONS;
+	      });
+	      options.participants = o;
+	    }
+	    if (typeof options.participants === 'object') {
 	      // it's a group channel
 	      if (!options.uuid) {
 	        options.uuid = Attribute$1.getUuid().value;
 	        this.changeMyGroupSecret();
 	      }
-	      for (var i = 0; i < options.participants.length; i++) {
-	        if (typeof options.participants[i] === 'string') {
-	          this.addPub(options.participants[i], options.save);
-	        } else {
-	          console.log('participant public key must be string, got', _typeof(options.participants[i]), options.participants[i]);
-	        }
-	      }
+	      var keys = _Object$keys(options.participants);
+	      keys.forEach(function (k) {
+	        return _this.addParticipant(k, options.save, options.participants[k]);
+	      });
 	    }
 	    if (options.uuid) {
 	      // It's a group channel
@@ -7836,14 +7840,14 @@
 	  */
 
 
-	  Channel.prototype.addPub = async function addPub(pub) {
+	  Channel.prototype.addParticipant = async function addParticipant(pub) {
 	    var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
 	    this.secrets[pub] = null;
 	    this.getSecret(pub);
 	    var ourSecretChannelId = await this.getOurSecretChannelId(pub);
 	    if (save) {
-	      // Save their public key in encrypted format, so in channel listing we know who we are channelting with
+	      // Save their public key in encrypted format, so in channel listing we know who we are channeling with
 	      var mySecret = await Gun.SEA.secret(this.key.epub, this.key);
 	      this.gun.user().get('chats').get(ourSecretChannelId).get('pub').put((await Gun.SEA.encrypt({ pub: pub }, mySecret)));
 	    }
@@ -8023,7 +8027,7 @@
 	      throw new Error('onMy callback must be a function, got ' + (typeof callback === 'undefined' ? 'undefined' : _typeof(callback)));
 	    }
 	    var mySecretUuid = await this.getMySecretUuid();
-	    var mySecret = await this.getMySecret();
+	    var mySecret = await this.getMyGroupSecret();
 	    this.gun.user().get('chats').get(mySecretUuid).get(key).on(async function (data) {
 	      var decrypted = await Gun.SEA.decrypt(data, mySecret);
 	      if (decrypted) {
@@ -8482,6 +8486,8 @@
 
 	  return Channel;
 	}();
+
+	Channel.DEFAULT_PERMISSIONS = { read: true, write: true };
 
 	// eslint-disable-line no-unused-vars
 
