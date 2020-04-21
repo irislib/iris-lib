@@ -98,22 +98,29 @@ class Channel {
       const s = options.chatLink.split('?');
       if (s.length === 2) {
         const pub = util.getUrlParameter('chatWith', s[1]);
-        options.participants = pub;
-        if (pub !== this.key.pub) {
-          const sharedSecret = util.getUrlParameter('s', s[1]);
-          const linkId = util.getUrlParameter('k', s[1]);
-          if (sharedSecret && linkId) {
-            this.save(); // save the channel first so it's there before inviter subscribes to it
-            saved = true;
-            this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
-              const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
-              const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret);
-              const channelRequestId = await util.getHash(encryptedChatRequest);
-              util.gunAsAnotherUser(this.gun, sharedKey, user => {
-                user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
+        const channelId = util.getUrlParameter('channelId', s[1]);
+        const inviter = util.getUrlParameter('inviter', s[1]);
+        if (pub) {
+          options.participants = pub;
+          if (pub !== this.key.pub) {
+            const sharedSecret = util.getUrlParameter('s', s[1]);
+            const linkId = util.getUrlParameter('k', s[1]);
+            if (sharedSecret && linkId) {
+              this.save(); // save the channel first so it's there before inviter subscribes to it
+              saved = true;
+              this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
+                const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
+                const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret); // TODO encrypt is not deterministic, it uses salt
+                const channelRequestId = await util.getHash(encryptedChatRequest);
+                util.gunAsAnotherUser(this.gun, sharedKey, user => {
+                  user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
+                });
               });
-            });
+            }
           }
+        } else if (channelId && inviter) {
+          options.uuid = channelId;
+          options.participants = [inviter];
         }
       }
     }
