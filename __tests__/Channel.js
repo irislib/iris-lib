@@ -102,6 +102,7 @@ test(`Friends say hi in a group chat`, async (done) => {
 test(`Save and retrieve channels`, async (done) => {
   const myself = await iris.Key.generate();
   const friend1 = await iris.Key.generate();
+  iris.Channel.initUser(gun, friend1); // TODO direct chat is not saved unless the other guy's epub is found
   const friend2 = await iris.Key.generate();
   const directChannel = new iris.Channel({
     gun: gun,
@@ -113,17 +114,19 @@ test(`Save and retrieve channels`, async (done) => {
     key: myself,
     participants: [friend1.pub, friend2.pub]
   });
-  let gotDirect, gotGroup;
+  groupChannel.save(); // TODO: should be saved automatically
+  let direct, group;
   iris.Channel.getChannels(gun, myself, channel => {
-    console.log('got channel', channel);
+    console.log('got channel', channel.getId());
     if (channel.uuid) {
       group = channel;
     } else {
       direct = channel;
     }
     if (group && direct) {
-      expect(direct.getParticipants()[0]).toBe(friend1.pub);
-      expect(group.uuid).toBe(groupChannel.uuid);
+      expect(direct.getId()).toBe(friend1.pub);
+      expect(group.getId()).toBe(groupChannel.uuid);
+      expect(groupChannel.getParticipants().length).toBe(2);
       expect(group.getParticipants().length).toBe(2);
       done();
     }

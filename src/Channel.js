@@ -36,7 +36,7 @@ import Attribute from './attribute';
 * @param {Object} options.gun [gun](https://github.com/amark/gun) instance
 * @param options.participants (optional) string or string array of participant public keys (your own key is included by default)
 * @param {string} options.chatLink (optional) chat link instead of participants list
-* @param {string} options.uuid (group channels only) unique channel identifier
+* @param {string} options.uuid (group channels only) unique channel identifier. Leave out for new channel.
 * @param {string} options.name (group channels only) channel name
 * @example
 * // Copy & paste this to console at https://iris.to or other page that has gun, sea and iris-lib
@@ -236,6 +236,13 @@ class Channel {
   */
   getParticipants() {
     return Object.keys(this.secrets);
+  }
+
+  /**
+  * Returns either the uuid of a group channel or the public key of a direct channel.
+  */
+  getId() {
+    return this.uuid || this.getParticipants()[0];
   }
 
   async getSecret(pub) {
