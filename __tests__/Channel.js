@@ -57,7 +57,7 @@ test(`User2 says hi`, async (done) => {
   });
 });
 
-test(`3 users send and receive messages on a group channel`, async (done) => {
+test(`3 users send and receive messages and key-value pairs on a group channel`, async (done) => {
   const user1 = await iris.Key.generate();
   const user2 = await iris.Key.generate();
   const user3 = await iris.Key.generate();
@@ -74,13 +74,14 @@ test(`3 users send and receive messages on a group channel`, async (done) => {
   expect(typeof user1Channel.myGroupSecret).toBe('string');
   expect(user1Channel.uuid.length).toBe(36);
   user1Channel.send('1')
+  user1Channel.put('name', 'Champions');
 
   const r1 = [];
   const r2 = [];
   const r3 = [];
-  let user1ChannelDone, user2ChannelDone, user3ChannelDone;
+  let user1MsgsReceived, user2MsgsReceived, user3MsgsReceived, putReceived1, putReceived2, putReceived3;
   function checkDone() {
-    if (user1ChannelDone && user2ChannelDone && user3ChannelDone) {
+    if (user1MsgsReceived && user2MsgsReceived && user3MsgsReceived && putReceived1 && putReceived2 && putReceived3) {
       done();
     }
   }
@@ -88,10 +89,15 @@ test(`3 users send and receive messages on a group channel`, async (done) => {
     console.log('got msg', msg.text);
     r1.push(msg.text);
     if (r1.indexOf('1') >= 0 && r1.indexOf('2') >= 0 && r1.indexOf('3') >= 0) {
-      user1ChannelDone = true;
-      console.log('user1ChannelDone');
+      user1MsgsReceived = true;
+      console.log('user1MsgsReceived');
       checkDone();
     }
+  });
+  user1Channel.on('name', name => {
+    putReceived1 = name === 'Champions';
+    console.log('putReceived1');
+    checkDone();
   });
 
   setTimeout(() => { // with separate gun instances would work without timeout?
@@ -103,10 +109,15 @@ test(`3 users send and receive messages on a group channel`, async (done) => {
       console.log('got msg', msg.text);
       r2.push(msg.text);
       if (r2.indexOf('1') >= 0 && r2.indexOf('2') >= 0 && r2.indexOf('3') >= 0) {
-        user2ChannelDone = true;
-        console.log('user2ChannelDone');
+        user2MsgsReceived = true;
+        console.log('user2MsgsReceived');
         checkDone();
       }
+    });
+    user2Channel.on('name', name => {
+      putReceived2 = name === 'Champions';
+      console.log('putReceived2');
+      checkDone();
     });
   }, 500);
 
@@ -119,10 +130,15 @@ test(`3 users send and receive messages on a group channel`, async (done) => {
       console.log('got msg', msg.text);
       r3.push(msg.text);
       if (r3.indexOf('1') >= 0 && r3.indexOf('2') >= 0 && r3.indexOf('3') >= 0) {
-        user3ChannelDone = true;
-        console.log('user3ChannelDone');
+        user3MsgsReceived = true;
+        console.log('user3MsgsReceived');
         checkDone();
       }
+    });
+    user3Channel.on('name', name => {
+      putReceived3 = name === 'Champions';
+      console.log('putReceived3');
+      checkDone();
     });
   }, 1000);
 });
