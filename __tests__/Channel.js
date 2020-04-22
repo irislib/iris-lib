@@ -61,6 +61,9 @@ test(`3 users send and receive messages on a group channel`, async (done) => {
   const user1 = await iris.Key.generate();
   const user2 = await iris.Key.generate();
   const user3 = await iris.Key.generate();
+  iris.Channel.initUser(gun, user1);
+  iris.Channel.initUser(gun, user2);
+  iris.Channel.initUser(gun, user3);
 
   const user1Channel = new iris.Channel({
     gun: gun,

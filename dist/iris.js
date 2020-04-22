@@ -7471,21 +7471,19 @@
 	    }
 	    if (typeof options.participants === 'object') {
 	      // it's a group channel
-	      if (!options.uuid) {
-	        options.uuid = Attribute$1.getUuid().value;
-	        this.changeMyGroupSecret();
-	      }
 	      var keys = _Object$keys(options.participants);
 	      keys.forEach(function (k) {
 	        return _this.addParticipant(k, options.save, options.participants[k]);
 	      });
+	      if (!options.uuid) {
+	        options.uuid = Attribute$1.getUuid().value;
+	        this.uuid = options.uuid;
+	        this.changeMyGroupSecret();
+	      }
 	    }
 	    if (options.uuid) {
 	      // It's a group channel
 	      this.uuid = options.uuid;
-	      if (!this.myGroupSecret) {
-	        this.changeMyGroupSecret();
-	      }
 	      this.name = options.name;
 	      this.theirSecretUuids = {};
 	      this.theirGroupSecrets = {};
@@ -7495,14 +7493,14 @@
 	      // what if you join the channel with 2 unconnected devices? on reconnect, the older secret would be overwritten and messages unreadable. maybe participants should store each others' old keys? or maybe you should store them and re-encrypt old stuff when key changes? return them with map() instead?
 	      this.getMySecretUuid().then(function (s) {
 	        _this.putDirect(_this.uuid, s); // TODO: encrypt keys in put()
-	        console.log(_this.key.pub.slice(0, 6), 'set secret uuid:', s);
+	        console.log(_this.key.pub.slice(0, 4), 'set secret uuid:', s);
 	      });
 	      this.onTheirDirect(this.uuid, function (s, k, from) {
-	        console.log(_this.key.pub.slice(0, 6), 'got secret uuid from', from.slice(0, 6), ':', s);
+	        console.log(_this.key.pub.slice(0, 4), 'got secret uuid from', from.slice(0, 4), ':', s);
 	        _this.theirSecretUuids[from] = s;
 	      });
 	      this.onTheirDirect('S' + this.uuid, function (s, k, from) {
-	        console.log(_this.key.pub.slice(0, 6), 'got group secret from', from.slice(0, 6), ':', s);
+	        console.log(_this.key.pub.slice(0, 4), 'got group secret from', from.slice(0, 4), ':', s);
 	        _this.theirGroupSecrets[from] = s;
 	      });
 	      // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
@@ -7536,7 +7534,7 @@
 	    return new _Promise(function (resolve) {
 	      if (!_this3.theirGroupSecrets[pub]) {
 	        _this3.onTheirDirect('S' + _this3.uuid, function (s) {
-	          console.log(_this3.key.pub.slice(0, 6), 'got group secret from', pub.slice(0, 6), ':', s);
+	          console.log(_this3.key.pub.slice(0, 4), 'got group secret from', pub.slice(0, 4), ':', s);
 	          _this3.theirGroupSecrets[pub] = s;
 	          resolve(_this3.theirGroupSecrets[pub]);
 	        }, pub);
@@ -7550,7 +7548,7 @@
 	    this.myGroupSecret = Gun.SEA.random(32).toString('base64');
 	    // TODO: secret should be archived and probably messages should include the encryption key id so past messages don't become unreadable
 	    this.putDirect('S' + this.uuid, this.myGroupSecret);
-	    console.log(this.key.pub.slice(0, 6), 'set group secret', this.myGroupSecret);
+	    console.log(this.key.pub.slice(0, 4), 'set group secret', this.myGroupSecret, 'for channel', 'this.uuid');
 	  };
 
 	  /**
@@ -7878,7 +7876,7 @@
 	    if (this.uuid) {
 	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), this.getMyGroupSecret());
 	      var mySecretUuid = await this.getMySecretUuid();
-	      console.log(this.key.pub.slice(0, 6), 'sending msg', msg, 'to their secret uuid', mySecretUuid, 'encrypted with', this.getMyGroupSecret());
+	      console.log(this.key.pub.slice(0, 4), 'sending msg', msg, 'to their secret uuid', mySecretUuid, 'encrypted with', this.getMyGroupSecret());
 	      this.user.get('chats').get(mySecretUuid).get('msgs').get('' + msg.time).put(encrypted);
 	      this.user.get('chats').get(mySecretUuid).get('latestMsg').put(encrypted);
 	    } else {
