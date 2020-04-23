@@ -5,53 +5,191 @@ const then = require(`gun/lib/then`);
 const radix = require(`gun/lib/radix`); // Require before instantiating Gun, if running in jsdom mode
 const SEA = require(`gun/sea`);
 
-const gun = new GUN({radisk: false});
+const gun = new GUN({radisk: false, multicast: false});
 
-test(`We say hi`, async (done) => {
-  const myself = await iris.Key.generate();
-  const friend = await iris.Key.generate();
-  const friendsChannel = new iris.Channel({ gun: gun, key: friend, participants: myself.pub });
-  const myChannel = new iris.Channel({
+test(`User1 says hi`, async (done) => {
+  const user1 = await iris.Key.generate();
+  const user2 = await iris.Key.generate();
+  const user2Channel = new iris.Channel({ gun: gun, key: user2, participants: user1.pub });
+  const user1Channel = new iris.Channel({
     gun: gun,
-    key: myself,
-    participants: friend.pub
+    key: user1,
+    participants: user2.pub
   });
-  myChannel.getMessages((msg, info) => {
+  user1Channel.getMessages((msg, info) => {
     expect(msg.text).toEqual(`hi`);
     expect(info.selfAuthored).toBe(true);
     done();
   });
-  myChannel.send(`hi`);
+  user1Channel.send(`hi`);
 });
 test(`Set and get msgsLastSeenTime`, async (done) => {
-  const myself = await iris.Key.generate();
-  const myChannel = new iris.Channel({
+  const user1 = await iris.Key.generate();
+  const user1Channel = new iris.Channel({
     gun: gun,
-    key: myself,
-    participants: myself.pub
+    key: user1,
+    participants: user1.pub
   });
   const t = new Date();
-  myChannel.setMyMsgsLastSeenTime();
-  myChannel.getMyMsgsLastSeenTime(time => {
+  user1Channel.setMyMsgsLastSeenTime();
+  user1Channel.getMyMsgsLastSeenTime(time => {
     expect(time).toBeDefined();
     expect(new Date(time).getTime()).toBeGreaterThanOrEqual(t.getTime());
     done();
   });
 });
 
-test(`Friend says hi`, async (done) => {
-  const myself = await iris.Key.generate();
-  const friend = await iris.Key.generate();
-  const myChannel = new iris.Channel({
+test(`User2 says hi`, async (done) => {
+  const user1 = await iris.Key.generate();
+  const user2 = await iris.Key.generate();
+  const user1Channel = new iris.Channel({
     gun: gun,
-    key: myself,
-    participants: friend.pub,
+    key: user1,
+    participants: user2.pub,
   });
 
-  const friendsChannel = new iris.Channel({ gun: gun, key: friend, participants: myself.pub });
-  friendsChannel.send(`hi`);
-  myChannel.getMessages((msg) => {
+  const user2Channel = new iris.Channel({ gun: gun, key: user2, participants: user1.pub });
+  user2Channel.send(`hi`);
+  user1Channel.getMessages((msg) => {
     if (msg.text === `hi`) {
+      done();
+    }
+  });
+});
+
+test(`3 users send and receive messages and key-value pairs on a group channel`, async (done) => {
+  const user1 = await iris.Key.generate();
+  const user2 = await iris.Key.generate();
+  const user3 = await iris.Key.generate();
+  iris.Channel.initUser(gun, user1);
+  iris.Channel.initUser(gun, user2);
+  iris.Channel.initUser(gun, user3);
+
+  const user1Channel = new iris.Channel({
+    gun: gun,
+    key: user1,
+    participants: [user2.pub, user3.pub]
+  });
+  expect(typeof user1Channel.uuid).toBe('string');
+  expect(typeof user1Channel.myGroupSecret).toBe('string');
+  expect(user1Channel.uuid.length).toBe(36);
+  user1Channel.send('1')
+  user1Channel.put('name', 'Champions');
+
+  const r1 = [];
+  const r2 = [];
+  const r3 = [];
+  let user1MsgsReceived, user2MsgsReceived, user3MsgsReceived, putReceived1, putReceived2, putReceived3;
+  function checkDone() {
+    if (user1MsgsReceived && user2MsgsReceived && user3MsgsReceived && putReceived1 && putReceived2 && putReceived3) {
+      done();
+    }
+  }
+  user1Channel.getMessages((msg) => {
+    r1.push(msg.text);
+    if (r1.indexOf('1') >= 0 && r1.indexOf('2') >= 0 && r1.indexOf('3') >= 0) {
+      user1MsgsReceived = true;
+      checkDone();
+    }
+  });
+  user1Channel.on('name', name => {
+    putReceived1 = name === 'Champions';
+    checkDone();
+  });
+
+  setTimeout(() => { // with separate gun instances would work without timeout?
+    const user2Channel = new iris.Channel({ gun: gun, key: user2, participants: [user1.pub, user3.pub], uuid: user1Channel.uuid });
+    user2Channel.send('2');
+    expect(user2Channel.uuid).toEqual(user1Channel.uuid);
+    expect(typeof user2Channel.myGroupSecret).toBe('string');
+    user2Channel.getMessages((msg) => {
+      r2.push(msg.text);
+      if (r2.indexOf('1') >= 0 && r2.indexOf('2') >= 0 && r2.indexOf('3') >= 0) {
+        user2MsgsReceived = true;
+        checkDone();
+      }
+    });
+    user2Channel.on('name', name => {
+      putReceived2 = name === 'Champions';
+      checkDone();
+    });
+  }, 500);
+
+  setTimeout(() => {
+    const user3Channel = new iris.Channel({ gun: gun, key: user3, participants: [user1.pub, user2.pub], uuid: user1Channel.uuid });
+    user3Channel.send('3');
+    expect(user3Channel.uuid).toEqual(user1Channel.uuid);
+    expect(typeof user3Channel.myGroupSecret).toBe('string');
+    user3Channel.getMessages((msg) => {
+      r3.push(msg.text);
+      if (r3.indexOf('1') >= 0 && r3.indexOf('2') >= 0 && r3.indexOf('3') >= 0) {
+        user3MsgsReceived = true;
+        checkDone();
+      }
+    });
+    user3Channel.on('name', name => {
+      putReceived3 = name === 'Champions';
+      checkDone();
+    });
+  }, 1000);
+});
+
+test(`Join a channel using a chat link`, async (done) => {
+  const user1 = await iris.Key.generate();
+  const user2 = await iris.Key.generate();
+  const user3 = await iris.Key.generate();
+  iris.Channel.initUser(gun, user1);
+  iris.Channel.initUser(gun, user2);
+  iris.Channel.initUser(gun, user3);
+
+  const user1Channel = new iris.Channel({
+    gun: gun,
+    key: user1,
+    participants: [user2.pub, user3.pub]
+  });
+
+  const chatLink = user1Channel.getSimpleLink();
+
+  setTimeout(() => {
+    const user2Channel = new iris.Channel({gun, key: user2, chatLink});
+    expect(user2Channel.uuid).toBe(user1Channel.uuid);
+    expect(Object.keys(user2Channel.participants).length).toBe(2);
+    user2Channel.onTheir('participants', pants => {
+      expect(typeof pants).toBe('object');
+      expect(Object.keys(pants).length).toBe(3);
+      expect(Object.keys(user2Channel.participants).length).toBe(3);
+      done();
+    });
+  }, 500);
+});
+
+test(`Save and retrieve direct and group channels`, async (done) => {
+  const user1 = await iris.Key.generate();
+  const user2 = await iris.Key.generate();
+  iris.Channel.initUser(gun, user2); // TODO direct chat is not saved unless the other guy's epub is found
+  const user3 = await iris.Key.generate();
+  const directChannel = new iris.Channel({
+    gun: gun,
+    key: user1,
+    participants: user2.pub
+  });
+  const groupChannel = new iris.Channel({
+    gun: gun,
+    key: user1,
+    participants: [user2.pub, user3.pub]
+  });
+  let direct, group;
+  iris.Channel.getChannels(gun, user1, channel => {
+    if (channel.uuid) {
+      group = channel;
+    } else {
+      direct = channel;
+    }
+    if (group && direct) {
+      expect(direct.getId()).toBe(user2.pub);
+      expect(group.getId()).toBe(groupChannel.uuid);
+      expect(groupChannel.getParticipants().length).toBe(2);
+      expect(group.getParticipants().length).toBe(2);
       done();
     }
   });

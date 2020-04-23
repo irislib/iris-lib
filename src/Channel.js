@@ -1,8 +1,9 @@
 import Gun from 'gun';
 import util from './util';
+import Attribute from './attribute';
 
 /**
-* Private communication channel between two participants ([Gun](https://github.com/amark/gun) public keys). Can be used independently of other Iris stuff.
+* Private communication channel between two or more participants ([Gun](https://github.com/amark/gun) public keys). Can be used independently of other Iris stuff.
 *
 * Used as a core element of [iris-messenger](https://github.com/irislib/iris-messenger).
 *
@@ -24,13 +25,17 @@ import util from './util';
 *
 * You can open a channel with yourself for a private key-value space or a "note to self" type chat with yourself.
 *
-* You can specify more than one participant key (your own key is included by default), but it's not guaranteed to work and causes unscalable data replication - better group channel implementation to be done.
-*
 * **Note!** As of April 2020 Gun.SEA hashing function [is broken on Safari](https://github.com/amark/gun/issues/892). Channels don't work on Safari unless you patch sea.js by adding [this line](https://github.com/irislib/iris-messenger/blob/1e012581793485e6b8b5ed3c2ad0629716709366/src/js/sea.js#L270).
 *
 * **Privacy disclaimer:** Channel ids, data values and messages are encrypted, but message timestamps are unencrypted so that peers can return them to you in a sequential order. By looking at the unencrypted timestamps (or Gun subscriptions), it is possible to guess who are communicating with each other. This could be improved by indexing messages by *day* only, so making the guess would be more difficult, while you could still return them in a semi-sequential order.
 *
-* @param {Object} options {key, gun, chatLink, participants} **key**: your keypair, **gun**: gun instance, **chatLink**: (optional) chat link instead of participants list, **participants**: (optional) string or string array of participant public keys (your own key is included by default)
+* @param {Object} options
+* @param {string} options.key your keypair
+* @param {Object} options.gun [gun](https://github.com/amark/gun) instance
+* @param options.participants (optional) string or string array or permissions object ({'pub1':{read:true,write:true,admin:false},'pub2'...}) of participant public keys (your own key is included by default)
+* @param {string} options.chatLink (optional) chat link instead of participants list
+* @param {string} options.uuid (group channels only) unique channel identifier. Leave out for new channel.
+* @param {string} options.name (group channels only) channel name
 * @example
 * // Copy & paste this to console at https://iris.to or other page that has gun, sea and iris-lib
 * // Due to an unsolved bug, someoneElse's messages only start showing up after a reload
@@ -75,14 +80,16 @@ import util from './util';
 */
 class Channel {
   constructor(options) {
+    this.DEFAULT_PERMISSIONS = {read: true, write: true};
     this.key = options.key;
     this.gun = options.gun;
+    this.myGroupSecret = options.myGroupSecret;
     this.user = this.gun.user();
     this.user.auth(this.key);
     this.user.put({epub: this.key.epub});
     this.secrets = {}; // maps participant public key to shared secret
-    this.ourSecretChannelIds = {}; // maps participant public key to our secret channel id
-    this.theirSecretChannelIds = {}; // maps participant public key to their secret channel id
+    this.ourSecretChannelIds = {}; // maps participant public key to our secret mutual channel id
+    this.theirSecretChannelIds = {}; // maps participant public key to their secret mutual channel id
     this.messages = {};
 
     let saved;
@@ -90,40 +97,175 @@ class Channel {
       const s = options.chatLink.split('?');
       if (s.length === 2) {
         const pub = util.getUrlParameter('chatWith', s[1]);
-        options.participants = pub;
-        if (pub !== this.key.pub) {
-          const sharedSecret = util.getUrlParameter('s', s[1]);
-          const linkId = util.getUrlParameter('k', s[1]);
-          if (sharedSecret && linkId) {
-            this.save(); // save the channel first so it's there before inviter subscribes to it
-            saved = true;
-            this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
-              const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
-              const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret);
-              const channelRequestId = await util.getHash(encryptedChatRequest);
-              util.gunAsAnotherUser(this.gun, sharedKey, user => {
-                user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
+        const channelId = util.getUrlParameter('channelId', s[1]);
+        const inviter = util.getUrlParameter('inviter', s[1]);
+        if (pub) {
+          options.participants = pub;
+          if (pub !== this.key.pub) {
+            const sharedSecret = util.getUrlParameter('s', s[1]);
+            const linkId = util.getUrlParameter('k', s[1]);
+            if (sharedSecret && linkId) {
+              this.save(); // save the channel first so it's there before inviter subscribes to it
+              saved = true;
+              this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
+                const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
+                const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret); // TODO encrypt is not deterministic, it uses salt
+                const channelRequestId = await util.getHash(encryptedChatRequest);
+                util.gunAsAnotherUser(this.gun, sharedKey, user => {
+                  user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
+                });
               });
-            });
+            }
           }
+        } else if (channelId && inviter) {
+          options.uuid = channelId;
+          options.participants = {};
+          options.participants[inviter] = Object.assign({inviter: true}, this.DEFAULT_PERMISSIONS);
         }
       }
     }
 
     if (typeof options.participants === `string`) {
-      this.addPub(options.participants, options.save);
+      this.addParticipant(options.participants, options.save);
     } else if (Array.isArray(options.participants)) {
-      for (let i = 0;i < options.participants.length;i++) {
-        if (typeof options.participants[i] === `string`) {
-          this.addPub(options.participants[i], options.save);
-        } else {
-          console.log(`participant public key must be string, got`, typeof options.participants[i], options.participants[i]);
+      const o = {};
+      options.participants.forEach(p => o[p] = Object.assign({}, this.DEFAULT_PERMISSIONS));
+      options.participants = o;
+    }
+    if (typeof options.participants === `object`) { // it's a group channel
+      const keys = Object.keys(options.participants);
+      keys.forEach(k => {
+        if (k !== this.key.pub) {
+          this.addParticipant(k, options.save, Object.assign({}, this.DEFAULT_PERMISSIONS, options.participants[k]));
         }
+      });
+      options.participants[this.key.pub] = options.participants[this.key.pub] || Object.assign({}, this.DEFAULT_PERMISSIONS);
+      if (!options.uuid) {
+        options.uuid = Attribute.getUuid().value;
+        this.uuid = options.uuid;
+        options.participants[this.key.pub].admin = true;
+        options.participants[this.key.pub].founder = true;
       }
     }
+    this.participants = options.participants;
+    if (options.uuid) { // It's a group channel
+      this.uuid = options.uuid;
+      this.name = options.name;
+      this.theirSecretUuids = {};
+      this.theirGroupSecrets = {};
+      // share secret uuid with other participants. since secret is already non-deterministic, maybe uuid could also be?
+      // generate channel-specific secret and share it with other participants
+      // put() keys should be encrypted first? so you could do put(uuid, secret)
+      // what if you join the channel with 2 unconnected devices? on reconnect, the older secret would be overwritten and messages unreadable. maybe participants should store each others' old keys? or maybe you should store them and re-encrypt old stuff when key changes? return them with map() instead?
+      if (this.myGroupSecret) {
+        this.putDirect(`S${this.uuid}`, this.myGroupSecret);
+      } else {
+        this.getMyGroupSecret();
+      }
+      this.getMySecretUuid().then(s => {
+        this.putDirect(this.uuid, s); // TODO: encrypt keys in put()
+      });
+      this.onTheirDirect(this.uuid, (s, k, from) => {
+        this.theirSecretUuids[from] = s;
+      });
+      this.onTheirDirect(`S${this.uuid}`, (s, k, from) => {
+        this.theirGroupSecrets[from] = s;
+      });
+      // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
+    }
+    this.onTheir(`participants`, (participants, k, from) => {
+      let hasAdmin = false;
+      const keys = Object.keys(this.participants);
+      for (let i = 0; i < keys.length; i++) {
+        if (this.participants[keys[i]].admin || this.participants[keys[i]].inviter) {
+          hasAdmin = true;
+          break;
+        }
+      }
+      if (!hasAdmin) {
+        keys.forEach(k => this.participants[k].admin = true); // if no admins, make everyone admin
+      }
+      if (this.participants[from] && (this.participants[from].admin || this.participants[from].inviter)) {
+        if (typeof participants === `object`) {
+          const before = JSON.stringify(this.participants);
+          this.participants = Object.assign(this.participants, participants);
+          delete this.participants[from].inviter;
+          if (JSON.stringify(this.participants) === before) { return; }
+          this.save(); // forever loop?
+          saved = true;
+        }
+      }
+    });
     if (!saved && (options.save === undefined || options.save === true)) {
       this.save();
     }
+  }
+
+  getTheirSecretUuid(pub) {
+    return new Promise(resolve => {
+      if (!this.theirSecretUuids[pub]) {
+        this.onTheirDirect(this.uuid, s => {
+          this.theirSecretUuids[pub] = s;
+          resolve(this.theirSecretUuids[pub]);
+        }, pub);
+      } else {
+        resolve(this.theirSecretUuids[pub]);
+      }
+    });
+  }
+
+  getTheirGroupSecret(pub) {
+    if (pub === this.key.pub) { return this.getMyGroupSecret(); }
+    return new Promise(resolve => {
+      if (!this.theirGroupSecrets[pub]) {
+        this.onTheirDirect(`S${this.uuid}`, s => {
+          this.theirGroupSecrets[pub] = s;
+          resolve(this.theirGroupSecrets[pub]);
+        }, pub);
+      } else {
+        resolve(this.theirGroupSecrets[pub]);
+      }
+    });
+  }
+
+  changeMyGroupSecret() {
+    this.myGroupSecret = Gun.SEA.random(32).toString('base64');
+    // TODO: secret should be archived and probably messages should include the encryption key id so past messages don't become unreadable
+    this.putDirect(`S${this.uuid}`, this.myGroupSecret);
+  }
+
+  /**
+  * Unsubscribe messages from a channel participants
+  *
+  * @param {string} participant public key
+  */
+  async mute(participant) {
+    this.gun.user(participant).get(this.theirSecretUuids[participant]).off();
+    // TODO: persist
+  }
+
+  /**
+  * Mute user and prevent them from seeing your further (and maybe past) messages
+  *
+  * @param {string} participant public key
+  */
+  async block(participant) {
+    this.mute(participant);
+    this.putDirect(this.uuid, null);
+    this.putDirect(`S${this.uuid}`, null);
+    delete this.secrets[participant];
+    delete this.ourSecretChannelIds[participant];
+    delete this.theirSecretChannelIds[participant];
+    this.changeMyGroupSecret();
+  }
+
+  async getMySecretUuid() {
+    if (!this.mySecretUuid) {
+      const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
+      const mySecretHash = await util.getHash(mySecret);
+      this.mySecretUuid = await util.getHash(mySecretHash + this.uuid);
+    }
+    return this.mySecretUuid;
   }
 
   /**
@@ -131,6 +273,13 @@ class Channel {
   */
   getParticipants() {
     return Object.keys(this.secrets);
+  }
+
+  /**
+  * Returns either the uuid of a group channel or the public key of a direct channel.
+  */
+  getId() {
+    return this.uuid || this.getParticipants()[0];
   }
 
   async getSecret(pub) {
@@ -178,11 +327,36 @@ class Channel {
           gun.user().get(`chats`).get(ourSecretChannelId).put(null);
           return;
         }
-        const encryptedPub = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`));
-        const pub = await Gun.SEA.decrypt(encryptedPub, mySecret);
-        callback(new Channel({key: keypair, gun, participants: pub, save: false}));
+        const encryptedChatId = await util.gunOnceDefined(gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`));
+        const chatId = await Gun.SEA.decrypt(encryptedChatId, mySecret);
+        if (chatId.pub || typeof chatId === `string`) {
+          callback(new Channel({
+            key: keypair,
+            gun,
+            participants: chatId.pub || chatId,
+            save: false
+          }));
+        } else {
+          if (chatId.uuid && chatId.participants && chatId.myGroupSecret) {
+            callback(new Channel({
+              key: keypair,
+              gun,
+              participants: chatId.participants,
+              uuid: chatId.uuid,
+              myGroupSecret: chatId.myGroupSecret,
+              save: false
+            }));
+          }
+        }
       }
     });
+  }
+
+  getMyGroupSecret() { // group secret could be deterministic: hash(encryptToSelf(uuid + iterator))
+    if (!this.myGroupSecret) {
+      this.changeMyGroupSecret();
+    }
+    return this.myGroupSecret;
   }
 
   async getOurSecretChannelId(pub) {
@@ -208,24 +382,37 @@ class Channel {
     this.getParticipants().forEach(async pub => {
       if (pub !== this.key.pub) {
         // Subscribe to their messages
-        const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
-        this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, pub, false, key, pub);});
+        let theirSecretChannelId;
+        if (this.uuid) {
+          theirSecretChannelId = await this.getTheirSecretUuid(pub);
+        } else {
+          theirSecretChannelId = await this.getTheirSecretChannelId(pub);
+        }
+        this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, this.uuid || pub, false, key, pub);});
       }
-      // Subscribe to our messages
-      const ourSecretChannelId = await this.getOurSecretChannelId(pub);
-      this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, pub, true, key, this.key.pub);});
+      if (!this.uuid) {
+        // Subscribe to our messages
+        const ourSecretChannelId = await this.getOurSecretChannelId(pub);
+        this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, pub, true, key, this.key.pub);});
+      }
     });
+    if (this.uuid) {
+      // Subscribe to our messages
+      const mySecretUuid = await this.getMySecretUuid();
+      this.user.get(`chats`).get(mySecretUuid).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, this.uuid, true, key, this.key.pub);});
+    }
   }
 
-  async messageReceived(callback, data, pub, selfAuthored, key, from) {
+  async messageReceived(callback, data, channelId, selfAuthored, key, from) {
     if (this.messages[key]) {
       return;
     }
-    const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+    const secret = this.uuid ? (await this.getTheirGroupSecret(from)) : (await this.getSecret(channelId));
+    const decrypted = await Gun.SEA.decrypt(data, secret);
     if (typeof decrypted !== `object`) {
       return;
     }
-    var info = {selfAuthored, pub, from};
+    const info = {selfAuthored, channelId, from};
     this.messages[key] = decrypted;
     callback(decrypted, info);
   }
@@ -286,14 +473,20 @@ class Channel {
   * Add a public key to the channel
   * @param {string} pub
   */
-  async addPub(pub, save = true) {
+  async addParticipant(pub, save = true, permissions = this.DEFAULT_PERMISSIONS) {
     this.secrets[pub] = null;
+    if (this.uuid) {
+      this.participants[pub] = permissions;
+      if (save) {
+        this.save();
+      }
+    }
     this.getSecret(pub);
     const ourSecretChannelId = await this.getOurSecretChannelId(pub);
-    if (save) {
-      // Save their public key in encrypted format, so in channel listing we know who we are channelting with
+    if (!this.uuid && save) {
+      // Save their public key in encrypted format, so in channel listing we know who we are channeling with
       const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
-      this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt(pub, mySecret));
+      this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt({pub}, mySecret));
     }
   }
 
@@ -317,12 +510,19 @@ class Channel {
       throw new Error(`msg param must be a string or an object`);
     }
     //this.gun.user().get('message').set(temp);
-    const keys = this.getParticipants();
-    for (let i = 0;i < keys.length;i++) {
-      const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
-      const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).get(`${msg.time}`).put(encrypted);
-      this.user.get(`chats`).get(ourSecretChannelId).get(`latestMsg`).put(encrypted);
+    if (this.uuid) {
+      const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), this.getMyGroupSecret());
+      const mySecretUuid = await this.getMySecretUuid();
+      this.user.get(`chats`).get(mySecretUuid).get(`msgs`).get(`${msg.time}`).put(encrypted);
+      this.user.get(`chats`).get(mySecretUuid).get(`latestMsg`).put(encrypted);
+    } else {
+      const keys = this.getParticipants();
+      for (let i = 0;i < keys.length;i++) {
+        const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
+        const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
+        this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).get(`${msg.time}`).put(encrypted);
+        this.user.get(`chats`).get(ourSecretChannelId).get(`latestMsg`).put(encrypted);
+      }
     }
   }
 
@@ -330,10 +530,22 @@ class Channel {
   * Save the channel to our channels list without sending a message
   */
   async save() {
-    const keys = this.getParticipants();
-    for (let i = 0;i < keys.length;i++) {
-      const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
-      this.user.get(`chats`).get(ourSecretChannelId).get('msgs').get('a').put(null);
+    if (this.uuid) {
+      const mySecretUuid = await this.getMySecretUuid();
+      this.user.get(`chats`).get(mySecretUuid).get('msgs').get('a').put(null);
+      this.put(`participants`, this.participants); // public participants list
+      const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
+      this.user.get(`chats`).get(mySecretUuid).get(`pub`).put(await Gun.SEA.encrypt({
+        uuid: this.uuid,
+        myGroupSecret: this.getMyGroupSecret(),
+        participants: this.participants // private participants list
+      }, mySecret));
+    } else {
+      const keys = this.getParticipants();
+      for (let i = 0;i < keys.length;i++) {
+        const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
+        this.user.get(`chats`).get(ourSecretChannelId).get('msgs').get('a').put(null);
+      }
     }
   }
 
@@ -341,15 +553,23 @@ class Channel {
   * Save a key-value pair, encrypt value. Each participant in the Channel writes to their own version of the key-value pair — they don't overwrite the same one.
   * @param {string} key
   * @param value
-  * @param {string} salt (optional) custom salt for encrypting the value
   */
-  async put(key, value, salt) {
+  async put(key, value) {
+    return (this.uuid ? this.putGroup : this.putDirect).call(this, key, value);
+  }
+
+  async putGroup(key, value) {
+    if (key === `msgs`) { throw new Error(`Sorry, you can't overwrite the msgs field which is used for .send()`); }
+    const encrypted = await Gun.SEA.encrypt(JSON.stringify(value), this.getMyGroupSecret());
+    const mySecretUuid = await this.getMySecretUuid();
+    this.user.get(`chats`).get(mySecretUuid).get(key).put(encrypted);
+  }
+
+  async putDirect(key, value) {
     if (key === `msgs`) { throw new Error(`Sorry, you can't overwrite the msgs field which is used for .send()`); }
     const keys = this.getParticipants();
-    salt = salt || Gun.SEA.random(32).toString();
-    const obj = {v: value, s: salt};
     for (let i = 0;i < keys.length;i++) {
-      const encrypted = await Gun.SEA.encrypt(JSON.stringify(obj), (await this.getSecret(keys[i])));
+      const encrypted = await Gun.SEA.encrypt(JSON.stringify(value), (await this.getSecret(keys[i])));
       const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
       this.user.get(`chats`).get(ourSecretChannelId).get(key).put(encrypted);
     }
@@ -362,6 +582,10 @@ class Channel {
   * @param {string} from public key whose value you want, or *"me"* for your value only, or *"them"* for the value of others only
   */
   async on(key, callback, from) {
+    return (this.uuid ? this.onGroup : this.onDirect).call(this, key, callback, from);
+  }
+
+  async onDirect(key, callback, from) {
     if (!from || from === `me` || from === this.key.pub) {
       this.onMy(key, val => callback(val, this.key.pub));
     }
@@ -370,7 +594,20 @@ class Channel {
     }
   }
 
+  async onGroup(key, callback, from) {
+    if (!from || from === `me` || from === this.key.pub) {
+      this.onMyGroup(key, val => callback(val, this.key.pub));
+    }
+    if (!from || (from !== `me` && from !== this.key.pub)) {
+      this.onTheirGroup(key, (val, k, pub) => callback(val, pub));
+    }
+  }
+
   async onMy(key, callback) {
+    return (this.uuid ? this.onMyGroup : this.onMyDirect).call(this, key, callback);
+  }
+
+  async onMyDirect(key, callback) {
     if (typeof callback !== 'function') {
       throw new Error(`onMy callback must be a function, got ${typeof callback}`);
     }
@@ -387,20 +624,56 @@ class Channel {
     }
   }
 
-  async onTheir(key, callback) {
+  async onMyGroup(key, callback) {
+    if (typeof callback !== 'function') {
+      throw new Error(`onMy callback must be a function, got ${typeof callback}`);
+    }
+    const mySecretUuid = await this.getMySecretUuid();
+    const mySecret = await this.getMyGroupSecret();
+    this.gun.user().get(`chats`).get(mySecretUuid).get(key).on(async data => {
+      const decrypted = await Gun.SEA.decrypt(data, mySecret);
+      if (decrypted) {
+        callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
+      }
+    });
+  }
+
+  async onTheir(key, callback, from) {
+    return (this.uuid ? this.onTheirGroup : this.onTheirDirect).call(this, key, callback, from);
+  }
+
+  async onTheirDirect(key, callback, from) {
     if (typeof callback !== 'function') {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
     const keys = this.getParticipants();
-    for (let i = 0;i < keys.length;i++) {
-      const theirSecretChannelId = await this.getTheirSecretChannelId(keys[i]);
-      this.gun.user(keys[i]).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
-        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
+    keys.forEach(async pub => {
+      if (from && pub !== from) { return; }
+      const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
+      this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
+        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
         if (decrypted) {
-          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, keys[i]);
+          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, pub);
         }
       });
+    });
+  }
+
+  async onTheirGroup(key, callback, from) {
+    if (typeof callback !== 'function') {
+      throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
+    const keys = this.getParticipants();
+    keys.forEach(async pub => {
+      if (from && pub !== from) { return; }
+      const theirSecretUuid = await this.getTheirSecretUuid(pub);
+      this.gun.user(pub).get(`chats`).get(theirSecretUuid).get(key).on(async data => {
+        const decrypted = await Gun.SEA.decrypt(data, (await this.getTheirGroupSecret(pub)));
+        if (decrypted) {
+          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, pub);
+        }
+      });
+    });
   }
 
   /**
@@ -456,6 +729,21 @@ class Channel {
         box.setAttribute('style', ''); // show
       }
     });
+  }
+
+  /**
+  * Get a simple link that points to the channel.
+  *
+  * Direct channel: both users need to give their simple links. Use createChatLink() to get a two-way link that needs to be given by one user only.
+  *
+  * Group channel: Works only if the link recipient has been already added onto the channel participants list.
+  */
+  getSimpleLink(urlRoot = 'https://iris.to/') {
+    if (this.uuid) {
+      return `${urlRoot}?channelId=${this.uuid}&inviter=${this.key.pub}`;
+    } else {
+      return `${urlRoot}?chatWith=${this.key.pub}`;
+    }
   }
 
   /**
