@@ -93,6 +93,8 @@ class Channel {
     this.theirSecretChannelIds = {}; // maps participant public key to their secret mutual channel id
     this.messages = {};
 
+    const DEFAULT_PERMISSIONS = {read: true, write: true};
+
     let saved;
     if (options.chatLink) {
       const s = options.chatLink.split('?');
@@ -120,7 +122,8 @@ class Channel {
           }
         } else if (channelId && inviter) {
           options.uuid = channelId;
-          options.participants = [inviter];
+          options.participants = {};
+          options.participants[inviter] = Object.assign({inviter: true}, DEFAULT_PERMISSIONS);
         }
       }
     }
@@ -129,17 +132,25 @@ class Channel {
       this.addParticipant(options.participants, options.save);
     } else if (Array.isArray(options.participants)) {
       const o = {};
-      options.participants.forEach(p => o[p] = Channel.DEFAULT_PERMISSONS);
+      options.participants.forEach(p => o[p] = Object.assign({}, DEFAULT_PERMISSIONS));
       options.participants = o;
     }
     if (typeof options.participants === `object`) { // it's a group channel
       const keys = Object.keys(options.participants);
-      keys.forEach(k => this.addParticipant(k, options.save, options.participants[k]));
+      keys.forEach(k => {
+        if (k !== this.key.pub) {
+          this.addParticipant(k, options.save, Object.assign({}, DEFAULT_PERMISSIONS, options.participants[k]));
+        }
+      });
+      options.participants[this.key.pub] = options.participants[this.key.pub] || Object.assign({}, DEFAULT_PERMISSIONS);
       if (!options.uuid) {
         options.uuid = Attribute.getUuid().value;
         this.uuid = options.uuid;
+        options.participants[this.key.pub].admin = true;
+        options.participants[this.key.pub].founder = true;
       }
     }
+    this.participants = options.participants;
     if (options.uuid) { // It's a group channel
       this.uuid = options.uuid;
       this.name = options.name;
@@ -156,18 +167,38 @@ class Channel {
       }
       this.getMySecretUuid().then(s => {
         this.putDirect(this.uuid, s); // TODO: encrypt keys in put()
-        console.log(this.key.pub.slice(0, 4), 'set secret uuid:', s);
       });
       this.onTheirDirect(this.uuid, (s, k, from) => {
-        console.log(this.key.pub.slice(0, 4), 'got secret uuid from', from.slice(0, 4), ':', s);
         this.theirSecretUuids[from] = s;
       });
       this.onTheirDirect(`S${this.uuid}`, (s, k, from) => {
-        console.log(this.key.pub.slice(0, 4), 'got group secret from', from.slice(0, 4), ':', s);
         this.theirGroupSecrets[from] = s;
       });
       // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
     }
+    this.onTheir(`participants`, (participants, k, from) => {
+      let hasAdmin = false;
+      const keys = Object.keys(this.participants);
+      for (let i = 0; i < keys.length; i++) {
+        if (this.participants[keys[i]].admin || this.participants[keys[i]].inviter) {
+          hasAdmin = true;
+          break;
+        }
+      }
+      if (!hasAdmin) {
+        keys.forEach(k => this.participants[k].admin = true); // if no admins, make everyone admin
+      }
+      if (this.participants[from] && (this.participants[from].admin || this.participants[from].inviter)) {
+        if (typeof participants === `object`) {
+          const before = JSON.stringify(this.participants);
+          this.participants = Object.assign(this.participants, participants);
+          delete this.participants[from].inviter;
+          if (JSON.stringify(this.participants) === before) { return; }
+          this.save(); // forever loop?
+          saved = true;
+        }
+      }
+    });
     if (!saved && (options.save === undefined || options.save === true)) {
       this.save();
     }
@@ -191,7 +222,6 @@ class Channel {
     return new Promise(resolve => {
       if (!this.theirGroupSecrets[pub]) {
         this.onTheirDirect(`S${this.uuid}`, s => {
-          console.log(this.key.pub.slice(0, 4), 'got group secret from', pub.slice(0, 4), ':', s);
           this.theirGroupSecrets[pub] = s;
           resolve(this.theirGroupSecrets[pub]);
         }, pub);
@@ -205,7 +235,6 @@ class Channel {
     this.myGroupSecret = Gun.SEA.random(32).toString('base64');
     // TODO: secret should be archived and probably messages should include the encryption key id so past messages don't become unreadable
     this.putDirect(`S${this.uuid}`, this.myGroupSecret);
-    console.log(this.key.pub.slice(0, 4), 'set group secret', this.myGroupSecret, 'for channel', 'this.uuid');
   }
 
   /**
@@ -449,6 +478,9 @@ class Channel {
   */
   async addParticipant(pub, save = true, permissions) {
     this.secrets[pub] = null;
+    if (this.uuid) {
+      this.participant
+    }
     this.getSecret(pub);
     const ourSecretChannelId = await this.getOurSecretChannelId(pub);
     if (save) {
@@ -481,7 +513,6 @@ class Channel {
     if (this.uuid) {
       const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), this.getMyGroupSecret());
       const mySecretUuid = await this.getMySecretUuid();
-      console.log(this.key.pub.slice(0, 4), 'sending msg', msg, 'to their secret uuid', mySecretUuid, 'encrypted with', this.getMyGroupSecret());
       this.user.get(`chats`).get(mySecretUuid).get(`msgs`).get(`${msg.time}`).put(encrypted);
       this.user.get(`chats`).get(mySecretUuid).get(`latestMsg`).put(encrypted);
     } else {
@@ -502,13 +533,12 @@ class Channel {
     if (this.uuid) {
       const mySecretUuid = await this.getMySecretUuid();
       this.user.get(`chats`).get(mySecretUuid).get('msgs').get('a').put(null);
-      this.put(`participants`, this.getParticipants()); // public participants list
-
+      this.put(`participants`, this.participants); // public participants list
       const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
       this.user.get(`chats`).get(mySecretUuid).get(`pub`).put(await Gun.SEA.encrypt({
         uuid: this.uuid,
         myGroupSecret: this.getMyGroupSecret(),
-        participants: this.getParticipants() // private participants list
+        participants: this.participants // private participants list
       }, mySecret));
     } else {
       const keys = this.getParticipants();
@@ -699,6 +729,21 @@ class Channel {
         box.setAttribute('style', ''); // show
       }
     });
+  }
+
+  /**
+  * Get a simple link that points to the channel.
+  *
+  * Direct channel: both users need to give their simple links. Use createChatLink() to get a two-way link that needs to be given by one user only.
+  *
+  * Group channel: Works only if the link recipient has been already added onto the channel participants list.
+  */
+  getSimpleLink(urlRoot = 'https://iris.to/') {
+    if (this.uuid) {
+      return `${urlRoot}?channelId=${this.uuid}&inviter=${this.key.pub}`;
+    } else {
+      return `${urlRoot}?chatWith=${this.key.pub}`;
+    }
   }
 
   /**
@@ -991,7 +1036,5 @@ class Channel {
     gun.user().get('channels').get(channelId).off();
   }
 }
-
-Channel.DEFAULT_PERMISSIONS = {read: true, write: true};
 
 export default Channel;

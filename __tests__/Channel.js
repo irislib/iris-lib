@@ -86,17 +86,14 @@ test(`3 users send and receive messages and key-value pairs on a group channel`,
     }
   }
   user1Channel.getMessages((msg) => {
-    console.log('got msg', msg.text);
     r1.push(msg.text);
     if (r1.indexOf('1') >= 0 && r1.indexOf('2') >= 0 && r1.indexOf('3') >= 0) {
       user1MsgsReceived = true;
-      console.log('user1MsgsReceived');
       checkDone();
     }
   });
   user1Channel.on('name', name => {
     putReceived1 = name === 'Champions';
-    console.log('putReceived1');
     checkDone();
   });
 
@@ -106,17 +103,14 @@ test(`3 users send and receive messages and key-value pairs on a group channel`,
     expect(user2Channel.uuid).toEqual(user1Channel.uuid);
     expect(typeof user2Channel.myGroupSecret).toBe('string');
     user2Channel.getMessages((msg) => {
-      console.log('got msg', msg.text);
       r2.push(msg.text);
       if (r2.indexOf('1') >= 0 && r2.indexOf('2') >= 0 && r2.indexOf('3') >= 0) {
         user2MsgsReceived = true;
-        console.log('user2MsgsReceived');
         checkDone();
       }
     });
     user2Channel.on('name', name => {
       putReceived2 = name === 'Champions';
-      console.log('putReceived2');
       checkDone();
     });
   }, 500);
@@ -127,20 +121,46 @@ test(`3 users send and receive messages and key-value pairs on a group channel`,
     expect(user3Channel.uuid).toEqual(user1Channel.uuid);
     expect(typeof user3Channel.myGroupSecret).toBe('string');
     user3Channel.getMessages((msg) => {
-      console.log('got msg', msg.text);
       r3.push(msg.text);
       if (r3.indexOf('1') >= 0 && r3.indexOf('2') >= 0 && r3.indexOf('3') >= 0) {
         user3MsgsReceived = true;
-        console.log('user3MsgsReceived');
         checkDone();
       }
     });
     user3Channel.on('name', name => {
       putReceived3 = name === 'Champions';
-      console.log('putReceived3');
       checkDone();
     });
   }, 1000);
+});
+
+test(`Join a channel using a chat link`, async (done) => {
+  const user1 = await iris.Key.generate();
+  const user2 = await iris.Key.generate();
+  const user3 = await iris.Key.generate();
+  iris.Channel.initUser(gun, user1);
+  iris.Channel.initUser(gun, user2);
+  iris.Channel.initUser(gun, user3);
+
+  const user1Channel = new iris.Channel({
+    gun: gun,
+    key: user1,
+    participants: [user2.pub, user3.pub]
+  });
+
+  const chatLink = user1Channel.getSimpleLink();
+
+  setTimeout(() => {
+    const user2Channel = new iris.Channel({gun, key: user2, chatLink});
+    expect(user2Channel.uuid).toBe(user1Channel.uuid);
+    expect(Object.keys(user2Channel.participants).length).toBe(2);
+    user2Channel.onTheir('participants', pants => {
+      expect(typeof pants).toBe('object');
+      expect(Object.keys(pants).length).toBe(3);
+      expect(Object.keys(user2Channel.participants).length).toBe(3);
+      done();
+    });
+  }, 500);
 });
 
 test(`Save and retrieve direct and group channels`, async (done) => {
