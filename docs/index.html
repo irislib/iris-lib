@@ -164,9 +164,9 @@
                       </a></li>
                       
                       <li><a
-                        href='#channeladdpub'
+                        href='#channeladdparticipant'
                         class='regular pre-open'>
-                        #addPub
+                        #addParticipant
                       </a></li>
                       
                       <li><a
@@ -203,6 +203,12 @@
                         href='#channelgettyping'
                         class='regular pre-open'>
                         #getTyping
+                      </a></li>
+                      
+                      <li><a
+                        href='#channelgetsimplelink'
+                        class='regular pre-open'>
+                        #getSimpleLink
                       </a></li>
                       
                       <li><a
@@ -1167,7 +1173,7 @@
   </div>
   
 
-  <p>Private communication channel between two participants (<a href="https://github.com/amark/gun">Gun</a> public keys). Can be used independently of other Iris stuff.</p>
+  <p>Private communication channel between two or more participants (<a href="https://github.com/amark/gun">Gun</a> public keys). Can be used independently of other Iris stuff.</p>
 <p>Used as a core element of <a href="https://github.com/irislib/iris-messenger">iris-messenger</a>.</p>
 <hr>
 <h4>Key-value API</h4>
@@ -1179,7 +1185,6 @@
 <p>Message data is encrypted, but timestamps are public so that peers can return your messages in a sequential order.</p>
 <hr>
 <p>You can open a channel with yourself for a private key-value space or a "note to self" type chat with yourself.</p>
-<p>You can specify more than one participant key (your own key is included by default), but it's not guaranteed to work and causes unscalable data replication - better group channel implementation to be done.</p>
 <p><strong>Note!</strong> As of April 2020 Gun.SEA hashing function <a href="https://github.com/amark/gun/issues/892">is broken on Safari</a>. Channels don't work on Safari unless you patch sea.js by adding <a href="https://github.com/irislib/iris-messenger/blob/1e012581793485e6b8b5ed3c2ad0629716709366/src/js/sea.js#L270">this line</a>.</p>
 <p><strong>Privacy disclaimer:</strong> Channel ids, data values and messages are encrypted, but message timestamps are unencrypted so that peers can return them to you in a sequential order. By looking at the unencrypted timestamps (or Gun subscriptions), it is possible to guess who are communicating with each other. This could be improved by indexing messages by <em>day</em> only, so making the guess would be more difficult, while you could still return them in a semi-sequential order.</p>
 
@@ -1239,7 +1244,7 @@
                 <tr>
   <td class='break-word'><span class='code bold'>options.participants</span> <code class='quiet'>any</code>
   </td>
-  <td class='break-word'><span>(optional) string or string array of participant public keys (your own key is included by default)
+  <td class='break-word'><span>(optional) string or string array or permissions object ({'pub1':{read:true,write:true,admin:false},'pub2'...}) of participant public keys (your own key is included by default)
 </span></td>
 </tr>
 
@@ -2701,11 +2706,11 @@ to call this method.</p>
       </div>
     </div>
   
-    <div class='border-bottom' id='channeladdpub'>
+    <div class='border-bottom' id='channeladdparticipant'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>addPub(pub, save)</span>
+            <span class='code strong strong truncate'>addParticipant(pub, save, permissions)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -2715,7 +2720,7 @@ to call this method.</p>
 
   <p>Add a public key to the channel</p>
 
-    <div class='pre p1 fill-light mt0'>addPub(pub: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, save: any)</div>
+    <div class='pre p1 fill-light mt0'>addParticipant(pub: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, save: any, permissions: any)</div>
   
   
 
@@ -2742,6 +2747,15 @@ to call this method.</p>
           <div>
             <span class='code bold'>save</span> <code class='quiet'>(any
             = <code>true</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>permissions</span> <code class='quiet'>(any
+            = <code>this.DEFAULT_PERMISSIONS</code>)</code>
 	    
           </div>
           
@@ -3137,6 +3151,69 @@ to call this method.</p>
           <div>
             <span class='code bold'>timeout</span> <code class='quiet'>(any
             = <code>5</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='channelgetsimplelink'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>getSimpleLink(urlRoot)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  <p>Get a simple link that points to the channel.</p>
+<p>Direct channel: both users need to give their simple links. Use createChatLink() to get a two-way link that needs to be given by one user only.</p>
+<p>Group channel: Works only if the link recipient has been already added onto the channel participants list.</p>
+
+    <div class='pre p1 fill-light mt0'>getSimpleLink(urlRoot: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>urlRoot</span> <code class='quiet'>(any
+            = <code>&#39;https://iris.to/&#39;</code>)</code>
 	    
           </div>
           
