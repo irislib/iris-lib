@@ -82,6 +82,7 @@ import Attribute from './attribute';
 */
 class Channel {
   constructor(options) {
+    this.DEFAULT_PERMISSIONS = {read: true, write: true};
     this.key = options.key;
     this.gun = options.gun;
     this.myGroupSecret = options.myGroupSecret;
@@ -92,8 +93,6 @@ class Channel {
     this.ourSecretChannelIds = {}; // maps participant public key to our secret mutual channel id
     this.theirSecretChannelIds = {}; // maps participant public key to their secret mutual channel id
     this.messages = {};
-
-    const DEFAULT_PERMISSIONS = {read: true, write: true};
 
     let saved;
     if (options.chatLink) {
@@ -123,7 +122,7 @@ class Channel {
         } else if (channelId && inviter) {
           options.uuid = channelId;
           options.participants = {};
-          options.participants[inviter] = Object.assign({inviter: true}, DEFAULT_PERMISSIONS);
+          options.participants[inviter] = Object.assign({inviter: true}, this.DEFAULT_PERMISSIONS);
         }
       }
     }
@@ -132,17 +131,17 @@ class Channel {
       this.addParticipant(options.participants, options.save);
     } else if (Array.isArray(options.participants)) {
       const o = {};
-      options.participants.forEach(p => o[p] = Object.assign({}, DEFAULT_PERMISSIONS));
+      options.participants.forEach(p => o[p] = Object.assign({}, this.DEFAULT_PERMISSIONS));
       options.participants = o;
     }
     if (typeof options.participants === `object`) { // it's a group channel
       const keys = Object.keys(options.participants);
       keys.forEach(k => {
         if (k !== this.key.pub) {
-          this.addParticipant(k, options.save, Object.assign({}, DEFAULT_PERMISSIONS, options.participants[k]));
+          this.addParticipant(k, options.save, Object.assign({}, this.DEFAULT_PERMISSIONS, options.participants[k]));
         }
       });
-      options.participants[this.key.pub] = options.participants[this.key.pub] || Object.assign({}, DEFAULT_PERMISSIONS);
+      options.participants[this.key.pub] = options.participants[this.key.pub] || Object.assign({}, this.DEFAULT_PERMISSIONS);
       if (!options.uuid) {
         options.uuid = Attribute.getUuid().value;
         this.uuid = options.uuid;
@@ -476,14 +475,17 @@ class Channel {
   * Add a public key to the channel
   * @param {string} pub
   */
-  async addParticipant(pub, save = true, permissions) {
+  async addParticipant(pub, save = true, permissions = this.DEFAULT_PERMISSIONS) {
     this.secrets[pub] = null;
     if (this.uuid) {
-      this.participant
+      this.participants[pub] = permissions;
+      if (save) {
+        this.save();
+      }
     }
     this.getSecret(pub);
     const ourSecretChannelId = await this.getOurSecretChannelId(pub);
-    if (save) {
+    if (!this.uuid && save) {
       // Save their public key in encrypted format, so in channel listing we know who we are channeling with
       const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
       this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt({pub}, mySecret));
