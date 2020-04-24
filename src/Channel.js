@@ -191,6 +191,11 @@ class Channel {
           this.participants = Object.assign(this.participants, participants);
           delete this.participants[from].inviter;
           if (JSON.stringify(this.participants) === before) { return; }
+          Object.keys(participants).forEach(k => {
+            if (k !== this.key.pub) {
+              this.addParticipant(k, false, Object.assign({}, this.DEFAULT_PERMISSIONS, participants[k]));
+            }
+          });
           this.save(); // forever loop?
           saved = true;
         }
@@ -474,6 +479,7 @@ class Channel {
   * @param {string} pub
   */
   async addParticipant(pub, save = true, permissions = this.DEFAULT_PERMISSIONS) {
+    if (this.secrets[pub]) { return; }
     this.secrets[pub] = null;
     if (this.uuid) {
       this.participants[pub] = permissions;
