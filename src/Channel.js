@@ -117,7 +117,7 @@ class Channel {
               });
             }
           }
-        } else if (channelId && inviter) {
+        } else if (channelId && inviter) { // TODO! initializing it twice breaks things - new secret is generated
           options.uuid = channelId;
           options.participants = {};
           options.participants[inviter] = Object.assign({inviter: true}, this.DEFAULT_PERMISSIONS);
@@ -742,7 +742,7 @@ class Channel {
     if (this.uuid) {
       return `${urlRoot}?channelId=${this.uuid}&inviter=${this.key.pub}`;
     } else {
-      return `${urlRoot}?chatWith=${this.key.pub}`;
+      return `${urlRoot}?chatWith=${this.getParticipants()[0]}`;
     }
   }
 
