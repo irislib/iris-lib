@@ -40,7 +40,7 @@ TODO: docker instructions
 ### Tech
 Data storage and networking are outsourced to [GUN](https://github.com/amark/gun), which manages the synchronization of data between different storages: RAM, localstorage, GUN websocket server, WebRTC peers, LAN multicast peers, IPFS (no adapter yet), S3 or others.
 
-GUN enables subscription to data changes, so message feeds and identity profiles just update real-time without having to hit f5 or writing complex update logic.
+GUN enables subscription to data changes, so message feeds and contact details just update real-time without having to hit f5 or writing complex update logic.
 
 IPFS is used to store file attachments and optional message backups.
 
