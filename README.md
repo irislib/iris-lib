@@ -16,7 +16,7 @@ Iris-lib allows you to integrate __decentralized social networking__ features in
 
 Public messaging: Add a troll-free comment box to your website or app.
 
-Private chats: Don't reinvent the wheel - just deploy iris-lib for real-time private and group discussions. No phone number or other "account" needed - just a public key verified by friends.
+Private chats: Don't reinvent the wheel - just deploy iris-lib for real-time private and group discussions. No phone number or other "account" needed - just generate a public key that your friends can optionally verify.
 
 Web of trust: Filter out spam and other unwanted content, without giving power to central moderators. Iris public and private messages are automatically filtered. You can also filter your own datasets by user's web of trust distance.
 
@@ -24,18 +24,53 @@ Contacts management: Ask friends to verify your public key or cryptocurrency add
 
 Iris-lib runs in the browser and on Node.js.
 
-### Usage
-Library integration: see [Iris API](http://docs.iris.to/) for documentation and [tests](https://github.com/irislib/iris-lib/tree/master/__tests__) directory for examples.
+### Documentation
+[Iris API](http://docs.iris.to/)
 
-Server script:
+### Example
+Private channel:
+```
+// Copy & paste this to console at https://iris.to or other page that has gun, sea and iris-lib
+// Due to an unsolved bug, someoneElse's messages only start showing up after a reload
 
-`npm start`
+var gun1 = new Gun('https://gun-us.herokuapp.com/gun');
+var gun2 = new Gun('https://gun-us.herokuapp.com/gun');
+var myKey = await iris.Key.getDefault();
+var someoneElse = localStorage.getItem('someoneElsesKey');
+if (someoneElse) {
+ someoneElse = JSON.parse(someoneElse);
+} else {
+ someoneElse = await iris.Key.generate();
+ localStorage.setItem('someoneElsesKey', JSON.stringify(someoneElse));
+}
 
-Deploy to Heroku:
+iris.Channel.initUser(gun1, myKey); // saves myKey.epub to gun.user().get('epub')
+iris.Channel.initUser(gun2, someoneElse);
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/irislib/iris-lib)
+var ourChannel = new iris.Channel({key: myKey, gun: gun1, participants: someoneElse.pub});
+var theirChannel = new iris.Channel({key: someoneElse, gun: gun2, participants: myKey.pub});
 
-TODO: docker instructions
+var myChannels = {}; // you can list them in a user interface
+function printMessage(msg, info) {
+ console.log(`[${new Date(msg.time).toLocaleString()}] ${info.from.slice(0,8)}: ${msg.text}`)
+}
+iris.Channel.getChannels(gun1, myKey, channel => {
+ var pub = channel.getParticipants()[0];
+ gun1.user(pub).get('profile').get('name').on(name => channel.name = name);
+ myChannels[pub] = channel;
+ channel.getMessages(printMessage);
+ channel.on('mood', (mood, from) => console.log(from.slice(0,8) + ' is feeling ' + mood));
+});
+
+// you can play with these in the console:
+ourChannel.send('message from myKey');
+theirChannel.send('message from someoneElse');
+
+ourChannel.put('mood', 'blessed');
+theirChannel.put('mood', 'happy');
+```
+
+More examples: [tests](https://github.com/irislib/iris-lib/tree/master/__tests__) 
 
 ### Tech
 Data storage and networking are outsourced to [GUN](https://github.com/amark/gun), which manages the synchronization of data between different storages: RAM, localstorage, GUN websocket server, WebRTC peers, LAN multicast peers, IPFS (no adapter yet), S3 or others.
