@@ -193,10 +193,9 @@ class Channel {
           if (JSON.stringify(this.participants) === before) { return; }
           Object.keys(participants).forEach(k => {
             if (k !== this.key.pub) {
-              this.addParticipant(k, false, Object.assign({}, this.DEFAULT_PERMISSIONS, participants[k]));
+              this.addParticipant(k, true, Object.assign({}, this.DEFAULT_PERMISSIONS, participants[k]));
             }
           });
-          this.save(); // forever loop?
           saved = true;
         }
       }
@@ -489,7 +488,7 @@ class Channel {
     }
     this.getSecret(pub);
     const ourSecretChannelId = await this.getOurSecretChannelId(pub);
-    if (!this.uuid && save) {
+    if (save) {
       // Save their public key in encrypted format, so in channel listing we know who we are channeling with
       const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
       this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt({pub}, mySecret));
@@ -690,13 +689,13 @@ class Channel {
     timeout = timeout * 1000;
     this.put(`typing`, isTyping ? new Date().toISOString() : false);
     clearTimeout(this.setTypingTimeout);
-    this.setTypingTimeout = setTimeout(() => this.put(`isTyping`, false), timeout);
+    this.setTypingTimeout = setTimeout(() => this.put(`typing`, false), timeout);
   }
 
   /**
   * Get typing status
   */
-  getTyping(callback, timeout = 5) {
+  getTyping(callback, timeout = 5) { // TODO callback not called on setTyping(false), at least for self chat
     timeout = timeout * 1000;
     this.onTheir(`typing`, (typing, key, pub) => {
       if (callback) {
