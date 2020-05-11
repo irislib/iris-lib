@@ -100,13 +100,92 @@ test(`3 users send and receive messages and key-value pairs on a group channel`,
     checkDone();
   });
 
+  const user2Channel = new iris.Channel({ gun: gun2, key: user2, participants: [user1.pub, user3.pub], uuid: user1Channel.uuid });
+  user2Channel.send('2');
+  expect(user2Channel.uuid).toEqual(user1Channel.uuid);
+  expect(typeof user2Channel.myGroupSecret).toBe('string');
+  user2Channel.getMessages((msg) => {
+    r2.push(msg.text);
+    if (r2.indexOf('1') >= 0 && r2.indexOf('2') >= 0 && r2.indexOf('3') >= 0) {
+      user2MsgsReceived = true;
+      checkDone();
+    }
+  });
+  user2Channel.on('name', name => {
+    putReceived2 = name === 'Champions';
+    checkDone();
+  });
+
+  const user3Channel = new iris.Channel({ gun: superNode, key: user3, participants: [user1.pub, user2.pub], uuid: user1Channel.uuid });
+  user3Channel.send('3');
+  expect(user3Channel.uuid).toEqual(user1Channel.uuid);
+  expect(typeof user3Channel.myGroupSecret).toBe('string');
+  user3Channel.getMessages((msg) => {
+    r3.push(msg.text);
+    if (r3.indexOf('1') >= 0 && r3.indexOf('2') >= 0 && r3.indexOf('3') >= 0) {
+      user3MsgsReceived = true;
+      checkDone();
+    }
+  });
+  user3Channel.on('name', name => {
+    putReceived3 = name === 'Champions';
+    checkDone();
+  });
+});
+
+test(`create new channel, send messages, add participants afterwards`, async (done) => {
+  const user1 = await iris.Key.generate();
+  const user2 = await iris.Key.generate();
+  const user3 = await iris.Key.generate();
+  iris.Channel.initUser(gun1, user1);
+  iris.Channel.initUser(gun2, user2);
+  iris.Channel.initUser(superNode, user3);
+
+  const user1Channel = new iris.Channel({
+    gun: gun1,
+    key: user1,
+    participants: []
+  });
+  const chatLink = user1Channel.getSimpleLink();
+  expect(typeof user1Channel.uuid).toBe('string');
+  expect(typeof user1Channel.myGroupSecret).toBe('string');
+  expect(user1Channel.uuid.length).toBe(36);
+  user1Channel.send('1')
+  user1Channel.put('name', 'Champions');
+
+  user1Channel.addParticipant(user2.pub);
+
+  const r1 = [];
+  const r2 = [];
+  const r3 = [];
+  let user1MsgsReceived, user2MsgsReceived, user3MsgsReceived, putReceived1, putReceived2, putReceived3;
+  function checkDone() {
+    if (user1MsgsReceived && user2MsgsReceived && user3MsgsReceived && putReceived1 && putReceived2 && putReceived3) {
+      done();
+    }
+  }
+  user1Channel.getMessages((msg) => {
+    r1.push(msg.text);
+    console.log('user1', r1);
+    if (r1.indexOf('1') >= 0 && r1.indexOf('2') >= 0 && r1.indexOf('3') >= 0) {
+      user1MsgsReceived = true;
+      checkDone();
+    }
+  });
+  user1Channel.on('name', name => {
+    putReceived1 = name === 'Champions';
+    checkDone();
+  });
+
   setTimeout(() => { // with separate gun instances would work without timeout?
-    const user2Channel = new iris.Channel({ gun: gun2, key: user2, participants: [user1.pub, user3.pub], uuid: user1Channel.uuid });
+    const user2Channel = new iris.Channel({ gun: gun2, key: user2, chatLink });
     user2Channel.send('2');
+    user1Channel.addParticipant(user3.pub);
     expect(user2Channel.uuid).toEqual(user1Channel.uuid);
     expect(typeof user2Channel.myGroupSecret).toBe('string');
     user2Channel.getMessages((msg) => {
       r2.push(msg.text);
+      console.log('user2', r2);
       if (r2.indexOf('1') >= 0 && r2.indexOf('2') >= 0 && r2.indexOf('3') >= 0) {
         user2MsgsReceived = true;
         checkDone();
@@ -119,12 +198,13 @@ test(`3 users send and receive messages and key-value pairs on a group channel`,
   }, 500);
 
   setTimeout(() => {
-    const user3Channel = new iris.Channel({ gun: superNode, key: user3, participants: [user1.pub, user2.pub], uuid: user1Channel.uuid });
+    const user3Channel = new iris.Channel({ gun: superNode, key: user3, chatLink });
     user3Channel.send('3');
     expect(user3Channel.uuid).toEqual(user1Channel.uuid);
     expect(typeof user3Channel.myGroupSecret).toBe('string');
     user3Channel.getMessages((msg) => {
       r3.push(msg.text);
+      console.log('user3', r3);
       if (r3.indexOf('1') >= 0 && r3.indexOf('2') >= 0 && r3.indexOf('3') >= 0) {
         user3MsgsReceived = true;
         checkDone();
