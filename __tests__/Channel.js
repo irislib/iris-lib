@@ -10,6 +10,29 @@ const superNode = GUN({radisk:false, web: server.listen(8768), multicast: false 
 const gun1 = new GUN({radisk: false, multicast: false, peers: ['http://localhost:8768/gun']});
 const gun2 = new GUN({radisk: false, multicast: false, peers: ['http://localhost:8768/gun']});
 
+const logger = function()
+{
+  let oldConsoleLog = null;
+  const pub = {};
+
+  pub.enable =  function enable()
+  {
+    if (oldConsoleLog == null)
+      return;
+
+    window[`console`][`log`] = oldConsoleLog;
+  };
+
+  pub.disable = function disable()
+  {
+    oldConsoleLog = console.log;
+    window[`console`][`log`] = function() {};
+  };
+
+  return pub;
+}();
+logger.disable();
+
 test(`User1 says hi`, async (done) => {
   const user1 = await iris.Key.generate();
   const user2 = await iris.Key.generate();
@@ -134,9 +157,13 @@ test(`3 users send and receive messages and key-value pairs on a group channel`,
 });
 
 test(`create new channel, send messages, add participants afterwards`, async (done) => {
+  logger.enable();
   const user1 = await iris.Key.generate();
   const user2 = await iris.Key.generate();
   const user3 = await iris.Key.generate();
+  console.log(1, user1.pub.slice(0,4));
+  console.log(2, user2.pub.slice(0,4));
+  console.log(3, user3.pub.slice(0,4));
   iris.Channel.initUser(gun1, user1);
   iris.Channel.initUser(gun2, user2);
   iris.Channel.initUser(superNode, user3);
@@ -154,6 +181,7 @@ test(`create new channel, send messages, add participants afterwards`, async (do
   user1Channel.put('name', 'Champions');
 
   user1Channel.addParticipant(user2.pub);
+  user1Channel.addParticipant(user3.pub);
 
   const r1 = [];
   const r2 = [];
@@ -161,6 +189,7 @@ test(`create new channel, send messages, add participants afterwards`, async (do
   let user1MsgsReceived, user2MsgsReceived, user3MsgsReceived, putReceived1, putReceived2, putReceived3;
   function checkDone() {
     if (user1MsgsReceived && user2MsgsReceived && user3MsgsReceived && putReceived1 && putReceived2 && putReceived3) {
+      logger.disable();
       done();
     }
   }
@@ -180,7 +209,6 @@ test(`create new channel, send messages, add participants afterwards`, async (do
   setTimeout(() => { // with separate gun instances would work without timeout?
     const user2Channel = new iris.Channel({ gun: gun2, key: user2, chatLink });
     user2Channel.send('2');
-    user1Channel.addParticipant(user3.pub);
     expect(user2Channel.uuid).toEqual(user1Channel.uuid);
     expect(typeof user2Channel.myGroupSecret).toBe('string');
     user2Channel.getMessages((msg) => {

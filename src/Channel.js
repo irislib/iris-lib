@@ -84,6 +84,8 @@ class Channel {
     this.key = options.key;
     this.gun = options.gun;
     this.myGroupSecret = options.myGroupSecret;
+    this.theirSecretUuids = {};
+    this.theirGroupSecrets = {};
     this.user = this.gun.user();
     this.user.auth(this.key);
     this.user.put({epub: this.key.epub});
@@ -140,7 +142,10 @@ class Channel {
         }
       });
       options.participants[this.key.pub] = options.participants[this.key.pub] || Object.assign({}, this.DEFAULT_PERMISSIONS);
-      if (!options.uuid) {
+      if (options.uuid) { // It's a group channel
+        this.uuid = options.uuid;
+        this.name = options.name;
+      } else {
         options.uuid = Attribute.getUuid().value;
         this.uuid = options.uuid;
         options.participants[this.key.pub].admin = true;
@@ -149,19 +154,11 @@ class Channel {
     }
     this.participants = options.participants;
     if (options.uuid) { // It's a group channel
-      this.uuid = options.uuid;
-      this.name = options.name;
-      this.theirSecretUuids = {};
-      this.theirGroupSecrets = {};
       // share secret uuid with other participants. since secret is already non-deterministic, maybe uuid could also be?
       // generate channel-specific secret and share it with other participants
       // put() keys should be encrypted first? so you could do put(uuid, secret)
       // what if you join the channel with 2 unconnected devices? on reconnect, the older secret would be overwritten and messages unreadable. maybe participants should store each others' old keys? or maybe you should store them and re-encrypt old stuff when key changes? return them with map() instead?
-      if (this.myGroupSecret) {
-        this.putDirect(`S${this.uuid}`, this.myGroupSecret);
-      } else {
-        this.getMyGroupSecret();
-      }
+      this.putDirect(`S${this.uuid}`, this.getMyGroupSecret());
       this.getMySecretUuid().then(s => {
         this.putDirect(this.uuid, s); // TODO: encrypt keys in put()
       });
@@ -174,6 +171,7 @@ class Channel {
       // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
     }
     this.onTheir(`participants`, (participants, k, from) => {
+      console.log(this.key.pub.slice(0,4), 'got participants', participants);
       let hasAdmin = false;
       const keys = Object.keys(this.participants);
       for (let i = 0; i < keys.length; i++) {
@@ -480,18 +478,28 @@ class Channel {
   async addParticipant(pub, save = true, permissions = this.DEFAULT_PERMISSIONS) {
     if (this.secrets[pub]) { return; }
     this.secrets[pub] = null;
-    if (this.uuid) {
-      this.participants[pub] = permissions;
-      if (save) {
-        this.save();
-      }
-    }
     this.getSecret(pub);
     const ourSecretChannelId = await this.getOurSecretChannelId(pub);
     if (save) {
       // Save their public key in encrypted format, so in channel listing we know who we are channeling with
       const mySecret = await Gun.SEA.secret(this.key.epub, this.key);
       this.gun.user().get(`chats`).get(ourSecretChannelId).get(`pub`).put(await Gun.SEA.encrypt({pub}, mySecret));
+    }
+    if (this.uuid) {
+      this.participants[pub] = permissions;
+      if (save) {
+        this.putDirect(`S${this.uuid}`, this.getMyGroupSecret());
+        this.getMySecretUuid().then(s => {
+          this.putDirect(this.uuid, s); // TODO: encrypt keys in put()
+        });
+        this.onTheirDirect(this.uuid, (s, k, from) => {
+          this.theirSecretUuids[from] = s;
+        });
+        this.onTheirDirect(`S${this.uuid}`, (s, k, from) => {
+          this.theirGroupSecrets[from] = s;
+        });
+        this.save();
+      }
     }
   }
 
