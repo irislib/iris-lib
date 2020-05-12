@@ -7392,7 +7392,7 @@
 	*  console.log(`[${new Date(msg.time).toLocaleString()}] ${info.from.slice(0,8)}: ${msg.text}`)
 	* }
 	* iris.Channel.getChannels(gun1, myKey, channel => {
-	*  var pub = channel.getParticipants()[0];
+	*  var pub = channel.getCurrentParticipants()[0];
 	*  gun1.user(pub).get('profile').get('name').on(name => channel.name = name);
 	*  myChannels[pub] = channel;
 	*  channel.getMessages(printMessage);
@@ -7630,9 +7630,16 @@
 	  */
 
 
-	  Channel.prototype.getParticipants = function getParticipants() {
+	  Channel.prototype.getCurrentParticipants = function getCurrentParticipants() {
 	    return _Object$keys(this.secrets);
 	  };
+
+	  /**
+	  * Subscribe to the changing list of participants by channel admins
+	  */
+
+
+	  Channel.prototype.getParticipants = function getParticipants(callback) {};
 
 	  /**
 	  * Returns either the uuid of a group channel or the public key of a direct channel.
@@ -7640,7 +7647,7 @@
 
 
 	  Channel.prototype.getId = function getId() {
-	    return this.uuid || this.getParticipants()[0];
+	    return this.uuid || this.getCurrentParticipants()[0];
 	  };
 
 	  Channel.prototype.getSecret = async function getSecret(pub) {
@@ -7754,7 +7761,7 @@
 	    var _this4 = this;
 
 	    // TODO: save callback and apply it when new participants are added to channel
-	    this.getParticipants().forEach(async function (pub) {
+	    this.getCurrentParticipants().forEach(async function (pub) {
 	      if (pub !== _this4.key.pub) {
 	        // Subscribe to their messages
 	        var theirSecretChannelId = void 0;
@@ -7878,11 +7885,12 @@
 	    var _this8 = this;
 
 	    var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-	    var permissions = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.DEFAULT_PERMISSIONS;
+	    var permissions = arguments[2];
 
-	    if (this.secrets[pub]) {
+	    permissions = permissions || this.DEFAULT_PERMISSIONS;
+	    if (this.secrets[pub] && _JSON$stringify(this.secrets[pub]) === _JSON$stringify(permissions)) {
 	      return;
-	    }
+	    } // TODO: handle changed permissions
 	    this.secrets[pub] = null;
 	    this.getSecret(pub);
 	    var ourSecretChannelId = await this.getOurSecretChannelId(pub);
@@ -7937,7 +7945,7 @@
 	      this.user.get('chats').get(mySecretUuid).get('msgs').get('' + msg.time).put(encrypted);
 	      this.user.get('chats').get(mySecretUuid).get('latestMsg').put(encrypted);
 	    } else {
-	      var keys = this.getParticipants();
+	      var keys = this.getCurrentParticipants();
 	      for (var i = 0; i < keys.length; i++) {
 	        var _encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
 	        var ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
@@ -7964,7 +7972,7 @@
 	        participants: this.participants // private participants list
 	      }, mySecret)));
 	    } else {
-	      var keys = this.getParticipants();
+	      var keys = this.getCurrentParticipants();
 	      for (var i = 0; i < keys.length; i++) {
 	        var ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
 	        this.user.get('chats').get(ourSecretChannelId).get('msgs').get('a').put(null);
@@ -7996,7 +8004,7 @@
 	    if (key === 'msgs') {
 	      throw new Error('Sorry, you can\'t overwrite the msgs field which is used for .send()');
 	    }
-	    var keys = this.getParticipants();
+	    var keys = this.getCurrentParticipants();
 	    for (var i = 0; i < keys.length; i++) {
 	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(value), (await this.getSecret(keys[i])));
 	      var ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
@@ -8056,7 +8064,7 @@
 	    if (typeof callback !== 'function') {
 	      throw new Error('onMy callback must be a function, got ' + (typeof callback === 'undefined' ? 'undefined' : _typeof(callback)));
 	    }
-	    var keys = this.getParticipants();
+	    var keys = this.getCurrentParticipants();
 
 	    var _loop = async function _loop(i) {
 	      var ourSecretChannelId = await _this11.getOurSecretChannelId(keys[i]);
@@ -8097,10 +8105,11 @@
 	  Channel.prototype.onTheirDirect = async function onTheirDirect(key, callback, from) {
 	    var _this12 = this;
 
+	    // TODO: subscribe to new channel participants
 	    if (typeof callback !== 'function') {
 	      throw new Error('onTheir callback must be a function, got ' + (typeof callback === 'undefined' ? 'undefined' : _typeof(callback)));
 	    }
-	    var keys = this.getParticipants();
+	    var keys = this.getCurrentParticipants();
 	    keys.forEach(async function (pub) {
 	      if (from && pub !== from) {
 	        return;
@@ -8118,10 +8127,11 @@
 	  Channel.prototype.onTheirGroup = async function onTheirGroup(key, callback, from) {
 	    var _this13 = this;
 
+	    // TODO: subscribe to new channel participants
 	    if (typeof callback !== 'function') {
 	      throw new Error('onTheir callback must be a function, got ' + (typeof callback === 'undefined' ? 'undefined' : _typeof(callback)));
 	    }
-	    var keys = this.getParticipants();
+	    var keys = this.getCurrentParticipants();
 	    keys.forEach(async function (pub) {
 	      if (from && pub !== from) {
 	        return;
@@ -8227,7 +8237,7 @@
 	    if (this.uuid) {
 	      return urlRoot + '?channelId=' + this.uuid + '&inviter=' + this.key.pub;
 	    } else {
-	      return urlRoot + '?chatWith=' + this.getParticipants()[0];
+	      return urlRoot + '?chatWith=' + this.getCurrentParticipants()[0];
 	    }
 	  };
 
@@ -8293,7 +8303,7 @@
 	      });
 	    }
 
-	    var participants = this.getParticipants();
+	    var participants = this.getCurrentParticipants();
 	    if (participants.length) {
 	      var pub = participants[0];
 	      this.gun.user(pub).get('profile').get('name').on(function (name) {

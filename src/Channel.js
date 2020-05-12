@@ -62,7 +62,7 @@ import Attribute from './attribute';
 *  console.log(`[${new Date(msg.time).toLocaleString()}] ${info.from.slice(0,8)}: ${msg.text}`)
 * }
 * iris.Channel.getChannels(gun1, myKey, channel => {
-*  var pub = channel.getParticipants()[0];
+*  var pub = channel.getCurrentParticipants()[0];
 *  gun1.user(pub).get('profile').get('name').on(name => channel.name = name);
 *  myChannels[pub] = channel;
 *  channel.getMessages(printMessage);
@@ -273,15 +273,22 @@ class Channel {
   /**
   * List participants of the channel (other than you)
   */
-  getParticipants() {
+  getCurrentParticipants() {
     return Object.keys(this.secrets);
+  }
+
+  /**
+  * Subscribe to the changing list of participants by channel admins
+  */
+  getParticipants(callback) {
+
   }
 
   /**
   * Returns either the uuid of a group channel or the public key of a direct channel.
   */
   getId() {
-    return this.uuid || this.getParticipants()[0];
+    return this.uuid || this.getCurrentParticipants()[0];
   }
 
   async getSecret(pub) {
@@ -381,7 +388,7 @@ class Channel {
   * Get messages from the channel
   */
   async getMessages(callback) { // TODO: save callback and apply it when new participants are added to channel
-    this.getParticipants().forEach(async pub => {
+    this.getCurrentParticipants().forEach(async pub => {
       if (pub !== this.key.pub) {
         // Subscribe to their messages
         let theirSecretChannelId;
@@ -475,8 +482,11 @@ class Channel {
   * Add a public key to the channel
   * @param {string} pub
   */
-  async addParticipant(pub, save = true, permissions = this.DEFAULT_PERMISSIONS) {
-    if (this.secrets[pub]) { return; }
+  async addParticipant(pub, save = true, permissions) {
+    permissions = (permissions || this.DEFAULT_PERMISSIONS);
+    if (this.secrets[pub] && JSON.stringify(this.secrets[pub]) === JSON.stringify(permissions)) { // TODO: should be this.participants[pub]
+      return;
+    }
     this.secrets[pub] = null;
     this.getSecret(pub);
     const ourSecretChannelId = await this.getOurSecretChannelId(pub);
@@ -529,7 +539,7 @@ class Channel {
       this.user.get(`chats`).get(mySecretUuid).get(`msgs`).get(`${msg.time}`).put(encrypted);
       this.user.get(`chats`).get(mySecretUuid).get(`latestMsg`).put(encrypted);
     } else {
-      const keys = this.getParticipants();
+      const keys = this.getCurrentParticipants();
       for (let i = 0;i < keys.length;i++) {
         const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
         const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
@@ -554,7 +564,7 @@ class Channel {
         participants: this.participants // private participants list
       }, mySecret));
     } else {
-      const keys = this.getParticipants();
+      const keys = this.getCurrentParticipants();
       for (let i = 0;i < keys.length;i++) {
         const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
         this.user.get(`chats`).get(ourSecretChannelId).get('msgs').get('a').put(null);
@@ -580,7 +590,7 @@ class Channel {
 
   async putDirect(key, value) {
     if (key === `msgs`) { throw new Error(`Sorry, you can't overwrite the msgs field which is used for .send()`); }
-    const keys = this.getParticipants();
+    const keys = this.getCurrentParticipants();
     for (let i = 0;i < keys.length;i++) {
       const encrypted = await Gun.SEA.encrypt(JSON.stringify(value), (await this.getSecret(keys[i])));
       const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
@@ -624,7 +634,7 @@ class Channel {
     if (typeof callback !== 'function') {
       throw new Error(`onMy callback must be a function, got ${typeof callback}`);
     }
-    const keys = this.getParticipants();
+    const keys = this.getCurrentParticipants();
     for (let i = 0;i < keys.length;i++) {
       const ourSecretChannelId = await this.getOurSecretChannelId(keys[i]);
       this.gun.user().get(`chats`).get(ourSecretChannelId).get(key).on(async data => {
@@ -655,11 +665,11 @@ class Channel {
     return (this.uuid ? this.onTheirGroup : this.onTheirDirect).call(this, key, callback, from);
   }
 
-  async onTheirDirect(key, callback, from) {
+  async onTheirDirect(key, callback, from) {  // TODO: subscribe to new channel participants
     if (typeof callback !== 'function') {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
-    const keys = this.getParticipants();
+    const keys = this.getCurrentParticipants();
     keys.forEach(async pub => {
       if (from && pub !== from) { return; }
       const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
@@ -672,11 +682,11 @@ class Channel {
     });
   }
 
-  async onTheirGroup(key, callback, from) {
+  async onTheirGroup(key, callback, from) { // TODO: subscribe to new channel participants
     if (typeof callback !== 'function') {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
-    const keys = this.getParticipants();
+    const keys = this.getCurrentParticipants();
     keys.forEach(async pub => {
       if (from && pub !== from) { return; }
       const theirSecretUuid = await this.getTheirSecretUuid(pub);
@@ -755,7 +765,7 @@ class Channel {
     if (this.uuid) {
       return `${urlRoot}?channelId=${this.uuid}&inviter=${this.key.pub}`;
     } else {
-      return `${urlRoot}?chatWith=${this.getParticipants()[0]}`;
+      return `${urlRoot}?chatWith=${this.getCurrentParticipants()[0]}`;
     }
   }
 
@@ -819,7 +829,7 @@ class Channel {
       });
     }
 
-    const participants = this.getParticipants();
+    const participants = this.getCurrentParticipants();
     if (participants.length) {
       const pub = participants[0];
       this.gun.user(pub).get('profile').get('name').on(name => nameEl.innerText = name);

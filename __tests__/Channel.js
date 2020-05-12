@@ -299,8 +299,8 @@ test(`Save and retrieve direct and group channels`, async (done) => {
     if (group && direct) {
       expect(direct.getId()).toBe(user2.pub);
       expect(group.getId()).toBe(groupChannel.uuid);
-      expect(groupChannel.getParticipants().length).toBe(2);
-      expect(group.getParticipants().length).toBe(2);
+      expect(groupChannel.getCurrentParticipants().length).toBe(2);
+      expect(group.getCurrentParticipants().length).toBe(2);
       done();
     }
   });
