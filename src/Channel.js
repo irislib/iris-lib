@@ -119,7 +119,7 @@ class Channel {
               });
             }
           }
-        } else if (channelId && inviter) { // TODO! initializing it twice breaks things - new secret is generated
+        } else if (channelId && inviter && inviter !== this.key.pub) { // TODO! initializing it twice breaks things - new secret is generated
           options.uuid = channelId;
           options.participants = {};
           options.participants[inviter] = Object.assign({inviter: true}, this.DEFAULT_PERMISSIONS);
@@ -171,7 +171,6 @@ class Channel {
       // need to make put(), on(), send() and getMessages() behave differently when it's a group and retain the old versions for mutual signaling
     }
     this.onTheir(`participants`, (participants, k, from) => {
-      console.log(this.key.pub.slice(0,4), 'got participants', participants);
       let hasAdmin = false;
       const keys = Object.keys(this.participants);
       for (let i = 0; i < keys.length; i++) {
