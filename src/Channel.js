@@ -768,6 +768,55 @@ class Channel {
     }
   }
 
+  async getChatLinks(urlRoot = 'https://iris.to/', callback, subscribe) {
+    if (!this.uuid) { throw new Error('Only group channels may have chat links'); }
+    const chatLinks = [];
+    this.on('chatLinks', links => {
+      // TODO: check admin permissions
+      if (!links || typeof links !== 'object') { return; }
+      Object.keys(links).forEach(linkId => {
+        const link = links[linkId];
+        if (chatLinks.indexOf(linkId !== -1)) { return; } // TODO: check if link was nulled
+        const channels = [];
+        chatLinks.push(linkId);
+        const url = Channel.formatChatLink(urlRoot, key.pub, link.sharedSecret, linkId);
+        if (callback) {
+          callback({url, id: linkId});
+        }
+        if (subscribe) {
+          this.user(link.sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId) => {
+            if (!encPub) { return; }
+            const s = JSON.stringify(encPub);
+            if (channels.indexOf(s) === -1) {
+              channels.push(s);
+              const pub = await Gun.SEA.decrypt(encPub, link.sharedSecret);
+              this.addParticipant(pub);
+            }
+          });
+        }
+      });
+    });
+  }
+
+  async createChatLink(urlRoot = 'https://iris.to/') {
+    const sharedKey = await Gun.SEA.pair();
+    const sharedKeyString = JSON.stringify(sharedKey);
+    const sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
+    const encryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, sharedSecret);
+    let linkId = await util.getHash(encryptedSharedKey);
+    linkId = linkId.slice(0, 12);
+
+    // User has to exist, in order for .get(chatRequests).on() to be ever triggered
+    await util.gunAsAnotherUser(this.gun, sharedKey, user => {
+      return user.get('chatRequests').put({a: 1}).then();
+    });
+
+    this.chatLinks[linkId] = {sharedKey, sharedSecret};
+    this.put('chatLinks', this.chatLinks);
+
+    return Channel.formatChatLink(urlRoot, this.key.pub, sharedSecret, linkId);
+  }
+
   /**
   * Get a channel box element that you can add to your page
   */
