@@ -1,12 +1,12 @@
-const iris = require(`../cjs/index.js`);
+const iris = require(`index.js`);
 const GUN = require(`gun`);
+const SEA = require(`gun/sea`);
 const load = require(`gun/lib/load`);
 const then = require(`gun/lib/then`);
 const radix = require(`gun/lib/radix`); // Require before instantiating Gun, if running in jsdom mode
-const SEA = require(`gun/sea`);
 
 const server = require('http').createServer(GUN.serve);
-const superNode = GUN({radisk:false, web: server.listen(8768), multicast: false });
+const superNode = GUN({radisk: false, web: server.listen(8768), multicast: false });
 const gun1 = new GUN({radisk: false, multicast: false, peers: ['http://localhost:8768/gun']});
 const gun2 = new GUN({radisk: false, multicast: false, peers: ['http://localhost:8768/gun']});
 
@@ -273,6 +273,21 @@ test(`Join a channel using a simple chat link`, async (done) => {
       done();
     });
   }, 500);
+});
+
+test(`Retrieve chat links`, async (done) => {
+  const user1 = await iris.Key.generate();
+  iris.Channel.initUser(gun1, user1);
+  const user1Channel = new iris.Channel({
+    gun: gun1,
+    key: user1,
+    participants: []
+  });
+  const chatLink = await user1Channel.createChatLink();
+  user1Channel.getChatLinks(link => {
+    expect(link).toEqual(chatLink);
+    done();
+  });
 });
 
 test(`Join a channel using an advanced chat link`, async (done) => {
