@@ -93,6 +93,7 @@ class Channel {
     this.ourSecretChannelIds = {}; // maps participant public key to our secret mutual channel id
     this.theirSecretChannelIds = {}; // maps participant public key to their secret mutual channel id
     this.messages = {};
+    this.chatLinks = {};
 
     let saved;
     if (options.chatLink) {
@@ -768,7 +769,7 @@ class Channel {
     }
   }
 
-  async getChatLinks(urlRoot = 'https://iris.to/', callback, subscribe) {
+  async getChatLinks(callback, urlRoot = 'https://iris.to/', subscribe) {
     if (!this.uuid) { throw new Error('Only group channels may have chat links'); }
     const chatLinks = [];
     this.on('chatLinks', links => {

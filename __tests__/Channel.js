@@ -285,7 +285,8 @@ test(`Retrieve chat links`, async (done) => {
   });
   const chatLink = await user1Channel.createChatLink();
   user1Channel.getChatLinks(link => {
-    expect(link).toEqual(chatLink);
+    expect(link).toBeDefined();
+    expect(link.url).toEqual(chatLink);
     done();
   });
 });
@@ -308,6 +309,10 @@ test(`Join a channel using an advanced chat link`, async (done) => {
 
   setTimeout(() => {
     const user2Channel = new iris.Channel({gun: gun2, key: user2, chatLink});
+    logger.enable();
+    console.log(1, chatLink);
+    console.log(2, user2Channel);
+    logger.disable();
     expect(user2Channel.uuid).toBe(user1Channel.uuid);
     expect(Object.keys(user2Channel.participants).length).toBe(2);
     user2Channel.onTheir('participants', pants => {

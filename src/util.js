@@ -19,7 +19,7 @@ const isMobile = !isNode && (function() {
 })();
 
 function gunAsAnotherUser(gun, key, f) { // Hacky way to use multiple users with gun
-  const gun2 = new Gun({radisk: false, peers: Object.keys(gun._.opt.peers)});
+  const gun2 = new Gun({radisk: false, peers: Object.keys(gun._.opt.peers)}); // TODO: copy other options too
   const user = gun2.user();
   user.auth(key);
   setTimeout(() => {
