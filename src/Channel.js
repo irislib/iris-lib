@@ -143,7 +143,7 @@ class Channel {
         }
       });
       options.participants[this.key.pub] = options.participants[this.key.pub] || Object.assign({}, this.DEFAULT_PERMISSIONS);
-      if (options.uuid) { // It's a group channel
+      if (options.uuid) {
         this.uuid = options.uuid;
         this.name = options.name;
       } else {
@@ -152,6 +152,7 @@ class Channel {
         options.participants[this.key.pub].admin = true;
         options.participants[this.key.pub].founder = true;
       }
+      this.getChatLinks(); // subscribes to chat links
     }
     this.participants = options.participants;
     if (options.uuid) { // It's a group channel
