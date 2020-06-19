@@ -780,7 +780,7 @@ class Channel {
         if (chatLinks.indexOf(linkId !== -1)) { return; } // TODO: check if link was nulled
         const channels = [];
         chatLinks.push(linkId);
-        const url = Channel.formatChatLink(urlRoot, key.pub, link.sharedSecret, linkId);
+        const url = Channel.formatChatLink({urlRoot, chatWith: key.pub, sharedSecret: link.sharedSecret, linkId});
         if (callback) {
           callback({url, id: linkId});
         }
@@ -815,7 +815,7 @@ class Channel {
     this.chatLinks[linkId] = {sharedKey, sharedSecret};
     this.put('chatLinks', this.chatLinks);
 
-    return Channel.formatChatLink(urlRoot, this.key.pub, sharedSecret, linkId);
+    return Channel.formatChatLink({urlRoot, channelId: this.uuid, inviter: this.key.pub, sharedSecret, linkId});
   }
 
   /**
@@ -1021,8 +1021,13 @@ class Channel {
     user.put({epub: key.epub});
   }
 
-  static formatChatLink(urlRoot, pub, sharedSecret, linkId) {
-    return `${urlRoot}?chatWith=${encodeURIComponent(pub)}&s=${encodeURIComponent(sharedSecret)}&k=${encodeURIComponent(linkId)}`;
+  static formatChatLink({urlRoot, chatWith, channelId, inviter, sharedSecret, linkId}) {
+    const enc = encodeURIComponent;
+    if (channelId && inviter) {
+      return `${urlRoot}?channelId=${enc(channelId)}&inviter=${enc(inviter)}&s=${enc(sharedSecret)}&k=${enc(linkId)}`;
+    } else {
+      return `${urlRoot}?chatWith=${enc(pub)}&s=${enc(sharedSecret)}&k=${enc(linkId)}`;
+    }
   }
 
   /**
@@ -1048,7 +1053,7 @@ class Channel {
 
     user.get('chatLinks').get(linkId).put({encryptedSharedKey, ownerEncryptedSharedKey});
 
-    return Channel.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
+    return Channel.formatChatLink({urlRoot, chatWith: key.pub, sharedSecret, linkId});
   }
 
   /**
@@ -1067,7 +1072,7 @@ class Channel {
         chatLinks.push(linkId);
         const sharedKey = await Gun.SEA.decrypt(enc, mySecret);
         const sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
-        const url = Channel.formatChatLink(urlRoot, key.pub, sharedSecret, linkId);
+        const url = Channel.formatChatLink({urlRoot, chatWith: key.pub, sharedSecret, linkId});
         if (callback) {
           callback({url, id: linkId});
         }
