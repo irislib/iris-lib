@@ -29,7 +29,7 @@ Iris-lib runs in the browser and on Node.js.
 
 ### Example
 Private channel:
-```
+```js
 // Copy & paste this to console at https://iris.to or other page that has gun, sea and iris-lib
 // Due to an unsolved bug, someoneElse's messages only start showing up after a reload
 
