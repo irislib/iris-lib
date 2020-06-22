@@ -292,6 +292,8 @@ test(`Retrieve chat links`, async (done) => {
 });
 
 test(`Join a channel using an advanced chat link`, async (done) => {
+  logger.enable();
+
   const user1 = await iris.Key.generate();
   const user2 = await iris.Key.generate();
   const user3 = await iris.Key.generate();
@@ -309,16 +311,15 @@ test(`Join a channel using an advanced chat link`, async (done) => {
 
   setTimeout(() => {
     const user2Channel = new iris.Channel({gun: gun2, key: user2, chatLink});
-    logger.enable();
     console.log(1, chatLink);
     console.log(2, user2Channel);
-    logger.disable();
     expect(user2Channel.uuid).toBe(user1Channel.uuid);
     expect(Object.keys(user2Channel.participants).length).toBe(2);
     user2Channel.onTheir('participants', pants => {
       expect(typeof pants).toBe('object');
       expect(Object.keys(pants).length).toBe(3);
       expect(Object.keys(user2Channel.participants).length).toBe(3);
+      logger.disable();
       done();
     });
   }, 500);

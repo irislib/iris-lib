@@ -95,37 +95,8 @@ class Channel {
     this.messages = {};
     this.chatLinks = {};
 
-    let saved;
     if (options.chatLink) {
-      const s = options.chatLink.split('?');
-      if (s.length === 2) {
-        const pub = util.getUrlParameter('chatWith', s[1]);
-        const channelId = util.getUrlParameter('channelId', s[1]);
-        const inviter = util.getUrlParameter('inviter', s[1]);
-        if (pub) {
-          options.participants = pub;
-          if (pub !== this.key.pub) {
-            const sharedSecret = util.getUrlParameter('s', s[1]);
-            const linkId = util.getUrlParameter('k', s[1]);
-            if (sharedSecret && linkId) {
-              this.save(); // save the channel first so it's there before inviter subscribes to it
-              saved = true;
-              this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
-                const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
-                const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret); // TODO encrypt is not deterministic, it uses salt
-                const channelRequestId = await util.getHash(encryptedChatRequest);
-                util.gunAsAnotherUser(this.gun, sharedKey, user => {
-                  user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
-                });
-              });
-            }
-          }
-        } else if (channelId && inviter && inviter !== this.key.pub) { // TODO! initializing it twice breaks things - new secret is generated
-          options.uuid = channelId;
-          options.participants = {};
-          options.participants[inviter] = Object.assign({inviter: true}, this.DEFAULT_PERMISSIONS);
-        }
-      }
+      this.useChatLink(options);
     }
 
     if (typeof options.participants === `string`) {
@@ -152,7 +123,7 @@ class Channel {
         options.participants[this.key.pub].admin = true;
         options.participants[this.key.pub].founder = true;
       }
-      this.getChatLinks(); // subscribes to chat links
+      this.getChatLinks({subscribe: true});
     }
     this.participants = options.participants;
     if (options.uuid) { // It's a group channel
@@ -195,12 +166,46 @@ class Channel {
               this.addParticipant(k, true, Object.assign({}, this.DEFAULT_PERMISSIONS, participants[k]));
             }
           });
-          saved = true;
+          options.saved = true;
         }
       }
     });
-    if (!saved && (options.save === undefined || options.save === true)) {
+    if (!options.saved && (options.save === undefined || options.save === true)) {
       this.save();
+    }
+  }
+
+  useChatLink(options) {
+    const s = options.chatLink.split('?');
+    if (s.length === 2) {
+      const chatWith = util.getUrlParameter('chatWith', s[1]);
+      const channelId = util.getUrlParameter('channelId', s[1]);
+      const inviter = util.getUrlParameter('inviter', s[1]);
+      const pub = inviter || chatWith;
+      if (chatWith) {
+        options.participants = pub;
+      } else if (channelId && inviter && inviter !== this.key.pub) { // TODO! initializing it twice breaks things - new secret is generated
+        options.uuid = channelId;
+        options.participants = {};
+        options.participants[inviter] = Object.assign({inviter: true}, this.DEFAULT_PERMISSIONS);
+      }
+      if (pub !== this.key.pub) {
+        const sharedSecret = util.getUrlParameter('s', s[1]);
+        const linkId = util.getUrlParameter('k', s[1]);
+        if (sharedSecret && linkId) {
+          this.save(); // save the channel first so it's there before inviter subscribes to it
+          options.saved = true;
+          this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async encrypted => {
+            const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
+            const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret); // TODO encrypt is not deterministic, it uses salt
+            const channelRequestId = await util.getHash(encryptedChatRequest);
+            console.log(9090, 'adding chatRequst');
+            util.gunAsAnotherUser(this.gun, sharedKey, user => {
+              user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
+            });
+          });
+        }
+      }
     }
   }
 
@@ -770,23 +775,33 @@ class Channel {
     }
   }
 
-  async getChatLinks(callback, urlRoot = 'https://iris.to/', subscribe) {
+  /**
+  *
+  */
+  async getChatLinks({callback, urlRoot, subscribe}) {
+    urlRoot = urlRoot || 'https://iris.to/';
     if (!this.uuid) { throw new Error('Only group channels may have chat links'); }
     const chatLinks = [];
-    this.on('chatLinks', links => {
+    console.log(111, 'subscribe', subscribe);
+    this.on('chatLinks', (links, from) => {
+      console.log(222, links);
       // TODO: check admin permissions
       if (!links || typeof links !== 'object') { return; }
       Object.keys(links).forEach(linkId => {
+        console.log(333, linkId);
         const link = links[linkId];
-        if (chatLinks.indexOf(linkId !== -1)) { return; } // TODO: check if link was nulled
+        if (chatLinks.indexOf(linkId) !== -1) { return; } // TODO: check if link was nulled
         const channels = [];
+        console.log(444);
         chatLinks.push(linkId);
-        const url = Channel.formatChatLink({urlRoot, chatWith: key.pub, sharedSecret: link.sharedSecret, linkId});
+        const url = Channel.formatChatLink({urlRoot, inviter: from, channelId: this.uuid, sharedSecret: link.sharedSecret, linkId});
         if (callback) {
           callback({url, id: linkId});
         }
         if (subscribe) {
-          this.user(link.sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId) => {
+          console.log('subscribing to link id', linkId, 'url', url, 'sharedKey.pub', link.sharedKey.pub);
+          this.gun.user(link.sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId) => {
+            console.log(555, 'got join request');
             if (!encPub) { return; }
             const s = JSON.stringify(encPub);
             if (channels.indexOf(s) === -1) {
@@ -805,6 +820,8 @@ class Channel {
     const sharedKeyString = JSON.stringify(sharedKey);
     const sharedSecret = await Gun.SEA.secret(sharedKey.epub, sharedKey);
     const encryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, sharedSecret);
+    const ownerSecret = await Gun.SEA.secret(this.key.epub, this.key);
+    const ownerEncryptedSharedKey = await Gun.SEA.encrypt(sharedKeyString, ownerSecret);
     let linkId = await util.getHash(encryptedSharedKey);
     linkId = linkId.slice(0, 12);
 
@@ -815,6 +832,7 @@ class Channel {
 
     this.chatLinks[linkId] = {sharedKey, sharedSecret};
     this.put('chatLinks', this.chatLinks);
+    this.user.get('chatLinks').get(linkId).put({encryptedSharedKey, ownerEncryptedSharedKey});
 
     return Channel.formatChatLink({urlRoot, channelId: this.uuid, inviter: this.key.pub, sharedSecret, linkId});
   }
