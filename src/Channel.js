@@ -199,8 +199,8 @@ class Channel {
             const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
             const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret); // TODO encrypt is not deterministic, it uses salt
             const channelRequestId = await util.getHash(encryptedChatRequest);
-            console.log(9090, 'adding chatRequst');
             util.gunAsAnotherUser(this.gun, sharedKey, user => {
+              console.log(9090, 'adding chatRequest');
               user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
             });
           });
@@ -792,19 +792,20 @@ class Channel {
         const link = links[linkId];
         if (chatLinks.indexOf(linkId) !== -1) { return; } // TODO: check if link was nulled
         const channels = [];
-        console.log(444);
         chatLinks.push(linkId);
         const url = Channel.formatChatLink({urlRoot, inviter: from, channelId: this.uuid, sharedSecret: link.sharedSecret, linkId});
         if (callback) {
           callback({url, id: linkId});
         }
         if (subscribe) {
-          console.log('subscribing to link id', linkId, 'url', url, 'sharedKey.pub', link.sharedKey.pub);
+          console.log('subscribing to link', link);
           this.gun.user(link.sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId) => {
             console.log(555, 'got join request');
+            console.log('encpub', encPub);
             if (!encPub) { return; }
             const s = JSON.stringify(encPub);
             if (channels.indexOf(s) === -1) {
+              console.log(666);
               channels.push(s);
               const pub = await Gun.SEA.decrypt(encPub, link.sharedSecret);
               this.addParticipant(pub);
@@ -830,7 +831,7 @@ class Channel {
       return user.get('chatRequests').put({a: 1}).then();
     });
 
-    this.chatLinks[linkId] = {sharedKey, sharedSecret};
+    this.chatLinks[linkId] = {sharedKey, sharedSecret};
     this.put('chatLinks', this.chatLinks);
     this.user.get('chatLinks').get(linkId).put({encryptedSharedKey, ownerEncryptedSharedKey});
 
@@ -1045,7 +1046,7 @@ class Channel {
     if (channelId && inviter) {
       return `${urlRoot}?channelId=${enc(channelId)}&inviter=${enc(inviter)}&s=${enc(sharedSecret)}&k=${enc(linkId)}`;
     } else {
-      return `${urlRoot}?chatWith=${enc(pub)}&s=${enc(sharedSecret)}&k=${enc(linkId)}`;
+      return `${urlRoot}?chatWith=${enc(chatWith)}&s=${enc(sharedSecret)}&k=${enc(linkId)}`;
     }
   }
 
