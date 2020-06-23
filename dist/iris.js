@@ -7526,22 +7526,22 @@
 	      var chatWith = util.getUrlParameter('chatWith', s[1]);
 	      var channelId = util.getUrlParameter('channelId', s[1]);
 	      var inviter = util.getUrlParameter('inviter', s[1]);
-	      var _pub = inviter || chatWith;
+	      var pub = inviter || chatWith;
 	      if (chatWith) {
-	        options.participants = _pub;
+	        options.participants = pub;
 	      } else if (channelId && inviter && inviter !== this.key.pub) {
 	        // TODO! initializing it twice breaks things - new secret is generated
 	        options.uuid = channelId;
 	        options.participants = {};
 	        options.participants[inviter] = _Object$assign({ inviter: true }, this.DEFAULT_PERMISSIONS);
 	      }
-	      if (_pub !== this.key.pub) {
+	      if (pub !== this.key.pub) {
 	        var sharedSecret = util.getUrlParameter('s', s[1]);
 	        var linkId = util.getUrlParameter('k', s[1]);
 	        if (sharedSecret && linkId) {
 	          this.save(); // save the channel first so it's there before inviter subscribes to it
 	          options.saved = true;
-	          this.gun.user(_pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async function (encrypted) {
+	          this.gun.user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on(async function (encrypted) {
 	            var sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
 	            var encryptedChatRequest = await Gun.SEA.encrypt(_this2.key.pub, sharedSecret); // TODO encrypt is not deterministic, it uses salt
 	            var channelRequestId = await util.getHash(encryptedChatRequest);
@@ -8297,8 +8297,8 @@
 	            if (channels.indexOf(s) === -1) {
 	              console.log(666);
 	              channels.push(s);
-	              var _pub2 = await Gun.SEA.decrypt(encPub, link.sharedSecret);
-	              _this17.addParticipant(_pub2);
+	              var pub = await Gun.SEA.decrypt(encPub, link.sharedSecret);
+	              _this17.addParticipant(pub);
 	            }
 	          });
 	        }
@@ -8394,11 +8394,11 @@
 
 	    var participants = this.getCurrentParticipants();
 	    if (participants.length) {
-	      var _pub3 = participants[0];
-	      this.gun.user(_pub3).get('profile').get('name').on(function (name) {
+	      var pub = participants[0];
+	      this.gun.user(pub).get('profile').get('name').on(function (name) {
 	        return nameEl.innerText = name;
 	      });
-	      Channel.getOnline(this.gun, _pub3, function (status) {
+	      Channel.getOnline(this.gun, pub, function (status) {
 	        var cls = 'iris-online-indicator' + (status.isOnline ? ' yes' : '');
 	        onlineIndicator.setAttribute('class', cls);
 	        var undelivered = messages.querySelectorAll('.iris-chat-message:not(.delivered)');
@@ -8560,7 +8560,7 @@
 	    if (channelId && inviter) {
 	      return urlRoot + '?channelId=' + enc(channelId) + '&inviter=' + enc(inviter) + '&s=' + enc(sharedSecret) + '&k=' + enc(linkId);
 	    } else {
-	      return urlRoot + '?chatWith=' + enc(pub) + '&s=' + enc(sharedSecret) + '&k=' + enc(linkId);
+	      return urlRoot + '?chatWith=' + enc(chatWith) + '&s=' + enc(sharedSecret) + '&k=' + enc(linkId);
 	    }
 	  };
 
@@ -8632,8 +8632,8 @@
 	            var s = _JSON$stringify(encPub);
 	            if (channels.indexOf(s) === -1) {
 	              channels.push(s);
-	              var _pub4 = await Gun.SEA.decrypt(encPub, sharedSecret);
-	              var channel = new Channel({ gun: gun, key: key, participants: _pub4 });
+	              var pub = await Gun.SEA.decrypt(encPub, sharedSecret);
+	              var channel = new Channel({ gun: gun, key: key, participants: pub });
 	              channel.save();
 	            }
 	            util.gunAsAnotherUser(gun, sharedKey, function (user) {
