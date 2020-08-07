@@ -795,7 +795,7 @@ class Channel {
         }
         if (subscribe) {
           this.gun.user(link.sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId) => {
-            if (!encPub) { return; }
+            if (!encPub || typeof encPub !== 'string' || encPub.length < 10) { return; }
             const s = JSON.stringify(encPub);
             if (channels.indexOf(s) === -1) {
               channels.push(s);
