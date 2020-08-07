@@ -200,7 +200,6 @@ class Channel {
             const encryptedChatRequest = await Gun.SEA.encrypt(this.key.pub, sharedSecret); // TODO encrypt is not deterministic, it uses salt
             const channelRequestId = await util.getHash(encryptedChatRequest);
             util.gunAsAnotherUser(this.gun, sharedKey, user => {
-              console.log(9090, 'adding chatRequest');
               user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
             });
           });
@@ -782,13 +781,10 @@ class Channel {
     urlRoot = urlRoot || 'https://iris.to/';
     if (!this.uuid) { throw new Error('Only group channels may have chat links'); }
     const chatLinks = [];
-    console.log(111, 'subscribe', subscribe);
     this.on('chatLinks', (links, from) => {
-      console.log(222, links);
       // TODO: check admin permissions
       if (!links || typeof links !== 'object') { return; }
       Object.keys(links).forEach(linkId => {
-        console.log(333, linkId);
         const link = links[linkId];
         if (chatLinks.indexOf(linkId) !== -1) { return; } // TODO: check if link was nulled
         const channels = [];
@@ -798,14 +794,10 @@ class Channel {
           callback({url, id: linkId});
         }
         if (subscribe) {
-          console.log('subscribing to link', link);
           this.gun.user(link.sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId) => {
-            console.log(555, 'got join request');
-            console.log('encpub', encPub);
             if (!encPub) { return; }
             const s = JSON.stringify(encPub);
             if (channels.indexOf(s) === -1) {
-              console.log(666);
               channels.push(s);
               const pub = await Gun.SEA.decrypt(encPub, link.sharedSecret);
               this.addParticipant(pub);
