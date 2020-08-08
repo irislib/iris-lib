@@ -710,7 +710,7 @@ class Channel {
   setTyping(isTyping, timeout = 5) {
     isTyping = typeof isTyping === `undefined` ? true : isTyping;
     timeout = timeout * 1000;
-    this.put(`typing`, isTyping ? new Date().toISOString() : false);
+    this.put(`typing`, isTyping ? new Date().toISOString() : new Date(0).toISOString());
     clearTimeout(this.setTypingTimeout);
     this.setTypingTimeout = setTimeout(() => this.put(`typing`, false), timeout);
   }
