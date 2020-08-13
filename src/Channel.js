@@ -418,7 +418,7 @@ class Channel {
   }
 
   async messageReceived(callback, data, channelId, selfAuthored, key, from) {
-    if (this.messages[key]) {
+    if (this.messages[key] || !data) {
       return;
     }
     const secret = this.uuid ? (await this.getTheirGroupSecret(from)) : (await this.getSecret(channelId));
