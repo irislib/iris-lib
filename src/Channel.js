@@ -438,6 +438,7 @@ class Channel {
     const callbackIfLatest = async (msg, info) => {
       if (!this.latest) {
         this.latest = msg;
+        callback(msg, info);
       } else {
         const t = (typeof this.latest.time === `string` ? this.latest.time : this.latest.time.toISOString());
         if (t < msg.time) {
@@ -446,8 +447,8 @@ class Channel {
         }
       }
     };
-    this.onMy('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: true}));
-    this.onTheir('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: false}));
+    this.onMy('latestMsg', (msg, info) => callbackIfLatest(msg, {selfAuthored: true, from: info.from}));
+    this.onTheir('latestMsg', (msg, info) => callbackIfLatest(msg, {selfAuthored: false, from: info.from}));
   }
 
   /**
