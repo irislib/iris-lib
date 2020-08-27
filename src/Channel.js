@@ -447,8 +447,8 @@ class Channel {
         }
       }
     };
-    this.onMy('latestMsg', (msg, from) => callbackIfLatest(msg, {selfAuthored: true, from}));
-    this.onTheir('latestMsg', (msg, from) => callbackIfLatest(msg, {selfAuthored: false, from}));
+    this.onMy('latestMsg', msg => callbackIfLatest(msg, {selfAuthored: true, from: this.key.pub}));
+    this.onTheir('latestMsg', (msg, k, from) => callbackIfLatest(msg, {selfAuthored: false, from}));
   }
 
   /**
