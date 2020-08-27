@@ -7831,11 +7831,11 @@
 	        }
 	      }
 	    };
-	    this.onMy('latestMsg', function (msg, info) {
-	      return callbackIfLatest(msg, { selfAuthored: true, from: info.from });
+	    this.onMy('latestMsg', function (msg, from) {
+	      return callbackIfLatest(msg, { selfAuthored: true, from: from });
 	    });
-	    this.onTheir('latestMsg', function (msg, info) {
-	      return callbackIfLatest(msg, { selfAuthored: false, from: info.from });
+	    this.onTheir('latestMsg', function (msg, from) {
+	      return callbackIfLatest(msg, { selfAuthored: false, from: from });
 	    });
 	  };
 
