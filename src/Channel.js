@@ -980,6 +980,8 @@ class Channel {
   * @param {string} activity string: set the activity status every 3 seconds, null/false: stop updating
   */
   static setActivity(gun, activity) {
+    if (gun.irisActivityStatus === activity) { return; }
+    gun.irisActivityStatus = activity;
     clearInterval(gun.setActivityInterval);
     const update = () => {
       gun.user().get(`activity`).put({status: activity, time: new Date(Gun.state()).toISOString()});
@@ -1004,7 +1006,7 @@ class Channel {
       clearTimeout(timeout);
       const now = new Date(Gun.state());
       const activityDate = new Date(activity.time);
-      const isActive = activityDate > now - 10 * 1000 && activityDate < now + 30 * 1000;
+      const isActive = activityDate > new Date(now.getTime() - 10 * 1000) && activityDate < new Date(now.getTime() + 30 * 1000);
       callback({isActive, lastActive: activity.time, status: activity.status});
       if (isActive) {
         timeout = setTimeout(() => callback({isOnline: false, lastActive: activity.time}), 10000);
