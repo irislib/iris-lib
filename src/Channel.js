@@ -895,8 +895,8 @@ class Channel {
     if (participants.length) {
       const pub = participants[0];
       this.gun.user(pub).get('profile').get('name').on(name => nameEl.innerText = name);
-      Channel.getOnline(this.gun, pub, status => {
-        const cls = `iris-online-indicator${  status.isOnline ? ' yes' : ''}`;
+      Channel.getActivity(this.gun, pub, status => {
+        const cls = `iris-online-indicator${  status.isActive ? ' yes' : ''}`;
         onlineIndicator.setAttribute('class', cls);
         const undelivered = messages.querySelectorAll('.iris-chat-message:not(.delivered)');
         undelivered.forEach(msg => {
@@ -952,7 +952,7 @@ class Channel {
     });
 
     textArea.addEventListener('keyup', event => {
-      Channel.setOnline(this.gun, true); // TODO
+      Channel.setActivity(this.gun, true); // TODO
       this.setMyMsgsLastSeenTime(); // TODO
       if (event.keyCode === 13) {
         event.preventDefault();
@@ -975,21 +975,18 @@ class Channel {
   }
 
   /**
-  * Set the user's online status
+  * Set the user's online/active status
   * @param {object} gun
-  * @param {boolean} isOnline true: update the user's lastActive time every 3 seconds, false: stop updating
+  * @param {string} activity string: set the activity status every 3 seconds, null/false: stop updating
   */
-  static setOnline(gun, isOnline) {
-    if (isOnline) {
-      if (gun.setOnlineInterval) { return; }
-      const update = () => {
-        gun.user().get(`lastActive`).put(new Date(Gun.state()).toISOString());
-      };
-      update();
-      gun.setOnlineInterval = setInterval(update, 3000);
-    } else {
-      clearInterval(gun.setOnlineInterval);
-      gun.setOnlineInterval = undefined;
+  static setActivity(gun, activity) {
+    clearInterval(gun.setActivityInterval);
+    const update = () => {
+      gun.user().get(`activity`).put({status: activity, time: new Date(Gun.state()).toISOString()});
+    };
+    update();
+    if (activity) {
+      gun.setActivityInterval = setInterval(update, 3000);
     }
   }
 
@@ -1000,20 +997,17 @@ class Channel {
   * @param {string} pubKey public key of the user
   * @param {boolean} callback receives a boolean each time the user's online status changes
   */
-  static getOnline(gun, pubKey, callback) {
+  static getActivity(gun, pubKey, callback) {
     let timeout;
-    gun.user(pubKey).get(`lastActive`).on(lastActive => {
+    gun.user(pubKey).get(`activity`).on(activity => {
+      if (!activity || !(activity.time && activity.status)) { return; }
       clearTimeout(timeout);
       const now = new Date(Gun.state());
-      let lastActiveDate = new Date(lastActive);
-      if (lastActiveDate.getFullYear() === 1970) { // lol, format changed from seconds to iso string
-        lastActiveDate = new Date(lastActiveDate.getTime() * 1000);
-        lastActive = lastActiveDate.toISOString();
-      }
-      const isOnline = lastActiveDate > now - 10 * 1000 && lastActive < now + 30 * 1000;
-      callback({isOnline, lastActive});
-      if (isOnline) {
-        timeout = setTimeout(() => callback({isOnline: false, lastActive}), 10000);
+      const activityDate = new Date(activity.time);
+      const isActive = activityDate > now - 10 * 1000 && activityDate < now + 30 * 1000;
+      callback({isActive, lastActive: activity.time, status: activity.status});
+      if (isActive) {
+        timeout = setTimeout(() => callback({isOnline: false, lastActive: activity.time}), 10000);
       }
     });
   }

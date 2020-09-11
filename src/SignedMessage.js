@@ -401,7 +401,7 @@ class SignedMessage {
   }
 
   /**
-  * @returns {string} JSON string of signature and public key
+  * @returns {string}
   */
   serialize() {
     return {sig: this.sig, pubKey: this.pubKey};
@@ -412,7 +412,7 @@ class SignedMessage {
   }
 
   /**
-  * @returns {Promise<SignedMessage>} message from JSON string produced by toString
+  * @returns {Promise<SignedMessage>}
   */
   static async deserialize(s) {
     return SignedMessage.fromSig(s);
