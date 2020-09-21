@@ -982,13 +982,17 @@ class Channel {
   static setActivity(gun, activity) {
     if (gun.irisActivityStatus === activity) { return; }
     gun.irisActivityStatus = activity;
-    clearInterval(gun.setActivityInterval);
+    clearTimeout(gun.setActivityTimeout);
     const update = () => {
       gun.user().get(`activity`).put({status: activity, time: new Date(Gun.state()).toISOString()});
     };
     update();
     if (activity) {
-      gun.setActivityInterval = setInterval(update, 3000);
+      function timerUpdate() {
+        update();
+        gun.setActivityTimeout = setTimeout(timerUpdate, 3000);
+      }
+      timerUpdate();
     }
   }
 
