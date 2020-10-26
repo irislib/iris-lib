@@ -136,8 +136,9 @@ function resetView() {
 }
 
 function showMenu(show = true) {
+  console.log(show);
   $('.sidebar').toggleClass('hidden-xs', !show);
-  $('.main').toggleClass('hidden-xs', show);
+  $('.main-view').toggleClass('hidden-xs', show);
 }
 $('#back-button').click(() => {
   resetView();
