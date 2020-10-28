@@ -97,7 +97,7 @@
 	};
 
 	var _core = createCommonjsModule(function (module) {
-	var core = module.exports = { version: '2.6.11' };
+	var core = module.exports = { version: '2.6.9' };
 	if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 	});
 	var _core_1 = _core.version;
@@ -3049,6 +3049,12 @@
 	      return date.toLocaleDateString(undefined, { weekday: 'long' });
 	    }
 	    return dateStr;
+	  },
+	  getPublicState: function getPublicState() {
+	    if (!this.publicState) {
+	      this.publicState = new Gun('https://gun-us.herokuapp.com/gun');
+	    }
+	    return this.publicState;
 	  },
 	  createElement: function createElement(type, cls, parent) {
 	    var el = document.createElement(type);
@@ -10249,6 +10255,667 @@
 	}();
 
 	var version$1 = "0.0.146";
+
+	var taggedTemplateLiteralLoose = createCommonjsModule(function (module, exports) {
+
+	exports.__esModule = true;
+
+	exports.default = function (strings, raw) {
+	  strings.raw = raw;
+	  return strings;
+	};
+	});
+
+	var _taggedTemplateLiteralLoose = unwrapExports(taggedTemplateLiteralLoose);
+
+	var n,u,i$1,t,o,r,f$8={},e=[],c=/acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i;function s(n,l){for(var u in l)n[u]=l[u];return n}function a(n){var l=n.parentNode;l&&l.removeChild(n);}function h(n,l,u){var i,t,o,r=arguments,f={};for(o in l)"key"==o?i=l[o]:"ref"==o?t=l[o]:f[o]=l[o];if(arguments.length>3)for(u=[u],o=3;o<arguments.length;o++)u.push(r[o]);if(null!=u&&(f.children=u),"function"==typeof n&&null!=n.defaultProps)for(o in n.defaultProps)void 0===f[o]&&(f[o]=n.defaultProps[o]);return v(n,f,i,t,null)}function v(l,u,i,t,o){var r={type:l,props:u,key:i,ref:t,__k:null,__:null,__b:0,__e:null,__d:void 0,__c:null,__h:null,constructor:void 0,__v:o};return null==o&&(r.__v=r),null!=n.vnode&&n.vnode(r),r}function p(n){return n.children}function d(n,l){this.props=n,this.context=l;}function _(n,l){if(null==l)return n.__?_(n.__,n.__.__k.indexOf(n)+1):null;for(var u;l<n.__k.length;l++)if(null!=(u=n.__k[l])&&null!=u.__e)return u.__e;return "function"==typeof n.type?_(n):null}function w(n){var l,u;if(null!=(n=n.__)&&null!=n.__c){for(n.__e=n.__c.base=null,l=0;l<n.__k.length;l++)if(null!=(u=n.__k[l])&&null!=u.__e){n.__e=n.__c.base=u.__e;break}return w(n)}}function k$1(l){(!l.__d&&(l.__d=!0)&&u.push(l)&&!g$1.__r++||t!==n.debounceRendering)&&((t=n.debounceRendering)||i$1)(g$1);}function g$1(){for(var n;g$1.__r=u.length;)n=u.sort(function(n,l){return n.__v.__b-l.__v.__b}),u=[],n.some(function(n){var l,u,i,t,o,r,f;n.__d&&(r=(o=(l=n).__v).__e,(f=l.__P)&&(u=[],(i=s({},o)).__v=i,t=$(f,o,i,l.__n,void 0!==f.ownerSVGElement,null!=o.__h?[r]:null,u,null==r?_(o):r,o.__h),j$1(u,o),t!=r&&w(o)));});}function m(n,l,u,i,t,o,r,c,s,h){var y,d,w,k,g,m,b,A=i&&i.__k||e,P=A.length;for(s==f$8&&(s=null!=r?r[0]:P?_(i,0):null),u.__k=[],y=0;y<l.length;y++)if(null!=(k=u.__k[y]=null==(k=l[y])||"boolean"==typeof k?null:"string"==typeof k||"number"==typeof k?v(null,k,null,null,k):Array.isArray(k)?v(p,{children:k},null,null,null):null!=k.__e||null!=k.__c?v(k.type,k.props,k.key,null,k.__v):k)){if(k.__=u,k.__b=u.__b+1,null===(w=A[y])||w&&k.key==w.key&&k.type===w.type)A[y]=void 0;else for(d=0;d<P;d++){if((w=A[d])&&k.key==w.key&&k.type===w.type){A[d]=void 0;break}w=null;}g=$(n,k,w=w||f$8,t,o,r,c,s,h),(d=k.ref)&&w.ref!=d&&(b||(b=[]),w.ref&&b.push(w.ref,null,k),b.push(d,k.__c||g,k)),null!=g?(null==m&&(m=g),s=x(n,k,w,A,r,g,s),h||"option"!=u.type?"function"==typeof u.type&&(u.__d=s):n.value=""):s&&w.__e==s&&s.parentNode!=n&&(s=_(w));}if(u.__e=m,null!=r&&"function"!=typeof u.type)for(y=r.length;y--;)null!=r[y]&&a(r[y]);for(y=P;y--;)null!=A[y]&&L(A[y],A[y]);if(b)for(y=0;y<b.length;y++)I(b[y],b[++y],b[++y]);}function x(n,l,u,i,t,o,r){var f,e,c;if(void 0!==l.__d)f=l.__d,l.__d=void 0;else if(t==u||o!=r||null==o.parentNode)n:if(null==r||r.parentNode!==n)n.appendChild(o),f=null;else{for(e=r,c=0;(e=e.nextSibling)&&c<i.length;c+=2)if(e==o)break n;n.insertBefore(o,r),f=r;}return void 0!==f?f:o.nextSibling}function A(n,l,u,i,t){var o;for(o in u)"children"===o||"key"===o||o in l||C(n,o,null,u[o],i);for(o in l)t&&"function"!=typeof l[o]||"children"===o||"key"===o||"value"===o||"checked"===o||u[o]===l[o]||C(n,o,l[o],u[o],i);}function P(n,l,u){"-"===l[0]?n.setProperty(l,u):n[l]=null==u?"":"number"!=typeof u||c.test(l)?u:u+"px";}function C(n,l,u,i,t){var o,r,f;if(t&&"className"==l&&(l="class"),"style"===l)if("string"==typeof u)n.style.cssText=u;else{if("string"==typeof i&&(n.style.cssText=i=""),i)for(l in i)u&&l in u||P(n.style,l,"");if(u)for(l in u)i&&u[l]===i[l]||P(n.style,l,u[l]);}else"o"===l[0]&&"n"===l[1]?(o=l!==(l=l.replace(/Capture$/,"")),(r=l.toLowerCase())in n&&(l=r),l=l.slice(2),n.l||(n.l={}),n.l[l+o]=u,f=o?N:z,u?i||n.addEventListener(l,f,o):n.removeEventListener(l,f,o)):"list"!==l&&"tagName"!==l&&"form"!==l&&"type"!==l&&"size"!==l&&"download"!==l&&"href"!==l&&!t&&l in n?n[l]=null==u?"":u:"function"!=typeof u&&"dangerouslySetInnerHTML"!==l&&(l!==(l=l.replace(/xlink:?/,""))?null==u||!1===u?n.removeAttributeNS("http://www.w3.org/1999/xlink",l.toLowerCase()):n.setAttributeNS("http://www.w3.org/1999/xlink",l.toLowerCase(),u):null==u||!1===u&&!/^ar/.test(l)?n.removeAttribute(l):n.setAttribute(l,u));}function z(l){this.l[l.type+!1](n.event?n.event(l):l);}function N(l){this.l[l.type+!0](n.event?n.event(l):l);}function T(n,l,u){var i,t;for(i=0;i<n.__k.length;i++)(t=n.__k[i])&&(t.__=n,t.__e&&("function"==typeof t.type&&t.__k.length>1&&T(t,l,u),l=x(u,t,t,n.__k,null,t.__e,l),"function"==typeof n.type&&(n.__d=l)));}function $(l,u,i,t,o,r,f,e,c){var a,h,v,y,_,w,k,g,b,x,A,P=u.type;if(void 0!==u.constructor)return null;null!=i.__h&&(c=i.__h,e=u.__e=i.__e,u.__h=null,r=[e]),(a=n.__b)&&a(u);try{n:if("function"==typeof P){if(g=u.props,b=(a=P.contextType)&&t[a.__c],x=a?b?b.props.value:a.__:t,i.__c?k=(h=u.__c=i.__c).__=h.__E:("prototype"in P&&P.prototype.render?u.__c=h=new P(g,x):(u.__c=h=new d(g,x),h.constructor=P,h.render=M),b&&b.sub(h),h.props=g,h.state||(h.state={}),h.context=x,h.__n=t,v=h.__d=!0,h.__h=[]),null==h.__s&&(h.__s=h.state),null!=P.getDerivedStateFromProps&&(h.__s==h.state&&(h.__s=s({},h.__s)),s(h.__s,P.getDerivedStateFromProps(g,h.__s))),y=h.props,_=h.state,v)null==P.getDerivedStateFromProps&&null!=h.componentWillMount&&h.componentWillMount(),null!=h.componentDidMount&&h.__h.push(h.componentDidMount);else{if(null==P.getDerivedStateFromProps&&g!==y&&null!=h.componentWillReceiveProps&&h.componentWillReceiveProps(g,x),!h.__e&&null!=h.shouldComponentUpdate&&!1===h.shouldComponentUpdate(g,h.__s,x)||u.__v===i.__v){h.props=g,h.state=h.__s,u.__v!==i.__v&&(h.__d=!1),h.__v=u,u.__e=i.__e,u.__k=i.__k,h.__h.length&&f.push(h),T(u,e,l);break n}null!=h.componentWillUpdate&&h.componentWillUpdate(g,h.__s,x),null!=h.componentDidUpdate&&h.__h.push(function(){h.componentDidUpdate(y,_,w);});}h.context=x,h.props=g,h.state=h.__s,(a=n.__r)&&a(u),h.__d=!1,h.__v=u,h.__P=l,a=h.render(h.props,h.state,h.context),h.state=h.__s,null!=h.getChildContext&&(t=s(s({},t),h.getChildContext())),v||null==h.getSnapshotBeforeUpdate||(w=h.getSnapshotBeforeUpdate(y,_)),A=null!=a&&a.type==p&&null==a.key?a.props.children:a,m(l,Array.isArray(A)?A:[A],u,i,t,o,r,f,e,c),h.base=u.__e,u.__h=null,h.__h.length&&f.push(h),k&&(h.__E=h.__=null),h.__e=!1;}else null==r&&u.__v===i.__v?(u.__k=i.__k,u.__e=i.__e):u.__e=H(i.__e,u,i,t,o,r,f,c);(a=n.diffed)&&a(u);}catch(l){u.__v=null,(c||null!=r)&&(u.__e=e,u.__h=!!c,r[r.indexOf(e)]=null),n.__e(l,u,i);}return u.__e}function j$1(l,u){n.__c&&n.__c(u,l),l.some(function(u){try{l=u.__h,u.__h=[],l.some(function(n){n.call(u);});}catch(l){n.__e(l,u.__v);}});}function H(n,l,u,i,t,o,r,c){var s,a,h,v,y,p=u.props,d=l.props;if(t="svg"===l.type||t,null!=o)for(s=0;s<o.length;s++)if(null!=(a=o[s])&&((null===l.type?3===a.nodeType:a.localName===l.type)||n==a)){n=a,o[s]=null;break}if(null==n){if(null===l.type)return document.createTextNode(d);n=t?document.createElementNS("http://www.w3.org/2000/svg",l.type):document.createElement(l.type,d.is&&{is:d.is}),o=null,c=!1;}if(null===l.type)p===d||c&&n.data===d||(n.data=d);else{if(null!=o&&(o=e.slice.call(n.childNodes)),h=(p=u.props||f$8).dangerouslySetInnerHTML,v=d.dangerouslySetInnerHTML,!c){if(null!=o)for(p={},y=0;y<n.attributes.length;y++)p[n.attributes[y].name]=n.attributes[y].value;(v||h)&&(v&&(h&&v.__html==h.__html||v.__html===n.innerHTML)||(n.innerHTML=v&&v.__html||""));}A(n,d,p,t,c),v?l.__k=[]:(s=l.props.children,m(n,Array.isArray(s)?s:[s],l,u,i,"foreignObject"!==l.type&&t,o,r,f$8,c)),c||("value"in d&&void 0!==(s=d.value)&&(s!==n.value||"progress"===l.type&&!s)&&C(n,"value",s,p.value,!1),"checked"in d&&void 0!==(s=d.checked)&&s!==n.checked&&C(n,"checked",s,p.checked,!1));}return n}function I(l,u,i){try{"function"==typeof l?l(u):l.current=u;}catch(l){n.__e(l,i);}}function L(l,u,i){var t,o,r;if(n.unmount&&n.unmount(l),(t=l.ref)&&(t.current&&t.current!==l.__e||I(t,null,u)),i||"function"==typeof l.type||(i=null!=(o=l.__e)),l.__e=l.__d=void 0,null!=(t=l.__c)){if(t.componentWillUnmount)try{t.componentWillUnmount();}catch(l){n.__e(l,u);}t.base=t.__P=null;}if(t=l.__k)for(r=0;r<t.length;r++)t[r]&&L(t[r],u,i);null!=o&&a(o);}function M(n,l,u){return this.constructor(n,u)}function O(l,u,i){var t,r,c;n.__&&n.__(l,u),r=(t=i===o)?null:i&&i.__k||u.__k,l=h(p,null,[l]),c=[],$(u,(t?u:i||u).__k=l,r||f$8,f$8,void 0!==u.ownerSVGElement,i&&!t?[i]:r?null:u.childNodes.length?e.slice.call(u.childNodes):null,c,i||f$8,t),j$1(c,l);}function S(n,l){O(n,l,o);}function q(n,l,u){var i,t,o,r=arguments,f=s({},n.props);for(o in l)"key"==o?i=l[o]:"ref"==o?t=l[o]:f[o]=l[o];if(arguments.length>3)for(u=[u],o=3;o<arguments.length;o++)u.push(r[o]);return null!=u&&(f.children=u),v(n.type,f,i||n.key,t||n.ref,null)}n={__e:function(n,l){for(var u,i,t,o=l.__h;l=l.__;)if((u=l.__c)&&!u.__)try{if((i=u.constructor)&&null!=i.getDerivedStateFromError&&(u.setState(i.getDerivedStateFromError(n)),t=u.__d),null!=u.componentDidCatch&&(u.componentDidCatch(n),t=u.__d),t)return l.__h=o,u.__E=u}catch(l){n=l;}throw n}},d.prototype.setState=function(n,l){var u;u=null!=this.__s&&this.__s!==this.state?this.__s:this.__s=s({},this.state),"function"==typeof n&&(n=n(s({},u),this.props)),n&&s(u,n),null!=n&&this.__v&&(l&&this.__h.push(l),k$1(this));},d.prototype.forceUpdate=function(n){this.__v&&(this.__e=!0,n&&this.__h.push(n),k$1(this));},d.prototype.render=p,u=[],i$1="function"==typeof Promise?Promise.prototype.then.bind(Promise.resolve()):setTimeout,g$1.__r=0,o=f$8,r=0;
+
+	function r$1(){return (r$1=Object.assign||function(t){for(var e=1;e<arguments.length;e++){var n$$1=arguments[e];for(var o in n$$1)Object.prototype.hasOwnProperty.call(n$$1,o)&&(t[o]=n$$1[o]);}return t}).apply(this,arguments)}function i$2(t){this.getChildContext=function(){return t.context};var e=t.children,n$$1=function(t,e){if(null==t)return {};var n$$1,o,r={},i=Object.keys(t);for(o=0;o<i.length;o++)e.indexOf(n$$1=i[o])>=0||(r[n$$1]=t[n$$1]);return r}(t,["context","children"]);return q(e,n$$1)}function a$1(){var o=new CustomEvent("_preact",{detail:{},bubbles:!0,cancelable:!0});this.dispatchEvent(o),this._vdom=h(i$2,r$1({},this._props,{context:o.detail.context}),function e(n$$1,o){if(3===n$$1.nodeType)return n$$1.data;if(1!==n$$1.nodeType)return null;var r=[],i={},a=0,c=n$$1.attributes,l$$1=n$$1.childNodes;for(a=c.length;a--;)"slot"!==c[a].name&&(i[c[a].name]=c[a].value,i[s$1(c[a].name)]=c[a].value);for(a=l$$1.length;a--;){var p$$1=e(l$$1[a],null),d$$1=l$$1[a].slot;d$$1?i[d$$1]=h(u$1,{name:d$$1},p$$1):r[a]=p$$1;}var h$$1=o?h(u$1,null,r):r;return h(o||n$$1.nodeName.toLowerCase(),i,h$$1)}(this,this._vdomComponent)),(this.hasAttribute("hydrate")?S:O)(this._vdom,this._root);}function s$1(t){return t.replace(/-(\w)/g,function(t,e){return e?e.toUpperCase():""})}function c$1(t,e,r){if(this._vdom){var i={};i[t]=r=null==r?void 0:r,i[s$1(t)]=r,this._vdom=q(this._vdom,i),O(this._vdom,this._root);}}function l$1(){O(this._vdom=null,this._root);}function u$1(e,n$$1){var o=this;return h("slot",r$1({},e,{ref:function(t){t?(o.ref=t,o._listener||(o._listener=function(t){t.stopPropagation(),t.detail.context=n$$1;},t.addEventListener("_preact",o._listener))):o.ref.removeEventListener("_preact",o._listener);}}))}function register(t,e,n$$1,o){function r(){var e=Reflect.construct(HTMLElement,[],r);return e._vdomComponent=t,e._root=o&&o.shadow?e.attachShadow({mode:"open"}):e,e}return (r.prototype=Object.create(HTMLElement.prototype)).constructor=r,r.prototype.connectedCallback=a$1,r.prototype.attributeChangedCallback=c$1,r.prototype.disconnectedCallback=l$1,n$$1=n$$1||t.observedAttributes||Object.keys(t.propTypes||{}),r.observedAttributes=n$$1,n$$1.forEach(function(t){Object.defineProperty(r.prototype,t,{get:function(){return this._vdom.props[t]},set:function(e){this._vdom?this.attributeChangedCallback(t,null,e):(this._props||(this._props={}),this._props[t]=e,this.connectedCallback());var n$$1=typeof e;null!=e&&"string"!==n$$1&&"boolean"!==n$$1&&"number"!==n$$1||this.setAttribute(t,e);}});}),customElements.define(e||t.tagName||t.displayName||t.name,r)}
+
+	var n$1=function(t,s,r,e){var u;s[0]=0;for(var h=1;h<s.length;h++){var p=s[h++],a=s[h]?(s[0]|=p?1:2,r[s[h++]]):s[++h];3===p?e[0]=a:4===p?e[1]=Object.assign(e[1]||{},a):5===p?(e[1]=e[1]||{})[s[++h]]=a:6===p?e[1][s[++h]]+=a+"":p?(u=t.apply(a,n$1(t,a,r,["",null])),e.push(u),a[0]?s[0]|=2:(s[h-2]=0,s[h]=u)):e.push(a);}return e},t$1=new Map;function e$1(s){var r=t$1.get(this);return r||(r=new Map,t$1.set(this,r)),(r=n$1(this,r.get(s)||(r.set(s,r=function(n){for(var t,s,r=1,e="",u="",h=[0],p=function(n){1===r&&(n||(e=e.replace(/^\s*\n\s*|\s*\n\s*$/g,"")))?h.push(0,n,e):3===r&&(n||e)?(h.push(3,n,e),r=2):2===r&&"..."===e&&n?h.push(4,n,0):2===r&&e&&!n?h.push(5,0,!0,e):r>=5&&((e||!n&&5===r)&&(h.push(r,0,e,s),r=6),n&&(h.push(r,n,0,s),r=6)),e="";},a=0;a<n.length;a++){a&&(1===r&&p(),p(a));for(var l=0;l<n[a].length;l++)t=n[a][l],1===r?"<"===t?(p(),h=[h],r=3):e+=t:4===r?"--"===e&&">"===t?(r=1,e=""):e=t+e[0]:u?t===u?u="":e+=t:'"'===t||"'"===t?u=t:">"===t?(p(),r=1):r&&("="===t?(r=5,s=e,e=""):"/"===t&&(r<5||">"===n[a][l+1])?(p(),3===r&&(h=h[0]),r=h,(h=h[0]).push(2,0,r),r=0):" "===t||"\t"===t||"\n"===t||"\r"===t?(p(),r=2):e+=t),3===r&&"!--"===e&&(r=4,h=h[0]);}return p(),h}(s)),r),arguments,[])).length>1?r:r[0]}
+
+	var m$1=e$1.bind(h);
+
+	var canUseDOM = !!(
+	  typeof window !== 'undefined' &&
+	  window.document &&
+	  window.document.createElement
+	);
+	var styleElement;
+	if (
+	  typeof module !== 'undefined' &&
+	  module.hot &&
+	  typeof module.hot.addDisposeHandler === 'function'
+	) {
+	  // gross
+	  var hot = module.hot;
+	  if (hot.data != null) {
+	    styleElement = hot.data.styleElement;
+	  }
+	  hot.addDisposeHandler(function (data) {
+	    data.styleElement = styleElement;
+	  });
+	}
+	if (canUseDOM && !styleElement) {
+	  styleElement = document.createElement('style');
+	  styleElement.type = 'text/css';
+	  if (typeof __webpack_nonce__ !== 'undefined') {
+	    styleElement.nonce = __webpack_nonce__;
+	  }
+	  styleElement.appendChild(document.createTextNode('/* jsxstyle */'));
+	  document.head.appendChild(styleElement);
+	}
+	function addStyleToHead(rule) {
+	  if (styleElement && styleElement.sheet) {
+	    var sheet = styleElement.sheet;
+	    try {
+	      sheet.insertRule(rule, sheet.cssRules.length);
+	    } catch (insertError) {
+	      // insertRule will fail for rules with pseudoelements the browser doesn't support.
+	      // see: https://github.com/jsxstyle/jsxstyle/issues/75
+	      {
+	        console.error(
+	          '[jsxstyle] Could not insert rule at position ' +
+	            sheet.cssRules.length +
+	            ': `' +
+	            rule +
+	            '`'
+	        );
+	      }
+	    }
+	  }
+	}
+
+	var componentStyles = {
+	  Block: { display: 'block' },
+	  Box: null,
+	  Col: { display: 'flex', flexDirection: 'column' },
+	  Grid: { display: 'grid' },
+	  Inline: { display: 'inline' },
+	  InlineBlock: { display: 'inline-block' },
+	  InlineCol: { display: 'inline-flex', flexDirection: 'column' },
+	  InlineRow: { display: 'inline-flex', flexDirection: 'row' },
+	  Row: { display: 'flex', flexDirection: 'row' },
+	  // deprecated
+	  Flex: { display: 'flex' },
+	  InlineFlex: { display: 'inline-flex' },
+	  Table: { display: 'table' },
+	  TableCell: { display: 'table-cell' },
+	  TableRow: { display: 'table-row' },
+	};
+
+	/**
+	 * Copyright 2013-present, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 */
+	//  A hearty blend of the following two files:
+	// https://github.com/facebook/react/blob/master/src/renderers/dom/shared/CSSProperty.js
+	// https://github.com/facebook/react/blob/master/src/renderers/dom/shared/dangerousStyleValue.js
+	var isUnitlessNumber = {
+	  animationIterationCount: true,
+	  borderImageOutset: true,
+	  borderImageSlice: true,
+	  borderImageWidth: true,
+	  boxFlex: true,
+	  boxFlexGroup: true,
+	  boxOrdinalGroup: true,
+	  columnCount: true,
+	  columns: true,
+	  flex: true,
+	  flexGrow: true,
+	  flexNegative: true,
+	  flexOrder: true,
+	  flexPositive: true,
+	  flexShrink: true,
+	  fontWeight: true,
+	  gridColumn: true,
+	  gridColumnEnd: true,
+	  gridColumnSpan: true,
+	  gridColumnStart: true,
+	  gridRow: true,
+	  gridRowEnd: true,
+	  gridRowSpan: true,
+	  gridRowStart: true,
+	  lineClamp: true,
+	  lineHeight: true,
+	  opacity: true,
+	  order: true,
+	  orphans: true,
+	  tabSize: true,
+	  widows: true,
+	  zIndex: true,
+	  zoom: true,
+	  // SVG-related properties
+	  fillOpacity: true,
+	  floodOpacity: true,
+	  stopOpacity: true,
+	  strokeDasharray: true,
+	  strokeDashoffset: true,
+	  strokeMiterlimit: true,
+	  strokeOpacity: true,
+	  strokeWidth: true,
+	};
+	function prefixKey(prefix, key) {
+	  return prefix + key.charAt(0).toUpperCase() + key.substring(1);
+	}
+	var prefixes = ['Webkit', 'ms', 'Moz', 'O'];
+	Object.keys(isUnitlessNumber).forEach(function (prop) {
+	  prefixes.forEach(function (prefix) {
+	    isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
+	  });
+	});
+	function dangerousStyleValue(name, value) {
+	  var isEmpty = value == null || typeof value === 'boolean' || value === '';
+	  if (isEmpty) {
+	    return '';
+	  }
+	  if (
+	    typeof value === 'number' &&
+	    value !== 0 &&
+	    !(isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name])
+	  ) {
+	    if (value > -1 && value < 1) {
+	      return Math.round(value * 1e6) / 1e4 + '%';
+	    }
+	    return value + 'px';
+	  }
+	  if (!value.toString) {
+	    return '';
+	  }
+	  return ('' + value).trim();
+	}
+
+	var uppercasePattern = /([A-Z])/g;
+	var msPattern = /^ms-/;
+	var hyphenateCache = {};
+	function hyphenateStyleName(styleName) {
+	  if (hyphenateCache.hasOwnProperty(styleName)) {
+	    return hyphenateCache[styleName];
+	  }
+	  var hyphenatedString = styleName
+	    .replace(uppercasePattern, '-$1')
+	    .toLowerCase()
+	    .replace(msPattern, '-ms-');
+	  hyphenateCache[styleName] = hyphenatedString;
+	  return hyphenateCache[styleName];
+	}
+
+	/* tslint:disable no-bitwise */
+	// thx darksky: https://git.io/v9kWO
+	function stringHash(str) {
+	  var hash = 5381;
+	  var i = str.length;
+	  while (i) {
+	    hash = (hash * 33) ^ str.charCodeAt(--i);
+	  }
+	  /* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
+	   * integers. Since we want the results to be always positive, convert the
+	   * signed int to an unsigned by doing an unsigned bitshift. */
+	  return hash >>> 0;
+	}
+
+	// global flag makes subsequent calls of capRegex.test advance to the next match
+	var capRegex = /[A-Z]/g;
+	var pseudoelements = {
+	  after: true,
+	  before: true,
+	  placeholder: true,
+	  selection: true,
+	};
+	var pseudoclasses = {
+	  active: true,
+	  checked: true,
+	  disabled: true,
+	  empty: true,
+	  enabled: true,
+	  focus: true,
+	  hover: true,
+	  invalid: true,
+	  link: true,
+	  required: true,
+	  target: true,
+	  valid: true,
+	};
+	var specialCaseProps = {
+	  children: true,
+	  class: true,
+	  className: true,
+	  component: true,
+	  mediaQueries: true,
+	  props: true,
+	  style: true,
+	};
+	var sameAxisPropNames = {
+	  paddingH: ['paddingLeft', 'paddingRight'],
+	  paddingV: ['paddingTop', 'paddingBottom'],
+	  marginH: ['marginLeft', 'marginRight'],
+	  marginV: ['marginTop', 'marginBottom'],
+	};
+	function getStyleKeysForProps(props, pretty) {
+	  if (pretty === void 0) {
+	    pretty = false;
+	  }
+	  if (typeof props !== 'object' || props === null) {
+	    return null;
+	  }
+	  var propKeys = Object.keys(props).sort();
+	  var keyCount = propKeys.length;
+	  if (keyCount === 0) {
+	    return null;
+	  }
+	  var mediaQueries = props.mediaQueries;
+	  var usesMediaQueries = false;
+	  var stylesByKey = {};
+	  var styleKeyObj = {
+	    classNameKey: '',
+	    stylesByKey: stylesByKey,
+	  };
+	  var classNameKey = '';
+	  var animations;
+	  var seenMQs = {};
+	  var mqSortKeys = {};
+	  if (mediaQueries != null) {
+	    var idx = -1;
+	    for (var k in mediaQueries) {
+	      mqSortKeys[k] = '@' + (1000 + ++idx);
+	    }
+	  }
+	  for (var idx = -1; ++idx < keyCount; ) {
+	    var originalPropName = propKeys[idx];
+	    if (
+	      specialCaseProps.hasOwnProperty(originalPropName) ||
+	      !props.hasOwnProperty(originalPropName)
+	    ) {
+	      continue;
+	    }
+	    var propName = originalPropName;
+	    var propSansMQ = void 0;
+	    var pseudoelement = void 0;
+	    var pseudoclass = void 0;
+	    var mqKey = void 0;
+	    capRegex.lastIndex = 0;
+	    var splitIndex = 0;
+	    var prefix =
+	      capRegex.test(originalPropName) &&
+	      capRegex.lastIndex > 1 &&
+	      originalPropName.slice(0, capRegex.lastIndex - 1);
+	    // check for media query prefix
+	    if (prefix && mediaQueries != null && mediaQueries.hasOwnProperty(prefix)) {
+	      usesMediaQueries = true;
+	      mqKey = prefix;
+	      splitIndex = capRegex.lastIndex - 1;
+	      propSansMQ =
+	        originalPropName[splitIndex].toLowerCase() +
+	        originalPropName.slice(splitIndex + 1);
+	      prefix =
+	        capRegex.test(originalPropName) &&
+	        propSansMQ.slice(0, capRegex.lastIndex - splitIndex - 1);
+	    }
+	    // check for pseudoelement prefix
+	    if (prefix && pseudoelements.hasOwnProperty(prefix)) {
+	      pseudoelement = prefix;
+	      splitIndex = capRegex.lastIndex - 1;
+	      prefix =
+	        capRegex.test(originalPropName) &&
+	        originalPropName[splitIndex].toLowerCase() +
+	          originalPropName.slice(splitIndex + 1, capRegex.lastIndex - 1);
+	    }
+	    // check for pseudoclass prefix
+	    if (prefix && pseudoclasses.hasOwnProperty(prefix)) {
+	      pseudoclass = prefix;
+	      splitIndex = capRegex.lastIndex - 1;
+	    }
+	    // trim prefixes off propName
+	    if (splitIndex > 0) {
+	      propName =
+	        originalPropName[splitIndex].toLowerCase() +
+	        originalPropName.slice(splitIndex + 1);
+	    }
+	    var styleValue = props[originalPropName];
+	    var space = pretty ? ' ' : '';
+	    var colon = ':' + space;
+	    var newline = pretty ? '\n' : '';
+	    var semicolon = ';' + newline;
+	    var indent = pretty ? '  ' : '';
+	    if (
+	      propName === 'animation' &&
+	      styleValue &&
+	      typeof styleValue === 'object'
+	    ) {
+	      var animationValue = newline;
+	      for (var k in styleValue) {
+	        var obj = styleValue[k];
+	        animationValue += k + space + '{' + newline;
+	        for (var childPropName in obj) {
+	          var value_1 = dangerousStyleValue(childPropName, obj[childPropName]);
+	          animationValue +=
+	            indent +
+	            hyphenateStyleName(childPropName) +
+	            colon +
+	            value_1 +
+	            semicolon;
+	        }
+	        animationValue += '}' + newline;
+	      }
+	      var animationKey = 'jsxstyle_' + stringHash(animationValue).toString(36);
+	      propName = 'animationName';
+	      styleValue = animationKey;
+	      animations = animations || {};
+	      animations[animationKey] = animationValue;
+	    } else {
+	      styleValue = dangerousStyleValue(propName, props[originalPropName]);
+	      if (styleValue === '') {
+	        continue;
+	      }
+	    }
+	    var mediaQuery = mqKey && mediaQueries[mqKey];
+	    var mqSortKey = mqKey && mqSortKeys[mqKey];
+	    var key =
+	      '.' +
+	      (mqSortKey || '') +
+	      (pseudoclass ? ':' + pseudoclass : '') +
+	      (pseudoelement ? '::' + pseudoelement : '');
+	    if (!stylesByKey.hasOwnProperty(key)) {
+	      stylesByKey[key] = { styles: newline };
+	      if (mediaQuery) {
+	        stylesByKey[key].mediaQuery = mediaQuery;
+	      }
+	      if (pseudoclass) {
+	        stylesByKey[key].pseudoclass = pseudoclass;
+	      }
+	      if (pseudoelement) {
+	        stylesByKey[key].pseudoelement = pseudoelement;
+	      }
+	    }
+	    if (mediaQuery) {
+	      seenMQs[mediaQuery] = seenMQs[mediaQuery] || '';
+	      seenMQs[mediaQuery] += propSansMQ + ':' + styleValue + ';';
+	    } else {
+	      classNameKey += originalPropName + ':' + styleValue + ';';
+	    }
+	    var value = colon + styleValue + semicolon;
+	    var propArray = sameAxisPropNames[propName];
+	    if (propArray) {
+	      stylesByKey[key].styles +=
+	        indent +
+	        hyphenateStyleName(propArray[0]) +
+	        value +
+	        indent +
+	        hyphenateStyleName(propArray[1]) +
+	        value;
+	    } else {
+	      stylesByKey[key].styles += indent + hyphenateStyleName(propName) + value;
+	    }
+	  }
+	  // append media query key
+	  if (usesMediaQueries) {
+	    var mqKeys = Object.keys(seenMQs).sort();
+	    for (var idx = -1, len = mqKeys.length; ++idx < len; ) {
+	      var mediaQuery = mqKeys[idx];
+	      classNameKey += '@' + mediaQuery + '~' + seenMQs[mediaQuery];
+	    }
+	  }
+	  if (classNameKey === '') {
+	    return null;
+	  }
+	  if (animations) {
+	    styleKeyObj.animations = animations;
+	  }
+	  styleKeyObj.classNameKey = classNameKey;
+	  return styleKeyObj;
+	}
+
+	function cannotInject() {
+	  throw new Error(
+	    'jsxstyle error: `injectOptions` must be called before any jsxstyle components mount.'
+	  );
+	}
+	function alreadyInjected() {
+	  throw new Error(
+	    'jsxstyle error: `injectOptions` should be called once and only once.'
+	  );
+	}
+	function getStringHash(key, props) {
+	  return '_' + stringHash(key).toString(36);
+	}
+	function getStyleCache() {
+	  var _classNameCache = {};
+	  var getClassNameForKey = getStringHash;
+	  var onInsertRule;
+	  var pretty = false;
+	  var styleCache = {
+	    reset: function () {
+	      _classNameCache = {};
+	    },
+	    injectOptions: function (options) {
+	      if (options) {
+	        if (options.getClassName) {
+	          getClassNameForKey = options.getClassName;
+	        }
+	        if (options.onInsertRule) {
+	          onInsertRule = options.onInsertRule;
+	        }
+	        if (options.pretty) {
+	          pretty = options.pretty;
+	        }
+	      }
+	      styleCache.injectOptions = alreadyInjected;
+	    },
+	    getClassName: function (props, classNameProp) {
+	      styleCache.injectOptions = cannotInject;
+	      var styleObj = getStyleKeysForProps(props, pretty);
+	      if (styleObj == null) {
+	        return classNameProp || null;
+	      }
+	      var key = styleObj.classNameKey;
+	      if (key && !_classNameCache.hasOwnProperty(key)) {
+	        _classNameCache[key] = getClassNameForKey(key, props);
+	        Object.keys(styleObj.stylesByKey)
+	          .sort()
+	          .forEach(function (k) {
+	            var selector = '.' + _classNameCache[key];
+	            // prettier-ignore
+	            var _a = styleObj.stylesByKey[k], pseudoclass = _a.pseudoclass, pseudoelement = _a.pseudoelement, mediaQuery = _a.mediaQuery, styles = _a.styles;
+	            var rule =
+	              selector +
+	              (pseudoclass ? ':' + pseudoclass : '') +
+	              (pseudoelement ? '::' + pseudoelement : '') +
+	              (' {' + styles + '}');
+	            if (mediaQuery) {
+	              rule = '@media ' + mediaQuery + ' { ' + rule + ' }';
+	            }
+	            if (
+	              onInsertRule &&
+	              // if the function returns false, bail.
+	              onInsertRule(rule, props) === false
+	            ) {
+	              return;
+	            }
+	            addStyleToHead(rule);
+	          });
+	      }
+	      var animations = styleObj.animations;
+	      if (animations) {
+	        for (var animationKey in animations) {
+	          var rule =
+	            '@keyframes ' +
+	            animationKey +
+	            ' {' +
+	            animations[animationKey] +
+	            '}';
+	          if (!onInsertRule || onInsertRule(rule, props) !== false) {
+	            addStyleToHead(rule);
+	          }
+	        }
+	      }
+	      return _classNameCache[key] && classNameProp
+	        ? classNameProp + ' ' + _classNameCache[key]
+	        : _classNameCache[key] || classNameProp || null;
+	    },
+	  };
+	  return styleCache;
+	}
+
+	/*! *****************************************************************************
+	Copyright (c) Microsoft Corporation. All rights reserved.
+	Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+	this file except in compliance with the License. You may obtain a copy of the
+	License at http://www.apache.org/licenses/LICENSE-2.0
+
+	THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+	KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+	WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+	MERCHANTABLITY OR NON-INFRINGEMENT.
+
+	See the Apache Version 2.0 License for specific language governing permissions
+	and limitations under the License.
+	***************************************************************************** */
+	/* global Reflect, Promise */
+
+	var extendStatics = function (d$$1, b$$1) {
+	  extendStatics =
+	    Object.setPrototypeOf ||
+	    ({ __proto__: [] } instanceof Array &&
+	      function (d$$1, b$$1) {
+	        d$$1.__proto__ = b$$1;
+	      }) ||
+	    function (d$$1, b$$1) {
+	      for (var p$$1 in b$$1) if (b$$1.hasOwnProperty(p$$1)) d$$1[p$$1] = b$$1[p$$1];
+	    };
+	  return extendStatics(d$$1, b$$1);
+	};
+
+	function __extends(d$$1, b$$1) {
+	  extendStatics(d$$1, b$$1);
+	  function __() {
+	    this.constructor = d$$1;
+	  }
+	  d$$1.prototype =
+	    b$$1 === null ? Object.create(b$$1) : ((__.prototype = b$$1.prototype), new __());
+	}
+
+	var __assign = function () {
+	  __assign =
+	    Object.assign ||
+	    function __assign(t) {
+	      for (var s, i = 1, n$$1 = arguments.length; i < n$$1; i++) {
+	        s = arguments[i];
+	        for (var p$$1 in s)
+	          if (Object.prototype.hasOwnProperty.call(s, p$$1)) t[p$$1] = s[p$$1];
+	      }
+	      return t;
+	    };
+	  return __assign.apply(this, arguments);
+	};
+
+	var cache = getStyleCache();
+	function factory(displayName) {
+	  var _a;
+	  var tagName = 'div';
+	  var defaultProps = componentStyles[displayName] || undefined;
+	  return (
+	    (_a = /** @class */ (function (_super) {
+	      __extends(class_1, _super);
+	      function class_1(props) {
+	        var _this = _super.call(this, props) || this;
+	        _this.component = props.component || tagName;
+	        _this.className = cache.getClassName(props, props.class);
+	        return _this;
+	      }
+	      class_1.prototype.componentWillReceiveProps = function (props) {
+	        this.component = props.component || tagName;
+	        this.className = cache.getClassName(props, props.class);
+	      };
+	      class_1.prototype.render = function (_a) {
+	        var props = _a.props,
+	          style = _a.style,
+	          children = _a.children;
+	        return h(
+	          this.component,
+	          __assign({}, props, { class: this.className, style: style }),
+	          children
+	        );
+	      };
+	      return class_1;
+	    })(d)),
+	    (_a.defaultProps = defaultProps),
+	    (_a.displayName = displayName),
+	    _a
+	  );
+	}
+	var Box = factory('Box');
+	var Block = factory('Block');
+	var Inline = factory('Inline');
+	var InlineBlock = factory('InlineBlock');
+	var Row = factory('Row');
+	var Col = factory('Col');
+	var InlineRow = factory('InlineRow');
+	var InlineCol = factory('InlineCol');
+	var Grid = factory('Grid');
+
+	var _templateObject = _taggedTemplateLiteralLoose(['\n    <', '\n      onClick=', '\n      cursor=', '\n      borderRadius=', '\n      overflow="hidden"\n      class="identicon-container ', '">\n      ', '\n      <img width=', ' height=', ' src="', '" alt="', '"/>\n    <//>'], ['\n    <', '\n      onClick=', '\n      cursor=', '\n      borderRadius=', '\n      overflow="hidden"\n      class="identicon-container ', '">\n      ', '\n      <img width=', ' height=', ' src="', '" alt="', '"/>\n    <//>']),
+	    _templateObject2 = _taggedTemplateLiteralLoose(['<span class="tooltiptext">', '</span>'], ['<span class="tooltiptext">', '</span>']);
+
+	var DEFAULT_WIDTH = 80;
+
+	var Identicon = function (_Component) {
+	  _inherits(Identicon, _Component);
+
+	  function Identicon() {
+	    _classCallCheck(this, Identicon);
+
+	    var _this = _possibleConstructorReturn(this, _Component.call(this));
+
+	    _this.eventListeners = {};
+	    return _this;
+	  }
+
+	  Identicon.prototype.componentDidUpdate = function componentDidUpdate(prevProps) {
+	    if (prevProps.pub !== this.props.pub) {
+	      this.componentDidMount();
+	    }
+	  };
+
+	  Identicon.prototype.componentDidMount = function componentDidMount() {
+	    var _this2 = this;
+
+	    console.log(this.props);
+	    new iris.Attribute({ type: 'keyID', value: this.props.pub }).identiconSrc({ width: this.props.width, showType: false }).then(function (identicon) {
+	      _this2.setState({ identicon: identicon });
+	    });
+	    util.getPublicState().user(this.props.pub).get('profile').get('photo').on(function (photo) {
+	      if (photo.indexOf('data:image') === 0) {
+	        _this2.setState({ photo: photo });
+	      }
+	    });
+	    if (this.props.showTooltip) {
+	      util.getPublicState().user(this.props.pub).get('profile').get('name').on(function (name, a, b$$1, e) {
+	        _this2.eventListeners['name'] = e;
+	        _this2.setState({ name: name });
+	      });
+	    }
+	  };
+
+	  Identicon.prototype.componentWillUnmount = function componentWillUnmount() {
+	    _Object$values(this.eventListeners).forEach(function (e) {
+	      return e.off();
+	    });
+	    this.eventListeners = {};
+	  };
+
+	  Identicon.prototype.render = function render() {
+	    return m$1(_templateObject, InlineBlock, this.props.onClick, this.props.onClick ? 'pointer' : '', this.props.width || DEFAULT_WIDTH, this.props.showTooltip ? 'tooltip' : '', this.props.showTooltip && this.state.name ? m$1(_templateObject2, this.state.name) : '', this.props.width || DEFAULT_WIDTH, this.props.width || DEFAULT_WIDTH, this.state.photo || this.state.identicon, this.state.name || '');
+	  };
+
+	  return Identicon;
+	}(d);
+
+	register(Identicon, 'iris-identicon', ['pub', 'onClick', 'width', 'showTooltip']);
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 

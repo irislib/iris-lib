@@ -126,6 +126,10 @@
   },
   "dependencies": {
     "gun": "0.2019.930",
-    "identicon.js": "^2.3.3"
+    "htm": "^3.0.4",
+    "identicon.js": "^2.3.3",
+    "jsxstyle": "^2.4.0",
+    "preact": "^10.5.5",
+    "preact-custom-element": "^4.2.1"
   }
 }

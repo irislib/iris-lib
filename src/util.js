@@ -528,6 +528,13 @@ export default {
     return dateStr;
   },
 
+  getPublicState() {
+    if (!this.publicState) {
+      this.publicState = new Gun('https://gun-us.herokuapp.com/gun');
+    }
+    return this.publicState;
+  },
+
   createElement(type, cls, parent) {
     const el = document.createElement(type);
     if (cls) {

@@ -9,6 +9,7 @@ import SocialNetwork from './SocialNetwork';
 import Key from './Key';
 import Channel from './Channel';
 import {version} from '../package.json';
+import Identicon from './components/Identicon';
 
 export default {
   VERSION: version,
