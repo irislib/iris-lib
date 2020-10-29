@@ -3050,6 +3050,9 @@
 	    }
 	    return dateStr;
 	  },
+	  setPublicState: function setPublicState(gun) {
+	    this.publicState = gun;
+	  },
 	  getPublicState: function getPublicState() {
 	    if (!this.publicState) {
 	      this.publicState = new Gun('https://gun-us.herokuapp.com/gun');
@@ -10254,7 +10257,7 @@
 	  return SocialNetwork;
 	}();
 
-	var version$1 = "0.0.146";
+	var version$1 = "0.0.147";
 
 	var taggedTemplateLiteralLoose = createCommonjsModule(function (module, exports) {
 
@@ -10884,12 +10887,11 @@
 	  Identicon.prototype.componentDidMount = function componentDidMount() {
 	    var _this2 = this;
 
-	    console.log(this.props);
 	    new iris.Attribute({ type: 'keyID', value: this.props.pub }).identiconSrc({ width: this.props.width, showType: false }).then(function (identicon) {
 	      _this2.setState({ identicon: identicon });
 	    });
 	    util.getPublicState().user(this.props.pub).get('profile').get('photo').on(function (photo) {
-	      if (photo.indexOf('data:image') === 0) {
+	      if (typeof photo === 'string' && photo.indexOf('data:image') === 0) {
 	        _this2.setState({ photo: photo });
 	      }
 	    });
@@ -10917,6 +10919,52 @@
 
 	register(Identicon, 'iris-identicon', ['pub', 'onClick', 'width', 'showTooltip']);
 
+	var _templateObject$1 = _taggedTemplateLiteralLoose(['', ''], ['', '']);
+
+	var Name = function (_Component) {
+	  _inherits(Name, _Component);
+
+	  function Name() {
+	    _classCallCheck(this, Name);
+
+	    var _this = _possibleConstructorReturn(this, _Component.call(this));
+
+	    _this.eventListeners = {};
+	    _this.state = { name: '' };
+	    return _this;
+	  }
+
+	  Name.prototype.componentDidUpdate = function componentDidUpdate(prevProps) {
+	    if (prevProps.pub !== this.props.pub) {
+	      this.componentDidMount();
+	    }
+	  };
+
+	  Name.prototype.componentDidMount = function componentDidMount() {
+	    var _this2 = this;
+
+	    util.getPublicState().user(this.props.pub).get('profile').get('name').on(function (name, a, b$$1, e) {
+	      _this2.eventListeners['name'] = e;
+	      _this2.setState({ name: name });
+	    });
+	  };
+
+	  Name.prototype.componentWillUnmount = function componentWillUnmount() {
+	    _Object$values(this.eventListeners).forEach(function (e) {
+	      return e.off();
+	    });
+	    this.eventListeners = {};
+	  };
+
+	  Name.prototype.render = function render() {
+	    return m$1(_templateObject$1, this.state.name);
+	  };
+
+	  return Name;
+	}(d);
+
+	register(Name, 'iris-name', ['pub']);
+
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
 	var index = {
@@ -10928,7 +10976,11 @@
 	  SocialNetwork: SocialNetwork,
 	  Key: Key,
 	  Channel: Channel,
-	  util: util
+	  util: util,
+	  components: {
+	    Identicon: Identicon,
+	    Name: Name
+	  }
 	};
 
 	return index;

@@ -528,6 +528,10 @@ export default {
     return dateStr;
   },
 
+  setPublicState(gun) {
+    this.publicState = gun;
+  },
+
   getPublicState() {
     if (!this.publicState) {
       this.publicState = new Gun('https://gun-us.herokuapp.com/gun');

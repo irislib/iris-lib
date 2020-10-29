@@ -19,12 +19,11 @@ class Identicon extends Component {
   }
 
   componentDidMount() {
-    console.log(this.props);
     new iris.Attribute({type: 'keyID', value: this.props.pub}).identiconSrc({width: this.props.width, showType: false}).then(identicon => {
       this.setState({identicon});
     });
     util.getPublicState().user(this.props.pub).get('profile').get('photo').on(photo => {
-      if (photo.indexOf('data:image') === 0) {
+      if (typeof photo === 'string' && photo.indexOf('data:image') === 0) {
         this.setState({photo});
       }
     });

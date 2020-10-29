@@ -10,6 +10,7 @@ import Key from './Key';
 import Channel from './Channel';
 import {version} from '../package.json';
 import Identicon from './components/Identicon';
+import Name from './components/Name';
 
 export default {
   VERSION: version,
@@ -21,4 +22,8 @@ export default {
   Key,
   Channel,
   util,
+  components: {
+    Identicon,
+    Name
+  }
 };
