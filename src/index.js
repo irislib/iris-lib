@@ -11,6 +11,7 @@ import Channel from './Channel';
 import {version} from '../package.json';
 import Identicon from './components/Identicon';
 import Name from './components/Name';
+import CopyButton from './components/CopyButton';
 
 export default {
   VERSION: version,
@@ -24,6 +25,7 @@ export default {
   util,
   components: {
     Identicon,
-    Name
+    Name,
+    CopyButton
   }
 };

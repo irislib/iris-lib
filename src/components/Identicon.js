@@ -45,8 +45,9 @@ class Identicon extends Component {
     <${InlineBlock}
       onClick=${this.props.onClick}
       cursor=${this.props.onClick ? 'pointer' : ''}
-      borderRadius=${this.props.width || DEFAULT_WIDTH}
+      borderRadius=${parseInt(this.props.width) || DEFAULT_WIDTH}
       overflow="hidden"
+      userSelect="none"
       class="identicon-container ${this.props.showTooltip ? 'tooltip' : ''}">
       ${this.props.showTooltip && this.state.name ? html`<span class="tooltiptext">${this.state.name}</span>` : ''}
       <img width=${this.props.width || DEFAULT_WIDTH} height=${this.props.width || DEFAULT_WIDTH} src="${this.state.photo || this.state.identicon}" alt="${this.state.name || ''}"/>

@@ -1,21 +1,50 @@
+<!doctype html>
 <html>
   <head>
     <title>Iris Web Components</title>
-    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
     <script src="../iris.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
   </head>
-  <body style="background: #c5c7f7">
-    <script type="text/javascript">
+  <body style="background: #c5c7f7;">
+    <div class="container">
+      <h1 class="display-1">Iris web components</h1>
 
-    </script>
-    <pre>&lt;iris-identicon pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></pre>
-    <iris-identicon pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
-    <hr/>
+      <p class="lead">
+        Just include iris, gun and sea, and these web components are available on your page.
+      </p>
 
-    <pre>&lt;iris-name pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></pre>
-    <iris-name pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
+      <pre>
+&lt;script src="https://cdn.jsdelivr.net/npm/gun/gun.js">&lt;/script>
+&lt;script src="https://cdn.jsdelivr.net/npm/gun/sea.js">&lt;/script>
+&lt;script src="https://cdn.jsdelivr.net/npm/iris-lib/dist/iris.js">&lt;/script>
+      </pre>
 
+      <h2>Identicon</h2>
+      <p>
+        <code>&lt;iris-identicon pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU" width="100"/></code>
+      </p>
+      <p>
+        <iris-identicon pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU" width="100"/>
+      </p>
+
+      <h2>Name</h2>
+      <p>
+        <code>&lt;iris-name pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
+      </p>
+      <p>
+        <iris-name pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
+      </p>
+
+      <h2>Copy button</h2>
+      <p>
+        <code>&lt;iris-copy-button str="https://iris.to/#/profile/hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
+      </p>
+      <p>
+        <iris-copy-button str="https://iris.to/#/profile/hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
+      </p>
+    </div>
   </body>
 </html>

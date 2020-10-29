@@ -10861,7 +10861,7 @@
 	var InlineCol = factory('InlineCol');
 	var Grid = factory('Grid');
 
-	var _templateObject = _taggedTemplateLiteralLoose(['\n    <', '\n      onClick=', '\n      cursor=', '\n      borderRadius=', '\n      overflow="hidden"\n      class="identicon-container ', '">\n      ', '\n      <img width=', ' height=', ' src="', '" alt="', '"/>\n    <//>'], ['\n    <', '\n      onClick=', '\n      cursor=', '\n      borderRadius=', '\n      overflow="hidden"\n      class="identicon-container ', '">\n      ', '\n      <img width=', ' height=', ' src="', '" alt="', '"/>\n    <//>']),
+	var _templateObject = _taggedTemplateLiteralLoose(['\n    <', '\n      onClick=', '\n      cursor=', '\n      borderRadius=', '\n      overflow="hidden"\n      userSelect="none"\n      class="identicon-container ', '">\n      ', '\n      <img width=', ' height=', ' src="', '" alt="', '"/>\n    <//>'], ['\n    <', '\n      onClick=', '\n      cursor=', '\n      borderRadius=', '\n      overflow="hidden"\n      userSelect="none"\n      class="identicon-container ', '">\n      ', '\n      <img width=', ' height=', ' src="', '" alt="', '"/>\n    <//>']),
 	    _templateObject2 = _taggedTemplateLiteralLoose(['<span class="tooltiptext">', '</span>'], ['<span class="tooltiptext">', '</span>']);
 
 	var DEFAULT_WIDTH = 80;
@@ -10911,7 +10911,7 @@
 	  };
 
 	  Identicon.prototype.render = function render() {
-	    return m$1(_templateObject, InlineBlock, this.props.onClick, this.props.onClick ? 'pointer' : '', this.props.width || DEFAULT_WIDTH, this.props.showTooltip ? 'tooltip' : '', this.props.showTooltip && this.state.name ? m$1(_templateObject2, this.state.name) : '', this.props.width || DEFAULT_WIDTH, this.props.width || DEFAULT_WIDTH, this.state.photo || this.state.identicon, this.state.name || '');
+	    return m$1(_templateObject, InlineBlock, this.props.onClick, this.props.onClick ? 'pointer' : '', parseInt(this.props.width) || DEFAULT_WIDTH, this.props.showTooltip ? 'tooltip' : '', this.props.showTooltip && this.state.name ? m$1(_templateObject2, this.state.name) : '', this.props.width || DEFAULT_WIDTH, this.props.width || DEFAULT_WIDTH, this.state.photo || this.state.identicon, this.state.name || '');
 	  };
 
 	  return Identicon;
@@ -10965,6 +10965,86 @@
 
 	register(Name, 'iris-name', ['pub']);
 
+	var _templateObject$2 = _taggedTemplateLiteralLoose(['<button class="copy-button" onClick=', '>', '</button>'], ['<button class="copy-button" onClick=', '>', '</button>']);
+
+	var CopyButton = function (_Component) {
+	  _inherits(CopyButton, _Component);
+
+	  function CopyButton() {
+	    _classCallCheck(this, CopyButton);
+
+	    return _possibleConstructorReturn(this, _Component.apply(this, arguments));
+	  }
+
+	  CopyButton.prototype.copyToClipboard = function copyToClipboard(text) {
+	    console.log('text', text);
+	    if (window.clipboardData && window.clipboardData.setData) {
+	      // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
+	      return window.clipboardData.setData("Text", text);
+	    } else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
+	      var textarea = document.createElement("textarea");
+	      textarea.textContent = text;
+	      textarea.style.position = "fixed"; // Prevent scrolling to bottom of page in Microsoft Edge.
+	      document.body.appendChild(textarea);
+	      textarea.select();
+	      try {
+	        return document.execCommand("copy"); // Security exception may be thrown by some browsers.
+	      } catch (ex) {
+	        console.warn("Copy to clipboard failed.", ex);
+	        return false;
+	      } finally {
+	        document.body.removeChild(textarea);
+	      }
+	    }
+	  };
+
+	  CopyButton.prototype.copy = function copy(e, str) {
+	    var _this2 = this;
+
+	    this.copyToClipboard(str);
+
+	    var tgt = e.target;
+	    this.originalWidth = this.originalWidth || tgt.outerWidth + 1;
+	    tgt.outerWidth = this.originalWidth;
+
+	    this.setState({ copied: true });
+	    clearTimeout(this.timeout);
+	    this.timeout = setTimeout(function () {
+	      return _this2.setState({ copied: false });
+	    }, 2000);
+	  };
+
+	  CopyButton.prototype.onClick = function onClick(e) {
+	    var _this3 = this;
+
+	    e.preventDefault();
+	    console.log(this.props);
+	    var str = typeof this.props.str === 'function' ? this.props.str() : this.props.str;
+
+	    if (navigator.share && iris.util.isMobile && !this.props.notShareable) {
+	      navigator.share({ url: str, title: this.props.title }).catch(function (err) {
+	        console.error('share failed', err);
+	        _this3.copy(e, str);
+	      });
+	    } else {
+	      this.copy(e, str);
+	    }
+	  };
+
+	  CopyButton.prototype.render = function render() {
+	    var _this4 = this;
+
+	    var text = this.state.copied ? this.props.copiedText || 'Copied' : this.props.text || 'Copy';
+	    return m$1(_templateObject$2, function (e) {
+	      return _this4.onClick(e);
+	    }, text);
+	  };
+
+	  return CopyButton;
+	}(d);
+
+	register(CopyButton, 'iris-copy-button', ['str', 'notShareable', 'text', 'copiedText', 'title']);
+
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
 	var index = {
@@ -10979,7 +11059,8 @@
 	  util: util,
 	  components: {
 	    Identicon: Identicon,
-	    Name: Name
+	    Name: Name,
+	    CopyButton: CopyButton
 	  }
 	};
 
