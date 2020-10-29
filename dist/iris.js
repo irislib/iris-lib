@@ -10921,51 +10921,52 @@
 
 	var _templateObject$1 = _taggedTemplateLiteralLoose(['', ''], ['', '']);
 
-	var Name = function (_Component) {
-	  _inherits(Name, _Component);
+	var ProfileAttribute = function (_Component) {
+	  _inherits(ProfileAttribute, _Component);
 
-	  function Name() {
-	    _classCallCheck(this, Name);
+	  function ProfileAttribute() {
+	    _classCallCheck(this, ProfileAttribute);
 
 	    var _this = _possibleConstructorReturn(this, _Component.call(this));
 
 	    _this.eventListeners = {};
-	    _this.state = { name: '' };
+	    _this.state = { value: '' };
 	    return _this;
 	  }
 
-	  Name.prototype.componentDidUpdate = function componentDidUpdate(prevProps) {
-	    if (prevProps.pub !== this.props.pub) {
+	  ProfileAttribute.prototype.componentDidUpdate = function componentDidUpdate(prevProps) {
+	    if (prevProps.pub !== this.props.pub || prevProps.attr !== this.props.attr) {
 	      this.componentDidMount();
 	    }
 	  };
 
-	  Name.prototype.componentDidMount = function componentDidMount() {
+	  ProfileAttribute.prototype.componentDidMount = function componentDidMount() {
 	    var _this2 = this;
 
-	    util.getPublicState().user(this.props.pub).get('profile').get('name').on(function (name, a, b$$1, e) {
-	      _this2.eventListeners['name'] = e;
-	      _this2.setState({ name: name });
+	    var attr = this.props.attr || 'name';
+	    util.getPublicState().user(this.props.pub).get('profile').get(attr).on(function (value, a, b$$1, e) {
+	      _this2.eventListeners[attr] = e;
+	      _this2.setState({ value: value });
 	    });
 	  };
 
-	  Name.prototype.componentWillUnmount = function componentWillUnmount() {
+	  ProfileAttribute.prototype.componentWillUnmount = function componentWillUnmount() {
 	    _Object$values(this.eventListeners).forEach(function (e) {
 	      return e.off();
 	    });
 	    this.eventListeners = {};
 	  };
 
-	  Name.prototype.render = function render() {
-	    return m$1(_templateObject$1, this.state.name);
+	  ProfileAttribute.prototype.render = function render() {
+	    return m$1(_templateObject$1, this.state.value);
 	  };
 
-	  return Name;
+	  return ProfileAttribute;
 	}(d);
 
-	register(Name, 'iris-name', ['pub']);
+	register(ProfileAttribute, 'iris-profile-attribute', ['attr', 'pub']);
 
-	var _templateObject$2 = _taggedTemplateLiteralLoose(['<button class="copy-button" onClick=', '>', '</button>'], ['<button class="copy-button" onClick=', '>', '</button>']);
+	var _templateObject$2 = _taggedTemplateLiteralLoose(['<button class=', ' onClick=', '>', '</button>'], ['<button class=', ' onClick=', '>', '</button>']);
 
 	var CopyButton = function (_Component) {
 	  _inherits(CopyButton, _Component);
@@ -10977,7 +10978,6 @@
 	  }
 
 	  CopyButton.prototype.copyToClipboard = function copyToClipboard(text) {
-	    console.log('text', text);
 	    if (window.clipboardData && window.clipboardData.setData) {
 	      // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
 	      return window.clipboardData.setData("Text", text);
@@ -11004,8 +11004,8 @@
 	    this.copyToClipboard(str);
 
 	    var tgt = e.target;
-	    this.originalWidth = this.originalWidth || tgt.outerWidth + 1;
-	    tgt.outerWidth = this.originalWidth;
+	    this.originalWidth = this.originalWidth || tgt.offsetWidth + 1;
+	    tgt.style.width = this.originalWidth;
 
 	    this.setState({ copied: true });
 	    clearTimeout(this.timeout);
@@ -11018,10 +11018,9 @@
 	    var _this3 = this;
 
 	    e.preventDefault();
-	    console.log(this.props);
 	    var str = typeof this.props.str === 'function' ? this.props.str() : this.props.str;
 
-	    if (navigator.share && iris.util.isMobile && !this.props.notShareable) {
+	    if (navigator.share && iris.util.isMobile && !this.props['not-shareable']) {
 	      navigator.share({ url: str, title: this.props.title }).catch(function (err) {
 	        console.error('share failed', err);
 	        _this3.copy(e, str);
@@ -11034,8 +11033,8 @@
 	  CopyButton.prototype.render = function render() {
 	    var _this4 = this;
 
-	    var text = this.state.copied ? this.props.copiedText || 'Copied' : this.props.text || 'Copy';
-	    return m$1(_templateObject$2, function (e) {
+	    var text = this.state.copied ? this.props['copied-text'] || 'Copied' : this.props.text || 'Copy';
+	    return m$1(_templateObject$2, this.props['btn-class'] || 'copy-button', function (e) {
 	      return _this4.onClick(e);
 	    }, text);
 	  };
@@ -11043,7 +11042,7 @@
 	  return CopyButton;
 	}(d);
 
-	register(CopyButton, 'iris-copy-button', ['str', 'notShareable', 'text', 'copiedText', 'title']);
+	register(CopyButton, 'iris-copy-button', ['str', 'not-shareable', 'text', 'copied-text', 'title', 'btn-class']);
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
@@ -11059,7 +11058,7 @@
 	  util: util,
 	  components: {
 	    Identicon: Identicon,
-	    Name: Name,
+	    ProfileAttribute: ProfileAttribute,
 	    CopyButton: CopyButton
 	  }
 	};
