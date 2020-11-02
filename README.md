@@ -26,8 +26,10 @@ Iris-lib runs in the browser and on Node.js.
 
 ### Documentation
 [Iris API](http://docs.iris.to/)
+[Web components](https://examples.iris.to/components/)
 
 ### Example
+
 Private channel:
 ```js
 // Copy & paste this to console at https://iris.to or other page that has gun, sea and iris-lib
@@ -70,7 +72,7 @@ ourChannel.put('mood', 'blessed');
 theirChannel.put('mood', 'happy');
 ```
 
-More examples: [tests](https://github.com/irislib/iris-lib/tree/master/__tests__) 
+More examples: [tests](https://github.com/irislib/iris-lib/tree/master/__tests__)
 
 ### Tech
 Data storage and networking are outsourced to [GUN](https://github.com/amark/gun), which manages the synchronization of data between different storages: RAM, localstorage, GUN websocket server, WebRTC peers, LAN multicast peers, IPFS (no adapter yet), S3 or others.
