@@ -143,6 +143,18 @@ export default {
     const sheet = document.createElement(`style`);
     sheet.id = elementId;
     sheet.innerHTML = `
+      .iris-follow-button .hover {
+        display: none;
+      }
+
+      .iris-follow-button.following:hover .hover {
+        display: inline;
+      }
+
+      .iris-follow-button.following:hover .nonhover {
+        display: none;
+      }
+
       .iris-identicon * {
         box-sizing: border-box;
       }
@@ -508,6 +520,21 @@ export default {
       return `${s[0]  }:${  s[1]  }${s[2].slice(2)}`;
     }
     return t;
+  },
+
+  debounce(func, wait, immediate) {
+    var timeout;
+    return function() {
+      var context = this, args = arguments;
+      var later = function() {
+        timeout = null;
+        if (!immediate) func.apply(context, args);
+      };
+      var callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow) func.apply(context, args);
+    };
   },
 
   getDaySeparatorText(date, dateStr, now, nowStr) {

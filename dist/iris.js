@@ -2999,7 +2999,7 @@
 	    }
 	    var sheet = document.createElement('style');
 	    sheet.id = elementId;
-	    sheet.innerHTML = '\n      .iris-identicon * {\n        box-sizing: border-box;\n      }\n\n      .iris-identicon {\n        vertical-align: middle;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        max-width: 100%;\n      }\n\n      .iris-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .iris-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .iris-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .iris-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .iris-card a:hover, .iris-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .iris-pos {\n        color: #3c763d;\n      }\n\n      .iris-neg {\n        color: #a94442;\n      }\n\n      .iris-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }\n\n      .iris-chat-open-button {\n        background-color: #1e1e1e;\n        color: #fff;\n        padding: 15px;\n        cursor: pointer;\n        user-select: none;\n      }\n\n      .iris-chat-open-button svg {\n        width: 1em;\n      }\n\n      .iris-chat-open-button, .iris-chat-box {\n        position: fixed;\n        bottom: 0.5rem;\n        right: 0.5rem;\n        border-radius: 8px;\n        font-family: system-ui;\n        font-size: 15px;\n      }\n\n      .iris-chat-box {\n        background-color: #fff;\n        max-height: 25rem;\n        box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);\n        height: calc(100% - 44px);\n        display: flex;\n        flex-direction: column;\n        width: 320px;\n        color: rgb(38, 38, 38);\n      }\n\n      .iris-chat-box.minimized {\n        height: auto;\n      }\n\n      .iris-chat-box.minimized .iris-chat-header {\n        border-radius: 8px;\n        cursor: pointer;\n      }\n\n      .iris-chat-box.minimized .iris-chat-messages, .iris-chat-box.minimized .iris-typing-indicator, .iris-chat-box.minimized .iris-chat-input-wrapper, .iris-chat-box.minimized .iris-chat-minimize, .iris-chat-box.minimized .iris-chat-close {\n        display: none;\n      }\n\n      .iris-chat-header {\n        background-color: #1e1e1e;\n        height: 44px;\n        color: #fff;\n        border-radius: 8px 8px 0 0;\n        text-align: center;\n        display: flex;\n        flex-direction: row;\n        justify-content: center;\n        align-items: center;\n        flex: none;\n        white-space: nowrap;\n        text-overflow: ellipsis;\n        overflow: hidden;\n      }\n\n      .iris-chat-header-text {\n        flex: 1;\n      }\n\n      .iris-online-indicator {\n        color: #bfbfbf;\n        margin-right: 5px;\n        font-size: 12px;\n        user-select: none;\n        flex: none;\n      }\n\n      .iris-online-indicator.yes {\n        color: #80bf5f;\n      }\n\n      .iris-typing-indicator {\n        display: none;\n        background-color: rgba(255, 255, 255, 0.5);\n        font-size: 12px;\n        padding: 2px;\n        color: #777;\n      }\n\n      .iris-typing-indicator.yes {\n        display: block;\n      }\n\n      .iris-chat-messages {\n        flex: 1;\n        padding: 15px;\n        overflow-y: scroll;\n      }\n\n      .iris-chat-input-wrapper {\n        flex: none;\n        padding: 15px;\n        background-color: #efefef;\n        display: flex;\n        flex-direction: row;\n        border-radius: 0 0 8px 8px;\n      }\n\n      .iris-chat-input-wrapper textarea {\n        padding: 15px 8px;\n        border-radius: 4px;\n        border: 1px solid rgba(0,0,0,0);\n        width: auto;\n        font-size: 15px;\n        resize: none;\n        flex: 1;\n      }\n\n      .iris-chat-input-wrapper textarea:focus {\n        outline: none;\n        border: 1px solid #6dd0ed;\n      }\n\n      .iris-chat-input-wrapper button svg {\n        display: inline-block;\n        font-size: inherit;\n        height: 1em;\n        width: 1em;\n        overflow: visible;\n        vertical-align: -0.125em;\n      }\n\n      .iris-chat-input-wrapper button, .iris-chat-input-wrapper button:hover, .iris-chat-input-wrapper button:active, .iris-chat-input-wrapper button:focus {\n        flex: none;\n        color: #999;\n        background-color: transparent;\n        font-size: 30px;\n        padding: 5px;\n        border: 1px solid rgba(0,0,0,0);\n        border-radius: 4px;\n        margin-left: 5px;\n      }\n\n      .iris-chat-input-wrapper button:active, .iris-chat-input-wrapper button:focus {\n        outline: none;\n        border: 1px solid #6dd0ed;\n      }\n\n      .iris-chat-message {\n        display: flex;\n        flex-direction: column;\n        margin-bottom: 2px;\n        overflow-wrap: break-word;\n      }\n\n      .iris-msg-content {\n        background-color: #efefef;\n        padding: 6px 10px;\n        border-radius: 8px;\n        box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);\n        flex: none;\n        max-width: 75%;\n      }\n\n      .emoji {\n        font-size: 1.3em;\n        line-height: 1em;\n      }\n\n      .iris-chat-message .emoji-only {\n        font-size: 3em;\n        text-align: center;\n      }\n\n      .iris-seen {\n        color: rgba(0, 0, 0, 0.45);\n        user-select: none;\n      }\n\n      .iris-seen.yes {\n        color: #4fc3f7;\n      }\n\n      .iris-seen svg {\n        width: 18px;\n      }\n\n      .iris-delivered-checkmark {\n        display: none;\n      }\n\n      .delivered .iris-delivered-checkmark {\n        display: initial;\n      }\n\n      .iris-chat-minimize, .iris-chat-close {\n        user-select: none;\n        cursor: pointer;\n        width: 45px;\n        line-height: 44px;\n      }\n\n      .iris-chat-message.their {\n        align-items: flex-start;\n      }\n\n      .iris-chat-message.their + .iris-chat-message.our .iris-msg-content, .day-separator + .iris-chat-message.our .iris-msg-content {\n        margin-top: 15px;\n        border-radius: 8px 0px 8px 8px;\n      }\n\n      .iris-chat-message.their:first-of-type .iris-msg-content {\n        border-radius: 0px 8px 8px 8px;\n      }\n\n      .iris-chat-message.our:first-of-type .iris-msg-content {\n        border-radius: 8px 0px 8px 8px;\n      }\n\n      .iris-chat-message.our + .iris-chat-message.their .iris-msg-content, .day-separator + .iris-chat-message.their .iris-msg-content {\n        margin-top: 15px;\n        border-radius: 0px 8px 8px 8px;\n      }\n\n      .iris-chat-message.our {\n        align-items: flex-end;\n      }\n\n      .iris-chat-message.our .iris-msg-content {\n        background-color: #c5ecf7;\n      }\n\n      .iris-chat-message .time {\n        text-align: right;\n        font-size: 12px;\n        color: rgba(0, 0, 0, 0.45);\n      }\n\n      .day-separator {\n        display: inline-block;\n        border-radius: 8px;\n        background-color: rgba(227, 249, 255, 0.91);\n        padding: 6px 10px;\n        margin-top: 15px;\n        margin-left: auto;\n        margin-right: auto;\n        text-transform: uppercase;\n        font-size: 13px;\n        color: rgba(74, 74, 74, 0.88);\n        box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);\n        user-select: none;\n      }\n\n      .day-separator:first-of-type {\n        margin-top: 0;\n      }\n      ';
+	    sheet.innerHTML = '\n      .iris-follow-button .hover {\n        display: none;\n      }\n\n      .iris-follow-button.following:hover .hover {\n        display: inline;\n      }\n\n      .iris-follow-button.following:hover .nonhover {\n        display: none;\n      }\n\n      .iris-identicon * {\n        box-sizing: border-box;\n      }\n\n      .iris-identicon {\n        vertical-align: middle;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        max-width: 100%;\n      }\n\n      .iris-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .iris-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .iris-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .iris-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .iris-card a:hover, .iris-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .iris-pos {\n        color: #3c763d;\n      }\n\n      .iris-neg {\n        color: #a94442;\n      }\n\n      .iris-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }\n\n      .iris-chat-open-button {\n        background-color: #1e1e1e;\n        color: #fff;\n        padding: 15px;\n        cursor: pointer;\n        user-select: none;\n      }\n\n      .iris-chat-open-button svg {\n        width: 1em;\n      }\n\n      .iris-chat-open-button, .iris-chat-box {\n        position: fixed;\n        bottom: 0.5rem;\n        right: 0.5rem;\n        border-radius: 8px;\n        font-family: system-ui;\n        font-size: 15px;\n      }\n\n      .iris-chat-box {\n        background-color: #fff;\n        max-height: 25rem;\n        box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);\n        height: calc(100% - 44px);\n        display: flex;\n        flex-direction: column;\n        width: 320px;\n        color: rgb(38, 38, 38);\n      }\n\n      .iris-chat-box.minimized {\n        height: auto;\n      }\n\n      .iris-chat-box.minimized .iris-chat-header {\n        border-radius: 8px;\n        cursor: pointer;\n      }\n\n      .iris-chat-box.minimized .iris-chat-messages, .iris-chat-box.minimized .iris-typing-indicator, .iris-chat-box.minimized .iris-chat-input-wrapper, .iris-chat-box.minimized .iris-chat-minimize, .iris-chat-box.minimized .iris-chat-close {\n        display: none;\n      }\n\n      .iris-chat-header {\n        background-color: #1e1e1e;\n        height: 44px;\n        color: #fff;\n        border-radius: 8px 8px 0 0;\n        text-align: center;\n        display: flex;\n        flex-direction: row;\n        justify-content: center;\n        align-items: center;\n        flex: none;\n        white-space: nowrap;\n        text-overflow: ellipsis;\n        overflow: hidden;\n      }\n\n      .iris-chat-header-text {\n        flex: 1;\n      }\n\n      .iris-online-indicator {\n        color: #bfbfbf;\n        margin-right: 5px;\n        font-size: 12px;\n        user-select: none;\n        flex: none;\n      }\n\n      .iris-online-indicator.yes {\n        color: #80bf5f;\n      }\n\n      .iris-typing-indicator {\n        display: none;\n        background-color: rgba(255, 255, 255, 0.5);\n        font-size: 12px;\n        padding: 2px;\n        color: #777;\n      }\n\n      .iris-typing-indicator.yes {\n        display: block;\n      }\n\n      .iris-chat-messages {\n        flex: 1;\n        padding: 15px;\n        overflow-y: scroll;\n      }\n\n      .iris-chat-input-wrapper {\n        flex: none;\n        padding: 15px;\n        background-color: #efefef;\n        display: flex;\n        flex-direction: row;\n        border-radius: 0 0 8px 8px;\n      }\n\n      .iris-chat-input-wrapper textarea {\n        padding: 15px 8px;\n        border-radius: 4px;\n        border: 1px solid rgba(0,0,0,0);\n        width: auto;\n        font-size: 15px;\n        resize: none;\n        flex: 1;\n      }\n\n      .iris-chat-input-wrapper textarea:focus {\n        outline: none;\n        border: 1px solid #6dd0ed;\n      }\n\n      .iris-chat-input-wrapper button svg {\n        display: inline-block;\n        font-size: inherit;\n        height: 1em;\n        width: 1em;\n        overflow: visible;\n        vertical-align: -0.125em;\n      }\n\n      .iris-chat-input-wrapper button, .iris-chat-input-wrapper button:hover, .iris-chat-input-wrapper button:active, .iris-chat-input-wrapper button:focus {\n        flex: none;\n        color: #999;\n        background-color: transparent;\n        font-size: 30px;\n        padding: 5px;\n        border: 1px solid rgba(0,0,0,0);\n        border-radius: 4px;\n        margin-left: 5px;\n      }\n\n      .iris-chat-input-wrapper button:active, .iris-chat-input-wrapper button:focus {\n        outline: none;\n        border: 1px solid #6dd0ed;\n      }\n\n      .iris-chat-message {\n        display: flex;\n        flex-direction: column;\n        margin-bottom: 2px;\n        overflow-wrap: break-word;\n      }\n\n      .iris-msg-content {\n        background-color: #efefef;\n        padding: 6px 10px;\n        border-radius: 8px;\n        box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);\n        flex: none;\n        max-width: 75%;\n      }\n\n      .emoji {\n        font-size: 1.3em;\n        line-height: 1em;\n      }\n\n      .iris-chat-message .emoji-only {\n        font-size: 3em;\n        text-align: center;\n      }\n\n      .iris-seen {\n        color: rgba(0, 0, 0, 0.45);\n        user-select: none;\n      }\n\n      .iris-seen.yes {\n        color: #4fc3f7;\n      }\n\n      .iris-seen svg {\n        width: 18px;\n      }\n\n      .iris-delivered-checkmark {\n        display: none;\n      }\n\n      .delivered .iris-delivered-checkmark {\n        display: initial;\n      }\n\n      .iris-chat-minimize, .iris-chat-close {\n        user-select: none;\n        cursor: pointer;\n        width: 45px;\n        line-height: 44px;\n      }\n\n      .iris-chat-message.their {\n        align-items: flex-start;\n      }\n\n      .iris-chat-message.their + .iris-chat-message.our .iris-msg-content, .day-separator + .iris-chat-message.our .iris-msg-content {\n        margin-top: 15px;\n        border-radius: 8px 0px 8px 8px;\n      }\n\n      .iris-chat-message.their:first-of-type .iris-msg-content {\n        border-radius: 0px 8px 8px 8px;\n      }\n\n      .iris-chat-message.our:first-of-type .iris-msg-content {\n        border-radius: 8px 0px 8px 8px;\n      }\n\n      .iris-chat-message.our + .iris-chat-message.their .iris-msg-content, .day-separator + .iris-chat-message.their .iris-msg-content {\n        margin-top: 15px;\n        border-radius: 0px 8px 8px 8px;\n      }\n\n      .iris-chat-message.our {\n        align-items: flex-end;\n      }\n\n      .iris-chat-message.our .iris-msg-content {\n        background-color: #c5ecf7;\n      }\n\n      .iris-chat-message .time {\n        text-align: right;\n        font-size: 12px;\n        color: rgba(0, 0, 0, 0.45);\n      }\n\n      .day-separator {\n        display: inline-block;\n        border-radius: 8px;\n        background-color: rgba(227, 249, 255, 0.91);\n        padding: 6px 10px;\n        margin-top: 15px;\n        margin-left: auto;\n        margin-right: auto;\n        text-transform: uppercase;\n        font-size: 13px;\n        color: rgba(74, 74, 74, 0.88);\n        box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);\n        user-select: none;\n      }\n\n      .day-separator:first-of-type {\n        margin-top: 0;\n      }\n      ';
 	    document.head.prepend(sheet);
 	  },
 	  getUrlParameter: function getUrlParameter(sParam, sParams) {
@@ -3032,6 +3032,21 @@
 	      return s[0] + ':' + s[1] + s[2].slice(2);
 	    }
 	    return t;
+	  },
+	  debounce: function debounce(func, wait, immediate) {
+	    var timeout;
+	    return function () {
+	      var context = this,
+	          args = arguments;
+	      var later = function later() {
+	        timeout = null;
+	        if (!immediate) func.apply(context, args);
+	      };
+	      var callNow = immediate && !timeout;
+	      clearTimeout(timeout);
+	      timeout = setTimeout(later, wait);
+	      if (callNow) func.apply(context, args);
+	    };
 	  },
 	  getDaySeparatorText: function getDaySeparatorText(date, dateStr, now, nowStr) {
 	    if (!now) {
@@ -10257,7 +10272,7 @@
 	  return SocialNetwork;
 	}();
 
-	var version$1 = "0.0.147";
+	var version$1 = "0.0.148";
 
 	var taggedTemplateLiteralLoose = createCommonjsModule(function (module, exports) {
 
@@ -10880,6 +10895,8 @@
 
 	  Identicon.prototype.componentDidUpdate = function componentDidUpdate(prevProps) {
 	    if (prevProps.pub !== this.props.pub) {
+	      this.resetEventListeners();
+	      this.setState({ name: '', photo: '' });
 	      this.componentDidMount();
 	    }
 	  };
@@ -10887,6 +10904,7 @@
 	  Identicon.prototype.componentDidMount = function componentDidMount() {
 	    var _this2 = this;
 
+	    if (!this.props.pub) return;
 	    new iris.Attribute({ type: 'keyID', value: this.props.pub }).identiconSrc({ width: this.props.width, showType: false }).then(function (identicon) {
 	      _this2.setState({ identicon: identicon });
 	    });
@@ -10903,11 +10921,15 @@
 	    }
 	  };
 
-	  Identicon.prototype.componentWillUnmount = function componentWillUnmount() {
+	  Identicon.prototype.resetEventListeners = function resetEventListeners() {
 	    _Object$values(this.eventListeners).forEach(function (e) {
 	      return e.off();
 	    });
 	    this.eventListeners = {};
+	  };
+
+	  Identicon.prototype.componentWillUnmount = function componentWillUnmount() {
+	    this.resetEventListeners();
 	  };
 
 	  Identicon.prototype.render = function render() {
@@ -10943,6 +10965,7 @@
 	  ProfileAttribute.prototype.componentDidMount = function componentDidMount() {
 	    var _this2 = this;
 
+	    if (!this.props.pub) return;
 	    var attr = this.props.attr || 'name';
 	    util.getPublicState().user(this.props.pub).get('profile').get(attr).on(function (value, a, b$$1, e) {
 	      _this2.eventListeners[attr] = e;
@@ -11020,7 +11043,7 @@
 	    e.preventDefault();
 	    var str = typeof this.props.str === 'function' ? this.props.str() : this.props.str;
 
-	    if (navigator.share && iris.util.isMobile && !this.props['not-shareable']) {
+	    if (navigator.share && util.isMobile && !this.props['not-shareable']) {
 	      navigator.share({ url: str, title: this.props.title }).catch(function (err) {
 	        console.error('share failed', err);
 	        _this3.copy(e, str);
@@ -11034,7 +11057,7 @@
 	    var _this4 = this;
 
 	    var text = this.state.copied ? this.props['copied-text'] || 'Copied' : this.props.text || 'Copy';
-	    return m$1(_templateObject$2, this.props['btn-class'] || 'copy-button', function (e) {
+	    return m$1(_templateObject$2, this.props['inner-class'] || 'copy-button', function (e) {
 	      return _this4.onClick(e);
 	    }, text);
 	  };
@@ -11042,7 +11065,2493 @@
 	  return CopyButton;
 	}(d);
 
-	register(CopyButton, 'iris-copy-button', ['str', 'not-shareable', 'text', 'copied-text', 'title', 'btn-class']);
+	register(CopyButton, 'iris-copy-button', ['str', 'not-shareable', 'text', 'copied-text', 'title', 'inner-class']);
+
+	// eslint-disable-line no-unused-vars
+
+	var myKey$1 = void 0;
+
+	/**
+	* Key management utils. Wraps GUN's Gun.SEA. https://gun.eco/docs/Gun.SEA
+	*/
+
+	var Key$1 = function () {
+	  function Key() {
+	    _classCallCheck(this, Key);
+	  }
+
+	  /**
+	  * Load default key from datadir/private.key on node.js or from local storage 'iris.myKey' in browser.
+	  *
+	  * If default key does not exist, it is generated.
+	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
+	  * @returns {Promise<Object>} keypair object
+	  */
+	  Key.getDefault = async function getDefault() {
+	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
+	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'identifi.key';
+
+	    if (myKey$1) {
+	      return myKey$1;
+	    }
+	    if (util.isNode) {
+	      var fs = require('fs');
+	      var privKeyFile = datadir + '/' + keyfile;
+	      if (fs.existsSync(privKeyFile)) {
+	        var f = fs.readFileSync(privKeyFile, 'utf8');
+	        myKey$1 = Key.fromString(f);
+	      } else {
+	        var newKey = await Key.generate();
+	        myKey$1 = myKey$1 || newKey; // eslint-disable-line require-atomic-updates
+	        fs.writeFileSync(privKeyFile, Key.toString(myKey$1));
+	        fs.chmodSync(privKeyFile, 400);
+	      }
+	      if (!myKey$1) {
+	        throw new Error('loading default key failed - check ' + datadir + '/' + keyfile);
+	      }
+	    } else {
+	      var str = window.localStorage.getItem('iris.myKey');
+	      if (str) {
+	        myKey$1 = Key.fromString(str);
+	      } else {
+	        var _newKey = await Key.generate();
+	        myKey$1 = myKey$1 || _newKey; // eslint-disable-line require-atomic-updates
+	        window.localStorage.setItem('iris.myKey', Key.toString(myKey$1));
+	      }
+	      if (!myKey$1) {
+	        throw new Error('loading default key failed - check localStorage iris.myKey');
+	      }
+	    }
+	    return myKey$1;
+	  };
+
+	  /**
+	  * Serialize key as JSON string
+	  * @param {Object} key key to serialize
+	  * @returns {String} JSON Web Key string
+	  */
+
+
+	  Key.toString = function toString(key) {
+	    return _JSON$stringify(key);
+	  };
+
+	  /**
+	  * Get keyID
+	  * @param {Object} key key to get an id for. Currently just returns the public key string.
+	  * @returns {String} public key string
+	  */
+
+
+	  Key.getId = function getId(key) {
+	    if (!(key && key.pub)) {
+	      throw new Error('missing param');
+	    }
+	    return key.pub; // hack until GUN supports lookups by keyID
+	    //return util.getHash(key.pub);
+	  };
+
+	  /**
+	  * Get a keypair from a JSON string.
+	  * @param {String} str key JSON
+	  * @returns {Object} Gun.SEA keypair object
+	  */
+
+
+	  Key.fromString = function fromString(str) {
+	    return JSON.parse(str);
+	  };
+
+	  /**
+	  * Generate a new keypair
+	  * @returns {Promise<Object>} Gun.SEA keypair object
+	  */
+
+
+	  Key.generate = function generate() {
+	    return Gun.SEA.pair();
+	  };
+
+	  /**
+	  * Sign a message
+	  * @param {String} msg message to sign
+	  * @param {Object} pair signing keypair
+	  * @returns {Promise<String>} signed message string
+	  */
+
+
+	  Key.sign = async function sign(msg, pair) {
+	    var sig = await Gun.SEA.sign(msg, pair);
+	    return 'a' + sig;
+	  };
+
+	  /**
+	  * Verify a signed message
+	  * @param {String} msg message to verify
+	  * @param {Object} pubKey public key of the signer
+	  * @returns {Promise<String>} signature string
+	  */
+
+
+	  Key.verify = function verify(msg, pubKey) {
+	    return Gun.SEA.verify(msg.slice(1), pubKey);
+	  };
+
+	  return Key;
+	}();
+
+	var _templateObject$3 = _taggedTemplateLiteralLoose(['\n      <button class="iris-follow-button ', ' ', '" onClick=', '>\n        <span class="nonhover">', '</span>\n        <span class="hover">Unfollow</span>\n      </button>\n    '], ['\n      <button class="iris-follow-button ', ' ', '" onClick=', '>\n        <span class="nonhover">', '</span>\n        <span class="hover">Unfollow</span>\n      </button>\n    ']);
+
+	var FollowButton = function (_Component) {
+	  _inherits(FollowButton, _Component);
+
+	  function FollowButton() {
+	    _classCallCheck(this, FollowButton);
+
+	    var _this = _possibleConstructorReturn(this, _Component.call(this));
+
+	    _this.eventListeners = {};
+	    return _this;
+	  }
+
+	  FollowButton.prototype.onClick = function onClick(e) {
+	    e.preventDefault();
+	    var follow = !this.state.following;
+	    util.getPublicState().user().get('follow').get(this.props.pub).put(follow);
+	  };
+
+	  FollowButton.prototype.componentDidMount = function componentDidMount() {
+	    var _this2 = this;
+
+	    util.injectCss();
+	    Key$1.getDefault().then(function (key) {
+	      util.getPublicState().user().auth(key);
+	      util.getPublicState().user().get('follow').get(_this2.props.pub).on(function (following, a, b$$1, e) {
+	        _this2.setState({ following: following });
+	        _this2.eventListeners['follow'] = e;
+	      });
+	    });
+	  };
+
+	  FollowButton.prototype.componentWillUnmount = function componentWillUnmount() {
+	    _Object$values(this.eventListeners).forEach(function (e) {
+	      return e.off();
+	    });
+	  };
+
+	  FollowButton.prototype.render = function render() {
+	    var _this3 = this;
+
+	    return m$1(_templateObject$3, this.state.following ? 'following' : '', this.props['inner-class'] || '', function (e) {
+	      return _this3.onClick(e);
+	    }, this.state.following ? 'Following' : 'Follow');
+	  };
+
+	  return FollowButton;
+	}(d);
+
+	register(FollowButton, 'iris-follow-button', ['pub']);
+
+	var _validateCollection = function (it, TYPE) {
+	  if (!_isObject(it) || it._t !== TYPE) throw TypeError('Incompatible receiver, ' + TYPE + ' required!');
+	  return it;
+	};
+
+	var dP$2 = _objectDp.f;
+
+
+
+
+
+
+
+
+
+	var fastKey = _meta.fastKey;
+
+	var SIZE = _descriptors ? '_s' : 'size';
+
+	var getEntry = function (that, key) {
+	  // fast case
+	  var index = fastKey(key);
+	  var entry;
+	  if (index !== 'F') return that._i[index];
+	  // frozen object case
+	  for (entry = that._f; entry; entry = entry.n) {
+	    if (entry.k == key) return entry;
+	  }
+	};
+
+	var _collectionStrong = {
+	  getConstructor: function (wrapper, NAME, IS_MAP, ADDER) {
+	    var C = wrapper(function (that, iterable) {
+	      _anInstance(that, C, NAME, '_i');
+	      that._t = NAME;         // collection type
+	      that._i = _objectCreate(null); // index
+	      that._f = undefined;    // first entry
+	      that._l = undefined;    // last entry
+	      that[SIZE] = 0;         // size
+	      if (iterable != undefined) _forOf(iterable, IS_MAP, that[ADDER], that);
+	    });
+	    _redefineAll(C.prototype, {
+	      // 23.1.3.1 Map.prototype.clear()
+	      // 23.2.3.2 Set.prototype.clear()
+	      clear: function clear() {
+	        for (var that = _validateCollection(this, NAME), data = that._i, entry = that._f; entry; entry = entry.n) {
+	          entry.r = true;
+	          if (entry.p) entry.p = entry.p.n = undefined;
+	          delete data[entry.i];
+	        }
+	        that._f = that._l = undefined;
+	        that[SIZE] = 0;
+	      },
+	      // 23.1.3.3 Map.prototype.delete(key)
+	      // 23.2.3.4 Set.prototype.delete(value)
+	      'delete': function (key) {
+	        var that = _validateCollection(this, NAME);
+	        var entry = getEntry(that, key);
+	        if (entry) {
+	          var next = entry.n;
+	          var prev = entry.p;
+	          delete that._i[entry.i];
+	          entry.r = true;
+	          if (prev) prev.n = next;
+	          if (next) next.p = prev;
+	          if (that._f == entry) that._f = next;
+	          if (that._l == entry) that._l = prev;
+	          that[SIZE]--;
+	        } return !!entry;
+	      },
+	      // 23.2.3.6 Set.prototype.forEach(callbackfn, thisArg = undefined)
+	      // 23.1.3.5 Map.prototype.forEach(callbackfn, thisArg = undefined)
+	      forEach: function forEach(callbackfn /* , that = undefined */) {
+	        _validateCollection(this, NAME);
+	        var f = _ctx(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+	        var entry;
+	        while (entry = entry ? entry.n : this._f) {
+	          f(entry.v, entry.k, this);
+	          // revert to the last existing entry
+	          while (entry && entry.r) entry = entry.p;
+	        }
+	      },
+	      // 23.1.3.7 Map.prototype.has(key)
+	      // 23.2.3.7 Set.prototype.has(value)
+	      has: function has(key) {
+	        return !!getEntry(_validateCollection(this, NAME), key);
+	      }
+	    });
+	    if (_descriptors) dP$2(C.prototype, 'size', {
+	      get: function () {
+	        return _validateCollection(this, NAME)[SIZE];
+	      }
+	    });
+	    return C;
+	  },
+	  def: function (that, key, value) {
+	    var entry = getEntry(that, key);
+	    var prev, index;
+	    // change existing entry
+	    if (entry) {
+	      entry.v = value;
+	    // create new entry
+	    } else {
+	      that._l = entry = {
+	        i: index = fastKey(key, true), // <- index
+	        k: key,                        // <- key
+	        v: value,                      // <- value
+	        p: prev = that._l,             // <- previous entry
+	        n: undefined,                  // <- next entry
+	        r: false                       // <- removed
+	      };
+	      if (!that._f) that._f = entry;
+	      if (prev) prev.n = entry;
+	      that[SIZE]++;
+	      // add to index
+	      if (index !== 'F') that._i[index] = entry;
+	    } return that;
+	  },
+	  getEntry: getEntry,
+	  setStrong: function (C, NAME, IS_MAP) {
+	    // add .keys, .values, .entries, [@@iterator]
+	    // 23.1.3.4, 23.1.3.8, 23.1.3.11, 23.1.3.12, 23.2.3.5, 23.2.3.8, 23.2.3.10, 23.2.3.11
+	    _iterDefine(C, NAME, function (iterated, kind) {
+	      this._t = _validateCollection(iterated, NAME); // target
+	      this._k = kind;                     // kind
+	      this._l = undefined;                // previous
+	    }, function () {
+	      var that = this;
+	      var kind = that._k;
+	      var entry = that._l;
+	      // revert to the last existing entry
+	      while (entry && entry.r) entry = entry.p;
+	      // get next entry
+	      if (!that._t || !(that._l = entry = entry ? entry.n : that._t._f)) {
+	        // or finish the iteration
+	        that._t = undefined;
+	        return _iterStep(1);
+	      }
+	      // return step by kind
+	      if (kind == 'keys') return _iterStep(0, entry.k);
+	      if (kind == 'values') return _iterStep(0, entry.v);
+	      return _iterStep(0, [entry.k, entry.v]);
+	    }, IS_MAP ? 'entries' : 'values', !IS_MAP, true);
+
+	    // add [@@species], 23.1.2.2, 23.2.2.2
+	    _setSpecies(NAME);
+	  }
+	};
+
+	var SPECIES$2 = _wks('species');
+
+	var _arraySpeciesConstructor = function (original) {
+	  var C;
+	  if (_isArray(original)) {
+	    C = original.constructor;
+	    // cross-realm fallback
+	    if (typeof C == 'function' && (C === Array || _isArray(C.prototype))) C = undefined;
+	    if (_isObject(C)) {
+	      C = C[SPECIES$2];
+	      if (C === null) C = undefined;
+	    }
+	  } return C === undefined ? Array : C;
+	};
+
+	// 9.4.2.3 ArraySpeciesCreate(originalArray, length)
+
+
+	var _arraySpeciesCreate = function (original, length) {
+	  return new (_arraySpeciesConstructor(original))(length);
+	};
+
+	// 0 -> Array#forEach
+	// 1 -> Array#map
+	// 2 -> Array#filter
+	// 3 -> Array#some
+	// 4 -> Array#every
+	// 5 -> Array#find
+	// 6 -> Array#findIndex
+
+
+
+
+
+	var _arrayMethods = function (TYPE, $create) {
+	  var IS_MAP = TYPE == 1;
+	  var IS_FILTER = TYPE == 2;
+	  var IS_SOME = TYPE == 3;
+	  var IS_EVERY = TYPE == 4;
+	  var IS_FIND_INDEX = TYPE == 6;
+	  var NO_HOLES = TYPE == 5 || IS_FIND_INDEX;
+	  var create = $create || _arraySpeciesCreate;
+	  return function ($this, callbackfn, that) {
+	    var O = _toObject($this);
+	    var self = _iobject(O);
+	    var f = _ctx(callbackfn, that, 3);
+	    var length = _toLength(self.length);
+	    var index = 0;
+	    var result = IS_MAP ? create($this, length) : IS_FILTER ? create($this, 0) : undefined;
+	    var val, res;
+	    for (;length > index; index++) if (NO_HOLES || index in self) {
+	      val = self[index];
+	      res = f(val, index, O);
+	      if (TYPE) {
+	        if (IS_MAP) result[index] = res;   // map
+	        else if (res) switch (TYPE) {
+	          case 3: return true;             // some
+	          case 5: return val;              // find
+	          case 6: return index;            // findIndex
+	          case 2: result.push(val);        // filter
+	        } else if (IS_EVERY) return false; // every
+	      }
+	    }
+	    return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : result;
+	  };
+	};
+
+	var dP$3 = _objectDp.f;
+	var each = _arrayMethods(0);
+
+
+	var _collection = function (NAME, wrapper, methods, common, IS_MAP, IS_WEAK) {
+	  var Base = _global[NAME];
+	  var C = Base;
+	  var ADDER = IS_MAP ? 'set' : 'add';
+	  var proto = C && C.prototype;
+	  var O = {};
+	  if (!_descriptors || typeof C != 'function' || !(IS_WEAK || proto.forEach && !_fails(function () {
+	    new C().entries().next();
+	  }))) {
+	    // create collection constructor
+	    C = common.getConstructor(wrapper, NAME, IS_MAP, ADDER);
+	    _redefineAll(C.prototype, methods);
+	    _meta.NEED = true;
+	  } else {
+	    C = wrapper(function (target, iterable) {
+	      _anInstance(target, C, NAME, '_c');
+	      target._c = new Base();
+	      if (iterable != undefined) _forOf(iterable, IS_MAP, target[ADDER], target);
+	    });
+	    each('add,clear,delete,forEach,get,has,set,keys,values,entries,toJSON'.split(','), function (KEY) {
+	      var IS_ADDER = KEY == 'add' || KEY == 'set';
+	      if (KEY in proto && !(IS_WEAK && KEY == 'clear')) _hide(C.prototype, KEY, function (a, b) {
+	        _anInstance(this, C, KEY);
+	        if (!IS_ADDER && IS_WEAK && !_isObject(a)) return KEY == 'get' ? undefined : false;
+	        var result = this._c[KEY](a === 0 ? 0 : a, b);
+	        return IS_ADDER ? this : result;
+	      });
+	    });
+	    IS_WEAK || dP$3(C.prototype, 'size', {
+	      get: function () {
+	        return this._c.size;
+	      }
+	    });
+	  }
+
+	  _setToStringTag(C, NAME);
+
+	  O[NAME] = C;
+	  _export(_export.G + _export.W + _export.F, O);
+
+	  if (!IS_WEAK) common.setStrong(C, NAME, IS_MAP);
+
+	  return C;
+	};
+
+	var SET = 'Set';
+
+	// 23.2 Set Objects
+	var es6_set = _collection(SET, function (get) {
+	  return function Set() { return get(this, arguments.length > 0 ? arguments[0] : undefined); };
+	}, {
+	  // 23.2.3.1 Set.prototype.add(value)
+	  add: function add(value) {
+	    return _collectionStrong.def(_validateCollection(this, SET), value = value === 0 ? 0 : value, value);
+	  }
+	}, _collectionStrong);
+
+	var _arrayFromIterable = function (iter, ITERATOR) {
+	  var result = [];
+	  _forOf(iter, false, result.push, result, ITERATOR);
+	  return result;
+	};
+
+	// https://github.com/DavidBruant/Map-Set.prototype.toJSON
+
+
+	var _collectionToJson = function (NAME) {
+	  return function toJSON() {
+	    if (_classof(this) != NAME) throw TypeError(NAME + "#toJSON isn't generic");
+	    return _arrayFromIterable(this);
+	  };
+	};
+
+	// https://github.com/DavidBruant/Map-Set.prototype.toJSON
+
+
+	_export(_export.P + _export.R, 'Set', { toJSON: _collectionToJson('Set') });
+
+	// https://tc39.github.io/proposal-setmap-offrom/
+
+
+	var _setCollectionOf = function (COLLECTION) {
+	  _export(_export.S, COLLECTION, { of: function of() {
+	    var length = arguments.length;
+	    var A = new Array(length);
+	    while (length--) A[length] = arguments[length];
+	    return new this(A);
+	  } });
+	};
+
+	// https://tc39.github.io/proposal-setmap-offrom/#sec-set.of
+	_setCollectionOf('Set');
+
+	// https://tc39.github.io/proposal-setmap-offrom/
+
+
+
+
+
+	var _setCollectionFrom = function (COLLECTION) {
+	  _export(_export.S, COLLECTION, { from: function from(source /* , mapFn, thisArg */) {
+	    var mapFn = arguments[1];
+	    var mapping, A, n, cb;
+	    _aFunction(this);
+	    mapping = mapFn !== undefined;
+	    if (mapping) _aFunction(mapFn);
+	    if (source == undefined) return new this();
+	    A = [];
+	    if (mapping) {
+	      n = 0;
+	      cb = _ctx(mapFn, arguments[2], 2);
+	      _forOf(source, false, function (nextItem) {
+	        A.push(cb(nextItem, n++));
+	      });
+	    } else {
+	      _forOf(source, false, A.push, A);
+	    }
+	    return new this(A);
+	  } });
+	};
+
+	// https://tc39.github.io/proposal-setmap-offrom/#sec-set.from
+	_setCollectionFrom('Set');
+
+	var set = _core.Set;
+
+	var set$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": set, __esModule: true };
+	});
+
+	var _Set = unwrapExports(set$1);
+
+	/**
+	 * Fuse.js v6.4.2 - Lightweight fuzzy-search (http://fusejs.io)
+	 *
+	 * Copyright (c) 2020 Kiro Risk (http://kiro.me)
+	 * All Rights Reserved. Apache Software License 2.0
+	 *
+	 * http://www.apache.org/licenses/LICENSE-2.0
+	 */
+
+	function isArray$1(value) {
+	  return !Array.isArray
+	    ? getTag(value) === '[object Array]'
+	    : Array.isArray(value)
+	}
+
+	// Adapted from: https://github.com/lodash/lodash/blob/master/.internal/baseToString.js
+	const INFINITY = 1 / 0;
+	function baseToString(value) {
+	  // Exit early for strings to avoid a performance hit in some environments.
+	  if (typeof value == 'string') {
+	    return value
+	  }
+	  let result = value + '';
+	  return result == '0' && 1 / value == -INFINITY ? '-0' : result
+	}
+
+	function toString$3(value) {
+	  return value == null ? '' : baseToString(value)
+	}
+
+	function isString(value) {
+	  return typeof value === 'string'
+	}
+
+	function isNumber(value) {
+	  return typeof value === 'number'
+	}
+
+	// Adapted from: https://github.com/lodash/lodash/blob/master/isBoolean.js
+	function isBoolean(value) {
+	  return (
+	    value === true ||
+	    value === false ||
+	    (isObjectLike(value) && getTag(value) == '[object Boolean]')
+	  )
+	}
+
+	function isObject(value) {
+	  return typeof value === 'object'
+	}
+
+	// Checks if `value` is object-like.
+	function isObjectLike(value) {
+	  return isObject(value) && value !== null
+	}
+
+	function isDefined(value) {
+	  return value !== undefined && value !== null
+	}
+
+	function isBlank(value) {
+	  return !value.trim().length
+	}
+
+	// Gets the `toStringTag` of `value`.
+	// Adapted from: https://github.com/lodash/lodash/blob/master/.internal/getTag.js
+	function getTag(value) {
+	  return value == null
+	    ? value === undefined
+	      ? '[object Undefined]'
+	      : '[object Null]'
+	    : Object.prototype.toString.call(value)
+	}
+
+	const EXTENDED_SEARCH_UNAVAILABLE = 'Extended search is not available';
+
+	const INCORRECT_INDEX_TYPE = "Incorrect 'index' type";
+
+	const LOGICAL_SEARCH_INVALID_QUERY_FOR_KEY = (key) =>
+	  `Invalid value for key ${key}`;
+
+	const PATTERN_LENGTH_TOO_LARGE = (max) =>
+	  `Pattern length exceeds max of ${max}.`;
+
+	const MISSING_KEY_PROPERTY = (name) => `Missing ${name} property in key`;
+
+	const INVALID_KEY_WEIGHT_VALUE = (key) =>
+	  `Property 'weight' in key '${key}' must be a positive integer`;
+
+	const hasOwn = Object.prototype.hasOwnProperty;
+
+	class KeyStore {
+	  constructor(keys) {
+	    this._keys = [];
+	    this._keyMap = {};
+
+	    let totalWeight = 0;
+
+	    keys.forEach((key) => {
+	      let obj = createKey(key);
+
+	      totalWeight += obj.weight;
+
+	      this._keys.push(obj);
+	      this._keyMap[obj.id] = obj;
+
+	      totalWeight += obj.weight;
+	    });
+
+	    // Normalize weights so that their sum is equal to 1
+	    this._keys.forEach((key) => {
+	      key.weight /= totalWeight;
+	    });
+	  }
+	  get(keyId) {
+	    return this._keyMap[keyId]
+	  }
+	  keys() {
+	    return this._keys
+	  }
+	  toJSON() {
+	    return JSON.stringify(this._keys)
+	  }
+	}
+
+	function createKey(key) {
+	  let path = null;
+	  let id = null;
+	  let src = null;
+	  let weight = 1;
+
+	  if (isString(key) || isArray$1(key)) {
+	    src = key;
+	    path = createKeyPath(key);
+	    id = createKeyId(key);
+	  } else {
+	    if (!hasOwn.call(key, 'name')) {
+	      throw new Error(MISSING_KEY_PROPERTY('name'))
+	    }
+
+	    const name = key.name;
+	    src = name;
+
+	    if (hasOwn.call(key, 'weight')) {
+	      weight = key.weight;
+
+	      if (weight <= 0) {
+	        throw new Error(INVALID_KEY_WEIGHT_VALUE(name))
+	      }
+	    }
+
+	    path = createKeyPath(name);
+	    id = createKeyId(name);
+	  }
+
+	  return { path, id, weight, src }
+	}
+
+	function createKeyPath(key) {
+	  return isArray$1(key) ? key : key.split('.')
+	}
+
+	function createKeyId(key) {
+	  return isArray$1(key) ? key.join('.') : key
+	}
+
+	function get(obj, path) {
+	  let list = [];
+	  let arr = false;
+
+	  const deepGet = (obj, path, index) => {
+	    if (!isDefined(obj)) {
+	      return
+	    }
+	    if (!path[index]) {
+	      // If there's no path left, we've arrived at the object we care about.
+	      list.push(obj);
+	    } else {
+	      let key = path[index];
+
+	      const value = obj[key];
+
+	      if (!isDefined(value)) {
+	        return
+	      }
+
+	      // If we're at the last value in the path, and if it's a string/number/bool,
+	      // add it to the list
+	      if (
+	        index === path.length - 1 &&
+	        (isString(value) || isNumber(value) || isBoolean(value))
+	      ) {
+	        list.push(toString$3(value));
+	      } else if (isArray$1(value)) {
+	        arr = true;
+	        // Search each item in the array.
+	        for (let i = 0, len = value.length; i < len; i += 1) {
+	          deepGet(value[i], path, index + 1);
+	        }
+	      } else if (path.length) {
+	        // An object. Recurse further.
+	        deepGet(value, path, index + 1);
+	      }
+	    }
+	  };
+
+	  // Backwards compatibility (since path used to be a string)
+	  deepGet(obj, isString(path) ? path.split('.') : path, 0);
+
+	  return arr ? list : list[0]
+	}
+
+	const MatchOptions = {
+	  // Whether the matches should be included in the result set. When `true`, each record in the result
+	  // set will include the indices of the matched characters.
+	  // These can consequently be used for highlighting purposes.
+	  includeMatches: false,
+	  // When `true`, the matching function will continue to the end of a search pattern even if
+	  // a perfect match has already been located in the string.
+	  findAllMatches: false,
+	  // Minimum number of characters that must be matched before a result is considered a match
+	  minMatchCharLength: 1
+	};
+
+	const BasicOptions = {
+	  // When `true`, the algorithm continues searching to the end of the input even if a perfect
+	  // match is found before the end of the same input.
+	  isCaseSensitive: false,
+	  // When true, the matching function will continue to the end of a search pattern even if
+	  includeScore: false,
+	  // List of properties that will be searched. This also supports nested properties.
+	  keys: [],
+	  // Whether to sort the result list, by score
+	  shouldSort: true,
+	  // Default sort function: sort by ascending score, ascending index
+	  sortFn: (a, b) =>
+	    a.score === b.score ? (a.idx < b.idx ? -1 : 1) : a.score < b.score ? -1 : 1
+	};
+
+	const FuzzyOptions = {
+	  // Approximately where in the text is the pattern expected to be found?
+	  location: 0,
+	  // At what point does the match algorithm give up. A threshold of '0.0' requires a perfect match
+	  // (of both letters and location), a threshold of '1.0' would match anything.
+	  threshold: 0.6,
+	  // Determines how close the match must be to the fuzzy location (specified above).
+	  // An exact letter match which is 'distance' characters away from the fuzzy location
+	  // would score as a complete mismatch. A distance of '0' requires the match be at
+	  // the exact location specified, a threshold of '1000' would require a perfect match
+	  // to be within 800 characters of the fuzzy location to be found using a 0.8 threshold.
+	  distance: 100
+	};
+
+	const AdvancedOptions = {
+	  // When `true`, it enables the use of unix-like search commands
+	  useExtendedSearch: false,
+	  // The get function to use when fetching an object's properties.
+	  // The default will search nested paths *ie foo.bar.baz*
+	  getFn: get,
+	  // When `true`, search will ignore `location` and `distance`, so it won't matter
+	  // where in the string the pattern appears.
+	  // More info: https://fusejs.io/concepts/scoring-theory.html#fuzziness-score
+	  ignoreLocation: false,
+	  // When `true`, the calculation for the relevance score (used for sorting) will
+	  // ignore the field-length norm.
+	  // More info: https://fusejs.io/concepts/scoring-theory.html#field-length-norm
+	  ignoreFieldNorm: false
+	};
+
+	var Config = {
+	  ...BasicOptions,
+	  ...MatchOptions,
+	  ...FuzzyOptions,
+	  ...AdvancedOptions
+	};
+
+	const SPACE = /[^ ]+/g;
+
+	// Field-length norm: the shorter the field, the higher the weight.
+	// Set to 3 decimals to reduce index size.
+	function norm(mantissa = 3) {
+	  const cache = new Map();
+
+	  return {
+	    get(value) {
+	      const numTokens = value.match(SPACE).length;
+
+	      if (cache.has(numTokens)) {
+	        return cache.get(numTokens)
+	      }
+
+	      const n = parseFloat((1 / Math.sqrt(numTokens)).toFixed(mantissa));
+
+	      cache.set(numTokens, n);
+
+	      return n
+	    },
+	    clear() {
+	      cache.clear();
+	    }
+	  }
+	}
+
+	class FuseIndex {
+	  constructor({ getFn = Config.getFn } = {}) {
+	    this.norm = norm(3);
+	    this.getFn = getFn;
+	    this.isCreated = false;
+
+	    this.setIndexRecords();
+	  }
+	  setSources(docs = []) {
+	    this.docs = docs;
+	  }
+	  setIndexRecords(records = []) {
+	    this.records = records;
+	  }
+	  setKeys(keys = []) {
+	    this.keys = keys;
+	    this._keysMap = {};
+	    keys.forEach((key, idx) => {
+	      this._keysMap[key.id] = idx;
+	    });
+	  }
+	  create() {
+	    if (this.isCreated || !this.docs.length) {
+	      return
+	    }
+
+	    this.isCreated = true;
+
+	    // List is Array<String>
+	    if (isString(this.docs[0])) {
+	      this.docs.forEach((doc, docIndex) => {
+	        this._addString(doc, docIndex);
+	      });
+	    } else {
+	      // List is Array<Object>
+	      this.docs.forEach((doc, docIndex) => {
+	        this._addObject(doc, docIndex);
+	      });
+	    }
+
+	    this.norm.clear();
+	  }
+	  // Adds a doc to the end of the index
+	  add(doc) {
+	    const idx = this.size();
+
+	    if (isString(doc)) {
+	      this._addString(doc, idx);
+	    } else {
+	      this._addObject(doc, idx);
+	    }
+	  }
+	  // Removes the doc at the specified index of the index
+	  removeAt(idx) {
+	    this.records.splice(idx, 1);
+
+	    // Change ref index of every subsquent doc
+	    for (let i = idx, len = this.size(); i < len; i += 1) {
+	      this.records[i].i -= 1;
+	    }
+	  }
+	  getValueForItemAtKeyId(item, keyId) {
+	    return item[this._keysMap[keyId]]
+	  }
+	  size() {
+	    return this.records.length
+	  }
+	  _addString(doc, docIndex) {
+	    if (!isDefined(doc) || isBlank(doc)) {
+	      return
+	    }
+
+	    let record = {
+	      v: doc,
+	      i: docIndex,
+	      n: this.norm.get(doc)
+	    };
+
+	    this.records.push(record);
+	  }
+	  _addObject(doc, docIndex) {
+	    let record = { i: docIndex, $: {} };
+
+	    // Iterate over every key (i.e, path), and fetch the value at that key
+	    this.keys.forEach((key, keyIndex) => {
+	      // console.log(key)
+	      let value = this.getFn(doc, key.path);
+
+	      if (!isDefined(value)) {
+	        return
+	      }
+
+	      if (isArray$1(value)) {
+	        let subRecords = [];
+	        const stack = [{ nestedArrIndex: -1, value }];
+
+	        while (stack.length) {
+	          const { nestedArrIndex, value } = stack.pop();
+
+	          if (!isDefined(value)) {
+	            continue
+	          }
+
+	          if (isString(value) && !isBlank(value)) {
+	            let subRecord = {
+	              v: value,
+	              i: nestedArrIndex,
+	              n: this.norm.get(value)
+	            };
+
+	            subRecords.push(subRecord);
+	          } else if (isArray$1(value)) {
+	            value.forEach((item, k) => {
+	              stack.push({
+	                nestedArrIndex: k,
+	                value: item
+	              });
+	            });
+	          }
+	        }
+	        record.$[keyIndex] = subRecords;
+	      } else if (!isBlank(value)) {
+	        let subRecord = {
+	          v: value,
+	          n: this.norm.get(value)
+	        };
+
+	        record.$[keyIndex] = subRecord;
+	      }
+	    });
+
+	    this.records.push(record);
+	  }
+	  toJSON() {
+	    return {
+	      keys: this.keys,
+	      records: this.records
+	    }
+	  }
+	}
+
+	function createIndex(keys, docs, { getFn = Config.getFn } = {}) {
+	  const myIndex = new FuseIndex({ getFn });
+	  myIndex.setKeys(keys.map(createKey));
+	  myIndex.setSources(docs);
+	  myIndex.create();
+	  return myIndex
+	}
+
+	function parseIndex(data, { getFn = Config.getFn } = {}) {
+	  const { keys, records } = data;
+	  const myIndex = new FuseIndex({ getFn });
+	  myIndex.setKeys(keys);
+	  myIndex.setIndexRecords(records);
+	  return myIndex
+	}
+
+	function transformMatches(result, data) {
+	  const matches = result.matches;
+	  data.matches = [];
+
+	  if (!isDefined(matches)) {
+	    return
+	  }
+
+	  matches.forEach((match) => {
+	    if (!isDefined(match.indices) || !match.indices.length) {
+	      return
+	    }
+
+	    const { indices, value } = match;
+
+	    let obj = {
+	      indices,
+	      value
+	    };
+
+	    if (match.key) {
+	      obj.key = match.key.src;
+	    }
+
+	    if (match.idx > -1) {
+	      obj.refIndex = match.idx;
+	    }
+
+	    data.matches.push(obj);
+	  });
+	}
+
+	function transformScore(result, data) {
+	  data.score = result.score;
+	}
+
+	function computeScore(
+	  pattern,
+	  {
+	    errors = 0,
+	    currentLocation = 0,
+	    expectedLocation = 0,
+	    distance = Config.distance,
+	    ignoreLocation = Config.ignoreLocation
+	  } = {}
+	) {
+	  const accuracy = errors / pattern.length;
+
+	  if (ignoreLocation) {
+	    return accuracy
+	  }
+
+	  const proximity = Math.abs(expectedLocation - currentLocation);
+
+	  if (!distance) {
+	    // Dodge divide by zero error.
+	    return proximity ? 1.0 : accuracy
+	  }
+
+	  return accuracy + proximity / distance
+	}
+
+	function convertMaskToIndices(
+	  matchmask = [],
+	  minMatchCharLength = Config.minMatchCharLength
+	) {
+	  let indices = [];
+	  let start = -1;
+	  let end = -1;
+	  let i = 0;
+
+	  for (let len = matchmask.length; i < len; i += 1) {
+	    let match = matchmask[i];
+	    if (match && start === -1) {
+	      start = i;
+	    } else if (!match && start !== -1) {
+	      end = i - 1;
+	      if (end - start + 1 >= minMatchCharLength) {
+	        indices.push([start, end]);
+	      }
+	      start = -1;
+	    }
+	  }
+
+	  // (i-1 - start) + 1 => i - start
+	  if (matchmask[i - 1] && i - start >= minMatchCharLength) {
+	    indices.push([start, i - 1]);
+	  }
+
+	  return indices
+	}
+
+	// Machine word size
+	const MAX_BITS = 32;
+
+	function search(
+	  text,
+	  pattern,
+	  patternAlphabet,
+	  {
+	    location = Config.location,
+	    distance = Config.distance,
+	    threshold = Config.threshold,
+	    findAllMatches = Config.findAllMatches,
+	    minMatchCharLength = Config.minMatchCharLength,
+	    includeMatches = Config.includeMatches,
+	    ignoreLocation = Config.ignoreLocation
+	  } = {}
+	) {
+	  if (pattern.length > MAX_BITS) {
+	    throw new Error(PATTERN_LENGTH_TOO_LARGE(MAX_BITS))
+	  }
+
+	  const patternLen = pattern.length;
+	  // Set starting location at beginning text and initialize the alphabet.
+	  const textLen = text.length;
+	  // Handle the case when location > text.length
+	  const expectedLocation = Math.max(0, Math.min(location, textLen));
+	  // Highest score beyond which we give up.
+	  let currentThreshold = threshold;
+	  // Is there a nearby exact match? (speedup)
+	  let bestLocation = expectedLocation;
+
+	  // Performance: only computer matches when the minMatchCharLength > 1
+	  // OR if `includeMatches` is true.
+	  const computeMatches = minMatchCharLength > 1 || includeMatches;
+	  // A mask of the matches, used for building the indices
+	  const matchMask = computeMatches ? Array(textLen) : [];
+
+	  let index;
+
+	  // Get all exact matches, here for speed up
+	  while ((index = text.indexOf(pattern, bestLocation)) > -1) {
+	    let score = computeScore(pattern, {
+	      currentLocation: index,
+	      expectedLocation,
+	      distance,
+	      ignoreLocation
+	    });
+
+	    currentThreshold = Math.min(score, currentThreshold);
+	    bestLocation = index + patternLen;
+
+	    if (computeMatches) {
+	      let i = 0;
+	      while (i < patternLen) {
+	        matchMask[index + i] = 1;
+	        i += 1;
+	      }
+	    }
+	  }
+
+	  // Reset the best location
+	  bestLocation = -1;
+
+	  let lastBitArr = [];
+	  let finalScore = 1;
+	  let binMax = patternLen + textLen;
+
+	  const mask = 1 << (patternLen - 1);
+
+	  for (let i = 0; i < patternLen; i += 1) {
+	    // Scan for the best match; each iteration allows for one more error.
+	    // Run a binary search to determine how far from the match location we can stray
+	    // at this error level.
+	    let binMin = 0;
+	    let binMid = binMax;
+
+	    while (binMin < binMid) {
+	      const score = computeScore(pattern, {
+	        errors: i,
+	        currentLocation: expectedLocation + binMid,
+	        expectedLocation,
+	        distance,
+	        ignoreLocation
+	      });
+
+	      if (score <= currentThreshold) {
+	        binMin = binMid;
+	      } else {
+	        binMax = binMid;
+	      }
+
+	      binMid = Math.floor((binMax - binMin) / 2 + binMin);
+	    }
+
+	    // Use the result from this iteration as the maximum for the next.
+	    binMax = binMid;
+
+	    let start = Math.max(1, expectedLocation - binMid + 1);
+	    let finish = findAllMatches
+	      ? textLen
+	      : Math.min(expectedLocation + binMid, textLen) + patternLen;
+
+	    // Initialize the bit array
+	    let bitArr = Array(finish + 2);
+
+	    bitArr[finish + 1] = (1 << i) - 1;
+
+	    for (let j = finish; j >= start; j -= 1) {
+	      let currentLocation = j - 1;
+	      let charMatch = patternAlphabet[text.charAt(currentLocation)];
+
+	      if (computeMatches) {
+	        // Speed up: quick bool to int conversion (i.e, `charMatch ? 1 : 0`)
+	        matchMask[currentLocation] = +!!charMatch;
+	      }
+
+	      // First pass: exact match
+	      bitArr[j] = ((bitArr[j + 1] << 1) | 1) & charMatch;
+
+	      // Subsequent passes: fuzzy match
+	      if (i) {
+	        bitArr[j] |=
+	          ((lastBitArr[j + 1] | lastBitArr[j]) << 1) | 1 | lastBitArr[j + 1];
+	      }
+
+	      if (bitArr[j] & mask) {
+	        finalScore = computeScore(pattern, {
+	          errors: i,
+	          currentLocation,
+	          expectedLocation,
+	          distance,
+	          ignoreLocation
+	        });
+
+	        // This match will almost certainly be better than any existing match.
+	        // But check anyway.
+	        if (finalScore <= currentThreshold) {
+	          // Indeed it is
+	          currentThreshold = finalScore;
+	          bestLocation = currentLocation;
+
+	          // Already passed `loc`, downhill from here on in.
+	          if (bestLocation <= expectedLocation) {
+	            break
+	          }
+
+	          // When passing `bestLocation`, don't exceed our current distance from `expectedLocation`.
+	          start = Math.max(1, 2 * expectedLocation - bestLocation);
+	        }
+	      }
+	    }
+
+	    // No hope for a (better) match at greater error levels.
+	    const score = computeScore(pattern, {
+	      errors: i + 1,
+	      currentLocation: expectedLocation,
+	      expectedLocation,
+	      distance,
+	      ignoreLocation
+	    });
+
+	    if (score > currentThreshold) {
+	      break
+	    }
+
+	    lastBitArr = bitArr;
+	  }
+
+	  const result = {
+	    isMatch: bestLocation >= 0,
+	    // Count exact matches (those with a score of 0) to be "almost" exact
+	    score: Math.max(0.001, finalScore)
+	  };
+
+	  if (computeMatches) {
+	    const indices = convertMaskToIndices(matchMask, minMatchCharLength);
+	    if (!indices.length) {
+	      result.isMatch = false;
+	    } else if (includeMatches) {
+	      result.indices = indices;
+	    }
+	  }
+
+	  return result
+	}
+
+	function createPatternAlphabet(pattern) {
+	  let mask = {};
+
+	  for (let i = 0, len = pattern.length; i < len; i += 1) {
+	    const char = pattern.charAt(i);
+	    mask[char] = (mask[char] || 0) | (1 << (len - i - 1));
+	  }
+
+	  return mask
+	}
+
+	class BitapSearch {
+	  constructor(
+	    pattern,
+	    {
+	      location = Config.location,
+	      threshold = Config.threshold,
+	      distance = Config.distance,
+	      includeMatches = Config.includeMatches,
+	      findAllMatches = Config.findAllMatches,
+	      minMatchCharLength = Config.minMatchCharLength,
+	      isCaseSensitive = Config.isCaseSensitive,
+	      ignoreLocation = Config.ignoreLocation
+	    } = {}
+	  ) {
+	    this.options = {
+	      location,
+	      threshold,
+	      distance,
+	      includeMatches,
+	      findAllMatches,
+	      minMatchCharLength,
+	      isCaseSensitive,
+	      ignoreLocation
+	    };
+
+	    this.pattern = isCaseSensitive ? pattern : pattern.toLowerCase();
+
+	    this.chunks = [];
+
+	    if (!this.pattern.length) {
+	      return
+	    }
+
+	    const addChunk = (pattern, startIndex) => {
+	      this.chunks.push({
+	        pattern,
+	        alphabet: createPatternAlphabet(pattern),
+	        startIndex
+	      });
+	    };
+
+	    const len = this.pattern.length;
+
+	    if (len > MAX_BITS) {
+	      let i = 0;
+	      const remainder = len % MAX_BITS;
+	      const end = len - remainder;
+
+	      while (i < end) {
+	        addChunk(this.pattern.substr(i, MAX_BITS), i);
+	        i += MAX_BITS;
+	      }
+
+	      if (remainder) {
+	        const startIndex = len - MAX_BITS;
+	        addChunk(this.pattern.substr(startIndex), startIndex);
+	      }
+	    } else {
+	      addChunk(this.pattern, 0);
+	    }
+	  }
+
+	  searchIn(text) {
+	    const { isCaseSensitive, includeMatches } = this.options;
+
+	    if (!isCaseSensitive) {
+	      text = text.toLowerCase();
+	    }
+
+	    // Exact match
+	    if (this.pattern === text) {
+	      let result = {
+	        isMatch: true,
+	        score: 0
+	      };
+
+	      if (includeMatches) {
+	        result.indices = [[0, text.length - 1]];
+	      }
+
+	      return result
+	    }
+
+	    // Otherwise, use Bitap algorithm
+	    const {
+	      location,
+	      distance,
+	      threshold,
+	      findAllMatches,
+	      minMatchCharLength,
+	      ignoreLocation
+	    } = this.options;
+
+	    let allIndices = [];
+	    let totalScore = 0;
+	    let hasMatches = false;
+
+	    this.chunks.forEach(({ pattern, alphabet, startIndex }) => {
+	      const { isMatch, score, indices } = search(text, pattern, alphabet, {
+	        location: location + startIndex,
+	        distance,
+	        threshold,
+	        findAllMatches,
+	        minMatchCharLength,
+	        includeMatches,
+	        ignoreLocation
+	      });
+
+	      if (isMatch) {
+	        hasMatches = true;
+	      }
+
+	      totalScore += score;
+
+	      if (isMatch && indices) {
+	        allIndices = [...allIndices, ...indices];
+	      }
+	    });
+
+	    let result = {
+	      isMatch: hasMatches,
+	      score: hasMatches ? totalScore / this.chunks.length : 1
+	    };
+
+	    if (hasMatches && includeMatches) {
+	      result.indices = allIndices;
+	    }
+
+	    return result
+	  }
+	}
+
+	class BaseMatch {
+	  constructor(pattern) {
+	    this.pattern = pattern;
+	  }
+	  static isMultiMatch(pattern) {
+	    return getMatch(pattern, this.multiRegex)
+	  }
+	  static isSingleMatch(pattern) {
+	    return getMatch(pattern, this.singleRegex)
+	  }
+	  search(/*text*/) {}
+	}
+
+	function getMatch(pattern, exp) {
+	  const matches = pattern.match(exp);
+	  return matches ? matches[1] : null
+	}
+
+	// Token: 'file
+
+	class ExactMatch extends BaseMatch {
+	  constructor(pattern) {
+	    super(pattern);
+	  }
+	  static get type() {
+	    return 'exact'
+	  }
+	  static get multiRegex() {
+	    return /^="(.*)"$/
+	  }
+	  static get singleRegex() {
+	    return /^=(.*)$/
+	  }
+	  search(text) {
+	    const isMatch = text === this.pattern;
+
+	    return {
+	      isMatch,
+	      score: isMatch ? 0 : 1,
+	      indices: [0, this.pattern.length - 1]
+	    }
+	  }
+	}
+
+	// Token: !fire
+
+	class InverseExactMatch extends BaseMatch {
+	  constructor(pattern) {
+	    super(pattern);
+	  }
+	  static get type() {
+	    return 'inverse-exact'
+	  }
+	  static get multiRegex() {
+	    return /^!"(.*)"$/
+	  }
+	  static get singleRegex() {
+	    return /^!(.*)$/
+	  }
+	  search(text) {
+	    const index = text.indexOf(this.pattern);
+	    const isMatch = index === -1;
+
+	    return {
+	      isMatch,
+	      score: isMatch ? 0 : 1,
+	      indices: [0, text.length - 1]
+	    }
+	  }
+	}
+
+	// Token: ^file
+
+	class PrefixExactMatch extends BaseMatch {
+	  constructor(pattern) {
+	    super(pattern);
+	  }
+	  static get type() {
+	    return 'prefix-exact'
+	  }
+	  static get multiRegex() {
+	    return /^\^"(.*)"$/
+	  }
+	  static get singleRegex() {
+	    return /^\^(.*)$/
+	  }
+	  search(text) {
+	    const isMatch = text.startsWith(this.pattern);
+
+	    return {
+	      isMatch,
+	      score: isMatch ? 0 : 1,
+	      indices: [0, this.pattern.length - 1]
+	    }
+	  }
+	}
+
+	// Token: !^fire
+
+	class InversePrefixExactMatch extends BaseMatch {
+	  constructor(pattern) {
+	    super(pattern);
+	  }
+	  static get type() {
+	    return 'inverse-prefix-exact'
+	  }
+	  static get multiRegex() {
+	    return /^!\^"(.*)"$/
+	  }
+	  static get singleRegex() {
+	    return /^!\^(.*)$/
+	  }
+	  search(text) {
+	    const isMatch = !text.startsWith(this.pattern);
+
+	    return {
+	      isMatch,
+	      score: isMatch ? 0 : 1,
+	      indices: [0, text.length - 1]
+	    }
+	  }
+	}
+
+	// Token: .file$
+
+	class SuffixExactMatch extends BaseMatch {
+	  constructor(pattern) {
+	    super(pattern);
+	  }
+	  static get type() {
+	    return 'suffix-exact'
+	  }
+	  static get multiRegex() {
+	    return /^"(.*)"\$$/
+	  }
+	  static get singleRegex() {
+	    return /^(.*)\$$/
+	  }
+	  search(text) {
+	    const isMatch = text.endsWith(this.pattern);
+
+	    return {
+	      isMatch,
+	      score: isMatch ? 0 : 1,
+	      indices: [text.length - this.pattern.length, text.length - 1]
+	    }
+	  }
+	}
+
+	// Token: !.file$
+
+	class InverseSuffixExactMatch extends BaseMatch {
+	  constructor(pattern) {
+	    super(pattern);
+	  }
+	  static get type() {
+	    return 'inverse-suffix-exact'
+	  }
+	  static get multiRegex() {
+	    return /^!"(.*)"\$$/
+	  }
+	  static get singleRegex() {
+	    return /^!(.*)\$$/
+	  }
+	  search(text) {
+	    const isMatch = !text.endsWith(this.pattern);
+	    return {
+	      isMatch,
+	      score: isMatch ? 0 : 1,
+	      indices: [0, text.length - 1]
+	    }
+	  }
+	}
+
+	class FuzzyMatch extends BaseMatch {
+	  constructor(
+	    pattern,
+	    {
+	      location = Config.location,
+	      threshold = Config.threshold,
+	      distance = Config.distance,
+	      includeMatches = Config.includeMatches,
+	      findAllMatches = Config.findAllMatches,
+	      minMatchCharLength = Config.minMatchCharLength,
+	      isCaseSensitive = Config.isCaseSensitive
+	    } = {}
+	  ) {
+	    super(pattern);
+	    this._bitapSearch = new BitapSearch(pattern, {
+	      location,
+	      threshold,
+	      distance,
+	      includeMatches,
+	      findAllMatches,
+	      minMatchCharLength,
+	      isCaseSensitive
+	    });
+	  }
+	  static get type() {
+	    return 'fuzzy'
+	  }
+	  static get multiRegex() {
+	    return /^"(.*)"$/
+	  }
+	  static get singleRegex() {
+	    return /^(.*)$/
+	  }
+	  search(text) {
+	    return this._bitapSearch.searchIn(text)
+	  }
+	}
+
+	// Token: 'file
+
+	class IncludeMatch extends BaseMatch {
+	  constructor(pattern) {
+	    super(pattern);
+	  }
+	  static get type() {
+	    return 'include'
+	  }
+	  static get multiRegex() {
+	    return /^'"(.*)"$/
+	  }
+	  static get singleRegex() {
+	    return /^'(.*)$/
+	  }
+	  search(text) {
+	    let location = 0;
+	    let index;
+
+	    const indices = [];
+	    const patternLen = this.pattern.length;
+
+	    // Get all exact matches
+	    while ((index = text.indexOf(this.pattern, location)) > -1) {
+	      location = index + patternLen;
+	      indices.push([index, location - 1]);
+	    }
+
+	    const isMatch = !!indices.length;
+
+	    return {
+	      isMatch,
+	      score: isMatch ? 1 : 0,
+	      indices
+	    }
+	  }
+	}
+
+	// ❗Order is important. DO NOT CHANGE.
+	const searchers = [
+	  ExactMatch,
+	  IncludeMatch,
+	  PrefixExactMatch,
+	  InversePrefixExactMatch,
+	  InverseSuffixExactMatch,
+	  SuffixExactMatch,
+	  InverseExactMatch,
+	  FuzzyMatch
+	];
+
+	const searchersLen = searchers.length;
+
+	// Regex to split by spaces, but keep anything in quotes together
+	const SPACE_RE = / +(?=([^\"]*\"[^\"]*\")*[^\"]*$)/;
+	const OR_TOKEN = '|';
+
+	// Return a 2D array representation of the query, for simpler parsing.
+	// Example:
+	// "^core go$ | rb$ | py$ xy$" => [["^core", "go$"], ["rb$"], ["py$", "xy$"]]
+	function parseQuery(pattern, options = {}) {
+	  return pattern.split(OR_TOKEN).map((item) => {
+	    let query = item
+	      .trim()
+	      .split(SPACE_RE)
+	      .filter((item) => item && !!item.trim());
+
+	    let results = [];
+	    for (let i = 0, len = query.length; i < len; i += 1) {
+	      const queryItem = query[i];
+
+	      // 1. Handle multiple query match (i.e, once that are quoted, like `"hello world"`)
+	      let found = false;
+	      let idx = -1;
+	      while (!found && ++idx < searchersLen) {
+	        const searcher = searchers[idx];
+	        let token = searcher.isMultiMatch(queryItem);
+	        if (token) {
+	          results.push(new searcher(token, options));
+	          found = true;
+	        }
+	      }
+
+	      if (found) {
+	        continue
+	      }
+
+	      // 2. Handle single query matches (i.e, once that are *not* quoted)
+	      idx = -1;
+	      while (++idx < searchersLen) {
+	        const searcher = searchers[idx];
+	        let token = searcher.isSingleMatch(queryItem);
+	        if (token) {
+	          results.push(new searcher(token, options));
+	          break
+	        }
+	      }
+	    }
+
+	    return results
+	  })
+	}
+
+	// These extended matchers can return an array of matches, as opposed
+	// to a singl match
+	const MultiMatchSet = new Set([FuzzyMatch.type, IncludeMatch.type]);
+
+	/**
+	 * Command-like searching
+	 * ======================
+	 *
+	 * Given multiple search terms delimited by spaces.e.g. `^jscript .python$ ruby !java`,
+	 * search in a given text.
+	 *
+	 * Search syntax:
+	 *
+	 * | Token       | Match type                 | Description                            |
+	 * | ----------- | -------------------------- | -------------------------------------- |
+	 * | `jscript`   | fuzzy-match                | Items that fuzzy match `jscript`       |
+	 * | `=scheme`   | exact-match                | Items that are `scheme`                |
+	 * | `'python`   | include-match              | Items that include `python`            |
+	 * | `!ruby`     | inverse-exact-match        | Items that do not include `ruby`       |
+	 * | `^java`     | prefix-exact-match         | Items that start with `java`           |
+	 * | `!^earlang` | inverse-prefix-exact-match | Items that do not start with `earlang` |
+	 * | `.js$`      | suffix-exact-match         | Items that end with `.js`              |
+	 * | `!.go$`     | inverse-suffix-exact-match | Items that do not end with `.go`       |
+	 *
+	 * A single pipe character acts as an OR operator. For example, the following
+	 * query matches entries that start with `core` and end with either`go`, `rb`,
+	 * or`py`.
+	 *
+	 * ```
+	 * ^core go$ | rb$ | py$
+	 * ```
+	 */
+	class ExtendedSearch {
+	  constructor(
+	    pattern,
+	    {
+	      isCaseSensitive = Config.isCaseSensitive,
+	      includeMatches = Config.includeMatches,
+	      minMatchCharLength = Config.minMatchCharLength,
+	      findAllMatches = Config.findAllMatches,
+	      location = Config.location,
+	      threshold = Config.threshold,
+	      distance = Config.distance
+	    } = {}
+	  ) {
+	    this.query = null;
+	    this.options = {
+	      isCaseSensitive,
+	      includeMatches,
+	      minMatchCharLength,
+	      findAllMatches,
+	      location,
+	      threshold,
+	      distance
+	    };
+
+	    this.pattern = isCaseSensitive ? pattern : pattern.toLowerCase();
+	    this.query = parseQuery(this.pattern, this.options);
+	  }
+
+	  static condition(_, options) {
+	    return options.useExtendedSearch
+	  }
+
+	  searchIn(text) {
+	    const query = this.query;
+
+	    if (!query) {
+	      return {
+	        isMatch: false,
+	        score: 1
+	      }
+	    }
+
+	    const { includeMatches, isCaseSensitive } = this.options;
+
+	    text = isCaseSensitive ? text : text.toLowerCase();
+
+	    let numMatches = 0;
+	    let allIndices = [];
+	    let totalScore = 0;
+
+	    // ORs
+	    for (let i = 0, qLen = query.length; i < qLen; i += 1) {
+	      const searchers = query[i];
+
+	      // Reset indices
+	      allIndices.length = 0;
+	      numMatches = 0;
+
+	      // ANDs
+	      for (let j = 0, pLen = searchers.length; j < pLen; j += 1) {
+	        const searcher = searchers[j];
+	        const { isMatch, indices, score } = searcher.search(text);
+
+	        if (isMatch) {
+	          numMatches += 1;
+	          totalScore += score;
+	          if (includeMatches) {
+	            const type = searcher.constructor.type;
+	            if (MultiMatchSet.has(type)) {
+	              allIndices = [...allIndices, ...indices];
+	            } else {
+	              allIndices.push(indices);
+	            }
+	          }
+	        } else {
+	          totalScore = 0;
+	          numMatches = 0;
+	          allIndices.length = 0;
+	          break
+	        }
+	      }
+
+	      // OR condition, so if TRUE, return
+	      if (numMatches) {
+	        let result = {
+	          isMatch: true,
+	          score: totalScore / numMatches
+	        };
+
+	        if (includeMatches) {
+	          result.indices = allIndices;
+	        }
+
+	        return result
+	      }
+	    }
+
+	    // Nothing was matched
+	    return {
+	      isMatch: false,
+	      score: 1
+	    }
+	  }
+	}
+
+	const registeredSearchers = [];
+
+	function register$1(...args) {
+	  registeredSearchers.push(...args);
+	}
+
+	function createSearcher(pattern, options) {
+	  for (let i = 0, len = registeredSearchers.length; i < len; i += 1) {
+	    let searcherClass = registeredSearchers[i];
+	    if (searcherClass.condition(pattern, options)) {
+	      return new searcherClass(pattern, options)
+	    }
+	  }
+
+	  return new BitapSearch(pattern, options)
+	}
+
+	const LogicalOperator = {
+	  AND: '$and',
+	  OR: '$or'
+	};
+
+	const KeyType = {
+	  PATH: '$path',
+	  PATTERN: '$val'
+	};
+
+	const isExpression = (query) =>
+	  !!(query[LogicalOperator.AND] || query[LogicalOperator.OR]);
+
+	const isPath = (query) => !!query[KeyType.PATH];
+
+	const isLeaf = (query) =>
+	  !isArray$1(query) && isObject(query) && !isExpression(query);
+
+	const convertToExplicit = (query) => ({
+	  [LogicalOperator.AND]: Object.keys(query).map((key) => ({
+	    [key]: query[key]
+	  }))
+	});
+
+	// When `auto` is `true`, the parse function will infer and initialize and add
+	// the appropriate `Searcher` instance
+	function parse(query, options, { auto = true } = {}) {
+	  const next = (query) => {
+	    let keys = Object.keys(query);
+
+	    const isQueryPath = isPath(query);
+
+	    if (!isQueryPath && keys.length > 1 && !isExpression(query)) {
+	      return next(convertToExplicit(query))
+	    }
+
+	    if (isLeaf(query)) {
+	      const key = isQueryPath ? query[KeyType.PATH] : keys[0];
+
+	      const pattern = isQueryPath ? query[KeyType.PATTERN] : query[key];
+
+	      if (!isString(pattern)) {
+	        throw new Error(LOGICAL_SEARCH_INVALID_QUERY_FOR_KEY(key))
+	      }
+
+	      const obj = {
+	        keyId: createKeyId(key),
+	        pattern
+	      };
+
+	      if (auto) {
+	        obj.searcher = createSearcher(pattern, options);
+	      }
+
+	      return obj
+	    }
+
+	    let node = {
+	      children: [],
+	      operator: keys[0]
+	    };
+
+	    keys.forEach((key) => {
+	      const value = query[key];
+
+	      if (isArray$1(value)) {
+	        value.forEach((item) => {
+	          node.children.push(next(item));
+	        });
+	      }
+	    });
+
+	    return node
+	  };
+
+	  if (!isExpression(query)) {
+	    query = convertToExplicit(query);
+	  }
+
+	  return next(query)
+	}
+
+	class Fuse {
+	  constructor(docs, options = {}, index) {
+	    this.options = { ...Config, ...options };
+
+	    if (
+	      this.options.useExtendedSearch &&
+	      !true
+	    ) {
+	      throw new Error(EXTENDED_SEARCH_UNAVAILABLE)
+	    }
+
+	    this._keyStore = new KeyStore(this.options.keys);
+
+	    this.setCollection(docs, index);
+	  }
+
+	  setCollection(docs, index) {
+	    this._docs = docs;
+
+	    if (index && !(index instanceof FuseIndex)) {
+	      throw new Error(INCORRECT_INDEX_TYPE)
+	    }
+
+	    this._myIndex =
+	      index ||
+	      createIndex(this.options.keys, this._docs, {
+	        getFn: this.options.getFn
+	      });
+	  }
+
+	  add(doc) {
+	    if (!isDefined(doc)) {
+	      return
+	    }
+
+	    this._docs.push(doc);
+	    this._myIndex.add(doc);
+	  }
+
+	  remove(predicate = (/* doc, idx */) => false) {
+	    const results = [];
+
+	    for (let i = 0, len = this._docs.length; i < len; i += 1) {
+	      const doc = this._docs[i];
+	      if (predicate(doc, i)) {
+	        this.removeAt(i);
+	        i -= 1;
+	        len -= 1;
+
+	        results.push(doc);
+	      }
+	    }
+
+	    return results
+	  }
+
+	  removeAt(idx) {
+	    this._docs.splice(idx, 1);
+	    this._myIndex.removeAt(idx);
+	  }
+
+	  getIndex() {
+	    return this._myIndex
+	  }
+
+	  search(query, { limit = -1 } = {}) {
+	    const {
+	      includeMatches,
+	      includeScore,
+	      shouldSort,
+	      sortFn,
+	      ignoreFieldNorm
+	    } = this.options;
+
+	    let results = isString(query)
+	      ? isString(this._docs[0])
+	        ? this._searchStringList(query)
+	        : this._searchObjectList(query)
+	      : this._searchLogical(query);
+
+	    computeScore$1(results, { ignoreFieldNorm });
+
+	    if (shouldSort) {
+	      results.sort(sortFn);
+	    }
+
+	    if (isNumber(limit) && limit > -1) {
+	      results = results.slice(0, limit);
+	    }
+
+	    return format(results, this._docs, {
+	      includeMatches,
+	      includeScore
+	    })
+	  }
+
+	  _searchStringList(query) {
+	    const searcher = createSearcher(query, this.options);
+	    const { records } = this._myIndex;
+	    const results = [];
+
+	    // Iterate over every string in the index
+	    records.forEach(({ v: text, i: idx, n: norm }) => {
+	      if (!isDefined(text)) {
+	        return
+	      }
+
+	      const { isMatch, score, indices } = searcher.searchIn(text);
+
+	      if (isMatch) {
+	        results.push({
+	          item: text,
+	          idx,
+	          matches: [{ score, value: text, norm, indices }]
+	        });
+	      }
+	    });
+
+	    return results
+	  }
+
+	  _searchLogical(query) {
+
+	    const expression = parse(query, this.options);
+
+	    const evaluate = (node, item, idx) => {
+	      if (!node.children) {
+	        const { keyId, searcher } = node;
+
+	        const matches = this._findMatches({
+	          key: this._keyStore.get(keyId),
+	          value: this._myIndex.getValueForItemAtKeyId(item, keyId),
+	          searcher
+	        });
+
+	        if (matches && matches.length) {
+	          return [
+	            {
+	              idx,
+	              item,
+	              matches
+	            }
+	          ]
+	        }
+
+	        return []
+	      }
+
+	      /*eslint indent: [2, 2, {"SwitchCase": 1}]*/
+	      switch (node.operator) {
+	        case LogicalOperator.AND: {
+	          const res = [];
+	          for (let i = 0, len = node.children.length; i < len; i += 1) {
+	            const child = node.children[i];
+	            const result = evaluate(child, item, idx);
+	            if (result.length) {
+	              res.push(...result);
+	            } else {
+	              return []
+	            }
+	          }
+	          return res
+	        }
+	        case LogicalOperator.OR: {
+	          const res = [];
+	          for (let i = 0, len = node.children.length; i < len; i += 1) {
+	            const child = node.children[i];
+	            const result = evaluate(child, item, idx);
+	            if (result.length) {
+	              res.push(...result);
+	              break
+	            }
+	          }
+	          return res
+	        }
+	      }
+	    };
+
+	    const records = this._myIndex.records;
+	    const resultMap = {};
+	    const results = [];
+
+	    records.forEach(({ $: item, i: idx }) => {
+	      if (isDefined(item)) {
+	        let expResults = evaluate(expression, item, idx);
+
+	        if (expResults.length) {
+	          // Dedupe when adding
+	          if (!resultMap[idx]) {
+	            resultMap[idx] = { idx, item, matches: [] };
+	            results.push(resultMap[idx]);
+	          }
+	          expResults.forEach(({ matches }) => {
+	            resultMap[idx].matches.push(...matches);
+	          });
+	        }
+	      }
+	    });
+
+	    return results
+	  }
+
+	  _searchObjectList(query) {
+	    const searcher = createSearcher(query, this.options);
+	    const { keys, records } = this._myIndex;
+	    const results = [];
+
+	    // List is Array<Object>
+	    records.forEach(({ $: item, i: idx }) => {
+	      if (!isDefined(item)) {
+	        return
+	      }
+
+	      let matches = [];
+
+	      // Iterate over every key (i.e, path), and fetch the value at that key
+	      keys.forEach((key, keyIndex) => {
+	        matches.push(
+	          ...this._findMatches({
+	            key,
+	            value: item[keyIndex],
+	            searcher
+	          })
+	        );
+	      });
+
+	      if (matches.length) {
+	        results.push({
+	          idx,
+	          item,
+	          matches
+	        });
+	      }
+	    });
+
+	    return results
+	  }
+	  _findMatches({ key, value, searcher }) {
+	    if (!isDefined(value)) {
+	      return []
+	    }
+
+	    let matches = [];
+
+	    if (isArray$1(value)) {
+	      value.forEach(({ v: text, i: idx, n: norm }) => {
+	        if (!isDefined(text)) {
+	          return
+	        }
+
+	        const { isMatch, score, indices } = searcher.searchIn(text);
+
+	        if (isMatch) {
+	          matches.push({
+	            score,
+	            key,
+	            value: text,
+	            idx,
+	            norm,
+	            indices
+	          });
+	        }
+	      });
+	    } else {
+	      const { v: text, n: norm } = value;
+
+	      const { isMatch, score, indices } = searcher.searchIn(text);
+
+	      if (isMatch) {
+	        matches.push({ score, key, value: text, norm, indices });
+	      }
+	    }
+
+	    return matches
+	  }
+	}
+
+	// Practical scoring function
+	function computeScore$1(results, { ignoreFieldNorm = Config.ignoreFieldNorm }) {
+	  results.forEach((result) => {
+	    let totalScore = 1;
+
+	    result.matches.forEach(({ key, norm, score }) => {
+	      const weight = key ? key.weight : null;
+
+	      totalScore *= Math.pow(
+	        score === 0 && weight ? Number.EPSILON : score,
+	        (weight || 1) * (ignoreFieldNorm ? 1 : norm)
+	      );
+	    });
+
+	    result.score = totalScore;
+	  });
+	}
+
+	function format(
+	  results,
+	  docs,
+	  {
+	    includeMatches = Config.includeMatches,
+	    includeScore = Config.includeScore
+	  } = {}
+	) {
+	  const transformers = [];
+
+	  if (includeMatches) transformers.push(transformMatches);
+	  if (includeScore) transformers.push(transformScore);
+
+	  return results.map((result) => {
+	    const { idx } = result;
+
+	    const data = {
+	      item: docs[idx],
+	      refIndex: idx
+	    };
+
+	    if (transformers.length) {
+	      transformers.forEach((transformer) => {
+	        transformer(result, data);
+	      });
+	    }
+
+	    return data
+	  })
+	}
+
+	Fuse.version = '6.4.2';
+	Fuse.createIndex = createIndex;
+	Fuse.parseIndex = parseIndex;
+	Fuse.config = Config;
+
+	{
+	  Fuse.parseQuery = parse;
+	}
+
+	{
+	  register$1(ExtendedSearch);
+	}
+
+	var _templateObject$4 = _taggedTemplateLiteralLoose(['\n      <div class="iris-search-box" style="position: relative;">\n        <form onSubmit=', '>\n          <label>\n            <input class="', '" type="text" placeholder="Search" onInput=', '/>\n          </label>\n        </form>\n        <', ' class="search-box-results" style="position: absolute; background-color: white; border:1 px solid #eee; border-radius: 8px; left: ', '">\n          ', '\n          ', '\n        <//>\n      </div>\n    '], ['\n      <div class="iris-search-box" style="position: relative;">\n        <form onSubmit=', '>\n          <label>\n            <input class="', '" type="text" placeholder="Search" onInput=', '/>\n          </label>\n        </form>\n        <', ' class="search-box-results" style="position: absolute; background-color: white; border:1 px solid #eee; border-radius: 8px; left: ', '">\n          ', '\n          ', '\n        <//>\n      </div>\n    ']),
+	    _templateObject2$1 = _taggedTemplateLiteralLoose(['\n              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="/profile/', '" padding="5px" onClick=', '>\n                <', ' pub=', ' width=40/>\n                <', ' marginLeft="5px">\n                  ', '<br/>\n                  <small>\n                    ', '\n                  </small>\n                <//>\n              <//>\n            '], ['\n              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="/profile/', '" padding="5px" onClick=', '>\n                <', ' pub=', ' width=40/>\n                <', ' marginLeft="5px">\n                  ', '<br/>\n                  <small>\n                    ', '\n                  </small>\n                <//>\n              <//>\n            ']),
+	    _templateObject3 = _taggedTemplateLiteralLoose(['\n            <a class="follow-someone">Follow someone to see more search results!</a>\n            <a href="/profile/', '" class="suggested">\n              <', ' pub=', ' width=40/>\n              <i>Suggested</i>\n            </a>\n          '], ['\n            <a class="follow-someone">Follow someone to see more search results!</a>\n            <a href="/profile/', '" class="suggested">\n              <', ' pub=', ' width=40/>\n              <i>Suggested</i>\n            </a>\n          ']);
+
+	var suggestedFollow = 'hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU';
+
+	var Search = function (_Component) {
+	  _inherits(Search, _Component);
+
+	  function Search() {
+	    _classCallCheck(this, Search);
+
+	    var _this = _possibleConstructorReturn(this, _Component.call(this));
+
+	    _this.eventListeners = {};
+	    _this.state = { results: [] };
+	    _this.follows = {};
+	    _this.debouncedIndexAndSearch = util.debounce(function () {
+	      var options = { keys: ['name'], includeScore: true, includeMatches: true, threshold: 0.3 };
+	      _this.fuse = new Fuse(_Object$values(_this.follows), options);
+	      _this.search();
+	    }, 200);
+	    Key$1.getDefault().then(function (key) {
+	      _this.key = key;
+	      util.getPublicState().user().auth(key);
+	      _this.getFollowsFn(function () {
+	        return _this.debouncedIndexAndSearch();
+	      });
+	    });
+	    return _this;
+	  }
+
+	  Search.prototype.onInput = function onInput() {
+	    this.search();
+	  };
+
+	  Search.prototype.close = function close() {
+	    this.base.querySelector('input').value = '';
+	    this.setState({ results: [], query: '' });
+	  };
+
+	  Search.prototype.getFollowsFn = function getFollowsFn(callback, k) {
+	    var _this2 = this;
+
+	    var maxDepth = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
+	    var currentDepth = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1;
+
+	    k = k || this.key.pub;
+
+	    var addFollow = function addFollow(k, followDistance, follower) {
+	      if (_this2.follows[k]) {
+	        if (_this2.follows[k].followDistance > followDistance) {
+	          _this2.follows[k].followDistance = followDistance;
+	        }
+	        _this2.follows[k].followers.add(follower);
+	      } else {
+	        _this2.follows[k] = { key: k, followDistance: followDistance, followers: new _Set([follower]) };
+	        util.getPublicState().user(k).get('profile').get('name').on(function (name) {
+	          _this2.follows[k].name = name;
+	          callback(k, _this2.follows[k]);
+	        });
+	      }
+	      callback(k, _this2.follows[k]);
+	    };
+
+	    addFollow(k, currentDepth - 1);
+
+	    util.getPublicState().user(k).get('follow').map().once(function (isFollowing, followedKey) {
+	      // TODO: .on for unfollow
+	      if (isFollowing) {
+	        _this2.hasFollows = true;
+	        addFollow(followedKey, currentDepth, k);
+	        if (currentDepth < maxDepth) {
+	          _this2.getFollowsFn(callback, followedKey, maxDepth, currentDepth + 1);
+	        }
+	      }
+	    });
+
+	    return this.follows;
+	  };
+
+	  Search.prototype.componentDidMount = function componentDidMount() {
+	    this.adjustResultsPosition();
+	  };
+
+	  Search.prototype.componentDidUpdate = function componentDidUpdate() {
+	    this.adjustResultsPosition();
+	  };
+
+	  Search.prototype.adjustResultsPosition = function adjustResultsPosition() {
+	    var input = this.base.querySelector('input');
+	    this.offsetLeft = input.offsetLeft;
+	  };
+
+	  Search.prototype.componentWillUnmount = function componentWillUnmount() {
+	    _Object$values(this.eventListeners).forEach(function (e) {
+	      return e.off();
+	    });
+	  };
+
+	  Search.prototype.onSubmit = function onSubmit(e) {
+	    e.preventDefault();
+	    var links = this.base.querySelector('a:not(.follow-someone)');
+	    links.length && links[0].click();
+	    this.base.querySelector('input').blur();
+	  };
+
+	  Search.prototype.search = function search() {
+	    var _this3 = this;
+
+	    var query = this.base.querySelector('input').value;
+
+	    if (this.props['on-select']) {
+	      var s = query.split('https://iris.to/#/profile/');
+	      if (s.length > 1) {
+	        return this.props['on-select']({ key: s[1] });
+	      }
+	    }
+	    //if (followChatLink(query)) return;
+
+	    if (query && this.fuse) {
+	      var results = this.fuse.search(query).slice(0, 5);
+	      if (results.length) {
+	        var onKeyUp = function onKeyUp(e) {
+	          if (e.key === "Escape") {
+	            // escape key maps to keycode `27`
+	            document.removeEventListener('keyup', onKeyUp);
+	            _this3.close();
+	          }
+	        };
+	        document.removeEventListener('keyup', onKeyUp);
+	        document.addEventListener('keyup', onKeyUp);
+	      }
+	      this.setState({ results: results, query: query });
+	    } else {
+	      this.setState({ results: [], query: query });
+	    }
+	  };
+
+	  Search.prototype.onClick = function onClick(e, item) {
+	    this.close();
+	    if (window.onIrisSearchSelect) {
+	      e.preventDefault();
+	      e.stopPropagation();
+	      window.onIrisSearchSelect(item);
+	    }
+	  };
+
+	  Search.prototype.render = function render() {
+	    var _this4 = this;
+
+	    return m$1(_templateObject$4, function (e) {
+	      return _this4.onSubmit(e);
+	    }, this.props['inner-class'] || '', function () {
+	      return _this4.onInput();
+	    }, Col, this.offsetLeft || '', this.state.results.map(function (r) {
+	      var i = r.item;
+	      var followText = '';
+	      if (i.followDistance === 1) {
+	        followText = 'Following';
+	      }
+	      if (i.followDistance === 2) {
+	        if (i.followers.size === 1 && _this4.follows[[].concat(i.followers)[0]] && _this4.follows[[].concat(i.followers)[0]].name) {
+	          followText = 'Followed by ' + _this4.follows[[].concat(i.followers)[0]].name;
+	        } else {
+	          followText = 'Followed by ' + i.followers.size + ' users you follow';
+	        }
+	      }
+	      return m$1(_templateObject2$1, i.key, function (e) {
+	        return _this4.onClick(e, i);
+	      }, Identicon, i.key, Col, i.name || '', followText);
+	    }), this.state.query && !this.hasFollows ? m$1(_templateObject3, suggestedFollow, Identicon, suggestedFollow) : '');
+	  };
+
+	  return Search;
+	}(d);
+
+	register(Search, 'iris-search', ['on-select', 'inner-class']);
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
@@ -11059,7 +13568,9 @@
 	  components: {
 	    Identicon: Identicon,
 	    ProfileAttribute: ProfileAttribute,
-	    CopyButton: CopyButton
+	    CopyButton: CopyButton,
+	    FollowButton: FollowButton,
+	    Search: Search
 	  }
 	};
 

@@ -48,11 +48,54 @@
 
       <h2>Copy button</h2>
       <p>
-        <code>&lt;iris-copy-button btn-class="btn btn-primary" str="https://iris.to/#/profile/hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
+        <code>&lt;iris-copy-button inner-class="btn btn-primary" str="https://iris.to/#/profile/hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
       </p>
       <p>
-        <iris-copy-button btn-class="btn btn-primary" str="https://iris.to/#/profile/hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
+        <iris-copy-button inner-class="btn btn-primary" str="https://iris.to/#/profile/hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
       </p>
+
+      <h2>Follow button</h2>
+      <p>
+        <code>&lt;iris-follow-button inner-class="btn btn-primary" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
+      </p>
+      <p>
+        <iris-follow-button inner-class="btn btn-primary" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
+      </p>
+
+      <h2>Search</h2>
+      <p>
+        <code>&lt;iris-search inner-class="form-control"/></code>
+<pre>
+&lt;script type="text/javascript">
+  window.onIrisSearchSelect = item => doSomething(item);
+&lt;/script>
+</pre>
+      </p>
+      <p>
+        <iris-search id="search" inner-class="form-control"/>
+        <script type="text/javascript">
+          window.onIrisSearchSelect = i => {
+            console.log(i);
+            const identicon = document.querySelector('#selected-result-identicon');
+            identicon.style.display = '';
+            identicon.setAttribute('pub', i.key);
+            const nameEl = document.querySelector('#selected-result-name');
+            nameEl.style.display = '';
+            nameEl.setAttribute('pub', i.key);
+            document.querySelector('#search-result-raw').innerHTML = JSON.stringify(i);
+          }
+        </script>
+      </p>
+
+      <h3>
+        <iris-profile-attribute id="selected-result-name" attr="name"/>
+      </h3>
+      <p>
+        <iris-identicon style="display: none;" id="selected-result-identicon" width="100"/>
+      </p>
+      <pre id="search-result-raw"></pre>
+
+      <hr style="margin-bottom:500px" />
     </div>
   </body>
 </html>

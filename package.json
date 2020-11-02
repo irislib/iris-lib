@@ -69,6 +69,7 @@
     "build:es": "rimraf es && cross-env BABEL_ENV=es babel src --out-dir es",
     "build:cjs": "rimraf cjs && cross-env BABEL_ENV=cjs babel src --out-dir cjs",
     "build:umd": "rimraf dist && cross-env BABEL_ENV=es rollup -c & cross-env BABEL_ENV=es NODE_ENV=production rollup -c",
+    "build:umdev": "rimraf dist && cross-env BABEL_ENV=es rollup -c",
     "build:docs": "documentation build src/** -f html -o docs --config documentation.yml",
     "build:run": "clear && rimraf cjs && cross-env BABEL_ENV=cjs yarn nodemon src/server.js --watch src --exec babel-node",
     "dev": "concurrently -n build,tests \"yarn build:watch\" \"yarn test:watch\"",
@@ -125,6 +126,7 @@
     "rollup-plugin-terser": "^1.0.1"
   },
   "dependencies": {
+    "fuse.js": "^6.4.2",
     "gun": "0.2019.930",
     "htm": "^3.0.4",
     "identicon.js": "^2.3.3",

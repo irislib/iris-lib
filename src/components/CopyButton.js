@@ -44,7 +44,7 @@ class CopyButton extends Component {
     e.preventDefault();
     const str = typeof this.props.str === 'function' ? this.props.str() : this.props.str;
 
-    if (navigator.share && iris.util.isMobile && !this.props['not-shareable']) {
+    if (navigator.share && util.isMobile && !this.props['not-shareable']) {
       navigator.share({url: str, title: this.props.title}).catch(err => {
         console.error('share failed', err);
         this.copy(e, str);
@@ -56,10 +56,10 @@ class CopyButton extends Component {
 
   render() {
     const text = this.state.copied ? (this.props['copied-text'] || 'Copied') : (this.props.text || 'Copy');
-    return html`<button class=${this.props['btn-class'] || 'copy-button'} onClick=${e => this.onClick(e)}>${text}</button>`;
+    return html`<button class=${this.props['inner-class'] || 'copy-button'} onClick=${e => this.onClick(e)}>${text}</button>`;
   }
 }
 
-register(CopyButton, 'iris-copy-button', ['str', 'not-shareable', 'text', 'copied-text', 'title', 'btn-class']);
+register(CopyButton, 'iris-copy-button', ['str', 'not-shareable', 'text', 'copied-text', 'title', 'inner-class']);
 
 export default CopyButton;

@@ -19,6 +19,7 @@ class ProfileAttribute extends Component {
   }
 
   componentDidMount() {
+    if (!this.props.pub) return;
     const attr = this.props.attr || 'name';
     util.getPublicState().user(this.props.pub).get('profile').get(attr).on((value,a,b,e) => {
       this.eventListeners[attr] = e;

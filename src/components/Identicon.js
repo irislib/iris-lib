@@ -14,11 +14,14 @@ class Identicon extends Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.pub !== this.props.pub) {
+      this.resetEventListeners();
+      this.setState({name:'', photo: ''});
       this.componentDidMount();
     }
   }
 
   componentDidMount() {
+    if (!this.props.pub) return;
     new iris.Attribute({type: 'keyID', value: this.props.pub}).identiconSrc({width: this.props.width, showType: false}).then(identicon => {
       this.setState({identicon});
     });
@@ -35,9 +38,13 @@ class Identicon extends Component {
     }
   }
 
-  componentWillUnmount() {
+  resetEventListeners() {
     Object.values(this.eventListeners).forEach(e => e.off());
     this.eventListeners = {};
+  }
+
+  componentWillUnmount() {
+    this.resetEventListeners();
   }
 
   render() {

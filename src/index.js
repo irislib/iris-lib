@@ -12,6 +12,8 @@ import {version} from '../package.json';
 import Identicon from './components/Identicon';
 import ProfileAttribute from './components/ProfileAttribute';
 import CopyButton from './components/CopyButton';
+import FollowButton from './components/FollowButton';
+import Search from './components/Search';
 
 export default {
   VERSION: version,
@@ -26,6 +28,8 @@ export default {
   components: {
     Identicon,
     ProfileAttribute,
-    CopyButton
+    CopyButton,
+    FollowButton,
+    Search
   }
 };
