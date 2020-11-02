@@ -129,10 +129,11 @@ class Search extends Component {
 
   onClick(e, item) {
     this.close();
-    if (window.onIrisSearchSelect) {
+    const onSelect = this.props.onSelect || window.onIrisSearchSelect;
+    if (onSelect) {
       e.preventDefault();
       e.stopPropagation();
-      window.onIrisSearchSelect(item);
+      onSelect(item);
     }
   }
 
@@ -144,7 +145,7 @@ class Search extends Component {
             <input class="${this.props['inner-class'] || ''}" type="text" placeholder="Search" onInput=${() => this.onInput()}/>
           </label>
         </form>
-        <${Col} class="search-box-results" style="position: absolute; background-color: white; border:1 px solid #eee; border-radius: 8px; left: ${this.offsetLeft || ''}">
+        <${Col} class="search-box-results" style="position: absolute; background-color: white; border: 1px solid #eee; border-radius: 8px; left: ${this.offsetLeft || ''}">
           ${this.state.results.map(r => {
             const i = r.item;
             let followText = '';
@@ -159,7 +160,7 @@ class Search extends Component {
               }
             }
             return html`
-              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="/profile/${i.key}" padding="5px" onClick=${e => this.onClick(e, i)}>
+              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="https://iris.to/#/profile/${i.key}" onClick=${e => this.onClick(e, i)}>
                 <${Identicon} pub=${i.key} width=40/>
                 <${Col} marginLeft="5px">
                   ${i.name || ''}<br/>
@@ -171,10 +172,10 @@ class Search extends Component {
             `;
           })}
           ${this.state.query && !this.hasFollows ? html`
-            <a class="follow-someone">Follow someone to see more search results!</a>
-            <a href="/profile/${suggestedFollow}" class="suggested">
+            <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>
+            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=${e => this.onClick(e, {key: suggestedFollow})} href="https://iris.to/#/profile/${suggestedFollow}" class="suggested">
               <${Identicon} pub=${suggestedFollow} width=40/>
-              <i>Suggested</i>
+              <${Row} alignItems="center" marginLeft="5px"><i>Suggested</i><//>
             </a>
           ` : ''}
         <//>
