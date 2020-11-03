@@ -487,6 +487,23 @@ export default {
       .day-separator:first-of-type {
         margin-top: 0;
       }
+
+      *[contenteditable="true"]:not(:focus) {
+        cursor: pointer;
+      }
+
+      *[contenteditable="true"] {
+        outline: none;
+      }
+
+      [placeholder]:empty::before {
+        content: attr(placeholder);
+        color: #999;
+      }
+
+      [placeholder]:empty:focus::before {
+          content: "\\200b";
+      }
       `;
     document.head.prepend(sheet);
   },

@@ -47,6 +47,10 @@
         <iris-profile-attribute attr="about" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
       </p>
 
+      <p>For currently logged in user attribute, leave out <code>pub</code>. It will be contenteditable, unless you add <code>editable="false"</code>.</p>
+      <p><code>What's your name? &lt;iris-profile-attribute attr="name"/></code></p>
+      <p>What's your name? <iris-profile-attribute attr="name"/></p>
+
       <h2>Copy button</h2>
       <p>
         <code>&lt;iris-copy-button inner-class="btn btn-primary" str="https://iris.to/#/profile/hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
@@ -89,7 +93,7 @@
       </p>
 
       <h3>
-        <iris-profile-attribute id="selected-result-name" attr="name"/>
+        <iris-profile-attribute style="display:none" id="selected-result-name" attr="name"/>
       </h3>
       <p>
         <iris-identicon style="display: none;" id="selected-result-identicon" width="100"/>

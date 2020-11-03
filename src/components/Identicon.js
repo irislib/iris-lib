@@ -3,6 +3,7 @@ import { Component } from 'preact';
 import { html } from 'htm/preact';
 import { InlineBlock } from 'jsxstyle/preact';
 import util from '../util';
+import Attribute from '../attribute';
 
 const DEFAULT_WIDTH = 80;
 
@@ -22,7 +23,7 @@ class Identicon extends Component {
 
   componentDidMount() {
     if (!this.props.pub) return;
-    new iris.Attribute({type: 'keyID', value: this.props.pub}).identiconSrc({width: this.props.width, showType: false}).then(identicon => {
+    new Attribute({type: 'keyID', value: this.props.pub}).identiconSrc({width: this.props.width, showType: false}).then(identicon => {
       this.setState({identicon});
     });
     util.getPublicState().user(this.props.pub).get('profile').get('photo').on(photo => {
