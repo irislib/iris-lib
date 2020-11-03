@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset='utf-8' />
-  <title>iris-lib 0.0.146 | Documentation</title>
+  <title>iris-lib 0.0.149 | Documentation</title>
   <meta name='description' content='Basic tools for reading and writing Iris messages and identities.'>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
   <link href='assets/bass.css' rel='stylesheet' />
@@ -15,7 +15,7 @@
       <div id='split-left' class='overflow-auto fs0 height-viewport-100'>
         <div class='py1 px2'>
           <h3 class='mb0 no-anchor'>iris-lib</h3>
-          <div class='mb1'><code>0.0.146</code></div>
+          <div class='mb1'><code>0.0.149</code></div>
           <input
             placeholder='Filter'
             id='filter-input'
@@ -62,15 +62,15 @@
                       </a></li>
                     
                       <li><a
-                        href='#channelsetonline'
+                        href='#channelsetactivity'
                         class='regular pre-open'>
-                        .setOnline
+                        .setActivity
                       </a></li>
                     
                       <li><a
-                        href='#channelgetonline'
+                        href='#channelgetactivity'
                         class='regular pre-open'>
-                        .getOnline
+                        .getActivity
                       </a></li>
                     
                       <li><a
@@ -215,6 +215,12 @@
                         href='#channelgetsimplelink'
                         class='regular pre-open'>
                         #getSimpleLink
+                      </a></li>
+                      
+                      <li><a
+                        href='#channelgetchatlinks'
+                        class='regular pre-open'>
+                        #getChatLinks
                       </a></li>
                       
                       <li><a
@@ -654,15 +660,27 @@
                     <li class='h5'><span>Static members</span></li>
                     
                       <li><a
-                        href='#keygetdefault'
+                        href='#keygetactivekey'
                         class='regular pre-open'>
-                        .getDefault
+                        .getActiveKey
                       </a></li>
                     
                       <li><a
-                        href='#keygetdefault'
+                        href='#keygetactivekey'
                         class='regular pre-open'>
-                        .getDefault
+                        .getActiveKey
+                      </a></li>
+                    
+                      <li><a
+                        href='#keysetactivekey'
+                        class='regular pre-open'>
+                        .setActiveKey
+                      </a></li>
+                    
+                      <li><a
+                        href='#keysetactivekey'
+                        class='regular pre-open'>
+                        .setActiveKey
                       </a></li>
                     
                       <li><a
@@ -760,15 +778,27 @@
                     <li class='h5'><span>Static members</span></li>
                     
                       <li><a
-                        href='#keygetdefault'
+                        href='#keygetactivekey'
                         class='regular pre-open'>
-                        .getDefault
+                        .getActiveKey
                       </a></li>
                     
                       <li><a
-                        href='#keygetdefault'
+                        href='#keygetactivekey'
                         class='regular pre-open'>
-                        .getDefault
+                        .getActiveKey
+                      </a></li>
+                    
+                      <li><a
+                        href='#keysetactivekey'
+                        class='regular pre-open'>
+                        .setActiveKey
+                      </a></li>
+                    
+                      <li><a
+                        href='#keysetactivekey'
+                        class='regular pre-open'>
+                        .setActiveKey
                       </a></li>
                     
                       <li><a
@@ -1648,11 +1678,11 @@ theirChannel.put(<span class="hljs-string">'mood'</span>, <span class="hljs-stri
       </div>
     </div>
   
-    <div class='border-bottom' id='channelsetonline'>
+    <div class='border-bottom' id='channelsetactivity'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>setOnline(gun, isOnline)</span>
+            <span class='code strong strong truncate'>setActivity(gun, activity)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1660,9 +1690,9 @@ theirChannel.put(<span class="hljs-string">'mood'</span>, <span class="hljs-stri
 
   
 
-  <p>Set the user's online status</p>
+  <p>Set the user's online/active status</p>
 
-    <div class='pre p1 fill-light mt0'>setOnline(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">object</a>, isOnline: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</div>
+    <div class='pre p1 fill-light mt0'>setActivity(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">object</a>, activity: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
   
   
 
@@ -1687,8 +1717,8 @@ theirChannel.put(<span class="hljs-string">'mood'</span>, <span class="hljs-stri
       
         <div class='space-bottom0'>
           <div>
-            <span class='code bold'>isOnline</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</code>
-	    true: update the user's lastActive time every 3 seconds, false: stop updating
+            <span class='code bold'>activity</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
+	    string: set the activity status every 3 seconds, null/false: stop updating
 
           </div>
           
@@ -1717,11 +1747,11 @@ theirChannel.put(<span class="hljs-string">'mood'</span>, <span class="hljs-stri
       </div>
     </div>
   
-    <div class='border-bottom' id='channelgetonline'>
+    <div class='border-bottom' id='channelgetactivity'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getOnline(gun, pubKey, callback)</span>
+            <span class='code strong strong truncate'>getActivity(gun, pubKey, callback)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -1731,7 +1761,7 @@ theirChannel.put(<span class="hljs-string">'mood'</span>, <span class="hljs-stri
 
   <p>Get the online status of a user.</p>
 
-    <div class='pre p1 fill-light mt0'>getOnline(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">object</a>, pubKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, callback: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</div>
+    <div class='pre p1 fill-light mt0'>getActivity(gun: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">object</a>, pubKey: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, callback: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a>)</div>
   
   
 
@@ -3281,6 +3311,105 @@ to call this method.</p>
             = <code>&#39;https://iris.to/&#39;</code>)</code>
 	    
           </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='channelgetchatlinks'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>getChatLinks($0)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>getChatLinks($0: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>$0</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    
+          </div>
+          
+          <table class='mt1 mb2 fixed-table h5 col-12'>
+            <colgroup>
+              <col width='30%' />
+              <col width='70%' />
+            </colgroup>
+            <thead>
+              <tr class='bold fill-light'>
+                <th>Name</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody class='mt1'>
+              
+                <tr>
+  <td class='break-word'><span class='code bold'>$0.callback</span> <code class='quiet'>any</code>
+  </td>
+  <td class='break-word'><span></span></td>
+</tr>
+
+
+              
+                <tr>
+  <td class='break-word'><span class='code bold'>$0.urlRoot</span> <code class='quiet'>any</code>
+  </td>
+  <td class='break-word'><span></span></td>
+</tr>
+
+
+              
+                <tr>
+  <td class='break-word'><span class='code bold'>$0.subscribe</span> <code class='quiet'>any</code>
+  </td>
+  <td class='break-word'><span></span></td>
+</tr>
+
+
+              
+            </tbody>
+          </table>
           
         </div>
       
@@ -6110,7 +6239,7 @@ Verification message:
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
       <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="#signedmessage">SignedMessage</a>></code>:
-        message from JSON string produced by toString
+        
 
       
     
@@ -7042,7 +7171,7 @@ Verification message:
     
       <div class='py1 quiet mt1 prose-big'>Returns</div>
       <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>:
-        JSON string of signature and public key
+        
 
       
     
@@ -7116,11 +7245,11 @@ Verification message:
     <div class='py1 quiet mt1 prose-big'>Static Members</div>
     <div class="clearfix">
   
-    <div class='border-bottom' id='keygetdefault'>
+    <div class='border-bottom' id='keygetactivekey'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getDefault(datadir, keyfile)</span>
+            <span class='code strong strong truncate'>getActiveKey(datadir, keyfile)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -7128,10 +7257,10 @@ Verification message:
 
   
 
-  <p>Load default key from datadir/private.key on node.js or from local storage 'iris.myKey' in browser.</p>
-<p>If default key does not exist, it is generated.</p>
+  <p>Load private key from datadir/iris.key on node.js or from local storage 'iris.myKey' in browser.</p>
+<p>If the key does not exist, it is generated.</p>
 
-    <div class='pre p1 fill-light mt0'>getDefault(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, keyfile: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
+    <div class='pre p1 fill-light mt0'>getActiveKey(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, keyfile: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
   
   
 
@@ -7159,7 +7288,7 @@ Verification message:
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>keyfile</span> <code class='quiet'>(any
-            = <code>`identifi.key`</code>)</code>
+            = <code>`iris.key`</code>)</code>
 	    
           </div>
           
@@ -7196,11 +7325,11 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='keygetdefault'>
+    <div class='border-bottom' id='keygetactivekey'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getDefault(datadir, keyfile)</span>
+            <span class='code strong strong truncate'>getActiveKey(datadir, keyfile)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -7208,10 +7337,10 @@ Verification message:
 
   
 
-  <p>Load default key from datadir/private.key on node.js or from local storage 'iris.myKey' in browser.</p>
-<p>If default key does not exist, it is generated.</p>
+  <p>Load private key from datadir/iris.key on node.js or from local storage 'iris.myKey' in browser.</p>
+<p>If the key does not exist, it is generated.</p>
 
-    <div class='pre p1 fill-light mt0'>getDefault(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, keyfile: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
+    <div class='pre p1 fill-light mt0'>getActiveKey(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, keyfile: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
   
   
 
@@ -7239,7 +7368,7 @@ Verification message:
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>keyfile</span> <code class='quiet'>(any
-            = <code>`identifi.key`</code>)</code>
+            = <code>`iris.key`</code>)</code>
 	    
           </div>
           
@@ -7258,6 +7387,178 @@ Verification message:
 
       
     
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='keysetactivekey'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>setActiveKey(key, save, datadir, keyfile)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>setActiveKey(key: any, save: any, datadir: any, keyfile: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>save</span> <code class='quiet'>(any
+            = <code>true</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>datadir</span> <code class='quiet'>(any
+            = <code>`.`</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>keyfile</span> <code class='quiet'>(any
+            = <code>`iris.key`</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='keysetactivekey'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>setActiveKey(key, save, datadir, keyfile)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>setActiveKey(key: any, save: any, datadir: any, keyfile: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>save</span> <code class='quiet'>(any
+            = <code>true</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>datadir</span> <code class='quiet'>(any
+            = <code>`.`</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>keyfile</span> <code class='quiet'>(any
+            = <code>`iris.key`</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
   
 
   
@@ -8166,11 +8467,11 @@ Verification message:
     <div class='py1 quiet mt1 prose-big'>Static Members</div>
     <div class="clearfix">
   
-    <div class='border-bottom' id='keygetdefault'>
+    <div class='border-bottom' id='keygetactivekey'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getDefault(datadir, keyfile)</span>
+            <span class='code strong strong truncate'>getActiveKey(datadir, keyfile)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -8178,10 +8479,10 @@ Verification message:
 
   
 
-  <p>Load default key from datadir/private.key on node.js or from local storage 'iris.myKey' in browser.</p>
-<p>If default key does not exist, it is generated.</p>
+  <p>Load private key from datadir/iris.key on node.js or from local storage 'iris.myKey' in browser.</p>
+<p>If the key does not exist, it is generated.</p>
 
-    <div class='pre p1 fill-light mt0'>getDefault(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, keyfile: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
+    <div class='pre p1 fill-light mt0'>getActiveKey(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, keyfile: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
   
   
 
@@ -8209,7 +8510,7 @@ Verification message:
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>keyfile</span> <code class='quiet'>(any
-            = <code>`identifi.key`</code>)</code>
+            = <code>`iris.key`</code>)</code>
 	    
           </div>
           
@@ -8246,11 +8547,11 @@ Verification message:
       </div>
     </div>
   
-    <div class='border-bottom' id='keygetdefault'>
+    <div class='border-bottom' id='keygetactivekey'>
       <div class="clearfix small pointer toggle-sibling">
         <div class="py1 contain">
             <a class='icon pin-right py1 dark-link caret-right'>▸</a>
-            <span class='code strong strong truncate'>getDefault(datadir, keyfile)</span>
+            <span class='code strong strong truncate'>getActiveKey(datadir, keyfile)</span>
         </div>
       </div>
       <div class="clearfix display-none toggle-target">
@@ -8258,10 +8559,10 @@ Verification message:
 
   
 
-  <p>Load default key from datadir/private.key on node.js or from local storage 'iris.myKey' in browser.</p>
-<p>If default key does not exist, it is generated.</p>
+  <p>Load private key from datadir/iris.key on node.js or from local storage 'iris.myKey' in browser.</p>
+<p>If the key does not exist, it is generated.</p>
 
-    <div class='pre p1 fill-light mt0'>getDefault(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, keyfile: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
+    <div class='pre p1 fill-light mt0'>getActiveKey(datadir: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, keyfile: any): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>></div>
   
   
 
@@ -8289,7 +8590,7 @@ Verification message:
         <div class='space-bottom0'>
           <div>
             <span class='code bold'>keyfile</span> <code class='quiet'>(any
-            = <code>`identifi.key`</code>)</code>
+            = <code>`iris.key`</code>)</code>
 	    
           </div>
           
@@ -8308,6 +8609,178 @@ Verification message:
 
       
     
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='keysetactivekey'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>setActiveKey(key, save, datadir, keyfile)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>setActiveKey(key: any, save: any, datadir: any, keyfile: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>save</span> <code class='quiet'>(any
+            = <code>true</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>datadir</span> <code class='quiet'>(any
+            = <code>`.`</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>keyfile</span> <code class='quiet'>(any
+            = <code>`iris.key`</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='keysetactivekey'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>setActiveKey(key, save, datadir, keyfile)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+
+  
+    <div class='pre p1 fill-light mt0'>setActiveKey(key: any, save: any, datadir: any, keyfile: any)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>key</span> <code class='quiet'>(any)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>save</span> <code class='quiet'>(any
+            = <code>true</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>datadir</span> <code class='quiet'>(any
+            = <code>`.`</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>keyfile</span> <code class='quiet'>(any
+            = <code>`iris.key`</code>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
   
 
   

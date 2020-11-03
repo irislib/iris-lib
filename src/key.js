@@ -11,13 +11,13 @@ let myKey;
 */
 class Key {
   /**
-  * Load default key from datadir/private.key on node.js or from local storage 'iris.myKey' in browser.
+  * Load private key from datadir/iris.key on node.js or from local storage 'iris.myKey' in browser.
   *
-  * If default key does not exist, it is generated.
+  * If the key does not exist, it is generated.
   * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
   * @returns {Promise<Object>} keypair object
   */
-  static async getDefault(datadir = `.`, keyfile = `identifi.key`) {
+  static async getActiveKey(datadir = `.`, keyfile = `iris.key`) {
     if (myKey) {
       return myKey;
     }
@@ -50,6 +50,30 @@ class Key {
       }
     }
     return myKey;
+  }
+
+  static getDefault(datadir = `.`, keyfile = `iris.key`) {
+    return Key.getActiveKey(datadir, keyfile);
+  }
+
+  static async getActivePub(datadir = `.`, keyfile = `iris.key`) {
+    const key = await Key.getActiveKey(datadir, keyfile);
+    return key.pub;
+  }
+
+  /**
+  *
+  */
+  static setActiveKey(key, save = true, datadir = `.`, keyfile = `iris.key`) {
+    myKey = key;
+    if (!save) return;
+    if (util.isNode) {
+      const privKeyFile = `${datadir}/${keyfile}`;
+      fs.writeFileSync(privKeyFile, Key.toString(myKey));
+      fs.chmodSync(privKeyFile, 400);
+    } else {
+      window.localStorage.setItem(`iris.myKey`, Key.toString(myKey));
+    }
   }
 
   /**

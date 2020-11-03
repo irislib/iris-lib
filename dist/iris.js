@@ -5752,30 +5752,30 @@
 	  }
 
 	  /**
-	  * Load default key from datadir/private.key on node.js or from local storage 'iris.myKey' in browser.
+	  * Load private key from datadir/iris.key on node.js or from local storage 'iris.myKey' in browser.
 	  *
-	  * If default key does not exist, it is generated.
+	  * If the key does not exist, it is generated.
 	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
 	  * @returns {Promise<Object>} keypair object
 	  */
-	  Key.getDefault = async function getDefault() {
+	  Key.getActiveKey = async function getActiveKey() {
 	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
-	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'identifi.key';
+	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
 
 	    if (myKey) {
 	      return myKey;
 	    }
 	    if (util.isNode) {
-	      var fs = require('fs');
+	      var _fs = require('fs');
 	      var privKeyFile = datadir + '/' + keyfile;
-	      if (fs.existsSync(privKeyFile)) {
-	        var f = fs.readFileSync(privKeyFile, 'utf8');
+	      if (_fs.existsSync(privKeyFile)) {
+	        var f = _fs.readFileSync(privKeyFile, 'utf8');
 	        myKey = Key.fromString(f);
 	      } else {
 	        var newKey = await Key.generate();
 	        myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
-	        fs.writeFileSync(privKeyFile, Key.toString(myKey));
-	        fs.chmodSync(privKeyFile, 400);
+	        _fs.writeFileSync(privKeyFile, Key.toString(myKey));
+	        _fs.chmodSync(privKeyFile, 400);
 	      }
 	      if (!myKey) {
 	        throw new Error('loading default key failed - check ' + datadir + '/' + keyfile);
@@ -5794,6 +5794,42 @@
 	      }
 	    }
 	    return myKey;
+	  };
+
+	  Key.getDefault = function getDefault() {
+	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
+	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
+
+	    return Key.getActiveKey(datadir, keyfile);
+	  };
+
+	  Key.getActivePub = async function getActivePub() {
+	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
+	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
+
+	    var key = await Key.getActiveKey(datadir, keyfile);
+	    return key.pub;
+	  };
+
+	  /**
+	  *
+	  */
+
+
+	  Key.setActiveKey = function setActiveKey(key) {
+	    var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+	    var datadir = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '.';
+	    var keyfile = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'iris.key';
+
+	    myKey = key;
+	    if (!save) return;
+	    if (util.isNode) {
+	      var privKeyFile = datadir + '/' + keyfile;
+	      fs.writeFileSync(privKeyFile, Key.toString(myKey));
+	      fs.chmodSync(privKeyFile, 400);
+	    } else {
+	      window.localStorage.setItem('iris.myKey', Key.toString(myKey));
+	    }
 	  };
 
 	  /**
@@ -10955,30 +10991,30 @@
 	  }
 
 	  /**
-	  * Load default key from datadir/private.key on node.js or from local storage 'iris.myKey' in browser.
+	  * Load private key from datadir/iris.key on node.js or from local storage 'iris.myKey' in browser.
 	  *
-	  * If default key does not exist, it is generated.
+	  * If the key does not exist, it is generated.
 	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
 	  * @returns {Promise<Object>} keypair object
 	  */
-	  Key.getDefault = async function getDefault() {
+	  Key.getActiveKey = async function getActiveKey() {
 	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
-	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'identifi.key';
+	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
 
 	    if (myKey$1) {
 	      return myKey$1;
 	    }
 	    if (util.isNode) {
-	      var fs = require('fs');
+	      var _fs = require('fs');
 	      var privKeyFile = datadir + '/' + keyfile;
-	      if (fs.existsSync(privKeyFile)) {
-	        var f = fs.readFileSync(privKeyFile, 'utf8');
+	      if (_fs.existsSync(privKeyFile)) {
+	        var f = _fs.readFileSync(privKeyFile, 'utf8');
 	        myKey$1 = Key.fromString(f);
 	      } else {
 	        var newKey = await Key.generate();
 	        myKey$1 = myKey$1 || newKey; // eslint-disable-line require-atomic-updates
-	        fs.writeFileSync(privKeyFile, Key.toString(myKey$1));
-	        fs.chmodSync(privKeyFile, 400);
+	        _fs.writeFileSync(privKeyFile, Key.toString(myKey$1));
+	        _fs.chmodSync(privKeyFile, 400);
 	      }
 	      if (!myKey$1) {
 	        throw new Error('loading default key failed - check ' + datadir + '/' + keyfile);
@@ -10997,6 +11033,42 @@
 	      }
 	    }
 	    return myKey$1;
+	  };
+
+	  Key.getDefault = function getDefault() {
+	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
+	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
+
+	    return Key.getActiveKey(datadir, keyfile);
+	  };
+
+	  Key.getActivePub = async function getActivePub() {
+	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
+	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
+
+	    var key = await Key.getActiveKey(datadir, keyfile);
+	    return key.pub;
+	  };
+
+	  /**
+	  *
+	  */
+
+
+	  Key.setActiveKey = function setActiveKey(key) {
+	    var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+	    var datadir = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '.';
+	    var keyfile = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'iris.key';
+
+	    myKey$1 = key;
+	    if (!save) return;
+	    if (util.isNode) {
+	      var privKeyFile = datadir + '/' + keyfile;
+	      fs.writeFileSync(privKeyFile, Key.toString(myKey$1));
+	      fs.chmodSync(privKeyFile, 400);
+	    } else {
+	      window.localStorage.setItem('iris.myKey', Key.toString(myKey$1));
+	    }
 	  };
 
 	  /**
