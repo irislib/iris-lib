@@ -402,18 +402,18 @@ class Channel {
         } else {
           theirSecretChannelId = await this.getTheirSecretChannelId(pub);
         }
-        this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, this.uuid || pub, false, key, pub);});
+        this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).get({ '.': {'-':true}}).map().once((data, key) => {this.messageReceived(callback, data, this.uuid || pub, false, key, pub);});
       }
       if (!this.uuid) {
         // Subscribe to our messages
         const ourSecretChannelId = await this.getOurSecretChannelId(pub);
-        this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, pub, true, key, this.key.pub);});
+        this.user.get(`chats`).get(ourSecretChannelId).get(`msgs`).get({ '.': {'-':true}}).map().once((data, key) => {this.messageReceived(callback, data, pub, true, key, this.key.pub);});
       }
     });
     if (this.uuid) {
       // Subscribe to our messages
       const mySecretUuid = await this.getMySecretUuid();
-      this.user.get(`chats`).get(mySecretUuid).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, this.uuid, true, key, this.key.pub);});
+      this.user.get(`chats`).get(mySecretUuid).get(`msgs`).get({ '.': {'-':true}}).map().once((data, key) => {this.messageReceived(callback, data, this.uuid, true, key, this.key.pub);});
     }
   }
 
