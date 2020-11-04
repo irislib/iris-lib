@@ -7836,14 +7836,14 @@
 	        } else {
 	          theirSecretChannelId = await _this5.getTheirSecretChannelId(pub);
 	        }
-	        _this5.gun.user(pub).get('chats').get(theirSecretChannelId).get('msgs').get({ '.': { '-': true } }).map().once(function (data, key) {
+	        _this5.gun.user(pub).get('chats').get(theirSecretChannelId).get('msgs').map().once(function (data, key) {
 	          _this5.messageReceived(callback, data, _this5.uuid || pub, false, key, pub);
 	        });
 	      }
 	      if (!_this5.uuid) {
 	        // Subscribe to our messages
 	        var ourSecretChannelId = await _this5.getOurSecretChannelId(pub);
-	        _this5.user.get('chats').get(ourSecretChannelId).get('msgs').get({ '.': { '-': true } }).map().once(function (data, key) {
+	        _this5.user.get('chats').get(ourSecretChannelId).get('msgs').map().once(function (data, key) {
 	          _this5.messageReceived(callback, data, pub, true, key, _this5.key.pub);
 	        });
 	      }
@@ -7851,7 +7851,7 @@
 	    if (this.uuid) {
 	      // Subscribe to our messages
 	      var mySecretUuid = await this.getMySecretUuid();
-	      this.user.get('chats').get(mySecretUuid).get('msgs').get({ '.': { '-': true } }).map().once(function (data, key) {
+	      this.user.get('chats').get(mySecretUuid).get('msgs').map().once(function (data, key) {
 	        _this5.messageReceived(callback, data, _this5.uuid, true, key, _this5.key.pub);
 	      });
 	    }
