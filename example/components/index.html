@@ -25,36 +25,39 @@
     </div>
 
     <div class="container">
+      <h2>Text node</h2>
+      <p>
+        Get a text node, optionally editable, from <code>gun.user(pub)</code> space. Useful for fetching profile attributes and other text fields.
+      </p>
+      <p>
+        <code>&lt;iris-text path="profile/name" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
+      </p>
+      <p>
+        <iris-text path="profile/name" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
+      </p>
+      <p>
+        <code>&lt;iris-text path="profile/about" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
+      </p>
+      <p>
+        <iris-text path="profile/about" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
+      </p>
+
+      <p>For currently logged in user attribute, leave out <code>pub</code>. It will be contenteditable, unless you add <code>editable="false"</code>.</p>
+      <p>
+        <code>&lt;iris-text placeholder="What's your name?" path="profile/name"/></code><br/>
+        <code>Hello &lt;b>&lt;iris-text editable="false" path="profile/name"/>&lt;/b>!</code>
+      </p>
+      <p>
+        <iris-text placeholder="What's your name?" path="profile/name"/><br/>
+        Hello <b><iris-text editable="false" path="profile/name"/></b>!
+      </p>
+
       <h2>Identicon</h2>
       <p>
         <code>&lt;iris-identicon pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU" width="100"/></code>
       </p>
       <p>
         <iris-identicon pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU" width="100"/>
-      </p>
-
-      <h2>Profile attribute</h2>
-      <p>
-        <code>&lt;iris-profile-attribute attr="name" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
-      </p>
-      <p>
-        <iris-profile-attribute attr="name" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
-      </p>
-      <p>
-        <code>&lt;iris-profile-attribute attr="about" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
-      </p>
-      <p>
-        <iris-profile-attribute attr="about" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
-      </p>
-
-      <p>For currently logged in user attribute, leave out <code>pub</code>. It will be contenteditable, unless you add <code>editable="false"</code>.</p>
-      <p>
-        <code>&lt;iris-profile-attribute placeholder="What's your name?" attr="name"/></code><br/>
-        <code>Hello &lt;b>&lt;iris-profile-attribute editable="false" attr="name"/>&lt;/b>!</code>
-      </p>
-      <p>
-        <iris-profile-attribute placeholder="What's your name?" attr="name"/><br/>
-        Hello <b><iris-profile-attribute editable="false" attr="name"/></b>!
       </p>
 
       <h2>Copy button</h2>
@@ -99,7 +102,7 @@
       </p>
 
       <h3>
-        <iris-profile-attribute style="display:none" id="selected-result-name" attr="name"/>
+        <iris-text style="display:none" id="selected-result-name" path="profile/name"/>
       </h3>
       <p>
         <iris-identicon style="display: none;" id="selected-result-identicon" width="100"/>

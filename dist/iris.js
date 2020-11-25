@@ -11146,14 +11146,15 @@
 	  return Key;
 	}();
 
-	var _templateObject$1 = _taggedTemplateLiteralLoose(['\n      <span ref=', ' contenteditable placeholder=', ' onInput=', '>\n        ', '\n      </span>'], ['\n      <span ref=', ' contenteditable placeholder=', ' onInput=', '>\n        ', '\n      </span>']),
-	    _templateObject2$1 = _taggedTemplateLiteralLoose(['', ''], ['', '']);
+	var _templateObject$1 = _taggedTemplateLiteralLoose(['\n      <input\n        type="text"\n        value=', '\n        placeholder=', '\n        onInput=', '\n        disabled=', ' />\n    '], ['\n      <input\n        type="text"\n        value=', '\n        placeholder=', '\n        onInput=', '\n        disabled=', ' />\n    ']),
+	    _templateObject2$1 = _taggedTemplateLiteralLoose(['\n        <span ref=', ' contenteditable placeholder=', ' onInput=', '>\n          ', '\n        </span>\n      '], ['\n        <span ref=', ' contenteditable placeholder=', ' onInput=', '>\n          ', '\n        </span>\n      ']),
+	    _templateObject3 = _taggedTemplateLiteralLoose(['', ''], ['', '']);
 
-	var ProfileAttribute = function (_Component) {
-	  _inherits(ProfileAttribute, _Component);
+	var TextNode = function (_Component) {
+	  _inherits(TextNode, _Component);
 
-	  function ProfileAttribute() {
-	    _classCallCheck(this, ProfileAttribute);
+	  function TextNode() {
+	    _classCallCheck(this, TextNode);
 
 	    var _this = _possibleConstructorReturn(this, _Component.call(this));
 
@@ -11163,63 +11164,87 @@
 	    return _this;
 	  }
 
-	  ProfileAttribute.prototype.componentDidUpdate = function componentDidUpdate(prevProps) {
-	    if (prevProps.pub !== this.props.pub || prevProps.attr !== this.props.attr) {
+	  TextNode.prototype.componentDidUpdate = function componentDidUpdate(prevProps) {
+	    if (prevProps.pub !== this.props.pub || prevProps.path !== this.props.path) {
 	      this.componentDidMount();
 	    }
 	  };
 
-	  ProfileAttribute.prototype.componentDidMount = function componentDidMount() {
+	  TextNode.prototype.componentDidMount = function componentDidMount() {
 	    var _this2 = this;
 
 	    util.injectCss();
-	    this.attr = this.props.attr || 'name';
-	    this.props.pub && this.getAttr(this.props.pub);
+	    this.path = this.props.path || 'profile/name';
+	    this.props.pub && this.getText(this.props.pub);
 	    Key$1.getDefault().then(function (key) {
 	      key && _this2.setState({ myPub: key.pub });
 	      if (!_this2.props.pub) {
-	        _this2.getAttr(key.pub);
+	        _this2.getText(key.pub);
 	      }
 	    });
 	  };
 
-	  ProfileAttribute.prototype.getAttr = function getAttr(pub) {
+	  TextNode.prototype.getText = function getText(pub) {
 	    var _this3 = this;
 
-	    util.getPublicState().user(pub).get('profile').get(this.attr).on(function (value, a, b$$1, e) {
-	      _this3.eventListeners[_this3.attr] = e;
+	    console.log(this.path);
+	    var base = util.getPublicState().user(pub);
+	    var path = this.path.split('/');
+	    var query = path.reduce(function (sum, current) {
+	      return sum.get(current);
+	    }, base);
+	    console.log('query', query);
+
+	    query.on(function (value, a, b$$1, e) {
+	      console.log('got', a, value);
+	      _this3.eventListeners[_this3.path] = e;
 	      if (!(_this3.ref.current && _this3.ref.current === document.activeElement)) {
 	        _this3.setState({ value: value });
 	      }
 	    });
 	  };
 
-	  ProfileAttribute.prototype.componentWillUnmount = function componentWillUnmount() {
+	  TextNode.prototype.componentWillUnmount = function componentWillUnmount() {
 	    _Object$values(this.eventListeners).forEach(function (e) {
 	      return e.off();
 	    });
 	    this.eventListeners = {};
 	  };
 
-	  ProfileAttribute.prototype.onInput = function onInput(e) {
-	    util.getPublicState().user().get('profile').get(this.attr).put(e.target.innerText);
+	  TextNode.prototype.onInput = function onInput(e) {
+	    var text = e.target.value || e.target.innerText;
+	    util.getPublicState().user().get(this.path).put(text);
 	  };
 
-	  ProfileAttribute.prototype.render = function render() {
+	  TextNode.prototype.renderInput = function renderInput() {
 	    var _this4 = this;
 
-	    if (this.props.pub === this.state.pub && String(this.props.editable) !== 'false') {
-	      return m$1(_templateObject$1, this.ref, this.props.placeholder || this.attr, function (e) {
-	        return _this4.onInput(e);
-	      }, this.state.value);
-	    }
-	    return m$1(_templateObject2$1, this.state.value);
+	    console.log('renderInput');
+	    return m$1(_templateObject$1, this.state.value, this.props.placeholder || this.path, function (e) {
+	      return _this4.onInput(e);
+	    }, this.props.pub !== this.state.myPub || String(this.props.editable) === 'false');
 	  };
 
-	  return ProfileAttribute;
+	  TextNode.prototype.renderTag = function renderTag() {
+	    var _this5 = this;
+
+	    console.log('renderTag');
+	    if (this.props.pub === this.state.myPub && String(this.props.editable) !== 'false') {
+	      return m$1(_templateObject2$1, this.ref, this.props.placeholder || this.path, function (e) {
+	        return _this5.onInput(e);
+	      }, this.state.value);
+	    }
+	    return m$1(_templateObject3, this.state.value);
+	  };
+
+	  TextNode.prototype.render = function render() {
+	    return this.props.tag === 'input' ? this.renderInput() : this.renderTag();
+	  };
+
+	  return TextNode;
 	}(d);
 
-	register(ProfileAttribute, 'iris-profile-attribute', ['attr', 'pub', 'placeholder', 'editable']);
+	register(TextNode, 'iris-text', ['path', 'pub', 'placeholder', 'editable', 'tag']);
 
 	var _templateObject$2 = _taggedTemplateLiteralLoose(['<button class=', ' onClick=', '>', '</button>'], ['<button class=', ' onClick=', '>', '</button>']);
 
@@ -13475,7 +13500,7 @@
 
 	var _templateObject$4 = _taggedTemplateLiteralLoose(['\n      <div class="iris-search-box" style="position: relative;">\n        <form onSubmit=', '>\n          <label>\n            <input class="', '" type="text" placeholder="Search" onInput=', '/>\n          </label>\n        </form>\n        <', ' class="search-box-results" style="position: absolute; background-color: white; border: 1px solid #eee; border-radius: 8px; left: ', '">\n          ', '\n          ', '\n        <//>\n      </div>\n    '], ['\n      <div class="iris-search-box" style="position: relative;">\n        <form onSubmit=', '>\n          <label>\n            <input class="', '" type="text" placeholder="Search" onInput=', '/>\n          </label>\n        </form>\n        <', ' class="search-box-results" style="position: absolute; background-color: white; border: 1px solid #eee; border-radius: 8px; left: ', '">\n          ', '\n          ', '\n        <//>\n      </div>\n    ']),
 	    _templateObject2$2 = _taggedTemplateLiteralLoose(['\n              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="https://iris.to/#/profile/', '" onClick=', '>\n                <', ' pub=', ' width=40/>\n                <', ' marginLeft="5px">\n                  ', '<br/>\n                  <small>\n                    ', '\n                  </small>\n                <//>\n              <//>\n            '], ['\n              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="https://iris.to/#/profile/', '" onClick=', '>\n                <', ' pub=', ' width=40/>\n                <', ' marginLeft="5px">\n                  ', '<br/>\n                  <small>\n                    ', '\n                  </small>\n                <//>\n              <//>\n            ']),
-	    _templateObject3 = _taggedTemplateLiteralLoose(['\n            <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>\n            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=', ' href="https://iris.to/#/profile/', '" class="suggested">\n              <', ' pub=', ' width=40/>\n              <', ' alignItems="center" marginLeft="5px"><i>Suggested</i><//>\n            </a>\n          '], ['\n            <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>\n            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=', ' href="https://iris.to/#/profile/', '" class="suggested">\n              <', ' pub=', ' width=40/>\n              <', ' alignItems="center" marginLeft="5px"><i>Suggested</i><//>\n            </a>\n          ']);
+	    _templateObject3$1 = _taggedTemplateLiteralLoose(['\n            <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>\n            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=', ' href="https://iris.to/#/profile/', '" class="suggested">\n              <', ' pub=', ' width=40/>\n              <', ' alignItems="center" marginLeft="5px"><i>Suggested</i><//>\n            </a>\n          '], ['\n            <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>\n            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=', ' href="https://iris.to/#/profile/', '" class="suggested">\n              <', ' pub=', ' width=40/>\n              <', ' alignItems="center" marginLeft="5px"><i>Suggested</i><//>\n            </a>\n          ']);
 
 	var suggestedFollow = 'hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU';
 
@@ -13645,7 +13670,7 @@
 	      return m$1(_templateObject2$2, i.key, function (e) {
 	        return _this4.onClick(e, i);
 	      }, Identicon, i.key, Col, i.name || '', followText);
-	    }), this.state.query && !this.hasFollows ? m$1(_templateObject3, function (e) {
+	    }), this.state.query && !this.hasFollows ? m$1(_templateObject3$1, function (e) {
 	      return _this4.onClick(e, { key: suggestedFollow });
 	    }, suggestedFollow, Identicon, suggestedFollow, Row) : '');
 	  };
@@ -13669,7 +13694,7 @@
 	  util: util,
 	  components: {
 	    Identicon: Identicon,
-	    ProfileAttribute: ProfileAttribute,
+	    TextNode: TextNode,
 	    CopyButton: CopyButton,
 	    FollowButton: FollowButton,
 	    Search: Search
