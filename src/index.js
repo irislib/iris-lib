@@ -11,6 +11,7 @@ import Channel from './Channel';
 import {version} from '../package.json';
 import Identicon from './components/Identicon';
 import TextNode from './components/TextNode';
+import ImageNode from './components/ImageNode';
 import CopyButton from './components/CopyButton';
 import FollowButton from './components/FollowButton';
 import Search from './components/Search';

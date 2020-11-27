@@ -11174,11 +11174,11 @@
 
 	    util.injectCss();
 	    this.path = this.props.path || 'profile/name';
-	    this.props.pub && this.getText(this.props.pub);
+	    this.props.pub && this.getValue(this.props.pub);
 	    Key$1.getDefault().then(function (key) {
 	      key && _this2.setState({ myPub: key.pub });
 	      if (!_this2.props.pub) {
-	        _this2.getText(key.pub);
+	        _this2.getValue(key.pub);
 	      }
 	    });
 	  };
@@ -11191,7 +11191,7 @@
 	    }, base);
 	  };
 
-	  TextNode.prototype.getText = function getText(pub) {
+	  TextNode.prototype.getValue = function getValue(pub) {
 	    var _this3 = this;
 
 	    this.getNode(pub).on(function (value, a, b$$1, e) {
@@ -11245,7 +11245,106 @@
 
 	register(TextNode, 'iris-text', ['path', 'pub', 'placeholder', 'editable', 'tag']);
 
-	var _templateObject$2 = _taggedTemplateLiteralLoose(['<button class=', ' onClick=', '>', '</button>'], ['<button class=', ' onClick=', '>', '</button>']);
+	var _templateObject$2 = _taggedTemplateLiteralLoose(['\n      <input\n        type="text"\n        value=', '\n        placeholder=', '\n        onInput=', '\n        disabled=', ' />\n    '], ['\n      <input\n        type="text"\n        value=', '\n        placeholder=', '\n        onInput=', '\n        disabled=', ' />\n    ']),
+	    _templateObject2$2 = _taggedTemplateLiteralLoose(['\n      <', ' ref=', ' contenteditable=', ' placeholder=', ' onInput=', '>\n        ', '\n      </', '>\n    '], ['\n      <', ' ref=', ' contenteditable=', ' placeholder=', ' onInput=', '>\n        ', '\n      </', '>\n    ']),
+	    _templateObject3 = _taggedTemplateLiteralLoose(['<img style=', ' onClick=', ' src=', ' ...', '/>'], ['<img style=', ' onClick=', ' src=', ' ...', '/>']),
+	    _templateObject4 = _taggedTemplateLiteralLoose(['<button class=', ' onClick=', '>Add image</button>'], ['<button class=', ' onClick=', '>Add image</button>']),
+	    _templateObject5 = _taggedTemplateLiteralLoose(['\n      <span>\n        <input name="profile-photo-input" type="file" style="display:none;" onChange=', ' accept="image/*"/>\n        ', '\n      </span>\n    '], ['\n      <span>\n        <input name="profile-photo-input" type="file" style="display:none;" onChange=', ' accept="image/*"/>\n        ', '\n      </span>\n    ']);
+
+	var toBase64 = function toBase64(file) {
+	  return new _Promise(function (resolve, reject) {
+	    var reader = new FileReader();
+	    reader.readAsDataURL(file);
+	    reader.onload = function () {
+	      return resolve(reader.result);
+	    };
+	    reader.onerror = function (error) {
+	      return reject(error);
+	    };
+	  });
+	};
+
+	var ImageNode = function (_TextNode) {
+	  _inherits(ImageNode, _TextNode);
+
+	  function ImageNode() {
+	    _classCallCheck(this, ImageNode);
+
+	    return _possibleConstructorReturn(this, _TextNode.apply(this, arguments));
+	  }
+
+	  ImageNode.prototype.getValue = function getValue(pub) {
+	    var _this2 = this;
+
+	    this.getNode(pub).on(function (value, a, b$$1, e) {
+	      _this2.eventListeners[_this2.path] = e;
+	      _this2.setState({ value: value });
+	    });
+	  };
+
+	  ImageNode.prototype.onChange = async function onChange(e) {
+	    var file = e.target.files[0];
+	    var data = await toBase64(file);
+	    this.getNode().put(data);
+	  };
+
+	  ImageNode.prototype.renderInput = function renderInput() {
+	    var _this3 = this;
+
+	    return m$1(_templateObject$2, this.state.value, this.props.placeholder || this.path, function (e) {
+	      return _this3.onInput(e);
+	    }, !this.isEditable());
+	  };
+
+	  ImageNode.prototype.renderTag = function renderTag() {
+	    var _this4 = this;
+
+	    var placeholder = this.props.placeholder || this.props.path;
+	    var tag = this.props.tag || 'span';
+	    return m$1(_templateObject2$2, tag, this.ref, this.isEditable(), placeholder, function (e) {
+	      return _this4.onInput(e);
+	    }, this.state.value, tag);
+	  };
+
+	  ImageNode.prototype.onClick = function onClick(e) {
+	    if (this.isEditable()) {
+	      this.base.firstChild.click();
+	    }
+	  };
+
+	  ImageNode.prototype.render = function render() {
+	    var _this5 = this;
+
+	    var editable = this.isEditable();
+	    var val = this.state.value;
+	    var src = val && val.indexOf('data:image') === 0 ? val : this.props.placeholder;
+	    var _props = this.props,
+	        alt = _props.alt,
+	        width = _props.width,
+	        height = _props.height;
+
+	    var el = void 0;
+	    if (src) {
+	      var style = editable ? 'cursor: pointer;' : '';
+	      el = m$1(_templateObject3, style, function (e) {
+	        return _this5.onClick(e);
+	      }, val, { alt: alt, width: width, height: height });
+	    } else if (editable) {
+	      el = m$1(_templateObject4, this.props['btn-class'], function (e) {
+	        return _this5.onClick(e);
+	      });
+	    }
+	    return m$1(_templateObject5, function (e) {
+	      return _this5.onChange(e);
+	    }, el);
+	  };
+
+	  return ImageNode;
+	}(TextNode);
+
+	register(ImageNode, 'iris-img', ['path', 'pub', 'placeholder', 'editable', 'alt', 'width', 'height']);
+
+	var _templateObject$3 = _taggedTemplateLiteralLoose(['<button class=', ' onClick=', '>', '</button>'], ['<button class=', ' onClick=', '>', '</button>']);
 
 	var CopyButton = function (_Component) {
 	  _inherits(CopyButton, _Component);
@@ -11313,7 +11412,7 @@
 	    var _this4 = this;
 
 	    var text = this.state.copied ? this.props['copied-text'] || 'Copied' : this.props.text || 'Copy';
-	    return m$1(_templateObject$2, this.props['inner-class'] || 'copy-button', function (e) {
+	    return m$1(_templateObject$3, this.props['inner-class'] || 'copy-button', function (e) {
 	      return _this4.onClick(e);
 	    }, text);
 	  };
@@ -11323,7 +11422,7 @@
 
 	register(CopyButton, 'iris-copy-button', ['str', 'not-shareable', 'text', 'copied-text', 'title', 'inner-class']);
 
-	var _templateObject$3 = _taggedTemplateLiteralLoose(['\n      <button class="iris-follow-button ', ' ', '" onClick=', '>\n        <span class="nonhover">', '</span>\n        <span class="hover">Unfollow</span>\n      </button>\n    '], ['\n      <button class="iris-follow-button ', ' ', '" onClick=', '>\n        <span class="nonhover">', '</span>\n        <span class="hover">Unfollow</span>\n      </button>\n    ']);
+	var _templateObject$4 = _taggedTemplateLiteralLoose(['\n      <button class="iris-follow-button ', ' ', '" onClick=', '>\n        <span class="nonhover">', '</span>\n        <span class="hover">Unfollow</span>\n      </button>\n    '], ['\n      <button class="iris-follow-button ', ' ', '" onClick=', '>\n        <span class="nonhover">', '</span>\n        <span class="hover">Unfollow</span>\n      </button>\n    ']);
 
 	var FollowButton = function (_Component) {
 	  _inherits(FollowButton, _Component);
@@ -11365,7 +11464,7 @@
 	  FollowButton.prototype.render = function render() {
 	    var _this3 = this;
 
-	    return m$1(_templateObject$3, this.state.following ? 'following' : '', this.props['inner-class'] || '', function (e) {
+	    return m$1(_templateObject$4, this.state.following ? 'following' : '', this.props['inner-class'] || '', function (e) {
 	      return _this3.onClick(e);
 	    }, this.state.following ? 'Following' : 'Follow');
 	  };
@@ -13497,9 +13596,9 @@
 	  register$1(ExtendedSearch);
 	}
 
-	var _templateObject$4 = _taggedTemplateLiteralLoose(['\n      <div class="iris-search-box" style="position: relative;">\n        <form onSubmit=', '>\n          <label>\n            <input class="', '" type="text" placeholder="Search" onInput=', '/>\n          </label>\n        </form>\n        <', ' class="search-box-results" style="position: absolute; background-color: white; border: 1px solid #eee; border-radius: 8px; left: ', '">\n          ', '\n          ', '\n        <//>\n      </div>\n    '], ['\n      <div class="iris-search-box" style="position: relative;">\n        <form onSubmit=', '>\n          <label>\n            <input class="', '" type="text" placeholder="Search" onInput=', '/>\n          </label>\n        </form>\n        <', ' class="search-box-results" style="position: absolute; background-color: white; border: 1px solid #eee; border-radius: 8px; left: ', '">\n          ', '\n          ', '\n        <//>\n      </div>\n    ']),
-	    _templateObject2$2 = _taggedTemplateLiteralLoose(['\n              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="https://iris.to/#/profile/', '" onClick=', '>\n                <', ' pub=', ' width=40/>\n                <', ' marginLeft="5px">\n                  ', '<br/>\n                  <small>\n                    ', '\n                  </small>\n                <//>\n              <//>\n            '], ['\n              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="https://iris.to/#/profile/', '" onClick=', '>\n                <', ' pub=', ' width=40/>\n                <', ' marginLeft="5px">\n                  ', '<br/>\n                  <small>\n                    ', '\n                  </small>\n                <//>\n              <//>\n            ']),
-	    _templateObject3 = _taggedTemplateLiteralLoose(['\n            <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>\n            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=', ' href="https://iris.to/#/profile/', '" class="suggested">\n              <', ' pub=', ' width=40/>\n              <', ' alignItems="center" marginLeft="5px"><i>Suggested</i><//>\n            </a>\n          '], ['\n            <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>\n            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=', ' href="https://iris.to/#/profile/', '" class="suggested">\n              <', ' pub=', ' width=40/>\n              <', ' alignItems="center" marginLeft="5px"><i>Suggested</i><//>\n            </a>\n          ']);
+	var _templateObject$5 = _taggedTemplateLiteralLoose(['\n      <div class="iris-search-box" style="position: relative;">\n        <form onSubmit=', '>\n          <label>\n            <input class="', '" type="text" placeholder="Search" onInput=', '/>\n          </label>\n        </form>\n        <', ' class="search-box-results" style="position: absolute; background-color: white; border: 1px solid #eee; border-radius: 8px; left: ', '">\n          ', '\n          ', '\n        <//>\n      </div>\n    '], ['\n      <div class="iris-search-box" style="position: relative;">\n        <form onSubmit=', '>\n          <label>\n            <input class="', '" type="text" placeholder="Search" onInput=', '/>\n          </label>\n        </form>\n        <', ' class="search-box-results" style="position: absolute; background-color: white; border: 1px solid #eee; border-radius: 8px; left: ', '">\n          ', '\n          ', '\n        <//>\n      </div>\n    ']),
+	    _templateObject2$3 = _taggedTemplateLiteralLoose(['\n              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="https://iris.to/#/profile/', '" onClick=', '>\n                <', ' pub=', ' width=40/>\n                <', ' marginLeft="5px">\n                  ', '<br/>\n                  <small>\n                    ', '\n                  </small>\n                <//>\n              <//>\n            '], ['\n              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="https://iris.to/#/profile/', '" onClick=', '>\n                <', ' pub=', ' width=40/>\n                <', ' marginLeft="5px">\n                  ', '<br/>\n                  <small>\n                    ', '\n                  </small>\n                <//>\n              <//>\n            ']),
+	    _templateObject3$1 = _taggedTemplateLiteralLoose(['\n            <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>\n            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=', ' href="https://iris.to/#/profile/', '" class="suggested">\n              <', ' pub=', ' width=40/>\n              <', ' alignItems="center" marginLeft="5px"><i>Suggested</i><//>\n            </a>\n          '], ['\n            <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>\n            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=', ' href="https://iris.to/#/profile/', '" class="suggested">\n              <', ' pub=', ' width=40/>\n              <', ' alignItems="center" marginLeft="5px"><i>Suggested</i><//>\n            </a>\n          ']);
 
 	var suggestedFollow = 'hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU';
 
@@ -13649,7 +13748,7 @@
 	  Search.prototype.render = function render() {
 	    var _this4 = this;
 
-	    return m$1(_templateObject$4, function (e) {
+	    return m$1(_templateObject$5, function (e) {
 	      return _this4.onSubmit(e);
 	    }, this.props['inner-class'] || '', function () {
 	      return _this4.onInput();
@@ -13666,10 +13765,10 @@
 	          followText = 'Followed by ' + i.followers.size + ' users you follow';
 	        }
 	      }
-	      return m$1(_templateObject2$2, i.key, function (e) {
+	      return m$1(_templateObject2$3, i.key, function (e) {
 	        return _this4.onClick(e, i);
 	      }, Identicon, i.key, Col, i.name || '', followText);
-	    }), this.state.query && !this.hasFollows ? m$1(_templateObject3, function (e) {
+	    }), this.state.query && !this.hasFollows ? m$1(_templateObject3$1, function (e) {
 	      return _this4.onClick(e, { key: suggestedFollow });
 	    }, suggestedFollow, Identicon, suggestedFollow, Row) : '');
 	  };

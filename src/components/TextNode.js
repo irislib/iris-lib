@@ -23,11 +23,11 @@ class TextNode extends Component {
   componentDidMount() {
     util.injectCss();
     this.path = this.props.path || 'profile/name';
-    this.props.pub && this.getText(this.props.pub);
+    this.props.pub && this.getValue(this.props.pub);
     Key.getDefault().then(key => {
       key && this.setState({myPub: key.pub});
       if (!this.props.pub) {
-        this.getText(key.pub);
+        this.getValue(key.pub);
       }
     });
   }
@@ -38,7 +38,7 @@ class TextNode extends Component {
     return path.reduce((sum, current) => sum.get(current), base);
   }
 
-  getText(pub) {
+  getValue(pub) {
     this.getNode(pub).on((value,a,b,e) => {
       this.eventListeners[this.path] = e;
       if (!(this.ref.current && this.ref.current === document.activeElement)) {
