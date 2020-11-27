@@ -496,13 +496,13 @@ export default {
         outline: none;
       }
 
-      [placeholder]:empty::before {
+      [placeholder]:empty:before {
         content: attr(placeholder);
         color: #999;
       }
 
-      [placeholder]:empty:focus::before {
-          content: "\\200b";
+      [placeholder]:empty:focus {
+        cursor: text;
       }
       `;
     document.head.prepend(sheet);

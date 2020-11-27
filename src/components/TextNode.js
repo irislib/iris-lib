@@ -32,15 +32,14 @@ class TextNode extends Component {
     });
   }
 
-  getText(pub) {
-    console.log(this.path);
+  getNode(pub) {
     const base = util.getPublicState().user(pub);
     const path = this.path.split('/');
-    const query = path.reduce((sum, current) => sum.get(current), base);
-    console.log('query', query);
+    return path.reduce((sum, current) => sum.get(current), base);
+  }
 
-    query.on((value,a,b,e) => {
-      console.log('got', a, value);
+  getText(pub) {
+    this.getNode(pub).on((value,a,b,e) => {
       this.eventListeners[this.path] = e;
       if (!(this.ref.current && this.ref.current === document.activeElement)) {
         this.setState({value});
@@ -55,31 +54,32 @@ class TextNode extends Component {
 
   onInput(e) {
     const text = e.target.value || e.target.innerText;
-    util.getPublicState().user().get(this.path).put(text);
+    this.getNode().put(text);
+  }
+
+  isEditable() {
+    return (!this.props.pub || this.props.pub === this.state.myPub) && String(this.props.editable) !== 'false';
   }
 
   renderInput() {
-    console.log('renderInput');
     return html`
       <input
         type="text"
         value=${this.state.value}
         placeholder=${this.props.placeholder || this.path}
         onInput=${e => this.onInput(e)}
-        disabled=${this.props.pub !== this.state.myPub || String(this.props.editable) === 'false'} />
+        disabled=${!this.isEditable()} />
     `;
   }
 
   renderTag() {
-    console.log('renderTag');
-    if (this.props.pub === this.state.myPub && String(this.props.editable) !== 'false') {
-      return html`
-        <span ref=${this.ref} contenteditable placeholder=${this.props.placeholder || this.path} onInput=${e => this.onInput(e)}>
-          ${this.state.value}
-        </span>
-      `;
-    }
-    return html`${this.state.value}`;
+    const placeholder = this.props.placeholder || this.props.path;
+    const tag = this.props.tag || 'span';
+    return html`
+      <${tag} ref=${this.ref} contenteditable=${this.isEditable()} placeholder=${placeholder} onInput=${e => this.onInput(e)}>
+        ${this.state.value}
+      </${tag}>
+    `;
   }
 
   render() {

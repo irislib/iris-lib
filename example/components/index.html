@@ -45,11 +45,12 @@
       <p>For currently logged in user attribute, leave out <code>pub</code>. It will be contenteditable, unless you add <code>editable="false"</code>.</p>
       <p>
         <code>&lt;iris-text placeholder="What's your name?" path="profile/name"/></code><br/>
-        <code>Hello &lt;b>&lt;iris-text editable="false" path="profile/name"/>&lt;/b>!</code>
+        <code>Hello &lt;b>&lt;iris-text placeholder="name" editable="false" path="profile/name"/>&lt;/b>!</code>
       </p>
       <p>
-        <iris-text placeholder="What's your name?" path="profile/name"/><br/>
-        Hello <b><iris-text editable="false" path="profile/name"/></b>!
+        <iris-text placeholder="What's your name?" path="profile/name"/>
+        <br/>
+        Hello <b><iris-text placeholder="name" editable="false" path="profile/name"></iris-text></b>!
       </p>
 
       <h2>Identicon</h2>
