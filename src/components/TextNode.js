@@ -24,12 +24,19 @@ class TextNode extends Component {
     util.injectCss();
     this.path = this.props.path || 'profile/name';
     this.props.pub && this.getValue(this.props.pub);
-    Key.getDefault().then(key => {
-      key && this.setState({myPub: key.pub});
-      if (!this.props.pub) {
-        this.getValue(key.pub);
-      }
-    });
+    const ps = util.getPublicState();
+    const myPub = ps._.user && ps._.user.is.pub;
+    const setMyPub = myPub => {
+      this.setState({myPub});
+      !this.props.pub && this.getValue(myPub);
+    }
+    if (myPub) {
+      setMyPub(myPub);
+    } else {
+      Key.getDefault().then(key => {
+        setMyPub(key.pub);
+      });
+    }
   }
 
   getNode(pub) {
