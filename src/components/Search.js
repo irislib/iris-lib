@@ -161,7 +161,7 @@ class Search extends Component {
             }
             return html`
               <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="https://iris.to/#/profile/${i.key}" onClick=${e => this.onClick(e, i)}>
-                <${Identicon} pub=${i.key} width=40/>
+                <${Identicon} user=${i.key} width=40/>
                 <${Col} marginLeft="5px">
                   ${i.name || ''}<br/>
                   <small>
@@ -174,7 +174,7 @@ class Search extends Component {
           ${this.state.query && !this.hasFollows ? html`
             <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>
             <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=${e => this.onClick(e, {key: suggestedFollow})} href="https://iris.to/#/profile/${suggestedFollow}" class="suggested">
-              <${Identicon} pub=${suggestedFollow} width=40/>
+              <${Identicon} user=${suggestedFollow} width=40/>
               <${Row} alignItems="center" marginLeft="5px"><i>Suggested</i><//>
             </a>
           ` : ''}

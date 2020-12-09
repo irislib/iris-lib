@@ -15,8 +15,8 @@ const toBase64 = file => new Promise((resolve, reject) => {
 });
 
 class ImageNode extends TextNode {
-  getValue(pub) {
-    this.getNode(pub).on((value,a,b,e) => {
+  getValue(user) {
+    this.getNode(user).on((value,a,b,e) => {
       this.eventListeners[this.path] = e;
       this.setState({value});
     });
@@ -76,6 +76,6 @@ class ImageNode extends TextNode {
   }
 }
 
-register(ImageNode, 'iris-img', ['path', 'pub', 'placeholder', 'editable', 'alt', 'width', 'height']);
+register(ImageNode, 'iris-img', ['path', 'user', 'placeholder', 'editable', 'alt', 'width', 'height']);
 
 export default ImageNode;

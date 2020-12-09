@@ -14,14 +14,14 @@ class FollowButton extends Component {
   onClick(e) {
     e.preventDefault();
     const follow = !this.state.following;
-    util.getPublicState().user().get('follow').get(this.props.pub).put(follow);
+    util.getPublicState().user().get('follow').get(this.props.user).put(follow);
   }
 
   componentDidMount() {
     util.injectCss();
     Key.getDefault().then(key => {
       util.getPublicState().user().auth(key);
-      util.getPublicState().user().get('follow').get(this.props.pub).on((following, a, b, e) => {
+      util.getPublicState().user().get('follow').get(this.props.user).on((following, a, b, e) => {
         this.setState({following});
         this.eventListeners['follow'] = e;
       });
@@ -42,6 +42,6 @@ class FollowButton extends Component {
   }
 }
 
-register(FollowButton, 'iris-follow-button', ['pub']);
+register(FollowButton, 'iris-follow-button', ['user']);
 
 export default FollowButton;

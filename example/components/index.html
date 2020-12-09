@@ -30,19 +30,19 @@
         Get a text node, optionally editable, from <code>gun.user(pub)</code> space. Useful for fetching profile attributes and other text fields.
       </p>
       <p>
-        <code>&lt;iris-text path="profile/name" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
+        <code>&lt;iris-text path="profile/name" user="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
       </p>
       <p>
-        <iris-text path="profile/name" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
+        <iris-text path="profile/name" user="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
       </p>
       <p>
-        <code>&lt;iris-text path="profile/about" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
+        <code>&lt;iris-text path="profile/about" user="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
       </p>
       <p>
-        <iris-text path="profile/about" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
+        <iris-text path="profile/about" user="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
       </p>
 
-      <p>For currently logged in user attribute, leave out <code>pub</code>. It will be contenteditable, unless you add <code>editable="false"</code>.</p>
+      <p>For currently logged in user attribute, leave out <code>user</code>. It will be contenteditable, unless you add <code>editable="false"</code>.</p>
       <p>
         <code>&lt;iris-text placeholder="What's your name?" path="profile/name"/></code><br/>
         <code>Hello &lt;b>&lt;iris-text placeholder="name" editable="false" path="profile/name"/>&lt;/b>!</code>
@@ -63,10 +63,10 @@
 
       <h2>Identicon</h2>
       <p>
-        <code>&lt;iris-identicon pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU" width="100"/></code>
+        <code>&lt;iris-identicon user="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU" width="100"/></code>
       </p>
       <p>
-        <iris-identicon pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU" width="100"/>
+        <iris-identicon user="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU" width="100"/>
       </p>
 
       <h2>Copy button</h2>
@@ -79,10 +79,10 @@
 
       <h2>Follow button</h2>
       <p>
-        <code>&lt;iris-follow-button inner-class="btn btn-primary" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
+        <code>&lt;iris-follow-button inner-class="btn btn-primary" user="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/></code>
       </p>
       <p>
-        <iris-follow-button inner-class="btn btn-primary" pub="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
+        <iris-follow-button inner-class="btn btn-primary" user="hyECQHwSo7fgr2MVfPyakvayPeixxsaAWVtZ-vbaiSc.TXIp8MnCtrnW6n2MrYquWPcc-DTmZzMBmc2yaGv9gIU"/>
       </p>
 
       <h2>Search</h2>
@@ -101,10 +101,10 @@
             console.log(i);
             const identicon = document.querySelector('#selected-result-identicon');
             identicon.style.display = '';
-            identicon.setAttribute('pub', i.key);
+            identicon.setAttribute('user', i.key);
             const nameEl = document.querySelector('#selected-result-name');
             nameEl.style.display = '';
-            nameEl.setAttribute('pub', i.key);
+            nameEl.setAttribute('user', i.key);
             document.querySelector('#search-result-raw').innerHTML = JSON.stringify(i);
           }
         </script>

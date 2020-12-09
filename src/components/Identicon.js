@@ -14,7 +14,7 @@ class Identicon extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (prevProps.pub !== this.props.pub) {
+    if (prevProps.user !== this.props.user) {
       this.resetEventListeners();
       this.setState({name:'', photo: ''});
       this.componentDidMount();
@@ -22,17 +22,17 @@ class Identicon extends Component {
   }
 
   componentDidMount() {
-    if (!this.props.pub) return;
-    new Attribute({type: 'keyID', value: this.props.pub}).identiconSrc({width: this.props.width, showType: false}).then(identicon => {
+    if (!this.props.user) return;
+    new Attribute({type: 'keyID', value: this.props.user}).identiconSrc({width: this.props.width, showType: false}).then(identicon => {
       this.setState({identicon});
     });
-    util.getPublicState().user(this.props.pub).get('profile').get('photo').on(photo => {
+    util.getPublicState().user(this.props.user).get('profile').get('photo').on(photo => {
       if (typeof photo === 'string' && photo.indexOf('data:image') === 0) {
         this.setState({photo});
       }
     });
     if (this.props.showTooltip) {
-      util.getPublicState().user(this.props.pub).get('profile').get('name').on((name,a,b,e) => {
+      util.getPublicState().user(this.props.user).get('profile').get('name').on((name,a,b,e) => {
         this.eventListeners['name'] = e;
         this.setState({name})
       });
@@ -62,6 +62,6 @@ class Identicon extends Component {
     <//>`;
   }
 }
-register(Identicon, 'iris-identicon', ['pub', 'onClick', 'width', 'showTooltip']);
+register(Identicon, 'iris-identicon', ['user', 'onClick', 'width', 'showTooltip']);
 
 export default Identicon;

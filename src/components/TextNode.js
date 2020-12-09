@@ -15,7 +15,7 @@ class TextNode extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (prevProps.pub !== this.props.pub || prevProps.path !== this.props.path) {
+    if (prevProps.user !== this.props.user || prevProps.path !== this.props.path) {
       this.componentDidMount();
     }
   }
@@ -23,12 +23,12 @@ class TextNode extends Component {
   componentDidMount() {
     util.injectCss();
     this.path = this.props.path || 'profile/name';
-    this.props.pub && this.getValue(this.props.pub);
+    this.props.user && this.getValue(this.props.user);
     const ps = util.getPublicState();
     const myPub = ps._.user && ps._.user.is.pub;
     const setMyPub = myPub => {
       this.setState({myPub});
-      !this.props.pub && this.getValue(myPub);
+      !this.props.user && this.getValue(myPub);
     }
     if (myPub) {
       setMyPub(myPub);
@@ -39,14 +39,14 @@ class TextNode extends Component {
     }
   }
 
-  getNode(pub) {
-    const base = util.getPublicState().user(pub);
+  getNode(user) {
+    const base = util.getPublicState().user(user);
     const path = this.path.split('/');
     return path.reduce((sum, current) => sum.get(current), base);
   }
 
-  getValue(pub) {
-    this.getNode(pub).on((value,a,b,e) => {
+  getValue(user) {
+    this.getNode(user).on((value,a,b,e) => {
       this.eventListeners[this.path] = e;
       if (!(this.ref.current && this.ref.current === document.activeElement)) {
         this.setState({value});
@@ -65,7 +65,7 @@ class TextNode extends Component {
   }
 
   isEditable() {
-    return (!this.props.pub || this.props.pub === this.state.myPub) && String(this.props.editable) !== 'false';
+    return (!this.props.user || this.props.user === this.state.myPub) && String(this.props.editable) !== 'false';
   }
 
   renderInput() {
@@ -94,6 +94,6 @@ class TextNode extends Component {
   }
 }
 
-register(TextNode, 'iris-text', ['path', 'pub', 'placeholder', 'editable', 'tag']);
+register(TextNode, 'iris-text', ['path', 'user', 'placeholder', 'editable', 'tag']);
 
 export default TextNode;
