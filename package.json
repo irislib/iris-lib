@@ -1,6 +1,6 @@
 {
   "name": "iris-lib",
-  "version": "0.0.149",
+  "version": "0.0.150",
   "description": "Basic tools for reading and writing Iris messages and identities.",
   "main": "src/index.js",
   "react-native": {
