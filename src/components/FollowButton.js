@@ -42,6 +42,6 @@ class FollowButton extends Component {
   }
 }
 
-register(FollowButton, 'iris-follow-button', ['user']);
+!util.isNode && register(FollowButton, 'iris-follow-button', ['user']);
 
 export default FollowButton;

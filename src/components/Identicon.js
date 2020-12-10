@@ -62,6 +62,7 @@ class Identicon extends Component {
     <//>`;
   }
 }
-register(Identicon, 'iris-identicon', ['user', 'onClick', 'width', 'showTooltip']);
+
+!util.isNode && register(Identicon, 'iris-identicon', ['user', 'onClick', 'width', 'showTooltip']);
 
 export default Identicon;

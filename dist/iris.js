@@ -3034,7 +3034,7 @@
 	    return t;
 	  },
 	  debounce: function debounce(func, wait, immediate) {
-	    var timeout;
+	    var timeout = void 0;
 	    return function () {
 	      var context = this,
 	          args = arguments;
@@ -8497,13 +8497,12 @@
 	      gun.user().get('activity').put({ status: activity, time: new Date(Gun.state()).toISOString() });
 	    };
 	    update();
+	    function timerUpdate() {
+	      update();
+	      gun.setActivityTimeout = setTimeout(timerUpdate, 3000);
+	    }
 	    if (activity) {
-	      var _timerUpdate = function _timerUpdate() {
-	        update();
-	        gun.setActivityTimeout = setTimeout(_timerUpdate, 3000);
-	      };
-
-	      _timerUpdate();
+	      timerUpdate();
 	    }
 	  };
 
@@ -10876,7 +10875,7 @@
 	  return Identicon;
 	}(d);
 
-	register(Identicon, 'iris-identicon', ['user', 'onClick', 'width', 'showTooltip']);
+	!util.isNode && register(Identicon, 'iris-identicon', ['user', 'onClick', 'width', 'showTooltip']);
 
 	// eslint-disable-line no-unused-vars
 
@@ -11151,7 +11150,7 @@
 	  return TextNode;
 	}(d);
 
-	register(TextNode, 'iris-text', ['path', 'user', 'placeholder', 'editable', 'tag']);
+	!util.isNode && register(TextNode, 'iris-text', ['path', 'user', 'placeholder', 'editable', 'tag']);
 
 	var _templateObject$2 = _taggedTemplateLiteralLoose(['\n      <input\n        type="text"\n        value=', '\n        placeholder=', '\n        onInput=', '\n        disabled=', ' />\n    '], ['\n      <input\n        type="text"\n        value=', '\n        placeholder=', '\n        onInput=', '\n        disabled=', ' />\n    ']),
 	    _templateObject2$2 = _taggedTemplateLiteralLoose(['\n      <', ' ref=', ' contenteditable=', ' placeholder=', ' onInput=', '>\n        ', '\n      </', '>\n    '], ['\n      <', ' ref=', ' contenteditable=', ' placeholder=', ' onInput=', '>\n        ', '\n      </', '>\n    ']),
@@ -11250,7 +11249,7 @@
 	  return ImageNode;
 	}(TextNode);
 
-	register(ImageNode, 'iris-img', ['path', 'user', 'placeholder', 'editable', 'alt', 'width', 'height']);
+	!util.isNode && register(ImageNode, 'iris-img', ['path', 'user', 'placeholder', 'editable', 'alt', 'width', 'height']);
 
 	var _templateObject$3 = _taggedTemplateLiteralLoose(['<button class=', ' onClick=', '>', '</button>'], ['<button class=', ' onClick=', '>', '</button>']);
 
@@ -11328,7 +11327,7 @@
 	  return CopyButton;
 	}(d);
 
-	register(CopyButton, 'iris-copy-button', ['str', 'not-shareable', 'text', 'copied-text', 'title', 'inner-class']);
+	!util.isNode && register(CopyButton, 'iris-copy-button', ['str', 'not-shareable', 'text', 'copied-text', 'title', 'inner-class']);
 
 	var _templateObject$4 = _taggedTemplateLiteralLoose(['\n      <button class="iris-follow-button ', ' ', '" onClick=', '>\n        <span class="nonhover">', '</span>\n        <span class="hover">Unfollow</span>\n      </button>\n    '], ['\n      <button class="iris-follow-button ', ' ', '" onClick=', '>\n        <span class="nonhover">', '</span>\n        <span class="hover">Unfollow</span>\n      </button>\n    ']);
 
@@ -11380,7 +11379,7 @@
 	  return FollowButton;
 	}(d);
 
-	register(FollowButton, 'iris-follow-button', ['user']);
+	!util.isNode && register(FollowButton, 'iris-follow-button', ['user']);
 
 	var _validateCollection = function (it, TYPE) {
 	  if (!_isObject(it) || it._t !== TYPE) throw TypeError('Incompatible receiver, ' + TYPE + ' required!');
@@ -13684,7 +13683,7 @@
 	  return Search;
 	}(d);
 
-	register(Search, 'iris-search', ['on-select', 'inner-class']);
+	!util.isNode && register(Search, 'iris-search', ['on-select', 'inner-class']);
 
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
@@ -13701,6 +13700,7 @@
 	  components: {
 	    Identicon: Identicon,
 	    TextNode: TextNode,
+	    ImageNode: ImageNode,
 	    CopyButton: CopyButton,
 	    FollowButton: FollowButton,
 	    Search: Search

@@ -94,6 +94,6 @@ class TextNode extends Component {
   }
 }
 
-register(TextNode, 'iris-text', ['path', 'user', 'placeholder', 'editable', 'tag']);
+!util.isNode && register(TextNode, 'iris-text', ['path', 'user', 'placeholder', 'editable', 'tag']);
 
 export default TextNode;

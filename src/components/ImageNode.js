@@ -76,6 +76,6 @@ class ImageNode extends TextNode {
   }
 }
 
-register(ImageNode, 'iris-img', ['path', 'user', 'placeholder', 'editable', 'alt', 'width', 'height']);
+!util.isNode && register(ImageNode, 'iris-img', ['path', 'user', 'placeholder', 'editable', 'alt', 'width', 'height']);
 
 export default ImageNode;

@@ -184,6 +184,6 @@ class Search extends Component {
   }
 }
 
-register(Search, 'iris-search', ['on-select', 'inner-class']);
+!util.isNode && register(Search, 'iris-search', ['on-select', 'inner-class']);
 
 export default Search;
