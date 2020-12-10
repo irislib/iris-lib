@@ -67,9 +67,6 @@ class SignedMessage {
     if (obj.pubKey) {
       this.pubKey = obj.pubKey;
     }
-    if (obj.ipfsUri) {
-      this.ipfsUri = obj.ipfsUri;
-    }
     if (obj.sig) {
       if (typeof obj.sig !== `string`) {
         throw new ValidationError(`SignedMessage signature must be a string`);
@@ -372,32 +369,6 @@ class SignedMessage {
       this.getHash();
     }
     return true;
-  }
-
-  /**
-  *
-  */
-  async saveToIpfs(ipfs) {
-    const s = this.toString();
-    const r = await ipfs.add(ipfs.types.Buffer.from(s));
-    if (r.length) {
-      this.ipfsUri = r[0].hash;
-    }
-    return this.ipfsUri;
-  }
-
-  /**
-  *
-  */
-  static async loadFromIpfs(ipfs, uri) {
-    const f = await ipfs.cat(uri);
-    const s = ipfs.types.Buffer.from(f).toString(`utf8`);
-    try {
-      return SignedMessage.fromString(s);
-    } catch (e) {
-      console.log(`loading message from ipfs failed`);
-      return Promise.reject();
-    }
   }
 
   /**

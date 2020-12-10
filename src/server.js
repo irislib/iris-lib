@@ -54,7 +54,6 @@ const fsReadFile = promisify(readFile);
 const configDir = `./.iris`;
 const keyFileName = `iris.default.key`;
 const gunDBName = `iris.db.radix`;
-const ipfsRepo = 'ipfs';
 
 let configFile = `${configDir}/config.json`;
 
@@ -101,20 +100,6 @@ let configFile = `${configDir}/config.json`;
         obj[item] = ``;
         return obj;
       }, {});
-  }
-
-  // Create an IPFS node - if js-ipfs exists, and unless flagged otherwise
-  if (!process.env.IRIS_NO_IPFS) {
-    let IPFS = null;
-    try {
-      IPFS = require('js-ipfs');
-    }
-    catch (err) {
-      console.warn('IRIS_NO_IPFS not set, and `js-ipfs` library not found! Local IPFS node NOT instantiated.');
-    }
-    if (IPFS) {
-      await IPFS.create({repo: `${configDir}/${ipfsRepo}`});
-    }
   }
 
   // Instantiate gun

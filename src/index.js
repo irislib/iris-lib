@@ -29,6 +29,7 @@ export default {
   components: {
     Identicon,
     TextNode,
+    ImageNode,
     CopyButton,
     FollowButton,
     Search

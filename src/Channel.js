@@ -987,11 +987,11 @@ class Channel {
       gun.user().get(`activity`).put({status: activity, time: new Date(Gun.state()).toISOString()});
     };
     update();
+    function timerUpdate() {
+      update();
+      gun.setActivityTimeout = setTimeout(timerUpdate, 3000);
+    }
     if (activity) {
-      function timerUpdate() {
-        update();
-        gun.setActivityTimeout = setTimeout(timerUpdate, 3000);
-      }
       timerUpdate();
     }
   }

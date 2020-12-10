@@ -114,14 +114,13 @@ class Contact {
   }
 
   /**
-  * @param {Object} ipfs (optional) an IPFS instance that is used to fetch images
   * @returns {HTMLElement} profile card html element describing the identity
   */
-  profileCard(ipfs: Object) {
+  profileCard() {
     const card = document.createElement(`div`);
     card.className = `iris-card`;
 
-    const identicon = this.identicon({width: 60, ipfs});
+    const identicon = this.identicon({width: 60});
     identicon.style.order = 1;
     identicon.style.flexShrink = 0;
     identicon.style.marginRight = `15px`;
@@ -233,7 +232,7 @@ class Contact {
   }
 
   /**
-  * @param {Object} options {width: 50, border: 4, showDistance: true, ipfs: null, outerGlow: false}
+  * @param {Object} options {width: 50, border: 4, showDistance: true, outerGlow: false}
   * @returns {HTMLElement} identicon element that can be appended to DOM
   */
   identicon(options = {}) {
@@ -242,7 +241,6 @@ class Contact {
       border: 4,
       showDistance: true,
       outerGlow: false,
-      ipfs: null
     }, options);
     util.injectCss(); // some other way that is not called on each identicon generation?
     const identicon = document.createElement(`div`);
@@ -313,7 +311,7 @@ class Contact {
       util.getHash(`${encodeURIComponent(data.type)}:${encodeURIComponent(data.value)}`, `hex`)
         .then(hash => {
           const identiconImg = new Identicon(hash, {width: options.width, format: `svg`});
-          img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;        
+          img.src = img.src || `data:image/svg+xml;base64,${identiconImg.toString()}`;
         });
     }
 
@@ -324,21 +322,6 @@ class Contact {
     }
 
     this.gun.on(setPie);
-
-    if (options.ipfs) {
-      Contact.getAttrs(this.gun).then(attrs => {
-        const mva = Contact.getMostVerifiedAttributes(attrs);
-        if (mva.profilePhoto) {
-          const go = () => {
-            options.ipfs.cat(mva.profilePhoto.attribute.value).then(file => {
-              const f = options.ipfs.types.Buffer.from(file).toString(`base64`);
-              img.src = `data:image;base64,${f}`;
-            });
-          };
-          options.ipfs.isOnline() ? go() : options.ipfs.on(`ready`, go);
-        }
-      });
-    }
 
     return identicon;
   }

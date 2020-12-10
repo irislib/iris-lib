@@ -42,7 +42,6 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
   });
 }
 
-// TODO: flush onto IPFS
 /**
 * **Experimental.** Unlike Channel, this is probably not the most useful class yet.
 *
@@ -58,8 +57,6 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 *
 * You can pass options.gun to use custom gun storages and networking settings.
 *
-* If you want messages saved to IPFS, pass options.ipfs = instance.
-*
 * Wait for index.ready promise to resolve before calling instance methods.
 * @param {Object} options see default options in example
 * @example
@@ -67,7 +64,6 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 *
 * Default options:
 *{
-*  ipfs: undefined,
 *  keypair: undefined,
 *  pubKey: undefined,
 *  gun: undefined,
@@ -99,7 +95,6 @@ async function searchText(node, callback, query, limit) { // , cursor, desc
 class SocialNetwork {
   constructor(options) {
     this.options = Object.assign({
-      ipfs: undefined,
       keypair: undefined,
       pubKey: undefined,
       self: undefined,
@@ -221,7 +216,7 @@ class SocialNetwork {
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
-    const key = `${distance}:${Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp))}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
+    const key = `${distance}:${Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp))}:${msg.hash.substr(0, 9)}`;
     return key;
   }
 
@@ -567,9 +562,6 @@ class SocialNetwork {
       if (filter && !filter(msg)) { return; }
       results++;
       msg.cursor = result.key;
-      if (result.value && result.value.ipfsUri) {
-        msg.ipfsUri = result.value.ipfsUri;
-      }
       msg.gun = msgIndex.get(result.key);
       callback(msg);
     }
@@ -753,9 +745,6 @@ class SocialNetwork {
       }
     }
     const obj = {sig: msg.sig, pubKey: msg.pubKey};
-    if (msg.ipfsUri) {
-      obj.ipfsUri = msg.ipfsUri;
-    }
 
     recipient.get(`received`).get(msgIndexKey).put(obj);
     recipient.get(`received`).get(msgIndexKey).put(obj);
@@ -791,9 +780,6 @@ class SocialNetwork {
       author.get(`sentNeutral`).put(id.sentNeutral);
     }
     const obj = {sig: msg.sig, pubKey: msg.pubKey};
-    if (msg.ipfsUri) {
-      obj.ipfsUri = msg.ipfsUri;
-    }
     author.get(`sent`).get(msgIndexKey).put(obj); // for some reason, doesn't work unless I do it twice
     author.get(`sent`).get(msgIndexKey).put(obj);
     return;
@@ -993,17 +979,6 @@ class SocialNetwork {
       }
     }
 
-
-    if (this.options.ipfs) {
-      try {
-        const ipfsUri = await msg.saveToIpfs(this.options.ipfs);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put(node);
-        this.gun.get(`messagesByHash`).get(ipfsUri).put({ipfsUri});
-      } catch (e) {
-        console.error(`adding msg ${msg} to ipfs failed: ${e}`);
-      }
-    }
     if (msg.signedData.type !== `chat`) {
       start = new Date();
       await this._updateContactIndexesByMsg(msg);
@@ -1111,41 +1086,17 @@ class SocialNetwork {
   * @returns {Object} message matching the hash
   */
   getMessageByHash(hash) {
-    const isIpfsUri = hash.indexOf(`Qm`) === 0;
     return new Promise(resolve => {
-      const resolveIfHashMatches = async (d, fromIpfs) => {
+      const resolveIfHashMatches = async d => {
         const obj = typeof d === `object` ? d : JSON.parse(d);
         const m = await SignedMessage.fromSig(obj);
-        let h;
-        let republished = false;
-        if (fromIpfs) {
-          return resolve(m);
-        } else if (isIpfsUri && this.options.ipfs) {
-          h = await m.saveToIpfs(this.options.ipfs);
-          republished = true;
-        } else {
-          h = await m.getHash();
-        }
-        if (h === hash || (isIpfsUri && !this.options.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
-          if (!fromIpfs && this.options.ipfs && this.writable && !republished) {
-            m.saveToIpfs(this.options.ipfs).then(ipfsUri => {
-              obj.ipfsUri = ipfsUri;
-              this.gun.get(`messagesByHash`).get(hash).put(obj);
-              this.gun.get(`messagesByHash`).get(ipfsUri).put(obj);
-            });
-          }
+        const h = await m.getHash();
+        if (h === hash) {
           resolve(m);
         } else {
           console.error(`queried index for message ${hash} but received ${h}`);
         }
       };
-      if (isIpfsUri && this.options.ipfs) {
-        this.options.ipfs.cat(hash).then(file => {
-          const s = this.options.ipfs.types.Buffer.from(file).toString(`utf8`);
-          this.debug(`got msg ${hash} from ipfs`);
-          resolveIfHashMatches(s, true);
-        });
-      }
       this.gun.get(`messagesByHash`).get(hash).on(d => {
         this.debug(`got msg ${hash} from own gun index`);
         resolveIfHashMatches(d);

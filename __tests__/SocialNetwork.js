@@ -6,7 +6,6 @@ const radix = require(`gun/lib/radix`); // Require before instantiating Gun, if 
 const SEA = require(`gun/sea`);
 //SEA.throw = true;
 
-//let ipfsNode = new IPFS({repo: './ipfs_repo'});
 const gun = new GUN({radisk: false, multicast: false});
 
 const waitForValue = function(gunNode, timeout = 100) {
@@ -59,21 +58,6 @@ function shuffle(array) {
 
   return array;
 }
-
-/*
-beforeAll(() => {
-  return new Promise((resolve, reject) => {
-    ipfsNode.on('ready', () => {
-      console.log('ipfs ready');
-      resolve();
-    });
-    ipfsNode.on('error', error => {
-      console.error(error.message);
-      reject();
-    });
-  });
-});
-*/
 
 beforeAll(() => {
   logger.disable();
@@ -533,5 +517,4 @@ describe(`local index`, async () => {
 
 afterAll(() => {
   logger.enable();
-  //return ipfsNode.stop();
 });
