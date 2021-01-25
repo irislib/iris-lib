@@ -59,7 +59,6 @@ class TextNode extends Component {
     this.getNode(user).on((value, a, b, e) => {
       this.eventListeners[this.path] = e;
       if (!(this.ref.current && this.ref.current === document.activeElement)) {
-        console.log(value, typeof value);
         this.setState({value, class: typeof value === 'string' ? '' : 'iris-non-string'});
       }
     });
