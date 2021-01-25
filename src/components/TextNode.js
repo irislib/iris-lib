@@ -15,7 +15,9 @@ class TextNode extends Component {
   }
 
   componentDidUpdate(prevProps) {
+    console.log('componentDidUpdate', prevProps.user, this.props.user);
     if (prevProps.user !== this.props.user || prevProps.path !== this.props.path) {
+      this.eventListenersOff();
       this.componentDidMount();
     }
   }
@@ -54,9 +56,13 @@ class TextNode extends Component {
     });
   }
 
-  componentWillUnmount() {
+  eventListenersOff() {
     Object.values(this.eventListeners).forEach(e => e.off());
     this.eventListeners = {};
+  }
+
+  componentWillUnmount() {
+    this.eventListenersOff();
   }
 
   onInput(e) {
