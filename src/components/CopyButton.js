@@ -1,25 +1,25 @@
 import register from 'preact-custom-element';
-import { Component } from 'preact';
-import { html } from 'htm/preact';
+import {Component} from 'preact';
+import {html} from 'htm/preact';
 import util from '../util';
 
 class CopyButton extends Component {
   copyToClipboard(text) {
     if (window.clipboardData && window.clipboardData.setData) {
       // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
-      return window.clipboardData.setData("Text", text);
+      return window.clipboardData.setData('Text', text);
     }
-    else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
-      var textarea = document.createElement("textarea");
+    else if (document.queryCommandSupported && document.queryCommandSupported('copy')) {
+      const textarea = document.createElement('textarea');
       textarea.textContent = text;
-      textarea.style.position = "fixed";  // Prevent scrolling to bottom of page in Microsoft Edge.
+      textarea.style.position = 'fixed';  // Prevent scrolling to bottom of page in Microsoft Edge.
       document.body.appendChild(textarea);
       textarea.select();
       try {
-        return document.execCommand("copy");  // Security exception may be thrown by some browsers.
+        return document.execCommand('copy');  // Security exception may be thrown by some browsers.
       }
       catch (ex) {
-        console.warn("Copy to clipboard failed.", ex);
+        console.warn('Copy to clipboard failed.', ex);
         return false;
       }
       finally {
@@ -35,9 +35,9 @@ class CopyButton extends Component {
     this.originalWidth = this.originalWidth || tgt.offsetWidth + 1;
     tgt.style.width = this.originalWidth;
 
-    this.setState({copied:true});
+    this.setState({copied: true});
     clearTimeout(this.timeout);
-    this.timeout = setTimeout(() => this.setState({copied:false}), 2000);
+    this.timeout = setTimeout(() => this.setState({copied: false}), 2000);
   }
 
   onClick(e) {

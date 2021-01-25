@@ -1,9 +1,9 @@
-import { Component } from 'preact';
+import {Component} from 'preact';
 import util from '../util';
-import { html } from 'htm/preact';
+import {html} from 'htm/preact';
 import Key from '../key';
 import register from 'preact-custom-element';
-import { Inline } from 'jsxstyle/preact';
+import {Inline} from 'jsxstyle/preact';
 
 class FollowButton extends Component {
   constructor() {
@@ -25,7 +25,7 @@ class FollowButton extends Component {
         this.setState({following});
         this.eventListeners['follow'] = e;
       });
-    })
+    });
   }
 
   componentWillUnmount() {

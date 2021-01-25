@@ -469,6 +469,10 @@ export default {
         color: rgba(0, 0, 0, 0.45);
       }
 
+      .iris-non-string {
+        color: blue;
+      }
+
       .day-separator {
         display: inline-block;
         border-radius: 8px;

@@ -1,6 +1,6 @@
 import register from 'preact-custom-element';
-import { Component, createRef } from 'preact';
-import { html } from 'htm/preact';
+import {Component, createRef} from 'preact';
+import {html} from 'htm/preact';
 import util from '../util';
 import Key from '../key';
 import TextNode from './TextNode';
@@ -8,15 +8,15 @@ import TextNode from './TextNode';
 const DEFAULT_WIDTH = 80;
 
 const toBase64 = file => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = error => reject(error);
 });
 
 class ImageNode extends TextNode {
   getValue(user) {
-    this.getNode(user).on((value,a,b,e) => {
+    this.getNode(user).on((value, a, b, e) => {
       this.eventListeners[this.path] = e;
       this.setState({value});
     });
@@ -62,8 +62,8 @@ class ImageNode extends TextNode {
     const {alt, width, height} = this.props;
     let el;
     if (src) {
-      const style = editable ? 'cursor: pointer;' : ''
-      el = html`<img style=${style} onClick=${e => this.onClick(e)} src=${val} ...${{alt, width, height}}/>`
+      const style = editable ? 'cursor: pointer;' : '';
+      el = html`<img style=${style} onClick=${e => this.onClick(e)} src=${val} ...${{alt, width, height}}/>`;
     } else if (editable) {
       el = html`<button class=${this.props['btn-class']} onClick=${e => this.onClick(e)}>Add image</button>`;
     }

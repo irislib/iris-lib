@@ -1,6 +1,6 @@
 import register from 'preact-custom-element';
-import { Component, createRef } from 'preact';
-import { html } from 'htm/preact';
+import {Component, createRef} from 'preact';
+import {html} from 'htm/preact';
 import util from '../util';
 import Key from '../key';
 
@@ -15,23 +15,30 @@ class TextNode extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    console.log('componentDidUpdate', prevProps.user, this.props.user);
     if (prevProps.user !== this.props.user || prevProps.path !== this.props.path) {
+      this.setState({value: ''});
       this.eventListenersOff();
       this.componentDidMount();
     }
   }
 
   componentDidMount() {
+    if (!this.props.path || this.props.user === undefined) {
+      return;
+    }
     util.injectCss();
-    this.path = this.props.path || 'profile/name';
-    this.props.user && this.getValue(this.props.user);
+    this.path = this.props.path;
+    this.user = this.props.user;
+    this.props.user && this.path && this.getValue(this.props.user);
     const ps = util.getPublicState();
     const myPub = ps._.user && ps._.user.is.pub;
     const setMyPub = myPub => {
       this.setState({myPub});
-      !this.props.user && this.getValue(myPub);
-    }
+      if (!this.props.user) {
+        this.user = myPub;
+        this.getValue(myPub);
+      }
+    };
     if (myPub) {
       setMyPub(myPub);
     } else {
@@ -48,10 +55,12 @@ class TextNode extends Component {
   }
 
   getValue(user) {
-    this.getNode(user).on((value,a,b,e) => {
+    this.getNode(user).once();
+    this.getNode(user).on((value, a, b, e) => {
       this.eventListeners[this.path] = e;
       if (!(this.ref.current && this.ref.current === document.activeElement)) {
-        this.setState({value});
+        console.log(value, typeof value);
+        this.setState({value, class: typeof value === 'string' ? '' : 'iris-non-string'});
       }
     });
   }
@@ -65,9 +74,19 @@ class TextNode extends Component {
     this.eventListenersOff();
   }
 
+  getParsedValue(s) {
+    if (this.props.json) {
+      try {
+        s = JSON.parse(s);
+      } catch (e) {}
+    }
+    return s;
+  }
+
   onInput(e) {
-    const text = e.target.value || e.target.innerText;
-    this.getNode().put(text);
+    const val = this.getParsedValue(e.target.value || e.target.innerText);
+    this.getNode().put(val);
+    this.setState({class: typeof val === 'string' ? '' : 'iris-non-string'});
   }
 
   isEditable() {
@@ -80,6 +99,7 @@ class TextNode extends Component {
         type="text"
         value=${this.state.value}
         placeholder=${this.props.placeholder || this.path}
+        class=${this.getClass()}
         onInput=${e => this.onInput(e)}
         disabled=${!this.isEditable()} />
     `;
@@ -89,8 +109,8 @@ class TextNode extends Component {
     const placeholder = this.props.placeholder || this.props.path;
     const tag = this.props.tag || 'span';
     return html`
-      <${tag} ref=${this.ref} contenteditable=${this.isEditable()} placeholder=${placeholder} onInput=${e => this.onInput(e)}>
-        ${this.state.value}
+      <${tag} class=${this.state.class} ref=${this.ref} contenteditable=${this.isEditable()} placeholder=${placeholder} onInput=${e => this.onInput(e)}>
+        ${this.props.json ? JSON.stringify(this.state.value) : this.state.value}
       </${tag}>
     `;
   }

@@ -1,7 +1,7 @@
 import register from 'preact-custom-element';
-import { Component } from 'preact';
-import { html } from 'htm/preact';
-import { InlineBlock } from 'jsxstyle/preact';
+import {Component} from 'preact';
+import {html} from 'htm/preact';
+import {InlineBlock} from 'jsxstyle/preact';
 import util from '../util';
 import Attribute from '../attribute';
 
@@ -16,7 +16,7 @@ class Identicon extends Component {
   componentDidUpdate(prevProps) {
     if (prevProps.user !== this.props.user) {
       this.resetEventListeners();
-      this.setState({name:'', photo: ''});
+      this.setState({name: '', photo: ''});
       this.componentDidMount();
     }
   }
@@ -32,9 +32,9 @@ class Identicon extends Component {
       }
     });
     if (this.props.showTooltip) {
-      util.getPublicState().user(this.props.user).get('profile').get('name').on((name,a,b,e) => {
+      util.getPublicState().user(this.props.user).get('profile').get('name').on((name, a, b, e) => {
         this.eventListeners['name'] = e;
-        this.setState({name})
+        this.setState({name});
       });
     }
   }
