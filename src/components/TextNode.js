@@ -51,7 +51,7 @@ class TextNode extends Component {
   getNode(user) {
     const base = util.getPublicState().user(user);
     const path = this.path.split('/');
-    return path.reduce((sum, current) => sum.get(current), base);
+    return path.reduce((sum, current) => sum.get(decodeURIComponent(current)), base);
   }
 
   getValue(user) {
