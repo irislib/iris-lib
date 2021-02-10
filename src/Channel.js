@@ -94,6 +94,8 @@ class Channel {
     this.theirSecretChannelIds = {}; // maps participant public key to their secret mutual channel id
     this.messages = {};
     this.chatLinks = {};
+    this.groupSubscriptions = {};
+    this.directSubscriptions = {};
 
     if (options.chatLink) {
       this.useChatLink(options);
@@ -163,7 +165,7 @@ class Channel {
           if (JSON.stringify(this.participants) === before) { return; }
           Object.keys(participants).forEach(k => {
             if (k !== this.key.pub) {
-              this.addParticipant(k, true, Object.assign({}, this.DEFAULT_PERMISSIONS, participants[k]));
+              this.addParticipant(k, true, Object.assign({}, this.DEFAULT_PERMISSIONS, participants[k]), true);
             }
           });
           options.saved = true;
@@ -488,7 +490,7 @@ class Channel {
   * Add a public key to the channel
   * @param {string} pub
   */
-  async addParticipant(pub, save = true, permissions) {
+  async addParticipant(pub, save = true, permissions, subscribe) {
     permissions = (permissions || this.DEFAULT_PERMISSIONS);
     if (this.secrets[pub] && JSON.stringify(this.secrets[pub]) === JSON.stringify(permissions)) { // TODO: should be this.participants[pub]
       return;
@@ -516,6 +518,22 @@ class Channel {
         });
         this.save();
       }
+    }
+    if (subscribe) {
+      Object.values(this.directSubscriptions).forEach(arr => {
+        arr.forEach(o => {
+          if (!o.from || o.from === pub) {
+            this._onTheirDirectFromUser(pub, o.key, o.callback);
+          }
+        });
+      });
+      Object.values(this.groupSubscriptions).forEach(arr => {
+        arr.forEach(o => {
+          if (!o.from || o.from === pub) {
+            this._onTheirGroupFromUser(pub, o.key, o.callback);
+          }
+        });
+      });
     }
   }
 
@@ -671,20 +689,38 @@ class Channel {
     return (this.uuid ? this.onTheirGroup : this.onTheirDirect).call(this, key, callback, from);
   }
 
+  async _onTheirDirectFromUser(pub, key, callback) {
+    const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
+    this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
+      const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+      if (decrypted) {
+        callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, pub);
+      }
+    });
+  }
+
   async onTheirDirect(key, callback, from) {  // TODO: subscribe to new channel participants
     if (typeof callback !== 'function') {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
-    const keys = this.getCurrentParticipants();
-    keys.forEach(async pub => {
+    if (!this.directSubscriptions.hasOwnProperty(key)) {
+      this.directSubscriptions[key] = [];
+    }
+    this.directSubscriptions[key].push({key, callback, from});
+    const participants = this.getCurrentParticipants();
+    participants.forEach(async pub => {
       if (from && pub !== from) { return; }
-      const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
-      this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
-        const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
-        if (decrypted) {
-          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, pub);
-        }
-      });
+      this._onTheirDirectFromUser(pub, key, callback);
+    });
+  }
+
+  async _onTheirGroupFromUser(pub, key, callback) {
+    const theirSecretUuid = await this.getTheirSecretUuid(pub);
+    this.gun.user(pub).get(`chats`).get(theirSecretUuid).get(key).on(async data => {
+      const decrypted = await Gun.SEA.decrypt(data, (await this.getTheirGroupSecret(pub)));
+      if (decrypted) {
+        callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, pub);
+      }
     });
   }
 
@@ -692,16 +728,14 @@ class Channel {
     if (typeof callback !== 'function') {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
-    const keys = this.getCurrentParticipants();
-    keys.forEach(async pub => {
+    if (!this.groupSubscriptions.hasOwnProperty(key)) {
+      this.groupSubscriptions[key] = [];
+    }
+    this.groupSubscriptions[key].push({key, callback, from});
+    const participants = this.getCurrentParticipants();
+    participants.forEach(async pub => {
       if (from && pub !== from) { return; }
-      const theirSecretUuid = await this.getTheirSecretUuid(pub);
-      this.gun.user(pub).get(`chats`).get(theirSecretUuid).get(key).on(async data => {
-        const decrypted = await Gun.SEA.decrypt(data, (await this.getTheirGroupSecret(pub)));
-        if (decrypted) {
-          callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, pub);
-        }
-      });
+      this._onTheirGroupFromUser(pub, key, callback);
     });
   }
 
@@ -801,7 +835,7 @@ class Channel {
             if (channels.indexOf(s) === -1) {
               channels.push(s);
               const pub = await Gun.SEA.decrypt(encPub, link.sharedSecret);
-              this.addParticipant(pub);
+              this.addParticipant(pub, undefined, undefined, true);
             }
           });
         }
