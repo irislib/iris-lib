@@ -486,6 +486,10 @@ class Channel {
     });
   }
 
+  async removeParticipant(pub) {
+    this.addParticipant(pub, true, {read: false, write: false, admin: false});
+  }
+
   /**
   * Add a public key to the channel
   * @param {string} pub
