@@ -160,10 +160,9 @@ class Channel {
       }
       if (this.participants[from] && (this.participants[from].admin || this.participants[from].inviter)) {
         if (typeof participants === `object`) {
-          const before = JSON.stringify(this.participants);
-          this.participants = Object.assign(this.participants, participants);
+          if (JSON.stringify(this.participants) === JSON.stringify(participants)) { return; }
+          this.participants = participants;
           delete this.participants[from].inviter;
-          if (JSON.stringify(this.participants) === before) { return; }
           Object.keys(participants).forEach(k => {
             if (k !== this.key.pub) {
               this.addParticipant(k, true, Object.assign({}, this.DEFAULT_PERMISSIONS, participants[k]), true);
@@ -702,7 +701,7 @@ class Channel {
     this.gun.user().get(`chats`).get(mySecretUuid).get(key).on(async data => {
       const decrypted = await Gun.SEA.decrypt(data, mySecret);
       if (decrypted) {
-        callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key);
+        callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, this.key.pub);
       }
     });
   }
