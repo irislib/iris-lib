@@ -96,6 +96,7 @@ class Channel {
     this.chatLinks = {};
     this.groupSubscriptions = {};
     this.directSubscriptions = {};
+    this.getParticipantsCallbacks = {};
 
     if (options.chatLink) {
       this.useChatLink(options);
@@ -168,6 +169,7 @@ class Channel {
               this.addParticipant(k, true, Object.assign({}, this.DEFAULT_PERMISSIONS, participants[k]), true);
             }
           });
+          this.onParticipantsChange();
           options.saved = true;
         }
       }
@@ -288,7 +290,21 @@ class Channel {
   * Subscribe to the changing list of participants by channel admins
   */
   getParticipants(callback) {
+    if (this.getParticipantsCallbackId) {
+      this.getParticipantsCallbackId++;
+    } else {
+      this.getParticipantsCallbackId = 1;
+    }
+    this.getParticipantsCallbacks[this.getParticipantsCallbackId] = callback;
+    if (this.participants) {
+      callback(this.participants);
+    }
+  }
 
+  onParticipantsChange() {
+    Object.keys(this.getParticipantsCallbacks).forEach(id => {
+      this.getParticipantsCallbacks[id](this.participants);
+    });
   }
 
   /**
@@ -487,15 +503,17 @@ class Channel {
   }
 
   async removeParticipant(pub) {
-    this.addParticipant(pub, true, {read: false, write: false, admin: false});
+    this.addParticipant(pub, true, {read: false, write: false});
   }
 
   /**
-  * Add a public key to the channel
+  * Add a public key to the channel or update its permissions
   * @param {string} pub
   */
   async addParticipant(pub, save = true, permissions, subscribe) {
-    permissions = (permissions || this.DEFAULT_PERMISSIONS);
+    if (permissions === undefined) {
+      permissions = this.DEFAULT_PERMISSIONS;
+    }
     if (this.secrets[pub] && JSON.stringify(this.secrets[pub]) === JSON.stringify(permissions)) { // TODO: should be this.participants[pub]
       return;
     }
@@ -523,7 +541,7 @@ class Channel {
         this.save();
       }
     }
-    if (subscribe) {
+    if (subscribe) { // TODO: unsubscribe
       Object.values(this.directSubscriptions).forEach(arr => {
         arr.forEach(o => {
           if (!o.from || o.from === pub) {
@@ -533,9 +551,9 @@ class Channel {
       });
       Object.values(this.groupSubscriptions).forEach(arr => {
         arr.forEach(o => {
-          if (!o.from || o.from === pub) {
-            this._onTheirGroupFromUser(pub, o.key, o.callback);
-          }
+          if (!permissions.write) { return; }
+          if (o.from && o.from !== pub) { return; }
+          this._onTheirGroupFromUser(pub, o.key, o.callback);
         });
       });
     }
@@ -694,8 +712,10 @@ class Channel {
   }
 
   async _onTheirDirectFromUser(pub, key, callback) {
+    if (!this.hasWritePermission(pub)) { return; }
     const theirSecretChannelId = await this.getTheirSecretChannelId(pub);
     this.gun.user(pub).get(`chats`).get(theirSecretChannelId).get(key).on(async data => {
+      if (!this.hasWritePermission(pub)) { return; }
       const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
       if (decrypted) {
         callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, pub);
@@ -718,9 +738,15 @@ class Channel {
     });
   }
 
+  hasWritePermission(pub) {
+    return this.participants && this.participants[pub] && this.participants[pub].write;
+  }
+
   async _onTheirGroupFromUser(pub, key, callback) {
+    if (!this.hasWritePermission(pub)) { return; }
     const theirSecretUuid = await this.getTheirSecretUuid(pub);
     this.gun.user(pub).get(`chats`).get(theirSecretUuid).get(key).on(async data => {
+      if (!this.hasWritePermission(pub)) { return; }
       const decrypted = await Gun.SEA.decrypt(data, (await this.getTheirGroupSecret(pub)));
       if (decrypted) {
         callback(typeof decrypted.v !== `undefined` ? decrypted.v : decrypted, key, pub);
@@ -728,7 +754,7 @@ class Channel {
     });
   }
 
-  async onTheirGroup(key, callback, from) { // TODO: subscribe to new channel participants
+  async onTheirGroup(key, callback, from) {
     if (typeof callback !== 'function') {
       throw new Error(`onTheir callback must be a function, got ${typeof callback}`);
     }
@@ -736,10 +762,13 @@ class Channel {
       this.groupSubscriptions[key] = [];
     }
     this.groupSubscriptions[key].push({key, callback, from});
-    const participants = this.getCurrentParticipants();
-    participants.forEach(async pub => {
-      if (from && pub !== from) { return; }
-      this._onTheirGroupFromUser(pub, key, callback);
+
+    this.getParticipants(participants => {
+      Object.keys(participants).forEach(async pub => {
+        if (from && pub !== from) { return; }
+        if (!(participants[pub] && participants[pub].write)) { return; }
+        this._onTheirGroupFromUser(pub, key, callback);
+      });
     });
   }
 
