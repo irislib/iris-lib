@@ -540,7 +540,7 @@ class Channel {
         this.save();
       }
     }
-    if (subscribe) { // TODO: unsubscribe
+    if (subscribe) {
       Object.values(this.directSubscriptions).forEach(arr => {
         arr.forEach(o => {
           if (!o.from || o.from === pub) {
@@ -550,9 +550,12 @@ class Channel {
       });
       Object.values(this.groupSubscriptions).forEach(arr => {
         arr.forEach(o => {
-          if (!permissions.write) { return; }
           if (o.from && o.from !== pub) { return; }
-          this._onTheirGroupFromUser(pub, o.key, o.callback);
+          if (permissions.write) {
+            this._onTheirGroupFromUser(pub, o.key, o.callback);
+          } else {  // unsubscribe
+            o.event && o.event.off();
+          }
         });
       });
     }
@@ -742,10 +745,11 @@ class Channel {
     return this.participants && this.participants[pub] && this.participants[pub].write;
   }
 
-  async _onTheirGroupFromUser(pub, key, callback) {
+  async _onTheirGroupFromUser(pub, key, callback, subscription) {
     if (!this.hasWritePermission(pub)) { return; }
     const theirSecretUuid = await this.getTheirSecretUuid(pub);
-    this.gun.user(pub).get(`chats`).get(theirSecretUuid).get(key).on(async data => {
+    this.gun.user(pub).get(`chats`).get(theirSecretUuid).get(key).on(async (data, a, b, e) => {
+      if (subscription) { subscription.event = e; }
       if (!this.hasWritePermission(pub)) { return; }
       const decrypted = await Gun.SEA.decrypt(data, (await this.getTheirGroupSecret(pub)));
       if (decrypted) {
@@ -761,13 +765,14 @@ class Channel {
     if (!this.groupSubscriptions.hasOwnProperty(key)) {
       this.groupSubscriptions[key] = [];
     }
-    this.groupSubscriptions[key].push({key, callback, from});
+    const subscription = {key, callback, from};
+    this.groupSubscriptions[key].push(subscription);
 
     this.getParticipants(participants => {
       Object.keys(participants).forEach(async pub => {
         if (from && pub !== from) { return; }
         if (!(participants[pub] && participants[pub].write)) { return; }
-        this._onTheirGroupFromUser(pub, key, callback);
+        this._onTheirGroupFromUser(pub, key, callback, subscription);
       });
     });
   }
