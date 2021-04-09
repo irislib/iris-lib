@@ -168,7 +168,7 @@ class Channel {
               this.addParticipant(k, true, Object.assign({}, this.DEFAULT_PERMISSIONS, participants[k]), true);
             }
           });
-          this.onParticipantsChange();
+          this.participantsChanged();
           options.saved = true;
         }
       }
@@ -300,7 +300,7 @@ class Channel {
     }
   }
 
-  onParticipantsChange() {
+  participantsChanged() {
     Object.keys(this.getParticipantsCallbacks).forEach(id => {
       this.getParticipantsCallbacks[id](this.participants);
     });
@@ -608,6 +608,7 @@ class Channel {
         myGroupSecret: this.getMyGroupSecret(),
         participants: this.participants // private participants list
       }, mySecret));
+      this.participantsChanged();
     } else {
       const keys = this.getCurrentParticipants();
       for (let i = 0;i < keys.length;i++) {
