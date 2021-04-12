@@ -854,21 +854,27 @@ class Channel {
     urlRoot = urlRoot || 'https://iris.to/';
     if (!this.uuid) { throw new Error('Only group channels may have chat links'); }
     const chatLinks = [];
+    const chatLinkSubscriptions = {};
     this.on('chatLinks', (links, from) => {
       // TODO: check admin permissions
       if (!links || typeof links !== 'object') { return; }
       Object.keys(links).forEach(linkId => {
         const link = links[linkId];
-        if (chatLinks.indexOf(linkId) !== -1) { return; } // TODO: check if link was nulled
+        if (chatLinks.indexOf(linkId) !== -1) { return; }
+        if (link === null) {
+          chatLinkSubscriptions[linkId] && chatLinkSubscriptions[linkId].off(); // unsubscribe removed chat link
+          delete chatLinkSubscriptions[linkId];
+          callback && callback({id: linkId, url: null});
+          return;
+        }
         const channels = [];
         chatLinks.push(linkId);
         const url = Channel.formatChatLink({urlRoot, inviter: from, channelId: this.uuid, sharedSecret: link.sharedSecret, linkId});
-        if (callback) {
-          callback({url, id: linkId});
-        }
+        callback && callback({url, id: linkId});
         if (subscribe) {
-          this.gun.user(link.sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId) => {
+          this.gun.user(link.sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId, a, e) => {
             if (!encPub || typeof encPub !== 'string' || encPub.length < 10) { return; }
+            chatLinkSubscriptions[linkId] = e;
             const s = JSON.stringify(encPub);
             if (channels.indexOf(s) === -1) {
               channels.push(s);
@@ -1183,7 +1189,16 @@ class Channel {
   /**
   *
   */
-  static removeChatLink(gun, key, linkId) {
+  removeGroupChatLink(linkId) {
+    this.chatLinks[linkId] = null;
+    this.put('chatLinks', this.chatLinks);
+    this.gun.user().get('chatLinks').get(linkId).put(null);
+  }
+
+  /**
+  *
+  */
+  static removePrivateChatLink(gun, key, linkId) {
     gun.user().auth(key);
     gun.user().get('chatLinks').get(linkId).put(null);
   }
