@@ -8382,13 +8382,13 @@
 	      }
 	      _Object$keys(links).forEach(function (linkId) {
 	        var link = links[linkId];
-	        if (chatLinks.indexOf(linkId) !== -1) {
-	          return;
-	        }
 	        if (link === null) {
 	          chatLinkSubscriptions[linkId] && chatLinkSubscriptions[linkId].off(); // unsubscribe removed chat link
 	          delete chatLinkSubscriptions[linkId];
 	          callback && callback({ id: linkId, url: null });
+	          return;
+	        }
+	        if (chatLinks.indexOf(linkId) !== -1) {
 	          return;
 	        }
 	        var channels = [];
@@ -10323,7 +10323,7 @@
 	  return SocialNetwork;
 	}();
 
-	var version$1 = "0.0.152";
+	var version$1 = "0.0.153";
 
 	var taggedTemplateLiteralLoose = createCommonjsModule(function (module, exports) {
 

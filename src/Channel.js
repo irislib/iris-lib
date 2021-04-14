@@ -860,13 +860,13 @@ class Channel {
       if (!links || typeof links !== 'object') { return; }
       Object.keys(links).forEach(linkId => {
         const link = links[linkId];
-        if (chatLinks.indexOf(linkId) !== -1) { return; }
         if (link === null) {
           chatLinkSubscriptions[linkId] && chatLinkSubscriptions[linkId].off(); // unsubscribe removed chat link
           delete chatLinkSubscriptions[linkId];
           callback && callback({id: linkId, url: null});
           return;
         }
+        if (chatLinks.indexOf(linkId) !== -1) { return; }
         const channels = [];
         chatLinks.push(linkId);
         const url = Channel.formatChatLink({urlRoot, inviter: from, channelId: this.uuid, sharedSecret: link.sharedSecret, linkId});
