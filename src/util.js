@@ -1,6 +1,8 @@
 /* eslint no-useless-escape: "off", camelcase: "off" */
 
 import Gun from 'gun'; // eslint-disable-line no-unused-vars
+import 'gun/sea';
+
 // eslint-disable-line no-unused-vars
 
 let isNode = false;

@@ -1,4 +1,5 @@
 import Gun from 'gun';
+import 'gun/sea';
 import util from './util';
 import Attribute from './attribute';
 
