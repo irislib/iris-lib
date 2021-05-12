@@ -125,9 +125,11 @@
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-terser": "^1.0.1"
   },
+  "peerDependencies": {
+    "gun": "^0.2020.1232"
+  },
   "dependencies": {
     "fuse.js": "^6.4.2",
-    "gun": "^0.2020.1232",
     "htm": "^3.0.4",
     "identicon.js": "^2.3.3",
     "jsxstyle": "^2.4.0",
