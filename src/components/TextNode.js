@@ -4,8 +4,6 @@ import {html} from 'htm/preact';
 import util from '../util';
 import Key from '../key';
 
-const DEFAULT_WIDTH = 80;
-
 class TextNode extends Component {
   constructor() {
     super();
@@ -77,7 +75,7 @@ class TextNode extends Component {
     if (this.props.json) {
       try {
         s = JSON.parse(s);
-      } catch (e) {}
+      } catch (e) { null; }
     }
     return s;
   }

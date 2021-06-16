@@ -1,11 +1,7 @@
 import register from 'preact-custom-element';
-import {Component, createRef} from 'preact';
 import {html} from 'htm/preact';
 import util from '../util';
-import Key from '../key';
 import TextNode from './TextNode';
-
-const DEFAULT_WIDTH = 80;
 
 const toBase64 = file => new Promise((resolve, reject) => {
   const reader = new FileReader();
@@ -49,7 +45,7 @@ class ImageNode extends TextNode {
     `;
   }
 
-  onClick(e) {
+  onClick() {
     if (this.isEditable()) {
       this.base.firstChild.click();
     }

@@ -21,9 +21,9 @@ test(`Serialize and deserialize a key`, async () => {
   expect(i).toBeDefined();
 });
 test(`Get default key and sign a message with it`, async () => {
-  const i = await iris.Key.getDefault(`.`);
+  const i = await iris.Key.getDefault(`.`, undefined, fs);
   expect(i).toBeDefined();
-  const j = await iris.Key.getDefault(`.`);
+  const j = await iris.Key.getDefault(`.`, undefined, fs);
   expect(i).toEqual(j);
   const msg = await iris.SignedMessage.createRating({
     author: {email: `alice@example.com`},

@@ -16,14 +16,15 @@ class Key {
   *
   * If the key does not exist, it is generated.
   * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
+  * @param {string} keyfile keyfile name (within datadir)
+  * @param {Object} fs node: require('fs'); browser: leave empty.
   * @returns {Promise<Object>} keypair object
   */
-  static async getActiveKey(datadir = `.`, keyfile = `iris.key`) {
+  static async getActiveKey(datadir = `.`, keyfile = `iris.key`, fs) {
     if (myKey) {
       return myKey;
     }
-    if (util.isNode) {
-      const fs = require(`fs`);
+    if (fs) {
       const privKeyFile = `${datadir}/${keyfile}`;
       if (fs.existsSync(privKeyFile)) {
         const f = fs.readFileSync(privKeyFile, `utf8`);
@@ -65,7 +66,7 @@ class Key {
   /**
   *
   */
-  static setActiveKey(key, save = true, datadir = `.`, keyfile = `iris.key`) {
+  static setActiveKey(key, save = true, datadir = `.`, keyfile = `iris.key`, fs) {
     myKey = key;
     if (!save) return;
     if (util.isNode) {

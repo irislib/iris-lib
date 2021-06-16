@@ -5756,26 +5756,28 @@
 	  *
 	  * If the key does not exist, it is generated.
 	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
+	  * @param {string} keyfile keyfile name (within datadir)
+	  * @param {Object} fs node: require('fs'); browser: leave empty.
 	  * @returns {Promise<Object>} keypair object
 	  */
 	  Key.getActiveKey = async function getActiveKey() {
 	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
 	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
+	    var fs = arguments[2];
 
 	    if (myKey) {
 	      return myKey;
 	    }
-	    if (util.isNode) {
-	      var _fs = require('fs');
+	    if (fs) {
 	      var privKeyFile = datadir + '/' + keyfile;
-	      if (_fs.existsSync(privKeyFile)) {
-	        var f = _fs.readFileSync(privKeyFile, 'utf8');
+	      if (fs.existsSync(privKeyFile)) {
+	        var f = fs.readFileSync(privKeyFile, 'utf8');
 	        myKey = Key.fromString(f);
 	      } else {
 	        var newKey = await Key.generate();
 	        myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
-	        _fs.writeFileSync(privKeyFile, Key.toString(myKey));
-	        _fs.chmodSync(privKeyFile, 400);
+	        fs.writeFileSync(privKeyFile, Key.toString(myKey));
+	        fs.chmodSync(privKeyFile, 400);
 	      }
 	      if (!myKey) {
 	        throw new Error('loading default key failed - check ' + datadir + '/' + keyfile);
@@ -5820,6 +5822,7 @@
 	    var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 	    var datadir = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '.';
 	    var keyfile = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'iris.key';
+	    var fs = arguments[4];
 
 	    myKey = key;
 	    if (!save) return;
@@ -6834,297 +6837,6 @@
 
 	  return Contact;
 	}();
-
-	// shim for using process in browser
-	// based off https://github.com/defunctzombie/node-process/blob/master/browser.js
-
-	function defaultSetTimout() {
-	    throw new Error('setTimeout has not been defined');
-	}
-	function defaultClearTimeout () {
-	    throw new Error('clearTimeout has not been defined');
-	}
-	var cachedSetTimeout = defaultSetTimout;
-	var cachedClearTimeout = defaultClearTimeout;
-	if (typeof global$1.setTimeout === 'function') {
-	    cachedSetTimeout = setTimeout;
-	}
-	if (typeof global$1.clearTimeout === 'function') {
-	    cachedClearTimeout = clearTimeout;
-	}
-
-	function runTimeout(fun) {
-	    if (cachedSetTimeout === setTimeout) {
-	        //normal enviroments in sane situations
-	        return setTimeout(fun, 0);
-	    }
-	    // if setTimeout wasn't available but was latter defined
-	    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-	        cachedSetTimeout = setTimeout;
-	        return setTimeout(fun, 0);
-	    }
-	    try {
-	        // when when somebody has screwed with setTimeout but no I.E. maddness
-	        return cachedSetTimeout(fun, 0);
-	    } catch(e){
-	        try {
-	            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-	            return cachedSetTimeout.call(null, fun, 0);
-	        } catch(e){
-	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-	            return cachedSetTimeout.call(this, fun, 0);
-	        }
-	    }
-
-
-	}
-	function runClearTimeout(marker) {
-	    if (cachedClearTimeout === clearTimeout) {
-	        //normal enviroments in sane situations
-	        return clearTimeout(marker);
-	    }
-	    // if clearTimeout wasn't available but was latter defined
-	    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-	        cachedClearTimeout = clearTimeout;
-	        return clearTimeout(marker);
-	    }
-	    try {
-	        // when when somebody has screwed with setTimeout but no I.E. maddness
-	        return cachedClearTimeout(marker);
-	    } catch (e){
-	        try {
-	            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-	            return cachedClearTimeout.call(null, marker);
-	        } catch (e){
-	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-	            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-	            return cachedClearTimeout.call(this, marker);
-	        }
-	    }
-
-
-
-	}
-	var queue$1 = [];
-	var draining = false;
-	var currentQueue;
-	var queueIndex = -1;
-
-	function cleanUpNextTick() {
-	    if (!draining || !currentQueue) {
-	        return;
-	    }
-	    draining = false;
-	    if (currentQueue.length) {
-	        queue$1 = currentQueue.concat(queue$1);
-	    } else {
-	        queueIndex = -1;
-	    }
-	    if (queue$1.length) {
-	        drainQueue();
-	    }
-	}
-
-	function drainQueue() {
-	    if (draining) {
-	        return;
-	    }
-	    var timeout = runTimeout(cleanUpNextTick);
-	    draining = true;
-
-	    var len = queue$1.length;
-	    while(len) {
-	        currentQueue = queue$1;
-	        queue$1 = [];
-	        while (++queueIndex < len) {
-	            if (currentQueue) {
-	                currentQueue[queueIndex].run();
-	            }
-	        }
-	        queueIndex = -1;
-	        len = queue$1.length;
-	    }
-	    currentQueue = null;
-	    draining = false;
-	    runClearTimeout(timeout);
-	}
-	function nextTick(fun) {
-	    var args = new Array(arguments.length - 1);
-	    if (arguments.length > 1) {
-	        for (var i = 1; i < arguments.length; i++) {
-	            args[i - 1] = arguments[i];
-	        }
-	    }
-	    queue$1.push(new Item(fun, args));
-	    if (queue$1.length === 1 && !draining) {
-	        runTimeout(drainQueue);
-	    }
-	}
-	// v8 likes predictible objects
-	function Item(fun, array) {
-	    this.fun = fun;
-	    this.array = array;
-	}
-	Item.prototype.run = function () {
-	    this.fun.apply(null, this.array);
-	};
-	var title = 'browser';
-	var platform = 'browser';
-	var browser = true;
-	var env = {};
-	var argv = [];
-	var version = ''; // empty string to avoid regexp issues
-	var versions$1 = {};
-	var release = {};
-	var config = {};
-
-	function noop() {}
-
-	var on = noop;
-	var addListener = noop;
-	var once = noop;
-	var off = noop;
-	var removeListener = noop;
-	var removeAllListeners = noop;
-	var emit = noop;
-
-	function binding(name) {
-	    throw new Error('process.binding is not supported');
-	}
-
-	function cwd () { return '/' }
-	function chdir (dir) {
-	    throw new Error('process.chdir is not supported');
-	}function umask() { return 0; }
-
-	// from https://github.com/kumavis/browser-process-hrtime/blob/master/index.js
-	var performance = global$1.performance || {};
-	var performanceNow =
-	  performance.now        ||
-	  performance.mozNow     ||
-	  performance.msNow      ||
-	  performance.oNow       ||
-	  performance.webkitNow  ||
-	  function(){ return (new Date()).getTime() };
-
-	// generate timestamp or delta
-	// see http://nodejs.org/api/process.html#process_process_hrtime
-	function hrtime(previousTimestamp){
-	  var clocktime = performanceNow.call(performance)*1e-3;
-	  var seconds = Math.floor(clocktime);
-	  var nanoseconds = Math.floor((clocktime%1)*1e9);
-	  if (previousTimestamp) {
-	    seconds = seconds - previousTimestamp[0];
-	    nanoseconds = nanoseconds - previousTimestamp[1];
-	    if (nanoseconds<0) {
-	      seconds--;
-	      nanoseconds += 1e9;
-	    }
-	  }
-	  return [seconds,nanoseconds]
-	}
-
-	var startTime = new Date();
-	function uptime() {
-	  var currentTime = new Date();
-	  var dif = currentTime - startTime;
-	  return dif / 1000;
-	}
-
-	var process$3 = {
-	  nextTick: nextTick,
-	  title: title,
-	  browser: browser,
-	  env: env,
-	  argv: argv,
-	  version: version,
-	  versions: versions$1,
-	  on: on,
-	  addListener: addListener,
-	  once: once,
-	  off: off,
-	  removeListener: removeListener,
-	  removeAllListeners: removeAllListeners,
-	  emit: emit,
-	  binding: binding,
-	  cwd: cwd,
-	  chdir: chdir,
-	  umask: umask,
-	  hrtime: hrtime,
-	  platform: platform,
-	  release: release,
-	  config: config,
-	  uptime: uptime
-	};
-
-	// 20.1.2.4 Number.isNaN(number)
-
-
-	_export(_export.S, 'Number', {
-	  isNaN: function isNaN(number) {
-	    // eslint-disable-next-line no-self-compare
-	    return number != number;
-	  }
-	});
-
-	var isNan = _core.Number.isNaN;
-
-	var isNan$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": isNan, __esModule: true };
-	});
-
-	var _Number$isNaN = unwrapExports(isNan$1);
-
-	var _stringWs = '\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003' +
-	  '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
-
-	var space = '[' + _stringWs + ']';
-	var non = '\u200b\u0085';
-	var ltrim = RegExp('^' + space + space + '*');
-	var rtrim = RegExp(space + space + '*$');
-
-	var exporter = function (KEY, exec, ALIAS) {
-	  var exp = {};
-	  var FORCE = _fails(function () {
-	    return !!_stringWs[KEY]() || non[KEY]() != non;
-	  });
-	  var fn = exp[KEY] = FORCE ? exec(trim) : _stringWs[KEY];
-	  if (ALIAS) exp[ALIAS] = fn;
-	  _export(_export.P + _export.F * FORCE, 'String', exp);
-	};
-
-	// 1 -> String#trimLeft
-	// 2 -> String#trimRight
-	// 3 -> String#trim
-	var trim = exporter.trim = function (string, TYPE) {
-	  string = String(_defined(string));
-	  if (TYPE & 1) string = string.replace(ltrim, '');
-	  if (TYPE & 2) string = string.replace(rtrim, '');
-	  return string;
-	};
-
-	var _stringTrim = exporter;
-
-	var $parseInt = _global.parseInt;
-	var $trim = _stringTrim.trim;
-
-	var hex = /^[-+]?0[xX]/;
-
-	var _parseInt = $parseInt(_stringWs + '08') !== 8 || $parseInt(_stringWs + '0x16') !== 22 ? function parseInt(str, radix) {
-	  var string = $trim(String(str), 3);
-	  return $parseInt(string, (radix >>> 0) || (hex.test(string) ? 16 : 10));
-	} : $parseInt;
-
-	// 20.1.2.13 Number.parseInt(string, radix)
-	_export(_export.S + _export.F * (Number.parseInt != _parseInt), 'Number', { parseInt: _parseInt });
-
-	var _parseInt$1 = _core.Number.parseInt;
-
-	var _parseInt$2 = createCommonjsModule(function (module) {
-	module.exports = { "default": _parseInt$1, __esModule: true };
-	});
-
-	var _Number$parseInt = unwrapExports(_parseInt$2);
 
 	var UNIQUE_ID_VALIDATORS$1 = {
 	  email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
@@ -8790,1540 +8502,7 @@
 	  return Channel;
 	}();
 
-	// eslint-disable-line no-unused-vars
-
-	/**
-	* Gun object collection that provides tools for indexing and search. Decentralize everything!
-	*
-	* If opt.class is passed, object.serialize() and opt.class.deserialize() must be defined.
-	*
-	* Supports search from multiple indexes.
-	* For example, retrieve message feed from your own index and your friends' indexes.
-	*
-	* TODO: aggregation
-	* TODO: example
-	* TODO: scrollable and stretchable "search result window"
-	* @param {Object} opt {gun, class, indexes = [], askPeers = true, name = class.name}
-	*/
-
-	var Collection$2 = function () {
-	  function Collection() {
-	    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-	    _classCallCheck(this, Collection);
-
-	    if (!opt.gun) {
-	      throw new Error('Missing opt.gun');
-	    }
-	    if (!(opt.class || opt.name)) {
-	      throw new Error('You must supply either opt.name or opt.class');
-	    }
-	    this.class = opt.class;
-	    this.serializer = opt.serializer;
-	    if (this.class && !this.class.deserialize && !this.serializer) {
-	      throw new Error('opt.class must have deserialize() method or opt.serializer must be defined');
-	    }
-	    this.name = opt.name || opt.class.name;
-	    this.gun = opt.gun;
-	    this.indexes = opt.indexes || [];
-	    this.indexer = opt.indexer;
-	    this.askPeers = typeof opt.askPeers === 'undefined' ? true : opt.askPeers;
-	  }
-
-	  /**
-	  * @return {String} id of added object, which can be used for collection.get(id)
-	  */
-
-
-	  Collection.prototype.put = function put(object) {
-	    var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-	    var data = object;
-	    if (this.serializer) {
-	      data = this.serializer.serialize(object);
-	    }if (this.class) {
-	      data = object.serialize();
-	    }
-	    // TODO: optionally use gun hash table
-	    var node = void 0;
-	    if (opt.id || data.id) {
-	      node = this.gun.get(this.name).get('id').get(opt.id || data.id).put(data); // TODO: use .top()
-	    } else if (object.getId) {
-	      node = this.gun.get(this.name).get('id').get(object.getId()).put(data);
-	    } else {
-	      node = this.gun.get(this.name).get('id').set(data);
-	    }
-	    this._addToIndexes(data, node);
-	    return data.id || Gun.node.soul(node) || node._.link;
-	  };
-
-	  Collection.prototype._addToIndexes = async function _addToIndexes(serializedObject, node) {
-	    var _this = this;
-
-	    if (Gun.node.is(serializedObject)) {
-	      serializedObject = await serializedObject.open();
-	    }
-	    var addToIndex = function addToIndex(indexName, indexKey) {
-	      _this.gun.get(_this.name).get(indexName).get(indexKey).put(node);
-	    };
-	    if (this.indexer) {
-	      var customIndexes = await this.indexer(serializedObject);
-	      var customIndexKeys = _Object$keys(customIndexes);
-	      for (var i = 0; i < customIndexKeys; i++) {
-	        var key = customIndexKeys[i];
-	        addToIndex(key, customIndexes[key]);
-	      }
-	    }
-	    for (var _i = 0; _i < this.indexes.length; _i++) {
-	      var indexName = this.indexes[_i];
-	      if (Object.prototype.hasOwnProperty.call(serializedObject, indexName)) {
-	        addToIndex(indexName, serializedObject[indexName]);
-	      }
-	    }
-	  };
-
-	  // TODO: method for terminating the query
-	  // TODO: query ttl. https://mongodb.github.io/node-mongodb-native/2.0/api/Collection.html
-	  /**
-	  * @param {Object} opt {callback, id, selector, limit, orderBy}
-	  */
-
-
-	  Collection.prototype.get = function get() {
-	    var _this2 = this;
-
-	    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-	    if (!opt.callback) {
-	      return;
-	    }
-	    var results = 0;
-	    var matcher = function matcher(data, id, node) {
-	      if (!data) {
-	        return;
-	      }
-	      if (opt.limit && results++ >= opt.limit) {
-	        return; // TODO: terminate query
-	      }
-	      if (opt.selector) {
-	        // TODO: deep compare selector object?
-	        var keys = _Object$keys(opt.selector);
-	        for (var i = 0; i < keys.length; i++) {
-	          var key = keys[i];
-	          if (!Object.prototype.hasOwnProperty.call(data, key)) {
-	            return;
-	          }
-	          var v1 = void 0,
-	              v2 = void 0;
-	          if (opt.caseSensitive === false) {
-	            v1 = data[key].toLowerCase();
-	            v2 = opt.selector[key].toLowerCase();
-	          } else {
-	            v1 = data[key];
-	            v2 = opt.selector[key];
-	          }
-	          if (v1 !== v2) {
-	            return;
-	          }
-	        }
-	      }
-	      if (opt.query) {
-	        // TODO: use gun.get() lt / gt operators
-	        var _keys = _Object$keys(opt.query);
-	        for (var _i2 = 0; _i2 < _keys.length; _i2++) {
-	          var _key = _keys[_i2];
-	          if (!Object.prototype.hasOwnProperty.call(data, _key)) {
-	            return;
-	          }
-	          var _v = void 0,
-	              _v2 = void 0;
-	          if (opt.caseSensitive === false) {
-	            _v = data[_key].toLowerCase();
-	            _v2 = opt.query[_key].toLowerCase();
-	          } else {
-	            _v = data[_key];
-	            _v2 = opt.query[_key];
-	          }
-	          if (_v.indexOf(_v2) !== 0) {
-	            return;
-	          }
-	        }
-	      }
-	      if (_this2.serializer) {
-	        opt.callback(_this2.serializer.deserialize(data, { id: id, gun: node.$ }));
-	      } else if (_this2.class) {
-	        opt.callback(_this2.class.deserialize(data, { id: id, gun: node.$ }));
-	      } else {
-	        opt.callback(data);
-	      }
-	    };
-
-	    if (opt.id) {
-	      opt.limit = 1;
-	      this.gun.get(this.name).get('id').get(opt.id).on(matcher);
-	      return;
-	    }
-
-	    var indexName = 'id';
-	    if (opt.orderBy && this.indexes.indexOf(opt.orderBy) > -1) {
-	      indexName = opt.orderBy;
-	    }
-
-	    // TODO: query from indexes
-	    this.gun.get(this.name).get(indexName).map().on(matcher); // TODO: limit .open recursion
-	    if (this.askPeers) {
-	      this.gun.get('trustedIndexes').on(function (val, key) {
-	        _this2.gun.user(key).get(_this2.name).get(indexName).map().on(matcher);
-	      });
-	    }
-	  };
-
-	  Collection.prototype.delete = function _delete() {
-	    // gun.unset()
-	  };
-
-	  return Collection;
-	}();
-
-	if (Gun && Gun.User) {
-	  Gun.User.prototype.top = function (key) {
-	    var gun = this,
-	        root = gun.back(-1),
-	        user = root.user();
-	    if (!user.is) {
-	      throw { err: 'Not logged in!' };
-	    }
-	    var top = user.chain(),
-	        at = top._;
-	    at.soul = at.get = '~' + user.is.pub + '.' + key;
-	    var tmp = root.get(at.soul)._;
-	    (tmp.echo || (tmp.echo = {}))[at.id] = at;
-	    return top;
-	  };
-	}
-
-	// temp method for GUN search
-	async function searchText(node, callback, query, limit) {
-	  // , cursor, desc
-	  var seen = {};
-	  node.map().once(function (value, key) {
-	    //console.log(`searchText`, value, key, desc);
-	    if (key.indexOf(query) === 0) {
-	      if (typeof limit === 'number' && _Object$keys(seen).length >= limit) {
-	        return;
-	      }
-	      if (Object.prototype.hasOwnProperty.call(seen, key)) {
-	        return;
-	      }
-	      if (value && _Object$keys(value).length > 1) {
-	        seen[key] = true;
-	        callback({ value: value, key: key });
-	      }
-	    }
-	  });
-	}
-
-	/**
-	* **Experimental.** Unlike Channel, this is probably not the most useful class yet.
-	*
-	* The essence of Iris: A database of Contacts and SignedMessages within your web of trust.
-	*
-	* NOTE: these docs reflect the latest commit at https://github.com/irislib/iris-lib
-	*
-	* To use someone else's index (read-only): set options.pubKey
-	*
-	* To use your own index: set options.keypair or omit it to use Key.getDefaultKey().
-	*
-	* Each added SignedMessage updates the SignedMessage and Contacts indexes and web of trust accordingly.
-	*
-	* You can pass options.gun to use custom gun storages and networking settings.
-	*
-	* Wait for index.ready promise to resolve before calling instance methods.
-	* @param {Object} options see default options in example
-	* @example
-	* https://github.com/irislib/iris-lib/blob/master/__tests__/SocialNetwork.js
-	*
-	* Default options:
-	*{
-	*  keypair: undefined,
-	*  pubKey: undefined,
-	*  gun: undefined,
-	*  self: undefined,
-	*  indexSync: {
-	*    importOnAdd: {
-	*      enabled: true,
-	*      maxMsgCount: 500,
-	*      maxMsgDistance: 2
-	*    },
-	*    subscribe: {
-	*      enabled: true,
-	*      maxMsgDistance: 1
-	*    },
-	*    query: {
-	*      enabled: true
-	*    },
-	*    msgTypes: {
-	*      all: false,
-	*      rating: true,
-	*      verification: true,
-	*      unverification: true
-	*    },
-	*    debug: false
-	*  }
-	*}
-	* @returns {SocialNetwork}  index object
-	*/
-
-	var SocialNetwork = function () {
-	  function SocialNetwork(options) {
-	    var _this = this;
-
-	    _classCallCheck(this, SocialNetwork);
-
-	    this.options = _Object$assign({
-	      keypair: undefined,
-	      pubKey: undefined,
-	      self: undefined,
-	      indexSync: {
-	        importOnAdd: {
-	          enabled: true,
-	          maxMsgCount: 100,
-	          maxMsgDistance: 2
-	        },
-	        subscribe: {
-	          enabled: true,
-	          maxMsgDistance: 1
-	        },
-	        query: {
-	          enabled: true
-	        },
-	        msgTypes: {
-	          all: false,
-	          rating: true,
-	          verification: true,
-	          unverification: true
-	        },
-	        debug: false
-	      }
-	    }, options);
-
-	    if (options.pubKey) {
-	      // someone else's index
-	      var gun = options.gun || new Gun();
-	      var user = gun.user(options.pubKey);
-	      this.gun = user.get('iris');
-	      this.rootContact = new Attribute({ type: 'keyID', value: options.pubKey });
-	      this.ready = _Promise.resolve();
-	    } else {
-	      // our own index
-	      this.ready = this._init();
-	    }
-	    this.ready.then(function () {
-	      return _this._subscribeToTrustedIndexes();
-	    });
-	  }
-
-	  SocialNetwork.prototype._init = async function _init() {
-	    var _this2 = this;
-
-	    var keypair = this.options.keypair;
-	    if (!keypair) {
-	      keypair = await Key.getDefault();
-	    }
-	    var gun = this.options.gun || new Gun();
-	    var user = gun.user();
-	    user.auth(keypair);
-	    this.writable = true;
-	    this.rootContact = new Attribute('keyID', Key.getId(keypair));
-	    user.get('epub').put(keypair.epub);
-	    // Initialize indexes with deterministic gun souls (.top)
-	    this.gun = user.get('iris').put(user.top('iris'));
-	    this.gun.get('identitiesBySearchKey').put(user.top('identitiesBySearchKey'));
-	    this.gun.get('identitiesByTrustDistance').put(user.top('identitiesByTrustDistance'));
-	    this.gun.get('messages').put(user.top('messages'));
-	    this.gun.get('messagesByTimestamp').put(user.top('messagesByTimestamp'));
-	    this.gun.get('messagesByHash').put(user.top('messagesByHash'));
-	    this.gun.get('messagesByDistance').put(user.top('messagesByDistance'));
-
-	    this.messages = new Collection$2({ gun: this.gun, class: SignedMessage, indexes: ['time', 'trustDistance'] });
-	    this.contacts = new Collection$2({ gun: this.gun, class: Contact });
-
-	    var uri = this.rootContact.uri();
-	    var g = user.top(uri);
-	    this.gun.get('identitiesBySearchKey').get(uri).put(g);
-	    var attrs = {};
-	    attrs[uri] = this.rootContact;
-	    if (this.options.self) {
-	      var keys = _Object$keys(this.options.self);
-	      for (var i = 0; i < keys.length; i++) {
-	        var a = new Attribute(keys[i], this.options.self[keys[i]]);
-	        attrs[a.uri()] = a;
-	      }
-	    }
-	    var id = Contact.create(g, { trustDistance: 0, linkTo: this.rootContact, attrs: attrs }, this);
-	    await this._addContactToIndexes(id.gun);
-	    if (this.options.self) {
-	      var recipient = _Object$assign(this.options.self, { keyID: this.rootContact.value });
-	      SignedMessage.createVerification({ recipient: recipient }, keypair).then(function (msg) {
-	        _this2.addMessage(msg);
-	      });
-	    }
-	  };
-
-	  SocialNetwork.prototype._subscribeToTrustedIndexes = function _subscribeToTrustedIndexes() {
-	    var _this3 = this;
-
-	    if (this.writable && this.options.indexSync.subscribe.enabled) {
-	      setTimeout(function () {
-	        _this3.gun.get('trustedIndexes').map().once(function (val, uri) {
-	          if (val) {
-	            // TODO: only get new messages?
-	            _this3.gun.user(uri).get('iris').get('messagesByDistance').map(function (val, key) {
-	              var d = _Number$parseInt(key.split(':')[0]);
-	              if (!isNaN(d) && d <= _this3.options.indexSync.subscribe.maxMsgDistance) {
-	                SignedMessage.fromSig(val).then(function (msg) {
-	                  if (_this3.options.indexSync.msgTypes.all || Object.prototype.hasOwnProperty.call(_this3.options.indexSync.msgTypes, msg.signedData.type)) {
-	                    _this3.addMessage(msg, { checkIfExists: true });
-	                  }
-	                });
-	              }
-	            });
-	            _this3.gun.user(uri).get('iris').get('reactions').map(function (reaction, msgHash) {
-	              _this3.gun.get('messagesByHash').get(msgHash).get('reactions').get(uri).put(reaction);
-	              _this3.gun.get('messagesByHash').get(msgHash).get('reactions').get(uri).put(reaction);
-	            });
-	          }
-	        });
-	      }, 5000); // TODO: this should be made to work without timeout
-	    }
-	  };
-
-	  SocialNetwork.prototype.debug = function debug() {
-	    var d = util.isNode && process$3.env.DEBUG ? process$3.env.DEBUG === 'true' : this.options.debug;
-	    if (d) {
-	      console.log.apply(console, arguments);
-	    }
-	  };
-
-	  SocialNetwork.getMsgIndexKey = function getMsgIndexKey(msg) {
-	    var distance = parseInt(msg.distance);
-	    distance = _Number$isNaN(distance) ? 99 : distance;
-	    distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
-	    var key = distance + ':' + Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp)) + ':' + msg.hash.substr(0, 9);
-	    return key;
-	  };
-
-	  // TODO: GUN indexing module that does this automatically
-
-
-	  SocialNetwork.getMsgIndexKeys = async function getMsgIndexKeys(msg) {
-	    var keys = {};
-	    var distance = parseInt(msg.distance);
-	    distance = _Number$isNaN(distance) ? 99 : distance;
-	    distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
-	    var timestamp = Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp));
-	    var hash = await msg.getHash();
-	    var hashSlice = hash.substr(0, 9);
-
-	    if (msg.signedData.type === 'chat') {
-	      if (msg.signedData.recipient.uuid) {
-	        keys.chatMessagesByUuid = {};
-	        keys.chatMessagesByUuid[msg.signedData.recipient.uuid] = msg.signedData.time + ':' + hashSlice;
-	      }
-	      return keys;
-	    }
-
-	    keys.messagesByHash = [hash];
-	    keys.messagesByTimestamp = [timestamp + ':' + hashSlice];
-	    keys.messagesByDistance = [distance + ':' + keys.messagesByTimestamp[0]];
-	    keys.messagesByType = [msg.signedData.type + ':' + timestamp + ':' + hashSlice];
-
-	    keys.messagesByAuthor = {};
-	    var authors = msg.getAuthorArray();
-	    for (var i = 0; i < authors.length; i++) {
-	      if (authors[i].isUniqueType()) {
-	        keys.messagesByAuthor[authors[i].uri()] = msg.signedData.timestamp + ':' + hashSlice;
-	      }
-	    }
-	    keys.messagesByRecipient = {};
-	    var recipients = msg.getRecipientArray();
-	    for (var _i = 0; _i < recipients.length; _i++) {
-	      if (recipients[_i].isUniqueType()) {
-	        keys.messagesByRecipient[recipients[_i].uri()] = msg.signedData.timestamp + ':' + hashSlice;
-	      }
-	    }
-
-	    if (['verification', 'unverification'].indexOf(msg.signedData.type) > -1) {
-	      keys.verificationsByRecipient = {};
-	      for (var _i2 = 0; _i2 < recipients.length; _i2++) {
-	        var r = recipients[_i2];
-	        if (!r.isUniqueType()) {
-	          continue;
-	        }
-	        for (var j = 0; j < authors.length; j++) {
-	          var a = authors[j];
-	          if (!a.isUniqueType()) {
-	            continue;
-	          }
-	          keys.verificationsByRecipient[r.uri()] = a.uri();
-	        }
-	      }
-	    } else if (msg.signedData.type === 'rating') {
-	      keys.ratingsByRecipient = {};
-	      for (var _i3 = 0; _i3 < recipients.length; _i3++) {
-	        var _r = recipients[_i3];
-	        if (!_r.isUniqueType()) {
-	          continue;
-	        }
-	        for (var _j = 0; _j < authors.length; _j++) {
-	          var _a = authors[_j];
-	          if (!_a.isUniqueType()) {
-	            continue;
-	          }
-	          keys.ratingsByRecipient[_r.uri()] = _a.uri();
-	        }
-	      }
-	    }
-	    return keys;
-	  };
-
-	  SocialNetwork.prototype.getContactIndexKeys = async function getContactIndexKeys(contact, hash) {
-	    var indexKeys = { identitiesByTrustDistance: [], identitiesBySearchKey: [] };
-	    var d = void 0;
-	    if (contact.keyID && this.rootContact.equals(contact.linkTo)) {
-	      // TODO: contact is a gun instance, no linkTo
-	      d = 0;
-	    } else {
-	      d = await contact.get('trustDistance').then();
-	    }
-
-	    function addIndexKey(a) {
-	      if (!(a && a.value && a.type)) {
-	        // TODO: this sometimes returns undefined
-	        return;
-	      }
-	      var distance = d !== undefined ? d : parseInt(a.dist);
-	      distance = _Number$isNaN(distance) ? 99 : distance;
-	      distance = ('00' + distance).substring(distance.toString().length); // pad with zeros
-	      var v = a.value || a[1];
-	      var n = a.type || a[0];
-	      var value = encodeURIComponent(v);
-	      var lowerCaseValue = encodeURIComponent(v.toLowerCase());
-	      var name = encodeURIComponent(n);
-	      var key = value + ':' + name;
-	      var lowerCaseKey = lowerCaseValue + ':' + name;
-	      if (!Attribute.isUniqueType(n)) {
-	        // allow for multiple index keys with same non-unique attribute
-	        key = key + ':' + hash.substr(0, 9);
-	        lowerCaseKey = lowerCaseKey + ':' + hash.substr(0, 9);
-	      }
-	      indexKeys.identitiesBySearchKey.push(key);
-	      indexKeys.identitiesByTrustDistance.push(distance + ':' + key);
-	      if (key !== lowerCaseKey) {
-	        indexKeys.identitiesBySearchKey.push(lowerCaseKey);
-	        indexKeys.identitiesByTrustDistance.push(distance + ':' + lowerCaseKey);
-	      }
-	      if (v.indexOf(' ') > -1) {
-	        var words = v.toLowerCase().split(' ');
-	        for (var l = 0; l < words.length; l += 1) {
-	          var k = encodeURIComponent(words[l]) + ':' + name;
-	          if (!Attribute.isUniqueType(n)) {
-	            k = k + ':' + hash.substr(0, 9);
-	          }
-	          indexKeys.identitiesBySearchKey.push(k);
-	          indexKeys.identitiesByTrustDistance.push(distance + ':' + k);
-	        }
-	      }
-	      if (key.match(/^http(s)?:\/\/.+\/[a-zA-Z0-9_]+$/)) {
-	        var split = key.split('/');
-	        indexKeys.identitiesBySearchKey.push(split[split.length - 1]);
-	        indexKeys.identitiesByTrustDistance.push(distance + ':' + split[split.length - 1]);
-	      }
-	    }
-
-	    if (this.rootContact.equals(contact.keyID)) {
-	      addIndexKey(contact.keyID);
-	    }
-
-	    var attrs = await Contact.getAttrs(contact);
-	    _Object$values(attrs).map(addIndexKey);
-
-	    return indexKeys;
-	  };
-
-	  /**
-	  *
-	  */
-
-
-	  SocialNetwork.prototype.addContact = async function addContact(attributes) {
-	    var follow = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
-	    // TODO: add uuid to attributes
-	    var msg = void 0;
-	    if (follow) {
-	      msg = await SignedMessage.createRating({ recipient: attributes, rating: 1 });
-	    } else {
-	      msg = await SignedMessage.createVerification({ recipient: attributes });
-	    }
-	    return this.addMessage(msg);
-	  };
-
-	  /*
-	  * Get an contact referenced by an identifier.
-	  * get(type, value)
-	  * get(Attribute)
-	  * get(value) - guesses the type or throws an error
-	  * @returns {Contact} contact that is connected to the identifier param
-	  */
-
-
-	  SocialNetwork.prototype.getContact = function getContact(a, b) {
-	    var _this4 = this;
-
-	    var reload = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-
-	    if (!a) {
-	      throw new Error('getContact failed: first param must be defined');
-	    }
-	    var attr = a;
-	    if (a.constructor.name !== 'Attribute') {
-	      var type = void 0,
-	          value = void 0;
-	      if (b) {
-	        type = a;
-	        value = b;
-	      } else {
-	        value = a;
-	        type = Attribute.guessTypeOf(value);
-	      }
-	      attr = new Attribute(type, value);
-	    }
-	    if (reload) {
-	      // 1) get verifications connecting attr to other attributes
-	      // 2) recurse
-	      // 3) get messages received by this list of attributes
-	      // 4) calculate stats
-	      // 5) update contact index entry
-	      var o = {
-	        attributes: {},
-	        sent: {},
-	        received: {},
-	        receivedPositive: 0,
-	        receivedNeutral: 0,
-	        receivedNegative: 0,
-	        sentPositive: 0,
-	        sentNeutral: 0,
-	        sentNegative: 0
-	      };
-	      var node = this.gun.get('identities').set(o);
-	      var updateContactByLinkedAttribute = function updateContactByLinkedAttribute(attribute) {
-	        _this4.gun.get('verificationsByRecipient').get(attribute.uri()).map().once(function (val) {
-	          var m = SignedMessage.fromSig(val);
-	          var recipients = m.getRecipientArray();
-	          for (var i = 0; i < recipients.length; i++) {
-	            var a2 = recipients[i];
-	            if (!Object.prototype.hasOwnProperty.call(o.attributes), a2.uri()) {
-	              // TODO remove attribute from contact if not enough verifications / too many unverifications
-	              o.attributes[a2.uri()] = a2;
-	              _this4.gun.get('messagesByRecipient').get(a2.uri()).map().once(async function (val) {
-	                var m2 = SignedMessage.fromSig(val);
-	                var m2hash = await m2.getHash();
-	                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2hash)) {
-	                  o.received[m2hash] = m2;
-	                  if (m2.isPositive()) {
-	                    o.receivedPositive++;
-	                    m2.getAuthor(_this4).gun.get('trustDistance').on(function (d) {
-	                      if (typeof d === 'number') {
-	                        if (typeof o.trustDistance !== 'number' || o.trustDistance > d + 1) {
-	                          o.trustDistance = d + 1;
-	                          node.get('trustDistance').put(d + 1);
-	                        }
-	                      }
-	                    });
-	                  } else if (m2.isNegative()) {
-	                    o.receivedNegative++;
-	                  } else {
-	                    o.receivedNeutral++;
-	                  }
-	                  node.put(o);
-	                }
-	              });
-	              _this4.gun.get('messagesByAuthor').get(a2.uri()).map().once(async function (val) {
-	                var m2 = SignedMessage.fromSig(val);
-	                var m2hash = await m2.getHash();
-	                if (!Object.prototype.hasOwnProperty.call(o.sent, m2hash)) {
-	                  o.sent[m2hash] = m2;
-	                  if (m2.isPositive()) {
-	                    o.sentPositive++;
-	                  } else if (m2.isNegative()) {
-	                    o.sentNegative++;
-	                  } else {
-	                    o.sentNeutral++;
-	                  }
-	                  node.put(o);
-	                }
-	              });
-	              updateContactByLinkedAttribute(a2);
-	            }
-	          }
-	        });
-	      };
-	      updateContactByLinkedAttribute(attr);
-	      if (this.writable) {
-	        this._addContactToIndexes(node);
-	      }
-	      return new Contact(node, attr, this);
-	    } else {
-	      return new Contact(this.gun.get('identitiesBySearchKey').get(attr.uri()), attr, this);
-	    }
-	  };
-
-	  /**
-	  *
-	  */
-
-
-	  SocialNetwork.prototype.getContacts = function getContacts() {
-	    var _this5 = this;
-
-	    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	    // cursor // TODO: param 'exact', type param
-	    if (opt.value) {
-	      if (opt.type) {
-	        return this.getContact(opt.type, opt.value, opt.reload);
-	      } else {
-	        return this.getContact(opt.value);
-	      }
-	    }
-	    opt.query = opt.query || '';
-	    var seen = {};
-	    function searchTermCheck(key) {
-	      var arr = key.split(':');
-	      if (arr.length < 2) {
-	        return false;
-	      }
-	      var keyValue = arr[0];
-	      var keyType = arr[1];
-	      if (keyValue.indexOf(encodeURIComponent(opt.query)) !== 0) {
-	        return false;
-	      }
-	      if (opt.type && keyType !== opt.type) {
-	        return false;
-	      }
-	      return true;
-	    }
-	    var node = this.gun.get('identitiesBySearchKey');
-	    node.map().on(function (id, key) {
-	      if (_Object$keys(seen).length >= opt.limit) {
-	        // TODO: turn off .map cb
-	        return;
-	      }
-	      if (!searchTermCheck(key)) {
-	        return;
-	      }
-	      var soul = Gun.node.soul(id);
-	      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
-	        seen[soul] = true;
-	        var contact = new Contact(node.get(key), undefined, _this5);
-	        contact.cursor = key;
-	        opt.callback(contact);
-	      }
-	    });
-	    if (this.options.indexSync.query.enabled) {
-	      this.gun.get('trustedIndexes').map().once(function (val, key) {
-	        if (val) {
-	          _this5.gun.user(key).get('iris').get('identitiesBySearchKey').map().on(function (id, k) {
-	            if (_Object$keys(seen).length >= opt.limit) {
-	              // TODO: turn off .map cb
-	              return;
-	            }
-	            if (!searchTermCheck(key)) {
-	              return;
-	            }
-	            var soul = Gun.node.soul(id);
-	            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
-	              seen[soul] = true;
-	              opt.callback(new Contact(_this5.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this5));
-	            }
-	          });
-	        }
-	      });
-	    }
-	  };
-
-	  /**
-	  * @returns {Contact} root contact (center of the social graph, trustDistance == 0)
-	  */
-
-
-	  SocialNetwork.prototype.getRootContact = function getRootContact() {
-	    return new Contact(this.gun.get('identitiesBySearchKey').get(this.rootContact.uri()), undefined, this);
-	  };
-
-	  /**
-	  * Return existing chats and listen to new chats initiated by friends.
-	  * Like Channel.getChannels(), but also listens to chats initiated by friends.
-	  */
-
-
-	  SocialNetwork.prototype.getChannels = async function getChannels(callback) {
-	    var _this6 = this;
-
-	    Channel.getChannels(this.gun, this.options.keypair, callback);
-	    this.gun.get('trustedIndexes').map().on(async function (value, pub) {
-	      if (value && pub) {
-	        var theirSecretChannelId = await Channel.getTheirSecretChannelId(_this6.gun, pub, _this6.options.keypair);
-	        _this6.gun.user(pub).get('chats').get(theirSecretChannelId).on(function (v) {
-	          if (v) {
-	            callback(pub);
-	          }
-	        });
-	      }
-	    });
-	  };
-
-	  SocialNetwork.prototype._getMsgs = async function _getMsgs(msgIndex, callback, limit, cursor, desc, filter) {
-	    var results = 0;
-	    async function resultFound(result) {
-	      if (results >= limit) {
-	        return;
-	      }
-	      var msg = await SignedMessage.fromSig(result.value);
-	      if (filter && !filter(msg)) {
-	        return;
-	      }
-	      results++;
-	      msg.cursor = result.key;
-	      msg.gun = msgIndex.get(result.key);
-	      callback(msg);
-	    }
-	    searchText(msgIndex, resultFound, '', undefined, cursor, desc);
-	  };
-
-	  SocialNetwork.prototype._addContactToIndexes = async function _addContactToIndexes(id) {
-	    if (typeof id === 'undefined') {
-	      var e = new Error('id is undefined');
-	      console.error(e.stack);
-	      throw e;
-	    }
-	    var hash = Gun.node.soul(id) || id._ && id._.link || 'todo';
-	    var indexKeys = await this.getContactIndexKeys(id, hash.substr(0, 6));
-
-	    var indexes = _Object$keys(indexKeys);
-	    for (var i = 0; i < indexes.length; i++) {
-	      var index = indexes[i];
-	      for (var j = 0; j < indexKeys[index].length; j++) {
-	        var key = indexKeys[index][j];
-	        // this.debug(`adding to index ${index} key ${key}, saving data: ${id}`);
-	        this.gun.get(index).get(key).put(id); // FIXME: Check, why this can't be `await`ed for in tests? [index.ready promise gets stuck]
-	      }
-	    }
-	  };
-
-	  SocialNetwork.prototype._getSentMsgs = async function _getSentMsgs(contact, options) {
-	    var _this7 = this;
-
-	    this._getMsgs(contact.gun.get('sent'), options.callback, options.limit, options.cursor, true, options.filter);
-	    if (this.options.indexSync.query.enabled) {
-	      this.gun.get('trustedIndexes').map().once(function (val, key) {
-	        if (val) {
-	          var n = _this7.gun.user(key).get('iris').get('messagesByAuthor').get(contact.linkTo.uri());
-	          _this7._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
-	        }
-	      });
-	    }
-	  };
-
-	  SocialNetwork.prototype._getReceivedMsgs = async function _getReceivedMsgs(contact, options) {
-	    var _this8 = this;
-
-	    this._getMsgs(contact.gun.get('received'), options.callback, options.limit, options.cursor, true, options.filter);
-	    if (this.options.indexSync.query.enabled) {
-	      this.gun.get('trustedIndexes').map().once(function (val, key) {
-	        if (val) {
-	          var n = _this8.gun.user(key).get('iris').get('messagesByRecipient').get(contact.linkTo.uri());
-	          _this8._getMsgs(n, options.callback, options.limit, options.cursor, false, options.filter);
-	        }
-	      });
-	    }
-	  };
-
-	  SocialNetwork.prototype.getChatMsgs = async function getChatMsgs(uuid, options) {
-	    var _this9 = this;
-
-	    this._getMsgs(this.gun.get('chatMessagesByUuid').get(uuid), options.callback, options.limit, options.cursor, true, options.filter);
-	    var callback = function callback(msg) {
-	      if (options.callback) {
-	        options.callback(msg);
-	      }
-	      _this9.addMessage(msg, { checkIfExists: true });
-	    };
-	    this.gun.get('trustedIndexes').map().once(function (val, key) {
-	      if (val) {
-	        var n = _this9.gun.user(key).get('iris').get('chatMessagesByUuid').get(uuid);
-	        _this9._getMsgs(n, callback, options.limit, options.cursor, false, options.filter);
-	      }
-	    });
-	  };
-
-	  SocialNetwork.prototype._getAttributeTrustDistance = async function _getAttributeTrustDistance(a) {
-	    if (!Attribute.isUniqueType(a.type)) {
-	      return;
-	    }
-	    if (this.rootContact.equals(a)) {
-	      return 0;
-	    }
-	    var id = this.getContact(a);
-	    var d = await id.gun.get('trustDistance').then();
-	    if (isNaN(d)) {
-	      d = Infinity;
-	    }
-	    return d;
-	  };
-
-	  SocialNetwork.prototype._getMsgTrustDistance = async function _getMsgTrustDistance(msg) {
-	    var shortestDistance = Infinity;
-	    var signerAttr = new Attribute('keyID', msg.getSignerKeyID());
-	    if (!signerAttr.equals(this.rootContact)) {
-	      var signer = this.getContact(signerAttr);
-	      var d = await signer.gun.get('trustDistance').then();
-	      if (isNaN(d)) {
-	        return;
-	      }
-	    }
-	    for (var _iterator = msg.getAuthorArray(), _isArray = Array.isArray(_iterator), _i4 = 0, _iterator = _isArray ? _iterator : _getIterator(_iterator);;) {
-	      var _ref;
-
-	      if (_isArray) {
-	        if (_i4 >= _iterator.length) break;
-	        _ref = _iterator[_i4++];
-	      } else {
-	        _i4 = _iterator.next();
-	        if (_i4.done) break;
-	        _ref = _i4.value;
-	      }
-
-	      var a = _ref;
-
-	      var _d = await this._getAttributeTrustDistance(a);
-	      if (_d < shortestDistance) {
-	        shortestDistance = _d;
-	      }
-	    }
-	    return shortestDistance < Infinity ? shortestDistance : undefined;
-	  };
-
-	  SocialNetwork.prototype._updateMsgRecipientContact = async function _updateMsgRecipientContact(msg, msgIndexKey, recipient) {
-	    var hash = recipient._ && recipient._.link || 'todo';
-	    var contactIndexKeysBefore = await this.getContactIndexKeys(recipient, hash.substr(0, 6));
-	    var attrs = await Contact.getAttrs(recipient);
-	    if (['verification', 'unverification'].indexOf(msg.signedData.type) > -1) {
-	      var isVerification = msg.signedData.type === 'verification';
-
-	      var _loop = function _loop() {
-	        if (_isArray2) {
-	          if (_i5 >= _iterator2.length) return 'break';
-	          _ref2 = _iterator2[_i5++];
-	        } else {
-	          _i5 = _iterator2.next();
-	          if (_i5.done) return 'break';
-	          _ref2 = _i5.value;
-	        }
-
-	        var a = _ref2;
-
-	        var hasAttr = false;
-	        var v = {
-	          verifications: isVerification ? 1 : 0,
-	          unverifications: isVerification ? 0 : 1
-	        };
-	        _Object$keys(attrs).forEach(function (k) {
-	          // TODO: if author is self, mark as self verified
-	          // TODO: only 1 verif / unverif per author
-	          if (a.equals(attrs[k])) {
-	            attrs[k].verifications = (attrs[k].verifications || 0) + v.verifications;
-	            attrs[k].unverifications = (attrs[k].unverifications || 0) + v.unverifications;
-	            hasAttr = true;
-	          }
-	        });
-	        if (!hasAttr) {
-	          attrs[a.uri()] = _Object$assign({ type: a.type, value: a.value }, v);
-	        }
-	        if (msg.goodVerification) {
-	          if (isVerification) {
-	            attrs[a.uri()].wellVerified = true;
-	          } else {
-	            attrs[a.uri()].wellUnverified = true;
-	          }
-	        }
-	      };
-
-	      for (var _iterator2 = msg.getRecipientArray(), _isArray2 = Array.isArray(_iterator2), _i5 = 0, _iterator2 = _isArray2 ? _iterator2 : _getIterator(_iterator2);;) {
-	        var _ref2;
-
-	        var _ret = _loop();
-
-	        if (_ret === 'break') break;
-	      }
-	      var mva = Contact.getMostVerifiedAttributes(attrs);
-	      recipient.get('mostVerifiedAttributes').put(mva); // TODO: why this needs to be done twice to register?
-	      recipient.get('mostVerifiedAttributes').put(mva);
-	      var k = mva.keyID && mva.keyID.attribute.value || mva.uuid && mva.uuid.attribute.value || hash;
-	      console.log('k', k);
-	      recipient.get('attrs').put(this.gun.user().top(k + '/attrs'));
-	      recipient.get('attrs').put(attrs);
-	      recipient.get('attrs').put(attrs);
-	    }
-	    if (msg.signedData.type === 'rating') {
-	      var id = await recipient.then();
-	      id.receivedPositive = id.receivedPositive || 0;
-	      id.receivedNegative = id.receivedNegative || 0;
-	      id.receivedNeutral = id.receivedNeutral || 0;
-	      if (msg.isPositive()) {
-	        if (typeof id.trustDistance !== 'number' || msg.distance + 1 < id.trustDistance) {
-	          recipient.get('trustDistance').put(msg.distance + 1);
-	        }
-	        id.receivedPositive++;
-	      } else {
-	        if (msg.distance < id.trustDistance) {
-	          recipient.get('trustDistance').put(false); // TODO: this should take into account the aggregate score of the contact
-	        }
-	        if (msg.isNegative()) {
-	          id.receivedNegative++;
-	        } else {
-	          id.receivedNeutral++;
-	        }
-	      }
-
-	      recipient.put({
-	        receivedPositive: id.receivedPositive,
-	        receivedNegative: id.receivedNegative,
-	        receivedNeutral: id.receivedNeutral
-	      });
-
-	      if (msg.signedData.context === 'verifier') {
-	        if (msg.distance === 0) {
-	          if (msg.isPositive) {
-	            recipient.get('scores').get(msg.signedData.context).get('score').put(10);
-	          } else if (msg.isNegative()) {
-	            recipient.get('scores').get(msg.signedData.context).get('score').put(0);
-	          } else {
-	            recipient.get('scores').get(msg.signedData.context).get('score').put(-10);
-	          }
-	        }
-	      }
-	    }
-	    var obj = { sig: msg.sig, pubKey: msg.pubKey };
-
-	    recipient.get('received').get(msgIndexKey).put(obj);
-	    recipient.get('received').get(msgIndexKey).put(obj);
-
-	    var contactIndexKeysAfter = await this.getContactIndexKeys(recipient, hash.substr(0, 6));
-	    var indexesBefore = _Object$keys(contactIndexKeysBefore);
-	    for (var i = 0; i < indexesBefore.length; i++) {
-	      var index = indexesBefore[i];
-	      for (var j = 0; j < contactIndexKeysBefore[index].length; j++) {
-	        var key = contactIndexKeysBefore[index][j];
-	        if (!contactIndexKeysAfter[index] || contactIndexKeysAfter[index].indexOf(key) === -1) {
-	          this.gun.get(index).get(key).put(null);
-	        }
-	      }
-	    }
-	  };
-
-	  SocialNetwork.prototype._updateMsgAuthorContact = async function _updateMsgAuthorContact(msg, msgIndexKey, author) {
-	    if (msg.signedData.type === 'rating') {
-	      var id = await author.then();
-	      id.sentPositive = id.sentPositive || 0;
-	      id.sentNegative = id.sentNegative || 0;
-	      id.sentNeutral = id.sentNeutral || 0;
-	      if (msg.isPositive()) {
-	        id.sentPositive++;
-	      } else if (msg.isNegative()) {
-	        id.sentNegative++;
-	      } else {
-	        id.sentNeutral++;
-	      }
-	      author.get('sentPositive').put(id.sentPositive);
-	      author.get('sentNegative').put(id.sentNegative);
-	      author.get('sentNeutral').put(id.sentNeutral);
-	    }
-	    var obj = { sig: msg.sig, pubKey: msg.pubKey };
-	    author.get('sent').get(msgIndexKey).put(obj); // for some reason, doesn't work unless I do it twice
-	    author.get('sent').get(msgIndexKey).put(obj);
-	    return;
-	  };
-
-	  SocialNetwork.prototype._updateContactProfilesByMsg = async function _updateContactProfilesByMsg(msg, authorIdentities, recipientIdentities) {
-	    var start = void 0;
-	    var msgIndexKey = SocialNetwork.getMsgIndexKey(msg);
-	    msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(':') + 1);
-	    var ids = _Object$values(_Object$assign({}, authorIdentities, recipientIdentities));
-	    for (var i = 0; i < ids.length; i++) {
-	      // add new identifiers to contact
-	      if (Object.prototype.hasOwnProperty.call(recipientIdentities, ids[i].gun['_'].link)) {
-	        start = new Date();
-	        await this._updateMsgRecipientContact(msg, msgIndexKey, ids[i].gun);
-	        this.debug(new Date() - start, 'ms _updateMsgRecipientContact');
-	      }
-	      if (Object.prototype.hasOwnProperty.call(authorIdentities, ids[i].gun['_'].link)) {
-	        start = new Date();
-	        await this._updateMsgAuthorContact(msg, msgIndexKey, ids[i].gun);
-	        this.debug(new Date() - start, 'ms _updateMsgAuthorContact');
-	      }
-	      start = new Date();
-	      await this._addContactToIndexes(ids[i].gun);
-	      this.debug(new Date() - start, 'ms _addContactToIndexes');
-	    }
-	  };
-
-	  SocialNetwork.prototype.removeTrustedIndex = async function removeTrustedIndex(gunUri) {
-	    this.gun.get('trustedIndexes').get(gunUri).put(null);
-	  };
-
-	  SocialNetwork.prototype.addTrustedIndex = async function addTrustedIndex(gunUri) {
-	    var _this10 = this;
-
-	    var maxMsgsToCrawl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.options.indexSync.importOnAdd.maxMsgCount;
-	    // maxMsgDistance = this.options.indexSync.importOnAdd.maxMsgDistance
-	    if (gunUri === this.rootContact.value) {
-	      return;
-	    }
-	    var exists = await this.gun.get('trustedIndexes').get(gunUri).then();
-	    if (exists) {
-	      return;
-	    }
-	    this.gun.get('trustedIndexes').get(gunUri).put(true);
-	    var msgs = [];
-	    if (this.options.indexSync.importOnAdd.enabled) {
-	      await util.timeoutPromise(new _Promise(function (resolve) {
-	        var gun = _this10.gun.user(gunUri).get('iris');
-	        var callback = function callback(msg) {
-	          msgs.push(msg);
-	          if (msgs.length >= maxMsgsToCrawl) {
-	            resolve();
-	          }
-	        };
-	        var messages = new Collection$2({ gun: gun, class: SignedMessage, indexes: ['trustDistance'] });
-	        messages.get({ callback: callback, orderBy: 'trustDistance', desc: false });
-	      }), 10000);
-	      this.debug('adding', msgs.length, 'msgs');
-	      this.addMessages(msgs);
-	    }
-	  };
-
-	  SocialNetwork.prototype._updateContactIndexesByMsg = async function _updateContactIndexesByMsg(msg) {
-	    var recipientIdentities = {};
-	    var authorIdentities = {};
-	    var selfAuthored = false;
-	    var start = void 0;
-	    start = new Date();
-	    for (var _iterator3 = msg.getAuthorArray(), _isArray3 = Array.isArray(_iterator3), _i6 = 0, _iterator3 = _isArray3 ? _iterator3 : _getIterator(_iterator3);;) {
-	      var _ref3;
-
-	      if (_isArray3) {
-	        if (_i6 >= _iterator3.length) break;
-	        _ref3 = _iterator3[_i6++];
-	      } else {
-	        _i6 = _iterator3.next();
-	        if (_i6.done) break;
-	        _ref3 = _i6.value;
-	      }
-
-	      var _a3 = _ref3;
-
-	      var _id = this.getContact(_a3);
-	      var start2 = new Date();
-	      var td = await _id.gun.get('trustDistance').then();
-	      this.debug(new Date() - start2, 'ms get trustDistance');
-	      if (!isNaN(td)) {
-	        authorIdentities[_id.gun['_'].link] = _id;
-	        start2 = new Date();
-	        var scores = await _id.gun.get('scores').then();
-	        this.debug(new Date() - start2, 'ms get scores');
-	        if (scores && scores.verifier && msg.signedData.type === 'verification') {
-	          msg.goodVerification = true;
-	        }
-	        if (td === 0) {
-	          selfAuthored = true;
-	        }
-	      }
-	    }
-	    this.debug(new Date() - start, 'ms getAuthorArray');
-	    if (!_Object$keys(authorIdentities).length) {
-	      return; // unknown author, do nothing
-	    }
-	    start = new Date();
-	    for (var _iterator4 = msg.getRecipientArray(), _isArray4 = Array.isArray(_iterator4), _i7 = 0, _iterator4 = _isArray4 ? _iterator4 : _getIterator(_iterator4);;) {
-	      var _ref4;
-
-	      if (_isArray4) {
-	        if (_i7 >= _iterator4.length) break;
-	        _ref4 = _iterator4[_i7++];
-	      } else {
-	        _i7 = _iterator4.next();
-	        if (_i7.done) break;
-	        _ref4 = _i7.value;
-	      }
-
-	      var _a4 = _ref4;
-
-	      var _id2 = this.getContact(_a4);
-	      var _td = await _id2.gun.get('trustDistance').then();
-
-	      if (!isNaN(_td)) {
-	        recipientIdentities[_id2.gun['_'].link] = _id2;
-	      }
-	      if (selfAuthored && _a4.type === 'keyID' && _a4.value !== this.rootContact.value) {
-	        // TODO: not if already added - causes infinite loop?
-	        if (msg.isPositive()) {
-	          this.addTrustedIndex(_a4.value);
-	        } else {
-	          this.removeTrustedIndex(_a4.value);
-	        }
-	      }
-	    }
-	    this.debug(new Date() - start, 'ms getRecipientArray');
-	    if (!msg.signedData.recipient) {
-	      // message to self
-	      recipientIdentities = authorIdentities;
-	    }
-	    if (!_Object$keys(recipientIdentities).length) {
-	      // recipient is previously unknown
-	      var attrs = {};
-	      var u = void 0;
-	      for (var _iterator5 = msg.getRecipientArray(), _isArray5 = Array.isArray(_iterator5), _i8 = 0, _iterator5 = _isArray5 ? _iterator5 : _getIterator(_iterator5);;) {
-	        var _ref5;
-
-	        if (_isArray5) {
-	          if (_i8 >= _iterator5.length) break;
-	          _ref5 = _iterator5[_i8++];
-	        } else {
-	          _i8 = _iterator5.next();
-	          if (_i8.done) break;
-	          _ref5 = _i8.value;
-	        }
-
-	        var _a2 = _ref5;
-
-	        attrs[_a2.uri()] = _a2;
-	        if (!u && _a2.isUniqueType()) {
-	          u = _a2;
-	        }
-	      }
-	      var linkTo = Contact.getLinkTo(attrs);
-	      var trustDistance = msg.isPositive() && typeof msg.distance === 'number' ? msg.distance + 1 : false;
-	      var _start = new Date();
-	      var node = this.gun.get('identitiesBySearchKey').get(u.uri());
-	      node.put({ a: 1 }); // {a:1} because inserting {} causes a "no signature on data" error from gun
-	      var id = Contact.create(node, { attrs: attrs, linkTo: linkTo, trustDistance: trustDistance }, this);
-	      this.debug(new Date() - _start, 'ms contact.create');
-
-	      // TODO: take msg author trust into account
-	      recipientIdentities[id.gun['_'].link] = id;
-	    }
-
-	    return this._updateContactProfilesByMsg(msg, authorIdentities, recipientIdentities);
-	  };
-
-	  /**
-	  * Add a message to messagesByTimestamp and other relevant indexes. Update identities in the web of trust according to message data.
-	  *
-	  * @param msg SignedMessage (or an array of messages) to add to the index
-	  */
-
-
-	  SocialNetwork.prototype.addMessage = async function addMessage(msg) {
-	    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-	    if (!this.writable) {
-	      throw new Error('Cannot write to a read-only index (initialized with options.pubKey)');
-	    }
-	    if (Array.isArray(msg)) {
-	      return this.addMessages(msg, options);
-	    }
-	    var start = void 0;
-	    if (msg.constructor.name !== 'SignedMessage') {
-	      throw new Error('addMessage failed: param must be a SignedMessage, received ' + msg.constructor.name);
-	    }
-	    var hash = await msg.getHash();
-	    if (true === options.checkIfExists) {
-	      var exists = await this.gun.get('messagesByHash').get(hash).then();
-	      if (exists) {
-	        return;
-	      }
-	    }
-	    var obj = { sig: msg.sig, pubKey: msg.pubKey };
-	    //const node = this.gun.get(`messagesByHash`).get(hash).put(obj);
-	    var node = this.gun.back(-1).get('messagesByHash').get(hash).put(obj); // TODO: needs fix to https://github.com/amark/gun/issues/719
-	    start = new Date();
-	    var d = await this._getMsgTrustDistance(msg);
-	    msg.distance = Object.prototype.hasOwnProperty.call(msg, 'distance') ? msg.distance : d; // eslint-disable-line require-atomic-updates
-	    this.debug('----');
-	    this.debug(new Date() - start, 'ms _getMsgTrustDistance');
-	    if (msg.distance === undefined) {
-	      return false; // do not save messages from untrusted author
-	    }
-	    if (msg.signedData.replyTo) {
-	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.replyTo).get('replies').get(hash).put(node);
-	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.replyTo).get('replies').get(hash).put(node);
-	    }
-	    if (msg.signedData.sharedMsg) {
-	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.sharedMsg).get('shares').get(hash).put(node);
-	      this.gun.back(-1).get('messagesByHash').get(msg.signedData.sharedMsg).get('shares').get(hash).put(node);
-	    }
-	    start = new Date();
-
-	    this.messages.put(msg);
-
-	    // TODO: this should be moved to Collection
-	    var indexKeys = SocialNetwork.getMsgIndexKeys(msg);
-	    this.debug(new Date() - start, 'ms getMsgIndexKeys');
-	    for (var index in indexKeys) {
-	      if (Array.isArray(indexKeys[index])) {
-	        for (var i = 0; i < indexKeys[index].length; i++) {
-	          var key = indexKeys[index][i];
-	          // this.debug(`adding to index ${index} key ${key}`);
-	          this.gun.get(index).get(key).put(node);
-	          this.gun.get(index).get(key).put(node); // umm, what? doesn't work unless I write it twice
-	        }
-	      } else if (typeof indexKeys[index] === 'object') {
-	        for (var _key in indexKeys[index]) {
-	          this.gun.get(index).get(_key).get(indexKeys[index][_key]).put(node);
-	          this.gun.get(index).get(_key).get(indexKeys[index][_key]).put(node);
-	        }
-	      }
-	    }
-
-	    if (msg.signedData.type !== 'chat') {
-	      start = new Date();
-	      await this._updateContactIndexesByMsg(msg);
-	      this.debug(new Date() - start, 'ms _updateContactIndexesByMsg');
-	    }
-	    return true;
-	  };
-
-	  /**
-	  * Alias to socialNetwork.messages.get(opt) (but with opt.orderBy = 'time')
-	  * @param {Object} opt {hash, orderBy, callback, limit, cursor, desc, filter}
-	  */
-
-
-	  SocialNetwork.prototype.getMessages = async function getMessages(opt) {
-	    if (opt.hash) {
-	      return this.messages.get({ id: opt.hash });
-	    }
-	    opt.orderBy = opt.orderBy || 'time';
-	    return this.messages.get(opt);
-	  };
-
-	  /*
-	  * Add a list of messages to the index.
-	  * Useful for example when adding a new WoT dataset that contains previously
-	  * unknown authors.
-	  *
-	  * Iteratively performs sorted merge joins on [previously known contacts] and
-	  * [new msgs authors], until all messages from within the WoT have been added.
-	  *
-	  * @param {Array} msgs an array of messages.
-	  * @returns {boolean} true on success
-	  */
-
-
-	  SocialNetwork.prototype.addMessages = async function addMessages(msgs) {
-	    var _this11 = this;
-
-	    if (!this.writable) {
-	      throw new Error('Cannot write to a read-only index (initialized with options.pubKey)');
-	    }
-	    var msgsByAuthor = {};
-	    if (Array.isArray(msgs)) {
-	      this.debug('sorting ' + msgs.length + ' messages onto a search tree...');
-	      for (var i = 0; i < msgs.length; i++) {
-	        for (var _iterator6 = msgs[i].getAuthorArray(), _isArray6 = Array.isArray(_iterator6), _i9 = 0, _iterator6 = _isArray6 ? _iterator6 : _getIterator(_iterator6);;) {
-	          var _ref6;
-
-	          if (_isArray6) {
-	            if (_i9 >= _iterator6.length) break;
-	            _ref6 = _iterator6[_i9++];
-	          } else {
-	            _i9 = _iterator6.next();
-	            if (_i9.done) break;
-	            _ref6 = _i9.value;
-	          }
-
-	          var _a5 = _ref6;
-
-	          if (_a5.isUniqueType()) {
-	            var hash = msgs[i].getHash();
-	            var key = _a5.uri() + ':' + hash;
-	            msgsByAuthor[key] = msgs[i];
-	          }
-	        }
-	      }
-	      this.debug('...done');
-	    } else {
-	      throw 'msgs param must be an array';
-	    }
-	    var msgAuthors = _Object$keys(msgsByAuthor).sort();
-	    if (!msgAuthors.length) {
-	      return;
-	    }
-	    var initialMsgCount = void 0,
-	        msgCountAfterwards = void 0;
-	    var index = this.gun.get('identitiesBySearchKey');
-
-	    var _loop2 = async function _loop2() {
-	      var knownIdentities = [];
-	      var stop = false;
-	      searchText(index, function (result) {
-	        if (stop) {
-	          return;
-	        }
-	        knownIdentities.push(result);
-	      }, '');
-	      await new _Promise(function (r) {
-	        return setTimeout(r, 2000);
-	      }); // wait for results to accumulate
-	      stop = true;
-	      knownIdentities.sort(function (a, b) {
-	        if (a.key === b.key) {
-	          return 0;
-	        } else if (a.key > b.key) {
-	          return 1;
-	        } else {
-	          return -1;
-	        }
-	      });
-	      var i = 0;
-	      var author = msgAuthors[i];
-	      var knownContact = knownIdentities.shift();
-	      initialMsgCount = msgAuthors.length;
-	      // sort-merge join identitiesBySearchKey and msgsByAuthor
-	      while (author && knownContact) {
-	        if (author.indexOf(knownContact.key) === 0) {
-	          try {
-	            await util.timeoutPromise(_this11.addMessage(msgsByAuthor[author], { checkIfExists: true }), 10000);
-	          } catch (e) {
-	            _this11.debug('adding failed:', e, _JSON$stringify(msgsByAuthor[author], null, 2));
-	          }
-	          msgAuthors.splice(i, 1);
-	          author = i < msgAuthors.length ? msgAuthors[i] : undefined;
-	          //knownContact = knownIdentities.shift();
-	        } else if (author < knownContact.key) {
-	          author = i < msgAuthors.length ? msgAuthors[++i] : undefined;
-	        } else {
-	          knownContact = knownIdentities.shift();
-	        }
-	      }
-	      msgCountAfterwards = msgAuthors.length;
-	    };
-
-	    do {
-	      await _loop2();
-	    } while (msgCountAfterwards !== initialMsgCount);
-	    return true;
-	  };
-
-	  /*
-	  * @returns {Object} message matching the hash
-	  */
-
-
-	  SocialNetwork.prototype.getMessageByHash = function getMessageByHash(hash) {
-	    var _this12 = this;
-
-	    return new _Promise(function (resolve) {
-	      var resolveIfHashMatches = async function resolveIfHashMatches(d) {
-	        var obj = typeof d === 'object' ? d : JSON.parse(d);
-	        var m = await SignedMessage.fromSig(obj);
-	        var h = await m.getHash();
-	        if (h === hash) {
-	          resolve(m);
-	        } else {
-	          console.error('queried index for message ' + hash + ' but received ' + h);
-	        }
-	      };
-	      _this12.gun.get('messagesByHash').get(hash).on(function (d) {
-	        _this12.debug('got msg ' + hash + ' from own gun index');
-	        resolveIfHashMatches(d);
-	      });
-	      if (_this12.options.indexSync.query.enabled) {
-	        _this12.gun.get('trustedIndexes').map().once(function (val, key) {
-	          if (val) {
-	            _this12.gun.user(key).get('iris').get('messagesByHash').get(hash).on(function (d) {
-	              _this12.debug('got msg ' + hash + ' from friend\'s gun index ' + val);
-	              resolveIfHashMatches(d);
-	            });
-	          }
-	        });
-	      }
-	    });
-	  };
-
-	  /*
-	  * @returns {Array} list of messages
-	  */
-
-
-	  SocialNetwork.prototype.getMessagesByTimestamp = function getMessagesByTimestamp(callback, limit, cursor) {
-	    var _this13 = this;
-
-	    var desc = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
-	    var filter = arguments[4];
-
-	    var seen = {};
-	    var cb = async function cb(msg) {
-	      if ((!limit || _Object$keys(seen).length < limit) && !Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
-	        seen[msg.hash] = true;
-	        callback(msg);
-	      }
-	    };
-
-	    this._getMsgs(this.gun.get('messagesByTimestamp'), cb, limit, cursor, desc, filter);
-	    if (this.options.indexSync.query.enabled) {
-	      this.gun.get('trustedIndexes').map().once(function (val, key) {
-	        if (val) {
-	          var n = _this13.gun.user(key).get('iris').get('messagesByTimestamp');
-	          _this13._getMsgs(n, cb, limit, cursor, desc, filter);
-	        }
-	      });
-	    }
-	  };
-
-	  /*
-	  * @returns {Array} list of messages
-	  */
-
-
-	  SocialNetwork.prototype.getMessagesByDistance = function getMessagesByDistance(callback, limit, cursor, desc, filter) {
-	    var _this14 = this;
-
-	    var seen = {};
-	    var cb = function cb(msg) {
-	      if (!Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
-	        if ((!limit || _Object$keys(seen).length <= limit) && !Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
-	          seen[msg.hash] = true;
-	          callback(msg);
-	        }
-	      }
-	    };
-	    this._getMsgs(this.gun.get('messagesByDistance'), cb, limit, cursor, desc, filter);
-	    if (this.options.indexSync.query.enabled) {
-	      this.gun.get('trustedIndexes').map().once(function (val, key) {
-	        if (val) {
-	          var n = _this14.gun.user(key).get('iris').get('messagesByDistance');
-	          _this14._getMsgs(n, cb, limit, cursor, desc, filter);
-	        }
-	      });
-	    }
-	  };
-
-	  return SocialNetwork;
-	}();
-
-	var version$1 = "0.0.153";
+	var version = "0.0.155";
 
 	var taggedTemplateLiteralLoose = createCommonjsModule(function (module, exports) {
 
@@ -10344,6 +8523,228 @@
 	var n$1=function(t,s,r,e){var u;s[0]=0;for(var h=1;h<s.length;h++){var p=s[h++],a=s[h]?(s[0]|=p?1:2,r[s[h++]]):s[++h];3===p?e[0]=a:4===p?e[1]=Object.assign(e[1]||{},a):5===p?(e[1]=e[1]||{})[s[++h]]=a:6===p?e[1][s[++h]]+=a+"":p?(u=t.apply(a,n$1(t,a,r,["",null])),e.push(u),a[0]?s[0]|=2:(s[h-2]=0,s[h]=u)):e.push(a);}return e},t$1=new Map;function e$1(s){var r=t$1.get(this);return r||(r=new Map,t$1.set(this,r)),(r=n$1(this,r.get(s)||(r.set(s,r=function(n){for(var t,s,r=1,e="",u="",h=[0],p=function(n){1===r&&(n||(e=e.replace(/^\s*\n\s*|\s*\n\s*$/g,"")))?h.push(0,n,e):3===r&&(n||e)?(h.push(3,n,e),r=2):2===r&&"..."===e&&n?h.push(4,n,0):2===r&&e&&!n?h.push(5,0,!0,e):r>=5&&((e||!n&&5===r)&&(h.push(r,0,e,s),r=6),n&&(h.push(r,n,0,s),r=6)),e="";},a=0;a<n.length;a++){a&&(1===r&&p(),p(a));for(var l=0;l<n[a].length;l++)t=n[a][l],1===r?"<"===t?(p(),h=[h],r=3):e+=t:4===r?"--"===e&&">"===t?(r=1,e=""):e=t+e[0]:u?t===u?u="":e+=t:'"'===t||"'"===t?u=t:">"===t?(p(),r=1):r&&("="===t?(r=5,s=e,e=""):"/"===t&&(r<5||">"===n[a][l+1])?(p(),3===r&&(h=h[0]),r=h,(h=h[0]).push(2,0,r),r=0):" "===t||"\t"===t||"\n"===t||"\r"===t?(p(),r=2):e+=t),3===r&&"!--"===e&&(r=4,h=h[0]);}return p(),h}(s)),r),arguments,[])).length>1?r:r[0]}
 
 	var m$1=e$1.bind(h);
+
+	// shim for using process in browser
+	// based off https://github.com/defunctzombie/node-process/blob/master/browser.js
+
+	function defaultSetTimout() {
+	    throw new Error('setTimeout has not been defined');
+	}
+	function defaultClearTimeout () {
+	    throw new Error('clearTimeout has not been defined');
+	}
+	var cachedSetTimeout = defaultSetTimout;
+	var cachedClearTimeout = defaultClearTimeout;
+	if (typeof global$1.setTimeout === 'function') {
+	    cachedSetTimeout = setTimeout;
+	}
+	if (typeof global$1.clearTimeout === 'function') {
+	    cachedClearTimeout = clearTimeout;
+	}
+
+	function runTimeout(fun) {
+	    if (cachedSetTimeout === setTimeout) {
+	        //normal enviroments in sane situations
+	        return setTimeout(fun, 0);
+	    }
+	    // if setTimeout wasn't available but was latter defined
+	    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+	        cachedSetTimeout = setTimeout;
+	        return setTimeout(fun, 0);
+	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedSetTimeout(fun, 0);
+	    } catch(e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+	            return cachedSetTimeout.call(null, fun, 0);
+	        } catch(e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+	            return cachedSetTimeout.call(this, fun, 0);
+	        }
+	    }
+
+
+	}
+	function runClearTimeout(marker) {
+	    if (cachedClearTimeout === clearTimeout) {
+	        //normal enviroments in sane situations
+	        return clearTimeout(marker);
+	    }
+	    // if clearTimeout wasn't available but was latter defined
+	    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+	        cachedClearTimeout = clearTimeout;
+	        return clearTimeout(marker);
+	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedClearTimeout(marker);
+	    } catch (e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+	            return cachedClearTimeout.call(null, marker);
+	        } catch (e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+	            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+	            return cachedClearTimeout.call(this, marker);
+	        }
+	    }
+
+
+
+	}
+	var queue$1 = [];
+	var draining = false;
+	var currentQueue;
+	var queueIndex = -1;
+
+	function cleanUpNextTick() {
+	    if (!draining || !currentQueue) {
+	        return;
+	    }
+	    draining = false;
+	    if (currentQueue.length) {
+	        queue$1 = currentQueue.concat(queue$1);
+	    } else {
+	        queueIndex = -1;
+	    }
+	    if (queue$1.length) {
+	        drainQueue();
+	    }
+	}
+
+	function drainQueue() {
+	    if (draining) {
+	        return;
+	    }
+	    var timeout = runTimeout(cleanUpNextTick);
+	    draining = true;
+
+	    var len = queue$1.length;
+	    while(len) {
+	        currentQueue = queue$1;
+	        queue$1 = [];
+	        while (++queueIndex < len) {
+	            if (currentQueue) {
+	                currentQueue[queueIndex].run();
+	            }
+	        }
+	        queueIndex = -1;
+	        len = queue$1.length;
+	    }
+	    currentQueue = null;
+	    draining = false;
+	    runClearTimeout(timeout);
+	}
+	function nextTick(fun) {
+	    var args = new Array(arguments.length - 1);
+	    if (arguments.length > 1) {
+	        for (var i = 1; i < arguments.length; i++) {
+	            args[i - 1] = arguments[i];
+	        }
+	    }
+	    queue$1.push(new Item(fun, args));
+	    if (queue$1.length === 1 && !draining) {
+	        runTimeout(drainQueue);
+	    }
+	}
+	// v8 likes predictible objects
+	function Item(fun, array) {
+	    this.fun = fun;
+	    this.array = array;
+	}
+	Item.prototype.run = function () {
+	    this.fun.apply(null, this.array);
+	};
+	var title = 'browser';
+	var platform = 'browser';
+	var browser$1 = true;
+	var env = {};
+	var argv = [];
+	var version$1 = ''; // empty string to avoid regexp issues
+	var versions$1 = {};
+	var release = {};
+	var config = {};
+
+	function noop() {}
+
+	var on = noop;
+	var addListener = noop;
+	var once = noop;
+	var off = noop;
+	var removeListener = noop;
+	var removeAllListeners = noop;
+	var emit = noop;
+
+	function binding(name) {
+	    throw new Error('process.binding is not supported');
+	}
+
+	function cwd () { return '/' }
+	function chdir (dir) {
+	    throw new Error('process.chdir is not supported');
+	}function umask() { return 0; }
+
+	// from https://github.com/kumavis/browser-process-hrtime/blob/master/index.js
+	var performance = global$1.performance || {};
+	var performanceNow =
+	  performance.now        ||
+	  performance.mozNow     ||
+	  performance.msNow      ||
+	  performance.oNow       ||
+	  performance.webkitNow  ||
+	  function(){ return (new Date()).getTime() };
+
+	// generate timestamp or delta
+	// see http://nodejs.org/api/process.html#process_process_hrtime
+	function hrtime(previousTimestamp){
+	  var clocktime = performanceNow.call(performance)*1e-3;
+	  var seconds = Math.floor(clocktime);
+	  var nanoseconds = Math.floor((clocktime%1)*1e9);
+	  if (previousTimestamp) {
+	    seconds = seconds - previousTimestamp[0];
+	    nanoseconds = nanoseconds - previousTimestamp[1];
+	    if (nanoseconds<0) {
+	      seconds--;
+	      nanoseconds += 1e9;
+	    }
+	  }
+	  return [seconds,nanoseconds]
+	}
+
+	var startTime = new Date();
+	function uptime() {
+	  var currentTime = new Date();
+	  var dif = currentTime - startTime;
+	  return dif / 1000;
+	}
+
+	var process$3 = {
+	  nextTick: nextTick,
+	  title: title,
+	  browser: browser$1,
+	  env: env,
+	  argv: argv,
+	  version: version$1,
+	  versions: versions$1,
+	  on: on,
+	  addListener: addListener,
+	  once: once,
+	  off: off,
+	  removeListener: removeListener,
+	  removeAllListeners: removeAllListeners,
+	  emit: emit,
+	  binding: binding,
+	  cwd: cwd,
+	  chdir: chdir,
+	  umask: umask,
+	  hrtime: hrtime,
+	  platform: platform,
+	  release: release,
+	  config: config,
+	  uptime: uptime
+	};
 
 	var canUseDOM = !!(
 	  typeof window !== 'undefined' &&
@@ -10382,7 +8783,7 @@
 	    } catch (insertError) {
 	      // insertRule will fail for rules with pseudoelements the browser doesn't support.
 	      // see: https://github.com/jsxstyle/jsxstyle/issues/75
-	      {
+	      if (process$3.env.NODE_ENV !== 'production') {
 	        console.error(
 	          '[jsxstyle] Could not insert rule at position ' +
 	            sheet.cssRules.length +
@@ -10494,6 +8895,15 @@
 	    return value + 'px';
 	  }
 	  if (!value.toString) {
+	    // values that lack a toString method on their prototype will throw a TypeError
+	    // see https://github.com/jsxstyle/jsxstyle/issues/112
+	    if (process$3.env.NODE_ENV === 'development') {
+	      console.error(
+	        'Value for prop `%s` (`%o`) cannot be stringified.',
+	        name,
+	        value
+	      );
+	    }
 	    return '';
 	  }
 	  return ('' + value).trim();
@@ -11010,26 +9420,28 @@
 	  *
 	  * If the key does not exist, it is generated.
 	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
+	  * @param {string} keyfile keyfile name (within datadir)
+	  * @param {Object} fs node: require('fs'); browser: leave empty.
 	  * @returns {Promise<Object>} keypair object
 	  */
 	  Key.getActiveKey = async function getActiveKey() {
 	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
 	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
+	    var fs = arguments[2];
 
 	    if (myKey$1) {
 	      return myKey$1;
 	    }
-	    if (util.isNode) {
-	      var _fs = require('fs');
+	    if (fs) {
 	      var privKeyFile = datadir + '/' + keyfile;
-	      if (_fs.existsSync(privKeyFile)) {
-	        var f = _fs.readFileSync(privKeyFile, 'utf8');
+	      if (fs.existsSync(privKeyFile)) {
+	        var f = fs.readFileSync(privKeyFile, 'utf8');
 	        myKey$1 = Key.fromString(f);
 	      } else {
 	        var newKey = await Key.generate();
 	        myKey$1 = myKey$1 || newKey; // eslint-disable-line require-atomic-updates
-	        _fs.writeFileSync(privKeyFile, Key.toString(myKey$1));
-	        _fs.chmodSync(privKeyFile, 400);
+	        fs.writeFileSync(privKeyFile, Key.toString(myKey$1));
+	        fs.chmodSync(privKeyFile, 400);
 	      }
 	      if (!myKey$1) {
 	        throw new Error('loading default key failed - check ' + datadir + '/' + keyfile);
@@ -11074,6 +9486,7 @@
 	    var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 	    var datadir = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '.';
 	    var keyfile = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'iris.key';
+	    var fs = arguments[4];
 
 	    myKey$1 = key;
 	    if (!save) return;
@@ -11249,7 +9662,8 @@
 	    if (this.props.json) {
 	      try {
 	        s = JSON.parse(s);
-	      } catch (e) {}
+	      } catch (e) {
+	      }
 	    }
 	    return s;
 	  };
@@ -11322,7 +9736,7 @@
 	  ImageNode.prototype.getValue = function getValue(user) {
 	    var _this2 = this;
 
-	    this.getNode(user).on(function (value, a, b$$1, e) {
+	    this.getNode(user).on(function (value, a, b, e) {
 	      _this2.eventListeners[_this2.path] = e;
 	      _this2.setState({ value: value });
 	    });
@@ -11352,7 +9766,7 @@
 	    }, this.state.value, tag);
 	  };
 
-	  ImageNode.prototype.onClick = function onClick(e) {
+	  ImageNode.prototype.onClick = function onClick() {
 	    if (this.isEditable()) {
 	      this.base.firstChild.click();
 	    }
@@ -13827,12 +12241,11 @@
 	/*eslint no-useless-escape: "off", camelcase: "off" */
 
 	var index = {
-	  VERSION: version$1,
+	  VERSION: version,
 	  Collection: Collection,
 	  SignedMessage: SignedMessage,
 	  Contact: Contact,
 	  Attribute: Attribute,
-	  SocialNetwork: SocialNetwork,
 	  Key: Key,
 	  Channel: Channel,
 	  util: util,

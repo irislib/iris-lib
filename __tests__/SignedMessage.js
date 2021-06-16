@@ -28,7 +28,7 @@ describe(`SignedMessage`, async () => {
     });
     */
     test(`should use signing key as author if not defined`, async () => {
-      const defaultKey = await Key.getDefault(`.`);
+      const defaultKey = await Key.getDefault(`.`, undefined, require('fs'));
       msg = await SignedMessage.createRating({
         recipient: {email: `bob@example.com`},
         rating: 5,

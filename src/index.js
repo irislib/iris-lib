@@ -5,7 +5,6 @@ import SignedMessage from './SignedMessage';
 import Contact from './Contact';
 import Attribute from './Attribute';
 import util from './util';
-import SocialNetwork from './SocialNetwork';
 import Key from './Key';
 import Channel from './Channel';
 import {version} from '../package.json';
@@ -22,7 +21,6 @@ export default {
   SignedMessage,
   Contact,
   Attribute,
-  SocialNetwork,
   Key,
   Channel,
   util,

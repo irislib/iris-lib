@@ -3,7 +3,6 @@ import util from '../util';
 import {html} from 'htm/preact';
 import Key from '../key';
 import register from 'preact-custom-element';
-import {Inline} from 'jsxstyle/preact';
 
 class FollowButton extends Component {
   constructor() {
