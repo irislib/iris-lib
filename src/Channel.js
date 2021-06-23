@@ -743,7 +743,7 @@ class Channel {
   }
 
   hasWritePermission(pub) {
-    return this.participants && this.participants[pub] && this.participants[pub].write;
+    return !this.uuid || (this.participants && this.participants[pub] && this.participants[pub].write);
   }
 
   async _onTheirGroupFromUser(pub, key, callback, subscription) {

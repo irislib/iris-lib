@@ -7925,7 +7925,7 @@
 	  };
 
 	  Channel.prototype.hasWritePermission = function hasWritePermission(pub) {
-	    return this.participants && this.participants[pub] && this.participants[pub].write;
+	    return !this.uuid || this.participants && this.participants[pub] && this.participants[pub].write;
 	  };
 
 	  Channel.prototype._onTheirGroupFromUser = async function _onTheirGroupFromUser(pub, key, callback, subscription) {
