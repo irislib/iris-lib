@@ -3,7 +3,7 @@ import {Component} from 'preact';
 import {html} from 'htm/preact';
 import {Row, Col} from 'jsxstyle/preact';
 import util from '../util';
-import Key from '../key';
+import Key from '../Key';
 import Identicon from './Identicon.js';
 import Fuse from 'fuse.js';
 

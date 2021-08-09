@@ -2,7 +2,7 @@ import register from 'preact-custom-element';
 import {Component, createRef} from 'preact';
 import {html} from 'htm/preact';
 import util from '../util';
-import Key from '../key';
+import Key from '../Key';
 
 class TextNode extends Component {
   constructor() {

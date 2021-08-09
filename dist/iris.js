@@ -6838,222 +6838,6 @@
 	  return Contact;
 	}();
 
-	var UNIQUE_ID_VALIDATORS$1 = {
-	  email: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
-	  bitcoin: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
-	  bitcoin_address: /^[13][a-km-zA-HJ-NP-Z0-9]{26,33}$/,
-	  ip: /^(([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)\.){3}([1-9]?\d|1\d\d|2[0-5][0-5]|2[0-4]\d)$/,
-	  ipv6: /^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$/,
-	  gpg_fingerprint: null,
-	  gpg_keyid: null,
-	  google_oauth2: null,
-	  tel: /^\d{7,}$/,
-	  phone: /^\d{7,}$/,
-	  keyID: null,
-	  url: /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi,
-	  account: /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i,
-	  uuid: /[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}/
-	};
-
-	/**
-	* A simple key-value pair with helper functions.
-	*
-	* Constructor: new Attribute(value), new Attribute(type, value) or new Attribute({type, value})
-	*/
-
-	var Attribute$1 = function () {
-	  /**
-	  * @param {string} a
-	  * @param {string} b
-	  */
-	  function Attribute(a, b) {
-	    _classCallCheck(this, Attribute);
-
-	    if (typeof a === 'object') {
-	      if (typeof a.value !== 'string') {
-	        throw new Error('param1.value must be a string, got ' + _typeof(a.value) + ': ' + _JSON$stringify(a.value));
-	      }
-	      if (typeof a.type !== 'string') {
-	        throw new Error('param1.type must be a string, got ' + _typeof(a.type) + ': ' + _JSON$stringify(a.type));
-	      }
-	      b = a.value;
-	      a = a.type;
-	    }
-	    if (typeof a !== 'string') {
-	      throw new Error('First param must be a string, got ' + (typeof a === 'undefined' ? 'undefined' : _typeof(a)) + ': ' + _JSON$stringify(a));
-	    }
-	    if (!a.length) {
-	      throw new Error('First param string is empty');
-	    }
-	    if (b) {
-	      if (typeof b !== 'string') {
-	        throw new Error('Second parameter must be a string, got ' + (typeof b === 'undefined' ? 'undefined' : _typeof(b)) + ': ' + _JSON$stringify(b));
-	      }
-	      if (!b.length) {
-	        throw new Error('Second param string is empty');
-	      }
-	      this.type = a;
-	      this.value = b;
-	    } else {
-	      this.value = a;
-	      var t = Attribute.guessTypeOf(this.value);
-	      if (t) {
-	        this.type = t;
-	      } else {
-	        throw new Error('Type of attribute was omitted and could not be guessed');
-	      }
-	    }
-	  }
-
-	  /**
-	  * @returns {Attribute} uuid
-	  */
-
-
-	  Attribute.getUuid = function getUuid() {
-	    var b = function b(a) {
-	      return a ? (a ^ Math.random() * 16 >> a / 4).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, b);
-	    };
-	    return new Attribute('uuid', b());
-	  };
-
-	  /**
-	  * @returns {Object} an object with attribute types as keys and regex patterns as values
-	  */
-
-
-	  Attribute.getUniqueIdValidators = function getUniqueIdValidators() {
-	    return UNIQUE_ID_VALIDATORS$1;
-	  };
-
-	  /**
-	  * @param {string} type attribute type
-	  * @returns {boolean} true if the attribute type is unique
-	  */
-
-
-	  Attribute.isUniqueType = function isUniqueType(type) {
-	    return _Object$keys(UNIQUE_ID_VALIDATORS$1).indexOf(type) > -1;
-	  };
-
-	  /**
-	  * @returns {boolean} true if the attribute type is unique
-	  */
-
-
-	  Attribute.prototype.isUniqueType = function isUniqueType() {
-	    return Attribute.isUniqueType(this.type);
-	  };
-
-	  /**
-	  * @param {string} value guess type of this attribute value
-	  * @returns {string} type of attribute value or undefined
-	  */
-
-
-	  Attribute.guessTypeOf = function guessTypeOf(value) {
-	    for (var key in UNIQUE_ID_VALIDATORS$1) {
-	      if (value.match(UNIQUE_ID_VALIDATORS$1[key])) {
-	        return key;
-	      }
-	    }
-	  };
-
-	  /**
-	  * @param {Attribute} a
-	  * @param {Attribute} b
-	  * @returns {boolean} true if params are equal
-	  */
-
-
-	  Attribute.equals = function equals(a, b) {
-	    return a.equals(b);
-	  };
-
-	  /**
-	  * @param {Attribute} a attribute to compare to
-	  * @returns {boolean} true if attribute matches param
-	  */
-
-
-	  Attribute.prototype.equals = function equals(a) {
-	    return a && this.type === a.type && this.value === a.value;
-	  };
-
-	  /**
-	  * @returns {string} uri - `${encodeURIComponent(this.value)}:${encodeURIComponent(this.type)}`
-	  * @example
-	  * user%20example.com:email
-	  */
-
-
-	  Attribute.prototype.uri = function uri() {
-	    return encodeURIComponent(this.value) + ':' + encodeURIComponent(this.type);
-	  };
-
-	  Attribute.prototype.identiconXml = function identiconXml() {
-	    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-	    return util.getHash(encodeURIComponent(this.type) + ':' + encodeURIComponent(this.value), 'hex').then(function (hash) {
-	      var identicon$$1 = new identicon(hash, { width: options.width, format: 'svg' });
-	      return identicon$$1.toString(true);
-	    });
-	  };
-
-	  Attribute.prototype.identiconSrc = function identiconSrc() {
-	    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-	    return util.getHash(encodeURIComponent(this.type) + ':' + encodeURIComponent(this.value), 'hex').then(function (hash) {
-	      var identicon$$1 = new identicon(hash, { width: options.width, format: 'svg' });
-	      return 'data:image/svg+xml;base64,' + identicon$$1.toString();
-	    });
-	  };
-
-	  /**
-	  * Generate a visually recognizable representation of the attribute
-	  * @param {object} options {width}
-	  * @returns {HTMLElement} identicon div element
-	  */
-
-
-	  Attribute.prototype.identicon = function identicon$$1() {
-	    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-	    options = _Object$assign({
-	      width: 50,
-	      showType: true
-	    }, options);
-	    util.injectCss(); // some other way that is not called on each identicon generation?
-
-	    var div = document.createElement('div');
-	    div.className = 'iris-identicon';
-	    div.style.width = options.width + 'px';
-	    div.style.height = options.width + 'px';
-
-	    var img = document.createElement('img');
-	    img.alt = '';
-	    img.width = options.width;
-	    img.height = options.width;
-	    this.identiconSrc(options).then(function (src) {
-	      return img.src = src;
-	    });
-
-	    if (options.showType) {
-	      var name = document.createElement('span');
-	      name.className = 'iris-distance';
-	      name.style.fontSize = options.width > 50 ? options.width / 4 + 'px' : '10px';
-	      name.textContent = this.type.slice(0, 5);
-	      div.appendChild(name);
-	    }
-
-	    div.appendChild(img);
-
-	    return div;
-	  };
-
-	  return Attribute;
-	}();
-
 	/**
 	* Private communication channel between two or more participants ([Gun](https://github.com/amark/gun) public keys). Can be used independently of other Iris stuff.
 	*
@@ -7181,7 +6965,7 @@
 	        this.uuid = options.uuid;
 	        this.name = options.name;
 	      } else {
-	        options.uuid = Attribute$1.getUuid().value;
+	        options.uuid = Attribute.getUuid().value;
 	        this.uuid = options.uuid;
 	        options.participants[this.key.pub].admin = true;
 	        options.participants[this.key.pub].founder = true;
@@ -9366,7 +9150,7 @@
 	    var _this2 = this;
 
 	    if (!this.props.user) return;
-	    new Attribute$1({ type: 'keyID', value: this.props.user }).identiconSrc({ width: this.props.width, showType: false }).then(function (identicon) {
+	    new Attribute({ type: 'keyID', value: this.props.user }).identiconSrc({ width: this.props.width, showType: false }).then(function (identicon) {
 	      _this2.setState({ identicon: identicon });
 	    });
 	    util.getPublicState().user(this.props.user).get('profile').get('photo').on(function (photo) {
@@ -9401,178 +9185,6 @@
 	}(d);
 
 	!util.isNode && register(Identicon, 'iris-identicon', ['user', 'onClick', 'width', 'showTooltip']);
-
-	// eslint-disable-line no-unused-vars
-
-	var myKey$1 = void 0;
-
-	/**
-	* Key management utils. Wraps GUN's Gun.SEA. https://gun.eco/docs/Gun.SEA
-	*/
-
-	var Key$1 = function () {
-	  function Key() {
-	    _classCallCheck(this, Key);
-	  }
-
-	  /**
-	  * Load private key from datadir/iris.key on node.js or from local storage 'iris.myKey' in browser.
-	  *
-	  * If the key does not exist, it is generated.
-	  * @param {string} datadir directory to find key from. In browser, localStorage is used instead.
-	  * @param {string} keyfile keyfile name (within datadir)
-	  * @param {Object} fs node: require('fs'); browser: leave empty.
-	  * @returns {Promise<Object>} keypair object
-	  */
-	  Key.getActiveKey = async function getActiveKey() {
-	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
-	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
-	    var fs = arguments[2];
-
-	    if (myKey$1) {
-	      return myKey$1;
-	    }
-	    if (fs) {
-	      var privKeyFile = datadir + '/' + keyfile;
-	      if (fs.existsSync(privKeyFile)) {
-	        var f = fs.readFileSync(privKeyFile, 'utf8');
-	        myKey$1 = Key.fromString(f);
-	      } else {
-	        var newKey = await Key.generate();
-	        myKey$1 = myKey$1 || newKey; // eslint-disable-line require-atomic-updates
-	        fs.writeFileSync(privKeyFile, Key.toString(myKey$1));
-	        fs.chmodSync(privKeyFile, 400);
-	      }
-	      if (!myKey$1) {
-	        throw new Error('loading default key failed - check ' + datadir + '/' + keyfile);
-	      }
-	    } else {
-	      var str = window.localStorage.getItem('iris.myKey');
-	      if (str) {
-	        myKey$1 = Key.fromString(str);
-	      } else {
-	        var _newKey = await Key.generate();
-	        myKey$1 = myKey$1 || _newKey; // eslint-disable-line require-atomic-updates
-	        window.localStorage.setItem('iris.myKey', Key.toString(myKey$1));
-	      }
-	      if (!myKey$1) {
-	        throw new Error('loading default key failed - check localStorage iris.myKey');
-	      }
-	    }
-	    return myKey$1;
-	  };
-
-	  Key.getDefault = function getDefault() {
-	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
-	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
-
-	    return Key.getActiveKey(datadir, keyfile);
-	  };
-
-	  Key.getActivePub = async function getActivePub() {
-	    var datadir = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.';
-	    var keyfile = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'iris.key';
-
-	    var key = await Key.getActiveKey(datadir, keyfile);
-	    return key.pub;
-	  };
-
-	  /**
-	  *
-	  */
-
-
-	  Key.setActiveKey = function setActiveKey(key) {
-	    var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-	    var datadir = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '.';
-	    var keyfile = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'iris.key';
-	    var fs = arguments[4];
-
-	    myKey$1 = key;
-	    if (!save) return;
-	    if (util.isNode) {
-	      var privKeyFile = datadir + '/' + keyfile;
-	      fs.writeFileSync(privKeyFile, Key.toString(myKey$1));
-	      fs.chmodSync(privKeyFile, 400);
-	    } else {
-	      window.localStorage.setItem('iris.myKey', Key.toString(myKey$1));
-	    }
-	  };
-
-	  /**
-	  * Serialize key as JSON string
-	  * @param {Object} key key to serialize
-	  * @returns {String} JSON Web Key string
-	  */
-
-
-	  Key.toString = function toString(key) {
-	    return _JSON$stringify(key);
-	  };
-
-	  /**
-	  * Get keyID
-	  * @param {Object} key key to get an id for. Currently just returns the public key string.
-	  * @returns {String} public key string
-	  */
-
-
-	  Key.getId = function getId(key) {
-	    if (!(key && key.pub)) {
-	      throw new Error('missing param');
-	    }
-	    return key.pub; // hack until GUN supports lookups by keyID
-	    //return util.getHash(key.pub);
-	  };
-
-	  /**
-	  * Get a keypair from a JSON string.
-	  * @param {String} str key JSON
-	  * @returns {Object} Gun.SEA keypair object
-	  */
-
-
-	  Key.fromString = function fromString(str) {
-	    return JSON.parse(str);
-	  };
-
-	  /**
-	  * Generate a new keypair
-	  * @returns {Promise<Object>} Gun.SEA keypair object
-	  */
-
-
-	  Key.generate = function generate() {
-	    return Gun.SEA.pair();
-	  };
-
-	  /**
-	  * Sign a message
-	  * @param {String} msg message to sign
-	  * @param {Object} pair signing keypair
-	  * @returns {Promise<String>} signed message string
-	  */
-
-
-	  Key.sign = async function sign(msg, pair) {
-	    var sig = await Gun.SEA.sign(msg, pair);
-	    return 'a' + sig;
-	  };
-
-	  /**
-	  * Verify a signed message
-	  * @param {String} msg message to verify
-	  * @param {Object} pubKey public key of the signer
-	  * @returns {Promise<String>} signature string
-	  */
-
-
-	  Key.verify = function verify(msg, pubKey) {
-	    return Gun.SEA.verify(msg.slice(1), pubKey);
-	  };
-
-	  return Key;
-	}();
 
 	var _templateObject$1 = _taggedTemplateLiteralLoose(['\n      <input\n        type="text"\n        value=', '\n        placeholder=', '\n        class=', '\n        onInput=', '\n        disabled=', ' />\n    '], ['\n      <input\n        type="text"\n        value=', '\n        placeholder=', '\n        class=', '\n        onInput=', '\n        disabled=', ' />\n    ']),
 	    _templateObject2$1 = _taggedTemplateLiteralLoose(['\n      <', ' class=', ' ref=', ' contenteditable=', ' placeholder=', ' onInput=', '>\n        ', '\n      </', '>\n    '], ['\n      <', ' class=', ' ref=', ' contenteditable=', ' placeholder=', ' onInput=', '>\n        ', '\n      </', '>\n    ']);
@@ -9621,7 +9233,7 @@
 	    if (myPub) {
 	      setMyPub(myPub);
 	    } else {
-	      Key$1.getDefault().then(function (key) {
+	      Key.getDefault().then(function (key) {
 	        setMyPub(key.pub);
 	      });
 	    }
@@ -9906,7 +9518,7 @@
 	    var _this2 = this;
 
 	    util.injectCss();
-	    Key$1.getDefault().then(function (key) {
+	    Key.getDefault().then(function (key) {
 	      util.getPublicState().user().auth(key);
 	      util.getPublicState().user().get('follow').get(_this2.props.user).on(function (following, a, b$$1, e) {
 	        _this2.setState({ following: following });
@@ -12078,7 +11690,7 @@
 	      _this.fuse = new Fuse(_Object$values(_this.follows), options);
 	      _this.search();
 	    }, 200);
-	    Key$1.getDefault().then(function (key) {
+	    Key.getDefault().then(function (key) {
 	      _this.key = key;
 	      util.getPublicState().user().auth(key);
 	      _this.getFollowsFn(function () {

@@ -3,7 +3,7 @@ import {Component} from 'preact';
 import {html} from 'htm/preact';
 import {InlineBlock} from 'jsxstyle/preact';
 import util from '../util';
-import Attribute from '../attribute';
+import Attribute from '../Attribute';
 
 const DEFAULT_WIDTH = 80;
 

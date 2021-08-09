@@ -1,7 +1,7 @@
 import {Component} from 'preact';
 import util from '../util';
 import {html} from 'htm/preact';
-import Key from '../key';
+import Key from '../Key';
 import register from 'preact-custom-element';
 
 class FollowButton extends Component {
