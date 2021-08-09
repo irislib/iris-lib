@@ -98,7 +98,7 @@ class Search extends Component {
     const query = this.base.querySelector('input').value;
 
     if (this.props['on-select']) {
-      const s = query.split('https://iris.to/#/profile/');
+      const s = query.split('https://iris.to/profile/');
       if (s.length > 1) {
         return this.props['on-select']({key: s[1]});
       }
@@ -160,7 +160,7 @@ class Search extends Component {
       }
     }
     return html`
-              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="https://iris.to/#/profile/${i.key}" onClick=${e => this.onClick(e, i)}>
+              <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" href="https://iris.to/profile/${i.key}" onClick=${e => this.onClick(e, i)}>
                 <${Identicon} user=${i.key} width=40/>
                 <${Col} marginLeft="5px">
                   ${i.name || ''}<br/>
@@ -173,7 +173,7 @@ class Search extends Component {
   })}
           ${this.state.query && !this.hasFollows ? html`
             <a class="follow-someone" style="padding:5px;">Follow someone to see more search results</a>
-            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=${e => this.onClick(e, {key: suggestedFollow})} href="https://iris.to/#/profile/${suggestedFollow}" class="suggested">
+            <a style="width: 300px; display: flex; padding: 5px; flex-direction: row" onClick=${e => this.onClick(e, {key: suggestedFollow})} href="https://iris.to/profile/${suggestedFollow}" class="suggested">
               <${Identicon} user=${suggestedFollow} width=40/>
               <${Row} alignItems="center" marginLeft="5px"><i>Suggested</i><//>
             </a>
