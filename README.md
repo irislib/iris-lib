@@ -1,4 +1,4 @@
-Note 28-2-2022: iris-lib is currently used for private messaging in [iris-messenger](https://github.com/irislib/iris-messenger). Other functions of iris-lib might not be the most useful, but you can look into [iris-messenger](https://github.com/irislib/iris-messenger) code for decentralized social media stuff like profile names and photos.
+Note 28-2-2022: iris-lib is currently used for private messaging in [iris-messenger](https://github.com/irislib/iris-messenger). Other functions of iris-lib might not be the most useful in their current state, but you can look into [iris-messenger](https://github.com/irislib/iris-messenger) code for decentralized social media stuff like profile names and photos.
 
 # iris-lib
 
