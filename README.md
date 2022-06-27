@@ -1,3 +1,5 @@
+27-6-2022: For now it's best to copy the parts you need from [iris-messenger](https://github.com/irislib/iris-messenger). Iris-lib and iris-messenger are being merged into the same repo, so we can export iris-messenger components and utilities as parts of the lib.
+
 Note 28-2-2022: iris-lib is currently used for private messaging in [iris-messenger](https://github.com/irislib/iris-messenger). Other functions of iris-lib might not be the most useful in their current state, but you can look into [iris-messenger](https://github.com/irislib/iris-messenger) code for decentralized social media stuff like profile names and photos.
 
 # iris-lib
