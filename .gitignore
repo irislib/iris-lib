@@ -1,13 +1,5 @@
-es
-cjs
-node_modules
-coverage
 *.log
-ipfs_repo
-test-report.html
-jest-stare
-.iris
+.DS_Store
 .idea
 .env
-radata
-*.key
+node_modules

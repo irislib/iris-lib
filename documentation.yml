@@ -1,6 +1,8 @@
 toc:
-  - Channel
-  - Contact
-  - SignedMessage
-  - Key
-  - Attribute
+  - session
+  - public
+  - private
+  - group
+  - local
+  - static
+  - peers
