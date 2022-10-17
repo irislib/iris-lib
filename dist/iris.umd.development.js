@@ -10704,7 +10704,7 @@
 	});
 
 	var ELECTRON_GUN_URL = 'http://localhost:8767/gun';
-	var maxConnectedPeers = 1;
+	var maxConnectedPeers = 2;
 	var DEFAULT_PEERS = {
 	  'https://gun-rs.iris.to/gun': {},
 	  'https://gun-us.herokuapp.com/gun': {}
@@ -19585,13 +19585,20 @@
 	    this.updateNoFollowers();
 	  },
 	  removeFollow: function removeFollow(k, followDistance, follower) {
-	    if (searchableItems[k]) {
-	      searchableItems[k].followers["delete"](follower);
-	      if (followDistance === 1) {
-	        local$1().get('groups').get('follows').get(k).put(false);
+	    if (followDistance === 1) {
+	      local$1().get('contacts').get(k).put(false);
+	      local$1().get('groups').get('follows').get(k).put(false);
+	      if (searchableItems[k]) {
+	        searchableItems[k].followers["delete"](follower);
+	        this.updateNoFollows();
+	        this.updateNoFollowers();
 	      }
-	      this.updateNoFollows();
-	      this.updateNoFollowers();
+	    }
+	    console.log('removeFollow', k, followDistance, follower);
+	    if (searchableItems[k] && searchableItems[k].followers.size === 0) {
+	      delete searchableItems[k];
+	      local$1().get('contacts').get(k).put(false);
+	      local$1().get('groups').get('everyone').get(k).put(false);
 	    }
 	  },
 	  getExtendedFollows: function getExtendedFollows(callback, k, maxDepth, currentDepth) {
@@ -20038,8 +20045,7 @@
 	          }
 	        });
 	      } else {
-	        local$1().get('groups').get('everyone').get(pub).put(true);
-	        _this8.addFollow(null, pub, Infinity);
+	        // TODO do we want this?
 	        publicState(pub).get('profile').get('name').on(function (v) {
 	          return local$1().get('channels').get(pub).get('name').put(v);
 	        });

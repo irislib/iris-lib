@@ -5,7 +5,7 @@ import util from './util';
 import publicState from './global';
 
 const ELECTRON_GUN_URL = 'http://localhost:8767/gun';
-let maxConnectedPeers = 1;
+let maxConnectedPeers = 2;
 
 type Peer = {
   url?: string;

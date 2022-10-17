@@ -1,12 +1,18 @@
-import Gun from 'gun';
-import 'gun/sea';
-import 'gun/lib/yson';
-import 'gun/lib/radix';
-import 'gun/lib/radisk';
-import 'gun/lib/store';
-import 'gun/lib/rindexed';
-import localForage from 'localforage';
-import Fuse from 'fuse.js';
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var Gun = _interopDefault(require('gun'));
+require('gun/sea');
+require('gun/lib/yson');
+require('gun/lib/radix');
+require('gun/lib/radisk');
+require('gun/lib/store');
+require('gun/lib/rindexed');
+var localForage = _interopDefault(require('localforage'));
+var Fuse = _interopDefault(require('fuse.js'));
 
 function _regeneratorRuntime() {
   _regeneratorRuntime = function () {
@@ -816,7 +822,7 @@ var util = {
 };
 
 var ELECTRON_GUN_URL = 'http://localhost:8767/gun';
-var maxConnectedPeers = 1;
+var maxConnectedPeers = 2;
 var DEFAULT_PEERS = {
   'https://gun-rs.iris.to/gun': {},
   'https://gun-us.herokuapp.com/gun': {}
@@ -5103,13 +5109,20 @@ var session = {
     this.updateNoFollowers();
   },
   removeFollow: function removeFollow(k, followDistance, follower) {
-    if (searchableItems[k]) {
-      searchableItems[k].followers["delete"](follower);
-      if (followDistance === 1) {
-        local$1().get('groups').get('follows').get(k).put(false);
+    if (followDistance === 1) {
+      local$1().get('contacts').get(k).put(false);
+      local$1().get('groups').get('follows').get(k).put(false);
+      if (searchableItems[k]) {
+        searchableItems[k].followers["delete"](follower);
+        this.updateNoFollows();
+        this.updateNoFollowers();
       }
-      this.updateNoFollows();
-      this.updateNoFollowers();
+    }
+    console.log('removeFollow', k, followDistance, follower);
+    if (searchableItems[k] && searchableItems[k].followers.size === 0) {
+      delete searchableItems[k];
+      local$1().get('contacts').get(k).put(false);
+      local$1().get('groups').get('everyone').get(k).put(false);
     }
   },
   getExtendedFollows: function getExtendedFollows(callback, k, maxDepth, currentDepth) {
@@ -5556,8 +5569,7 @@ var session = {
           }
         });
       } else {
-        local$1().get('groups').get('everyone').get(pub).put(true);
-        _this8.addFollow(null, pub, Infinity);
+        // TODO do we want this?
         publicState(pub).get('profile').get('name').on(function (v) {
           return local$1().get('channels').get(pub).get('name').put(v);
         });
@@ -6510,5 +6522,5 @@ var index = {
   Node: Node
 };
 
-export default index;
-//# sourceMappingURL=iris-lib.esm.js.map
+exports.default = index;
+//# sourceMappingURL=iris.cjs.development.js.map

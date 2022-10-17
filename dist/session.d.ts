@@ -43,7 +43,7 @@ declare const _default: {
      * @param options {Object} - Options for the new account.
      * @returns {Promise<*>}
      */
-    loginAsNewUser(options?: any): any;
+    loginAsNewUser(options?: any): Promise<void>;
     /**
      * Log out the current user.
      * @returns {Promise<void>}

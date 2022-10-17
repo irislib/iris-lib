@@ -7,8 +7,8 @@ declare class Key {
     static toString(key: any): string;
     static getId(key: any): any;
     static fromString(str: string): any;
-    static generate(): any;
+    static generate(): Promise<import("gun").ISEAPair>;
     static sign(msg: any, pair: any): Promise<string>;
-    static verify(msg: any, pubKey: any): any;
+    static verify(msg: any, pubKey: any): Promise<any>;
 }
 export default Key;

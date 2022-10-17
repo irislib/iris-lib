@@ -15,9 +15,9 @@ declare const _default: {
     private: typeof privateState;
     static: {
         get(hash: string, callback: Function): Promise<unknown>;
-        put(value: any): Promise<any>;
+        put(value: any): Promise<string | undefined>;
     };
-    electron: any;
+    electron: import("gun").IGunChain<any, import("gun").IGunInstance<any>, import("gun").IGunInstance<any>, "state"> | null;
     peers: {
         known: {
             [key: string]: {
@@ -72,7 +72,7 @@ declare const _default: {
         setOurOnlineStatus(): void;
         updateGroups(): void;
         login(k: any): void;
-        loginAsNewUser(options?: any): any;
+        loginAsNewUser(options?: any): Promise<void>;
         logOut(): Promise<void>;
         clearIndexedDB(): Promise<unknown>;
         getMyChatLink(): string;
@@ -90,7 +90,7 @@ declare const _default: {
     util: {
         gunOnceDefined: (node: any) => Promise<unknown>;
         gunAsAnotherUser: (gun: any, key: any, f: Function) => any;
-        getHash(str: string, format?: string): Promise<any>;
+        getHash(str: string, format?: string): Promise<string | undefined>;
         capitalize(s: string): string;
         generateName(): string;
         base64ToHex(str: string): string;
@@ -128,8 +128,8 @@ declare const _default: {
         getWebPushSubscriptions: () => Promise<void>;
         removeSubscription: (hash: any) => void;
     };
-    SEA: any;
-    Gun: any;
+    SEA: import("gun").ISEA;
+    Gun: import("gun").IGun;
     SignedMessage: typeof SignedMessage;
     Channel: typeof Channel;
     Node: typeof Node;

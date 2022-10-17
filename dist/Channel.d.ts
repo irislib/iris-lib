@@ -133,11 +133,11 @@ declare class Channel {
     /**
     *
     */
-    static getOurSecretChannelId(pub: any, pair: any): Promise<any>;
+    static getOurSecretChannelId(pub: any, pair: any): Promise<string | undefined>;
     /**
     *
     */
-    static getTheirSecretChannelId(pub: any, pair: any): Promise<any>;
+    static getTheirSecretChannelId(pub: any, pair: any): Promise<string | undefined>;
     /**
     * Calls back with Channels that you have initiated or written to.
     * @param {Object} keypair Gun.SEA keypair that the gun instance is authenticated with

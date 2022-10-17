@@ -117,13 +117,20 @@ export default {
   },
 
   removeFollow(k: string, followDistance: number, follower: string) {
-    if (searchableItems[k]) {
-      searchableItems[k].followers.delete(follower);
-      if (followDistance === 1) {
-        local().get('groups').get('follows').get(k).put(false);
+    if (followDistance === 1) {
+      local().get('contacts').get(k).put(false);
+      local().get('groups').get('follows').get(k).put(false);
+      if (searchableItems[k]) {
+        searchableItems[k].followers.delete(follower);
+        this.updateNoFollows();
+        this.updateNoFollowers();
       }
-      this.updateNoFollows();
-      this.updateNoFollowers();
+    }
+    console.log('removeFollow', k, followDistance, follower);
+    if (searchableItems[k] && searchableItems[k].followers.size === 0) {
+      delete searchableItems[k];
+      local().get('contacts').get(k).put(false);
+      local().get('groups').get('everyone').get(k).put(false);
     }
   },
 
@@ -482,8 +489,7 @@ export default {
           local().get('inviteLinksChanged').put(true);
         }});
       } else {
-        local().get('groups').get('everyone').get(pub).put(true);
-        this.addFollow(null, pub, Infinity);
+        // TODO do we want this?
         user(pub).get('profile').get('name').on(v => local().get('channels').get(pub).get('name').put(v))
       }
       if (chat.put) {
