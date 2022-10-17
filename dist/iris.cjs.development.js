@@ -13,6 +13,7 @@ require('gun/lib/store');
 require('gun/lib/rindexed');
 var localForage = _interopDefault(require('localforage'));
 var Fuse = _interopDefault(require('fuse.js'));
+var Dexie = _interopDefault(require('dexie'));
 
 function _regeneratorRuntime() {
   _regeneratorRuntime = function () {
@@ -5118,7 +5119,6 @@ var session = {
         this.updateNoFollowers();
       }
     }
-    console.log('removeFollow', k, followDistance, follower);
     if (searchableItems[k] && searchableItems[k].followers.size === 0) {
       delete searchableItems[k];
       local$1().get('contacts').get(k).put(false);
@@ -6502,6 +6502,727 @@ var SignedMessage = /*#__PURE__*/function () {
   return SignedMessage;
 }();
 
+var Message = /*#__PURE__*/function () {
+  function Message() {}
+  // When Messages are sent over BroadcastChannel, class name is lost.
+  Message.fromObject = function fromObject(obj) {
+    if (obj.type === 'get') {
+      return Get.fromObject(obj);
+    } else if (obj.type === 'put') {
+      return Put.fromObject(obj);
+    } else {
+      throw new Error('not implemented');
+    }
+  };
+  return Message;
+}();
+function generateMsgId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+var Get = /*#__PURE__*/function () {
+  function Get(id, nodeId, from, recipients, childKey, jsonStr, checksum) {
+    this.type = 'get';
+    this.id = id;
+    this.from = from;
+    this.nodeId = nodeId;
+    this.recipients = recipients;
+    this.childKey = childKey;
+    this.jsonStr = jsonStr;
+    this.checksum = checksum;
+  }
+  var _proto = Get.prototype;
+  _proto.toJsonString = function toJsonString() {
+    return JSON.stringify({
+      id: this.id,
+      from: this.from,
+      nodeId: this.nodeId,
+      recipients: this.recipients,
+      childKey: this.childKey,
+      jsonStr: this.jsonStr,
+      checksum: this.checksum
+    });
+  };
+  Get.fromObject = function fromObject(obj) {
+    return new Get(obj.id, obj.nodeId, obj.from, obj.recipients, obj.childKey, obj.jsonStr, obj.checksum);
+  };
+  Get["new"] = function _new(nodeId, from, recipients, childKey, jsonStr, checksum) {
+    var id = generateMsgId();
+    return new Get(id, nodeId, from, recipients, childKey, jsonStr, checksum);
+  };
+  return Get;
+}();
+var Put = /*#__PURE__*/function () {
+  function Put(id, updatedNodes, from, inResponseTo, recipients, jsonStr, checksum) {
+    this.type = 'put';
+    this.id = id;
+    this.from = from;
+    this.updatedNodes = updatedNodes;
+    this.inResponseTo = inResponseTo;
+    this.recipients = recipients;
+    this.jsonStr = jsonStr;
+    this.checksum = checksum;
+  }
+  var _proto2 = Put.prototype;
+  _proto2.toJsonString = function toJsonString() {
+    return JSON.stringify(this);
+  };
+  Put.fromObject = function fromObject(obj) {
+    return new Put(obj.id, obj.updatedNodes, obj.from, obj.inResponseTo, obj.recipients, obj.jsonStr, obj.checksum);
+  };
+  Put["new"] = function _new(updatedNodes, from, inResponseTo, recipients, jsonStr, checksum) {
+    var id = generateMsgId();
+    return new Put(id, updatedNodes, from, inResponseTo, recipients, jsonStr, checksum);
+  };
+  Put.newFromKv = function newFromKv(key, children, from) {
+    var updatedNodes = {};
+    updatedNodes[key] = children;
+    return Put["new"](updatedNodes, from);
+  };
+  return Put;
+}();
+
+function generateUuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0,
+      v = c == 'x' ? r : r & 0x3 | 0x8;
+    return v.toString(16);
+  });
+}
+var Actor = /*#__PURE__*/function () {
+  function Actor(id) {
+    var _this = this;
+    if (id === void 0) {
+      id = generateUuid();
+    }
+    this.channel = new BroadcastChannel(id);
+    this.channel.onmessage = function (e) {
+      var message = Message.fromObject(e.data);
+      _this.handle(message);
+    };
+  }
+  var _proto = Actor.prototype;
+  _proto.handle = function handle(_message) {
+    throw new Error('not implemented');
+  };
+  _proto.getChannel = function getChannel() {
+    return new BroadcastChannel(this.channel.name);
+  };
+  return Actor;
+}();
+
+// import * as Comlink from "comlink";
+
+/*
+class SeenGetMessage {
+    constructor(id, from, lastReplyChecksum) {
+        this.id = id;
+        this.from = from;
+        this.lastReplyChecksum = lastReplyChecksum;
+    }
+}
+*/
+var Router = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(Router, _Actor);
+  function Router() {
+    var _this;
+    _this = _Actor.call(this, 'router') || this;
+    _this.storageAdapters = new Set();
+    _this.networkAdapters = new Set();
+    _this.serverPeers = new Set();
+    _this.seenMessages = new Set();
+    _this.seenGetMessages = new Map();
+    _this.subscribersByTopic = new Map();
+    _this.msgCounter = 0;
+    _this.storageAdapters.add(new BroadcastChannel('indexeddb'));
+    return _this;
+  }
+  var _proto = Router.prototype;
+  _proto.handle = function handle(message) {
+    // console.log('router received', message);
+    if (this.seenMessages.has(message.id)) {
+      return;
+    }
+    this.seenMessages.add(message.id);
+    if (message instanceof Put) {
+      this.handlePut(message);
+    } else if (message instanceof Get) {
+      this.handleGet(message);
+    }
+  };
+  _proto.handlePut = function handlePut(put) {
+    var _this2 = this;
+    Object.keys(put.updatedNodes).forEach(function (path) {
+      var topic = path.split('/')[1] || '';
+      var subscribers = _this2.subscribersByTopic.get(topic);
+      // send to storage adapters
+      console.log('put subscribers', subscribers);
+      for (var _iterator = _createForOfIteratorHelperLoose(_this2.storageAdapters), _step; !(_step = _iterator()).done;) {
+        var storageAdapter = _step.value;
+        storageAdapter.postMessage(put);
+      }
+      if (subscribers) {
+        for (var _iterator2 = _createForOfIteratorHelperLoose(subscribers), _step2; !(_step2 = _iterator2()).done;) {
+          var _step2$value = _step2.value,
+            k = _step2$value[0],
+            v = _step2$value[1];
+          if (k !== put.from) {
+            v.postMessage(put);
+          }
+        }
+      }
+    });
+  };
+  _proto.handleGet = function handleGet(get) {
+    var topic = get.nodeId.split('/')[1];
+    for (var _iterator3 = _createForOfIteratorHelperLoose(this.storageAdapters), _step3; !(_step3 = _iterator3()).done;) {
+      var storageAdapter = _step3.value;
+      storageAdapter.postMessage(get);
+    }
+    if (!this.subscribersByTopic.has(topic)) {
+      this.subscribersByTopic.set(topic, new Map());
+    }
+    var subscribers = this.subscribersByTopic.get(topic);
+    for (var _iterator4 = _createForOfIteratorHelperLoose(subscribers), _step4; !(_step4 = _iterator4()).done;) {
+      var _step4$value = _step4.value,
+        k = _step4$value[0],
+        v = _step4$value[1];
+      // TODO: sample
+      if (k !== get.from) {
+        v.postMessage(get);
+      }
+    }
+    if (!subscribers.has(get.from)) {
+      subscribers.set(get.from, new BroadcastChannel(get.from));
+    }
+  };
+  return Router;
+}(Actor);
+var actor;
+onconnect = function onconnect() {
+  actor = actor || new Router();
+};
+
+// self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
+
+// import * as Comlink from "comlink";
+
+console.log('indexeddb shared worker loaded');
+var IndexedDBSharedWorker = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(IndexedDBSharedWorker, _Actor);
+  function IndexedDBSharedWorker() {
+    var _this;
+    _this = _Actor.call(this, 'indexeddb') || this;
+    _this.throttledPut = _.throttle(function () {
+      var keys = Object.keys(_this.putQueue);
+      console.log('putting ', keys.length, 'keys');
+      var values = keys.map(function (key) {
+        return _this.putQueue[key];
+      });
+      _this.db.nodes.bulkPut(values, keys);
+      _this.putQueue = {};
+    }, 500);
+    _this.throttledGet = _.throttle(function () {
+      // clone this.getQueue and clear it
+      var queue = _this.getQueue;
+      var keys = Object.keys(queue);
+      _this.db.nodes.bulkGet(keys).then(function (values) {
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          var value = values[i];
+          var callbacks = queue[key];
+          for (var _iterator = _createForOfIteratorHelperLoose(callbacks), _step; !(_step = _iterator()).done;) {
+            var callback = _step.value;
+            callback(value);
+          }
+        }
+      });
+      _this.getQueue = {};
+    }, 100);
+    _this._saveLocalForage = _.throttle( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+      var children;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (_this.loaded) {
+                _context.next = 3;
+                break;
+              }
+              _context.next = 3;
+              return _this.loadLocalForage();
+            case 3:
+              if (_this.children.size) {
+                children = Array.from(_this.children.keys());
+                _this.putQueue[_this.id] = children;
+              } else if (_this.value === undefined) {
+                _this.db.nodes["delete"](_this.id);
+              } else {
+                _this.putQueue[_this.id] = _this.value;
+              }
+            case 4:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    })), 500);
+    _this._loadLocalForage = _.throttle( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
+      var result, newResult;
+      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              if (!_this.notStored.has(_this.id)) {
+                _context3.next = 2;
+                break;
+              }
+              return _context3.abrupt("return", undefined);
+            case 2:
+              _context3.next = 4;
+              return _this.db.nodes.get(_this.id);
+            case 4:
+              result = _context3.sent;
+              if (!(result === null)) {
+                _context3.next = 10;
+                break;
+              }
+              result = undefined;
+              _this.notStored.add(_this.id);
+              _context3.next = 18;
+              break;
+            case 10:
+              if (!Array.isArray(result)) {
+                _context3.next = 17;
+                break;
+              }
+              // result is a list of children
+              newResult = {};
+              _context3.next = 14;
+              return Promise.all(result.map( /*#__PURE__*/function () {
+                var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(key) {
+                  return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+                    while (1) {
+                      switch (_context2.prev = _context2.next) {
+                        case 0:
+                          _context2.next = 2;
+                          return _this.get(key).once();
+                        case 2:
+                          newResult[key] = _context2.sent;
+                        case 3:
+                        case "end":
+                          return _context2.stop();
+                      }
+                    }
+                  }, _callee2);
+                }));
+                return function (_x) {
+                  return _ref3.apply(this, arguments);
+                };
+              }()));
+            case 14:
+              result = newResult;
+              _context3.next = 18;
+              break;
+            case 17:
+              // result is a value
+              _this.value = result;
+            case 18:
+              _this.loaded = true;
+              return _context3.abrupt("return", result);
+            case 20:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, _callee3);
+    })), 500);
+    _this.notStored = new Set();
+    _this.putQueue = {};
+    _this.getQueue = {};
+    _this.i = 0;
+    var dbName = _this.config && _this.config.indexeddb && _this.config.indexeddb.name || 'iris';
+    _this.db = new Dexie(dbName);
+    _this.db.version(1).stores({
+      nodes: ',value'
+    });
+    _this.db.open()["catch"](function (err) {
+      console.error(err.stack || err);
+    });
+    return _this;
+  }
+  var _proto = IndexedDBSharedWorker.prototype;
+  _proto.put = function put(nodeId, value) {
+    // add puts to a queue and dexie bulk write them once per 500ms
+    this.putQueue[nodeId] = value;
+    this.throttledPut();
+  };
+  _proto.get = function get(path, callback) {
+    this.getQueue[path] = this.getQueue[path] || [];
+    this.getQueue[path].push(callback);
+    this.throttledGet();
+  };
+  _proto.handle = function handle(message) {
+    this.queue = this.queue && this.queue++ || 1;
+    if (this.queue > 10) {
+      return;
+    }
+    if (message instanceof Put) {
+      this.handlePut(message);
+    } else if (message instanceof Get) {
+      this.handleGet(message);
+    } else {
+      console.log('worker got unknown message', message);
+    }
+  };
+  _proto.handleGet = function handleGet(message) {
+    var _this2 = this;
+    if (this.notStored.has(message.nodeId)) {
+      console.log('notStored', message.nodeId);
+      // TODO message implying that the key is not stored
+      return;
+    }
+    this.get(message.nodeId, function (value) {
+      // TODO: this takes a long time to return
+      if (value === undefined) {
+        console.log('have not', message.nodeId);
+        _this2.notStored.add(message.nodeId);
+        // TODO message implying that the key is not stored
+      } else {
+        console.log('have', message.nodeId, value);
+        var putMessage = Put.newFromKv(message.nodeId, value, _this2.channel.name);
+        putMessage.inResponseTo = message.id;
+        console.log('respond with', putMessage);
+        new BroadcastChannel(message.from || 'router').postMessage(putMessage);
+      }
+    });
+  };
+  _proto.mergeAndSave = function mergeAndSave(path, newValue) {
+    var _this3 = this;
+    this.get(path, function (existing) {
+      if (existing === undefined) {
+        //console.log('saving new', path, newValue);
+        _this3.put(path, newValue);
+      } else if (!_.isEqual(existing, newValue)) {
+        // if existing value is array, merge it
+        //console.log('merging', path, existing, newValue);
+        if (Array.isArray(existing) && Array.isArray(newValue)) {
+          newValue = _.uniq(existing.concat(newValue));
+        }
+        if (Array.isArray(newValue) && newValue.length === 0) {
+          console.log('no kids', path);
+        }
+        _this3.put(path, newValue);
+      }
+    });
+  };
+  _proto.handlePut = /*#__PURE__*/function () {
+    var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(message) {
+      var _i, _Object$entries, _Object$entries$_i, nodeName, children, _i2, _Object$entries2, _Object$entries2$_i, childName, newValue, path;
+      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+        while (1) {
+          switch (_context4.prev = _context4.next) {
+            case 0:
+              for (_i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
+                _Object$entries$_i = _Object$entries[_i], nodeName = _Object$entries$_i[0], children = _Object$entries$_i[1];
+                for (_i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
+                  _Object$entries2$_i = _Object$entries2[_i2], childName = _Object$entries2$_i[0], newValue = _Object$entries2$_i[1];
+                  path = nodeName + "/" + childName;
+                  if (newValue === undefined) {
+                    this.db.nodes["delete"](path);
+                    this.notStored.add(path);
+                  } else {
+                    this.notStored["delete"](path);
+                    this.mergeAndSave(path, newValue);
+                  }
+                }
+              }
+            case 1:
+            case "end":
+              return _context4.stop();
+          }
+        }
+      }, _callee4, this);
+    }));
+    function handlePut(_x2) {
+      return _handlePut.apply(this, arguments);
+    }
+    return handlePut;
+  }() /// old stuff
+  ;
+  return IndexedDBSharedWorker;
+}(Actor);
+var actor$1;
+onconnect = function onconnect() {
+  if (actor$1) {
+    console.log('worker already exists');
+  } else {
+    console.log('starting worker');
+    actor$1 = actor$1 || new IndexedDBSharedWorker();
+  }
+};
+
+// self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
+
+var DEFAULT_CONFIG = {
+  allowPublicSpace: false,
+  enableStats: true,
+  localOnly: true
+};
+var Node$1 = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(Node, _Actor);
+  function Node(id, config, parent) {
+    var _this;
+    if (id === void 0) {
+      id = '';
+    }
+    _this = _Actor.call(this) || this;
+    _this.children = new Map();
+    _this.once_subscriptions = new Map();
+    _this.on_subscriptions = new Map();
+    _this.map_subscriptions = new Map();
+    _this.value = undefined;
+    _this.counter = 0;
+    _this.loaded = false;
+    _this.router = new BroadcastChannel('router');
+    _this.doCallbacks = _.throttle(function () {
+      var _loop3 = function _loop3() {
+        var _step$value = _step.value,
+          id = _step$value[0],
+          callback = _step$value[1];
+        var event = {
+          off: function off() {
+            return _this.on_subscriptions["delete"](id);
+          }
+        };
+        _this.once(callback, event, false);
+      };
+      for (var _iterator = _createForOfIteratorHelperLoose(_this.on_subscriptions), _step; !(_step = _iterator()).done;) {
+        _loop3();
+      }
+      for (var _iterator2 = _createForOfIteratorHelperLoose(_this.once_subscriptions), _step2; !(_step2 = _iterator2()).done;) {
+        var _step2$value = _step2.value,
+          _id = _step2$value[0],
+          callback = _step2$value[1];
+        _this.once(callback, undefined, false);
+        _this.once_subscriptions["delete"](_id);
+      }
+      if (_this.parent) {
+        var _loop = function _loop() {
+          var _step3$value = _step3.value,
+            id = _step3$value[0],
+            callback = _step3$value[1];
+          var event = {
+            off: function off() {
+              var _this$parent;
+              return (_this$parent = _this.parent) == null ? void 0 : _this$parent.on_subscriptions["delete"](id);
+            }
+          };
+          _this.parent.once(callback, event, false);
+        };
+        for (var _iterator3 = _createForOfIteratorHelperLoose(_this.parent.on_subscriptions), _step3; !(_step3 = _iterator3()).done;) {
+          _loop();
+        }
+        var _loop2 = function _loop2() {
+          var _step4$value = _step4.value,
+            id = _step4$value[0],
+            callback = _step4$value[1];
+          var event = {
+            off: function off() {
+              var _this$parent2;
+              return (_this$parent2 = _this.parent) == null ? void 0 : _this$parent2.map_subscriptions["delete"](id);
+            }
+          };
+          _this.once(callback, event, false);
+        };
+        for (var _iterator4 = _createForOfIteratorHelperLoose(_this.parent.map_subscriptions), _step4; !(_step4 = _iterator4()).done;) {
+          _loop2();
+        }
+      }
+    }, 40);
+    _this.id = id;
+    _this.parent = parent;
+    _this.config = config || parent && parent.config || DEFAULT_CONFIG;
+    if (!parent) {
+      //@ts-ignore
+      var routerWorker = new Router();
+      //@ts-ignore
+      var idbWorker = new IndexedDBSharedWorker();
+      //const router = Comlink.wrap(routerWorker);
+    }
+    return _this;
+  }
+  var _proto = Node.prototype;
+  _proto.handle = function handle(message) {
+    var _this2 = this;
+    if (message instanceof Put) {
+      for (var _i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
+        var _Object$entries$_i = _Object$entries[_i],
+          key = _Object$entries$_i[0],
+          value = _Object$entries$_i[1];
+        if (key === this.id) {
+          if (Array.isArray(value)) {
+            value.forEach(function (childKey) {
+              return _this2.get(childKey);
+            });
+          } else {
+            this.value = value;
+          }
+          this.parent && this.parent.handle(message);
+        }
+      }
+      setTimeout(function () {
+        return _this2.doCallbacks();
+      }, 100);
+    }
+  };
+  _proto.get = function get(key) {
+    var existing = this.children.get(key);
+    if (existing) {
+      return existing;
+    }
+    var newNode = new Node(this.id + "/" + key, this.config, this);
+    this.children.set(key, newNode);
+    return newNode;
+  };
+  _proto.put = function put(value) {
+    if (this.value === value) {
+      return; // TODO: when timestamps are added, this should be changed
+    }
+
+    if (Array.isArray(value)) {
+      throw new Error('put() does not support arrays');
+    }
+    if (typeof value === 'object' && value !== null) {
+      this.value = undefined;
+      // TODO: update the whole path of parent nodes
+      for (var key in value) {
+        this.get(key).put(value[key]);
+      }
+      return;
+    }
+    this.children = new Map();
+    this.value = value;
+    this.doCallbacks();
+    var updatedNodes = {};
+    updatedNodes[this.id] = value;
+    this.addParentNodes(updatedNodes);
+    this.router.postMessage(Put["new"](updatedNodes, this.channel.name));
+  };
+  _proto.addParentNodes = function addParentNodes(updatedNodes) {
+    if (this.parent) {
+      this.parent.value = undefined;
+      var children = {};
+      for (var _iterator5 = _createForOfIteratorHelperLoose(this.parent.children), _step5; !(_step5 = _iterator5()).done;) {
+        var _step5$value = _step5.value,
+          key = _step5$value[0],
+          child = _step5$value[1];
+        if (child.children.size > 0) {
+          children[key] = Array.from(child.children.keys());
+        } else if (child.value !== undefined) {
+          children[key] = child.value;
+        }
+      }
+      updatedNodes[this.parent.id] = children;
+      this.parent.addParentNodes(updatedNodes);
+    }
+  };
+  _proto.once = /*#__PURE__*/function () {
+    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(callback, event, returnIfUndefined) {
+      var _this3 = this;
+      var result, id;
+      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              if (returnIfUndefined === void 0) {
+                returnIfUndefined = true;
+              }
+              if (!this.children.size) {
+                _context2.next = 7;
+                break;
+              }
+              // return an object containing all children
+              result = {};
+              _context2.next = 5;
+              return Promise.all(Array.from(this.children.keys()).map( /*#__PURE__*/function () {
+                var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(key) {
+                  return _regeneratorRuntime().wrap(function _callee$(_context) {
+                    while (1) {
+                      switch (_context.prev = _context.next) {
+                        case 0:
+                          _context.next = 2;
+                          return _this3.get(key).once(null, event);
+                        case 2:
+                          result[key] = _context.sent;
+                        case 3:
+                        case "end":
+                          return _context.stop();
+                      }
+                    }
+                  }, _callee);
+                }));
+                return function (_x4) {
+                  return _ref.apply(this, arguments);
+                };
+              }()));
+            case 5:
+              _context2.next = 8;
+              break;
+            case 7:
+              if (this.value !== undefined) {
+                result = this.value;
+              } else {
+                this.router.postMessage(Get["new"](this.id, this.channel.name));
+                id = this.counter++;
+                callback && this.once_subscriptions.set(id, callback);
+              }
+            case 8:
+              if (!(result !== undefined || returnIfUndefined)) {
+                _context2.next = 12;
+                break;
+              }
+              callback && callback(result, this.id.slice(this.id.lastIndexOf('/') + 1), null, event);
+              return _context2.abrupt("return", result);
+            case 12:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this);
+    }));
+    function once(_x, _x2, _x3) {
+      return _once.apply(this, arguments);
+    }
+    return once;
+  }();
+  _proto.on = function on(callback) {
+    var _this4 = this;
+    var id = this.counter++;
+    this.on_subscriptions.set(id, callback);
+    var event = {
+      off: function off() {
+        return _this4.on_subscriptions["delete"](id);
+      }
+    };
+    this.once(callback, event, false);
+  };
+  _proto.map = function map(callback) {
+    var _this5 = this;
+    var id = this.counter++;
+    this.map_subscriptions.set(id, callback);
+    var event = {
+      off: function off() {
+        return _this5.map_subscriptions["delete"](id);
+      }
+    };
+    for (var _iterator6 = _createForOfIteratorHelperLoose(this.children.values()), _step6; !(_step6 = _iterator6()).done;) {
+      var child = _step6.value;
+      child.once(callback, event, false);
+    }
+  };
+  return Node;
+}(Actor);
+
 /*eslint no-useless-escape: "off", camelcase: "off" */
 var index = {
   local: local$1,
@@ -6519,7 +7240,7 @@ var index = {
   Gun: Gun,
   SignedMessage: SignedMessage,
   Channel: Channel,
-  Node: Node
+  Node: Node$1
 };
 
 exports.default = index;

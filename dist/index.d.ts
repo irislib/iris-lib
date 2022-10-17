@@ -6,7 +6,7 @@ import group from './group';
 import privateState from './private';
 import SignedMessage from './SignedMessage';
 import Channel from './Channel';
-import Node from './Node';
+import Node from './db/Node';
 declare const _default: {
     local: typeof local;
     global: typeof global;

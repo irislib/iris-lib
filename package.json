@@ -51,12 +51,14 @@
     "@size-limit/preset-small-lib": "^8.1.0",
     "documentation": "^14.0.0",
     "husky": "^8.0.1",
+    "rollup-plugin-web-worker-loader": "^1.6.1",
     "size-limit": "^8.1.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.4.0",
     "typescript": "^4.8.4"
   },
   "dependencies": {
+    "dexie": "^3.2.2",
     "fuse.js": "^6.6.2",
     "gun": "https://github.com/mmalmi/gun",
     "localforage": "^1.10.0"

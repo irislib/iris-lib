@@ -126,7 +126,6 @@ export default {
         this.updateNoFollowers();
       }
     }
-    console.log('removeFollow', k, followDistance, follower);
     if (searchableItems[k] && searchableItems[k].followers.size === 0) {
       delete searchableItems[k];
       local().get('contacts').get(k).put(false);

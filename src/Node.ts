@@ -14,7 +14,7 @@ const notInLocalForage = new Set();
 
 localForage.config({
     driver: [localForage.LOCALSTORAGE, localForage.INDEXEDDB, localForage.WEBSQL]
-})
+});
 
 /**
   Our very own implementation of the Gun API
