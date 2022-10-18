@@ -1,4 +1,4 @@
-declare const _default: {
+declare const _: {
     throttle: (func: Function, limit: number) => () => void;
     debounce: (func: Function, limit: number) => () => void;
     sample: (arr: any[]) => any;
@@ -8,5 +8,7 @@ declare const _default: {
     omit: (obj: any, keys: string[]) => {};
     defaults: (obj: any, defaults: any) => any;
     pickBy: (obj: any, predicate: Function) => {};
+    isEqual: (a: any, b: any) => any;
+    uniq: (arr: any[]) => any[];
 };
-export default _default;
+export default _;

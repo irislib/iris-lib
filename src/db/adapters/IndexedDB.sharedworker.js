@@ -6,9 +6,9 @@ import Dexie from 'dexie';
 
 console.log('indexeddb shared worker loaded');
 
-class IndexedDBSharedWorker extends Actor {
+export default class IndexedDBSharedWorker extends Actor {
     constructor() {
-        super('indexeddb');
+        super('router');
         this.notStored = new Set();
         this.putQueue = {};
         this.getQueue = {};
@@ -61,6 +61,7 @@ class IndexedDBSharedWorker extends Actor {
     }, 100);
 
     handle(message) {
+        console.log('indexeddb shared worker received', message);
         this.queue = (this.queue && this.queue++) || 1;
         if (this.queue > 10) {
             return;

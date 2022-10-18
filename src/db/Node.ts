@@ -2,8 +2,6 @@ import _ from '../lodash';
 import {Actor}  from './Actor';
 import {Get, Message, Put} from './Message';
 //@ts-ignore
-import Router from './Router.sharedworker.js';
-//@ts-ignore
 import IndexedDBWorker from "./adapters/IndexedDB.sharedworker.js";
 //import * as Comlink from "comlink";
 
@@ -46,16 +44,13 @@ export default class Node extends Actor {
     router = new BroadcastChannel('router');
 
     constructor(id = '', config?: Config, parent?: Node) {
-        super();
+        super(id);
         this.id = id;
         this.parent = parent;
         this.config = config || (parent && parent.config) || DEFAULT_CONFIG;
         if (!parent) {
             //@ts-ignore
-            const routerWorker = new Router();
-            console.log('routerWorker', routerWorker);
-            //@ts-ignore
-            //const idbWorker = new IndexedDBWorker();
+            const idbWorker = new IndexedDBWorker();
             //console.log('idbWorker', idbWorker);
             //const router = Comlink.wrap(routerWorker);
         }
@@ -130,6 +125,7 @@ export default class Node extends Actor {
         updatedNodes[this.id] = value;
         this.addParentNodes(updatedNodes);
         this.router.postMessage(Put.new(updatedNodes, this.channel.name));
+        this.channel.postMessage(Put.new(updatedNodes, this.channel.name));
     }
 
     private addParentNodes(updatedNodes: any) {

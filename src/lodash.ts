@@ -1,5 +1,5 @@
 // @ts-nocheck
-export default {
+const _ = {
   throttle: (func: Function, limit: number) => {
     let inThrottle: boolean;
     return function() {
@@ -72,5 +72,30 @@ export default {
       }
     });
     return newObj;
+  },
+  isEqual: (a: any, b: any) => {
+    if (a === b) {
+      return true;
+    }
+    if (a instanceof Date && b instanceof Date) {
+      return a.getTime() === b.getTime();
+    }
+    if (!a || !b || (typeof a !== 'object' && typeof b !== 'object')) {
+      return a !== a && b !== b;
+    }
+    if (a.prototype !== b.prototype) {
+      return false;
+    }
+    const keys = Object.keys(a);
+    if (keys.length !== Object.keys(b).length) {
+      return false;
+    }
+    return keys.every(k => _.isEqual(a[k], b[k]));
+  },
+  uniq: (arr: any[]) => {
+    const set = new Set(arr);
+    return Array.from(set);
   }
-}
+};
+
+export default _;
