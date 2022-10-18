@@ -6,7 +6,7 @@ import Dexie from 'dexie';
 
 console.log('indexeddb shared worker loaded');
 
-export default class IndexedDBSharedWorker extends Actor {
+class IndexedDBSharedWorker extends Actor {
     constructor() {
         super('indexeddb');
         this.notStored = new Set();
@@ -179,7 +179,7 @@ export default class IndexedDBSharedWorker extends Actor {
 }
 
 let actor;
-onconnect = () => {
+global.onconnect = () => {
     if (actor) {
         console.log ('worker already exists');
     } else {

@@ -1,4 +1,4 @@
-import Node from './Node';
+import Node from './db/Node';
 import Component from '../BaseComponent';
 
 // simple preact page for testing our db

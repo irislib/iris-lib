@@ -1,4 +1,4 @@
-import Node from './Node';
+import Node from './db/Node';
 
 let local: Node;
 

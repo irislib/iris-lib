@@ -12,7 +12,9 @@ class SeenGetMessage {
 }
 */
 
-export default class Router extends Actor {
+console.log('router shared worker loaded');
+
+class Router extends Actor {
     storageAdapters = new Set();
     networkAdapters = new Set();
     serverPeers = new Set();
@@ -22,12 +24,13 @@ export default class Router extends Actor {
     msgCounter = 0;
 
     constructor() {
+        console.log('hi from router');
         super('router');
         this.storageAdapters.add(new BroadcastChannel('indexeddb'));
     }
 
     handle(message) {
-        // console.log('router received', message);
+        console.log('router received', message);
         if (this.seenMessages.has(message.id)) {
             return;
         }
@@ -80,7 +83,8 @@ export default class Router extends Actor {
 }
 
 let actor;
-onconnect = () => {
+self.onconnect = () => {
+    console.log('router shared worker connected');
     actor = actor || new Router();
 }
 

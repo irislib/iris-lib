@@ -53,8 +53,10 @@ export default class Node extends Actor {
         if (!parent) {
             //@ts-ignore
             const routerWorker = new Router();
+            console.log('routerWorker', routerWorker);
             //@ts-ignore
-            const idbWorker = new IndexedDBWorker();
+            //const idbWorker = new IndexedDBWorker();
+            //console.log('idbWorker', idbWorker);
             //const router = Comlink.wrap(routerWorker);
         }
     }

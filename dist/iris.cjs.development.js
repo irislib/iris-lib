@@ -11,9 +11,8 @@ require('gun/lib/radix');
 require('gun/lib/radisk');
 require('gun/lib/store');
 require('gun/lib/rindexed');
-var localForage = _interopDefault(require('localforage'));
 var Fuse = _interopDefault(require('fuse.js'));
-var Dexie = _interopDefault(require('dexie'));
+var localforage = _interopDefault(require('localforage'));
 
 function _regeneratorRuntime() {
   _regeneratorRuntime = function () {
@@ -3837,139 +3836,207 @@ function privateState (publicKey, chatLink) {
   return channel;
 }
 
-// Localforage returns null if an item is not found, so we represent null with this uuid instead.
-// not foolproof, but good enough for now.
-var LOCALFORAGE_NULL = "c2fc1ad0-f76f-11ec-b939-0242ac120002";
-var notInLocalForage = /*#__PURE__*/new Set();
-localForage.config({
-  driver: [localForage.LOCALSTORAGE, localForage.INDEXEDDB, localForage.WEBSQL]
-});
-/**
-  Our very own implementation of the Gun API
- */
-var Node = /*#__PURE__*/function () {
-  /** */
-  function Node(id, parent) {
+var Message = /*#__PURE__*/function () {
+  function Message() {}
+  // When Messages are sent over BroadcastChannel, class name is lost.
+  Message.fromObject = function fromObject(obj) {
+    if (obj.type === 'get') {
+      return Get.fromObject(obj);
+    } else if (obj.type === 'put') {
+      return Put.fromObject(obj);
+    } else {
+      throw new Error('not implemented');
+    }
+  };
+  return Message;
+}();
+function generateMsgId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+var Get = /*#__PURE__*/function () {
+  function Get(id, nodeId, from, recipients, childKey, jsonStr, checksum) {
+    this.type = 'get';
+    this.id = id;
+    this.from = from;
+    this.nodeId = nodeId;
+    this.recipients = recipients;
+    this.childKey = childKey;
+    this.jsonStr = jsonStr;
+    this.checksum = checksum;
+  }
+  var _proto = Get.prototype;
+  _proto.toJsonString = function toJsonString() {
+    return JSON.stringify({
+      id: this.id,
+      from: this.from,
+      nodeId: this.nodeId,
+      recipients: this.recipients,
+      childKey: this.childKey,
+      jsonStr: this.jsonStr,
+      checksum: this.checksum
+    });
+  };
+  Get.fromObject = function fromObject(obj) {
+    return new Get(obj.id, obj.nodeId, obj.from, obj.recipients, obj.childKey, obj.jsonStr, obj.checksum);
+  };
+  Get["new"] = function _new(nodeId, from, recipients, childKey, jsonStr, checksum) {
+    var id = generateMsgId();
+    return new Get(id, nodeId, from, recipients, childKey, jsonStr, checksum);
+  };
+  return Get;
+}();
+var Put = /*#__PURE__*/function () {
+  function Put(id, updatedNodes, from, inResponseTo, recipients, jsonStr, checksum) {
+    this.type = 'put';
+    this.id = id;
+    this.from = from;
+    this.updatedNodes = updatedNodes;
+    this.inResponseTo = inResponseTo;
+    this.recipients = recipients;
+    this.jsonStr = jsonStr;
+    this.checksum = checksum;
+  }
+  var _proto2 = Put.prototype;
+  _proto2.toJsonString = function toJsonString() {
+    return JSON.stringify(this);
+  };
+  Put.fromObject = function fromObject(obj) {
+    return new Put(obj.id, obj.updatedNodes, obj.from, obj.inResponseTo, obj.recipients, obj.jsonStr, obj.checksum);
+  };
+  Put["new"] = function _new(updatedNodes, from, inResponseTo, recipients, jsonStr, checksum) {
+    var id = generateMsgId();
+    return new Put(id, updatedNodes, from, inResponseTo, recipients, jsonStr, checksum);
+  };
+  Put.newFromKv = function newFromKv(key, children, from) {
+    var updatedNodes = {};
+    updatedNodes[key] = children;
+    return Put["new"](updatedNodes, from);
+  };
+  return Put;
+}();
+
+function generateUuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0,
+      v = c == 'x' ? r : r & 0x3 | 0x8;
+    return v.toString(16);
+  });
+}
+var Actor = /*#__PURE__*/function () {
+  function Actor(id) {
     var _this = this;
+    if (id === void 0) {
+      id = generateUuid();
+    }
+    this.channel = new BroadcastChannel(id);
+    this.channel.onmessage = function (e) {
+      var message = Message.fromObject(e.data);
+      _this.handle(message);
+    };
+  }
+  var _proto = Actor.prototype;
+  _proto.handle = function handle(_message) {
+    throw new Error('not implemented');
+  };
+  _proto.getChannel = function getChannel() {
+    return new BroadcastChannel(this.channel.name);
+  };
+  return Actor;
+}();
+
+var WorkerClass = null;
+
+try {
+    var WorkerThreads =
+        typeof module !== 'undefined' && typeof module.require === 'function' && module.require('worker_threads') ||
+        typeof __non_webpack_require__ === 'function' && __non_webpack_require__('worker_threads') ||
+        typeof require === 'function' && require('worker_threads');
+    WorkerClass = WorkerThreads.Worker;
+} catch(e) {} // eslint-disable-line
+
+function decodeBase64(base64, enableUnicode) {
+    return Buffer.from(base64, 'base64').toString(enableUnicode ? 'utf16' : 'utf8');
+}
+
+function createBase64WorkerFactory(base64, sourcemapArg, enableUnicodeArg) {
+    var sourcemap = sourcemapArg === undefined ? null : sourcemapArg;
+    var enableUnicode = enableUnicodeArg === undefined ? false : enableUnicodeArg;
+    var source = decodeBase64(base64, enableUnicode);
+    var start = source.indexOf('\n', 10) + 1;
+    var body = source.substring(start) + (sourcemap ? '\/\/# sourceMappingURL=' + sourcemap : '');
+    return function WorkerFactory(options) {
+        return new WorkerClass(body, Object.assign({}, options, { eval: true }));
+    };
+}
+
+function decodeBase64$1(base64, enableUnicode) {
+    var binaryString = atob(base64);
+    if (enableUnicode) {
+        var binaryView = new Uint8Array(binaryString.length);
+        for (var i = 0, n = binaryString.length; i < n; ++i) {
+            binaryView[i] = binaryString.charCodeAt(i);
+        }
+        return String.fromCharCode.apply(null, new Uint16Array(binaryView.buffer));
+    }
+    return binaryString;
+}
+
+function createURL(base64, sourcemapArg, enableUnicodeArg) {
+    var sourcemap = sourcemapArg === undefined ? null : sourcemapArg;
+    var enableUnicode = enableUnicodeArg === undefined ? false : enableUnicodeArg;
+    var source = decodeBase64$1(base64, enableUnicode);
+    var start = source.indexOf('\n', 10) + 1;
+    var body = source.substring(start) + (sourcemap ? '\/\/# sourceMappingURL=' + sourcemap : '');
+    var blob = new Blob([body], { type: 'application/javascript' });
+    return URL.createObjectURL(blob);
+}
+
+function createBase64WorkerFactory$1(base64, sourcemapArg, enableUnicodeArg) {
+    var url;
+    return function WorkerFactory(options) {
+        url = url || createURL(base64, sourcemapArg, enableUnicodeArg);
+        return new Worker(url, options);
+    };
+}
+
+var kIsNodeJS = Object.prototype.toString.call(typeof process !== 'undefined' ? process : 0) === '[object process]';
+
+function isNodeJS() {
+    return kIsNodeJS;
+}
+
+function createBase64WorkerFactory$2(base64, sourcemapArg, enableUnicodeArg) {
+    if (isNodeJS()) {
+        return createBase64WorkerFactory(base64, sourcemapArg, enableUnicodeArg);
+    }
+    return createBase64WorkerFactory$1(base64, sourcemapArg, enableUnicodeArg);
+}
+
+var WorkerFactory = createBase64WorkerFactory$2('Lyogcm9sbHVwLXBsdWdpbi13ZWItd29ya2VyLWxvYWRlciAqLwooZnVuY3Rpb24gKCkgewogICd1c2Ugc3RyaWN0JzsKCiAgZnVuY3Rpb24gX2luaGVyaXRzTG9vc2Uoc3ViQ2xhc3MsIHN1cGVyQ2xhc3MpIHsKICAgIHN1YkNsYXNzLnByb3RvdHlwZSA9IE9iamVjdC5jcmVhdGUoc3VwZXJDbGFzcy5wcm90b3R5cGUpOwogICAgc3ViQ2xhc3MucHJvdG90eXBlLmNvbnN0cnVjdG9yID0gc3ViQ2xhc3M7CiAgICBfc2V0UHJvdG90eXBlT2Yoc3ViQ2xhc3MsIHN1cGVyQ2xhc3MpOwogIH0KICBmdW5jdGlvbiBfc2V0UHJvdG90eXBlT2YobywgcCkgewogICAgX3NldFByb3RvdHlwZU9mID0gT2JqZWN0LnNldFByb3RvdHlwZU9mID8gT2JqZWN0LnNldFByb3RvdHlwZU9mLmJpbmQoKSA6IGZ1bmN0aW9uIF9zZXRQcm90b3R5cGVPZihvLCBwKSB7CiAgICAgIG8uX19wcm90b19fID0gcDsKICAgICAgcmV0dXJuIG87CiAgICB9OwogICAgcmV0dXJuIF9zZXRQcm90b3R5cGVPZihvLCBwKTsKICB9CiAgZnVuY3Rpb24gX3Vuc3VwcG9ydGVkSXRlcmFibGVUb0FycmF5KG8sIG1pbkxlbikgewogICAgaWYgKCFvKSByZXR1cm47CiAgICBpZiAodHlwZW9mIG8gPT09ICJzdHJpbmciKSByZXR1cm4gX2FycmF5TGlrZVRvQXJyYXkobywgbWluTGVuKTsKICAgIHZhciBuID0gT2JqZWN0LnByb3RvdHlwZS50b1N0cmluZy5jYWxsKG8pLnNsaWNlKDgsIC0xKTsKICAgIGlmIChuID09PSAiT2JqZWN0IiAmJiBvLmNvbnN0cnVjdG9yKSBuID0gby5jb25zdHJ1Y3Rvci5uYW1lOwogICAgaWYgKG4gPT09ICJNYXAiIHx8IG4gPT09ICJTZXQiKSByZXR1cm4gQXJyYXkuZnJvbShvKTsKICAgIGlmIChuID09PSAiQXJndW1lbnRzIiB8fCAvXig/OlVpfEkpbnQoPzo4fDE2fDMyKSg/OkNsYW1wZWQpP0FycmF5JC8udGVzdChuKSkgcmV0dXJuIF9hcnJheUxpa2VUb0FycmF5KG8sIG1pbkxlbik7CiAgfQogIGZ1bmN0aW9uIF9hcnJheUxpa2VUb0FycmF5KGFyciwgbGVuKSB7CiAgICBpZiAobGVuID09IG51bGwgfHwgbGVuID4gYXJyLmxlbmd0aCkgbGVuID0gYXJyLmxlbmd0aDsKICAgIGZvciAodmFyIGkgPSAwLCBhcnIyID0gbmV3IEFycmF5KGxlbik7IGkgPCBsZW47IGkrKykgYXJyMltpXSA9IGFycltpXTsKICAgIHJldHVybiBhcnIyOwogIH0KICBmdW5jdGlvbiBfY3JlYXRlRm9yT2ZJdGVyYXRvckhlbHBlckxvb3NlKG8sIGFsbG93QXJyYXlMaWtlKSB7CiAgICB2YXIgaXQgPSB0eXBlb2YgU3ltYm9sICE9PSAidW5kZWZpbmVkIiAmJiBvW1N5bWJvbC5pdGVyYXRvcl0gfHwgb1siQEBpdGVyYXRvciJdOwogICAgaWYgKGl0KSByZXR1cm4gKGl0ID0gaXQuY2FsbChvKSkubmV4dC5iaW5kKGl0KTsKICAgIGlmIChBcnJheS5pc0FycmF5KG8pIHx8IChpdCA9IF91bnN1cHBvcnRlZEl0ZXJhYmxlVG9BcnJheShvKSkgfHwgYWxsb3dBcnJheUxpa2UgJiYgbyAmJiB0eXBlb2Ygby5sZW5ndGggPT09ICJudW1iZXIiKSB7CiAgICAgIGlmIChpdCkgbyA9IGl0OwogICAgICB2YXIgaSA9IDA7CiAgICAgIHJldHVybiBmdW5jdGlvbiAoKSB7CiAgICAgICAgaWYgKGkgPj0gby5sZW5ndGgpIHJldHVybiB7CiAgICAgICAgICBkb25lOiB0cnVlCiAgICAgICAgfTsKICAgICAgICByZXR1cm4gewogICAgICAgICAgZG9uZTogZmFsc2UsCiAgICAgICAgICB2YWx1ZTogb1tpKytdCiAgICAgICAgfTsKICAgICAgfTsKICAgIH0KICAgIHRocm93IG5ldyBUeXBlRXJyb3IoIkludmFsaWQgYXR0ZW1wdCB0byBpdGVyYXRlIG5vbi1pdGVyYWJsZSBpbnN0YW5jZS5cbkluIG9yZGVyIHRvIGJlIGl0ZXJhYmxlLCBub24tYXJyYXkgb2JqZWN0cyBtdXN0IGhhdmUgYSBbU3ltYm9sLml0ZXJhdG9yXSgpIG1ldGhvZC4iKTsKICB9CgogIHZhciBNZXNzYWdlID0gLyojX19QVVJFX18qL2Z1bmN0aW9uICgpIHsKICAgIGZ1bmN0aW9uIE1lc3NhZ2UoKSB7fQogICAgLy8gV2hlbiBNZXNzYWdlcyBhcmUgc2VudCBvdmVyIEJyb2FkY2FzdENoYW5uZWwsIGNsYXNzIG5hbWUgaXMgbG9zdC4KICAgIE1lc3NhZ2UuZnJvbU9iamVjdCA9IGZ1bmN0aW9uIGZyb21PYmplY3Qob2JqKSB7CiAgICAgIGlmIChvYmoudHlwZSA9PT0gJ2dldCcpIHsKICAgICAgICByZXR1cm4gR2V0LmZyb21PYmplY3Qob2JqKTsKICAgICAgfSBlbHNlIGlmIChvYmoudHlwZSA9PT0gJ3B1dCcpIHsKICAgICAgICByZXR1cm4gUHV0LmZyb21PYmplY3Qob2JqKTsKICAgICAgfSBlbHNlIHsKICAgICAgICB0aHJvdyBuZXcgRXJyb3IoJ25vdCBpbXBsZW1lbnRlZCcpOwogICAgICB9CiAgICB9OwogICAgcmV0dXJuIE1lc3NhZ2U7CiAgfSgpOwogIGZ1bmN0aW9uIGdlbmVyYXRlTXNnSWQoKSB7CiAgICByZXR1cm4gTWF0aC5yYW5kb20oKS50b1N0cmluZygzNikuc2xpY2UoMiwgMTApOwogIH0KICB2YXIgR2V0ID0gLyojX19QVVJFX18qL2Z1bmN0aW9uICgpIHsKICAgIGZ1bmN0aW9uIEdldChpZCwgbm9kZUlkLCBmcm9tLCByZWNpcGllbnRzLCBjaGlsZEtleSwganNvblN0ciwgY2hlY2tzdW0pIHsKICAgICAgdGhpcy50eXBlID0gJ2dldCc7CiAgICAgIHRoaXMuaWQgPSBpZDsKICAgICAgdGhpcy5mcm9tID0gZnJvbTsKICAgICAgdGhpcy5ub2RlSWQgPSBub2RlSWQ7CiAgICAgIHRoaXMucmVjaXBpZW50cyA9IHJlY2lwaWVudHM7CiAgICAgIHRoaXMuY2hpbGRLZXkgPSBjaGlsZEtleTsKICAgICAgdGhpcy5qc29uU3RyID0ganNvblN0cjsKICAgICAgdGhpcy5jaGVja3N1bSA9IGNoZWNrc3VtOwogICAgfQogICAgdmFyIF9wcm90byA9IEdldC5wcm90b3R5cGU7CiAgICBfcHJvdG8udG9Kc29uU3RyaW5nID0gZnVuY3Rpb24gdG9Kc29uU3RyaW5nKCkgewogICAgICByZXR1cm4gSlNPTi5zdHJpbmdpZnkoewogICAgICAgIGlkOiB0aGlzLmlkLAogICAgICAgIGZyb206IHRoaXMuZnJvbSwKICAgICAgICBub2RlSWQ6IHRoaXMubm9kZUlkLAogICAgICAgIHJlY2lwaWVudHM6IHRoaXMucmVjaXBpZW50cywKICAgICAgICBjaGlsZEtleTogdGhpcy5jaGlsZEtleSwKICAgICAgICBqc29uU3RyOiB0aGlzLmpzb25TdHIsCiAgICAgICAgY2hlY2tzdW06IHRoaXMuY2hlY2tzdW0KICAgICAgfSk7CiAgICB9OwogICAgR2V0LmZyb21PYmplY3QgPSBmdW5jdGlvbiBmcm9tT2JqZWN0KG9iaikgewogICAgICByZXR1cm4gbmV3IEdldChvYmouaWQsIG9iai5ub2RlSWQsIG9iai5mcm9tLCBvYmoucmVjaXBpZW50cywgb2JqLmNoaWxkS2V5LCBvYmouanNvblN0ciwgb2JqLmNoZWNrc3VtKTsKICAgIH07CiAgICBHZXRbIm5ldyJdID0gZnVuY3Rpb24gX25ldyhub2RlSWQsIGZyb20sIHJlY2lwaWVudHMsIGNoaWxkS2V5LCBqc29uU3RyLCBjaGVja3N1bSkgewogICAgICB2YXIgaWQgPSBnZW5lcmF0ZU1zZ0lkKCk7CiAgICAgIHJldHVybiBuZXcgR2V0KGlkLCBub2RlSWQsIGZyb20sIHJlY2lwaWVudHMsIGNoaWxkS2V5LCBqc29uU3RyLCBjaGVja3N1bSk7CiAgICB9OwogICAgcmV0dXJuIEdldDsKICB9KCk7CiAgdmFyIFB1dCA9IC8qI19fUFVSRV9fKi9mdW5jdGlvbiAoKSB7CiAgICBmdW5jdGlvbiBQdXQoaWQsIHVwZGF0ZWROb2RlcywgZnJvbSwgaW5SZXNwb25zZVRvLCByZWNpcGllbnRzLCBqc29uU3RyLCBjaGVja3N1bSkgewogICAgICB0aGlzLnR5cGUgPSAncHV0JzsKICAgICAgdGhpcy5pZCA9IGlkOwogICAgICB0aGlzLmZyb20gPSBmcm9tOwogICAgICB0aGlzLnVwZGF0ZWROb2RlcyA9IHVwZGF0ZWROb2RlczsKICAgICAgdGhpcy5pblJlc3BvbnNlVG8gPSBpblJlc3BvbnNlVG87CiAgICAgIHRoaXMucmVjaXBpZW50cyA9IHJlY2lwaWVudHM7CiAgICAgIHRoaXMuanNvblN0ciA9IGpzb25TdHI7CiAgICAgIHRoaXMuY2hlY2tzdW0gPSBjaGVja3N1bTsKICAgIH0KICAgIHZhciBfcHJvdG8yID0gUHV0LnByb3RvdHlwZTsKICAgIF9wcm90bzIudG9Kc29uU3RyaW5nID0gZnVuY3Rpb24gdG9Kc29uU3RyaW5nKCkgewogICAgICByZXR1cm4gSlNPTi5zdHJpbmdpZnkodGhpcyk7CiAgICB9OwogICAgUHV0LmZyb21PYmplY3QgPSBmdW5jdGlvbiBmcm9tT2JqZWN0KG9iaikgewogICAgICByZXR1cm4gbmV3IFB1dChvYmouaWQsIG9iai51cGRhdGVkTm9kZXMsIG9iai5mcm9tLCBvYmouaW5SZXNwb25zZVRvLCBvYmoucmVjaXBpZW50cywgb2JqLmpzb25TdHIsIG9iai5jaGVja3N1bSk7CiAgICB9OwogICAgUHV0WyJuZXciXSA9IGZ1bmN0aW9uIF9uZXcodXBkYXRlZE5vZGVzLCBmcm9tLCBpblJlc3BvbnNlVG8sIHJlY2lwaWVudHMsIGpzb25TdHIsIGNoZWNrc3VtKSB7CiAgICAgIHZhciBpZCA9IGdlbmVyYXRlTXNnSWQoKTsKICAgICAgcmV0dXJuIG5ldyBQdXQoaWQsIHVwZGF0ZWROb2RlcywgZnJvbSwgaW5SZXNwb25zZVRvLCByZWNpcGllbnRzLCBqc29uU3RyLCBjaGVja3N1bSk7CiAgICB9OwogICAgUHV0Lm5ld0Zyb21LdiA9IGZ1bmN0aW9uIG5ld0Zyb21LdihrZXksIGNoaWxkcmVuLCBmcm9tKSB7CiAgICAgIHZhciB1cGRhdGVkTm9kZXMgPSB7fTsKICAgICAgdXBkYXRlZE5vZGVzW2tleV0gPSBjaGlsZHJlbjsKICAgICAgcmV0dXJuIFB1dFsibmV3Il0odXBkYXRlZE5vZGVzLCBmcm9tKTsKICAgIH07CiAgICByZXR1cm4gUHV0OwogIH0oKTsKCiAgZnVuY3Rpb24gZ2VuZXJhdGVVdWlkKCkgewogICAgcmV0dXJuICd4eHh4eHh4eC14eHh4LTR4eHgteXh4eC14eHh4eHh4eHh4eHgnLnJlcGxhY2UoL1t4eV0vZywgZnVuY3Rpb24gKGMpIHsKICAgICAgdmFyIHIgPSBNYXRoLnJhbmRvbSgpICogMTYgfCAwLAogICAgICAgIHYgPSBjID09ICd4JyA/IHIgOiByICYgMHgzIHwgMHg4OwogICAgICByZXR1cm4gdi50b1N0cmluZygxNik7CiAgICB9KTsKICB9CiAgdmFyIEFjdG9yID0gLyojX19QVVJFX18qL2Z1bmN0aW9uICgpIHsKICAgIGZ1bmN0aW9uIEFjdG9yKGlkKSB7CiAgICAgIHZhciBfdGhpcyA9IHRoaXM7CiAgICAgIGlmIChpZCA9PT0gdm9pZCAwKSB7CiAgICAgICAgaWQgPSBnZW5lcmF0ZVV1aWQoKTsKICAgICAgfQogICAgICB0aGlzLmNoYW5uZWwgPSBuZXcgQnJvYWRjYXN0Q2hhbm5lbChpZCk7CiAgICAgIHRoaXMuY2hhbm5lbC5vbm1lc3NhZ2UgPSBmdW5jdGlvbiAoZSkgewogICAgICAgIHZhciBtZXNzYWdlID0gTWVzc2FnZS5mcm9tT2JqZWN0KGUuZGF0YSk7CiAgICAgICAgX3RoaXMuaGFuZGxlKG1lc3NhZ2UpOwogICAgICB9OwogICAgfQogICAgdmFyIF9wcm90byA9IEFjdG9yLnByb3RvdHlwZTsKICAgIF9wcm90by5oYW5kbGUgPSBmdW5jdGlvbiBoYW5kbGUoX21lc3NhZ2UpIHsKICAgICAgdGhyb3cgbmV3IEVycm9yKCdub3QgaW1wbGVtZW50ZWQnKTsKICAgIH07CiAgICBfcHJvdG8uZ2V0Q2hhbm5lbCA9IGZ1bmN0aW9uIGdldENoYW5uZWwoKSB7CiAgICAgIHJldHVybiBuZXcgQnJvYWRjYXN0Q2hhbm5lbCh0aGlzLmNoYW5uZWwubmFtZSk7CiAgICB9OwogICAgcmV0dXJuIEFjdG9yOwogIH0oKTsKCiAgLy8gaW1wb3J0ICogYXMgQ29tbGluayBmcm9tICJjb21saW5rIjsKCiAgLyoKICBjbGFzcyBTZWVuR2V0TWVzc2FnZSB7CiAgICAgIGNvbnN0cnVjdG9yKGlkLCBmcm9tLCBsYXN0UmVwbHlDaGVja3N1bSkgewogICAgICAgICAgdGhpcy5pZCA9IGlkOwogICAgICAgICAgdGhpcy5mcm9tID0gZnJvbTsKICAgICAgICAgIHRoaXMubGFzdFJlcGx5Q2hlY2tzdW0gPSBsYXN0UmVwbHlDaGVja3N1bTsKICAgICAgfQogIH0KICAqLwoKICBjb25zb2xlLmxvZygncm91dGVyIHNoYXJlZCB3b3JrZXIgbG9hZGVkJyk7CiAgdmFyIFJvdXRlciA9IC8qI19fUFVSRV9fKi9mdW5jdGlvbiAoX0FjdG9yKSB7CiAgICBfaW5oZXJpdHNMb29zZShSb3V0ZXIsIF9BY3Rvcik7CiAgICBmdW5jdGlvbiBSb3V0ZXIoKSB7CiAgICAgIHZhciBfdGhpczsKICAgICAgY29uc29sZS5sb2coJ2hpIGZyb20gcm91dGVyJyk7CiAgICAgIF90aGlzID0gX0FjdG9yLmNhbGwodGhpcywgJ3JvdXRlcicpIHx8IHRoaXM7CiAgICAgIF90aGlzLnN0b3JhZ2VBZGFwdGVycyA9IG5ldyBTZXQoKTsKICAgICAgX3RoaXMubmV0d29ya0FkYXB0ZXJzID0gbmV3IFNldCgpOwogICAgICBfdGhpcy5zZXJ2ZXJQZWVycyA9IG5ldyBTZXQoKTsKICAgICAgX3RoaXMuc2Vlbk1lc3NhZ2VzID0gbmV3IFNldCgpOwogICAgICBfdGhpcy5zZWVuR2V0TWVzc2FnZXMgPSBuZXcgTWFwKCk7CiAgICAgIF90aGlzLnN1YnNjcmliZXJzQnlUb3BpYyA9IG5ldyBNYXAoKTsKICAgICAgX3RoaXMubXNnQ291bnRlciA9IDA7CiAgICAgIF90aGlzLnN0b3JhZ2VBZGFwdGVycy5hZGQobmV3IEJyb2FkY2FzdENoYW5uZWwoJ2luZGV4ZWRkYicpKTsKICAgICAgcmV0dXJuIF90aGlzOwogICAgfQogICAgdmFyIF9wcm90byA9IFJvdXRlci5wcm90b3R5cGU7CiAgICBfcHJvdG8uaGFuZGxlID0gZnVuY3Rpb24gaGFuZGxlKG1lc3NhZ2UpIHsKICAgICAgY29uc29sZS5sb2coJ3JvdXRlciByZWNlaXZlZCcsIG1lc3NhZ2UpOwogICAgICBpZiAodGhpcy5zZWVuTWVzc2FnZXMuaGFzKG1lc3NhZ2UuaWQpKSB7CiAgICAgICAgcmV0dXJuOwogICAgICB9CiAgICAgIHRoaXMuc2Vlbk1lc3NhZ2VzLmFkZChtZXNzYWdlLmlkKTsKICAgICAgaWYgKG1lc3NhZ2UgaW5zdGFuY2VvZiBQdXQpIHsKICAgICAgICB0aGlzLmhhbmRsZVB1dChtZXNzYWdlKTsKICAgICAgfSBlbHNlIGlmIChtZXNzYWdlIGluc3RhbmNlb2YgR2V0KSB7CiAgICAgICAgdGhpcy5oYW5kbGVHZXQobWVzc2FnZSk7CiAgICAgIH0KICAgIH07CiAgICBfcHJvdG8uaGFuZGxlUHV0ID0gZnVuY3Rpb24gaGFuZGxlUHV0KHB1dCkgewogICAgICB2YXIgX3RoaXMyID0gdGhpczsKICAgICAgT2JqZWN0LmtleXMocHV0LnVwZGF0ZWROb2RlcykuZm9yRWFjaChmdW5jdGlvbiAocGF0aCkgewogICAgICAgIHZhciB0b3BpYyA9IHBhdGguc3BsaXQoJy8nKVsxXSB8fCAnJzsKICAgICAgICB2YXIgc3Vic2NyaWJlcnMgPSBfdGhpczIuc3Vic2NyaWJlcnNCeVRvcGljLmdldCh0b3BpYyk7CiAgICAgICAgLy8gc2VuZCB0byBzdG9yYWdlIGFkYXB0ZXJzCiAgICAgICAgY29uc29sZS5sb2coJ3B1dCBzdWJzY3JpYmVycycsIHN1YnNjcmliZXJzKTsKICAgICAgICBmb3IgKHZhciBfaXRlcmF0b3IgPSBfY3JlYXRlRm9yT2ZJdGVyYXRvckhlbHBlckxvb3NlKF90aGlzMi5zdG9yYWdlQWRhcHRlcnMpLCBfc3RlcDsgIShfc3RlcCA9IF9pdGVyYXRvcigpKS5kb25lOykgewogICAgICAgICAgdmFyIHN0b3JhZ2VBZGFwdGVyID0gX3N0ZXAudmFsdWU7CiAgICAgICAgICBzdG9yYWdlQWRhcHRlci5wb3N0TWVzc2FnZShwdXQpOwogICAgICAgIH0KICAgICAgICBpZiAoc3Vic2NyaWJlcnMpIHsKICAgICAgICAgIGZvciAodmFyIF9pdGVyYXRvcjIgPSBfY3JlYXRlRm9yT2ZJdGVyYXRvckhlbHBlckxvb3NlKHN1YnNjcmliZXJzKSwgX3N0ZXAyOyAhKF9zdGVwMiA9IF9pdGVyYXRvcjIoKSkuZG9uZTspIHsKICAgICAgICAgICAgdmFyIF9zdGVwMiR2YWx1ZSA9IF9zdGVwMi52YWx1ZSwKICAgICAgICAgICAgICBrID0gX3N0ZXAyJHZhbHVlWzBdLAogICAgICAgICAgICAgIHYgPSBfc3RlcDIkdmFsdWVbMV07CiAgICAgICAgICAgIGlmIChrICE9PSBwdXQuZnJvbSkgewogICAgICAgICAgICAgIHYucG9zdE1lc3NhZ2UocHV0KTsKICAgICAgICAgICAgfQogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfSk7CiAgICB9OwogICAgX3Byb3RvLmhhbmRsZUdldCA9IGZ1bmN0aW9uIGhhbmRsZUdldChnZXQpIHsKICAgICAgdmFyIHRvcGljID0gZ2V0Lm5vZGVJZC5zcGxpdCgnLycpWzFdOwogICAgICBmb3IgKHZhciBfaXRlcmF0b3IzID0gX2NyZWF0ZUZvck9mSXRlcmF0b3JIZWxwZXJMb29zZSh0aGlzLnN0b3JhZ2VBZGFwdGVycyksIF9zdGVwMzsgIShfc3RlcDMgPSBfaXRlcmF0b3IzKCkpLmRvbmU7KSB7CiAgICAgICAgdmFyIHN0b3JhZ2VBZGFwdGVyID0gX3N0ZXAzLnZhbHVlOwogICAgICAgIHN0b3JhZ2VBZGFwdGVyLnBvc3RNZXNzYWdlKGdldCk7CiAgICAgIH0KICAgICAgaWYgKCF0aGlzLnN1YnNjcmliZXJzQnlUb3BpYy5oYXModG9waWMpKSB7CiAgICAgICAgdGhpcy5zdWJzY3JpYmVyc0J5VG9waWMuc2V0KHRvcGljLCBuZXcgTWFwKCkpOwogICAgICB9CiAgICAgIHZhciBzdWJzY3JpYmVycyA9IHRoaXMuc3Vic2NyaWJlcnNCeVRvcGljLmdldCh0b3BpYyk7CiAgICAgIGZvciAodmFyIF9pdGVyYXRvcjQgPSBfY3JlYXRlRm9yT2ZJdGVyYXRvckhlbHBlckxvb3NlKHN1YnNjcmliZXJzKSwgX3N0ZXA0OyAhKF9zdGVwNCA9IF9pdGVyYXRvcjQoKSkuZG9uZTspIHsKICAgICAgICB2YXIgX3N0ZXA0JHZhbHVlID0gX3N0ZXA0LnZhbHVlLAogICAgICAgICAgayA9IF9zdGVwNCR2YWx1ZVswXSwKICAgICAgICAgIHYgPSBfc3RlcDQkdmFsdWVbMV07CiAgICAgICAgLy8gVE9ETzogc2FtcGxlCiAgICAgICAgaWYgKGsgIT09IGdldC5mcm9tKSB7CiAgICAgICAgICB2LnBvc3RNZXNzYWdlKGdldCk7CiAgICAgICAgfQogICAgICB9CiAgICAgIGlmICghc3Vic2NyaWJlcnMuaGFzKGdldC5mcm9tKSkgewogICAgICAgIHN1YnNjcmliZXJzLnNldChnZXQuZnJvbSwgbmV3IEJyb2FkY2FzdENoYW5uZWwoZ2V0LmZyb20pKTsKICAgICAgfQogICAgfTsKICAgIHJldHVybiBSb3V0ZXI7CiAgfShBY3Rvcik7CiAgdmFyIGFjdG9yOwogIHNlbGYub25jb25uZWN0ID0gZnVuY3Rpb24gKCkgewogICAgY29uc29sZS5sb2coJ3JvdXRlciBzaGFyZWQgd29ya2VyIGNvbm5lY3RlZCcpOwogICAgYWN0b3IgPSBhY3RvciB8fCBuZXcgUm91dGVyKCk7CiAgfTsKCiAgLy8gc2VsZi5vbmNvbm5lY3QgPSAoZSkgPT4gQ29tbGluay5leHBvc2UoYWN0b3IsIGUucG9ydHNbMF0pOwoKfSgpKTsKCg==', null, false);
+/* eslint-enable */
+
+var DEFAULT_CONFIG = {
+  allowPublicSpace: false,
+  enableStats: true,
+  localOnly: true
+};
+var Node = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(Node, _Actor);
+  function Node(id, config, parent) {
+    var _this;
     if (id === void 0) {
       id = '';
     }
-    if (parent === void 0) {
-      parent = null;
-    }
-    this.children = new Map();
-    this.on_subscriptions = new Map();
-    this.map_subscriptions = new Map();
-    this.value = undefined;
-    this.counter = 0;
-    this.loaded = false;
-    this.saveLocalForage = _.throttle( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var children;
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              if (_this.loaded) {
-                _context.next = 3;
-                break;
-              }
-              _context.next = 3;
-              return _this.loadLocalForage();
-            case 3:
-              if (_this.children.size) {
-                children = Array.from(_this.children.keys());
-                localForage.setItem(_this.id, children);
-              } else if (_this.value === undefined) {
-                localForage.removeItem(_this.id);
-              } else {
-                localForage.setItem(_this.id, _this.value === null ? LOCALFORAGE_NULL : _this.value);
-              }
-            case 4:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    })), 500);
-    this.loadLocalForage = _.throttle( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
-      var result, newResult;
-      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-        while (1) {
-          switch (_context3.prev = _context3.next) {
-            case 0:
-              if (!notInLocalForage.has(_this.id)) {
-                _context3.next = 2;
-                break;
-              }
-              return _context3.abrupt("return", undefined);
-            case 2:
-              _context3.next = 4;
-              return localForage.getItem(_this.id);
-            case 4:
-              result = _context3.sent;
-              if (!(result === null)) {
-                _context3.next = 10;
-                break;
-              }
-              result = undefined;
-              notInLocalForage.add(_this.id);
-              _context3.next = 22;
-              break;
-            case 10:
-              if (!(result === LOCALFORAGE_NULL)) {
-                _context3.next = 14;
-                break;
-              }
-              result = null;
-              _context3.next = 22;
-              break;
-            case 14:
-              if (!Array.isArray(result)) {
-                _context3.next = 21;
-                break;
-              }
-              // result is a list of children
-              newResult = {};
-              _context3.next = 18;
-              return Promise.all(result.map( /*#__PURE__*/function () {
-                var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(key) {
-                  return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-                    while (1) {
-                      switch (_context2.prev = _context2.next) {
-                        case 0:
-                          _context2.next = 2;
-                          return _this.get(key).once();
-                        case 2:
-                          newResult[key] = _context2.sent;
-                        case 3:
-                        case "end":
-                          return _context2.stop();
-                      }
-                    }
-                  }, _callee2);
-                }));
-                return function (_x) {
-                  return _ref3.apply(this, arguments);
-                };
-              }()));
-            case 18:
-              result = newResult;
-              _context3.next = 22;
-              break;
-            case 21:
-              // result is a value
-              _this.value = result;
-            case 22:
-              _this.loaded = true;
-              return _context3.abrupt("return", result);
-            case 24:
-            case "end":
-              return _context3.stop();
-          }
-        }
-      }, _callee3);
-    })), 500);
-    this.doCallbacks = _.throttle(function () {
+    _this = _Actor.call(this) || this;
+    _this.children = new Map();
+    _this.once_subscriptions = new Map();
+    _this.on_subscriptions = new Map();
+    _this.map_subscriptions = new Map();
+    _this.value = undefined;
+    _this.counter = 0;
+    _this.loaded = false;
+    _this.router = new BroadcastChannel('router');
+    _this.doCallbacks = _.throttle(function () {
       var _loop3 = function _loop3() {
         var _step$value = _step.value,
           id = _step$value[0],
@@ -3984,169 +4051,204 @@ var Node = /*#__PURE__*/function () {
       for (var _iterator = _createForOfIteratorHelperLoose(_this.on_subscriptions), _step; !(_step = _iterator()).done;) {
         _loop3();
       }
+      for (var _iterator2 = _createForOfIteratorHelperLoose(_this.once_subscriptions), _step2; !(_step2 = _iterator2()).done;) {
+        var _step2$value = _step2.value,
+          _id = _step2$value[0],
+          callback = _step2$value[1];
+        _this.once(callback, undefined, false);
+        _this.once_subscriptions["delete"](_id);
+      }
       if (_this.parent) {
         var _loop = function _loop() {
-          var _step2$value = _step2.value,
-            id = _step2$value[0],
-            callback = _step2$value[1];
-          var event = {
-            off: function off() {
-              return _this.parent.on_subscriptions["delete"](id);
-            }
-          };
-          _this.parent.once(callback, event, false);
-        };
-        for (var _iterator2 = _createForOfIteratorHelperLoose(_this.parent.on_subscriptions), _step2; !(_step2 = _iterator2()).done;) {
-          _loop();
-        }
-        var _loop2 = function _loop2() {
           var _step3$value = _step3.value,
             id = _step3$value[0],
             callback = _step3$value[1];
           var event = {
             off: function off() {
-              return _this.parent.map_subscriptions["delete"](id);
+              var _this$parent;
+              return (_this$parent = _this.parent) == null ? void 0 : _this$parent.on_subscriptions["delete"](id);
+            }
+          };
+          _this.parent.once(callback, event, false);
+        };
+        for (var _iterator3 = _createForOfIteratorHelperLoose(_this.parent.on_subscriptions), _step3; !(_step3 = _iterator3()).done;) {
+          _loop();
+        }
+        var _loop2 = function _loop2() {
+          var _step4$value = _step4.value,
+            id = _step4$value[0],
+            callback = _step4$value[1];
+          var event = {
+            off: function off() {
+              var _this$parent2;
+              return (_this$parent2 = _this.parent) == null ? void 0 : _this$parent2.map_subscriptions["delete"](id);
             }
           };
           _this.once(callback, event, false);
         };
-        for (var _iterator3 = _createForOfIteratorHelperLoose(_this.parent.map_subscriptions), _step3; !(_step3 = _iterator3()).done;) {
+        for (var _iterator4 = _createForOfIteratorHelperLoose(_this.parent.map_subscriptions), _step4; !(_step4 = _iterator4()).done;) {
           _loop2();
         }
       }
     }, 40);
-    this.id = id;
-    this.parent = parent;
+    _this.id = id;
+    _this.parent = parent;
+    _this.config = config || parent && parent.config || DEFAULT_CONFIG;
+    if (!parent) {
+      //@ts-ignore
+      var routerWorker = new WorkerFactory();
+      console.log('routerWorker', routerWorker);
+      //@ts-ignore
+      //const idbWorker = new IndexedDBWorker();
+      //console.log('idbWorker', idbWorker);
+      //const router = Comlink.wrap(routerWorker);
+    }
+    return _this;
   }
-  /**
-   *
-   * @param key
-   * @returns {Node}
-   * @example node.get('users').get('alice').put({name: 'Alice'})
-   */
   var _proto = Node.prototype;
+  _proto.handle = function handle(message) {
+    var _this2 = this;
+    if (message instanceof Put) {
+      for (var _i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
+        var _Object$entries$_i = _Object$entries[_i],
+          key = _Object$entries$_i[0],
+          value = _Object$entries$_i[1];
+        if (key === this.id) {
+          if (Array.isArray(value)) {
+            value.forEach(function (childKey) {
+              return _this2.get(childKey);
+            });
+          } else {
+            this.value = value;
+          }
+          this.parent && this.parent.handle(message);
+        }
+      }
+      setTimeout(function () {
+        return _this2.doCallbacks();
+      }, 100);
+    }
+  };
   _proto.get = function get(key) {
     var existing = this.children.get(key);
     if (existing) {
       return existing;
     }
-    var new_node = new Node(this.id + "/" + key, this);
-    this.children.set(key, new_node);
-    this.saveLocalForage();
-    return new_node;
-  }
-  /**
-   * Set a value to the node. If the value is an object, it will be converted to child nodes.
-   * @param value
-   * @example node.get('users').get('alice').put({name: 'Alice'})
-   */;
+    var newNode = new Node(this.id + "/" + key, this.config, this);
+    this.children.set(key, newNode);
+    return newNode;
+  };
   _proto.put = function put(value) {
-    var _this2 = this;
+    if (this.value === value) {
+      return; // TODO: when timestamps are added, this should be changed
+    }
+
     if (Array.isArray(value)) {
-      throw new Error('Sorry, we don\'t deal with arrays');
+      throw new Error('put() does not support arrays');
     }
     if (typeof value === 'object' && value !== null) {
       this.value = undefined;
+      // TODO: update the whole path of parent nodes
       for (var key in value) {
         this.get(key).put(value[key]);
       }
-      _.defer(function () {
-        return _this2.doCallbacks();
-      }, 100);
       return;
     }
     this.children = new Map();
     this.value = value;
     this.doCallbacks();
-    this.saveLocalForage();
-  }
-  // protip: the code would be a lot cleaner if you separated the Node API from storage adapters.
-  /**
-   * Return a value without subscribing to it
-   * @param callback
-   * @param event
-   * @param returnIfUndefined
-   * @returns {Promise<*>}
-   */;
-  _proto.once =
-  /*#__PURE__*/
-  function () {
-    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5(callback, event, returnIfUndefined) {
+    var updatedNodes = {};
+    updatedNodes[this.id] = value;
+    this.addParentNodes(updatedNodes);
+    this.router.postMessage(Put["new"](updatedNodes, this.channel.name));
+  };
+  _proto.addParentNodes = function addParentNodes(updatedNodes) {
+    if (this.parent) {
+      this.parent.value = undefined;
+      var children = {};
+      for (var _iterator5 = _createForOfIteratorHelperLoose(this.parent.children), _step5; !(_step5 = _iterator5()).done;) {
+        var _step5$value = _step5.value,
+          key = _step5$value[0],
+          child = _step5$value[1];
+        if (child.children.size > 0) {
+          children[key] = Array.from(child.children.keys());
+        } else if (child.value !== undefined) {
+          children[key] = child.value;
+        }
+      }
+      updatedNodes[this.parent.id] = children;
+      this.parent.addParentNodes(updatedNodes);
+    }
+  };
+  _proto.once = /*#__PURE__*/function () {
+    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(callback, event, returnIfUndefined) {
       var _this3 = this;
-      var result;
-      return _regeneratorRuntime().wrap(function _callee5$(_context5) {
+      var result, id;
+      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) {
-          switch (_context5.prev = _context5.next) {
+          switch (_context2.prev = _context2.next) {
             case 0:
               if (returnIfUndefined === void 0) {
                 returnIfUndefined = true;
               }
               if (!this.children.size) {
-                _context5.next = 7;
+                _context2.next = 7;
                 break;
               }
               // return an object containing all children
               result = {};
-              _context5.next = 5;
+              _context2.next = 5;
               return Promise.all(Array.from(this.children.keys()).map( /*#__PURE__*/function () {
-                var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(key) {
-                  return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+                var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(key) {
+                  return _regeneratorRuntime().wrap(function _callee$(_context) {
                     while (1) {
-                      switch (_context4.prev = _context4.next) {
+                      switch (_context.prev = _context.next) {
                         case 0:
-                          _context4.next = 2;
-                          return _this3.get(key).once(undefined, event);
+                          _context.next = 2;
+                          return _this3.get(key).once(null, event);
                         case 2:
-                          result[key] = _context4.sent;
+                          result[key] = _context.sent;
                         case 3:
                         case "end":
-                          return _context4.stop();
+                          return _context.stop();
                       }
                     }
-                  }, _callee4);
+                  }, _callee);
                 }));
-                return function (_x5) {
-                  return _ref4.apply(this, arguments);
+                return function (_x4) {
+                  return _ref.apply(this, arguments);
                 };
               }()));
             case 5:
-              _context5.next = 14;
+              _context2.next = 8;
               break;
             case 7:
-              if (!(this.value !== undefined)) {
-                _context5.next = 11;
-                break;
+              if (this.value !== undefined) {
+                result = this.value;
+              } else {
+                this.router.postMessage(Get["new"](this.id, this.channel.name));
+                id = this.counter++;
+                callback && this.once_subscriptions.set(id, callback);
               }
-              result = this.value;
-              _context5.next = 14;
-              break;
-            case 11:
-              _context5.next = 13;
-              return this.loadLocalForage();
-            case 13:
-              result = _context5.sent;
-            case 14:
+            case 8:
               if (!(result !== undefined || returnIfUndefined)) {
-                _context5.next = 17;
+                _context2.next = 12;
                 break;
               }
               callback && callback(result, this.id.slice(this.id.lastIndexOf('/') + 1), null, event);
-              return _context5.abrupt("return", result);
-            case 17:
+              return _context2.abrupt("return", result);
+            case 12:
             case "end":
-              return _context5.stop();
+              return _context2.stop();
           }
         }
-      }, _callee5, this);
+      }, _callee2, this);
     }));
-    function once(_x2, _x3, _x4) {
+    function once(_x, _x2, _x3) {
       return _once.apply(this, arguments);
     }
     return once;
-  }() /**
-       * Subscribe to a value
-       * @param callback
-       */;
+  }();
   _proto.on = function on(callback) {
     var _this4 = this;
     var id = this.counter++;
@@ -4157,54 +4259,23 @@ var Node = /*#__PURE__*/function () {
       }
     };
     this.once(callback, event, false);
-  }
-  /**
-   * Subscribe to the children of a node. Callback is called separately for each child.
-   * @param callback
-   * @returns {Promise<void>}
-   */;
-  _proto.map =
-  /*#__PURE__*/
-  function () {
-    var _map = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(callback) {
-      var _this5 = this;
-      var id, event, _iterator4, _step4, child;
-      return _regeneratorRuntime().wrap(function _callee6$(_context6) {
-        while (1) {
-          switch (_context6.prev = _context6.next) {
-            case 0:
-              id = this.counter++;
-              this.map_subscriptions.set(id, callback);
-              event = {
-                off: function off() {
-                  return _this5.map_subscriptions["delete"](id);
-                }
-              };
-              if (this.loaded) {
-                _context6.next = 6;
-                break;
-              }
-              _context6.next = 6;
-              return this.loadLocalForage();
-            case 6:
-              for (_iterator4 = _createForOfIteratorHelperLoose(this.children.values()); !(_step4 = _iterator4()).done;) {
-                child = _step4.value;
-                child.once(callback, event, false);
-              }
-            case 7:
-            case "end":
-              return _context6.stop();
-          }
-        }
-      }, _callee6, this);
-    }));
-    function map(_x6) {
-      return _map.apply(this, arguments);
+  };
+  _proto.map = function map(callback) {
+    var _this5 = this;
+    var id = this.counter++;
+    this.map_subscriptions.set(id, callback);
+    var event = {
+      off: function off() {
+        return _this5.map_subscriptions["delete"](id);
+      }
+    };
+    for (var _iterator6 = _createForOfIteratorHelperLoose(this.children.values()), _step6; !(_step6 = _iterator6()).done;) {
+      var child = _step6.value;
+      child.once(callback, event, false);
     }
-    return map;
-  }();
+  };
   return Node;
-}();
+}(Actor);
 
 var local;
 /**
@@ -5373,7 +5444,7 @@ var session = {
             case 16:
               _this6.clearIndexedDB();
               localStorage.clear(); // TODO clear only iris data
-              localForage.clear().then(function () {
+              localforage.clear().then(function () {
                 window.location.hash = '';
                 window.location.href = '/';
                 location.reload();
@@ -6502,727 +6573,6 @@ var SignedMessage = /*#__PURE__*/function () {
   return SignedMessage;
 }();
 
-var Message = /*#__PURE__*/function () {
-  function Message() {}
-  // When Messages are sent over BroadcastChannel, class name is lost.
-  Message.fromObject = function fromObject(obj) {
-    if (obj.type === 'get') {
-      return Get.fromObject(obj);
-    } else if (obj.type === 'put') {
-      return Put.fromObject(obj);
-    } else {
-      throw new Error('not implemented');
-    }
-  };
-  return Message;
-}();
-function generateMsgId() {
-  return Math.random().toString(36).slice(2, 10);
-}
-var Get = /*#__PURE__*/function () {
-  function Get(id, nodeId, from, recipients, childKey, jsonStr, checksum) {
-    this.type = 'get';
-    this.id = id;
-    this.from = from;
-    this.nodeId = nodeId;
-    this.recipients = recipients;
-    this.childKey = childKey;
-    this.jsonStr = jsonStr;
-    this.checksum = checksum;
-  }
-  var _proto = Get.prototype;
-  _proto.toJsonString = function toJsonString() {
-    return JSON.stringify({
-      id: this.id,
-      from: this.from,
-      nodeId: this.nodeId,
-      recipients: this.recipients,
-      childKey: this.childKey,
-      jsonStr: this.jsonStr,
-      checksum: this.checksum
-    });
-  };
-  Get.fromObject = function fromObject(obj) {
-    return new Get(obj.id, obj.nodeId, obj.from, obj.recipients, obj.childKey, obj.jsonStr, obj.checksum);
-  };
-  Get["new"] = function _new(nodeId, from, recipients, childKey, jsonStr, checksum) {
-    var id = generateMsgId();
-    return new Get(id, nodeId, from, recipients, childKey, jsonStr, checksum);
-  };
-  return Get;
-}();
-var Put = /*#__PURE__*/function () {
-  function Put(id, updatedNodes, from, inResponseTo, recipients, jsonStr, checksum) {
-    this.type = 'put';
-    this.id = id;
-    this.from = from;
-    this.updatedNodes = updatedNodes;
-    this.inResponseTo = inResponseTo;
-    this.recipients = recipients;
-    this.jsonStr = jsonStr;
-    this.checksum = checksum;
-  }
-  var _proto2 = Put.prototype;
-  _proto2.toJsonString = function toJsonString() {
-    return JSON.stringify(this);
-  };
-  Put.fromObject = function fromObject(obj) {
-    return new Put(obj.id, obj.updatedNodes, obj.from, obj.inResponseTo, obj.recipients, obj.jsonStr, obj.checksum);
-  };
-  Put["new"] = function _new(updatedNodes, from, inResponseTo, recipients, jsonStr, checksum) {
-    var id = generateMsgId();
-    return new Put(id, updatedNodes, from, inResponseTo, recipients, jsonStr, checksum);
-  };
-  Put.newFromKv = function newFromKv(key, children, from) {
-    var updatedNodes = {};
-    updatedNodes[key] = children;
-    return Put["new"](updatedNodes, from);
-  };
-  return Put;
-}();
-
-function generateUuid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    var r = Math.random() * 16 | 0,
-      v = c == 'x' ? r : r & 0x3 | 0x8;
-    return v.toString(16);
-  });
-}
-var Actor = /*#__PURE__*/function () {
-  function Actor(id) {
-    var _this = this;
-    if (id === void 0) {
-      id = generateUuid();
-    }
-    this.channel = new BroadcastChannel(id);
-    this.channel.onmessage = function (e) {
-      var message = Message.fromObject(e.data);
-      _this.handle(message);
-    };
-  }
-  var _proto = Actor.prototype;
-  _proto.handle = function handle(_message) {
-    throw new Error('not implemented');
-  };
-  _proto.getChannel = function getChannel() {
-    return new BroadcastChannel(this.channel.name);
-  };
-  return Actor;
-}();
-
-// import * as Comlink from "comlink";
-
-/*
-class SeenGetMessage {
-    constructor(id, from, lastReplyChecksum) {
-        this.id = id;
-        this.from = from;
-        this.lastReplyChecksum = lastReplyChecksum;
-    }
-}
-*/
-var Router = /*#__PURE__*/function (_Actor) {
-  _inheritsLoose(Router, _Actor);
-  function Router() {
-    var _this;
-    _this = _Actor.call(this, 'router') || this;
-    _this.storageAdapters = new Set();
-    _this.networkAdapters = new Set();
-    _this.serverPeers = new Set();
-    _this.seenMessages = new Set();
-    _this.seenGetMessages = new Map();
-    _this.subscribersByTopic = new Map();
-    _this.msgCounter = 0;
-    _this.storageAdapters.add(new BroadcastChannel('indexeddb'));
-    return _this;
-  }
-  var _proto = Router.prototype;
-  _proto.handle = function handle(message) {
-    // console.log('router received', message);
-    if (this.seenMessages.has(message.id)) {
-      return;
-    }
-    this.seenMessages.add(message.id);
-    if (message instanceof Put) {
-      this.handlePut(message);
-    } else if (message instanceof Get) {
-      this.handleGet(message);
-    }
-  };
-  _proto.handlePut = function handlePut(put) {
-    var _this2 = this;
-    Object.keys(put.updatedNodes).forEach(function (path) {
-      var topic = path.split('/')[1] || '';
-      var subscribers = _this2.subscribersByTopic.get(topic);
-      // send to storage adapters
-      console.log('put subscribers', subscribers);
-      for (var _iterator = _createForOfIteratorHelperLoose(_this2.storageAdapters), _step; !(_step = _iterator()).done;) {
-        var storageAdapter = _step.value;
-        storageAdapter.postMessage(put);
-      }
-      if (subscribers) {
-        for (var _iterator2 = _createForOfIteratorHelperLoose(subscribers), _step2; !(_step2 = _iterator2()).done;) {
-          var _step2$value = _step2.value,
-            k = _step2$value[0],
-            v = _step2$value[1];
-          if (k !== put.from) {
-            v.postMessage(put);
-          }
-        }
-      }
-    });
-  };
-  _proto.handleGet = function handleGet(get) {
-    var topic = get.nodeId.split('/')[1];
-    for (var _iterator3 = _createForOfIteratorHelperLoose(this.storageAdapters), _step3; !(_step3 = _iterator3()).done;) {
-      var storageAdapter = _step3.value;
-      storageAdapter.postMessage(get);
-    }
-    if (!this.subscribersByTopic.has(topic)) {
-      this.subscribersByTopic.set(topic, new Map());
-    }
-    var subscribers = this.subscribersByTopic.get(topic);
-    for (var _iterator4 = _createForOfIteratorHelperLoose(subscribers), _step4; !(_step4 = _iterator4()).done;) {
-      var _step4$value = _step4.value,
-        k = _step4$value[0],
-        v = _step4$value[1];
-      // TODO: sample
-      if (k !== get.from) {
-        v.postMessage(get);
-      }
-    }
-    if (!subscribers.has(get.from)) {
-      subscribers.set(get.from, new BroadcastChannel(get.from));
-    }
-  };
-  return Router;
-}(Actor);
-var actor;
-onconnect = function onconnect() {
-  actor = actor || new Router();
-};
-
-// self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
-
-// import * as Comlink from "comlink";
-
-console.log('indexeddb shared worker loaded');
-var IndexedDBSharedWorker = /*#__PURE__*/function (_Actor) {
-  _inheritsLoose(IndexedDBSharedWorker, _Actor);
-  function IndexedDBSharedWorker() {
-    var _this;
-    _this = _Actor.call(this, 'indexeddb') || this;
-    _this.throttledPut = _.throttle(function () {
-      var keys = Object.keys(_this.putQueue);
-      console.log('putting ', keys.length, 'keys');
-      var values = keys.map(function (key) {
-        return _this.putQueue[key];
-      });
-      _this.db.nodes.bulkPut(values, keys);
-      _this.putQueue = {};
-    }, 500);
-    _this.throttledGet = _.throttle(function () {
-      // clone this.getQueue and clear it
-      var queue = _this.getQueue;
-      var keys = Object.keys(queue);
-      _this.db.nodes.bulkGet(keys).then(function (values) {
-        for (var i = 0; i < keys.length; i++) {
-          var key = keys[i];
-          var value = values[i];
-          var callbacks = queue[key];
-          for (var _iterator = _createForOfIteratorHelperLoose(callbacks), _step; !(_step = _iterator()).done;) {
-            var callback = _step.value;
-            callback(value);
-          }
-        }
-      });
-      _this.getQueue = {};
-    }, 100);
-    _this._saveLocalForage = _.throttle( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var children;
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              if (_this.loaded) {
-                _context.next = 3;
-                break;
-              }
-              _context.next = 3;
-              return _this.loadLocalForage();
-            case 3:
-              if (_this.children.size) {
-                children = Array.from(_this.children.keys());
-                _this.putQueue[_this.id] = children;
-              } else if (_this.value === undefined) {
-                _this.db.nodes["delete"](_this.id);
-              } else {
-                _this.putQueue[_this.id] = _this.value;
-              }
-            case 4:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    })), 500);
-    _this._loadLocalForage = _.throttle( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
-      var result, newResult;
-      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-        while (1) {
-          switch (_context3.prev = _context3.next) {
-            case 0:
-              if (!_this.notStored.has(_this.id)) {
-                _context3.next = 2;
-                break;
-              }
-              return _context3.abrupt("return", undefined);
-            case 2:
-              _context3.next = 4;
-              return _this.db.nodes.get(_this.id);
-            case 4:
-              result = _context3.sent;
-              if (!(result === null)) {
-                _context3.next = 10;
-                break;
-              }
-              result = undefined;
-              _this.notStored.add(_this.id);
-              _context3.next = 18;
-              break;
-            case 10:
-              if (!Array.isArray(result)) {
-                _context3.next = 17;
-                break;
-              }
-              // result is a list of children
-              newResult = {};
-              _context3.next = 14;
-              return Promise.all(result.map( /*#__PURE__*/function () {
-                var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(key) {
-                  return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-                    while (1) {
-                      switch (_context2.prev = _context2.next) {
-                        case 0:
-                          _context2.next = 2;
-                          return _this.get(key).once();
-                        case 2:
-                          newResult[key] = _context2.sent;
-                        case 3:
-                        case "end":
-                          return _context2.stop();
-                      }
-                    }
-                  }, _callee2);
-                }));
-                return function (_x) {
-                  return _ref3.apply(this, arguments);
-                };
-              }()));
-            case 14:
-              result = newResult;
-              _context3.next = 18;
-              break;
-            case 17:
-              // result is a value
-              _this.value = result;
-            case 18:
-              _this.loaded = true;
-              return _context3.abrupt("return", result);
-            case 20:
-            case "end":
-              return _context3.stop();
-          }
-        }
-      }, _callee3);
-    })), 500);
-    _this.notStored = new Set();
-    _this.putQueue = {};
-    _this.getQueue = {};
-    _this.i = 0;
-    var dbName = _this.config && _this.config.indexeddb && _this.config.indexeddb.name || 'iris';
-    _this.db = new Dexie(dbName);
-    _this.db.version(1).stores({
-      nodes: ',value'
-    });
-    _this.db.open()["catch"](function (err) {
-      console.error(err.stack || err);
-    });
-    return _this;
-  }
-  var _proto = IndexedDBSharedWorker.prototype;
-  _proto.put = function put(nodeId, value) {
-    // add puts to a queue and dexie bulk write them once per 500ms
-    this.putQueue[nodeId] = value;
-    this.throttledPut();
-  };
-  _proto.get = function get(path, callback) {
-    this.getQueue[path] = this.getQueue[path] || [];
-    this.getQueue[path].push(callback);
-    this.throttledGet();
-  };
-  _proto.handle = function handle(message) {
-    this.queue = this.queue && this.queue++ || 1;
-    if (this.queue > 10) {
-      return;
-    }
-    if (message instanceof Put) {
-      this.handlePut(message);
-    } else if (message instanceof Get) {
-      this.handleGet(message);
-    } else {
-      console.log('worker got unknown message', message);
-    }
-  };
-  _proto.handleGet = function handleGet(message) {
-    var _this2 = this;
-    if (this.notStored.has(message.nodeId)) {
-      console.log('notStored', message.nodeId);
-      // TODO message implying that the key is not stored
-      return;
-    }
-    this.get(message.nodeId, function (value) {
-      // TODO: this takes a long time to return
-      if (value === undefined) {
-        console.log('have not', message.nodeId);
-        _this2.notStored.add(message.nodeId);
-        // TODO message implying that the key is not stored
-      } else {
-        console.log('have', message.nodeId, value);
-        var putMessage = Put.newFromKv(message.nodeId, value, _this2.channel.name);
-        putMessage.inResponseTo = message.id;
-        console.log('respond with', putMessage);
-        new BroadcastChannel(message.from || 'router').postMessage(putMessage);
-      }
-    });
-  };
-  _proto.mergeAndSave = function mergeAndSave(path, newValue) {
-    var _this3 = this;
-    this.get(path, function (existing) {
-      if (existing === undefined) {
-        //console.log('saving new', path, newValue);
-        _this3.put(path, newValue);
-      } else if (!_.isEqual(existing, newValue)) {
-        // if existing value is array, merge it
-        //console.log('merging', path, existing, newValue);
-        if (Array.isArray(existing) && Array.isArray(newValue)) {
-          newValue = _.uniq(existing.concat(newValue));
-        }
-        if (Array.isArray(newValue) && newValue.length === 0) {
-          console.log('no kids', path);
-        }
-        _this3.put(path, newValue);
-      }
-    });
-  };
-  _proto.handlePut = /*#__PURE__*/function () {
-    var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(message) {
-      var _i, _Object$entries, _Object$entries$_i, nodeName, children, _i2, _Object$entries2, _Object$entries2$_i, childName, newValue, path;
-      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
-        while (1) {
-          switch (_context4.prev = _context4.next) {
-            case 0:
-              for (_i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
-                _Object$entries$_i = _Object$entries[_i], nodeName = _Object$entries$_i[0], children = _Object$entries$_i[1];
-                for (_i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
-                  _Object$entries2$_i = _Object$entries2[_i2], childName = _Object$entries2$_i[0], newValue = _Object$entries2$_i[1];
-                  path = nodeName + "/" + childName;
-                  if (newValue === undefined) {
-                    this.db.nodes["delete"](path);
-                    this.notStored.add(path);
-                  } else {
-                    this.notStored["delete"](path);
-                    this.mergeAndSave(path, newValue);
-                  }
-                }
-              }
-            case 1:
-            case "end":
-              return _context4.stop();
-          }
-        }
-      }, _callee4, this);
-    }));
-    function handlePut(_x2) {
-      return _handlePut.apply(this, arguments);
-    }
-    return handlePut;
-  }() /// old stuff
-  ;
-  return IndexedDBSharedWorker;
-}(Actor);
-var actor$1;
-onconnect = function onconnect() {
-  if (actor$1) {
-    console.log('worker already exists');
-  } else {
-    console.log('starting worker');
-    actor$1 = actor$1 || new IndexedDBSharedWorker();
-  }
-};
-
-// self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
-
-var DEFAULT_CONFIG = {
-  allowPublicSpace: false,
-  enableStats: true,
-  localOnly: true
-};
-var Node$1 = /*#__PURE__*/function (_Actor) {
-  _inheritsLoose(Node, _Actor);
-  function Node(id, config, parent) {
-    var _this;
-    if (id === void 0) {
-      id = '';
-    }
-    _this = _Actor.call(this) || this;
-    _this.children = new Map();
-    _this.once_subscriptions = new Map();
-    _this.on_subscriptions = new Map();
-    _this.map_subscriptions = new Map();
-    _this.value = undefined;
-    _this.counter = 0;
-    _this.loaded = false;
-    _this.router = new BroadcastChannel('router');
-    _this.doCallbacks = _.throttle(function () {
-      var _loop3 = function _loop3() {
-        var _step$value = _step.value,
-          id = _step$value[0],
-          callback = _step$value[1];
-        var event = {
-          off: function off() {
-            return _this.on_subscriptions["delete"](id);
-          }
-        };
-        _this.once(callback, event, false);
-      };
-      for (var _iterator = _createForOfIteratorHelperLoose(_this.on_subscriptions), _step; !(_step = _iterator()).done;) {
-        _loop3();
-      }
-      for (var _iterator2 = _createForOfIteratorHelperLoose(_this.once_subscriptions), _step2; !(_step2 = _iterator2()).done;) {
-        var _step2$value = _step2.value,
-          _id = _step2$value[0],
-          callback = _step2$value[1];
-        _this.once(callback, undefined, false);
-        _this.once_subscriptions["delete"](_id);
-      }
-      if (_this.parent) {
-        var _loop = function _loop() {
-          var _step3$value = _step3.value,
-            id = _step3$value[0],
-            callback = _step3$value[1];
-          var event = {
-            off: function off() {
-              var _this$parent;
-              return (_this$parent = _this.parent) == null ? void 0 : _this$parent.on_subscriptions["delete"](id);
-            }
-          };
-          _this.parent.once(callback, event, false);
-        };
-        for (var _iterator3 = _createForOfIteratorHelperLoose(_this.parent.on_subscriptions), _step3; !(_step3 = _iterator3()).done;) {
-          _loop();
-        }
-        var _loop2 = function _loop2() {
-          var _step4$value = _step4.value,
-            id = _step4$value[0],
-            callback = _step4$value[1];
-          var event = {
-            off: function off() {
-              var _this$parent2;
-              return (_this$parent2 = _this.parent) == null ? void 0 : _this$parent2.map_subscriptions["delete"](id);
-            }
-          };
-          _this.once(callback, event, false);
-        };
-        for (var _iterator4 = _createForOfIteratorHelperLoose(_this.parent.map_subscriptions), _step4; !(_step4 = _iterator4()).done;) {
-          _loop2();
-        }
-      }
-    }, 40);
-    _this.id = id;
-    _this.parent = parent;
-    _this.config = config || parent && parent.config || DEFAULT_CONFIG;
-    if (!parent) {
-      //@ts-ignore
-      var routerWorker = new Router();
-      //@ts-ignore
-      var idbWorker = new IndexedDBSharedWorker();
-      //const router = Comlink.wrap(routerWorker);
-    }
-    return _this;
-  }
-  var _proto = Node.prototype;
-  _proto.handle = function handle(message) {
-    var _this2 = this;
-    if (message instanceof Put) {
-      for (var _i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
-        var _Object$entries$_i = _Object$entries[_i],
-          key = _Object$entries$_i[0],
-          value = _Object$entries$_i[1];
-        if (key === this.id) {
-          if (Array.isArray(value)) {
-            value.forEach(function (childKey) {
-              return _this2.get(childKey);
-            });
-          } else {
-            this.value = value;
-          }
-          this.parent && this.parent.handle(message);
-        }
-      }
-      setTimeout(function () {
-        return _this2.doCallbacks();
-      }, 100);
-    }
-  };
-  _proto.get = function get(key) {
-    var existing = this.children.get(key);
-    if (existing) {
-      return existing;
-    }
-    var newNode = new Node(this.id + "/" + key, this.config, this);
-    this.children.set(key, newNode);
-    return newNode;
-  };
-  _proto.put = function put(value) {
-    if (this.value === value) {
-      return; // TODO: when timestamps are added, this should be changed
-    }
-
-    if (Array.isArray(value)) {
-      throw new Error('put() does not support arrays');
-    }
-    if (typeof value === 'object' && value !== null) {
-      this.value = undefined;
-      // TODO: update the whole path of parent nodes
-      for (var key in value) {
-        this.get(key).put(value[key]);
-      }
-      return;
-    }
-    this.children = new Map();
-    this.value = value;
-    this.doCallbacks();
-    var updatedNodes = {};
-    updatedNodes[this.id] = value;
-    this.addParentNodes(updatedNodes);
-    this.router.postMessage(Put["new"](updatedNodes, this.channel.name));
-  };
-  _proto.addParentNodes = function addParentNodes(updatedNodes) {
-    if (this.parent) {
-      this.parent.value = undefined;
-      var children = {};
-      for (var _iterator5 = _createForOfIteratorHelperLoose(this.parent.children), _step5; !(_step5 = _iterator5()).done;) {
-        var _step5$value = _step5.value,
-          key = _step5$value[0],
-          child = _step5$value[1];
-        if (child.children.size > 0) {
-          children[key] = Array.from(child.children.keys());
-        } else if (child.value !== undefined) {
-          children[key] = child.value;
-        }
-      }
-      updatedNodes[this.parent.id] = children;
-      this.parent.addParentNodes(updatedNodes);
-    }
-  };
-  _proto.once = /*#__PURE__*/function () {
-    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(callback, event, returnIfUndefined) {
-      var _this3 = this;
-      var result, id;
-      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              if (returnIfUndefined === void 0) {
-                returnIfUndefined = true;
-              }
-              if (!this.children.size) {
-                _context2.next = 7;
-                break;
-              }
-              // return an object containing all children
-              result = {};
-              _context2.next = 5;
-              return Promise.all(Array.from(this.children.keys()).map( /*#__PURE__*/function () {
-                var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(key) {
-                  return _regeneratorRuntime().wrap(function _callee$(_context) {
-                    while (1) {
-                      switch (_context.prev = _context.next) {
-                        case 0:
-                          _context.next = 2;
-                          return _this3.get(key).once(null, event);
-                        case 2:
-                          result[key] = _context.sent;
-                        case 3:
-                        case "end":
-                          return _context.stop();
-                      }
-                    }
-                  }, _callee);
-                }));
-                return function (_x4) {
-                  return _ref.apply(this, arguments);
-                };
-              }()));
-            case 5:
-              _context2.next = 8;
-              break;
-            case 7:
-              if (this.value !== undefined) {
-                result = this.value;
-              } else {
-                this.router.postMessage(Get["new"](this.id, this.channel.name));
-                id = this.counter++;
-                callback && this.once_subscriptions.set(id, callback);
-              }
-            case 8:
-              if (!(result !== undefined || returnIfUndefined)) {
-                _context2.next = 12;
-                break;
-              }
-              callback && callback(result, this.id.slice(this.id.lastIndexOf('/') + 1), null, event);
-              return _context2.abrupt("return", result);
-            case 12:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2, this);
-    }));
-    function once(_x, _x2, _x3) {
-      return _once.apply(this, arguments);
-    }
-    return once;
-  }();
-  _proto.on = function on(callback) {
-    var _this4 = this;
-    var id = this.counter++;
-    this.on_subscriptions.set(id, callback);
-    var event = {
-      off: function off() {
-        return _this4.on_subscriptions["delete"](id);
-      }
-    };
-    this.once(callback, event, false);
-  };
-  _proto.map = function map(callback) {
-    var _this5 = this;
-    var id = this.counter++;
-    this.map_subscriptions.set(id, callback);
-    var event = {
-      off: function off() {
-        return _this5.map_subscriptions["delete"](id);
-      }
-    };
-    for (var _iterator6 = _createForOfIteratorHelperLoose(this.children.values()), _step6; !(_step6 = _iterator6()).done;) {
-      var child = _step6.value;
-      child.once(callback, event, false);
-    }
-  };
-  return Node;
-}(Actor);
-
 /*eslint no-useless-escape: "off", camelcase: "off" */
 var index = {
   local: local$1,
@@ -7240,7 +6590,7 @@ var index = {
   Gun: Gun,
   SignedMessage: SignedMessage,
   Channel: Channel,
-  Node: Node$1
+  Node: Node
 };
 
 exports.default = index;

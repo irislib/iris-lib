@@ -6,7 +6,8 @@ module.exports = {
       delete config.external;
     }
     config.plugins.unshift(webWorkerLoader({
-        extensions: [".sharedworker.js", ".worker.js"],
+        extensions: ['.ts', '.js'],
+        pattern: /.+?worker(?:\.js)?$/g
     }));
     return config;
   }
