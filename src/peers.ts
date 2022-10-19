@@ -146,6 +146,7 @@ export default {
   },
 
   checkGunPeerCount() {
+    return;
     let peersFromGun = publicState().back('opt.peers');
     let connectedPeers = Object.values(peersFromGun).filter((peer: any) => {
       if (peer && peer.wire && peer.wire.constructor.name !== 'WebSocket') {

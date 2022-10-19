@@ -142,7 +142,7 @@ export default {
 
     this.addFollow(callback, k, currentDepth - 1);
 
-    user(k).get('follow').map().on((isFollowing: boolean, followedKey: string) => { // TODO: unfollow
+    user(k).get('follow').map((isFollowing: boolean, followedKey: string) => { // TODO: unfollow
       if (isFollowing) {
         this.addFollow(callback, followedKey, currentDepth, k);
         if (currentDepth < maxDepth) {
@@ -260,7 +260,7 @@ export default {
         local().get('settings').get('autoplayWebtorrent').put(DEFAULT_SETTINGS.local.autoplayWebtorrent);
       }
     });
-    user().get('block').map().on((isBlocked: boolean, user: string) => {
+    user().get('block').map((isBlocked: boolean, user: string) => {
       local().get('block').get(user).put(isBlocked);
       if (isBlocked) {
         delete searchableItems[user];

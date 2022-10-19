@@ -14,6 +14,7 @@ export declare type Config = {
 export declare const DEFAULT_CONFIG: Config;
 export default class Node extends Actor {
     id: string;
+    root: Node;
     parent?: Node;
     children: Map<string, Node>;
     once_subscriptions: Map<number, Function>;
@@ -23,10 +24,13 @@ export default class Node extends Actor {
     counter: number;
     loaded: boolean;
     config: Config;
-    router: BroadcastChannel;
+    currentUser: any;
+    router: any;
     constructor(id?: string, config?: Config, parent?: Node);
     handle(message: Message): void;
     get(key: string): Node;
+    user(pub?: string): Node;
+    auth(key: any): void;
     doCallbacks: () => void;
     put(value: any): void;
     private addParentNodes;

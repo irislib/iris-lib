@@ -32,6 +32,7 @@ function log(...args: any[]) {
 
 export default class Node extends Actor {
     id: string;
+    root: Node;
     parent?: Node;
     children = new Map<string, Node>();
     once_subscriptions = new Map<number, Function>();
@@ -41,16 +42,21 @@ export default class Node extends Actor {
     counter = 0;
     loaded = false;
     config: Config;
-    router = new BroadcastChannel('router');
+    currentUser: any;
+    router: any;
 
     constructor(id = '', config?: Config, parent?: Node) {
         super(id);
         this.id = id;
+        this.router = new BroadcastChannel(id + '-idb');
         this.parent = parent;
         this.config = config || (parent && parent.config) || DEFAULT_CONFIG;
-        if (!parent) {
+        if (parent) {
+            this.root = parent.root;
+        } else {
+            this.root = this;
             //@ts-ignore
-            const idbWorker = new IndexedDBWorker();
+            const idbWorker = new IndexedDBWorker({id});
             //console.log('idbWorker', idbWorker);
             //const router = Comlink.wrap(routerWorker);
         }
@@ -82,6 +88,19 @@ export default class Node extends Actor {
         return newNode;
     }
 
+    user(pub: string = (this.root.currentUser && this.root.currentUser.pub)): Node {
+        console.log('user', pub);
+        return this.get('users').get(pub);
+    }
+
+    auth(key: any) {
+        // TODO get public key from key
+        console.log('auth', key);
+        this.root.currentUser = key;
+        console.log(this.root);
+        return;
+    }
+
     doCallbacks = _.throttle(() => {
         for (const [id, callback] of this.on_subscriptions) {
             const event = { off: () => this.on_subscriptions.delete(id) };
@@ -110,6 +129,9 @@ export default class Node extends Actor {
         if (Array.isArray(value)) {
             throw new Error('put() does not support arrays');
         }
+        if (typeof value === 'function') {
+            throw new Error('put() does not support functions');
+        }
         if (typeof value === 'object' && value !== null) {
             this.value = undefined;
             // TODO: update the whole path of parent nodes
@@ -124,8 +146,14 @@ export default class Node extends Actor {
         const updatedNodes: any = {};
         updatedNodes[this.id] = value;
         this.addParentNodes(updatedNodes);
-        this.router.postMessage(Put.new(updatedNodes, this.channel.name));
-        this.channel.postMessage(Put.new(updatedNodes, this.channel.name));
+        console.log('put', updatedNodes);
+        try {
+            structuredClone(updatedNodes);
+            this.router.postMessage(Put.new(updatedNodes, this.channel.name));
+            this.channel.postMessage(Put.new(updatedNodes, this.channel.name));
+        } catch(e) {
+            console.log('put failed', e);
+        }
     }
 
     private addParentNodes(updatedNodes: any) {
@@ -133,12 +161,18 @@ export default class Node extends Actor {
             this.parent.value = undefined;
             const children: any = {};
             for (const [key, child] of this.parent.children) {
+                if (!key.indexOf) {
+                    console.log('key', key);
+                    this.parent.children.delete(key);
+                    continue;
+                }
                 if (child.children.size > 0) {
                     children[key] = Array.from(child.children.keys());
                 } else if (child.value !== undefined) {
                     children[key] = child.value;
                 }
             }
+            console.log('this.parent.id', this.parent.id, children);
             updatedNodes[this.parent.id] = children;
             this.parent.addParentNodes(updatedNodes);
         }

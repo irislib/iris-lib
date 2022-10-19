@@ -7,13 +7,15 @@ import Dexie from 'dexie';
 console.log('indexeddb shared worker loaded');
 
 export default class IndexedDBSharedWorker extends Actor {
-    constructor() {
-        super('router');
+    constructor(config = {}) {
+        const id = (config.id || 'iris') + '-idb';
+        super(id);
+        this.config = config;
         this.notStored = new Set();
         this.putQueue = {};
         this.getQueue = {};
         this.i = 0;
-        const dbName = (this.config && this.config.indexeddb && this.config.indexeddb.name) || 'iris';
+        const dbName = (config.id || 'iris');
         this.db = new Dexie(dbName);
         this.db.version(1).stores({
             nodes: ',value'

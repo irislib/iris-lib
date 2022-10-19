@@ -10,7 +10,7 @@ let local: Node;
  */
 export default function() {
   if (!local) {
-    local = new Node();
+    local = new Node('local');
   }
   return local;
 }
