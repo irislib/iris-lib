@@ -161,7 +161,7 @@ export default class Node extends Actor {
             this.parent.value = undefined;
             const children: any = {};
             for (const [key, child] of this.parent.children) {
-                if (!key.indexOf) {
+                if (!(key && key.indexOf)) {
                     console.log('key', key);
                     this.parent.children.delete(key);
                     continue;

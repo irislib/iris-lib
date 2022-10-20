@@ -1579,7 +1579,7 @@ var Node = /*#__PURE__*/function (_Actor) {
         var _step5$value = _step5.value,
           key = _step5$value[0],
           child = _step5$value[1];
-        if (!key.indexOf) {
+        if (!(key && key.indexOf)) {
           console.log('key', key);
           this.parent.children["delete"](key);
           continue;
