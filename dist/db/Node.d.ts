@@ -13,7 +13,6 @@ export declare type Config = {
 };
 export declare const DEFAULT_CONFIG: Config;
 export default class Node extends Actor {
-    id: string;
     root: Node;
     parent?: Node;
     children: Map<string, Node>;
@@ -25,7 +24,7 @@ export default class Node extends Actor {
     loaded: boolean;
     config: Config;
     currentUser: any;
-    router: any;
+    router: Actor;
     constructor(id?: string, config?: Config, parent?: Node);
     handle(message: Message): void;
     get(key: string): Node;

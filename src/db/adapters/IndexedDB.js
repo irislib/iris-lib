@@ -1,21 +1,21 @@
-import { Put, Get } from '../Message'
-import { Actor } from '../Actor';
-import _ from "../../lodash";
+import { Put, Get } from '../Message.ts'
+import { Actor } from '../Actor.ts';
+import _ from "../../lodash.ts";
 import Dexie from 'dexie';
 // import * as Comlink from "comlink";
 
 console.log('indexeddb shared worker loaded');
 
-export default class IndexedDBSharedWorker extends Actor {
+export default class IndexedDB extends Actor {
     constructor(config = {}) {
-        const id = (config.id || 'iris') + '-idb';
-        super(id);
+        console.log('indexeddb shared worker constructor');
+        super();
         this.config = config;
         this.notStored = new Set();
         this.putQueue = {};
         this.getQueue = {};
         this.i = 0;
-        const dbName = (config.id || 'iris');
+        const dbName = (config.dbName || 'iris');
         this.db = new Dexie(dbName);
         this.db.version(1).stores({
             nodes: ',value'
@@ -122,6 +122,10 @@ export default class IndexedDBSharedWorker extends Actor {
 
     async handlePut(message) {
         for (const [nodeName, children] of Object.entries(message.updatedNodes)) {
+            if (!children) {
+                console.log('deleting', nodeName);
+                continue;
+            }
             for (const [childName, newValue] of Object.entries(children)) {
                 const path = `${nodeName}/${childName}`;
                 if (newValue === undefined) {
@@ -187,7 +191,7 @@ global.onconnect = () => {
         console.log ('worker already exists');
     } else {
         console.log('starting worker');
-        actor = actor || new IndexedDBSharedWorker();
+        actor = actor || new IndexedDB();
     }
 }
 

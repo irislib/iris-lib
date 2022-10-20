@@ -1,8 +1,9 @@
 import _ from '../lodash';
 import {Actor}  from './Actor';
-import {Get, Message, Put} from './Message';
-//@ts-ignore
-import IndexedDBWorker from "./adapters/IndexedDB.sharedworker.js";
+import {Message, Put, Get} from './Message';
+
+// @ts-ignore
+import Router from './Router.js';
 //import * as Comlink from "comlink";
 
 type FunEventListener = {
@@ -31,7 +32,6 @@ function log(...args: any[]) {
 }
 
 export default class Node extends Actor {
-    id: string;
     root: Node;
     parent?: Node;
     children = new Map<string, Node>();
@@ -43,20 +43,20 @@ export default class Node extends Actor {
     loaded = false;
     config: Config;
     currentUser: any;
-    router: any;
+    router: Actor;
 
     constructor(id = '', config?: Config, parent?: Node) {
         super(id);
-        this.id = id;
-        this.router = new BroadcastChannel(id + '-idb');
         this.parent = parent;
         this.config = config || (parent && parent.config) || DEFAULT_CONFIG;
         if (parent) {
             this.root = parent.root;
+            this.router = parent.router;
         } else {
+            console.log('root constructor');
             this.root = this;
             //@ts-ignore
-            const idbWorker = new IndexedDBWorker({id});
+            this.router = new Router({dbName: this.id + '-idb'});
             //console.log('idbWorker', idbWorker);
             //const router = Comlink.wrap(routerWorker);
         }
@@ -110,6 +110,7 @@ export default class Node extends Actor {
             this.once(callback, undefined, false);
             this.once_subscriptions.delete(id);
         }
+
         if (this.parent) {
             for (const [id, callback] of this.parent.on_subscriptions) {
                 const event = { off: () => this.parent?.on_subscriptions.delete(id) };
@@ -149,8 +150,7 @@ export default class Node extends Actor {
         console.log('put', updatedNodes);
         try {
             structuredClone(updatedNodes);
-            this.router.postMessage(Put.new(updatedNodes, this.channel.name));
-            this.channel.postMessage(Put.new(updatedNodes, this.channel.name));
+            this.router.postMessage(Put.new(updatedNodes, this));
         } catch(e) {
             console.log('put failed', e);
         }
@@ -188,8 +188,8 @@ export default class Node extends Actor {
             }));
         } else if (this.value !== undefined) {
             result = this.value;
-        } else {
-            this.router.postMessage(Get.new(this.id, this.channel.name));
+        } else if (returnIfUndefined) {
+            this.router.postMessage(Get.new(this.id, this));
             const id = this.counter++;
             callback && this.once_subscriptions.set(id, callback);
         }

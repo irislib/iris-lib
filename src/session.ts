@@ -238,7 +238,7 @@ export default {
     user().get('replies').put({a:null}); // gun bug?
     notifications.subscribeToWebPush();
     notifications.getWebPushSubscriptions();
-    notifications.subscribeToIrisNotifications();
+    //notifications.subscribeToIrisNotifications();
     Channel.getMyChatLinks( undefined, (chatLink: any) => {
       local().get('chatLinks').get(chatLink.id).put(chatLink.url);
       latestChatLink = chatLink.url;

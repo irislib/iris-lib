@@ -1,8 +1,8 @@
 import { Message } from './Message';
 export declare function generateUuid(): string;
 export declare class Actor {
-    channel: BroadcastChannel;
+    id: string;
     handle(_message: Message): void;
-    getChannel(): BroadcastChannel;
+    postMessage(message: Message): void;
     constructor(id?: string);
 }

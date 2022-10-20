@@ -1025,20 +1025,32 @@ var peers = {
   }
 };
 
-var Message = /*#__PURE__*/function () {
-  function Message() {}
-  // When Messages are sent over BroadcastChannel, class name is lost.
-  Message.fromObject = function fromObject(obj) {
-    if (obj.type === 'get') {
-      return Get.fromObject(obj);
-    } else if (obj.type === 'put') {
-      return Put.fromObject(obj);
-    } else {
-      throw new Error('not implemented');
+function generateUuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0,
+      v = c == 'x' ? r : r & 0x3 | 0x8;
+    return v.toString(16);
+  });
+}
+var Actor = /*#__PURE__*/function () {
+  function Actor(id) {
+    if (id === void 0) {
+      id = generateUuid();
     }
+    this.id = id;
+  }
+  var _proto = Actor.prototype;
+  _proto.handle = function handle(_message) {
+    throw new Error('not implemented');
+  }
+  // so we can support a similar api as Channels
+  ;
+  _proto.postMessage = function postMessage(message) {
+    this.handle(message);
   };
-  return Message;
+  return Actor;
 }();
+
 function generateMsgId() {
   return Math.random().toString(36).slice(2, 10);
 }
@@ -1104,47 +1116,18 @@ var Put = /*#__PURE__*/function () {
   return Put;
 }();
 
-function generateUuid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    var r = Math.random() * 16 | 0,
-      v = c == 'x' ? r : r & 0x3 | 0x8;
-    return v.toString(16);
-  });
-}
-var Actor = /*#__PURE__*/function () {
-  function Actor(id) {
-    var _this = this;
-    if (id === void 0) {
-      id = generateUuid();
-    }
-    this.channel = new BroadcastChannel(id);
-    this.channel.onmessage = function (e) {
-      var message = Message.fromObject(e.data);
-      _this.handle(message);
-    };
-  }
-  var _proto = Actor.prototype;
-  _proto.handle = function handle(_message) {
-    throw new Error('not implemented');
-  };
-  _proto.getChannel = function getChannel() {
-    return new BroadcastChannel(this.channel.name);
-  };
-  return Actor;
-}();
-
 // import * as Comlink from "comlink";
 
 console.log('indexeddb shared worker loaded');
-var IndexedDBSharedWorker = /*#__PURE__*/function (_Actor) {
-  _inheritsLoose(IndexedDBSharedWorker, _Actor);
-  function IndexedDBSharedWorker(config) {
+var IndexedDB = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(IndexedDB, _Actor);
+  function IndexedDB(config) {
     var _this;
     if (config === void 0) {
       config = {};
     }
-    var id = (config.id || 'iris') + '-idb';
-    _this = _Actor.call(this, id) || this;
+    console.log('indexeddb shared worker constructor');
+    _this = _Actor.call(this) || this;
     _this.throttledPut = _.throttle(function () {
       var keys = Object.keys(_this.putQueue);
       console.log('putting ', keys.length, 'keys');
@@ -1274,7 +1257,7 @@ var IndexedDBSharedWorker = /*#__PURE__*/function (_Actor) {
     _this.putQueue = {};
     _this.getQueue = {};
     _this.i = 0;
-    var dbName = config.id || 'iris';
+    var dbName = config.dbName || 'iris';
     _this.db = new Dexie(dbName);
     _this.db.version(1).stores({
       nodes: ',value'
@@ -1284,7 +1267,7 @@ var IndexedDBSharedWorker = /*#__PURE__*/function (_Actor) {
     });
     return _this;
   }
-  var _proto = IndexedDBSharedWorker.prototype;
+  var _proto = IndexedDB.prototype;
   _proto.put = function put(nodeId, value) {
     // add puts to a queue and dexie bulk write them once per 500ms
     this.putQueue[nodeId] = value;
@@ -1357,21 +1340,36 @@ var IndexedDBSharedWorker = /*#__PURE__*/function (_Actor) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              for (_i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
-                _Object$entries$_i = _Object$entries[_i], nodeName = _Object$entries$_i[0], children = _Object$entries$_i[1];
-                for (_i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
-                  _Object$entries2$_i = _Object$entries2[_i2], childName = _Object$entries2$_i[0], newValue = _Object$entries2$_i[1];
-                  path = nodeName + "/" + childName;
-                  if (newValue === undefined) {
-                    this.db.nodes["delete"](path);
-                    this.notStored.add(path);
-                  } else {
-                    this.notStored["delete"](path);
-                    this.mergeAndSave(path, newValue);
-                  }
+              _i = 0, _Object$entries = Object.entries(message.updatedNodes);
+            case 1:
+              if (!(_i < _Object$entries.length)) {
+                _context4.next = 10;
+                break;
+              }
+              _Object$entries$_i = _Object$entries[_i], nodeName = _Object$entries$_i[0], children = _Object$entries$_i[1];
+              if (children) {
+                _context4.next = 6;
+                break;
+              }
+              console.log('deleting', nodeName);
+              return _context4.abrupt("continue", 7);
+            case 6:
+              for (_i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
+                _Object$entries2$_i = _Object$entries2[_i2], childName = _Object$entries2$_i[0], newValue = _Object$entries2$_i[1];
+                path = nodeName + "/" + childName;
+                if (newValue === undefined) {
+                  this.db.nodes["delete"](path);
+                  this.notStored.add(path);
+                } else {
+                  this.notStored["delete"](path);
+                  this.mergeAndSave(path, newValue);
                 }
               }
-            case 1:
+            case 7:
+              _i++;
+              _context4.next = 1;
+              break;
+            case 10:
             case "end":
               return _context4.stop();
           }
@@ -1384,7 +1382,7 @@ var IndexedDBSharedWorker = /*#__PURE__*/function (_Actor) {
     return handlePut;
   }() /// old stuff
   ;
-  return IndexedDBSharedWorker;
+  return IndexedDB;
 }(Actor);
 var actor;
 global.onconnect = function () {
@@ -1392,8 +1390,109 @@ global.onconnect = function () {
     console.log('worker already exists');
   } else {
     console.log('starting worker');
-    actor = actor || new IndexedDBSharedWorker();
+    actor = actor || new IndexedDB();
   }
+};
+
+// self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
+
+// import * as Comlink from "comlink";
+
+/*
+class SeenGetMessage {
+    constructor(id, from, lastReplyChecksum) {
+        this.id = id;
+        this.from = from;
+        this.lastReplyChecksum = lastReplyChecksum;
+    }
+}
+*/
+
+console.log('router shared worker loaded');
+var Router = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(Router, _Actor);
+  function Router(config) {
+    var _this;
+    if (config === void 0) {
+      config = {};
+    }
+    console.log('hi from router');
+    _this = _Actor.call(this, 'router') || this;
+    _this.storageAdapters = new Set();
+    _this.networkAdapters = new Set();
+    _this.serverPeers = new Set();
+    _this.seenMessages = new Set();
+    _this.seenGetMessages = new Map();
+    _this.subscribersByTopic = new Map();
+    _this.msgCounter = 0;
+    _this.storageAdapters.add(new IndexedDB(config));
+    return _this;
+  }
+  var _proto = Router.prototype;
+  _proto.handle = function handle(message) {
+    console.log('router received', message);
+    if (this.seenMessages.has(message.id)) {
+      return;
+    }
+    this.seenMessages.add(message.id);
+    if (message instanceof Put) {
+      this.handlePut(message);
+    } else if (message instanceof Get) {
+      this.handleGet(message);
+    }
+  };
+  _proto.handlePut = function handlePut(put) {
+    var _this2 = this;
+    Object.keys(put.updatedNodes).forEach(function (path) {
+      var topic = path.split('/')[1] || '';
+      var subscribers = _this2.subscribersByTopic.get(topic);
+      // send to storage adapters
+      console.log('put subscribers', subscribers);
+      for (var _iterator = _createForOfIteratorHelperLoose(_this2.storageAdapters), _step; !(_step = _iterator()).done;) {
+        var storageAdapter = _step.value;
+        storageAdapter.postMessage(put);
+      }
+      if (subscribers) {
+        for (var _iterator2 = _createForOfIteratorHelperLoose(subscribers), _step2; !(_step2 = _iterator2()).done;) {
+          var _step2$value = _step2.value,
+            k = _step2$value[0],
+            v = _step2$value[1];
+          if (k !== put.from) {
+            v.postMessage(put);
+          }
+        }
+      }
+    });
+  };
+  _proto.handleGet = function handleGet(get) {
+    var topic = get.nodeId.split('/')[1];
+    for (var _iterator3 = _createForOfIteratorHelperLoose(this.storageAdapters), _step3; !(_step3 = _iterator3()).done;) {
+      var storageAdapter = _step3.value;
+      storageAdapter.postMessage(get);
+    }
+    if (!this.subscribersByTopic.has(topic)) {
+      this.subscribersByTopic.set(topic, new Map());
+    }
+    var subscribers = this.subscribersByTopic.get(topic);
+    for (var _iterator4 = _createForOfIteratorHelperLoose(subscribers), _step4; !(_step4 = _iterator4()).done;) {
+      var _step4$value = _step4.value,
+        k = _step4$value[0],
+        v = _step4$value[1];
+      // TODO: sample
+      if (k !== get.from.id) {
+        v.postMessage(get);
+      }
+    }
+    if (!subscribers.has(get.from.id)) {
+      subscribers.set(get.from.id, get.from);
+    }
+  };
+  return Router;
+}(Actor);
+var actor$1;
+self.onconnect = function () {
+  console.log('router shared worker connected');
+  actor$1 = actor$1 || new Router();
 };
 
 // self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
@@ -1473,17 +1572,17 @@ var Node = /*#__PURE__*/function (_Actor) {
         }
       }
     }, 40);
-    _this.id = id;
-    _this.router = new BroadcastChannel(id + '-idb');
     _this.parent = parent;
     _this.config = config || parent && parent.config || DEFAULT_CONFIG;
     if (parent) {
       _this.root = parent.root;
+      _this.router = parent.router;
     } else {
+      console.log('root constructor');
       _this.root = _assertThisInitialized(_this);
       //@ts-ignore
-      var idbWorker = new IndexedDBSharedWorker({
-        id: id
+      _this.router = new Router({
+        dbName: _this.id + '-idb'
       });
       //console.log('idbWorker', idbWorker);
       //const router = Comlink.wrap(routerWorker);
@@ -1565,8 +1664,7 @@ var Node = /*#__PURE__*/function (_Actor) {
     console.log('put', updatedNodes);
     try {
       structuredClone(updatedNodes);
-      this.router.postMessage(Put["new"](updatedNodes, this.channel.name));
-      this.channel.postMessage(Put["new"](updatedNodes, this.channel.name));
+      this.router.postMessage(Put["new"](updatedNodes, this));
     } catch (e) {
       console.log('put failed', e);
     }
@@ -1640,8 +1738,8 @@ var Node = /*#__PURE__*/function (_Actor) {
             case 7:
               if (this.value !== undefined) {
                 result = this.value;
-              } else {
-                this.router.postMessage(Get["new"](this.id, this.channel.name));
+              } else if (returnIfUndefined) {
+                this.router.postMessage(Get["new"](this.id, this));
                 id = this.counter++;
                 callback && this.once_subscriptions.set(id, callback);
               }
@@ -5548,7 +5646,7 @@ var session = {
     }); // gun bug?
     notifications.subscribeToWebPush();
     notifications.getWebPushSubscriptions();
-    notifications.subscribeToIrisNotifications();
+    //notifications.subscribeToIrisNotifications();
     Channel.getMyChatLinks(undefined, function (chatLink) {
       local$1().get('chatLinks').get(chatLink.id).put(chatLink.url);
       latestChatLink = chatLink.url;

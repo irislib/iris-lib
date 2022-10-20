@@ -8,21 +8,18 @@ export function generateUuid() {
 }
 
 export class Actor {
-    channel: BroadcastChannel;
+    id: string;
 
     handle(_message: Message) {
         throw new Error('not implemented');
     }
 
-    getChannel() {
-        return new BroadcastChannel(this.channel.name);
+    // so we can support a similar api as Channels
+    postMessage(message: Message) {
+        this.handle(message);
     }
 
     constructor(id = generateUuid()) {
-        this.channel = new BroadcastChannel(id);
-        this.channel.onmessage = (e) => {
-            const message = Message.fromObject(e.data);
-            this.handle(message);
-        }
+        this.id = id;
     }
 }
