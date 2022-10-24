@@ -4,11 +4,8 @@ import _ from "../../lodash.ts";
 import Dexie from 'dexie';
 // import * as Comlink from "comlink";
 
-console.log('indexeddb shared worker loaded');
-
 export default class IndexedDB extends Actor {
     constructor(config = {}) {
-        console.log('indexeddb shared worker constructor');
         super();
         this.config = config;
         this.notStored = new Set();
@@ -33,8 +30,9 @@ export default class IndexedDB extends Actor {
 
     throttledPut = _.throttle(() => {
         const keys = Object.keys(this.putQueue);
-        console.log('putting ', keys.length, 'keys');
-        const values = keys.map(key => this.putQueue[key]);
+        const values = keys.map(key => {
+            return this.putQueue[key];
+        });
         this.db.nodes.bulkPut(values, keys);
         this.putQueue = {};
     }, 500);
@@ -54,6 +52,7 @@ export default class IndexedDB extends Actor {
                 const key = keys[i];
                 const value = values[i];
                 const callbacks = queue[key];
+                // console.log('have', key, value);
                 for (const callback of callbacks) {
                     callback(value);
                 }
@@ -63,7 +62,6 @@ export default class IndexedDB extends Actor {
     }, 100);
 
     handle(message) {
-        console.log('indexeddb shared worker received', message);
         this.queue = (this.queue && this.queue++) || 1;
         if (this.queue > 10) {
             return;
@@ -79,22 +77,18 @@ export default class IndexedDB extends Actor {
 
     handleGet(message) {
         if (this.notStored.has(message.nodeId)) {
-            console.log('notStored', message.nodeId);
             // TODO message implying that the key is not stored
             return;
         }
         this.get(message.nodeId, (value) => {
             // TODO: this takes a long time to return
             if (value === undefined) {
-                console.log('have not', message.nodeId);
                 this.notStored.add(message.nodeId);
                 // TODO message implying that the key is not stored
             } else {
-                console.log('have', message.nodeId, value);
-                const putMessage = Put.newFromKv(message.nodeId, value, this.channel.name);
+                const putMessage = Put.newFromKv(message.nodeId, value, this.id);
                 putMessage.inResponseTo = message.id;
-                console.log('respond with', putMessage);
-                new BroadcastChannel(message.from || 'router').postMessage(putMessage);
+                message.from && message.from.postMessage(putMessage);
             }
         });
     }
@@ -102,11 +96,9 @@ export default class IndexedDB extends Actor {
     mergeAndSave(path, newValue) {
         this.get(path, existing => {
             if (existing === undefined) {
-                //console.log('saving new', path, newValue);
                 this.put(path, newValue);
             } else if (!_.isEqual(existing, newValue)) {
                 // if existing value is array, merge it
-                //console.log('merging', path, existing, newValue);
                 if (Array.isArray(existing) && Array.isArray(newValue)) {
                     newValue = _.uniq(existing.concat(newValue));
                 }
@@ -120,69 +112,32 @@ export default class IndexedDB extends Actor {
         });
     }
 
+    savePath(path, value) {
+        if (value === undefined) {
+            this.db.nodes.delete(path);
+            this.notStored.add(path);
+        } else {
+            this.notStored.delete(path);
+            this.mergeAndSave(path, value);
+        }
+    }
+
     async handlePut(message) {
         for (const [nodeName, children] of Object.entries(message.updatedNodes)) {
             if (!children) {
                 console.log('deleting', nodeName);
                 continue;
             }
+            if (typeof children !== 'object') { // we receiving bad messages? or is this handled correctly?
+                this.savePath(nodeName, children);
+                continue;
+            }
             for (const [childName, newValue] of Object.entries(children)) {
                 const path = `${nodeName}/${childName}`;
-                if (newValue === undefined) {
-                    this.db.nodes.delete(path);
-                    this.notStored.add(path);
-                } else {
-                    this.notStored.delete(path);
-                    this.mergeAndSave(path, newValue);
-                }
+                this.savePath(path, newValue);
             }
         }
     }
-
-
-
-
-    /// old stuff
-    _saveLocalForage = _.throttle(async () => {
-        if (!this.loaded) {
-            await this.loadLocalForage();
-        }
-        if (this.children.size) {
-            const children = Array.from(this.children.keys());
-            this.putQueue[this.id] = children;
-        } else if (this.value === undefined) {
-            this.db.nodes.delete(this.id);
-        } else {
-            this.putQueue[this.id] = this.value;
-        }
-    }, 500);
-
-        // TODO: indexedDB has poor performance when there's lots of queries.
-    //  we should perhaps store child values with the parent node in order to reduce queries
-    _loadLocalForage = _.throttle(async () => {
-        if (this.notStored.has(this.id)) {
-            return undefined;
-        }
-        // try to get the value from localforage
-        let result = await this.db.nodes.get(this.id);
-        // getItem returns null if not found
-        if (result === null) {
-            result = undefined;
-            this.notStored.add(this.id);
-        } else if (Array.isArray(result)) {
-            // result is a list of children
-            const newResult = {};
-            await Promise.all(result.map(async key => {
-                newResult[key] = await this.get(key).once();
-            }));
-            result = newResult;
-        } else {
-            // result is a value
-            this.value = result;
-        }
-        this.loaded = true;
-        return result;
-    }, 500);
 }
 
 let actor;

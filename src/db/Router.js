@@ -1,6 +1,6 @@
-import {Actor} from "./Actor";
+import {Actor} from "./Actor.ts";
 import IndexedDBWorker from "./adapters/IndexedDB.js";
-import { Put, Get } from "./Message";
+import { Put, Get } from "./Message.ts";
 // import * as Comlink from "comlink";
 
 /*
@@ -13,8 +13,6 @@ class SeenGetMessage {
 }
 */
 
-console.log('router shared worker loaded');
-
 export default class Router extends Actor {
     storageAdapters = new Set();
     networkAdapters = new Set();
@@ -25,13 +23,12 @@ export default class Router extends Actor {
     msgCounter = 0;
 
     constructor(config = {}) {
-        console.log('hi from router');
         super('router');
         this.storageAdapters.add(new IndexedDBWorker(config));
     }
 
     handle(message) {
-        console.log('router received', message);
+        //console.log('router received', message);
         if (this.seenMessages.has(message.id)) {
             return;
         }
@@ -48,7 +45,7 @@ export default class Router extends Actor {
             const topic = path.split('/')[1] || '';
             const subscribers = this.subscribersByTopic.get(topic);
             // send to storage adapters
-            console.log('put subscribers', subscribers);
+            //console.log('put subscribers', subscribers);
             for (const storageAdapter of this.storageAdapters) {
                 storageAdapter.postMessage(put);
             }

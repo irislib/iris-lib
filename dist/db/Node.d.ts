@@ -26,9 +26,11 @@ export default class Node extends Actor {
     currentUser: any;
     router: Actor;
     constructor(id?: string, config?: Config, parent?: Node);
+    getCurrentUser(): any;
+    setCurrentUser(key: any): void;
     handle(message: Message): void;
     get(key: string): Node;
-    user(pub?: string): Node;
+    user(pub: string | undefined): Node;
     auth(key: any): void;
     doCallbacks: () => void;
     put(value: any): void;

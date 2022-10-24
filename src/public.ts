@@ -8,10 +8,6 @@ let currentUser: any;
  * @param pub The public key of the user. Defaults to the current user from session.
  * @returns {Node} The user space.
  */
-export default function(pub?: string) {
-  if (!currentUser) {
-    currentUser = publicState().user();
-    currentUser.auth(session.getKey());
-  }
+export default function(pub: string = session.getKey().pub) {
   return pub ? publicState().user(pub) : currentUser;
 }

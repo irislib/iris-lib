@@ -3,7 +3,7 @@ import {Actor}  from './Actor';
 import {Message, Put, Get} from './Message';
 
 // @ts-ignore
-import Router from './Router.js';
+import Router from './Router';
 //import * as Comlink from "comlink";
 
 type FunEventListener = {
@@ -31,6 +31,7 @@ function log(...args: any[]) {
     debug && console.log(...args);
 }
 
+// TODO move memory storage to its own adapter? it would make things simpler here
 export default class Node extends Actor {
     root: Node;
     parent?: Node;
@@ -53,7 +54,6 @@ export default class Node extends Actor {
             this.root = parent.root;
             this.router = parent.router;
         } else {
-            console.log('root constructor');
             this.root = this;
             //@ts-ignore
             this.router = new Router({dbName: this.id + '-idb'});
@@ -62,10 +62,23 @@ export default class Node extends Actor {
         }
     }
 
+    getCurrentUser(): any {
+        return this.parent ? this.parent.getCurrentUser() : this.currentUser;
+    }
+
+    setCurrentUser(key: any) {
+        if (this.parent) {
+            this.parent.setCurrentUser(key);
+        } else {
+            this.currentUser = key;
+        }
+    }
+
     handle(message: Message): void {
         if (message instanceof Put) {
             for (const [key, value] of Object.entries(message.updatedNodes)) {
                 if (key === this.id) {
+                    this.loaded = true;
                     if (Array.isArray(value)) {
                         value.forEach(childKey => this.get(childKey));
                     } else {
@@ -74,7 +87,7 @@ export default class Node extends Actor {
                     this.parent && this.parent.handle(message);
                 }
             }
-            setTimeout(() => this.doCallbacks(), 100);
+            setTimeout(() => this.doCallbacks(), 100); // why is this needed?
         }
     };
 
@@ -88,16 +101,18 @@ export default class Node extends Actor {
         return newNode;
     }
 
-    user(pub: string = (this.root.currentUser && this.root.currentUser.pub)): Node {
-        console.log('user', pub);
-        return this.get('users').get(pub);
+    user(pub: string | undefined): Node {
+        pub = pub || (this.root.currentUser && this.root.currentUser.pub);
+        if (!pub) {
+            throw new Error("no public key!");
+        }
+        return this.get('users').get(pub as string);
     }
 
     auth(key: any) {
         // TODO get public key from key
-        console.log('auth', key);
         this.root.currentUser = key;
-        console.log(this.root);
+        this.root.setCurrentUser(key);
         return;
     }
 
@@ -147,13 +162,7 @@ export default class Node extends Actor {
         const updatedNodes: any = {};
         updatedNodes[this.id] = value;
         this.addParentNodes(updatedNodes);
-        console.log('put', updatedNodes);
-        try {
-            structuredClone(updatedNodes);
-            this.router.postMessage(Put.new(updatedNodes, this));
-        } catch(e) {
-            console.log('put failed', e);
-        }
+        this.router.postMessage(Put.new(updatedNodes, this));
     }
 
     private addParentNodes(updatedNodes: any) {
@@ -162,7 +171,6 @@ export default class Node extends Actor {
             const children: any = {};
             for (const [key, child] of this.parent.children) {
                 if (!(key && key.indexOf)) {
-                    console.log('key', key);
                     this.parent.children.delete(key);
                     continue;
                 }
@@ -172,7 +180,6 @@ export default class Node extends Actor {
                     children[key] = child.value;
                 }
             }
-            console.log('this.parent.id', this.parent.id, children);
             updatedNodes[this.parent.id] = children;
             this.parent.addParentNodes(updatedNodes);
         }
@@ -180,6 +187,9 @@ export default class Node extends Actor {
 
     async once(callback?: Function | null, event?: FunEventListener, returnIfUndefined = true): Promise<any> {
         let result: any;
+        if (!this.loaded) {
+            this.router.postMessage(Get.new(this.id, this));
+        }
         if (this.children.size) {
             // return an object containing all children
             result = {};
@@ -189,7 +199,6 @@ export default class Node extends Actor {
         } else if (this.value !== undefined) {
             result = this.value;
         } else if (returnIfUndefined) {
-            this.router.postMessage(Get.new(this.id, this));
             const id = this.counter++;
             callback && this.once_subscriptions.set(id, callback);
         }

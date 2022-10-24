@@ -37,7 +37,7 @@ const DEFAULT_SETTINGS = {
     autoplayWebtorrent: true,
     maxConnectedPeers: util.isElectron ? 2 : 1
   }
-}
+};
 
 /**
  * User session management utilities.
@@ -233,9 +233,6 @@ export default {
     localStorage.setItem('chatKeyPair', JSON.stringify(k));
     user().auth(key);
     user().put({epub: key.epub});
-    user().get('likes').put({a:null}); // gun bug?
-    user().get('msgs').put({a:null}); // gun bug?
-    user().get('replies').put({a:null}); // gun bug?
     notifications.subscribeToWebPush();
     notifications.getWebPushSubscriptions();
     //notifications.subscribeToIrisNotifications();
@@ -250,6 +247,7 @@ export default {
         myName = name;
       }
     });
+    // a lot of this is iris-messenger stuff
     notifications.init();
     local().get('loggedIn').put(true);
     local().get('settings').once().then(settings => {
@@ -282,6 +280,8 @@ export default {
       }
     });
   },
+
+
 
   /**
    * Create a new user account and log in.

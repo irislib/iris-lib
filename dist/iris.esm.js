@@ -914,7 +914,7 @@ var peers = {
               });
             case 17:
               encryptedUrlHash = _context.sent;
-              global$2().user().get('peers').get(encryptedUrlHash).put({
+              global$1().user().get('peers').get(encryptedUrlHash).put({
                 url: peer.url,
                 lastSeen: new Date().toISOString()
               });
@@ -937,7 +937,7 @@ var peers = {
     this.save();
   },
   /** */disconnect: function disconnect(peerFromGun) {
-    global$2().on('bye', peerFromGun);
+    global$1().on('bye', peerFromGun);
     peerFromGun.url = '';
   },
   save: function save() {
@@ -970,7 +970,7 @@ var peers = {
     }
     if (this.known[url]) {
       this.known[url].enabled = true;
-      global$2().opt({
+      global$1().opt({
         peers: [url]
       });
       this.save();
@@ -1111,8 +1111,6 @@ var Put = /*#__PURE__*/function () {
 }();
 
 // import * as Comlink from "comlink";
-
-console.log('indexeddb shared worker loaded');
 var IndexedDB = /*#__PURE__*/function (_Actor) {
   _inheritsLoose(IndexedDB, _Actor);
   function IndexedDB(config) {
@@ -1120,11 +1118,9 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
     if (config === void 0) {
       config = {};
     }
-    console.log('indexeddb shared worker constructor');
     _this = _Actor.call(this) || this;
     _this.throttledPut = _.throttle(function () {
       var keys = Object.keys(_this.putQueue);
-      console.log('putting ', keys.length, 'keys');
       var values = keys.map(function (key) {
         return _this.putQueue[key];
       });
@@ -1140,6 +1136,7 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
           var key = keys[i];
           var value = values[i];
           var callbacks = queue[key];
+          // console.log('have', key, value);
           for (var _iterator = _createForOfIteratorHelperLoose(callbacks), _step; !(_step = _iterator()).done;) {
             var callback = _step.value;
             callback(value);
@@ -1148,104 +1145,6 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
       });
       _this.getQueue = {};
     }, 100);
-    _this._saveLocalForage = _.throttle( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var children;
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              if (_this.loaded) {
-                _context.next = 3;
-                break;
-              }
-              _context.next = 3;
-              return _this.loadLocalForage();
-            case 3:
-              if (_this.children.size) {
-                children = Array.from(_this.children.keys());
-                _this.putQueue[_this.id] = children;
-              } else if (_this.value === undefined) {
-                _this.db.nodes["delete"](_this.id);
-              } else {
-                _this.putQueue[_this.id] = _this.value;
-              }
-            case 4:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    })), 500);
-    _this._loadLocalForage = _.throttle( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
-      var result, newResult;
-      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-        while (1) {
-          switch (_context3.prev = _context3.next) {
-            case 0:
-              if (!_this.notStored.has(_this.id)) {
-                _context3.next = 2;
-                break;
-              }
-              return _context3.abrupt("return", undefined);
-            case 2:
-              _context3.next = 4;
-              return _this.db.nodes.get(_this.id);
-            case 4:
-              result = _context3.sent;
-              if (!(result === null)) {
-                _context3.next = 10;
-                break;
-              }
-              result = undefined;
-              _this.notStored.add(_this.id);
-              _context3.next = 18;
-              break;
-            case 10:
-              if (!Array.isArray(result)) {
-                _context3.next = 17;
-                break;
-              }
-              // result is a list of children
-              newResult = {};
-              _context3.next = 14;
-              return Promise.all(result.map( /*#__PURE__*/function () {
-                var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(key) {
-                  return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-                    while (1) {
-                      switch (_context2.prev = _context2.next) {
-                        case 0:
-                          _context2.next = 2;
-                          return _this.get(key).once();
-                        case 2:
-                          newResult[key] = _context2.sent;
-                        case 3:
-                        case "end":
-                          return _context2.stop();
-                      }
-                    }
-                  }, _callee2);
-                }));
-                return function (_x) {
-                  return _ref3.apply(this, arguments);
-                };
-              }()));
-            case 14:
-              result = newResult;
-              _context3.next = 18;
-              break;
-            case 17:
-              // result is a value
-              _this.value = result;
-            case 18:
-              _this.loaded = true;
-              return _context3.abrupt("return", result);
-            case 20:
-            case "end":
-              return _context3.stop();
-          }
-        }
-      }, _callee3);
-    })), 500);
     _this.config = config;
     _this.notStored = new Set();
     _this.putQueue = {};
@@ -1273,7 +1172,6 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
     this.throttledGet();
   };
   _proto.handle = function handle(message) {
-    console.log('indexeddb shared worker received', message);
     this.queue = this.queue && this.queue++ || 1;
     if (this.queue > 10) {
       return;
@@ -1289,22 +1187,18 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
   _proto.handleGet = function handleGet(message) {
     var _this2 = this;
     if (this.notStored.has(message.nodeId)) {
-      console.log('notStored', message.nodeId);
       // TODO message implying that the key is not stored
       return;
     }
     this.get(message.nodeId, function (value) {
       // TODO: this takes a long time to return
       if (value === undefined) {
-        console.log('have not', message.nodeId);
         _this2.notStored.add(message.nodeId);
         // TODO message implying that the key is not stored
       } else {
-        console.log('have', message.nodeId, value);
-        var putMessage = Put.newFromKv(message.nodeId, value, _this2.channel.name);
+        var putMessage = Put.newFromKv(message.nodeId, value, _this2.id);
         putMessage.inResponseTo = message.id;
-        console.log('respond with', putMessage);
-        new BroadcastChannel(message.from || 'router').postMessage(putMessage);
+        message.from && message.from.postMessage(putMessage);
       }
     });
   };
@@ -1312,11 +1206,9 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
     var _this3 = this;
     this.get(path, function (existing) {
       if (existing === undefined) {
-        //console.log('saving new', path, newValue);
         _this3.put(path, newValue);
       } else if (!_.isEqual(existing, newValue)) {
         // if existing value is array, merge it
-        //console.log('merging', path, existing, newValue);
         if (Array.isArray(existing) && Array.isArray(newValue)) {
           newValue = _.uniq(existing.concat(newValue));
         }
@@ -1327,55 +1219,65 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
       }
     });
   };
+  _proto.savePath = function savePath(path, value) {
+    if (value === undefined) {
+      this.db.nodes["delete"](path);
+      this.notStored.add(path);
+    } else {
+      this.notStored["delete"](path);
+      this.mergeAndSave(path, value);
+    }
+  };
   _proto.handlePut = /*#__PURE__*/function () {
-    var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(message) {
+    var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(message) {
       var _i, _Object$entries, _Object$entries$_i, nodeName, children, _i2, _Object$entries2, _Object$entries2$_i, childName, newValue, path;
-      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) {
-          switch (_context4.prev = _context4.next) {
+          switch (_context.prev = _context.next) {
             case 0:
               _i = 0, _Object$entries = Object.entries(message.updatedNodes);
             case 1:
               if (!(_i < _Object$entries.length)) {
-                _context4.next = 10;
+                _context.next = 13;
                 break;
               }
               _Object$entries$_i = _Object$entries[_i], nodeName = _Object$entries$_i[0], children = _Object$entries$_i[1];
               if (children) {
-                _context4.next = 6;
+                _context.next = 6;
                 break;
               }
               console.log('deleting', nodeName);
-              return _context4.abrupt("continue", 7);
+              return _context.abrupt("continue", 10);
             case 6:
+              if (!(typeof children !== 'object')) {
+                _context.next = 9;
+                break;
+              }
+              // we receiving bad messages? or is this handled correctly?
+              this.savePath(nodeName, children);
+              return _context.abrupt("continue", 10);
+            case 9:
               for (_i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
                 _Object$entries2$_i = _Object$entries2[_i2], childName = _Object$entries2$_i[0], newValue = _Object$entries2$_i[1];
                 path = nodeName + "/" + childName;
-                if (newValue === undefined) {
-                  this.db.nodes["delete"](path);
-                  this.notStored.add(path);
-                } else {
-                  this.notStored["delete"](path);
-                  this.mergeAndSave(path, newValue);
-                }
+                this.savePath(path, newValue);
               }
-            case 7:
-              _i++;
-              _context4.next = 1;
-              break;
             case 10:
+              _i++;
+              _context.next = 1;
+              break;
+            case 13:
             case "end":
-              return _context4.stop();
+              return _context.stop();
           }
         }
-      }, _callee4, this);
+      }, _callee, this);
     }));
-    function handlePut(_x2) {
+    function handlePut(_x) {
       return _handlePut.apply(this, arguments);
     }
     return handlePut;
-  }() /// old stuff
-  ;
+  }();
   return IndexedDB;
 }(Actor);
 var actor;
@@ -1401,8 +1303,6 @@ class SeenGetMessage {
     }
 }
 */
-
-console.log('router shared worker loaded');
 var Router = /*#__PURE__*/function (_Actor) {
   _inheritsLoose(Router, _Actor);
   function Router(config) {
@@ -1410,7 +1310,6 @@ var Router = /*#__PURE__*/function (_Actor) {
     if (config === void 0) {
       config = {};
     }
-    console.log('hi from router');
     _this = _Actor.call(this, 'router') || this;
     _this.storageAdapters = new Set();
     _this.networkAdapters = new Set();
@@ -1424,7 +1323,7 @@ var Router = /*#__PURE__*/function (_Actor) {
   }
   var _proto = Router.prototype;
   _proto.handle = function handle(message) {
-    console.log('router received', message);
+    //console.log('router received', message);
     if (this.seenMessages.has(message.id)) {
       return;
     }
@@ -1441,7 +1340,7 @@ var Router = /*#__PURE__*/function (_Actor) {
       var topic = path.split('/')[1] || '';
       var subscribers = _this2.subscribersByTopic.get(topic);
       // send to storage adapters
-      console.log('put subscribers', subscribers);
+      //console.log('put subscribers', subscribers);
       for (var _iterator = _createForOfIteratorHelperLoose(_this2.storageAdapters), _step; !(_step = _iterator()).done;) {
         var storageAdapter = _step.value;
         storageAdapter.postMessage(put);
@@ -1496,6 +1395,7 @@ var DEFAULT_CONFIG = {
   enableStats: true,
   localOnly: true
 };
+// TODO move memory storage to its own adapter? it would make things simpler here
 var Node = /*#__PURE__*/function (_Actor) {
   _inheritsLoose(Node, _Actor);
   function Node(id, config, parent) {
@@ -1572,7 +1472,6 @@ var Node = /*#__PURE__*/function (_Actor) {
       _this.root = parent.root;
       _this.router = parent.router;
     } else {
-      console.log('root constructor');
       _this.root = _assertThisInitialized(_this);
       //@ts-ignore
       _this.router = new Router({
@@ -1584,6 +1483,16 @@ var Node = /*#__PURE__*/function (_Actor) {
     return _this;
   }
   var _proto = Node.prototype;
+  _proto.getCurrentUser = function getCurrentUser() {
+    return this.parent ? this.parent.getCurrentUser() : this.currentUser;
+  };
+  _proto.setCurrentUser = function setCurrentUser(key) {
+    if (this.parent) {
+      this.parent.setCurrentUser(key);
+    } else {
+      this.currentUser = key;
+    }
+  };
   _proto.handle = function handle(message) {
     var _this2 = this;
     if (message instanceof Put) {
@@ -1592,6 +1501,7 @@ var Node = /*#__PURE__*/function (_Actor) {
           key = _Object$entries$_i[0],
           value = _Object$entries$_i[1];
         if (key === this.id) {
+          this.loaded = true;
           if (Array.isArray(value)) {
             value.forEach(function (childKey) {
               return _this2.get(childKey);
@@ -1604,7 +1514,7 @@ var Node = /*#__PURE__*/function (_Actor) {
       }
       setTimeout(function () {
         return _this2.doCallbacks();
-      }, 100);
+      }, 100); // why is this needed?
     }
   };
   _proto.get = function get(key) {
@@ -1617,17 +1527,16 @@ var Node = /*#__PURE__*/function (_Actor) {
     return newNode;
   };
   _proto.user = function user(pub) {
-    if (pub === void 0) {
-      pub = this.root.currentUser && this.root.currentUser.pub;
+    pub = pub || this.root.currentUser && this.root.currentUser.pub;
+    if (!pub) {
+      throw new Error("no public key!");
     }
-    console.log('user', pub);
     return this.get('users').get(pub);
   };
   _proto.auth = function auth(key) {
     // TODO get public key from key
-    console.log('auth', key);
     this.root.currentUser = key;
-    console.log(this.root);
+    this.root.setCurrentUser(key);
     return;
   };
   _proto.put = function put(value) {
@@ -1655,13 +1564,7 @@ var Node = /*#__PURE__*/function (_Actor) {
     var updatedNodes = {};
     updatedNodes[this.id] = value;
     this.addParentNodes(updatedNodes);
-    console.log('put', updatedNodes);
-    try {
-      structuredClone(updatedNodes);
-      this.router.postMessage(Put["new"](updatedNodes, this));
-    } catch (e) {
-      console.log('put failed', e);
-    }
+    this.router.postMessage(Put["new"](updatedNodes, this));
   };
   _proto.addParentNodes = function addParentNodes(updatedNodes) {
     if (this.parent) {
@@ -1672,7 +1575,6 @@ var Node = /*#__PURE__*/function (_Actor) {
           key = _step5$value[0],
           child = _step5$value[1];
         if (!(key && key.indexOf)) {
-          console.log('key', key);
           this.parent.children["delete"](key);
           continue;
         }
@@ -1682,7 +1584,6 @@ var Node = /*#__PURE__*/function (_Actor) {
           children[key] = child.value;
         }
       }
-      console.log('this.parent.id', this.parent.id, children);
       updatedNodes[this.parent.id] = children;
       this.parent.addParentNodes(updatedNodes);
     }
@@ -1698,13 +1599,16 @@ var Node = /*#__PURE__*/function (_Actor) {
               if (returnIfUndefined === void 0) {
                 returnIfUndefined = true;
               }
+              if (!this.loaded) {
+                this.router.postMessage(Get["new"](this.id, this));
+              }
               if (!this.children.size) {
-                _context2.next = 7;
+                _context2.next = 8;
                 break;
               }
               // return an object containing all children
               result = {};
-              _context2.next = 5;
+              _context2.next = 6;
               return Promise.all(Array.from(this.children.keys()).map( /*#__PURE__*/function () {
                 var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(key) {
                   return _regeneratorRuntime().wrap(function _callee$(_context) {
@@ -1726,25 +1630,24 @@ var Node = /*#__PURE__*/function (_Actor) {
                   return _ref.apply(this, arguments);
                 };
               }()));
-            case 5:
-              _context2.next = 8;
+            case 6:
+              _context2.next = 9;
               break;
-            case 7:
+            case 8:
               if (this.value !== undefined) {
                 result = this.value;
               } else if (returnIfUndefined) {
-                this.router.postMessage(Get["new"](this.id, this));
                 id = this.counter++;
                 callback && this.once_subscriptions.set(id, callback);
               }
-            case 8:
+            case 9:
               if (!(result !== undefined || returnIfUndefined)) {
-                _context2.next = 12;
+                _context2.next = 13;
                 break;
               }
               callback && callback(result, this.id.slice(this.id.lastIndexOf('/') + 1), null, event);
               return _context2.abrupt("return", result);
-            case 12:
+            case 13:
             case "end":
               return _context2.stop();
           }
@@ -1784,12 +1687,12 @@ var Node = /*#__PURE__*/function (_Actor) {
   return Node;
 }(Actor);
 
-var global$1;
-function global$2 (opts) {
+var globalState;
+function global$1 (opts) {
   if (opts === void 0) {
     opts = {};
   }
-  if (!global$1) {
+  if (!globalState) {
     var myOpts = Object.assign({
       peers: opts.peers || peers.random(),
       localStorage: false,
@@ -1803,9 +1706,9 @@ function global$2 (opts) {
       });
     }
     peers.init();
-    global$1 = new Node('global', myOpts);
+    globalState = new Node('global', myOpts);
   }
-  return global$1;
+  return globalState;
 }
 
 // @ts-nocheck
@@ -1906,11 +1809,10 @@ var currentUser;
  * @returns {Node} The user space.
  */
 function publicState (pub) {
-  if (!currentUser) {
-    currentUser = global$2().user();
-    currentUser.auth(session.getKey());
+  if (pub === void 0) {
+    pub = session.getKey().pub;
   }
-  return pub ? global$2().user(pub) : currentUser;
+  return pub ? global$1().user(pub) : currentUser;
 }
 
 // TODO: extract Group channels into their own class
@@ -2124,7 +2026,7 @@ var Channel = /*#__PURE__*/function () {
         if (sharedSecret && linkId) {
           this.save(); // save the channel first so it's there before inviter subscribes to it
           options.saved = true;
-          global$2().user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on( /*#__PURE__*/function () {
+          global$1().user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on( /*#__PURE__*/function () {
             var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(encrypted) {
               var sharedKey, encryptedChatRequest, channelRequestId;
               return _regeneratorRuntime().wrap(function _callee$(_context) {
@@ -2143,7 +2045,7 @@ var Channel = /*#__PURE__*/function () {
                       return util.getHash(encryptedChatRequest);
                     case 8:
                       channelRequestId = _context.sent;
-                      util.gunAsAnotherUser(global$2(), sharedKey, function (user) {
+                      util.gunAsAnotherUser(global$1(), sharedKey, function (user) {
                         user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
                       });
                     case 10:
@@ -2208,7 +2110,7 @@ var Channel = /*#__PURE__*/function () {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
-              global$2().user(participant).get(this.theirSecretUuids[participant]).off();
+              global$1().user(participant).get(this.theirSecretUuids[participant]).off();
               // TODO: persist
             case 1:
             case "end":
@@ -2333,7 +2235,7 @@ var Channel = /*#__PURE__*/function () {
                 break;
               }
               _context5.next = 3;
-              return util.gunOnceDefined(global$2().user(pub).get("epub"));
+              return util.gunOnceDefined(global$1().user(pub).get("epub"));
             case 3:
               epub = _context5.sent;
               _context5.next = 6;
@@ -2366,7 +2268,7 @@ var Channel = /*#__PURE__*/function () {
           switch (_context6.prev = _context6.next) {
             case 0:
               _context6.next = 2;
-              return util.gunOnceDefined(global$2().user(pub).get("epub"));
+              return util.gunOnceDefined(global$1().user(pub).get("epub"));
             case 2:
               epub = _context6.sent;
               _context6.next = 5;
@@ -2398,7 +2300,7 @@ var Channel = /*#__PURE__*/function () {
           switch (_context7.prev = _context7.next) {
             case 0:
               _context7.next = 2;
-              return util.gunOnceDefined(global$2().user(pub).get("epub"));
+              return util.gunOnceDefined(global$1().user(pub).get("epub"));
             case 2:
               epub = _context7.sent;
               _context7.next = 5;
@@ -2459,11 +2361,11 @@ var Channel = /*#__PURE__*/function () {
                             _context8.next = 5;
                             break;
                           }
-                          global$2().user().get("chats").get(ourSecretChannelId).put(null);
+                          global$1().user().get("chats").get(ourSecretChannelId).put(null);
                           return _context8.abrupt("return");
                         case 5:
                           _context8.next = 7;
-                          return util.gunOnceDefined(global$2().user().get("chats").get(ourSecretChannelId).get("pub"));
+                          return util.gunOnceDefined(global$1().user().get("chats").get(ourSecretChannelId).get("pub"));
                         case 7:
                           encryptedChatId = _context8.sent;
                           _context8.next = 10;
@@ -2502,7 +2404,7 @@ var Channel = /*#__PURE__*/function () {
                   return _ref2.apply(this, arguments);
                 };
               }();
-              global$2().user().get("chats").map(handleChannel);
+              global$1().user().get("chats").map(handleChannel);
             case 9:
             case "end":
               return _context9.stop();
@@ -2626,7 +2528,7 @@ var Channel = /*#__PURE__*/function () {
                         case 9:
                           theirSecretChannelId = _context12.sent;
                         case 10:
-                          global$2().user(pub).get("chats").get(theirSecretChannelId).get("msgs").map().once(function (data, key) {
+                          global$1().user(pub).get("chats").get(theirSecretChannelId).get("msgs").map().once(function (data, key) {
                             _this5.messageReceived(callback, data, _this5.uuid || pub, false, key, pub);
                           });
                         case 11:
@@ -2948,7 +2850,7 @@ var Channel = /*#__PURE__*/function () {
               return Gun.SEA.secret(session.getKey().epub, session.getKey());
             case 14:
               mySecret = _context21.sent;
-              _context21.t0 = global$2().user().get("chats").get(ourSecretChannelId).get("pub");
+              _context21.t0 = global$1().user().get("chats").get(ourSecretChannelId).get("pub");
               _context21.next = 18;
               return Gun.SEA.encrypt({
                 pub: pub
@@ -3407,7 +3309,7 @@ var Channel = /*#__PURE__*/function () {
                         return _this10.getOurSecretChannelId(keys[i]);
                       case 2:
                         ourSecretChannelId = _context32.sent;
-                        global$2().user().get("chats").get(ourSecretChannelId).get(key).on( /*#__PURE__*/function () {
+                        global$1().user().get("chats").get(ourSecretChannelId).get(key).on( /*#__PURE__*/function () {
                           var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee31(data) {
                             var decrypted;
                             return _regeneratorRuntime().wrap(function _callee31$(_context31) {
@@ -3497,7 +3399,7 @@ var Channel = /*#__PURE__*/function () {
               return this.getMyGroupSecret();
             case 7:
               mySecret = _context35.sent;
-              global$2().user().get("chats").get(mySecretUuid).get(key).on( /*#__PURE__*/function () {
+              global$1().user().get("chats").get(mySecretUuid).get(key).on( /*#__PURE__*/function () {
                 var _ref6 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee33(data) {
                   var decrypted;
                   return _regeneratorRuntime().wrap(function _callee33$(_context34) {
@@ -3571,7 +3473,7 @@ var Channel = /*#__PURE__*/function () {
               return this.getTheirSecretChannelId(pub);
             case 4:
               theirSecretChannelId = _context38.sent;
-              global$2().user(pub).get("chats").get(theirSecretChannelId).get(key).on( /*#__PURE__*/function () {
+              global$1().user(pub).get("chats").get(theirSecretChannelId).get(key).on( /*#__PURE__*/function () {
                 var _ref7 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee36(data) {
                   var decrypted;
                   return _regeneratorRuntime().wrap(function _callee36$(_context37) {
@@ -3700,7 +3602,7 @@ var Channel = /*#__PURE__*/function () {
               return this.getTheirSecretUuid(pub);
             case 4:
               theirSecretUuid = _context42.sent;
-              global$2().user(pub).get("chats").get(theirSecretUuid).get(key).on( /*#__PURE__*/function () {
+              global$1().user(pub).get("chats").get(theirSecretUuid).get(key).on( /*#__PURE__*/function () {
                 var _ref9 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee40(data, _a, _b, e) {
                   var decrypted;
                   return _regeneratorRuntime().wrap(function _callee40$(_context41) {
@@ -3962,7 +3864,7 @@ var Channel = /*#__PURE__*/function () {
                     id: linkId
                   });
                   if (subscribe) {
-                    global$2().user(link.sharedKey.pub).get('chatRequests').map( /*#__PURE__*/function () {
+                    global$1().user(link.sharedKey.pub).get('chatRequests').map( /*#__PURE__*/function () {
                       var _ref11 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee44(encPub, requestId, a, e) {
                         var s, pub;
                         return _regeneratorRuntime().wrap(function _callee44$(_context45) {
@@ -4051,7 +3953,7 @@ var Channel = /*#__PURE__*/function () {
               linkId = linkId.slice(0, 12);
               // User has to exist, in order for .get(chatRequests).on() to be ever triggered
               _context47.next = 23;
-              return util.gunAsAnotherUser(global$2(), sharedKey, function (user) {
+              return util.gunAsAnotherUser(global$1(), sharedKey, function (user) {
                 return user.get('chatRequests').put({
                   a: 1
                 }).then();
@@ -4142,10 +4044,10 @@ var Channel = /*#__PURE__*/function () {
     var participants = this.getCurrentParticipants();
     if (participants.length) {
       var pub = participants[0];
-      global$2().user(pub).get('profile').get('name').on(function (name) {
+      global$1().user(pub).get('profile').get('name').on(function (name) {
         return nameEl.innerText = name;
       });
-      Channel.getActivity(global$2(), pub, function (status) {
+      Channel.getActivity(global$1(), pub, function (status) {
         var cls = "iris-online-indicator" + (status.isActive ? ' yes' : '');
         onlineIndicator.setAttribute('class', cls);
         var undelivered = messages.querySelectorAll('.iris-chat-message:not(.delivered)');
@@ -4223,13 +4125,13 @@ var Channel = /*#__PURE__*/function () {
   * @param {string} activity string: set the activity status every 3 seconds, null/false: stop updating
   */;
   Channel.setActivity = function setActivity(activity) {
-    if (global$2().irisActivityStatus === activity) {
+    if (global$1().irisActivityStatus === activity) {
       return;
     }
-    global$2().irisActivityStatus = activity;
-    clearTimeout(global$2().setActivityTimeout);
+    global$1().irisActivityStatus = activity;
+    clearTimeout(global$1().setActivityTimeout);
     var update = function update() {
-      global$2().user().get("activity").put({
+      global$1().user().get("activity").put({
         status: activity,
         time: new Date(Gun.state()).toISOString()
       });
@@ -4237,7 +4139,7 @@ var Channel = /*#__PURE__*/function () {
     update();
     function timerUpdate() {
       update();
-      global$2().setActivityTimeout = setTimeout(timerUpdate, 3000);
+      global$1().setActivityTimeout = setTimeout(timerUpdate, 3000);
     }
     if (activity) {
       timerUpdate();
@@ -4251,7 +4153,7 @@ var Channel = /*#__PURE__*/function () {
   */;
   Channel.getActivity = function getActivity(pubKey, callback) {
     var timeout;
-    global$2().user(pubKey).get("activity").on(function (activity) {
+    global$1().user(pubKey).get("activity").on(function (activity) {
       if (!activity || !(activity.time && activity.status)) {
         return;
       }
@@ -4302,7 +4204,7 @@ var Channel = /*#__PURE__*/function () {
               if (urlRoot === void 0) {
                 urlRoot = 'https://iris.to/';
               }
-              user = global$2().user();
+              user = global$1().user();
               key = session.getKey(); // We create a new Gun user whose private key is shared with the chat link recipients.
               // Chat link recipients can contact you by writing their public key to the shared key's user space.
               _context48.next = 5;
@@ -4332,7 +4234,7 @@ var Channel = /*#__PURE__*/function () {
               linkId = _context48.sent;
               linkId = linkId.slice(0, 12);
               // User has to exist, in order for .get(chatRequests).on() to be ever triggered
-              util.gunAsAnotherUser(global$2(), sharedKey, function (user) {
+              util.gunAsAnotherUser(global$1(), sharedKey, function (user) {
                 user.get('chatRequests').put({
                   a: 1
                 });
@@ -4377,7 +4279,7 @@ var Channel = /*#__PURE__*/function () {
                 subscribe = false;
               }
               key = session.getKey();
-              user = global$2().user();
+              user = global$1().user();
               _context51.next = 6;
               return Gun.SEA.secret(key.epub, key);
             case 6:
@@ -4423,7 +4325,7 @@ var Channel = /*#__PURE__*/function () {
                               });
                             }
                             if (subscribe) {
-                              global$2().user(sharedKey.pub).get('chatRequests').map( /*#__PURE__*/function () {
+                              global$1().user(sharedKey.pub).get('chatRequests').map( /*#__PURE__*/function () {
                                 var _ref14 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee48(encPub, requestId) {
                                   var s, pub, channel;
                                   return _regeneratorRuntime().wrap(function _callee48$(_context49) {
@@ -4452,7 +4354,7 @@ var Channel = /*#__PURE__*/function () {
                                           });
                                           channel.save();
                                         case 10:
-                                          util.gunAsAnotherUser(global$2(), sharedKey, function (user) {
+                                          util.gunAsAnotherUser(global$1(), sharedKey, function (user) {
                                             user.get('chatRequests').get(requestId).put(null);
                                           });
                                         case 11:
@@ -4496,14 +4398,14 @@ var Channel = /*#__PURE__*/function () {
   _proto.removeGroupChatLink = function removeGroupChatLink(linkId) {
     this.chatLinks[linkId] = null;
     this.put('chatLinks', this.chatLinks);
-    global$2().user().get('chatLinks').get(linkId).put(null);
+    global$1().user().get('chatLinks').get(linkId).put(null);
   }
   /**
   *
   */;
   Channel.removePrivateChatLink = function removePrivateChatLink(key, linkId) {
-    global$2().user().auth(key);
-    global$2().user().get('chatLinks').get(linkId).put(null);
+    global$1().user().auth(key);
+    global$1().user().get('chatLinks').get(linkId).put(null);
   }
   /**
   *
@@ -4517,13 +4419,13 @@ var Channel = /*#__PURE__*/function () {
         while (1) {
           switch (_context52.prev = _context52.next) {
             case 0:
-              global$2().user().auth(key);
+              global$1().user().auth(key);
               _context52.next = 3;
               return Channel.getOurSecretChannelId(pub, key);
             case 3:
               channelId = _context52.sent;
-              global$2().user().get('channels').get(channelId).put(null);
-              global$2().user().get('channels').get(channelId).off();
+              global$1().user().get('channels').get(channelId).put(null);
+              global$1().user().get('channels').get(channelId).off();
             case 6:
             case "end":
               return _context52.stop();
@@ -4559,9 +4461,9 @@ var Channel = /*#__PURE__*/function () {
               return util.getHash(mySecretHash + uuid);
             case 8:
               mySecretUuid = _context53.sent;
-              global$2().user().auth(key);
-              global$2().user().get('channels').get(mySecretUuid).put(null);
-              global$2().user().get('channels').get(mySecretUuid).off();
+              global$1().user().auth(key);
+              global$1().user().get('channels').get(mySecretUuid).put(null);
+              global$1().user().get('channels').get(mySecretUuid).off();
             case 12:
             case "end":
               return _context53.stop();
@@ -4953,7 +4855,7 @@ var addWebPushSubscriptionsToChats = /*#__PURE__*/_.debounce(function () {
 }, 5000);
 function removeSubscription(hash) {
   delete webPushSubscriptions[hash];
-  global$2().user().get('webPushSubscriptions').get(hash).put(null);
+  global$1().user().get('webPushSubscriptions').get(hash).put(null);
   addWebPushSubscriptionsToChats();
 }
 function addWebPushSubscription(_x2, _x3) {
@@ -4982,12 +4884,13 @@ function _addWebPushSubscription() {
             return util.getHash(JSON.stringify(s));
           case 10:
             hash = _context5.sent;
+            console.log('hash', hash);
             if (saveToGun) {
-              global$2().user().get('webPushSubscriptions').get(hash).put(enc);
+              global$1().user().get('webPushSubscriptions').get(hash).put(enc);
             }
             webPushSubscriptions[hash] = s;
             addWebPushSubscriptionsToChats();
-          case 14:
+          case 15:
           case "end":
             return _context5.stop();
         }
@@ -5011,7 +4914,7 @@ function _getWebPushSubscriptions() {
             return Gun.SEA.secret(myKey.epub, myKey);
           case 3:
             mySecret = _context7.sent;
-            global$2().user().get('webPushSubscriptions').map( /*#__PURE__*/function () {
+            global$1().user().get('webPushSubscriptions').map( /*#__PURE__*/function () {
               var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(enc) {
                 var s;
                 return _regeneratorRuntime().wrap(function _callee6$(_context6) {
@@ -5051,7 +4954,7 @@ function _getWebPushSubscriptions() {
 }
 function getEpub(user) {
   return new Promise(function (resolve) {
-    global$2().user(user).get('epub').on( /*#__PURE__*/function () {
+    global$1().user(user).get('epub').on( /*#__PURE__*/function () {
       var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(epub, k, x, e) {
         return _regeneratorRuntime().wrap(function _callee$(_context) {
           while (1) {
@@ -5085,7 +4988,7 @@ function _getNotificationText() {
         switch (_context8.prev = _context8.next) {
           case 0:
             _context8.next = 2;
-            return global$2().user(notification.from).get('profile').once();
+            return global$1().user(notification.from).get('profile').once();
           case 2:
             profile = _context8.sent;
             name = profile && profile.name || 'someone';
@@ -5104,15 +5007,15 @@ function _getNotificationText() {
 function subscribeToIrisNotifications(onClick) {
   var notificationsSeenTime;
   var notificationsShownTime;
-  global$2().user().get('notificationsSeenTime').on(function (v) {
+  global$1().user().get('notificationsSeenTime').on(function (v) {
     notificationsSeenTime = v;
     console.log(v);
   });
-  global$2().user().get('notificationsShownTime').on(function (v) {
+  global$1().user().get('notificationsShownTime').on(function (v) {
     return notificationsShownTime = v;
   });
   var setNotificationsShownTime = _.debounce(function () {
-    global$2().user().get('notificationsShownTime').put(new Date().toISOString());
+    global$1().user().get('notificationsShownTime').put(new Date().toISOString());
   }, 1000);
   var alreadyHave = new Set();
   group().on("notifications/" + session.getPubKey(), /*#__PURE__*/function () {
@@ -5189,7 +5092,7 @@ function subscribeToIrisNotifications(onClick) {
 function changeUnseenNotificationCount(change) {
   if (!change) {
     unseenNotificationCount = 0;
-    global$2().user().get('notificationsSeenTime').put(new Date().toISOString());
+    global$1().user().get('notificationsSeenTime').put(new Date().toISOString());
   } else {
     unseenNotificationCount += change;
     unseenNotificationCount = Math.max(unseenNotificationCount, 0);
@@ -5228,7 +5131,7 @@ function _sendIrisNotification() {
             return Gun.SEA.encrypt(notification, secret);
           case 11:
             enc = _context9.sent;
-            global$2().user().get('notifications').get(recipient).put(enc);
+            global$1().user().get('notifications').get(recipient).put(enc);
           case 13:
           case "end":
             return _context9.stop();
@@ -5629,15 +5532,6 @@ var session = {
     publicState().put({
       epub: key.epub
     });
-    publicState().get('likes').put({
-      a: null
-    }); // gun bug?
-    publicState().get('msgs').put({
-      a: null
-    }); // gun bug?
-    publicState().get('replies').put({
-      a: null
-    }); // gun bug?
     notifications.subscribeToWebPush();
     notifications.getWebPushSubscriptions();
     //notifications.subscribeToIrisNotifications();
@@ -5654,6 +5548,7 @@ var session = {
         myName = name;
       }
     });
+    // a lot of this is iris-messenger stuff
     notifications.init();
     local$1().get('loggedIn').put(true);
     local$1().get('settings').once().then(function (settings) {
@@ -6073,7 +5968,7 @@ var staticState = {
       if (typeof hash !== 'string') {
         reject('Hash must be a string');
       }
-      global$2().get('#').get(hash).on(function (v, _k, _x, e) {
+      global$1().get('#').get(hash).on(function (v, _k, _x, e) {
         if (v) {
           e.off();
           callback && callback(v);
@@ -6097,7 +5992,7 @@ var staticState = {
               return util.getHash(value);
             case 2:
               hash = _context.sent;
-              global$2().get('#').get(hash).put(value);
+              global$1().get('#').get(hash).put(value);
               return _context.abrupt("return", hash);
             case 5:
             case "end":
@@ -6897,7 +6792,7 @@ var SignedMessage = /*#__PURE__*/function () {
 /*eslint no-useless-escape: "off", camelcase: "off" */
 var index = {
   local: local$1,
-  global: global$2,
+  global: global$1,
   group: group,
   "public": publicState,
   "private": privateState,
