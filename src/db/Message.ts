@@ -27,16 +27,31 @@ export class Get implements Message {
     jsonStr?: string;
     checksum?: string;
 
-    toJsonString(): string {
-        return JSON.stringify({
-            id: this.id,
-            from: this.from,
-            nodeId: this.nodeId,
-            recipients: this.recipients,
-            childKey: this.childKey,
-            jsonStr: this.jsonStr,
-            checksum: this.checksum
-        });
+    serialize(): string {
+        if (this.jsonStr) {
+            return this.jsonStr;
+        }
+
+        const obj: any = {
+            get: {
+                "#": this.nodeId,
+            },
+            "#": this.id,
+        };
+
+        if (this.childKey) {
+            obj.get['.'] = this.childKey;
+        }
+        this.jsonStr = JSON.stringify(obj);
+        return this.jsonStr;
+    }
+
+    static deserialize(jsonStr: string, from: Actor): Get {
+        const obj = JSON.parse(jsonStr);
+        const id = obj['#'];
+        const nodeId = obj.get['#'];
+        const childKey = obj.get['.'];
+        return new Get(id, nodeId, from, undefined, childKey, jsonStr);
     }
 
     static fromObject(obj: any): Get {
@@ -69,8 +84,20 @@ export class Put implements Message {
     jsonStr?: string;
     checksum?: string;
 
-    toJsonString(): string {
-        return JSON.stringify(this);
+    serialize(): string {
+        const obj = {
+            "#" : this.id,
+            "put": {} as any
+        };
+
+        // iterate over this.updatedNodes
+        for (const [nodeId, children] of Object.entries(this.updatedNodes)) {
+            const node: any = obj.put[nodeId] = {};
+            for (const [childKey, childValue] of Object.entries(children)) {
+                node[childKey] = childValue.value;
+                node["_"][">"][childKey] = childValue.updatedAt;
+            }
+        }
     }
 
     static fromObject(obj: any): Put {

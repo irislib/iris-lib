@@ -1041,16 +1041,28 @@ var Get = /*#__PURE__*/function () {
     this.checksum = checksum;
   }
   var _proto = Get.prototype;
-  _proto.toJsonString = function toJsonString() {
-    return JSON.stringify({
-      id: this.id,
-      from: this.from,
-      nodeId: this.nodeId,
-      recipients: this.recipients,
-      childKey: this.childKey,
-      jsonStr: this.jsonStr,
-      checksum: this.checksum
-    });
+  _proto.serialize = function serialize() {
+    if (this.jsonStr) {
+      return this.jsonStr;
+    }
+    var obj = {
+      get: {
+        "#": this.nodeId
+      },
+      "#": this.id
+    };
+    if (this.childKey) {
+      obj.get['.'] = this.childKey;
+    }
+    this.jsonStr = JSON.stringify(obj);
+    return this.jsonStr;
+  };
+  Get.deserialize = function deserialize(jsonStr, from) {
+    var obj = JSON.parse(jsonStr);
+    var id = obj['#'];
+    var nodeId = obj.get['#'];
+    var childKey = obj.get['.'];
+    return new Get(id, nodeId, from, undefined, childKey, jsonStr);
   };
   Get.fromObject = function fromObject(obj) {
     return new Get(obj.id, obj.nodeId, obj.from, obj.recipients, obj.childKey, obj.jsonStr, obj.checksum);
@@ -1073,7 +1085,7 @@ var Put = /*#__PURE__*/function () {
     this.checksum = checksum;
   }
   var _proto2 = Put.prototype;
-  _proto2.toJsonString = function toJsonString() {
+  _proto2.deserialize = function deserialize() {
     return JSON.stringify(this);
   };
   Put.fromObject = function fromObject(obj) {

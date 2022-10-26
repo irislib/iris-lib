@@ -11,7 +11,8 @@ export declare class Get implements Message {
     childKey?: string;
     jsonStr?: string;
     checksum?: string;
-    toJsonString(): string;
+    serialize(): string;
+    static deserialize(jsonStr: string, from: Actor): Get;
     static fromObject(obj: any): Get;
     static new(nodeId: string, from: Actor, recipients?: string[], childKey?: string, jsonStr?: string, checksum?: string): Get;
     constructor(id: string, nodeId: string, from: Actor, recipients?: string[], childKey?: string, jsonStr?: string, checksum?: string);
@@ -25,7 +26,7 @@ export declare class Put implements Message {
     recipients?: string[];
     jsonStr?: string;
     checksum?: string;
-    toJsonString(): string;
+    deserialize(): string;
     static fromObject(obj: any): Put;
     static new(updatedNodes: object, from: Actor, inResponseTo?: string, recipients?: string[], jsonStr?: string, checksum?: string): Put;
     static newFromKv(key: string, children: object, from: Actor): Put;
