@@ -62,7 +62,6 @@
   "dependencies": {
     "dexie": "^3.2.2",
     "fuse.js": "^6.6.2",
-    "gun": "https://github.com/mmalmi/gun.git#759784f9ce96044e47a83176fa1392dea14aef2f",
-    "localforage": "^1.10.0"
+    "gun": "https://github.com/mmalmi/gun.git#759784f9ce96044e47a83176fa1392dea14aef2f"
   }
 }

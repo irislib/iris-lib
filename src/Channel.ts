@@ -221,9 +221,7 @@ class Channel {
             const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
             const encryptedChatRequest = await Gun.SEA.encrypt(session.getKey().pub, sharedSecret); // TODO encrypt is not deterministic, it uses salt
             const channelRequestId = await util.getHash(encryptedChatRequest);
-            util.gunAsAnotherUser(publicState(), sharedKey, user => {
-              user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
-            });
+            publicState(sharedKey).get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
           });
         }
       }
@@ -922,9 +920,7 @@ class Channel {
     linkId = linkId.slice(0, 12);
 
     // User has to exist, in order for .get(chatRequests).on() to be ever triggered
-    await util.gunAsAnotherUser(publicState(), sharedKey, user => {
-      return user.get('chatRequests').put({a: 1}).then();
-    });
+    publicState(sharedKey).get('chatRequests').put({a: 1});
 
     this.chatLinks[linkId] = {sharedKey, sharedSecret};
     this.put('chatLinks', this.chatLinks);
@@ -1145,9 +1141,7 @@ class Channel {
     linkId = linkId.slice(0, 12);
 
     // User has to exist, in order for .get(chatRequests).on() to be ever triggered
-    util.gunAsAnotherUser(publicState(), sharedKey, user => {
-      user.get('chatRequests').put({a: 1});
-    });
+    publicState(sharedKey).get('chatRequests').put({a: 1}).get('chatRequests').put({a: 1});
 
     user.get('chatLinks').get(linkId).put({encryptedSharedKey, ownerEncryptedSharedKey});
 
@@ -1184,9 +1178,7 @@ class Channel {
               const channel = new Channel({key, participants: pub});
               channel.save();
             }
-            util.gunAsAnotherUser(publicState(), sharedKey, user => { // remove the channel request after reading
-              user.get('chatRequests').get(requestId).put(null);
-            });
+            publicState(sharedKey).get('chatRequests').get(requestId).put(null);
           });
         }
       });

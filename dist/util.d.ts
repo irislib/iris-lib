@@ -1,9 +1,7 @@
 import 'gun/sea';
-declare function gunAsAnotherUser(gun: any, key: any, f: Function): any;
 declare function gunOnceDefined(node: any): Promise<unknown>;
 declare const _default: {
     gunOnceDefined: typeof gunOnceDefined;
-    gunAsAnotherUser: typeof gunAsAnotherUser;
     getHash(str: string, format?: string): Promise<string | undefined>;
     capitalize(s: string): string;
     generateName(): string;

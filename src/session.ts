@@ -5,7 +5,6 @@ import Channel from './Channel';
 import util from './util';
 import _ from './lodash';
 import Fuse from "fuse.js";
-import localforage from 'localforage';
 import local from './local';
 import electron from './electron';
 import user from './public';
@@ -330,11 +329,9 @@ export default {
     }
     this.clearIndexedDB();
     localStorage.clear(); // TODO clear only iris data
-    localforage.clear().then(() => {
-      window.location.hash = '';
-      window.location.href = '/';
-      location.reload();
-    });
+    window.location.hash = '';
+    window.location.href = '/';
+    location.reload();
   },
 
   clearIndexedDB() {

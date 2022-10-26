@@ -22,21 +22,6 @@ const isMobile = !isNode && (function() {
   return check;
 })();
 
-function gunAsAnotherUser(gun: any, key: any, f: Function) { // Hacky way to use multiple users with gun
-  const gun2 = new Gun({radisk: false, peers: Object.keys(gun._.opt.peers)}); // TODO: copy other options too
-  const user = gun2.user();
-  user.auth(key);
-  setTimeout(() => {
-    // @ts-ignore
-    const peers = Object.values(gun2.back('opt.peers'));
-    peers.forEach(peer => {
-      // @ts-ignore
-      gun2.on('bye', peer);
-    });
-  }, 20000);
-  return f(user);
-}
-
 function gunOnceDefined(node: any) {
   return new Promise(resolve => {
     node.on((val: any, _k: any, _a: any, eve: any) => {
@@ -1867,7 +1852,6 @@ const adjectives = [
 
 export default {
   gunOnceDefined,
-  gunAsAnotherUser,
   async getHash (str: string, format = `base64`) {
     if (!str) {
       return undefined;
