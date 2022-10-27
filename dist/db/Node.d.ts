@@ -3,6 +3,13 @@ import { Message } from './Message';
 declare type FunEventListener = {
     off: Function;
 };
+export declare type NodeData = {
+    value: any;
+    updatedAt: number;
+};
+export declare type Children = {
+    [key: string]: NodeData;
+};
 export declare type Config = {
     peerId?: string;
     allowPublicSpace: boolean;
@@ -19,7 +26,7 @@ export default class Node extends Actor {
     once_subscriptions: Map<number, Function>;
     on_subscriptions: Map<number, Function>;
     map_subscriptions: Map<number, Function>;
-    value: undefined;
+    value: NodeData | undefined;
     counter: number;
     loaded: boolean;
     config: Config;
@@ -29,6 +36,7 @@ export default class Node extends Actor {
     getCurrentUser(): any;
     setCurrentUser(key: any): void;
     handle(message: Message): void;
+    private merge;
     get(key: string): Node;
     user(pub: string | undefined): Node;
     auth(key: any): void;

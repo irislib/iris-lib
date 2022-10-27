@@ -1085,8 +1085,27 @@ var Put = /*#__PURE__*/function () {
     this.checksum = checksum;
   }
   var _proto2 = Put.prototype;
-  _proto2.deserialize = function deserialize() {
-    return JSON.stringify(this);
+  _proto2.serialize = function serialize() {
+    var obj = {
+      "#": this.id,
+      "put": {}
+    };
+    // iterate over this.updatedNodes
+    for (var _i = 0, _Object$entries = Object.entries(this.updatedNodes); _i < _Object$entries.length; _i++) {
+      var _Object$entries$_i = _Object$entries[_i],
+        nodeId = _Object$entries$_i[0],
+        children = _Object$entries$_i[1];
+      var node = obj.put[nodeId] = {};
+      for (var _i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
+        var _Object$entries2$_i = _Object$entries2[_i2],
+          childKey = _Object$entries2$_i[0],
+          childValue = _Object$entries2$_i[1];
+        var data = childValue;
+        node[childKey] = data.value;
+        node["_"][">"][childKey] = data.updatedAt;
+      }
+    }
+    return JSON.stringify(obj);
   };
   Put.fromObject = function fromObject(obj) {
     return new Put(obj.id, obj.updatedNodes, obj.from, obj.inResponseTo, obj.recipients, obj.jsonStr, obj.checksum);
@@ -1198,6 +1217,7 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
   _proto.mergeAndSave = function mergeAndSave(path, newValue) {
     var _this3 = this;
     this.get(path, function (existing) {
+      // TODO check updatedAt timestamp
       if (existing === undefined) {
         _this3.put(path, newValue);
       } else if (!_.isEqual(existing, newValue)) {
@@ -1492,15 +1512,17 @@ var Node = /*#__PURE__*/function (_Actor) {
       for (var _i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
         var _Object$entries$_i = _Object$entries[_i],
           key = _Object$entries$_i[0],
-          value = _Object$entries$_i[1];
+          children = _Object$entries$_i[1];
+        if (!children) {
+          continue;
+        }
         if (key === this.id) {
           this.loaded = true;
-          if (Array.isArray(value)) {
-            value.forEach(function (childKey) {
-              return _this2.get(childKey);
-            });
-          } else {
-            this.value = value;
+          for (var _i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
+            var _Object$entries2$_i = _Object$entries2[_i2],
+              childKey = _Object$entries2$_i[0],
+              data = _Object$entries2$_i[1];
+            this.get(childKey).merge(data);
           }
           this.parent && this.parent.handle(message);
         }
@@ -1509,6 +1531,13 @@ var Node = /*#__PURE__*/function (_Actor) {
         return _this2.doCallbacks();
       }, 100); // why is this needed?
     }
+  };
+  _proto.merge = function merge(data) {
+    console.log('merge', this.id, data, this.value);
+    if (this.value && this.value.updatedAt > data.updatedAt) {
+      return;
+    }
+    this.value = data;
   };
   _proto.get = function get(key) {
     var existing = this.children.get(key);
@@ -1552,7 +1581,10 @@ var Node = /*#__PURE__*/function (_Actor) {
       return;
     }
     this.children = new Map();
-    this.value = value;
+    this.value = {
+      value: value,
+      updatedAt: Date.now()
+    };
     this.doCallbacks();
     var updatedNodes = {};
     updatedNodes[this.id] = value;

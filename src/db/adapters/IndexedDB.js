@@ -95,6 +95,7 @@ export default class IndexedDB extends Actor {
 
     mergeAndSave(path, newValue) {
         this.get(path, existing => {
+            // TODO check updatedAt timestamp
             if (existing === undefined) {
                 this.put(path, newValue);
             } else if (!_.isEqual(existing, newValue)) {

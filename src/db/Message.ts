@@ -1,4 +1,5 @@
 import {Actor} from './Actor';
+import {Children} from "./Node";
 
 export class Message {
     // When Messages are sent over BroadcastChannel, class name is lost.
@@ -74,11 +75,15 @@ export class Get implements Message {
     }
 }
 
+type UpdatedNodes = {
+    [key: string]: Children;
+};
+
 export class Put implements Message {
     type: string = 'put';
     id: string;
     from: Actor;
-    updatedNodes: object;
+    updatedNodes: UpdatedNodes;
     inResponseTo?: string;
     recipients?: string[];
     jsonStr?: string;
@@ -94,17 +99,19 @@ export class Put implements Message {
         for (const [nodeId, children] of Object.entries(this.updatedNodes)) {
             const node: any = obj.put[nodeId] = {};
             for (const [childKey, childValue] of Object.entries(children)) {
-                node[childKey] = childValue.value;
-                node["_"][">"][childKey] = childValue.updatedAt;
+                const data = childValue;
+                node[childKey] = data.value;
+                node["_"][">"][childKey] = data.updatedAt;
             }
         }
+        return JSON.stringify(obj);
     }
 
     static fromObject(obj: any): Put {
         return new Put(obj.id, obj.updatedNodes, obj.from, obj.inResponseTo, obj.recipients, obj.jsonStr, obj.checksum);
     }
 
-    static new(updatedNodes: object, from: Actor, inResponseTo?: string, recipients?: string[], jsonStr?: string, checksum?: string): Put {
+    static new(updatedNodes: UpdatedNodes, from: Actor, inResponseTo?: string, recipients?: string[], jsonStr?: string, checksum?: string): Put {
         const id = generateMsgId();
         return new Put(id, updatedNodes, from, inResponseTo, recipients, jsonStr, checksum);
     }
@@ -115,7 +122,7 @@ export class Put implements Message {
         return Put.new(updatedNodes, from);
     }
 
-    constructor(id: string, updatedNodes: object, from: Actor, inResponseTo?: string, recipients?: string[], jsonStr?: string, checksum?: string) {
+    constructor(id: string, updatedNodes: UpdatedNodes, from: Actor, inResponseTo?: string, recipients?: string[], jsonStr?: string, checksum?: string) {
         this.id = id;
         this.from = from;
         this.updatedNodes = updatedNodes;

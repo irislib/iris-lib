@@ -10,6 +10,15 @@ type FunEventListener = {
     off: Function;
 };
 
+export type NodeData = {
+    value: any;
+    updatedAt: number;
+};
+
+export type Children = {
+    [key: string]: NodeData;
+}
+
 export type Config = {
     peerId?: string;
     allowPublicSpace: boolean;
@@ -39,7 +48,7 @@ export default class Node extends Actor {
     once_subscriptions = new Map<number, Function>();
     on_subscriptions = new Map<number, Function>();
     map_subscriptions = new Map<number, Function>();
-    value = undefined;
+    value: NodeData | undefined = undefined;
     counter = 0;
     loaded = false;
     config: Config;
@@ -76,13 +85,14 @@ export default class Node extends Actor {
 
     handle(message: Message): void {
         if (message instanceof Put) {
-            for (const [key, value] of Object.entries(message.updatedNodes)) {
+            for (const [key, children] of Object.entries(message.updatedNodes)) {
+                if (!children) {
+                    continue;
+                }
                 if (key === this.id) {
                     this.loaded = true;
-                    if (Array.isArray(value)) {
-                        value.forEach(childKey => this.get(childKey));
-                    } else {
-                        this.value = value;
+                    for (const [childKey, data] of Object.entries(children)) {
+                        this.get(childKey).merge(data);
                     }
                     this.parent && this.parent.handle(message);
                 }
@@ -90,6 +100,14 @@ export default class Node extends Actor {
             setTimeout(() => this.doCallbacks(), 100); // why is this needed?
         }
     };
+
+    private merge(data: NodeData) {
+        console.log('merge', this.id, data, this.value);
+        if (this.value && this.value.updatedAt > data.updatedAt) {
+            return;
+        }
+        this.value = data;
+    }
 
     get(key: string): Node {
         const existing = this.children.get(key);
@@ -157,7 +175,7 @@ export default class Node extends Actor {
             return;
         }
         this.children = new Map();
-        this.value = value;
+        this.value = { value, updatedAt: Date.now() };
         this.doCallbacks();
         const updatedNodes: any = {};
         updatedNodes[this.id] = value;
