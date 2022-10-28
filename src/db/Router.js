@@ -1,5 +1,6 @@
 import {Actor} from "./Actor.ts";
-import IndexedDBWorker from "./adapters/IndexedDB.js";
+import IndexedDB from "./adapters/IndexedDB.js";
+import Websocket from "./adapters/Websocket.ts";
 import { Put, Get } from "./Message.ts";
 // import * as Comlink from "comlink";
 
@@ -24,7 +25,17 @@ export default class Router extends Actor {
 
     constructor(config = {}) {
         super('router');
-        this.storageAdapters.add(new IndexedDBWorker(config));
+        // default random id
+        this.peerId = config.peerId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        this.storageAdapters.add(new IndexedDB(config));
+        console.log('config', config);
+        if (config.peers) {
+            for (const peer of config.peers) {
+                if (peer) {
+                    this.serverPeers.add(new Websocket(peer, this));
+                }
+            }
+        }
     }
 
     handle(message) {
@@ -50,6 +61,10 @@ export default class Router extends Actor {
                 storageAdapter.postMessage(put);
             }
 
+            for (const peer of this.serverPeers) {
+                peer.postMessage(put);
+            }
+
             if (subscribers) {
                 for (const [k, v] of subscribers) {
                     if (k !== put.from) {
@@ -64,6 +79,9 @@ export default class Router extends Actor {
         const topic = get.nodeId.split('/')[1];
         for (const storageAdapter of this.storageAdapters) {
             storageAdapter.postMessage(get);
+        }
+        for (const peer of this.serverPeers) {
+            peer.postMessage(get);
         }
         if (!this.subscribersByTopic.has(topic)) {
             this.subscribersByTopic.set(topic, new Map());

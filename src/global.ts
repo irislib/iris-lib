@@ -5,11 +5,14 @@ let globalState: any;
 
 export default function(opts: any = {}) {
   if (!globalState) {
-    const myOpts = Object.assign({ peers: (opts.peers || peers.random()), localStorage: false, retry:Infinity }, opts);
+    peers.init();
+    const webSocketPeers = (opts.peers || peers.random());
+    console.log('webSocketPeers', webSocketPeers);
+    const myOpts = Object.assign({ webSocketPeers, localStorage: false, retry:Infinity }, opts);
     if (opts.peers) {
+      console.log('adding peers', opts.peers);
       opts.peers.forEach((url: string) => peers.add({url}));
     }
-    peers.init();
     globalState = new Node('global', myOpts);
   }
   return globalState;

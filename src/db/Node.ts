@@ -1,6 +1,6 @@
 import _ from '../lodash';
 import {Actor}  from './Actor';
-import {Message, Put, Get} from './Message';
+import {Message, Put, Get, UpdatedNodes} from './Message';
 
 // @ts-ignore
 import Router from './Router';
@@ -48,7 +48,7 @@ export default class Node extends Actor {
     once_subscriptions = new Map<number, Function>();
     on_subscriptions = new Map<number, Function>();
     map_subscriptions = new Map<number, Function>();
-    value: NodeData | undefined = undefined;
+    data: NodeData | undefined = undefined;
     counter = 0;
     loaded = false;
     config: Config;
@@ -65,7 +65,7 @@ export default class Node extends Actor {
         } else {
             this.root = this;
             //@ts-ignore
-            this.router = new Router({dbName: this.id + '-idb'});
+            this.router = new Router({dbName: this.id + '-idb', peers: this.config.webSocketPeers});
             //console.log('idbWorker', idbWorker);
             //const router = Comlink.wrap(routerWorker);
         }
@@ -102,11 +102,10 @@ export default class Node extends Actor {
     };
 
     private merge(data: NodeData) {
-        console.log('merge', this.id, data, this.value);
-        if (this.value && this.value.updatedAt > data.updatedAt) {
+        if (this.data && this.data.updatedAt > data.updatedAt) {
             return;
         }
-        this.value = data;
+        this.data = data;
     }
 
     get(key: string): Node {
@@ -157,7 +156,7 @@ export default class Node extends Actor {
     }, 40);
 
     put(value: any): void {
-        if (this.value === value) {
+        if (this.data === value) {
             return; // TODO: when timestamps are added, this should be changed
         }
         if (Array.isArray(value)) {
@@ -167,7 +166,7 @@ export default class Node extends Actor {
             throw new Error('put() does not support functions');
         }
         if (typeof value === 'object' && value !== null) {
-            this.value = undefined;
+            this.data = undefined;
             // TODO: update the whole path of parent nodes
             for (const key in value) {
                 this.get(key).put(value[key]);
@@ -175,30 +174,21 @@ export default class Node extends Actor {
             return;
         }
         this.children = new Map();
-        this.value = { value, updatedAt: Date.now() };
+        this.data = { value, updatedAt: Date.now() };
         this.doCallbacks();
-        const updatedNodes: any = {};
-        updatedNodes[this.id] = value;
+        const updatedNodes: UpdatedNodes = {};
         this.addParentNodes(updatedNodes);
         this.router.postMessage(Put.new(updatedNodes, this));
     }
 
-    private addParentNodes(updatedNodes: any) {
+    private addParentNodes(updatedNodes: UpdatedNodes) {
         if (this.parent) {
-            this.parent.value = undefined;
+            this.parent.data = undefined;
             const children: any = {};
-            for (const [key, child] of this.parent.children) {
-                if (!(key && key.indexOf)) {
-                    this.parent.children.delete(key);
-                    continue;
-                }
-                if (child.children.size > 0) {
-                    children[key] = Array.from(child.children.keys());
-                } else if (child.value !== undefined) {
-                    children[key] = child.value;
-                }
-            }
-            updatedNodes[this.parent.id] = children;
+            children[this.id.split('/').pop() as string] = this.data;
+            // remove the part before first / from id
+            const parentId = this.parent.id.split('/').slice(1).join('/');
+            updatedNodes[parentId] = children;
             this.parent.addParentNodes(updatedNodes);
         }
     }
@@ -206,7 +196,9 @@ export default class Node extends Actor {
     async once(callback?: Function | null, event?: FunEventListener, returnIfUndefined = true): Promise<any> {
         let result: any;
         if (!this.loaded) {
-            this.router.postMessage(Get.new(this.id, this));
+            let id = this.id.split('/').slice(1).join('/');
+            id = id.replace(/^users\//, '~');
+            this.router.postMessage(Get.new(id, this));
         }
         if (this.children.size) {
             // return an object containing all children
@@ -214,8 +206,8 @@ export default class Node extends Actor {
             await Promise.all(Array.from(this.children.keys()).map(async key => {
                 result[key] = await this.get(key).once(null, event);
             }));
-        } else if (this.value !== undefined) {
-            result = this.value;
+        } else if (this.data !== undefined) {
+            result = this.data && this.data.value;
         } else if (returnIfUndefined) {
             const id = this.counter++;
             callback && this.once_subscriptions.set(id, callback);

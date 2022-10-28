@@ -26,7 +26,7 @@ export default class Node extends Actor {
     once_subscriptions: Map<number, Function>;
     on_subscriptions: Map<number, Function>;
     map_subscriptions: Map<number, Function>;
-    value: NodeData | undefined;
+    data: NodeData | undefined;
     counter: number;
     loaded: boolean;
     config: Config;

@@ -19,8 +19,8 @@ type Peers = {
 }
 
 const DEFAULT_PEERS: Peers = {
-  'https://gun-rs.iris.to/gun': {},
-  'https://gun-us.herokuapp.com/gun': {},
+  'wss://gun-rs.iris.to/gun': {},
+  'wss://gun-us.herokuapp.com/gun': {},
 };
 
 const loc = window.location;
@@ -139,6 +139,7 @@ export default {
         })
       ), sampleSize
     );
+    console.log('random sample', sample, 'from', this.known);
     if (sample && connectToLocalElectron) {
       sample.push(ELECTRON_GUN_URL);
     }

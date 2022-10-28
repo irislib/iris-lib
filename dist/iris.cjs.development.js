@@ -832,8 +832,8 @@ var util = {
 var ELECTRON_GUN_URL = 'http://localhost:8767/gun';
 var maxConnectedPeers = 2;
 var DEFAULT_PEERS = {
-  'https://gun-rs.iris.to/gun': {},
-  'https://gun-us.herokuapp.com/gun': {}
+  'wss://gun-rs.iris.to/gun': {},
+  'wss://gun-us.herokuapp.com/gun': {}
 };
 var loc = window.location;
 var host = loc.host;
@@ -984,6 +984,7 @@ var peers = {
     var sample = _.sampleSize(Object.keys(_.pickBy(this.known, function (peer, url) {
       return !_this2.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
     })), sampleSize);
+    console.log('random sample', sample, 'from', this.known);
     if (sample && connectToLocalElectron) {
       sample.push(ELECTRON_GUN_URL);
     }
@@ -1032,6 +1033,36 @@ var Actor = /*#__PURE__*/function () {
   return Actor;
 }();
 
+var Message = /*#__PURE__*/function () {
+  function Message() {}
+  // When Messages are sent over BroadcastChannel, class name is lost.
+  Message.fromObject = function fromObject(obj) {
+    if (obj.type === 'get') {
+      return Get.fromObject(obj);
+    } else if (obj.type === 'put') {
+      return Put.fromObject(obj);
+    } else {
+      throw new Error('not implemented');
+    }
+  };
+  Message.deserialize = function deserialize(str, from) {
+    var obj = JSON.parse(str);
+    if (obj.get) {
+      return Get.deserialize(obj, str, from);
+    } else if (obj.put) {
+      return Put.deserialize(obj, str, from);
+    } else if (obj.dam && obj.dam === "hi") {
+      return Hi.deserialize(obj);
+    } else {
+      throw new Error('unknown message type');
+    }
+  };
+  var _proto = Message.prototype;
+  _proto.serialize = function serialize() {
+    throw new Error('not implemented');
+  };
+  return Message;
+}();
 function generateMsgId() {
   return Math.random().toString(36).slice(2, 10);
 }
@@ -1046,8 +1077,8 @@ var Get = /*#__PURE__*/function () {
     this.jsonStr = jsonStr;
     this.checksum = checksum;
   }
-  var _proto = Get.prototype;
-  _proto.serialize = function serialize() {
+  var _proto2 = Get.prototype;
+  _proto2.serialize = function serialize() {
     if (this.jsonStr) {
       return this.jsonStr;
     }
@@ -1063,8 +1094,7 @@ var Get = /*#__PURE__*/function () {
     this.jsonStr = JSON.stringify(obj);
     return this.jsonStr;
   };
-  Get.deserialize = function deserialize(jsonStr, from) {
-    var obj = JSON.parse(jsonStr);
+  Get.deserialize = function deserialize(obj, jsonStr, from) {
     var id = obj['#'];
     var nodeId = obj.get['#'];
     var childKey = obj.get['.'];
@@ -1090,8 +1120,8 @@ var Put = /*#__PURE__*/function () {
     this.jsonStr = jsonStr;
     this.checksum = checksum;
   }
-  var _proto2 = Put.prototype;
-  _proto2.serialize = function serialize() {
+  var _proto3 = Put.prototype;
+  _proto3.serialize = function serialize() {
     var obj = {
       "#": this.id,
       "put": {}
@@ -1106,12 +1136,22 @@ var Put = /*#__PURE__*/function () {
         var _Object$entries2$_i = _Object$entries2[_i2],
           childKey = _Object$entries2$_i[0],
           childValue = _Object$entries2$_i[1];
+        if (!childValue) {
+          continue;
+        }
         var data = childValue;
         node[childKey] = data.value;
+        node["_"] = node["_"] || {};
+        node["_"][">"] = node["_"][">"] || {};
         node["_"][">"][childKey] = data.updatedAt;
       }
     }
     return JSON.stringify(obj);
+  };
+  Put.deserialize = function deserialize(obj, jsonStr, from) {
+    var id = obj['#'];
+    var updatedNodes = obj.put;
+    return new Put(id, updatedNodes, from, undefined, undefined, jsonStr);
   };
   Put.fromObject = function fromObject(obj) {
     return new Put(obj.id, obj.updatedNodes, obj.from, obj.inResponseTo, obj.recipients, obj.jsonStr, obj.checksum);
@@ -1126,6 +1166,31 @@ var Put = /*#__PURE__*/function () {
     return Put["new"](updatedNodes, from);
   };
   return Put;
+}();
+var Hi = /*#__PURE__*/function () {
+  function Hi(peerId, jsonStr) {
+    this.type = 'hi';
+    this.peerId = peerId;
+    this.jsonStr = jsonStr;
+  }
+  //{"#":"aHHO9Srurq9nh6Q9","dam":"hi"}
+  var _proto4 = Hi.prototype;
+  _proto4.serialize = function serialize() {
+    if (this.jsonStr) {
+      return this.jsonStr;
+    }
+    var obj = {
+      dam: "hi",
+      "#": this.peerId
+    };
+    this.jsonStr = JSON.stringify(obj);
+    return this.jsonStr;
+  };
+  Hi.deserialize = function deserialize(obj) {
+    var peerId = obj['#'];
+    return new Hi(peerId);
+  };
+  return Hi;
 }();
 
 // import * as Comlink from "comlink";
@@ -1311,6 +1376,50 @@ global.onconnect = function () {
 
 // self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
 
+var Websocket = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(Websocket, _Actor);
+  function Websocket(url, router) {
+    var _this;
+    _this = _Actor.call(this, 'websocket:' + url) || this;
+    _this.sendQueue = [];
+    console.log('Websocket', url);
+    _this.router = router;
+    _this.ws = new WebSocket(url);
+    _this.ws.onopen = function () {
+      _this.ws.send(new Hi(_this.router.peerId).serialize());
+      console.log("Connected to " + url);
+      _this.sendQueue.forEach(function (message) {
+        return _this.ws.send(message);
+      });
+      _this.sendQueue = [];
+    };
+    _this.ws.onmessage = function (event) {
+      try {
+        var message = Message.deserialize(event.data, _assertThisInitialized(_this));
+        _this.router.postMessage(message);
+      } catch (e) {
+        console.log('Failed to deserialize message', event.data, e);
+      }
+    };
+    _this.ws.onclose = function () {
+      console.log("Disconnected from " + url);
+    };
+    _this.ws.onerror = function () {
+      console.log("Error on " + url);
+    };
+    return _this;
+  }
+  var _proto = Websocket.prototype;
+  _proto.handle = function handle(message) {
+    if (this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(message.serialize());
+    } else if (this.ws.readyState === WebSocket.CONNECTING) {
+      this.sendQueue.push(message.serialize());
+    }
+  };
+  return Websocket;
+}(Actor);
+
 // import * as Comlink from "comlink";
 
 /*
@@ -1330,6 +1439,7 @@ var Router = /*#__PURE__*/function (_Actor) {
       config = {};
     }
     _this = _Actor.call(this, 'router') || this;
+    // default random id
     _this.storageAdapters = new Set();
     _this.networkAdapters = new Set();
     _this.serverPeers = new Set();
@@ -1337,7 +1447,17 @@ var Router = /*#__PURE__*/function (_Actor) {
     _this.seenGetMessages = new Map();
     _this.subscribersByTopic = new Map();
     _this.msgCounter = 0;
+    _this.peerId = config.peerId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     _this.storageAdapters.add(new IndexedDB(config));
+    console.log('config', config);
+    if (config.peers) {
+      for (var _iterator = _createForOfIteratorHelperLoose(config.peers), _step; !(_step = _iterator()).done;) {
+        var peer = _step.value;
+        if (peer) {
+          _this.serverPeers.add(new Websocket(peer, _assertThisInitialized(_this)));
+        }
+      }
+    }
     return _this;
   }
   var _proto = Router.prototype;
@@ -1360,15 +1480,19 @@ var Router = /*#__PURE__*/function (_Actor) {
       var subscribers = _this2.subscribersByTopic.get(topic);
       // send to storage adapters
       //console.log('put subscribers', subscribers);
-      for (var _iterator = _createForOfIteratorHelperLoose(_this2.storageAdapters), _step; !(_step = _iterator()).done;) {
-        var storageAdapter = _step.value;
+      for (var _iterator2 = _createForOfIteratorHelperLoose(_this2.storageAdapters), _step2; !(_step2 = _iterator2()).done;) {
+        var storageAdapter = _step2.value;
         storageAdapter.postMessage(put);
       }
+      for (var _iterator3 = _createForOfIteratorHelperLoose(_this2.serverPeers), _step3; !(_step3 = _iterator3()).done;) {
+        var peer = _step3.value;
+        peer.postMessage(put);
+      }
       if (subscribers) {
-        for (var _iterator2 = _createForOfIteratorHelperLoose(subscribers), _step2; !(_step2 = _iterator2()).done;) {
-          var _step2$value = _step2.value,
-            k = _step2$value[0],
-            v = _step2$value[1];
+        for (var _iterator4 = _createForOfIteratorHelperLoose(subscribers), _step4; !(_step4 = _iterator4()).done;) {
+          var _step4$value = _step4.value,
+            k = _step4$value[0],
+            v = _step4$value[1];
           if (k !== put.from) {
             v.postMessage(put);
           }
@@ -1378,18 +1502,22 @@ var Router = /*#__PURE__*/function (_Actor) {
   };
   _proto.handleGet = function handleGet(get) {
     var topic = get.nodeId.split('/')[1];
-    for (var _iterator3 = _createForOfIteratorHelperLoose(this.storageAdapters), _step3; !(_step3 = _iterator3()).done;) {
-      var storageAdapter = _step3.value;
+    for (var _iterator5 = _createForOfIteratorHelperLoose(this.storageAdapters), _step5; !(_step5 = _iterator5()).done;) {
+      var storageAdapter = _step5.value;
       storageAdapter.postMessage(get);
+    }
+    for (var _iterator6 = _createForOfIteratorHelperLoose(this.serverPeers), _step6; !(_step6 = _iterator6()).done;) {
+      var peer = _step6.value;
+      peer.postMessage(get);
     }
     if (!this.subscribersByTopic.has(topic)) {
       this.subscribersByTopic.set(topic, new Map());
     }
     var subscribers = this.subscribersByTopic.get(topic);
-    for (var _iterator4 = _createForOfIteratorHelperLoose(subscribers), _step4; !(_step4 = _iterator4()).done;) {
-      var _step4$value = _step4.value,
-        k = _step4$value[0],
-        v = _step4$value[1];
+    for (var _iterator7 = _createForOfIteratorHelperLoose(subscribers), _step7; !(_step7 = _iterator7()).done;) {
+      var _step7$value = _step7.value,
+        k = _step7$value[0],
+        v = _step7$value[1];
       // TODO: sample
       if (k !== get.from.id) {
         v.postMessage(get);
@@ -1427,7 +1555,7 @@ var Node = /*#__PURE__*/function (_Actor) {
     _this.once_subscriptions = new Map();
     _this.on_subscriptions = new Map();
     _this.map_subscriptions = new Map();
-    _this.value = undefined;
+    _this.data = undefined;
     _this.counter = 0;
     _this.loaded = false;
     _this.doCallbacks = _.throttle(function () {
@@ -1494,7 +1622,8 @@ var Node = /*#__PURE__*/function (_Actor) {
       _this.root = _assertThisInitialized(_this);
       //@ts-ignore
       _this.router = new Router({
-        dbName: _this.id + '-idb'
+        dbName: _this.id + '-idb',
+        peers: _this.config.webSocketPeers
       });
       //console.log('idbWorker', idbWorker);
       //const router = Comlink.wrap(routerWorker);
@@ -1539,11 +1668,10 @@ var Node = /*#__PURE__*/function (_Actor) {
     }
   };
   _proto.merge = function merge(data) {
-    console.log('merge', this.id, data, this.value);
-    if (this.value && this.value.updatedAt > data.updatedAt) {
+    if (this.data && this.data.updatedAt > data.updatedAt) {
       return;
     }
-    this.value = data;
+    this.data = data;
   };
   _proto.get = function get(key) {
     var existing = this.children.get(key);
@@ -1568,7 +1696,7 @@ var Node = /*#__PURE__*/function (_Actor) {
     return;
   };
   _proto.put = function put(value) {
-    if (this.value === value) {
+    if (this.data === value) {
       return; // TODO: when timestamps are added, this should be changed
     }
 
@@ -1579,7 +1707,7 @@ var Node = /*#__PURE__*/function (_Actor) {
       throw new Error('put() does not support functions');
     }
     if (typeof value === 'object' && value !== null) {
-      this.value = undefined;
+      this.data = undefined;
       // TODO: update the whole path of parent nodes
       for (var key in value) {
         this.get(key).put(value[key]);
@@ -1587,42 +1715,30 @@ var Node = /*#__PURE__*/function (_Actor) {
       return;
     }
     this.children = new Map();
-    this.value = {
+    this.data = {
       value: value,
       updatedAt: Date.now()
     };
     this.doCallbacks();
     var updatedNodes = {};
-    updatedNodes[this.id] = value;
     this.addParentNodes(updatedNodes);
     this.router.postMessage(Put["new"](updatedNodes, this));
   };
   _proto.addParentNodes = function addParentNodes(updatedNodes) {
     if (this.parent) {
-      this.parent.value = undefined;
+      this.parent.data = undefined;
       var children = {};
-      for (var _iterator5 = _createForOfIteratorHelperLoose(this.parent.children), _step5; !(_step5 = _iterator5()).done;) {
-        var _step5$value = _step5.value,
-          key = _step5$value[0],
-          child = _step5$value[1];
-        if (!(key && key.indexOf)) {
-          this.parent.children["delete"](key);
-          continue;
-        }
-        if (child.children.size > 0) {
-          children[key] = Array.from(child.children.keys());
-        } else if (child.value !== undefined) {
-          children[key] = child.value;
-        }
-      }
-      updatedNodes[this.parent.id] = children;
+      children[this.id.split('/').pop()] = this.data;
+      // remove the part before first / from id
+      var parentId = this.parent.id.split('/').slice(1).join('/');
+      updatedNodes[parentId] = children;
       this.parent.addParentNodes(updatedNodes);
     }
   };
   _proto.once = /*#__PURE__*/function () {
     var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(callback, event, returnIfUndefined) {
       var _this3 = this;
-      var result, id;
+      var result, id, _id2;
       return _regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
@@ -1631,7 +1747,9 @@ var Node = /*#__PURE__*/function (_Actor) {
                 returnIfUndefined = true;
               }
               if (!this.loaded) {
-                this.router.postMessage(Get["new"](this.id, this));
+                id = this.id.split('/').slice(1).join('/');
+                id = id.replace(/^users\//, '~');
+                this.router.postMessage(Get["new"](id, this));
               }
               if (!this.children.size) {
                 _context2.next = 8;
@@ -1665,11 +1783,11 @@ var Node = /*#__PURE__*/function (_Actor) {
               _context2.next = 9;
               break;
             case 8:
-              if (this.value !== undefined) {
-                result = this.value;
+              if (this.data !== undefined) {
+                result = this.data && this.data.value;
               } else if (returnIfUndefined) {
-                id = this.counter++;
-                callback && this.once_subscriptions.set(id, callback);
+                _id2 = this.counter++;
+                callback && this.once_subscriptions.set(_id2, callback);
               }
             case 9:
               if (!(result !== undefined || returnIfUndefined)) {
@@ -1710,8 +1828,8 @@ var Node = /*#__PURE__*/function (_Actor) {
         return _this5.map_subscriptions["delete"](id);
       }
     };
-    for (var _iterator6 = _createForOfIteratorHelperLoose(this.children.values()), _step6; !(_step6 = _iterator6()).done;) {
-      var child = _step6.value;
+    for (var _iterator5 = _createForOfIteratorHelperLoose(this.children.values()), _step5; !(_step5 = _iterator5()).done;) {
+      var child = _step5.value;
       child.once(callback, event, false);
     }
   };
@@ -1724,19 +1842,22 @@ function global$1 (opts) {
     opts = {};
   }
   if (!globalState) {
+    peers.init();
+    var webSocketPeers = opts.peers || peers.random();
+    console.log('webSocketPeers', webSocketPeers);
     var myOpts = Object.assign({
-      peers: opts.peers || peers.random(),
+      webSocketPeers: webSocketPeers,
       localStorage: false,
       retry: Infinity
     }, opts);
     if (opts.peers) {
+      console.log('adding peers', opts.peers);
       opts.peers.forEach(function (url) {
         return peers.add({
           url: url
         });
       });
     }
-    peers.init();
     globalState = new Node('global', myOpts);
   }
   return globalState;

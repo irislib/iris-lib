@@ -12,6 +12,23 @@ export class Message {
             throw new Error('not implemented');
         }
     }
+
+    static deserialize(str: string, from: Actor): Message {
+        const obj = JSON.parse(str);
+        if (obj.get) {
+            return Get.deserialize(obj, str, from);
+        } else if (obj.put) {
+            return Put.deserialize(obj, str, from);
+        } else if (obj.dam && obj.dam === "hi") {
+            return Hi.deserialize(obj);
+        } else {
+            throw new Error('unknown message type');
+        }
+    }
+
+    serialize(): string {
+        throw new Error('not implemented');
+    }
 }
 
 function generateMsgId(): string {
@@ -47,8 +64,7 @@ export class Get implements Message {
         return this.jsonStr;
     }
 
-    static deserialize(jsonStr: string, from: Actor): Get {
-        const obj = JSON.parse(jsonStr);
+    static deserialize(obj: any, jsonStr: string, from: Actor): Get {
         const id = obj['#'];
         const nodeId = obj.get['#'];
         const childKey = obj.get['.'];
@@ -75,7 +91,7 @@ export class Get implements Message {
     }
 }
 
-type UpdatedNodes = {
+export type UpdatedNodes = {
     [key: string]: Children;
 };
 
@@ -99,12 +115,23 @@ export class Put implements Message {
         for (const [nodeId, children] of Object.entries(this.updatedNodes)) {
             const node: any = obj.put[nodeId] = {};
             for (const [childKey, childValue] of Object.entries(children)) {
+                if (!childValue) {
+                    continue;
+                }
                 const data = childValue;
                 node[childKey] = data.value;
+                node["_"] = node["_"] || {};
+                node["_"][">"] = node["_"][">"] || {};
                 node["_"][">"][childKey] = data.updatedAt;
             }
         }
         return JSON.stringify(obj);
+    }
+
+    static deserialize(obj: any, jsonStr: string, from: Actor): Put {
+        const id = obj['#'];
+        const updatedNodes = obj.put;
+        return new Put(id, updatedNodes, from, undefined, undefined, jsonStr);
     }
 
     static fromObject(obj: any): Put {
@@ -130,6 +157,39 @@ export class Put implements Message {
         this.recipients = recipients;
         this.jsonStr = jsonStr;
         this.checksum = checksum;
+    }
+}
+
+export class Hi implements Message {
+    type: string = 'hi';
+    peerId: string;
+    jsonStr?: string;
+
+    //{"#":"aHHO9Srurq9nh6Q9","dam":"hi"}
+
+
+    serialize(): string {
+        if (this.jsonStr) {
+            return this.jsonStr;
+        }
+
+        const obj: any = {
+            dam: "hi",
+            "#": this.peerId,
+        };
+
+        this.jsonStr = JSON.stringify(obj);
+        return this.jsonStr;
+    }
+
+    static deserialize(obj: any): Hi {
+        const peerId = obj['#'];
+        return new Hi(peerId);
+    }
+
+    constructor(peerId: string, jsonStr?: string) {
+        this.peerId = peerId;
+        this.jsonStr = jsonStr;
     }
 }
 
