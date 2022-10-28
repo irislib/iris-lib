@@ -221,9 +221,7 @@ class Channel {
             const sharedKey = await Gun.SEA.decrypt(encrypted, sharedSecret);
             const encryptedChatRequest = await Gun.SEA.encrypt(session.getKey().pub, sharedSecret); // TODO encrypt is not deterministic, it uses salt
             const channelRequestId = await util.getHash(encryptedChatRequest);
-            util.gunAsAnotherUser(publicState(), sharedKey, user => {
-              user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
-            });
+            publicState(sharedKey).get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
           });
         }
       }
@@ -401,7 +399,7 @@ class Channel {
       }
     };
 
-    publicState().user().get(`chats`).map().on(handleChannel);
+    publicState().user().get(`chats`).map(handleChannel);
   }
 
   getMyGroupSecret() { // group secret could be deterministic: hash(encryptToSelf(uuid + iterator))
@@ -896,7 +894,7 @@ class Channel {
         const url = Channel.formatChatLink({urlRoot, inviter: from, channelId: this.uuid, sharedSecret: link.sharedSecret, linkId});
         callback && callback({url, id: linkId});
         if (subscribe) {
-          publicState().user(link.sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId, a, e) => {
+          publicState().user(link.sharedKey.pub).get('chatRequests').map(async (encPub, requestId, a, e) => {
             if (!encPub || typeof encPub !== 'string' || encPub.length < 10) { return; }
             chatLinkSubscriptions[linkId] = e;
             const s = JSON.stringify(encPub);
@@ -922,9 +920,7 @@ class Channel {
     linkId = linkId.slice(0, 12);
 
     // User has to exist, in order for .get(chatRequests).on() to be ever triggered
-    await util.gunAsAnotherUser(publicState(), sharedKey, user => {
-      return user.get('chatRequests').put({a: 1}).then();
-    });
+    publicState(sharedKey).get('chatRequests').put({a: 1});
 
     this.chatLinks[linkId] = {sharedKey, sharedSecret};
     this.put('chatLinks', this.chatLinks);
@@ -1054,7 +1050,7 @@ class Channel {
     });
 
     textArea.addEventListener('keyup', event => {
-      Channel.setActivity(publicState(), true); // TODO
+      //Channel.setActivity(publicState(), true); // TODO
       this.setMyMsgsLastSeenTime(); // TODO
       if (event.keyCode === 13) {
         event.preventDefault();
@@ -1145,9 +1141,7 @@ class Channel {
     linkId = linkId.slice(0, 12);
 
     // User has to exist, in order for .get(chatRequests).on() to be ever triggered
-    util.gunAsAnotherUser(publicState(), sharedKey, user => {
-      user.get('chatRequests').put({a: 1});
-    });
+    publicState(sharedKey).get('chatRequests').put({a: 1}).get('chatRequests').put({a: 1});
 
     user.get('chatLinks').get(linkId).put({encryptedSharedKey, ownerEncryptedSharedKey});
 
@@ -1162,7 +1156,7 @@ class Channel {
     const user = publicState().user();
     const mySecret = await Gun.SEA.secret(key.epub, key);
     const chatLinks = [];
-    user.get('chatLinks').map().on((data, linkId) => {
+    user.get('chatLinks').map((data, linkId) => {
       if (!data || chatLinks.indexOf(linkId) !== -1) { return; }
       const channels = [];
       user.get('chatLinks').get(linkId).get('ownerEncryptedSharedKey').on(async enc => {
@@ -1175,7 +1169,7 @@ class Channel {
           callback({url, id: linkId});
         }
         if (subscribe) {
-          publicState().user(sharedKey.pub).get('chatRequests').map().on(async (encPub, requestId) => {
+          publicState().user(sharedKey.pub).get('chatRequests').map(async (encPub, requestId) => {
             if (!encPub) { return; }
             const s = JSON.stringify(encPub);
             if (channels.indexOf(s) === -1) {
@@ -1184,9 +1178,7 @@ class Channel {
               const channel = new Channel({key, participants: pub});
               channel.save();
             }
-            util.gunAsAnotherUser(publicState(), sharedKey, user => { // remove the channel request after reading
-              user.get('chatRequests').get(requestId).put(null);
-            });
+            publicState(sharedKey).get('chatRequests').get(requestId).put(null);
           });
         }
       });

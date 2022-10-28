@@ -138,6 +138,7 @@ async function addWebPushSubscription(s, saveToGun = true) {
   const mySecret = await Gun.SEA.secret(myKey.epub, myKey);
   const enc = await Gun.SEA.encrypt(s, mySecret);
   const hash = await util.getHash(JSON.stringify(s));
+  console.log('hash', hash);
   if (saveToGun) {
     publicState().user().get('webPushSubscriptions').get(hash).put(enc);
   }
@@ -148,7 +149,7 @@ async function addWebPushSubscription(s, saveToGun = true) {
 async function getWebPushSubscriptions() {
   const myKey = session.getKey();
   const mySecret = await Gun.SEA.secret(myKey.epub, myKey);
-  publicState().user().get('webPushSubscriptions').map().on(async enc => {
+  publicState().user().get('webPushSubscriptions').map(async enc => {
     if (!enc) { return; }
     const s = await Gun.SEA.decrypt(enc, mySecret);
     addWebPushSubscription(s, false);

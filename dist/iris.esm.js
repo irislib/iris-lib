@@ -1,11 +1,6 @@
 import Gun from 'gun';
 import 'gun/sea';
-import 'gun/lib/yson';
-import 'gun/lib/radix';
-import 'gun/lib/radisk';
-import 'gun/lib/store';
-import 'gun/lib/rindexed';
-import localForage from 'localforage';
+import Dexie from 'dexie';
 import Fuse from 'fuse.js';
 
 function _regeneratorRuntime() {
@@ -402,6 +397,12 @@ function _wrapNativeSuper(Class) {
   };
   return _wrapNativeSuper(Class);
 }
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+  return self;
+}
 function _unsupportedIterableToArray(o, minLen) {
   if (!o) return;
   if (typeof o === "string") return _arrayLikeToArray(o, minLen);
@@ -516,6 +517,31 @@ var _ = {
       }
     });
     return newObj;
+  },
+  isEqual: function isEqual(a, b) {
+    if (a === b) {
+      return true;
+    }
+    if (a instanceof Date && b instanceof Date) {
+      return a.getTime() === b.getTime();
+    }
+    if (!a || !b || typeof a !== 'object' && typeof b !== 'object') {
+      return a !== a && b !== b;
+    }
+    if (a.prototype !== b.prototype) {
+      return false;
+    }
+    var keys = Object.keys(a);
+    if (keys.length !== Object.keys(b).length) {
+      return false;
+    }
+    return keys.every(function (k) {
+      return _.isEqual(a[k], b[k]);
+    });
+  },
+  uniq: function uniq(arr) {
+    var set = new Set(arr);
+    return Array.from(set);
   }
 };
 
@@ -537,23 +563,6 @@ var isMobile = !isNode && /*#__PURE__*/function () {
   })(navigator.userAgent || navigator.vendor || '');
   return check;
 }();
-function gunAsAnotherUser(gun, key, f) {
-  var gun2 = new Gun({
-    radisk: false,
-    peers: Object.keys(gun._.opt.peers)
-  }); // TODO: copy other options too
-  var user = gun2.user();
-  user.auth(key);
-  setTimeout(function () {
-    // @ts-ignore
-    var peers = Object.values(gun2.back('opt.peers'));
-    peers.forEach(function (peer) {
-      // @ts-ignore
-      gun2.on('bye', peer);
-    });
-  }, 20000);
-  return f(user);
-}
 function gunOnceDefined(node) {
   return new Promise(function (resolve) {
     node.on(function (val, _k, _a, eve) {
@@ -568,7 +577,6 @@ var animals = ['canidae', 'felidae', 'cat', 'cattle', 'dog', 'donkey', 'goat', '
 var adjectives = ['average', 'big', 'colossal', 'fat', 'giant', 'gigantic', 'great', 'huge', 'immense', 'large', 'little', 'long', 'mammoth', 'massive', 'miniature', 'petite', 'puny', 'short', 'small', 'tall', 'tiny', 'boiling', 'breezy', 'broken', 'bumpy', 'chilly', 'cold', 'cool', 'creepy', 'crooked', 'cuddly', 'curly', 'damaged', 'damp', 'dirty', 'dry', 'dusty', 'filthy', 'flaky', 'fluffy', 'wet', 'broad', 'chubby', 'crooked', 'curved', 'deep', 'flat', 'high', 'hollow', 'low', 'narrow', 'round', 'shallow', 'skinny', 'square', 'steep', 'straight', 'wide', 'ancient', 'brief', 'early', 'fast', 'late', 'long', 'modern', 'old', 'quick', 'rapid', 'short', 'slow', 'swift', 'young', 'abundant', 'empty', 'few', 'heavy', 'light', 'many', 'numerous', 'Sound', 'cooing', 'deafening', 'faint', 'harsh', 'hissing', 'hushed', 'husky', 'loud', 'melodic', 'moaning', 'mute', 'noisy', 'purring', 'quiet', 'raspy', 'resonant', 'screeching', 'shrill', 'silent', 'soft', 'squealing', 'thundering', 'voiceless', 'whispering', 'bitter', 'delicious', 'fresh', 'juicy', 'ripe', 'rotten', 'salty', 'sour', 'spicy', 'stale', 'sticky', 'strong', 'sweet', 'tasteless', 'tasty', 'thirsty', 'fluttering', 'fuzzy', 'greasy', 'grubby', 'hard', 'hot', 'icy', 'loose', 'melted', 'plastic', 'prickly', 'rainy', 'rough', 'scattered', 'shaggy', 'shaky', 'sharp', 'shivering', 'silky', 'slimy', 'slippery', 'smooth', 'soft', 'solid', 'steady', 'sticky', 'tender', 'tight', 'uneven', 'weak', 'wet', 'wooden', 'afraid', 'angry', 'annoyed', 'anxious', 'arrogant', 'ashamed', 'awful', 'bad', 'bewildered', 'bored', 'combative', 'condemned', 'confused', 'creepy', 'cruel', 'dangerous', 'defeated', 'defiant', 'depressed', 'disgusted', 'disturbed', 'eerie', 'embarrassed', 'envious', 'evil', 'fierce', 'foolish', 'frantic', 'frightened', 'grieving', 'helpless', 'homeless', 'hungry', 'hurt', 'ill', 'jealous', 'lonely', 'mysterious', 'naughty', 'nervous', 'obnoxious', 'outrageous', 'panicky', 'repulsive', 'scary', 'scornful', 'selfish', 'sore', 'tense', 'terrible', 'thoughtless', 'tired', 'troubled', 'upset', 'uptight', 'weary', 'wicked', 'worried', 'agreeable', 'amused', 'brave', 'calm', 'charming', 'cheerful', 'comfortable', 'cooperative', 'courageous', 'delightful', 'determined', 'eager', 'elated', 'enchanting', 'encouraging', 'energetic', 'enthusiastic', 'excited', 'exuberant', 'fair', 'faithful', 'fantastic', 'fine', 'friendly', 'funny', 'gentle', 'glorious', 'good', 'happy', 'healthy', 'helpful', 'hilarious', 'jolly', 'joyous', 'kind', 'lively', 'lovely', 'lucky', 'obedient', 'perfect', 'pleasant', 'proud', 'relieved', 'silly', 'smiling', 'splendid', 'successful', 'thoughtful', 'victorious', 'vivacious', 'witty', 'wonderful', 'zealous', 'zany', 'other', 'good', 'new', 'old', 'great', 'high', 'small', 'different', 'large', 'local', 'social', 'important', 'long', 'young', 'national', 'british', 'right', 'early', 'possible', 'big', 'little', 'political', 'able', 'late', 'general', 'full', 'far', 'low', 'public', 'available', 'bad', 'main', 'sure', 'clear', 'major', 'economic', 'only', 'likely', 'real', 'black', 'particular', 'international', 'special', 'difficult', 'certain', 'open', 'whole', 'white', 'free', 'short', 'easy', 'strong', 'european', 'central', 'similar', 'human', 'common', 'necessary', 'single', 'personal', 'hard', 'private', 'poor', 'financial', 'wide', 'foreign', 'simple', 'recent', 'concerned', 'american', 'various', 'close', 'fine', 'english', 'wrong', 'present', 'royal', 'natural', 'individual', 'nice', 'french', 'nihilist', 'solipsist', 'materialist', 'surrealist', 'heroic', 'awesome', 'hedonist', 'absurd', 'current', 'modern', 'labour', 'legal', 'happy', 'final', 'red', 'normal', 'serious', 'previous', 'total', 'prime', 'significant', 'industrial', 'sorry', 'dead', 'specific', 'appropriate', 'top', 'soviet', 'basic', 'military', 'original', 'successful', 'aware', 'hon', 'popular', 'heavy', 'professional', 'direct', 'dark', 'cold', 'ready', 'green', 'useful', 'effective', 'western', 'traditional', 'scottish', 'german', 'independent', 'deep', 'interesting', 'considerable', 'involved', 'physical', 'hot', 'existing', 'responsible', 'complete', 'medical', 'blue', 'extra', 'past', 'male', 'interested', 'fair', 'essential', 'beautiful', 'civil', 'primary', 'obvious', 'future', 'environmental', 'positive', 'senior', 'nuclear', 'annual', 'relevant', 'huge', 'rich', 'commercial', 'safe', 'regional', 'practical', 'official', 'separate', 'key', 'chief', 'regular', 'due', 'additional', 'active', 'powerful', 'complex', 'standard', 'impossible', 'light', 'warm', 'middle', 'fresh', 'sexual', 'front', 'domestic', 'actual', 'united', 'technical', 'ordinary', 'cheap', 'strange', 'internal', 'excellent', 'quiet', 'soft', 'potential', 'northern', 'religious', 'quick', 'very', 'famous', 'cultural', 'proper', 'broad', 'joint', 'formal', 'limited', 'conservative', 'lovely', 'usual', 'ltd', 'unable', 'rural', 'initial', 'substantial', 'bright', 'average', 'leading', 'reasonable', 'immediate', 'suitable', 'equal', 'detailed', 'working', 'overall', 'female', 'afraid', 'democratic', 'growing', 'sufficient', 'scientific', 'eastern', 'correct', 'inc', 'irish', 'expensive', 'educational', 'mental', 'dangerous', 'critical', 'increased', 'familiar', 'unlikely', 'double', 'perfect', 'slow', 'tiny', 'dry', 'historical', 'thin', 'daily', 'southern', 'increasing', 'wild', 'alone', 'urban', 'empty', 'married', 'narrow', 'liberal', 'supposed', 'upper', 'apparent', 'tall', 'busy', 'bloody', 'prepared', 'russian', 'moral', 'careful', 'clean', 'attractive', 'japanese', 'vital', 'thick', 'alternative', 'fast', 'ancient', 'elderly', 'rare', 'external', 'capable', 'brief', 'wonderful', 'grand', 'typical', 'entire', 'grey', 'constant', 'vast', 'surprised', 'ideal', 'terrible', 'academic', 'funny', 'minor', 'pleased', 'severe', 'ill', 'corporate', 'negative', 'permanent', 'weak', 'brown', 'fundamental', 'odd', 'crucial', 'inner', 'used', 'criminal', 'contemporary', 'sharp', 'sick', 'near', 'roman', 'massive', 'unique', 'secondary', 'parliamentary', 'african', 'unknown', 'subsequent', 'angry', 'alive', 'guilty', 'lucky', 'enormous', 'well', 'yellow', 'unusual', 'net', 'tough', 'dear', 'extensive', 'glad', 'remaining', 'agricultural', 'alright', 'healthy', 'italian', 'principal', 'tired', 'efficient', 'comfortable', 'chinese', 'relative', 'friendly', 'conventional', 'willing', 'sudden', 'proposed', 'voluntary', 'slight', 'valuable', 'dramatic', 'golden', 'temporary', 'federal', 'keen', 'flat', 'silent', 'indian', 'worried', 'pale', 'statutory', 'welsh', 'dependent', 'firm', 'wet', 'competitive', 'armed', 'radical', 'outside', 'acceptable', 'sensitive', 'living', 'pure', 'global', 'emotional', 'sad', 'secret', 'rapid', 'adequate', 'fixed', 'sweet', 'administrative', 'wooden', 'remarkable', 'comprehensive', 'surprising', 'solid', 'rough', 'mere', 'mass', 'brilliant', 'maximum', 'absolute', 'electronic', 'visual', 'electric', 'cool', 'spanish', 'literary', 'continuing', 'supreme', 'chemical', 'genuine', 'exciting', 'written', 'advanced', 'extreme', 'classical', 'fit', 'favourite', 'widespread', 'confident', 'straight', 'proud', 'numerous', 'opposite', 'distinct', 'mad', 'helpful', 'given', 'disabled', 'consistent', 'anxious', 'nervous', 'awful', 'stable', 'constitutional', 'satisfied', 'conscious', 'developing', 'strategic', 'holy', 'smooth', 'dominant', 'remote', 'theoretical', 'outstanding', 'pink', 'pretty', 'clinical', 'minimum', 'honest', 'impressive', 'related', 'residential', 'extraordinary', 'plain', 'visible', 'accurate', 'distant', 'still', 'greek', 'complicated', 'musical', 'precise', 'gentle', 'broken', 'live', 'silly', 'fat', 'tight', 'monetary', 'round', 'psychological', 'violent', 'unemployed', 'inevitable', 'junior', 'sensible', 'grateful', 'pleasant', 'dirty', 'structural', 'welcome', 'deaf', 'above', 'continuous', 'blind', 'overseas', 'mean', 'entitled', 'delighted', 'loose', 'occasional', 'evident', 'desperate', 'fellow', 'universal', 'square', 'steady', 'classic', 'equivalent', 'intellectual', 'victorian', 'level', 'ultimate', 'creative', 'lost', 'medieval', 'clever', 'linguistic', 'convinced', 'judicial', 'raw', 'sophisticated', 'asleep', 'vulnerable', 'illegal', 'outer', 'revolutionary', 'bitter', 'changing', 'australian', 'native', 'imperial', 'strict', 'wise', 'informal', 'flexible', 'collective', 'frequent', 'experimental', 'spiritual', 'intense', 'rational', 'generous', 'inadequate', 'prominent', 'logical', 'bare', 'historic', 'modest', 'dutch', 'acute', 'electrical', 'valid', 'weekly', 'gross', 'automatic', 'loud', 'reliable', 'mutual', 'liable', 'multiple', 'ruling', 'curious', 'sole', 'managing', 'pregnant', 'latin', 'nearby', 'exact', 'underlying', 'identical', 'satisfactory', 'marginal', 'distinctive', 'electoral', 'urgent', 'presidential', 'controversial', 'everyday', 'encouraging', 'organic', 'continued', 'expected', 'statistical', 'desirable', 'innocent', 'improved', 'exclusive', 'marked', 'experienced', 'unexpected', 'superb', 'sheer', 'disappointed', 'frightened', 'gastric', 'romantic', 'naked', 'reluctant', 'magnificent', 'convenient', 'established', 'closed', 'uncertain', 'artificial', 'diplomatic', 'tremendous', 'marine', 'mechanical', 'retail', 'institutional', 'mixed', 'required', 'biological', 'known', 'functional', 'straightforward', 'superior', 'digital', 'spectacular', 'unhappy', 'confused', 'unfair', 'aggressive', 'spare', 'painful', 'abstract', 'asian', 'associated', 'legislative', 'monthly', 'intelligent', 'hungry', 'explicit', 'nasty', 'just', 'faint', 'coloured', 'ridiculous', 'amazing', 'comparable', 'successive', 'realistic', 'back', 'decent', 'decentralized', 'bitcoin', 'cypherpunk', 'unnecessary', 'flying', 'random', 'influential', 'dull', 'genetic', 'neat', 'marvellous', 'crazy', 'damp', 'giant', 'secure', 'bottom', 'skilled', 'subtle', 'elegant', 'brave', 'lesser', 'parallel', 'steep', 'intensive', 'casual', 'tropical', 'lonely', 'partial', 'preliminary', 'concrete', 'alleged', 'assistant', 'vertical', 'upset', 'delicate', 'mild', 'occupational', 'excessive', 'progressive', 'exceptional', 'integrated', 'striking', 'continental', 'okay', 'harsh', 'combined', 'fierce', 'handsome', 'characteristic', 'chronic', 'compulsory', 'interim', 'objective', 'splendid', 'magic', 'systematic', 'obliged', 'payable', 'fun', 'horrible', 'primitive', 'fascinating', 'ideological', 'metropolitan', 'surrounding', 'estimated', 'peaceful', 'premier', 'operational', 'technological', 'kind', 'advisory', 'hostile', 'precious', 'accessible', 'determined', 'excited', 'impressed', 'provincial', 'smart', 'endless', 'isolated', 'drunk', 'geographical', 'like', 'dynamic', 'boring', 'forthcoming', 'unfortunate', 'definite', 'super', 'notable', 'indirect', 'stiff', 'wealthy', 'awkward', 'lively', 'neutral', 'artistic', 'content', 'mature', 'colonial', 'ambitious', 'evil', 'magnetic', 'verbal', 'legitimate', 'sympathetic', 'empirical', 'head', 'shallow', 'vague', 'naval', 'depressed', 'shared', 'added', 'shocked', 'mid', 'worthwhile', 'qualified', 'missing', 'blank', 'absent', 'favourable', 'polish', 'israeli', 'developed', 'profound', 'representative', 'enthusiastic', 'dreadful', 'rigid', 'reduced', 'cruel', 'coastal', 'peculiar', 'swiss', 'crude', 'extended', 'selected', 'eager', 'canadian', 'bold', 'relaxed', 'corresponding', 'running', 'planned', 'applicable', 'immense', 'allied', 'comparative', 'uncomfortable', 'conservation', 'productive', 'beneficial', 'bored', 'charming', 'minimal', 'mobile', 'turkish', 'orange', 'rear', 'passive', 'suspicious', 'overwhelming', 'fatal', 'resulting', 'symbolic', 'registered', 'neighbouring', 'calm', 'irrelevant', 'patient', 'compact', 'profitable', 'rival', 'loyal', 'moderate', 'distinguished', 'interior', 'noble', 'insufficient', 'eligible', 'mysterious', 'varying', 'managerial', 'molecular', 'olympic', 'linear', 'prospective', 'printed', 'parental', 'diverse', 'elaborate', 'furious', 'fiscal', 'burning', 'useless', 'semantic', 'embarrassed', 'inherent', 'philosophical', 'deliberate', 'awake', 'variable', 'promising', 'unpleasant', 'varied', 'sacred', 'selective', 'inclined', 'tender', 'hidden', 'worthy', 'intermediate', 'sound', 'protective', 'fortunate', 'slim', 'defensive', 'divine', 'stuck', 'driving', 'invisible', 'misleading', 'circular', 'mathematical', 'inappropriate', 'liquid', 'persistent', 'solar', 'doubtful', 'manual', 'architectural', 'intact', 'incredible', 'devoted', 'prior', 'tragic', 'respectable', 'optimistic', 'convincing', 'unacceptable', 'decisive', 'competent', 'spatial', 'respective', 'binding', 'relieved', 'nursing', 'toxic', 'select', 'redundant', 'integral', 'then', 'probable', 'amateur', 'fond', 'passing', 'specified', 'territorial', 'horizontal', 'inland', 'cognitive', 'regulatory', 'miserable', 'resident', 'polite', 'scared', 'gothic', 'civilian', 'instant', 'lengthy', 'adverse', 'korean', 'unconscious', 'anonymous', 'aesthetic', 'orthodox', 'static', 'unaware', 'costly', 'fantastic', 'foolish', 'fashionable', 'causal', 'compatible', 'wee', 'implicit', 'dual', 'ok', 'cheerful', 'subjective', 'forward', 'surviving', 'exotic', 'purple', 'cautious', 'visiting', 'aggregate', 'ethical', 'teenage', 'dying', 'disastrous', 'delicious', 'confidential', 'underground', 'thorough', 'grim', 'autonomous', 'atomic', 'frozen', 'colourful', 'injured', 'uniform', 'ashamed', 'glorious', 'wicked', 'coherent', 'rising', 'shy', 'novel', 'balanced', 'delightful', 'arbitrary', 'adjacent', 'worrying', 'weird', 'unchanged', 'rolling', 'evolutionary', 'intimate', 'sporting', 'disciplinary', 'formidable', 'lexical', 'noisy', 'gradual', 'accused', 'homeless', 'supporting', 'coming', 'renewed', 'excess', 'retired', 'rubber', 'chosen', 'outdoor', 'embarrassing', 'preferred', 'bizarre', 'appalling', 'agreed', 'imaginative', 'governing', 'accepted', 'vocational', 'mighty', 'puzzled', 'worldwide', 'organisational', 'sunny', 'eldest', 'eventual', 'spontaneous', 'vivid', 'rude', 'faithful', 'ministerial', 'innovative', 'controlled', 'conceptual', 'unwilling', 'civic', 'meaningful', 'alive', 'brainy', 'breakable', 'busy', 'careful', 'cautious', 'clever', 'concerned', 'crazy', 'curious', 'dead', 'different', 'difficult', 'doubtful', 'easy', 'famous', 'fragile', 'helpful', 'helpless', 'important', 'impossible', 'innocent', 'inquisitive', 'modern', 'open', 'outstanding', 'poor', 'powerful', 'puzzled', 'real', 'rich', 'shy', 'sleepy', 'super', 'tame', 'uninterested', 'wandering', 'wild', 'wrong', 'adorable', 'alert', 'average', 'beautiful', 'blonde', 'bloody', 'blushing', 'bright', 'clean', 'clear', 'cloudy', 'colorful', 'crowded', 'cute', 'dark', 'drab', 'distinct', 'dull', 'elegant', 'fancy', 'filthy', 'glamorous', 'gleaming', 'graceful', 'grotesque', 'homely', 'light', 'misty', 'motionless', 'muddy', 'plain', 'poised', 'quaint', 'shiny', 'smoggy', 'sparkling', 'spotless', 'stormy', 'strange', 'ugly', 'unsightly', 'unusual', 'bad', 'better', 'beautiful', 'big', 'black', 'blue', 'bright', 'clumsy', 'crazy', 'dizzy', 'dull', 'fat', 'frail', 'friendly', 'funny', 'great', 'green', 'gigantic', 'gorgeous', 'grumpy', 'handsome', 'happy', 'horrible', 'itchy', 'jittery', 'jolly', 'kind', 'long', 'lazy', 'magnificent', 'magenta', 'many', 'mighty', 'mushy', 'nasty', 'new', 'nice', 'nosy', 'nutty', 'nutritious', 'odd', 'orange', 'ordinary', 'pretty', 'precious', 'prickly', 'purple', 'quaint', 'quiet', 'quick', 'quickest', 'rainy', 'rare', 'ratty', 'red', 'roasted', 'robust', 'round', 'sad', 'scary', 'scrawny', 'short', 'silly', 'stingy', 'strange', 'striped', 'spotty', 'tart', 'tall', 'tame', 'tan', 'tender', 'testy', 'tricky', 'tough', 'ugly', 'ugliest', 'vast', 'watery', 'wasteful', 'wonderful', 'yellow', 'yummy', 'zany'];
 var util = {
   gunOnceDefined: gunOnceDefined,
-  gunAsAnotherUser: gunAsAnotherUser,
   getHash: function getHash(str, format) {
     var _this = this;
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
@@ -818,8 +826,8 @@ var util = {
 var ELECTRON_GUN_URL = 'http://localhost:8767/gun';
 var maxConnectedPeers = 2;
 var DEFAULT_PEERS = {
-  'https://gun-rs.iris.to/gun': {},
-  'https://gun-us.herokuapp.com/gun': {}
+  'wss://gun-rs.iris.to/gun': {},
+  'wss://gun-us.herokuapp.com/gun': {}
 };
 var loc = window.location;
 var host = loc.host;
@@ -887,7 +895,7 @@ var peers = {
               });
             case 17:
               encryptedUrlHash = _context.sent;
-              global$2().user().get('peers').get(encryptedUrlHash).put({
+              global$1().user().get('peers').get(encryptedUrlHash).put({
                 url: peer.url,
                 lastSeen: new Date().toISOString()
               });
@@ -910,7 +918,7 @@ var peers = {
     this.save();
   },
   /** */disconnect: function disconnect(peerFromGun) {
-    global$2().on('bye', peerFromGun);
+    global$1().on('bye', peerFromGun);
     peerFromGun.url = '';
   },
   save: function save() {
@@ -943,7 +951,7 @@ var peers = {
     }
     if (this.known[url]) {
       this.known[url].enabled = true;
-      global$2().opt({
+      global$1().opt({
         peers: [url]
       });
       this.save();
@@ -970,37 +978,14 @@ var peers = {
     var sample = _.sampleSize(Object.keys(_.pickBy(this.known, function (peer, url) {
       return !_this2.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
     })), sampleSize);
+    console.log('random sample', sample, 'from', this.known);
     if (sample && connectToLocalElectron) {
       sample.push(ELECTRON_GUN_URL);
     }
     return sample;
   },
   checkGunPeerCount: function checkGunPeerCount() {
-    var _this3 = this;
-    var peersFromGun = global$2().back('opt.peers');
-    var connectedPeers = Object.values(peersFromGun).filter(function (peer) {
-      if (peer && peer.wire && peer.wire.constructor.name !== 'WebSocket') {
-        console.log('WebRTC peer', peer);
-      }
-      return peer && peer.wire && peer.wire.readyState === 1 && peer.wire.bufferedAmount === 0 && peer.wire.constructor.name === 'WebSocket';
-    });
-    if (connectedPeers.length < maxConnectedPeers) {
-      var unconnectedPeers = Object.keys(this.known).filter(function (url) {
-        var addedToGun = Object.values(peersFromGun).map(function (peer) {
-          return peer.url;
-        }).indexOf(url) > -1;
-        var enabled = _this3.known[url].enabled;
-        var mixedContent = window.location.protocol === 'https:' && url.indexOf('http:') === 0;
-        return !mixedContent && enabled && !addedToGun;
-      });
-      if (unconnectedPeers.length) {
-        var sample = String(_.sample(unconnectedPeers));
-        this.connect(sample);
-      }
-    }
-    if (connectedPeers.length > maxConnectedPeers) {
-      this.disconnect(_.sample(connectedPeers));
-    }
+    return;
   },
   init: function init() {
     var _this4 = this;
@@ -1016,28 +1001,860 @@ var peers = {
   }
 };
 
-var global$1;
-function global$2 (opts) {
+function generateUuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0,
+      v = c == 'x' ? r : r & 0x3 | 0x8;
+    return v.toString(16);
+  });
+}
+var Actor = /*#__PURE__*/function () {
+  function Actor(id) {
+    if (id === void 0) {
+      id = generateUuid();
+    }
+    this.id = id;
+  }
+  var _proto = Actor.prototype;
+  _proto.handle = function handle(_message) {
+    throw new Error('not implemented');
+  }
+  // so we can support a similar api as Channels
+  ;
+  _proto.postMessage = function postMessage(message) {
+    this.handle(message);
+  };
+  return Actor;
+}();
+
+var Message = /*#__PURE__*/function () {
+  function Message() {}
+  // When Messages are sent over BroadcastChannel, class name is lost.
+  Message.fromObject = function fromObject(obj) {
+    if (obj.type === 'get') {
+      return Get.fromObject(obj);
+    } else if (obj.type === 'put') {
+      return Put.fromObject(obj);
+    } else {
+      throw new Error('not implemented');
+    }
+  };
+  Message.deserialize = function deserialize(str, from) {
+    var obj = JSON.parse(str);
+    if (obj.get) {
+      return Get.deserialize(obj, str, from);
+    } else if (obj.put) {
+      return Put.deserialize(obj, str, from);
+    } else if (obj.dam && obj.dam === "hi") {
+      return Hi.deserialize(obj);
+    } else {
+      throw new Error('unknown message type');
+    }
+  };
+  var _proto = Message.prototype;
+  _proto.serialize = function serialize() {
+    throw new Error('not implemented');
+  };
+  return Message;
+}();
+function generateMsgId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+var Get = /*#__PURE__*/function () {
+  function Get(id, nodeId, from, recipients, childKey, jsonStr, checksum) {
+    this.type = 'get';
+    this.id = id;
+    this.from = from;
+    this.nodeId = nodeId;
+    this.recipients = recipients;
+    this.childKey = childKey;
+    this.jsonStr = jsonStr;
+    this.checksum = checksum;
+  }
+  var _proto2 = Get.prototype;
+  _proto2.serialize = function serialize() {
+    if (this.jsonStr) {
+      return this.jsonStr;
+    }
+    var obj = {
+      get: {
+        "#": this.nodeId
+      },
+      "#": this.id
+    };
+    if (this.childKey) {
+      obj.get['.'] = this.childKey;
+    }
+    this.jsonStr = JSON.stringify(obj);
+    return this.jsonStr;
+  };
+  Get.deserialize = function deserialize(obj, jsonStr, from) {
+    var id = obj['#'];
+    var nodeId = obj.get['#'];
+    var childKey = obj.get['.'];
+    return new Get(id, nodeId, from, undefined, childKey, jsonStr);
+  };
+  Get.fromObject = function fromObject(obj) {
+    return new Get(obj.id, obj.nodeId, obj.from, obj.recipients, obj.childKey, obj.jsonStr, obj.checksum);
+  };
+  Get["new"] = function _new(nodeId, from, recipients, childKey, jsonStr, checksum) {
+    var id = generateMsgId();
+    return new Get(id, nodeId, from, recipients, childKey, jsonStr, checksum);
+  };
+  return Get;
+}();
+var Put = /*#__PURE__*/function () {
+  function Put(id, updatedNodes, from, inResponseTo, recipients, jsonStr, checksum) {
+    this.type = 'put';
+    this.id = id;
+    this.from = from;
+    this.updatedNodes = updatedNodes;
+    this.inResponseTo = inResponseTo;
+    this.recipients = recipients;
+    this.jsonStr = jsonStr;
+    this.checksum = checksum;
+  }
+  var _proto3 = Put.prototype;
+  _proto3.serialize = function serialize() {
+    var obj = {
+      "#": this.id,
+      "put": {}
+    };
+    // iterate over this.updatedNodes
+    for (var _i = 0, _Object$entries = Object.entries(this.updatedNodes); _i < _Object$entries.length; _i++) {
+      var _Object$entries$_i = _Object$entries[_i],
+        nodeId = _Object$entries$_i[0],
+        children = _Object$entries$_i[1];
+      var node = obj.put[nodeId] = {};
+      for (var _i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
+        var _Object$entries2$_i = _Object$entries2[_i2],
+          childKey = _Object$entries2$_i[0],
+          childValue = _Object$entries2$_i[1];
+        if (!childValue) {
+          continue;
+        }
+        var data = childValue;
+        node[childKey] = data.value;
+        node["_"] = node["_"] || {};
+        node["_"][">"] = node["_"][">"] || {};
+        node["_"][">"][childKey] = data.updatedAt;
+      }
+    }
+    return JSON.stringify(obj);
+  };
+  Put.deserialize = function deserialize(obj, jsonStr, from) {
+    var id = obj['#'];
+    var updatedNodes = obj.put;
+    return new Put(id, updatedNodes, from, undefined, undefined, jsonStr);
+  };
+  Put.fromObject = function fromObject(obj) {
+    return new Put(obj.id, obj.updatedNodes, obj.from, obj.inResponseTo, obj.recipients, obj.jsonStr, obj.checksum);
+  };
+  Put["new"] = function _new(updatedNodes, from, inResponseTo, recipients, jsonStr, checksum) {
+    var id = generateMsgId();
+    return new Put(id, updatedNodes, from, inResponseTo, recipients, jsonStr, checksum);
+  };
+  Put.newFromKv = function newFromKv(key, children, from) {
+    var updatedNodes = {};
+    updatedNodes[key] = children;
+    return Put["new"](updatedNodes, from);
+  };
+  return Put;
+}();
+var Hi = /*#__PURE__*/function () {
+  function Hi(peerId, jsonStr) {
+    this.type = 'hi';
+    this.peerId = peerId;
+    this.jsonStr = jsonStr;
+  }
+  //{"#":"aHHO9Srurq9nh6Q9","dam":"hi"}
+  var _proto4 = Hi.prototype;
+  _proto4.serialize = function serialize() {
+    if (this.jsonStr) {
+      return this.jsonStr;
+    }
+    var obj = {
+      dam: "hi",
+      "#": this.peerId
+    };
+    this.jsonStr = JSON.stringify(obj);
+    return this.jsonStr;
+  };
+  Hi.deserialize = function deserialize(obj) {
+    var peerId = obj['#'];
+    return new Hi(peerId);
+  };
+  return Hi;
+}();
+
+// import * as Comlink from "comlink";
+var IndexedDB = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(IndexedDB, _Actor);
+  function IndexedDB(config) {
+    var _this;
+    if (config === void 0) {
+      config = {};
+    }
+    _this = _Actor.call(this) || this;
+    _this.throttledPut = _.throttle(function () {
+      var keys = Object.keys(_this.putQueue);
+      var values = keys.map(function (key) {
+        return _this.putQueue[key];
+      });
+      _this.db.nodes.bulkPut(values, keys);
+      _this.putQueue = {};
+    }, 500);
+    _this.throttledGet = _.throttle(function () {
+      // clone this.getQueue and clear it
+      var queue = _this.getQueue;
+      var keys = Object.keys(queue);
+      _this.db.nodes.bulkGet(keys).then(function (values) {
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          var value = values[i];
+          var callbacks = queue[key];
+          // console.log('have', key, value);
+          for (var _iterator = _createForOfIteratorHelperLoose(callbacks), _step; !(_step = _iterator()).done;) {
+            var callback = _step.value;
+            callback(value);
+          }
+        }
+      });
+      _this.getQueue = {};
+    }, 100);
+    _this.config = config;
+    _this.notStored = new Set();
+    _this.putQueue = {};
+    _this.getQueue = {};
+    _this.i = 0;
+    var dbName = config.dbName || 'iris';
+    _this.db = new Dexie(dbName);
+    _this.db.version(1).stores({
+      nodes: ',value'
+    });
+    _this.db.open()["catch"](function (err) {
+      console.error(err.stack || err);
+    });
+    return _this;
+  }
+  var _proto = IndexedDB.prototype;
+  _proto.put = function put(nodeId, value) {
+    // add puts to a queue and dexie bulk write them once per 500ms
+    this.putQueue[nodeId] = value;
+    this.throttledPut();
+  };
+  _proto.get = function get(path, callback) {
+    this.getQueue[path] = this.getQueue[path] || [];
+    this.getQueue[path].push(callback);
+    this.throttledGet();
+  };
+  _proto.handle = function handle(message) {
+    this.queue = this.queue && this.queue++ || 1;
+    if (this.queue > 10) {
+      return;
+    }
+    if (message instanceof Put) {
+      this.handlePut(message);
+    } else if (message instanceof Get) {
+      this.handleGet(message);
+    } else {
+      console.log('worker got unknown message', message);
+    }
+  };
+  _proto.handleGet = function handleGet(message) {
+    var _this2 = this;
+    if (this.notStored.has(message.nodeId)) {
+      // TODO message implying that the key is not stored
+      return;
+    }
+    this.get(message.nodeId, function (value) {
+      // TODO: this takes a long time to return
+      if (value === undefined) {
+        _this2.notStored.add(message.nodeId);
+        // TODO message implying that the key is not stored
+      } else {
+        var putMessage = Put.newFromKv(message.nodeId, value, _this2.id);
+        putMessage.inResponseTo = message.id;
+        message.from && message.from.postMessage(putMessage);
+      }
+    });
+  };
+  _proto.mergeAndSave = function mergeAndSave(path, newValue) {
+    var _this3 = this;
+    this.get(path, function (existing) {
+      // TODO check updatedAt timestamp
+      if (existing === undefined) {
+        _this3.put(path, newValue);
+      } else if (!_.isEqual(existing, newValue)) {
+        // if existing value is array, merge it
+        if (Array.isArray(existing) && Array.isArray(newValue)) {
+          newValue = _.uniq(existing.concat(newValue));
+        }
+        if (Array.isArray(newValue) && newValue.length === 0) {
+          console.log('no kids', path);
+        }
+        _this3.put(path, newValue);
+      }
+    });
+  };
+  _proto.savePath = function savePath(path, value) {
+    if (value === undefined) {
+      this.db.nodes["delete"](path);
+      this.notStored.add(path);
+    } else {
+      this.notStored["delete"](path);
+      this.mergeAndSave(path, value);
+    }
+  };
+  _proto.handlePut = /*#__PURE__*/function () {
+    var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(message) {
+      var _i, _Object$entries, _Object$entries$_i, nodeName, children, _i2, _Object$entries2, _Object$entries2$_i, childName, newValue, path;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _i = 0, _Object$entries = Object.entries(message.updatedNodes);
+            case 1:
+              if (!(_i < _Object$entries.length)) {
+                _context.next = 13;
+                break;
+              }
+              _Object$entries$_i = _Object$entries[_i], nodeName = _Object$entries$_i[0], children = _Object$entries$_i[1];
+              if (children) {
+                _context.next = 6;
+                break;
+              }
+              console.log('deleting', nodeName);
+              return _context.abrupt("continue", 10);
+            case 6:
+              if (!(typeof children !== 'object')) {
+                _context.next = 9;
+                break;
+              }
+              // we receiving bad messages? or is this handled correctly?
+              this.savePath(nodeName, children);
+              return _context.abrupt("continue", 10);
+            case 9:
+              for (_i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
+                _Object$entries2$_i = _Object$entries2[_i2], childName = _Object$entries2$_i[0], newValue = _Object$entries2$_i[1];
+                path = nodeName + "/" + childName;
+                this.savePath(path, newValue);
+              }
+            case 10:
+              _i++;
+              _context.next = 1;
+              break;
+            case 13:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+    function handlePut(_x) {
+      return _handlePut.apply(this, arguments);
+    }
+    return handlePut;
+  }();
+  return IndexedDB;
+}(Actor);
+var actor;
+global.onconnect = function () {
+  if (actor) {
+    console.log('worker already exists');
+  } else {
+    console.log('starting worker');
+    actor = actor || new IndexedDB();
+  }
+};
+
+// self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
+
+var Websocket = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(Websocket, _Actor);
+  function Websocket(url, router) {
+    var _this;
+    _this = _Actor.call(this, 'websocket:' + url) || this;
+    _this.sendQueue = [];
+    console.log('Websocket', url);
+    _this.router = router;
+    _this.ws = new WebSocket(url);
+    _this.ws.onopen = function () {
+      _this.ws.send(new Hi(_this.router.peerId).serialize());
+      console.log("Connected to " + url);
+      _this.sendQueue.forEach(function (message) {
+        return _this.ws.send(message);
+      });
+      _this.sendQueue = [];
+    };
+    _this.ws.onmessage = function (event) {
+      try {
+        var message = Message.deserialize(event.data, _assertThisInitialized(_this));
+        _this.router.postMessage(message);
+      } catch (e) {
+        console.log('Failed to deserialize message', event.data, e);
+      }
+    };
+    _this.ws.onclose = function () {
+      console.log("Disconnected from " + url);
+    };
+    _this.ws.onerror = function () {
+      console.log("Error on " + url);
+    };
+    return _this;
+  }
+  var _proto = Websocket.prototype;
+  _proto.handle = function handle(message) {
+    if (this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(message.serialize());
+    } else if (this.ws.readyState === WebSocket.CONNECTING) {
+      this.sendQueue.push(message.serialize());
+    }
+  };
+  return Websocket;
+}(Actor);
+
+// import * as Comlink from "comlink";
+
+/*
+class SeenGetMessage {
+    constructor(id, from, lastReplyChecksum) {
+        this.id = id;
+        this.from = from;
+        this.lastReplyChecksum = lastReplyChecksum;
+    }
+}
+*/
+var Router = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(Router, _Actor);
+  function Router(config) {
+    var _this;
+    if (config === void 0) {
+      config = {};
+    }
+    _this = _Actor.call(this, 'router') || this;
+    // default random id
+    _this.storageAdapters = new Set();
+    _this.networkAdapters = new Set();
+    _this.serverPeers = new Set();
+    _this.seenMessages = new Set();
+    _this.seenGetMessages = new Map();
+    _this.subscribersByTopic = new Map();
+    _this.msgCounter = 0;
+    _this.peerId = config.peerId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    _this.storageAdapters.add(new IndexedDB(config));
+    console.log('config', config);
+    if (config.peers) {
+      for (var _iterator = _createForOfIteratorHelperLoose(config.peers), _step; !(_step = _iterator()).done;) {
+        var peer = _step.value;
+        if (peer) {
+          _this.serverPeers.add(new Websocket(peer, _assertThisInitialized(_this)));
+        }
+      }
+    }
+    return _this;
+  }
+  var _proto = Router.prototype;
+  _proto.handle = function handle(message) {
+    //console.log('router received', message);
+    if (this.seenMessages.has(message.id)) {
+      return;
+    }
+    this.seenMessages.add(message.id);
+    if (message instanceof Put) {
+      this.handlePut(message);
+    } else if (message instanceof Get) {
+      this.handleGet(message);
+    }
+  };
+  _proto.handlePut = function handlePut(put) {
+    var _this2 = this;
+    Object.keys(put.updatedNodes).forEach(function (path) {
+      var topic = path.split('/')[1] || '';
+      var subscribers = _this2.subscribersByTopic.get(topic);
+      // send to storage adapters
+      //console.log('put subscribers', subscribers);
+      for (var _iterator2 = _createForOfIteratorHelperLoose(_this2.storageAdapters), _step2; !(_step2 = _iterator2()).done;) {
+        var storageAdapter = _step2.value;
+        storageAdapter.postMessage(put);
+      }
+      for (var _iterator3 = _createForOfIteratorHelperLoose(_this2.serverPeers), _step3; !(_step3 = _iterator3()).done;) {
+        var peer = _step3.value;
+        peer.postMessage(put);
+      }
+      if (subscribers) {
+        for (var _iterator4 = _createForOfIteratorHelperLoose(subscribers), _step4; !(_step4 = _iterator4()).done;) {
+          var _step4$value = _step4.value,
+            k = _step4$value[0],
+            v = _step4$value[1];
+          if (k !== put.from) {
+            v.postMessage(put);
+          }
+        }
+      }
+    });
+  };
+  _proto.handleGet = function handleGet(get) {
+    var topic = get.nodeId.split('/')[1];
+    for (var _iterator5 = _createForOfIteratorHelperLoose(this.storageAdapters), _step5; !(_step5 = _iterator5()).done;) {
+      var storageAdapter = _step5.value;
+      storageAdapter.postMessage(get);
+    }
+    for (var _iterator6 = _createForOfIteratorHelperLoose(this.serverPeers), _step6; !(_step6 = _iterator6()).done;) {
+      var peer = _step6.value;
+      peer.postMessage(get);
+    }
+    if (!this.subscribersByTopic.has(topic)) {
+      this.subscribersByTopic.set(topic, new Map());
+    }
+    var subscribers = this.subscribersByTopic.get(topic);
+    for (var _iterator7 = _createForOfIteratorHelperLoose(subscribers), _step7; !(_step7 = _iterator7()).done;) {
+      var _step7$value = _step7.value,
+        k = _step7$value[0],
+        v = _step7$value[1];
+      // TODO: sample
+      if (k !== get.from.id) {
+        v.postMessage(get);
+      }
+    }
+    if (!subscribers.has(get.from.id)) {
+      subscribers.set(get.from.id, get.from);
+    }
+  };
+  return Router;
+}(Actor);
+var actor$1;
+self.onconnect = function () {
+  console.log('router shared worker connected');
+  actor$1 = actor$1 || new Router();
+};
+
+// self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
+
+var DEFAULT_CONFIG = {
+  allowPublicSpace: false,
+  enableStats: true,
+  localOnly: true
+};
+// TODO move memory storage to its own adapter? it would make things simpler here
+var Node = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(Node, _Actor);
+  function Node(id, config, parent) {
+    var _this;
+    if (id === void 0) {
+      id = '';
+    }
+    _this = _Actor.call(this, id) || this;
+    _this.children = new Map();
+    _this.once_subscriptions = new Map();
+    _this.on_subscriptions = new Map();
+    _this.map_subscriptions = new Map();
+    _this.data = undefined;
+    _this.counter = 0;
+    _this.loaded = false;
+    _this.doCallbacks = _.throttle(function () {
+      var _loop3 = function _loop3() {
+        var _step$value = _step.value,
+          id = _step$value[0],
+          callback = _step$value[1];
+        var event = {
+          off: function off() {
+            return _this.on_subscriptions["delete"](id);
+          }
+        };
+        _this.once(callback, event, false);
+      };
+      for (var _iterator = _createForOfIteratorHelperLoose(_this.on_subscriptions), _step; !(_step = _iterator()).done;) {
+        _loop3();
+      }
+      for (var _iterator2 = _createForOfIteratorHelperLoose(_this.once_subscriptions), _step2; !(_step2 = _iterator2()).done;) {
+        var _step2$value = _step2.value,
+          _id = _step2$value[0],
+          callback = _step2$value[1];
+        _this.once(callback, undefined, false);
+        _this.once_subscriptions["delete"](_id);
+      }
+      if (_this.parent) {
+        var _loop = function _loop() {
+          var _step3$value = _step3.value,
+            id = _step3$value[0],
+            callback = _step3$value[1];
+          var event = {
+            off: function off() {
+              var _this$parent;
+              return (_this$parent = _this.parent) == null ? void 0 : _this$parent.on_subscriptions["delete"](id);
+            }
+          };
+          _this.parent.once(callback, event, false);
+        };
+        for (var _iterator3 = _createForOfIteratorHelperLoose(_this.parent.on_subscriptions), _step3; !(_step3 = _iterator3()).done;) {
+          _loop();
+        }
+        var _loop2 = function _loop2() {
+          var _step4$value = _step4.value,
+            id = _step4$value[0],
+            callback = _step4$value[1];
+          var event = {
+            off: function off() {
+              var _this$parent2;
+              return (_this$parent2 = _this.parent) == null ? void 0 : _this$parent2.map_subscriptions["delete"](id);
+            }
+          };
+          _this.once(callback, event, false);
+        };
+        for (var _iterator4 = _createForOfIteratorHelperLoose(_this.parent.map_subscriptions), _step4; !(_step4 = _iterator4()).done;) {
+          _loop2();
+        }
+      }
+    }, 40);
+    _this.parent = parent;
+    _this.config = config || parent && parent.config || DEFAULT_CONFIG;
+    if (parent) {
+      _this.root = parent.root;
+      _this.router = parent.router;
+    } else {
+      _this.root = _assertThisInitialized(_this);
+      //@ts-ignore
+      _this.router = new Router({
+        dbName: _this.id + '-idb',
+        peers: _this.config.webSocketPeers
+      });
+      //console.log('idbWorker', idbWorker);
+      //const router = Comlink.wrap(routerWorker);
+    }
+    return _this;
+  }
+  var _proto = Node.prototype;
+  _proto.getCurrentUser = function getCurrentUser() {
+    return this.parent ? this.parent.getCurrentUser() : this.currentUser;
+  };
+  _proto.setCurrentUser = function setCurrentUser(key) {
+    if (this.parent) {
+      this.parent.setCurrentUser(key);
+    } else {
+      this.currentUser = key;
+    }
+  };
+  _proto.handle = function handle(message) {
+    var _this2 = this;
+    if (message instanceof Put) {
+      for (var _i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
+        var _Object$entries$_i = _Object$entries[_i],
+          key = _Object$entries$_i[0],
+          children = _Object$entries$_i[1];
+        if (!children) {
+          continue;
+        }
+        if (key === this.id) {
+          this.loaded = true;
+          for (var _i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
+            var _Object$entries2$_i = _Object$entries2[_i2],
+              childKey = _Object$entries2$_i[0],
+              data = _Object$entries2$_i[1];
+            this.get(childKey).merge(data);
+          }
+          this.parent && this.parent.handle(message);
+        }
+      }
+      setTimeout(function () {
+        return _this2.doCallbacks();
+      }, 100); // why is this needed?
+    }
+  };
+  _proto.merge = function merge(data) {
+    if (this.data && this.data.updatedAt > data.updatedAt) {
+      return;
+    }
+    this.data = data;
+  };
+  _proto.get = function get(key) {
+    var existing = this.children.get(key);
+    if (existing) {
+      return existing;
+    }
+    var newNode = new Node(this.id + "/" + key, this.config, this);
+    this.children.set(key, newNode);
+    return newNode;
+  };
+  _proto.user = function user(pub) {
+    pub = pub || this.root.currentUser && this.root.currentUser.pub;
+    if (!pub) {
+      throw new Error("no public key!");
+    }
+    return this.get('users').get(pub);
+  };
+  _proto.auth = function auth(key) {
+    // TODO get public key from key
+    this.root.currentUser = key;
+    this.root.setCurrentUser(key);
+    return;
+  };
+  _proto.put = function put(value) {
+    if (this.data === value) {
+      return; // TODO: when timestamps are added, this should be changed
+    }
+
+    if (Array.isArray(value)) {
+      throw new Error('put() does not support arrays');
+    }
+    if (typeof value === 'function') {
+      throw new Error('put() does not support functions');
+    }
+    if (typeof value === 'object' && value !== null) {
+      this.data = undefined;
+      // TODO: update the whole path of parent nodes
+      for (var key in value) {
+        this.get(key).put(value[key]);
+      }
+      return;
+    }
+    this.children = new Map();
+    this.data = {
+      value: value,
+      updatedAt: Date.now()
+    };
+    this.doCallbacks();
+    var updatedNodes = {};
+    this.addParentNodes(updatedNodes);
+    this.router.postMessage(Put["new"](updatedNodes, this));
+  };
+  _proto.addParentNodes = function addParentNodes(updatedNodes) {
+    if (this.parent) {
+      this.parent.data = undefined;
+      var children = {};
+      children[this.id.split('/').pop()] = this.data;
+      // remove the part before first / from id
+      var parentId = this.parent.id.split('/').slice(1).join('/');
+      updatedNodes[parentId] = children;
+      this.parent.addParentNodes(updatedNodes);
+    }
+  };
+  _proto.once = /*#__PURE__*/function () {
+    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(callback, event, returnIfUndefined) {
+      var _this3 = this;
+      var result, id, _id2;
+      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              if (returnIfUndefined === void 0) {
+                returnIfUndefined = true;
+              }
+              if (!this.loaded) {
+                id = this.id.split('/').slice(1).join('/');
+                id = id.replace(/^users\//, '~');
+                this.router.postMessage(Get["new"](id, this));
+              }
+              if (!this.children.size) {
+                _context2.next = 8;
+                break;
+              }
+              // return an object containing all children
+              result = {};
+              _context2.next = 6;
+              return Promise.all(Array.from(this.children.keys()).map( /*#__PURE__*/function () {
+                var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(key) {
+                  return _regeneratorRuntime().wrap(function _callee$(_context) {
+                    while (1) {
+                      switch (_context.prev = _context.next) {
+                        case 0:
+                          _context.next = 2;
+                          return _this3.get(key).once(null, event);
+                        case 2:
+                          result[key] = _context.sent;
+                        case 3:
+                        case "end":
+                          return _context.stop();
+                      }
+                    }
+                  }, _callee);
+                }));
+                return function (_x4) {
+                  return _ref.apply(this, arguments);
+                };
+              }()));
+            case 6:
+              _context2.next = 9;
+              break;
+            case 8:
+              if (this.data !== undefined) {
+                result = this.data && this.data.value;
+              } else if (returnIfUndefined) {
+                _id2 = this.counter++;
+                callback && this.once_subscriptions.set(_id2, callback);
+              }
+            case 9:
+              if (!(result !== undefined || returnIfUndefined)) {
+                _context2.next = 13;
+                break;
+              }
+              callback && callback(result, this.id.slice(this.id.lastIndexOf('/') + 1), null, event);
+              return _context2.abrupt("return", result);
+            case 13:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this);
+    }));
+    function once(_x, _x2, _x3) {
+      return _once.apply(this, arguments);
+    }
+    return once;
+  }();
+  _proto.on = function on(callback) {
+    var _this4 = this;
+    var id = this.counter++;
+    this.on_subscriptions.set(id, callback);
+    var event = {
+      off: function off() {
+        return _this4.on_subscriptions["delete"](id);
+      }
+    };
+    this.once(callback, event, false);
+  };
+  _proto.map = function map(callback) {
+    var _this5 = this;
+    var id = this.counter++;
+    this.map_subscriptions.set(id, callback);
+    var event = {
+      off: function off() {
+        return _this5.map_subscriptions["delete"](id);
+      }
+    };
+    for (var _iterator5 = _createForOfIteratorHelperLoose(this.children.values()), _step5; !(_step5 = _iterator5()).done;) {
+      var child = _step5.value;
+      child.once(callback, event, false);
+    }
+  };
+  return Node;
+}(Actor);
+
+var globalState;
+function global$1 (opts) {
   if (opts === void 0) {
     opts = {};
   }
-  if (!global$1) {
+  if (!globalState) {
+    peers.init();
+    var webSocketPeers = opts.peers || peers.random();
+    console.log('webSocketPeers', webSocketPeers);
     var myOpts = Object.assign({
-      peers: opts.peers || peers.random(),
+      webSocketPeers: webSocketPeers,
       localStorage: false,
       retry: Infinity
     }, opts);
     if (opts.peers) {
+      console.log('adding peers', opts.peers);
       opts.peers.forEach(function (url) {
         return peers.add({
           url: url
         });
       });
     }
-    peers.init();
-    global$1 = new Gun(myOpts);
+    globalState = new Node('global', myOpts);
   }
-  return global$1;
+  return globalState;
 }
 
 // @ts-nocheck
@@ -1131,18 +1948,22 @@ var Attribute = /*#__PURE__*/function () {
   return Attribute;
 }();
 
-var currentUser;
 /**
  * Get a public space where only the specified user (public key) can write. Others can read.
- * @param pub The public key of the user. Defaults to the current user from session.
+ * @param pub The public key string or keypair object of the user. Defaults to the current user from session.
  * @returns {Node} The user space.
  */
 function publicState (pub) {
-  if (!currentUser) {
-    currentUser = global$2().user();
-    currentUser.auth(session.getKey());
+  if (pub === void 0) {
+    pub = session.getKey();
   }
-  return pub ? global$2().user(pub) : currentUser;
+  if (typeof pub === 'string') {
+    return global$1().user(pub);
+  } else if (typeof pub === 'object') {
+    var userSpace = global$1().user(pub.pub);
+    userSpace.auth(pub);
+    return userSpace;
+  }
 }
 
 // TODO: extract Group channels into their own class
@@ -1356,7 +2177,7 @@ var Channel = /*#__PURE__*/function () {
         if (sharedSecret && linkId) {
           this.save(); // save the channel first so it's there before inviter subscribes to it
           options.saved = true;
-          global$2().user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on( /*#__PURE__*/function () {
+          global$1().user(pub).get('chatLinks').get(linkId).get('encryptedSharedKey').on( /*#__PURE__*/function () {
             var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(encrypted) {
               var sharedKey, encryptedChatRequest, channelRequestId;
               return _regeneratorRuntime().wrap(function _callee$(_context) {
@@ -1375,9 +2196,7 @@ var Channel = /*#__PURE__*/function () {
                       return util.getHash(encryptedChatRequest);
                     case 8:
                       channelRequestId = _context.sent;
-                      util.gunAsAnotherUser(global$2(), sharedKey, function (user) {
-                        user.get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
-                      });
+                      global$1(sharedKey).get('chatRequests').get(channelRequestId.slice(0, 12)).put(encryptedChatRequest);
                     case 10:
                     case "end":
                       return _context.stop();
@@ -1440,7 +2259,7 @@ var Channel = /*#__PURE__*/function () {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
-              global$2().user(participant).get(this.theirSecretUuids[participant]).off();
+              global$1().user(participant).get(this.theirSecretUuids[participant]).off();
               // TODO: persist
             case 1:
             case "end":
@@ -1565,7 +2384,7 @@ var Channel = /*#__PURE__*/function () {
                 break;
               }
               _context5.next = 3;
-              return util.gunOnceDefined(global$2().user(pub).get("epub"));
+              return util.gunOnceDefined(global$1().user(pub).get("epub"));
             case 3:
               epub = _context5.sent;
               _context5.next = 6;
@@ -1598,7 +2417,7 @@ var Channel = /*#__PURE__*/function () {
           switch (_context6.prev = _context6.next) {
             case 0:
               _context6.next = 2;
-              return util.gunOnceDefined(global$2().user(pub).get("epub"));
+              return util.gunOnceDefined(global$1().user(pub).get("epub"));
             case 2:
               epub = _context6.sent;
               _context6.next = 5;
@@ -1630,7 +2449,7 @@ var Channel = /*#__PURE__*/function () {
           switch (_context7.prev = _context7.next) {
             case 0:
               _context7.next = 2;
-              return util.gunOnceDefined(global$2().user(pub).get("epub"));
+              return util.gunOnceDefined(global$1().user(pub).get("epub"));
             case 2:
               epub = _context7.sent;
               _context7.next = 5;
@@ -1691,11 +2510,11 @@ var Channel = /*#__PURE__*/function () {
                             _context8.next = 5;
                             break;
                           }
-                          global$2().user().get("chats").get(ourSecretChannelId).put(null);
+                          global$1().user().get("chats").get(ourSecretChannelId).put(null);
                           return _context8.abrupt("return");
                         case 5:
                           _context8.next = 7;
-                          return util.gunOnceDefined(global$2().user().get("chats").get(ourSecretChannelId).get("pub"));
+                          return util.gunOnceDefined(global$1().user().get("chats").get(ourSecretChannelId).get("pub"));
                         case 7:
                           encryptedChatId = _context8.sent;
                           _context8.next = 10;
@@ -1734,7 +2553,7 @@ var Channel = /*#__PURE__*/function () {
                   return _ref2.apply(this, arguments);
                 };
               }();
-              global$2().user().get("chats").map().on(handleChannel);
+              global$1().user().get("chats").map(handleChannel);
             case 9:
             case "end":
               return _context9.stop();
@@ -1858,7 +2677,7 @@ var Channel = /*#__PURE__*/function () {
                         case 9:
                           theirSecretChannelId = _context12.sent;
                         case 10:
-                          global$2().user(pub).get("chats").get(theirSecretChannelId).get("msgs").map().once(function (data, key) {
+                          global$1().user(pub).get("chats").get(theirSecretChannelId).get("msgs").map().once(function (data, key) {
                             _this5.messageReceived(callback, data, _this5.uuid || pub, false, key, pub);
                           });
                         case 11:
@@ -2180,7 +2999,7 @@ var Channel = /*#__PURE__*/function () {
               return Gun.SEA.secret(session.getKey().epub, session.getKey());
             case 14:
               mySecret = _context21.sent;
-              _context21.t0 = global$2().user().get("chats").get(ourSecretChannelId).get("pub");
+              _context21.t0 = global$1().user().get("chats").get(ourSecretChannelId).get("pub");
               _context21.next = 18;
               return Gun.SEA.encrypt({
                 pub: pub
@@ -2639,7 +3458,7 @@ var Channel = /*#__PURE__*/function () {
                         return _this10.getOurSecretChannelId(keys[i]);
                       case 2:
                         ourSecretChannelId = _context32.sent;
-                        global$2().user().get("chats").get(ourSecretChannelId).get(key).on( /*#__PURE__*/function () {
+                        global$1().user().get("chats").get(ourSecretChannelId).get(key).on( /*#__PURE__*/function () {
                           var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee31(data) {
                             var decrypted;
                             return _regeneratorRuntime().wrap(function _callee31$(_context31) {
@@ -2729,7 +3548,7 @@ var Channel = /*#__PURE__*/function () {
               return this.getMyGroupSecret();
             case 7:
               mySecret = _context35.sent;
-              global$2().user().get("chats").get(mySecretUuid).get(key).on( /*#__PURE__*/function () {
+              global$1().user().get("chats").get(mySecretUuid).get(key).on( /*#__PURE__*/function () {
                 var _ref6 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee33(data) {
                   var decrypted;
                   return _regeneratorRuntime().wrap(function _callee33$(_context34) {
@@ -2803,7 +3622,7 @@ var Channel = /*#__PURE__*/function () {
               return this.getTheirSecretChannelId(pub);
             case 4:
               theirSecretChannelId = _context38.sent;
-              global$2().user(pub).get("chats").get(theirSecretChannelId).get(key).on( /*#__PURE__*/function () {
+              global$1().user(pub).get("chats").get(theirSecretChannelId).get(key).on( /*#__PURE__*/function () {
                 var _ref7 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee36(data) {
                   var decrypted;
                   return _regeneratorRuntime().wrap(function _callee36$(_context37) {
@@ -2932,7 +3751,7 @@ var Channel = /*#__PURE__*/function () {
               return this.getTheirSecretUuid(pub);
             case 4:
               theirSecretUuid = _context42.sent;
-              global$2().user(pub).get("chats").get(theirSecretUuid).get(key).on( /*#__PURE__*/function () {
+              global$1().user(pub).get("chats").get(theirSecretUuid).get(key).on( /*#__PURE__*/function () {
                 var _ref9 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee40(data, _a, _b, e) {
                   var decrypted;
                   return _regeneratorRuntime().wrap(function _callee40$(_context41) {
@@ -3194,7 +4013,7 @@ var Channel = /*#__PURE__*/function () {
                     id: linkId
                   });
                   if (subscribe) {
-                    global$2().user(link.sharedKey.pub).get('chatRequests').map().on( /*#__PURE__*/function () {
+                    global$1().user(link.sharedKey.pub).get('chatRequests').map( /*#__PURE__*/function () {
                       var _ref11 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee44(encPub, requestId, a, e) {
                         var s, pub;
                         return _regeneratorRuntime().wrap(function _callee44$(_context45) {
@@ -3282,13 +4101,9 @@ var Channel = /*#__PURE__*/function () {
               linkId = _context47.sent;
               linkId = linkId.slice(0, 12);
               // User has to exist, in order for .get(chatRequests).on() to be ever triggered
-              _context47.next = 23;
-              return util.gunAsAnotherUser(global$2(), sharedKey, function (user) {
-                return user.get('chatRequests').put({
-                  a: 1
-                }).then();
+              global$1(sharedKey).get('chatRequests').put({
+                a: 1
               });
-            case 23:
               this.chatLinks[linkId] = {
                 sharedKey: sharedKey,
                 sharedSecret: sharedSecret
@@ -3305,7 +4120,7 @@ var Channel = /*#__PURE__*/function () {
                 sharedSecret: sharedSecret,
                 linkId: linkId
               }));
-            case 27:
+            case 26:
             case "end":
               return _context47.stop();
           }
@@ -3374,10 +4189,10 @@ var Channel = /*#__PURE__*/function () {
     var participants = this.getCurrentParticipants();
     if (participants.length) {
       var pub = participants[0];
-      global$2().user(pub).get('profile').get('name').on(function (name) {
+      global$1().user(pub).get('profile').get('name').on(function (name) {
         return nameEl.innerText = name;
       });
-      Channel.getActivity(global$2(), pub, function (status) {
+      Channel.getActivity(global$1(), pub, function (status) {
         var cls = "iris-online-indicator" + (status.isActive ? ' yes' : '');
         onlineIndicator.setAttribute('class', cls);
         var undelivered = messages.querySelectorAll('.iris-chat-message:not(.delivered)');
@@ -3430,7 +4245,7 @@ var Channel = /*#__PURE__*/function () {
       messages.scrollTop = messages.scrollHeight;
     });
     textArea.addEventListener('keyup', function (event) {
-      Channel.setActivity(global$2(), true); // TODO
+      //Channel.setActivity(publicState(), true); // TODO
       _this18.setMyMsgsLastSeenTime(); // TODO
       if (event.keyCode === 13) {
         event.preventDefault();
@@ -3455,13 +4270,13 @@ var Channel = /*#__PURE__*/function () {
   * @param {string} activity string: set the activity status every 3 seconds, null/false: stop updating
   */;
   Channel.setActivity = function setActivity(activity) {
-    if (global$2().irisActivityStatus === activity) {
+    if (global$1().irisActivityStatus === activity) {
       return;
     }
-    global$2().irisActivityStatus = activity;
-    clearTimeout(global$2().setActivityTimeout);
+    global$1().irisActivityStatus = activity;
+    clearTimeout(global$1().setActivityTimeout);
     var update = function update() {
-      global$2().user().get("activity").put({
+      global$1().user().get("activity").put({
         status: activity,
         time: new Date(Gun.state()).toISOString()
       });
@@ -3469,7 +4284,7 @@ var Channel = /*#__PURE__*/function () {
     update();
     function timerUpdate() {
       update();
-      global$2().setActivityTimeout = setTimeout(timerUpdate, 3000);
+      global$1().setActivityTimeout = setTimeout(timerUpdate, 3000);
     }
     if (activity) {
       timerUpdate();
@@ -3483,7 +4298,7 @@ var Channel = /*#__PURE__*/function () {
   */;
   Channel.getActivity = function getActivity(pubKey, callback) {
     var timeout;
-    global$2().user(pubKey).get("activity").on(function (activity) {
+    global$1().user(pubKey).get("activity").on(function (activity) {
       if (!activity || !(activity.time && activity.status)) {
         return;
       }
@@ -3534,7 +4349,7 @@ var Channel = /*#__PURE__*/function () {
               if (urlRoot === void 0) {
                 urlRoot = 'https://iris.to/';
               }
-              user = global$2().user();
+              user = global$1().user();
               key = session.getKey(); // We create a new Gun user whose private key is shared with the chat link recipients.
               // Chat link recipients can contact you by writing their public key to the shared key's user space.
               _context48.next = 5;
@@ -3564,10 +4379,10 @@ var Channel = /*#__PURE__*/function () {
               linkId = _context48.sent;
               linkId = linkId.slice(0, 12);
               // User has to exist, in order for .get(chatRequests).on() to be ever triggered
-              util.gunAsAnotherUser(global$2(), sharedKey, function (user) {
-                user.get('chatRequests').put({
-                  a: 1
-                });
+              global$1(sharedKey).get('chatRequests').put({
+                a: 1
+              }).get('chatRequests').put({
+                a: 1
               });
               user.get('chatLinks').get(linkId).put({
                 encryptedSharedKey: encryptedSharedKey,
@@ -3609,13 +4424,13 @@ var Channel = /*#__PURE__*/function () {
                 subscribe = false;
               }
               key = session.getKey();
-              user = global$2().user();
+              user = global$1().user();
               _context51.next = 6;
               return Gun.SEA.secret(key.epub, key);
             case 6:
               mySecret = _context51.sent;
               chatLinks = [];
-              user.get('chatLinks').map().on(function (data, linkId) {
+              user.get('chatLinks').map(function (data, linkId) {
                 if (!data || chatLinks.indexOf(linkId) !== -1) {
                   return;
                 }
@@ -3655,7 +4470,7 @@ var Channel = /*#__PURE__*/function () {
                               });
                             }
                             if (subscribe) {
-                              global$2().user(sharedKey.pub).get('chatRequests').map().on( /*#__PURE__*/function () {
+                              global$1().user(sharedKey.pub).get('chatRequests').map( /*#__PURE__*/function () {
                                 var _ref14 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee48(encPub, requestId) {
                                   var s, pub, channel;
                                   return _regeneratorRuntime().wrap(function _callee48$(_context49) {
@@ -3684,9 +4499,7 @@ var Channel = /*#__PURE__*/function () {
                                           });
                                           channel.save();
                                         case 10:
-                                          util.gunAsAnotherUser(global$2(), sharedKey, function (user) {
-                                            user.get('chatRequests').get(requestId).put(null);
-                                          });
+                                          global$1(sharedKey).get('chatRequests').get(requestId).put(null);
                                         case 11:
                                         case "end":
                                           return _context49.stop();
@@ -3728,14 +4541,14 @@ var Channel = /*#__PURE__*/function () {
   _proto.removeGroupChatLink = function removeGroupChatLink(linkId) {
     this.chatLinks[linkId] = null;
     this.put('chatLinks', this.chatLinks);
-    global$2().user().get('chatLinks').get(linkId).put(null);
+    global$1().user().get('chatLinks').get(linkId).put(null);
   }
   /**
   *
   */;
   Channel.removePrivateChatLink = function removePrivateChatLink(key, linkId) {
-    global$2().user().auth(key);
-    global$2().user().get('chatLinks').get(linkId).put(null);
+    global$1().user().auth(key);
+    global$1().user().get('chatLinks').get(linkId).put(null);
   }
   /**
   *
@@ -3749,13 +4562,13 @@ var Channel = /*#__PURE__*/function () {
         while (1) {
           switch (_context52.prev = _context52.next) {
             case 0:
-              global$2().user().auth(key);
+              global$1().user().auth(key);
               _context52.next = 3;
               return Channel.getOurSecretChannelId(pub, key);
             case 3:
               channelId = _context52.sent;
-              global$2().user().get('channels').get(channelId).put(null);
-              global$2().user().get('channels').get(channelId).off();
+              global$1().user().get('channels').get(channelId).put(null);
+              global$1().user().get('channels').get(channelId).off();
             case 6:
             case "end":
               return _context52.stop();
@@ -3791,9 +4604,9 @@ var Channel = /*#__PURE__*/function () {
               return util.getHash(mySecretHash + uuid);
             case 8:
               mySecretUuid = _context53.sent;
-              global$2().user().auth(key);
-              global$2().user().get('channels').get(mySecretUuid).put(null);
-              global$2().user().get('channels').get(mySecretUuid).off();
+              global$1().user().auth(key);
+              global$1().user().get('channels').get(mySecretUuid).put(null);
+              global$1().user().get('channels').get(mySecretUuid).off();
             case 12:
             case "end":
               return _context53.stop();
@@ -3830,375 +4643,6 @@ function privateState (publicKey, chatLink) {
   return channel;
 }
 
-// Localforage returns null if an item is not found, so we represent null with this uuid instead.
-// not foolproof, but good enough for now.
-var LOCALFORAGE_NULL = "c2fc1ad0-f76f-11ec-b939-0242ac120002";
-var notInLocalForage = /*#__PURE__*/new Set();
-localForage.config({
-  driver: [localForage.LOCALSTORAGE, localForage.INDEXEDDB, localForage.WEBSQL]
-});
-/**
-  Our very own implementation of the Gun API
- */
-var Node = /*#__PURE__*/function () {
-  /** */
-  function Node(id, parent) {
-    var _this = this;
-    if (id === void 0) {
-      id = '';
-    }
-    if (parent === void 0) {
-      parent = null;
-    }
-    this.children = new Map();
-    this.on_subscriptions = new Map();
-    this.map_subscriptions = new Map();
-    this.value = undefined;
-    this.counter = 0;
-    this.loaded = false;
-    this.saveLocalForage = _.throttle( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var children;
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              if (_this.loaded) {
-                _context.next = 3;
-                break;
-              }
-              _context.next = 3;
-              return _this.loadLocalForage();
-            case 3:
-              if (_this.children.size) {
-                children = Array.from(_this.children.keys());
-                localForage.setItem(_this.id, children);
-              } else if (_this.value === undefined) {
-                localForage.removeItem(_this.id);
-              } else {
-                localForage.setItem(_this.id, _this.value === null ? LOCALFORAGE_NULL : _this.value);
-              }
-            case 4:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    })), 500);
-    this.loadLocalForage = _.throttle( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
-      var result, newResult;
-      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-        while (1) {
-          switch (_context3.prev = _context3.next) {
-            case 0:
-              if (!notInLocalForage.has(_this.id)) {
-                _context3.next = 2;
-                break;
-              }
-              return _context3.abrupt("return", undefined);
-            case 2:
-              _context3.next = 4;
-              return localForage.getItem(_this.id);
-            case 4:
-              result = _context3.sent;
-              if (!(result === null)) {
-                _context3.next = 10;
-                break;
-              }
-              result = undefined;
-              notInLocalForage.add(_this.id);
-              _context3.next = 22;
-              break;
-            case 10:
-              if (!(result === LOCALFORAGE_NULL)) {
-                _context3.next = 14;
-                break;
-              }
-              result = null;
-              _context3.next = 22;
-              break;
-            case 14:
-              if (!Array.isArray(result)) {
-                _context3.next = 21;
-                break;
-              }
-              // result is a list of children
-              newResult = {};
-              _context3.next = 18;
-              return Promise.all(result.map( /*#__PURE__*/function () {
-                var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(key) {
-                  return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-                    while (1) {
-                      switch (_context2.prev = _context2.next) {
-                        case 0:
-                          _context2.next = 2;
-                          return _this.get(key).once();
-                        case 2:
-                          newResult[key] = _context2.sent;
-                        case 3:
-                        case "end":
-                          return _context2.stop();
-                      }
-                    }
-                  }, _callee2);
-                }));
-                return function (_x) {
-                  return _ref3.apply(this, arguments);
-                };
-              }()));
-            case 18:
-              result = newResult;
-              _context3.next = 22;
-              break;
-            case 21:
-              // result is a value
-              _this.value = result;
-            case 22:
-              _this.loaded = true;
-              return _context3.abrupt("return", result);
-            case 24:
-            case "end":
-              return _context3.stop();
-          }
-        }
-      }, _callee3);
-    })), 500);
-    this.doCallbacks = _.throttle(function () {
-      var _loop3 = function _loop3() {
-        var _step$value = _step.value,
-          id = _step$value[0],
-          callback = _step$value[1];
-        var event = {
-          off: function off() {
-            return _this.on_subscriptions["delete"](id);
-          }
-        };
-        _this.once(callback, event, false);
-      };
-      for (var _iterator = _createForOfIteratorHelperLoose(_this.on_subscriptions), _step; !(_step = _iterator()).done;) {
-        _loop3();
-      }
-      if (_this.parent) {
-        var _loop = function _loop() {
-          var _step2$value = _step2.value,
-            id = _step2$value[0],
-            callback = _step2$value[1];
-          var event = {
-            off: function off() {
-              return _this.parent.on_subscriptions["delete"](id);
-            }
-          };
-          _this.parent.once(callback, event, false);
-        };
-        for (var _iterator2 = _createForOfIteratorHelperLoose(_this.parent.on_subscriptions), _step2; !(_step2 = _iterator2()).done;) {
-          _loop();
-        }
-        var _loop2 = function _loop2() {
-          var _step3$value = _step3.value,
-            id = _step3$value[0],
-            callback = _step3$value[1];
-          var event = {
-            off: function off() {
-              return _this.parent.map_subscriptions["delete"](id);
-            }
-          };
-          _this.once(callback, event, false);
-        };
-        for (var _iterator3 = _createForOfIteratorHelperLoose(_this.parent.map_subscriptions), _step3; !(_step3 = _iterator3()).done;) {
-          _loop2();
-        }
-      }
-    }, 40);
-    this.id = id;
-    this.parent = parent;
-  }
-  /**
-   *
-   * @param key
-   * @returns {Node}
-   * @example node.get('users').get('alice').put({name: 'Alice'})
-   */
-  var _proto = Node.prototype;
-  _proto.get = function get(key) {
-    var existing = this.children.get(key);
-    if (existing) {
-      return existing;
-    }
-    var new_node = new Node(this.id + "/" + key, this);
-    this.children.set(key, new_node);
-    this.saveLocalForage();
-    return new_node;
-  }
-  /**
-   * Set a value to the node. If the value is an object, it will be converted to child nodes.
-   * @param value
-   * @example node.get('users').get('alice').put({name: 'Alice'})
-   */;
-  _proto.put = function put(value) {
-    var _this2 = this;
-    if (Array.isArray(value)) {
-      throw new Error('Sorry, we don\'t deal with arrays');
-    }
-    if (typeof value === 'object' && value !== null) {
-      this.value = undefined;
-      for (var key in value) {
-        this.get(key).put(value[key]);
-      }
-      _.defer(function () {
-        return _this2.doCallbacks();
-      }, 100);
-      return;
-    }
-    this.children = new Map();
-    this.value = value;
-    this.doCallbacks();
-    this.saveLocalForage();
-  }
-  // protip: the code would be a lot cleaner if you separated the Node API from storage adapters.
-  /**
-   * Return a value without subscribing to it
-   * @param callback
-   * @param event
-   * @param returnIfUndefined
-   * @returns {Promise<*>}
-   */;
-  _proto.once =
-  /*#__PURE__*/
-  function () {
-    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5(callback, event, returnIfUndefined) {
-      var _this3 = this;
-      var result;
-      return _regeneratorRuntime().wrap(function _callee5$(_context5) {
-        while (1) {
-          switch (_context5.prev = _context5.next) {
-            case 0:
-              if (returnIfUndefined === void 0) {
-                returnIfUndefined = true;
-              }
-              if (!this.children.size) {
-                _context5.next = 7;
-                break;
-              }
-              // return an object containing all children
-              result = {};
-              _context5.next = 5;
-              return Promise.all(Array.from(this.children.keys()).map( /*#__PURE__*/function () {
-                var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(key) {
-                  return _regeneratorRuntime().wrap(function _callee4$(_context4) {
-                    while (1) {
-                      switch (_context4.prev = _context4.next) {
-                        case 0:
-                          _context4.next = 2;
-                          return _this3.get(key).once(undefined, event);
-                        case 2:
-                          result[key] = _context4.sent;
-                        case 3:
-                        case "end":
-                          return _context4.stop();
-                      }
-                    }
-                  }, _callee4);
-                }));
-                return function (_x5) {
-                  return _ref4.apply(this, arguments);
-                };
-              }()));
-            case 5:
-              _context5.next = 14;
-              break;
-            case 7:
-              if (!(this.value !== undefined)) {
-                _context5.next = 11;
-                break;
-              }
-              result = this.value;
-              _context5.next = 14;
-              break;
-            case 11:
-              _context5.next = 13;
-              return this.loadLocalForage();
-            case 13:
-              result = _context5.sent;
-            case 14:
-              if (!(result !== undefined || returnIfUndefined)) {
-                _context5.next = 17;
-                break;
-              }
-              callback && callback(result, this.id.slice(this.id.lastIndexOf('/') + 1), null, event);
-              return _context5.abrupt("return", result);
-            case 17:
-            case "end":
-              return _context5.stop();
-          }
-        }
-      }, _callee5, this);
-    }));
-    function once(_x2, _x3, _x4) {
-      return _once.apply(this, arguments);
-    }
-    return once;
-  }() /**
-       * Subscribe to a value
-       * @param callback
-       */;
-  _proto.on = function on(callback) {
-    var _this4 = this;
-    var id = this.counter++;
-    this.on_subscriptions.set(id, callback);
-    var event = {
-      off: function off() {
-        return _this4.on_subscriptions["delete"](id);
-      }
-    };
-    this.once(callback, event, false);
-  }
-  /**
-   * Subscribe to the children of a node. Callback is called separately for each child.
-   * @param callback
-   * @returns {Promise<void>}
-   */;
-  _proto.map =
-  /*#__PURE__*/
-  function () {
-    var _map = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(callback) {
-      var _this5 = this;
-      var id, event, _iterator4, _step4, child;
-      return _regeneratorRuntime().wrap(function _callee6$(_context6) {
-        while (1) {
-          switch (_context6.prev = _context6.next) {
-            case 0:
-              id = this.counter++;
-              this.map_subscriptions.set(id, callback);
-              event = {
-                off: function off() {
-                  return _this5.map_subscriptions["delete"](id);
-                }
-              };
-              if (this.loaded) {
-                _context6.next = 6;
-                break;
-              }
-              _context6.next = 6;
-              return this.loadLocalForage();
-            case 6:
-              for (_iterator4 = _createForOfIteratorHelperLoose(this.children.values()); !(_step4 = _iterator4()).done;) {
-                child = _step4.value;
-                child.once(callback, event, false);
-              }
-            case 7:
-            case "end":
-              return _context6.stop();
-          }
-        }
-      }, _callee6, this);
-    }));
-    function map(_x6) {
-      return _map.apply(this, arguments);
-    }
-    return map;
-  }();
-  return Node;
-}();
-
 var local;
 /**
  * Get a state that is only synced in memory and local storage.
@@ -4208,7 +4652,7 @@ var local;
  */
 function local$1 () {
   if (!local) {
-    local = new Node();
+    local = new Node('local');
   }
   return local;
 }
@@ -4554,7 +4998,7 @@ var addWebPushSubscriptionsToChats = /*#__PURE__*/_.debounce(function () {
 }, 5000);
 function removeSubscription(hash) {
   delete webPushSubscriptions[hash];
-  global$2().user().get('webPushSubscriptions').get(hash).put(null);
+  global$1().user().get('webPushSubscriptions').get(hash).put(null);
   addWebPushSubscriptionsToChats();
 }
 function addWebPushSubscription(_x2, _x3) {
@@ -4583,12 +5027,13 @@ function _addWebPushSubscription() {
             return util.getHash(JSON.stringify(s));
           case 10:
             hash = _context5.sent;
+            console.log('hash', hash);
             if (saveToGun) {
-              global$2().user().get('webPushSubscriptions').get(hash).put(enc);
+              global$1().user().get('webPushSubscriptions').get(hash).put(enc);
             }
             webPushSubscriptions[hash] = s;
             addWebPushSubscriptionsToChats();
-          case 14:
+          case 15:
           case "end":
             return _context5.stop();
         }
@@ -4612,7 +5057,7 @@ function _getWebPushSubscriptions() {
             return Gun.SEA.secret(myKey.epub, myKey);
           case 3:
             mySecret = _context7.sent;
-            global$2().user().get('webPushSubscriptions').map().on( /*#__PURE__*/function () {
+            global$1().user().get('webPushSubscriptions').map( /*#__PURE__*/function () {
               var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(enc) {
                 var s;
                 return _regeneratorRuntime().wrap(function _callee6$(_context6) {
@@ -4652,7 +5097,7 @@ function _getWebPushSubscriptions() {
 }
 function getEpub(user) {
   return new Promise(function (resolve) {
-    global$2().user(user).get('epub').on( /*#__PURE__*/function () {
+    global$1().user(user).get('epub').on( /*#__PURE__*/function () {
       var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(epub, k, x, e) {
         return _regeneratorRuntime().wrap(function _callee$(_context) {
           while (1) {
@@ -4686,7 +5131,7 @@ function _getNotificationText() {
         switch (_context8.prev = _context8.next) {
           case 0:
             _context8.next = 2;
-            return global$2().user(notification.from).get('profile').once();
+            return global$1().user(notification.from).get('profile').once();
           case 2:
             profile = _context8.sent;
             name = profile && profile.name || 'someone';
@@ -4705,15 +5150,15 @@ function _getNotificationText() {
 function subscribeToIrisNotifications(onClick) {
   var notificationsSeenTime;
   var notificationsShownTime;
-  global$2().user().get('notificationsSeenTime').on(function (v) {
+  global$1().user().get('notificationsSeenTime').on(function (v) {
     notificationsSeenTime = v;
     console.log(v);
   });
-  global$2().user().get('notificationsShownTime').on(function (v) {
+  global$1().user().get('notificationsShownTime').on(function (v) {
     return notificationsShownTime = v;
   });
   var setNotificationsShownTime = _.debounce(function () {
-    global$2().user().get('notificationsShownTime').put(new Date().toISOString());
+    global$1().user().get('notificationsShownTime').put(new Date().toISOString());
   }, 1000);
   var alreadyHave = new Set();
   group().on("notifications/" + session.getPubKey(), /*#__PURE__*/function () {
@@ -4790,7 +5235,7 @@ function subscribeToIrisNotifications(onClick) {
 function changeUnseenNotificationCount(change) {
   if (!change) {
     unseenNotificationCount = 0;
-    global$2().user().get('notificationsSeenTime').put(new Date().toISOString());
+    global$1().user().get('notificationsSeenTime').put(new Date().toISOString());
   } else {
     unseenNotificationCount += change;
     unseenNotificationCount = Math.max(unseenNotificationCount, 0);
@@ -4829,7 +5274,7 @@ function _sendIrisNotification() {
             return Gun.SEA.encrypt(notification, secret);
           case 11:
             enc = _context9.sent;
-            global$2().user().get('notifications').get(recipient).put(enc);
+            global$1().user().get('notifications').get(recipient).put(enc);
           case 13:
           case "end":
             return _context9.stop();
@@ -4979,12 +5424,8 @@ var notifications = {
   removeSubscription: removeSubscription
 };
 
-var electron = util.isElectron ? /*#__PURE__*/new Gun({
-  peers: ['http://localhost:8768/gun'],
-  file: 'State.electron',
-  multicast: false,
-  localStorage: false
-}).get('state') : null;
+// TODO config {peers: ['http://localhost:8768/gun'], file: 'State.electron', multicast:false, localStorage: false}
+var electron = util.isElectron ? /*#__PURE__*/new Node('electron').get('state') : null;
 
 var key;
 var myName;
@@ -5112,7 +5553,6 @@ var session = {
         this.updateNoFollowers();
       }
     }
-    console.log('removeFollow', k, followDistance, follower);
     if (searchableItems[k] && searchableItems[k].followers.size === 0) {
       delete searchableItems[k];
       local$1().get('contacts').get(k).put(false);
@@ -5136,7 +5576,7 @@ var session = {
     }
     getExtendedFollowsCalled.set(k, currentDepth);
     this.addFollow(callback, k, currentDepth - 1);
-    publicState(k).get('follow').map().on(function (isFollowing, followedKey) {
+    publicState(k).get('follow').map(function (isFollowing, followedKey) {
       if (isFollowing) {
         _this2.addFollow(callback, followedKey, currentDepth, k);
         if (currentDepth < maxDepth) {
@@ -5231,18 +5671,9 @@ var session = {
     publicState().put({
       epub: key.epub
     });
-    publicState().get('likes').put({
-      a: null
-    }); // gun bug?
-    publicState().get('msgs').put({
-      a: null
-    }); // gun bug?
-    publicState().get('replies').put({
-      a: null
-    }); // gun bug?
     notifications.subscribeToWebPush();
     notifications.getWebPushSubscriptions();
-    notifications.subscribeToIrisNotifications();
+    //notifications.subscribeToIrisNotifications();
     Channel.getMyChatLinks(undefined, function (chatLink) {
       local$1().get('chatLinks').get(chatLink.id).put(chatLink.url);
       latestChatLink = chatLink.url;
@@ -5256,6 +5687,7 @@ var session = {
         myName = name;
       }
     });
+    // a lot of this is iris-messenger stuff
     notifications.init();
     local$1().get('loggedIn').put(true);
     local$1().get('settings').once().then(function (settings) {
@@ -5266,7 +5698,7 @@ var session = {
         local$1().get('settings').get('autoplayWebtorrent').put(DEFAULT_SETTINGS.local.autoplayWebtorrent);
       }
     });
-    publicState().get('block').map().on(function (isBlocked, user) {
+    publicState().get('block').map(function (isBlocked, user) {
       local$1().get('block').get(user).put(isBlocked);
       if (isBlocked) {
         delete searchableItems[user];
@@ -5367,12 +5799,10 @@ var session = {
             case 16:
               _this6.clearIndexedDB();
               localStorage.clear(); // TODO clear only iris data
-              localForage.clear().then(function () {
-                window.location.hash = '';
-                window.location.href = '/';
-                location.reload();
-              });
-            case 19:
+              window.location.hash = '';
+              window.location.href = '/';
+              location.reload();
+            case 21:
             case "end":
               return _context.stop();
           }
@@ -5675,7 +6105,7 @@ var staticState = {
       if (typeof hash !== 'string') {
         reject('Hash must be a string');
       }
-      global$2().get('#').get(hash).on(function (v, _k, _x, e) {
+      global$1().get('#').get(hash).on(function (v, _k, _x, e) {
         if (v) {
           e.off();
           callback && callback(v);
@@ -5699,7 +6129,7 @@ var staticState = {
               return util.getHash(value);
             case 2:
               hash = _context.sent;
-              global$2().get('#').get(hash).put(value);
+              global$1().get('#').get(hash).put(value);
               return _context.abrupt("return", hash);
             case 5:
             case "end":
@@ -6499,7 +6929,7 @@ var SignedMessage = /*#__PURE__*/function () {
 /*eslint no-useless-escape: "off", camelcase: "off" */
 var index = {
   local: local$1,
-  global: global$2,
+  global: global$1,
   group: group,
   "public": publicState,
   "private": privateState,

@@ -6,7 +6,7 @@ import group from './group';
 import privateState from './private';
 import SignedMessage from './SignedMessage';
 import Channel from './Channel';
-import Node from './Node';
+import Node from './db/Node';
 declare const _default: {
     local: typeof local;
     global: typeof global;
@@ -17,7 +17,7 @@ declare const _default: {
         get(hash: string, callback: Function): Promise<unknown>;
         put(value: any): Promise<string | undefined>;
     };
-    electron: import("gun").IGunChain<any, import("gun").IGunInstance<any>, import("gun").IGunInstance<any>, "state"> | null;
+    electron: Node | null;
     peers: {
         known: {
             [key: string]: {
@@ -89,7 +89,6 @@ declare const _default: {
     };
     util: {
         gunOnceDefined: (node: any) => Promise<unknown>;
-        gunAsAnotherUser: (gun: any, key: any, f: Function) => any;
         getHash(str: string, format?: string): Promise<string | undefined>;
         capitalize(s: string): string;
         generateName(): string;

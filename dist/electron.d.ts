@@ -1,2 +1,3 @@
-declare const electron: import("gun").IGunChain<any, import("gun").IGunInstance<any>, import("gun").IGunInstance<any>, "state"> | null;
+import Node from "./db/Node";
+declare const electron: Node | null;
 export default electron;

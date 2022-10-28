@@ -17,7 +17,7 @@ import notifications from './notifications';
 
 import SignedMessage from './SignedMessage';
 import Channel from './Channel';
-import Node from './Node';
+import Node from './db/Node';
 
 export default {
   local,

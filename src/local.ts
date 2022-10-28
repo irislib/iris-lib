@@ -1,4 +1,4 @@
-import Node from './Node';
+import Node from './db/Node';
 
 let local: Node;
 
@@ -10,7 +10,7 @@ let local: Node;
  */
 export default function() {
   if (!local) {
-    local = new Node();
+    local = new Node('local');
   }
   return local;
 }

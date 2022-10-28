@@ -1,4 +1,4 @@
-import Node from './Node';
+import Node from './db/Node';
 /**
  * Get a state that is only synced in memory and local storage.
  *

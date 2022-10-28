@@ -5,7 +5,6 @@ import Channel from './Channel';
 import util from './util';
 import _ from './lodash';
 import Fuse from "fuse.js";
-import localforage from 'localforage';
 import local from './local';
 import electron from './electron';
 import user from './public';
@@ -37,7 +36,7 @@ const DEFAULT_SETTINGS = {
     autoplayWebtorrent: true,
     maxConnectedPeers: util.isElectron ? 2 : 1
   }
-}
+};
 
 /**
  * User session management utilities.
@@ -126,7 +125,6 @@ export default {
         this.updateNoFollowers();
       }
     }
-    console.log('removeFollow', k, followDistance, follower);
     if (searchableItems[k] && searchableItems[k].followers.size === 0) {
       delete searchableItems[k];
       local().get('contacts').get(k).put(false);
@@ -143,7 +141,7 @@ export default {
 
     this.addFollow(callback, k, currentDepth - 1);
 
-    user(k).get('follow').map().on((isFollowing: boolean, followedKey: string) => { // TODO: unfollow
+    user(k).get('follow').map((isFollowing: boolean, followedKey: string) => { // TODO: unfollow
       if (isFollowing) {
         this.addFollow(callback, followedKey, currentDepth, k);
         if (currentDepth < maxDepth) {
@@ -234,12 +232,9 @@ export default {
     localStorage.setItem('chatKeyPair', JSON.stringify(k));
     user().auth(key);
     user().put({epub: key.epub});
-    user().get('likes').put({a:null}); // gun bug?
-    user().get('msgs').put({a:null}); // gun bug?
-    user().get('replies').put({a:null}); // gun bug?
     notifications.subscribeToWebPush();
     notifications.getWebPushSubscriptions();
-    notifications.subscribeToIrisNotifications();
+    //notifications.subscribeToIrisNotifications();
     Channel.getMyChatLinks( undefined, (chatLink: any) => {
       local().get('chatLinks').get(chatLink.id).put(chatLink.url);
       latestChatLink = chatLink.url;
@@ -251,6 +246,7 @@ export default {
         myName = name;
       }
     });
+    // a lot of this is iris-messenger stuff
     notifications.init();
     local().get('loggedIn').put(true);
     local().get('settings').once().then(settings => {
@@ -261,7 +257,7 @@ export default {
         local().get('settings').get('autoplayWebtorrent').put(DEFAULT_SETTINGS.local.autoplayWebtorrent);
       }
     });
-    user().get('block').map().on((isBlocked: boolean, user: string) => {
+    user().get('block').map((isBlocked: boolean, user: string) => {
       local().get('block').get(user).put(isBlocked);
       if (isBlocked) {
         delete searchableItems[user];
@@ -283,6 +279,8 @@ export default {
       }
     });
   },
+
+
 
   /**
    * Create a new user account and log in.
@@ -331,11 +329,9 @@ export default {
     }
     this.clearIndexedDB();
     localStorage.clear(); // TODO clear only iris data
-    localforage.clear().then(() => {
-      window.location.hash = '';
-      window.location.href = '/';
-      location.reload();
-    });
+    window.location.hash = '';
+    window.location.href = '/';
+    location.reload();
   },
 
   clearIndexedDB() {

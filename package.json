@@ -17,6 +17,7 @@
     "build": "tsdx build --format cjs,esm,umd --name iris",
     "build:docs": "documentation build src/** --shallow -f html -o docs --config documentation.yml",
     "test": "tsdx test",
+    "test:watch": "tsdx test --watch",
     "lint": "tsdx lint",
     "prepare": "tsdx build --name iris",
     "size": "size-limit",
@@ -50,15 +51,17 @@
   "devDependencies": {
     "@size-limit/preset-small-lib": "^8.1.0",
     "documentation": "^14.0.0",
+    "fake-indexeddb": "^4.0.0",
     "husky": "^8.0.1",
+    "rollup-plugin-web-worker-loader": "^1.6.1",
     "size-limit": "^8.1.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.4.0",
     "typescript": "^4.8.4"
   },
   "dependencies": {
+    "dexie": "^3.2.2",
     "fuse.js": "^6.6.2",
-    "gun": "https://github.com/mmalmi/gun",
-    "localforage": "^1.10.0"
+    "gun": "https://github.com/mmalmi/gun.git#759784f9ce96044e47a83176fa1392dea14aef2f"
   }
 }

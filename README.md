@@ -16,6 +16,25 @@ Iris is a fully decentralized p2p database that you can use to build all kinds o
 Used by [iris-messenger](https://iris.to) ([source](https://github.com/irislib/iris-messenger)), a decentralized social
 networking application.
 
+
+# TODO
+put somewhere 
+
+    config.module.rules.push({
+      test: /\.worker\.js$/,
+      loader: 'worker-loader',
+      options: {
+        worker: "Worker",
+      }
+    });
+    config.module.rules.push({
+      test: /\.sharedworker\.js$/,
+      loader: 'worker-loader',
+      options: {
+        worker: "SharedWorker",
+      }
+    });
+
 ## Installation
 
 ```sh

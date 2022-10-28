@@ -1,22 +1,19 @@
-import Gun from 'gun';
-import 'gun/sea';
-import 'gun/lib/yson';
-import 'gun/lib/radix';
-import 'gun/lib/radisk';
-import 'gun/lib/store';
-import 'gun/lib/rindexed';
 import peers from "./peers";
+import Node from "./db/Node";
 
-let global: any;
+let globalState: any;
 
 export default function(opts: any = {}) {
-  if (!global) {
-    const myOpts = Object.assign({ peers: (opts.peers || peers.random()), localStorage: false, retry:Infinity }, opts);
+  if (!globalState) {
+    peers.init();
+    const webSocketPeers = (opts.peers || peers.random());
+    console.log('webSocketPeers', webSocketPeers);
+    const myOpts = Object.assign({ webSocketPeers, localStorage: false, retry:Infinity }, opts);
     if (opts.peers) {
+      console.log('adding peers', opts.peers);
       opts.peers.forEach((url: string) => peers.add({url}));
     }
-    peers.init();
-    global = new Gun(myOpts);
+    globalState = new Node('global', myOpts);
   }
-  return global;
+  return globalState;
 }
