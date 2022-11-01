@@ -1,5 +1,6 @@
 import { Actor } from './Actor';
 import { Message } from './Message';
+import Router from './Router';
 declare type FunEventListener = {
     off: Function;
 };
@@ -31,7 +32,7 @@ export default class Node extends Actor {
     loaded: boolean;
     config: Config;
     currentUser: any;
-    router: Actor;
+    router: Router;
     constructor(id?: string, config?: Config, parent?: Node);
     getCurrentUser(): any;
     setCurrentUser(key: any): void;
@@ -46,5 +47,6 @@ export default class Node extends Actor {
     once(callback?: Function | null, event?: FunEventListener, returnIfUndefined?: boolean): Promise<any>;
     on(callback: Function): void;
     map(callback: Function): void;
+    opt(opts: any): void;
 }
 export {};

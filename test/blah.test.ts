@@ -1,6 +1,13 @@
 require("fake-indexeddb/auto");
 import iris from '..'; // can we test directly from ../src directory? requires some jest config, but would enable testing without building
 
+/*
+process.env.PORT = "8767";
+//@ts-ignore
+import Gun from 'gun/examples/http';
+console.log('Gun', Gun);
+ */
+
 describe('iris', () => {
   describe('global', () => {
     it('first put then on', (done) => {

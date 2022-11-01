@@ -53,7 +53,7 @@ export default class Node extends Actor {
     loaded = false;
     config: Config;
     currentUser: any;
-    router: Actor;
+    router: Router;
 
     constructor(id = '', config?: Config, parent?: Node) {
         super(id);
@@ -85,13 +85,21 @@ export default class Node extends Actor {
 
     handle(message: Message): void {
         if (message instanceof Put) {
+            console.log(this.id, 'handle put', message);
             for (const [key, children] of Object.entries(message.updatedNodes)) {
-                if (!children) {
+                if (!children || typeof children !== 'object') {
                     continue;
                 }
-                if (key === this.id) {
+                const ourKey = `global/${key.replace(/^~/, 'users/')}`
+                console.log('ourKey', ourKey);
+                console.log('this.id', this.id);
+                console.log('children', children);
+                if (this.parent && ourKey === this.parent.id) {
                     this.loaded = true;
                     for (const [childKey, data] of Object.entries(children)) {
+                        if (childKey === '_') {
+                            continue;
+                        }
                         this.get(childKey).merge(data);
                     }
                     this.parent && this.parent.handle(message);
@@ -102,9 +110,11 @@ export default class Node extends Actor {
     };
 
     private merge(data: NodeData) {
+        console.log('merge?', this.id, data);
         if (this.data && this.data.updatedAt > data.updatedAt) {
             return;
         }
+        console.log('merge', this.id, data);
         this.data = data;
     }
 
@@ -184,21 +194,27 @@ export default class Node extends Actor {
     private addParentNodes(updatedNodes: UpdatedNodes) {
         if (this.parent) {
             this.parent.data = undefined;
-            const children: any = {};
-            children[this.id.split('/').pop() as string] = this.data;
-            // remove the part before first / from id
+            const childName = this.id.split('/').pop() as string;
             const parentId = this.parent.id.split('/').slice(1).join('/');
-            updatedNodes[parentId] = children;
+            if (this.data) {
+                updatedNodes[parentId] = updatedNodes[parentId] || {};
+                updatedNodes[parentId][childName] = this.data;
+            } else {
+                // TODO add this.children in gun wire msg format
+            }
             this.parent.addParentNodes(updatedNodes);
         }
     }
 
     async once(callback?: Function | null, event?: FunEventListener, returnIfUndefined = true): Promise<any> {
+        // TODO would be much simpler with a mem storage adapter
         let result: any;
         if (!this.loaded) {
             let id = this.id.split('/').slice(1).join('/');
             id = id.replace(/^users\//, '~');
-            this.router.postMessage(Get.new(id, this));
+            const childKey = id.split('/').pop();
+            id = id.split('/').slice(0, -1).join('/');
+            this.router.postMessage(Get.new(id, this, undefined, childKey));
         }
         if (this.children.size) {
             // return an object containing all children
@@ -235,5 +251,9 @@ export default class Node extends Actor {
         for (const child of this.children.values()) {
             child.once(callback, event, false);
         }
+    }
+
+    opt(opts: any) {
+        this.router.opt(opts);
     }
 }

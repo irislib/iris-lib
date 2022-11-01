@@ -830,10 +830,9 @@ var util = {
 };
 
 var ELECTRON_GUN_URL = 'http://localhost:8767/gun';
-var maxConnectedPeers = 2;
+var maxConnectedPeers = 1;
 var DEFAULT_PEERS = {
-  'wss://gun-rs.iris.to/gun': {},
-  'wss://gun-us.herokuapp.com/gun': {}
+  'wss://gun-rs.iris.to/gun': {}
 };
 var loc = window.location;
 var host = loc.host;
@@ -846,7 +845,6 @@ if (loc.hostname.endsWith('herokuapp.com') || is_localhost_but_not_dev) {
     enabled: true
   };
 }
-var urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
 /**
  * Networking and peer management utilities
  */
@@ -860,12 +858,6 @@ var peers = {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              if (!(peer.url && !urlRegex.test(peer.url))) {
-                _context.next = 2;
-                break;
-              }
-              throw new Error("Invalid url " + peer.url);
-            case 2:
               if (peer.from) {
                 Object.keys(_this.known).forEach(function (k) {
                   if (_this.known[k].from === peer.from) {
@@ -877,41 +869,41 @@ var peers = {
               url = peer.url || '';
               _this.known[url] = _this.known[url] || _.omit(peer, ['url']);
               if (!(peer.visibility === 'public')) {
-                _context.next = 19;
+                _context.next = 17;
                 break;
               }
-              _context.next = 8;
+              _context.next = 6;
               return Gun.SEA.secret(session.getKey().epub, session.getKey());
-            case 8:
+            case 6:
               _context.t0 = _context.sent;
               if (_context.t0) {
-                _context.next = 11;
+                _context.next = 9;
                 break;
               }
               _context.t0 = '';
-            case 11:
+            case 9:
               secret = _context.t0;
-              _context.next = 14;
+              _context.next = 12;
               return Gun.SEA.encrypt(peer.url, secret);
-            case 14:
+            case 12:
               encryptedUrl = _context.sent;
-              _context.next = 17;
+              _context.next = 15;
               return Gun.SEA.work(encryptedUrl, null, null, {
                 name: 'SHA-256'
               });
-            case 17:
+            case 15:
               encryptedUrlHash = _context.sent;
               global$1().user().get('peers').get(encryptedUrlHash).put({
                 url: peer.url,
                 lastSeen: new Date().toISOString()
               });
-            case 19:
+            case 17:
               if (peer.enabled !== false) {
                 peer.url && _this.connect(peer.url); // this calls savePeers()
               } else {
                 _this.save();
               }
-            case 20:
+            case 18:
             case "end":
               return _context.stop();
           }
@@ -1083,10 +1075,10 @@ var Get = /*#__PURE__*/function () {
       return this.jsonStr;
     }
     var obj = {
+      "#": this.id,
       get: {
         "#": this.nodeId
-      },
-      "#": this.id
+      }
     };
     if (this.childKey) {
       obj.get['.'] = this.childKey;
@@ -1194,27 +1186,46 @@ var Hi = /*#__PURE__*/function () {
 }();
 
 // import * as Comlink from "comlink";
+var MyDexie = /*#__PURE__*/function (_Dexie) {
+  _inheritsLoose(MyDexie, _Dexie);
+  function MyDexie(dbName) {
+    var _this;
+    _this = _Dexie.call(this, dbName) || this;
+    _this.version(1).stores({
+      nodes: ", value, updatedAt"
+    });
+    _this.nodes = _this.table("nodes");
+    return _this;
+  }
+  return MyDexie;
+}(Dexie);
 var IndexedDB = /*#__PURE__*/function (_Actor) {
   _inheritsLoose(IndexedDB, _Actor);
   function IndexedDB(config) {
-    var _this;
+    var _this2;
     if (config === void 0) {
       config = {};
     }
-    _this = _Actor.call(this) || this;
-    _this.throttledPut = _.throttle(function () {
-      var keys = Object.keys(_this.putQueue);
+    _this2 = _Actor.call(this) || this;
+    _this2.config = {};
+    _this2.notStored = new Set();
+    _this2.putQueue = {};
+    _this2.getQueue = {};
+    _this2.i = 0;
+    _this2.queue = 0;
+    _this2.throttledPut = _.throttle(function () {
+      var keys = Object.keys(_this2.putQueue);
       var values = keys.map(function (key) {
-        return _this.putQueue[key];
+        return _this2.putQueue[key];
       });
-      _this.db.nodes.bulkPut(values, keys);
-      _this.putQueue = {};
+      _this2.db.nodes.bulkPut(values, keys);
+      _this2.putQueue = {};
     }, 500);
-    _this.throttledGet = _.throttle(function () {
+    _this2.throttledGet = _.throttle(function () {
       // clone this.getQueue and clear it
-      var queue = _this.getQueue;
+      var queue = _this2.getQueue;
       var keys = Object.keys(queue);
-      _this.db.nodes.bulkGet(keys).then(function (values) {
+      _this2.db.nodes.bulkGet(keys).then(function (values) {
         for (var i = 0; i < keys.length; i++) {
           var key = keys[i];
           var value = values[i];
@@ -1226,22 +1237,15 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
           }
         }
       });
-      _this.getQueue = {};
+      _this2.getQueue = {};
     }, 100);
-    _this.config = config;
-    _this.notStored = new Set();
-    _this.putQueue = {};
-    _this.getQueue = {};
-    _this.i = 0;
+    _this2.config = config;
     var dbName = config.dbName || 'iris';
-    _this.db = new Dexie(dbName);
-    _this.db.version(1).stores({
-      nodes: ',value'
-    });
-    _this.db.open()["catch"](function (err) {
+    _this2.db = new MyDexie(dbName);
+    _this2.db.open()["catch"](function (err) {
       console.error(err.stack || err);
     });
-    return _this;
+    return _this2;
   }
   var _proto = IndexedDB.prototype;
   _proto.put = function put(nodeId, value) {
@@ -1255,10 +1259,6 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
     this.throttledGet();
   };
   _proto.handle = function handle(message) {
-    this.queue = this.queue && this.queue++ || 1;
-    if (this.queue > 10) {
-      return;
-    }
     if (message instanceof Put) {
       this.handlePut(message);
     } else if (message instanceof Get) {
@@ -1268,7 +1268,7 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
     }
   };
   _proto.handleGet = function handleGet(message) {
-    var _this2 = this;
+    var _this3 = this;
     if (this.notStored.has(message.nodeId)) {
       // TODO message implying that the key is not stored
       return;
@@ -1276,21 +1276,21 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
     this.get(message.nodeId, function (value) {
       // TODO: this takes a long time to return
       if (value === undefined) {
-        _this2.notStored.add(message.nodeId);
+        _this3.notStored.add(message.nodeId);
         // TODO message implying that the key is not stored
       } else {
-        var putMessage = Put.newFromKv(message.nodeId, value, _this2.id);
+        var putMessage = Put.newFromKv(message.nodeId, value, _this3);
         putMessage.inResponseTo = message.id;
         message.from && message.from.postMessage(putMessage);
       }
     });
   };
   _proto.mergeAndSave = function mergeAndSave(path, newValue) {
-    var _this3 = this;
+    var _this4 = this;
     this.get(path, function (existing) {
       // TODO check updatedAt timestamp
       if (existing === undefined) {
-        _this3.put(path, newValue);
+        _this4.put(path, newValue);
       } else if (!_.isEqual(existing, newValue)) {
         // if existing value is array, merge it
         if (Array.isArray(existing) && Array.isArray(newValue)) {
@@ -1299,7 +1299,7 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
         if (Array.isArray(newValue) && newValue.length === 0) {
           console.log('no kids', path);
         }
-        _this3.put(path, newValue);
+        _this4.put(path, newValue);
       }
     });
   };
@@ -1313,13 +1313,13 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
     }
   };
   _proto.handlePut = /*#__PURE__*/function () {
-    var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(message) {
+    var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(put) {
       var _i, _Object$entries, _Object$entries$_i, nodeName, children, _i2, _Object$entries2, _Object$entries2$_i, childName, newValue, path;
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              _i = 0, _Object$entries = Object.entries(message.updatedNodes);
+              _i = 0, _Object$entries = Object.entries(put.updatedNodes);
             case 1:
               if (!(_i < _Object$entries.length)) {
                 _context.next = 13;
@@ -1364,18 +1364,8 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
   }();
   return IndexedDB;
 }(Actor);
-var actor;
-global.onconnect = function () {
-  if (actor) {
-    console.log('worker already exists');
-  } else {
-    console.log('starting worker');
-    actor = actor || new IndexedDB();
-  }
-};
 
-// self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
-
+//@ts-ignore
 var Websocket = /*#__PURE__*/function (_Actor) {
   _inheritsLoose(Websocket, _Actor);
   function Websocket(url, router) {
@@ -1384,9 +1374,9 @@ var Websocket = /*#__PURE__*/function (_Actor) {
     _this.sendQueue = [];
     console.log('Websocket', url);
     _this.router = router;
-    _this.ws = new WebSocket(url);
+    _this.ws = new WebSocket(url.replace('http', 'ws'));
     _this.ws.onopen = function () {
-      _this.ws.send(new Hi(_this.router.peerId).serialize());
+      //this.ws.send(new Hi(this.router.peerId).serialize());
       console.log("Connected to " + url);
       _this.sendQueue.forEach(function (message) {
         return _this.ws.send(message);
@@ -1411,17 +1401,21 @@ var Websocket = /*#__PURE__*/function (_Actor) {
   }
   var _proto = Websocket.prototype;
   _proto.handle = function handle(message) {
-    if (this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(message.serialize());
-    } else if (this.ws.readyState === WebSocket.CONNECTING) {
-      this.sendQueue.push(message.serialize());
+    if (message instanceof Get || message instanceof Put) {
+      if (message.from === this) {
+        return;
+      }
+      if (this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(message.serialize());
+      } else if (this.ws.readyState === WebSocket.CONNECTING) {
+        this.sendQueue.push(message.serialize());
+      }
     }
   };
   return Websocket;
 }(Actor);
 
 // import * as Comlink from "comlink";
-
 /*
 class SeenGetMessage {
     constructor(id, from, lastReplyChecksum) {
@@ -1439,7 +1433,6 @@ var Router = /*#__PURE__*/function (_Actor) {
       config = {};
     }
     _this = _Actor.call(this, 'router') || this;
-    // default random id
     _this.storageAdapters = new Set();
     _this.networkAdapters = new Set();
     _this.serverPeers = new Set();
@@ -1447,6 +1440,7 @@ var Router = /*#__PURE__*/function (_Actor) {
     _this.seenGetMessages = new Map();
     _this.subscribersByTopic = new Map();
     _this.msgCounter = 0;
+    // default random id
     _this.peerId = config.peerId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     _this.storageAdapters.add(new IndexedDB(config));
     console.log('config', config);
@@ -1463,14 +1457,16 @@ var Router = /*#__PURE__*/function (_Actor) {
   var _proto = Router.prototype;
   _proto.handle = function handle(message) {
     //console.log('router received', message);
-    if (this.seenMessages.has(message.id)) {
-      return;
-    }
-    this.seenMessages.add(message.id);
-    if (message instanceof Put) {
-      this.handlePut(message);
-    } else if (message instanceof Get) {
-      this.handleGet(message);
+    if (message instanceof Put || message instanceof Get) {
+      if (this.seenMessages.has(message.id)) {
+        return;
+      }
+      this.seenMessages.add(message.id);
+      if (message instanceof Put) {
+        this.handlePut(message);
+      } else if (message instanceof Get) {
+        this.handleGet(message);
+      }
     }
   };
   _proto.handlePut = function handlePut(put) {
@@ -1482,60 +1478,68 @@ var Router = /*#__PURE__*/function (_Actor) {
       //console.log('put subscribers', subscribers);
       for (var _iterator2 = _createForOfIteratorHelperLoose(_this2.storageAdapters), _step2; !(_step2 = _iterator2()).done;) {
         var storageAdapter = _step2.value;
-        storageAdapter.postMessage(put);
+        if (put.from !== storageAdapter) {
+          storageAdapter.postMessage(put);
+        }
       }
       for (var _iterator3 = _createForOfIteratorHelperLoose(_this2.serverPeers), _step3; !(_step3 = _iterator3()).done;) {
         var peer = _step3.value;
-        peer.postMessage(put);
+        if (put.from !== peer) {
+          peer.postMessage(put);
+        }
       }
       if (subscribers) {
         for (var _iterator4 = _createForOfIteratorHelperLoose(subscribers), _step4; !(_step4 = _iterator4()).done;) {
-          var _step4$value = _step4.value,
-            k = _step4$value[0],
-            v = _step4$value[1];
-          if (k !== put.from) {
-            v.postMessage(put);
+          var subscriber = _step4.value;
+          if (subscriber !== put.from) {
+            subscriber.postMessage(put);
           }
         }
       }
     });
   };
-  _proto.handleGet = function handleGet(get) {
-    var topic = get.nodeId.split('/')[1];
-    for (var _iterator5 = _createForOfIteratorHelperLoose(this.storageAdapters), _step5; !(_step5 = _iterator5()).done;) {
-      var storageAdapter = _step5.value;
-      storageAdapter.postMessage(get);
-    }
-    for (var _iterator6 = _createForOfIteratorHelperLoose(this.serverPeers), _step6; !(_step6 = _iterator6()).done;) {
-      var peer = _step6.value;
-      peer.postMessage(get);
-    }
-    if (!this.subscribersByTopic.has(topic)) {
-      this.subscribersByTopic.set(topic, new Map());
-    }
-    var subscribers = this.subscribersByTopic.get(topic);
-    for (var _iterator7 = _createForOfIteratorHelperLoose(subscribers), _step7; !(_step7 = _iterator7()).done;) {
-      var _step7$value = _step7.value,
-        k = _step7$value[0],
-        v = _step7$value[1];
-      // TODO: sample
-      if (k !== get.from.id) {
-        v.postMessage(get);
+  _proto.opt = function opt(opts) {
+    if (opts.peers) {
+      for (var _iterator5 = _createForOfIteratorHelperLoose(opts.peers), _step5; !(_step5 = _iterator5()).done;) {
+        var peer = _step5.value;
+        if (peer) {
+          this.serverPeers.add(new Websocket(peer, this));
+        }
       }
     }
-    if (!subscribers.has(get.from.id)) {
-      subscribers.set(get.from.id, get.from);
+  };
+  _proto.handleGet = function handleGet(get) {
+    var topic = get.nodeId.split('/')[1];
+    for (var _iterator6 = _createForOfIteratorHelperLoose(this.storageAdapters), _step6; !(_step6 = _iterator6()).done;) {
+      var storageAdapter = _step6.value;
+      if (get.from !== storageAdapter) {
+        storageAdapter.postMessage(get);
+      }
+    }
+    for (var _iterator7 = _createForOfIteratorHelperLoose(this.serverPeers), _step7; !(_step7 = _iterator7()).done;) {
+      var peer = _step7.value;
+      if (get.from !== peer) {
+        peer.postMessage(get);
+      }
+    }
+    if (!this.subscribersByTopic.has(topic)) {
+      this.subscribersByTopic.set(topic, new Set());
+    }
+    var subscribers = this.subscribersByTopic.get(topic);
+    if (subscribers) {
+      for (var _iterator8 = _createForOfIteratorHelperLoose(subscribers), _step8; !(_step8 = _iterator8()).done;) {
+        var subscriber = _step8.value;
+        if (subscriber !== get.from) {
+          subscriber.postMessage(get);
+        }
+      }
+      if (!subscribers.has(get.from)) {
+        subscribers.add(get.from);
+      }
     }
   };
   return Router;
 }(Actor);
-var actor$1;
-self.onconnect = function () {
-  console.log('router shared worker connected');
-  actor$1 = actor$1 || new Router();
-};
-
-// self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);
 
 var DEFAULT_CONFIG = {
   allowPublicSpace: false,
@@ -1644,19 +1648,27 @@ var Node = /*#__PURE__*/function (_Actor) {
   _proto.handle = function handle(message) {
     var _this2 = this;
     if (message instanceof Put) {
+      console.log(this.id, 'handle put', message);
       for (var _i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
         var _Object$entries$_i = _Object$entries[_i],
           key = _Object$entries$_i[0],
           children = _Object$entries$_i[1];
-        if (!children) {
+        if (!children || typeof children !== 'object') {
           continue;
         }
-        if (key === this.id) {
+        var ourKey = "global/" + key.replace(/^~/, 'users/');
+        console.log('ourKey', ourKey);
+        console.log('this.id', this.id);
+        console.log('children', children);
+        if (this.parent && ourKey === this.parent.id) {
           this.loaded = true;
           for (var _i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
             var _Object$entries2$_i = _Object$entries2[_i2],
               childKey = _Object$entries2$_i[0],
               data = _Object$entries2$_i[1];
+            if (childKey === '_') {
+              continue;
+            }
             this.get(childKey).merge(data);
           }
           this.parent && this.parent.handle(message);
@@ -1668,9 +1680,11 @@ var Node = /*#__PURE__*/function (_Actor) {
     }
   };
   _proto.merge = function merge(data) {
+    console.log('merge?', this.id, data);
     if (this.data && this.data.updatedAt > data.updatedAt) {
       return;
     }
+    console.log('merge', this.id, data);
     this.data = data;
   };
   _proto.get = function get(key) {
@@ -1727,18 +1741,19 @@ var Node = /*#__PURE__*/function (_Actor) {
   _proto.addParentNodes = function addParentNodes(updatedNodes) {
     if (this.parent) {
       this.parent.data = undefined;
-      var children = {};
-      children[this.id.split('/').pop()] = this.data;
-      // remove the part before first / from id
+      var childName = this.id.split('/').pop();
       var parentId = this.parent.id.split('/').slice(1).join('/');
-      updatedNodes[parentId] = children;
+      if (this.data) {
+        updatedNodes[parentId] = updatedNodes[parentId] || {};
+        updatedNodes[parentId][childName] = this.data;
+      }
       this.parent.addParentNodes(updatedNodes);
     }
   };
   _proto.once = /*#__PURE__*/function () {
     var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(callback, event, returnIfUndefined) {
       var _this3 = this;
-      var result, id, _id2;
+      var result, id, childKey, _id2;
       return _regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
@@ -1749,7 +1764,9 @@ var Node = /*#__PURE__*/function (_Actor) {
               if (!this.loaded) {
                 id = this.id.split('/').slice(1).join('/');
                 id = id.replace(/^users\//, '~');
-                this.router.postMessage(Get["new"](id, this));
+                childKey = id.split('/').pop();
+                id = id.split('/').slice(0, -1).join('/');
+                this.router.postMessage(Get["new"](id, this, undefined, childKey));
               }
               if (!this.children.size) {
                 _context2.next = 8;
@@ -1832,6 +1849,9 @@ var Node = /*#__PURE__*/function (_Actor) {
       var child = _step5.value;
       child.once(callback, event, false);
     }
+  };
+  _proto.opt = function opt(opts) {
+    this.router.opt(opts);
   };
   return Node;
 }(Actor);

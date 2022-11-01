@@ -1,28 +1,41 @@
-import { Put, Get } from '../Message.ts'
-import { Actor } from '../Actor.ts';
-import _ from "../../lodash.ts";
+import {Put, Get, Message} from '../Message'
+import { Actor } from '../Actor';
+import _ from "../../lodash";
 import Dexie from 'dexie';
+import {NodeData} from "../Node";
 // import * as Comlink from "comlink";
 
+class MyDexie extends Dexie {
+    nodes: Dexie.Table<NodeData, string>;
+    constructor(dbName: string) {
+        super(dbName);
+        this.version(1).stores({
+            nodes: ", value, updatedAt"
+        });
+        this.nodes = this.table("nodes");
+    }
+}
+
 export default class IndexedDB extends Actor {
-    constructor(config = {}) {
+    config = {};
+    notStored = new Set();
+    putQueue: any = {};
+    getQueue: any = {};
+    i = 0;
+    queue = 0;
+    db: MyDexie;
+
+    constructor(config: any = {}) {
         super();
         this.config = config;
-        this.notStored = new Set();
-        this.putQueue = {};
-        this.getQueue = {};
-        this.i = 0;
         const dbName = (config.dbName || 'iris');
-        this.db = new Dexie(dbName);
-        this.db.version(1).stores({
-            nodes: ',value'
-        });
+        this.db = new MyDexie(dbName);
         this.db.open().catch((err) => {
             console.error(err.stack || err);
         });
     }
 
-    put(nodeId, value) {
+    put(nodeId: string, value: any) {
         // add puts to a queue and dexie bulk write them once per 500ms
         this.putQueue[nodeId] = value;
         this.throttledPut();
@@ -37,7 +50,7 @@ export default class IndexedDB extends Actor {
         this.putQueue = {};
     }, 500);
 
-    get(path, callback) {
+    get(path: string, callback: Function) {
         this.getQueue[path] = this.getQueue[path] || [];
         this.getQueue[path].push(callback);
         this.throttledGet();
@@ -47,7 +60,7 @@ export default class IndexedDB extends Actor {
         // clone this.getQueue and clear it
         const queue = this.getQueue;
         const keys = Object.keys(queue);
-        this.db.nodes.bulkGet(keys).then((values) => {
+        this.db.nodes.bulkGet(keys).then((values: (any | undefined)[]) => {
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i];
                 const value = values[i];
@@ -61,11 +74,7 @@ export default class IndexedDB extends Actor {
         this.getQueue = {};
     }, 100);
 
-    handle(message) {
-        this.queue = (this.queue && this.queue++) || 1;
-        if (this.queue > 10) {
-            return;
-        }
+    handle(message: Message) {
         if (message instanceof Put) {
             this.handlePut(message);
         } else if (message instanceof Get) {
@@ -75,26 +84,26 @@ export default class IndexedDB extends Actor {
         }
     }
 
-    handleGet(message) {
+    handleGet(message: Get) {
         if (this.notStored.has(message.nodeId)) {
             // TODO message implying that the key is not stored
             return;
         }
-        this.get(message.nodeId, (value) => {
+        this.get(message.nodeId, (value: any) => {
             // TODO: this takes a long time to return
             if (value === undefined) {
                 this.notStored.add(message.nodeId);
                 // TODO message implying that the key is not stored
             } else {
-                const putMessage = Put.newFromKv(message.nodeId, value, this.id);
+                const putMessage = Put.newFromKv(message.nodeId, value, this);
                 putMessage.inResponseTo = message.id;
                 message.from && message.from.postMessage(putMessage);
             }
         });
     }
 
-    mergeAndSave(path, newValue) {
-        this.get(path, existing => {
+    mergeAndSave(path: string, newValue: any) {
+        this.get(path, (existing: any) => {
             // TODO check updatedAt timestamp
             if (existing === undefined) {
                 this.put(path, newValue);
@@ -113,7 +122,7 @@ export default class IndexedDB extends Actor {
         });
     }
 
-    savePath(path, value) {
+    savePath(path: string, value: any) {
         if (value === undefined) {
             this.db.nodes.delete(path);
             this.notStored.add(path);
@@ -123,8 +132,8 @@ export default class IndexedDB extends Actor {
         }
     }
 
-    async handlePut(message) {
-        for (const [nodeName, children] of Object.entries(message.updatedNodes)) {
+    async handlePut(put: Put) {
+        for (const [nodeName, children] of Object.entries(put.updatedNodes)) {
             if (!children) {
                 console.log('deleting', nodeName);
                 continue;
@@ -141,6 +150,7 @@ export default class IndexedDB extends Actor {
     }
 }
 
+/*
 let actor;
 global.onconnect = () => {
     if (actor) {
@@ -150,5 +160,6 @@ global.onconnect = () => {
         actor = actor || new IndexedDB();
     }
 }
+ */
 
 // self.onconnect = (e) => Comlink.expose(actor, e.ports[0]);

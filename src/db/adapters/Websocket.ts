@@ -1,20 +1,19 @@
-import {Hi, Message} from "../Message";
+import {Get, Message, Put} from "../Message";
 import {Actor} from "../Actor";
 //@ts-ignore
-import Router from "../Router.js";
 
 export default class Websocket extends Actor {
     ws: WebSocket;
-    router: Router;
+    router: Actor;
     sendQueue: string[] = [];
 
     constructor(url: string, router: Actor) {
         super('websocket:' + url);
         console.log('Websocket', url);
         this.router = router;
-        this.ws = new WebSocket(url);
+        this.ws = new WebSocket(url.replace('http', 'ws'));
         this.ws.onopen = () => {
-            this.ws.send(new Hi(this.router.peerId).serialize());
+            //this.ws.send(new Hi(this.router.peerId).serialize());
             console.log(`Connected to ${url}`);
             this.sendQueue.forEach((message) => this.ws.send(message));
             this.sendQueue = [];
@@ -36,10 +35,17 @@ export default class Websocket extends Actor {
     }
 
     handle(message: Message): void {
-        if (this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(message.serialize());
-        } else if (this.ws.readyState === WebSocket.CONNECTING) {
-            this.sendQueue.push(message.serialize());
+        if (message instanceof Get || message instanceof Put) {
+            if (message.from === this) {
+                return;
+            }
+            if (this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(message.serialize());
+            } else if (this.ws.readyState === WebSocket.CONNECTING) {
+                this.sendQueue.push(message.serialize());
+            }
         }
     }
 }
+
+

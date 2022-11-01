@@ -5,7 +5,7 @@ import util from './util';
 import publicState from './global';
 
 const ELECTRON_GUN_URL = 'http://localhost:8767/gun';
-let maxConnectedPeers = 2;
+let maxConnectedPeers = 1;
 
 type Peer = {
   url?: string;
@@ -20,7 +20,7 @@ type Peers = {
 
 const DEFAULT_PEERS: Peers = {
   'wss://gun-rs.iris.to/gun': {},
-  'wss://gun-us.herokuapp.com/gun': {},
+//  'wss://gun-us.herokuapp.com/gun': {},
 };
 
 const loc = window.location;
@@ -31,8 +31,6 @@ if (loc.hostname.endsWith('herokuapp.com') || is_localhost_but_not_dev) {
   DEFAULT_PEERS[`${loc.origin}/gun`] = {enabled: true};
 }
 
-const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
-
 /**
  * Networking and peer management utilities
  */
@@ -41,10 +39,6 @@ export default {
 
   /** */
   async add(peer: Peer) {
-    if (peer.url && !urlRegex.test(peer.url)) {
-      throw new Error(`Invalid url ${peer.url}`);
-    }
-
     if (peer.from) {
       Object.keys(this.known).forEach(k => {
         if (this.known[k].from === peer.from) { // remove previous peer url from the same user

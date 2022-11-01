@@ -51,10 +51,10 @@ export class Get implements Message {
         }
 
         const obj: any = {
+            "#": this.id,
             get: {
                 "#": this.nodeId,
             },
-            "#": this.id,
         };
 
         if (this.childKey) {
