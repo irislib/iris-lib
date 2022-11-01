@@ -817,7 +817,6 @@
 			
 			(Gun.window||{}).console = (Gun.window||{}).console || {log: function(){}};
 			(C = console).only = function(i, s){ return (C.only.i && i === C.only.i && C.only.i++) && (C.log.apply(C, arguments) || s) };
-			Gun.log.once("welcome", "Hello wonderful person! :) Thanks for using GUN, please ask for help on http://chat.gun.eco if anything takes you longer than 5min to figure out!");
 		})(USE, './root');
 	USE(function(module){
 			var Gun = USE('./root');
@@ -10720,7 +10719,6 @@
 	    enabled: true
 	  };
 	}
-	var urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
 	/**
 	 * Networking and peer management utilities
 	 */
@@ -10734,12 +10732,6 @@
 	        while (1) {
 	          switch (_context.prev = _context.next) {
 	            case 0:
-	              if (!(peer.url && !urlRegex.test(peer.url))) {
-	                _context.next = 2;
-	                break;
-	              }
-	              throw new Error("Invalid url " + peer.url);
-	            case 2:
 	              if (peer.from) {
 	                Object.keys(_this.known).forEach(function (k) {
 	                  if (_this.known[k].from === peer.from) {
@@ -10751,41 +10743,41 @@
 	              url = peer.url || '';
 	              _this.known[url] = _this.known[url] || _.omit(peer, ['url']);
 	              if (!(peer.visibility === 'public')) {
-	                _context.next = 19;
+	                _context.next = 17;
 	                break;
 	              }
-	              _context.next = 8;
+	              _context.next = 6;
 	              return gun$1.SEA.secret(session.getKey().epub, session.getKey());
-	            case 8:
+	            case 6:
 	              _context.t0 = _context.sent;
 	              if (_context.t0) {
-	                _context.next = 11;
+	                _context.next = 9;
 	                break;
 	              }
 	              _context.t0 = '';
-	            case 11:
+	            case 9:
 	              secret = _context.t0;
-	              _context.next = 14;
+	              _context.next = 12;
 	              return gun$1.SEA.encrypt(peer.url, secret);
-	            case 14:
+	            case 12:
 	              encryptedUrl = _context.sent;
-	              _context.next = 17;
+	              _context.next = 15;
 	              return gun$1.SEA.work(encryptedUrl, null, null, {
 	                name: 'SHA-256'
 	              });
-	            case 17:
+	            case 15:
 	              encryptedUrlHash = _context.sent;
 	              global$2().user().get('peers').get(encryptedUrlHash).put({
 	                url: peer.url,
 	                lastSeen: new Date().toISOString()
 	              });
-	            case 19:
+	            case 17:
 	              if (peer.enabled !== false) {
 	                peer.url && _this.connect(peer.url); // this calls savePeers()
 	              } else {
 	                _this.save();
 	              }
-	            case 20:
+	            case 18:
 	            case "end":
 	              return _context.stop();
 	          }

@@ -832,7 +832,6 @@ if (loc.hostname.endsWith('herokuapp.com') || is_localhost_but_not_dev) {
     enabled: true
   };
 }
-var urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
 /**
  * Networking and peer management utilities
  */
@@ -846,12 +845,6 @@ var peers = {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              if (!(peer.url && !urlRegex.test(peer.url))) {
-                _context.next = 2;
-                break;
-              }
-              throw new Error("Invalid url " + peer.url);
-            case 2:
               if (peer.from) {
                 Object.keys(_this.known).forEach(function (k) {
                   if (_this.known[k].from === peer.from) {
@@ -863,41 +856,41 @@ var peers = {
               url = peer.url || '';
               _this.known[url] = _this.known[url] || _.omit(peer, ['url']);
               if (!(peer.visibility === 'public')) {
-                _context.next = 19;
+                _context.next = 17;
                 break;
               }
-              _context.next = 8;
+              _context.next = 6;
               return Gun.SEA.secret(session.getKey().epub, session.getKey());
-            case 8:
+            case 6:
               _context.t0 = _context.sent;
               if (_context.t0) {
-                _context.next = 11;
+                _context.next = 9;
                 break;
               }
               _context.t0 = '';
-            case 11:
+            case 9:
               secret = _context.t0;
-              _context.next = 14;
+              _context.next = 12;
               return Gun.SEA.encrypt(peer.url, secret);
-            case 14:
+            case 12:
               encryptedUrl = _context.sent;
-              _context.next = 17;
+              _context.next = 15;
               return Gun.SEA.work(encryptedUrl, null, null, {
                 name: 'SHA-256'
               });
-            case 17:
+            case 15:
               encryptedUrlHash = _context.sent;
               global$2().user().get('peers').get(encryptedUrlHash).put({
                 url: peer.url,
                 lastSeen: new Date().toISOString()
               });
-            case 19:
+            case 17:
               if (peer.enabled !== false) {
                 peer.url && _this.connect(peer.url); // this calls savePeers()
               } else {
                 _this.save();
               }
-            case 20:
+            case 18:
             case "end":
               return _context.stop();
           }

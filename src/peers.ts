@@ -31,8 +31,6 @@ if (loc.hostname.endsWith('herokuapp.com') || is_localhost_but_not_dev) {
   DEFAULT_PEERS[`${loc.origin}/gun`] = {enabled: true};
 }
 
-const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
-
 /**
  * Networking and peer management utilities
  */
@@ -41,10 +39,6 @@ export default {
 
   /** */
   async add(peer: Peer) {
-    if (peer.url && !urlRegex.test(peer.url)) {
-      throw new Error(`Invalid url ${peer.url}`);
-    }
-
     if (peer.from) {
       Object.keys(this.known).forEach(k => {
         if (this.known[k].from === peer.from) { // remove previous peer url from the same user
