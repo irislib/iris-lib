@@ -6,10 +6,6 @@ import {Message, Put, Get, UpdatedNodes} from './Message';
 import Router from './Router';
 //import * as Comlink from "comlink";
 
-type FunEventListener = {
-    off: Function;
-};
-
 export type NodeData = {
     value: any;
     updatedAt: number;
@@ -48,7 +44,6 @@ export default class Node extends Actor {
     once_subscriptions = new Map<number, Function>();
     on_subscriptions = new Map<number, Function>();
     map_subscriptions = new Map<number, Function>();
-    data: NodeData | undefined = undefined;
     counter = 0;
     requested = false;
     config: Config;
@@ -84,40 +79,22 @@ export default class Node extends Actor {
     }
 
     handle(message: Message): void {
-        if (message instanceof Put) {
+        if (this.parent && message instanceof Put) {
             for (const [key, children] of Object.entries(message.updatedNodes)) {
                 if (!children || typeof children !== 'object') {
                     continue;
                 }
-                const parentKey = `global/${key.replace(/^~/, 'users/')}`
-                if (this.parent && parentKey === this.parent.id) {
-                    for (const [childKey, data] of Object.entries(children)) {
-                        console.log('handle put', this.id, parentKey, message);
-                        if (childKey === '_') {
-                            continue;
-                        }
-                        if (`${parentKey}/${childKey}` === this.id) {
-                            this.merge(data);
-                        }
+                console.log('nodehandle put', this.parent.id, message);
+                if (key === this.parent.id) {
+                    for (const [childKey, childData] of Object.entries(children)) {
+                        this.parent.get(childKey).doCallbacks({value: childData, updatedAt: Date.now()}); // TODO children should have proper NodeData
                     }
-                    this.parent && this.parent.handle(message);
                 } else {
-                    console.log('badly routed put', this.id);
+                    console.log('badly routed put', key, this.parent.id);
                 }
             }
-            setTimeout(() => this.doCallbacks(), 100); // why is this needed?
         }
     };
-
-    private merge(data: NodeData) {
-        console.log('merge?', this.id, data);
-        if (this.data && this.data.updatedAt > data.updatedAt) {
-            return;
-        }
-        console.log('merge', this.id, data);
-        this.data = data;
-        this.doCallbacks();
-    }
 
     get(key: string): Node {
         const existing = this.children.get(key);
@@ -139,37 +116,36 @@ export default class Node extends Actor {
 
     auth(key: any) {
         // TODO get public key from key
-        this.root.currentUser = key;
         this.root.setCurrentUser(key);
         return;
     }
 
-    doCallbacks = _.throttle(() => {
+    doCallbacks = (data: NodeData) => {
+        console.log('doCallbacks', this.id, data, this.on_subscriptions.size);
         for (const [id, callback] of this.on_subscriptions) {
+            console.log(1);
             const event = { off: () => this.on_subscriptions.delete(id) };
-            this.once(callback, event, false);
+            callback(data.value, data.updatedAt, null, event);
         }
         for (const [id, callback] of this.once_subscriptions) {
-            this.once(callback, undefined, false);
+            callback(data.value, data.updatedAt, null, {});
             this.once_subscriptions.delete(id);
         }
 
         if (this.parent) {
             for (const [id, callback] of this.parent.on_subscriptions) {
                 const event = { off: () => this.parent?.on_subscriptions.delete(id) };
-                this.parent.once(callback, event, false);
+                callback(data.value, data.updatedAt, null, event);
             }
             for (const [id, callback] of this.parent.map_subscriptions) {
                 const event = { off: () => this.parent?.map_subscriptions.delete(id) };
-                this.once(callback, event, false);
+                callback(data.value, data.updatedAt, null, event);
             }
         }
-    }, 40);
+    };
 
     put(value: any): void {
-        if (this.data === value) {
-            return; // TODO: when timestamps are added, this should be changed
-        }
+        const updatedAt = Date.now();
         if (Array.isArray(value)) {
             throw new Error('put() does not support arrays');
         }
@@ -177,7 +153,6 @@ export default class Node extends Actor {
             throw new Error('put() does not support functions');
         }
         if (typeof value === 'object' && value !== null) {
-            this.data = undefined;
             // TODO: update the whole path of parent nodes
             for (const key in value) {
                 this.get(key).put(value[key]);
@@ -185,78 +160,53 @@ export default class Node extends Actor {
             return;
         }
         this.children = new Map();
-        this.data = { value, updatedAt: Date.now() };
-        this.doCallbacks();
+        this.doCallbacks({value, updatedAt});
         const updatedNodes: UpdatedNodes = {};
-        this.addParentNodes(updatedNodes);
-        this.router.postMessage(Put.new(updatedNodes, this));
+        this.addParentNodes(updatedNodes, value, updatedAt);
+        const put = Put.new(updatedNodes, this);
+        console.log('put', put);
+        this.router.postMessage(put);
     }
 
-    private addParentNodes(updatedNodes: UpdatedNodes) {
+    private addParentNodes(updatedNodes: UpdatedNodes, value: any, updatedAt: number) {
         if (this.parent) {
-            this.parent.data = undefined;
             const childName = this.id.split('/').pop() as string;
-            const parentId = this.parent.id.split('/').slice(1).join('/');
-            if (this.data) {
-                updatedNodes[parentId] = updatedNodes[parentId] || {};
-                updatedNodes[parentId][childName] = this.data;
-            } else {
-                // TODO add this.children in gun wire msg format
-            }
-            this.parent.addParentNodes(updatedNodes);
+            const parentId = this.parent.id;
+            updatedNodes[parentId] = updatedNodes[parentId] || {};
+            updatedNodes[parentId][childName] = value;
+            this.parent.addParentNodes(updatedNodes, {'#': this.parent.id }, updatedAt);
         }
     }
 
-    async once(callback?: Function | null, event?: FunEventListener, returnIfUndefined = true): Promise<any> {
-        // TODO this is a mess, would be much simpler with a mem storage adapter
-        let result: any;
-        if (!this.requested) {
+    private async request() {
+        if (!this.requested && this.parent) { // TODO router should decide whether to re-request
             this.requested = true;
-            let id = this.id.split('/').slice(1).join('/');
-            id = id.replace(/^users\//, '~');
-            const childKey = id.split('/').pop();
-            id = id.split('/').slice(0, -1).join('/');
-            this.router.postMessage(Get.new(id, this, undefined, childKey));
+            const childKey = this.id.split('/').pop();
+            this.router.postMessage(Get.new(this.parent.id, this, undefined, childKey));
         }
-        if (this.children.size) {
-            // return an object containing all children
-            result = {};
-            await Promise.all(Array.from(this.children.keys()).map(async key => {
-                result[key] = await this.get(key).once(null, event);
-            }));
-        } else if (this.data !== undefined) {
-            result = this.data && this.data.value;
-        } else if (returnIfUndefined) {
-            const id = this.counter++;
-            callback && this.once_subscriptions.set(id, callback);
-        }
-        if (result !== undefined || returnIfUndefined) {
-            if (typeof result === 'string' && result.indexOf('{":"') === 0) { // hacky way to handle signed data
-                const o = JSON.parse(result);
-                console.log('once2', o, result);
-                result = o[':'];
-            }
-            console.log('once', this.id, this.data, result);
-            callback && callback(result, this.id.slice(this.id.lastIndexOf('/') + 1), null, event);
-            return result;
-        }
+    }
+
+    async once(callback?: Function | null): Promise<any> {
+        const id = this.counter++;
+        callback && this.once_subscriptions.set(id, callback);
+        this.request();
     }
 
     on(callback: Function): void {
         log('on', this.id);
         const id = this.counter++;
         this.on_subscriptions.set(id, callback);
-        const event = { off: () => this.on_subscriptions.delete(id) };
-        this.once(callback, event, false);
+        //const event = { off: () => this.on_subscriptions.delete(id) };
+        this.request();
     }
 
     map(callback: Function): void {
         log('map', this.id);
         const id = this.counter++;
         this.map_subscriptions.set(id, callback);
-        const event = { off: () => this.map_subscriptions.delete(id) };
+        //const event = { off: () => this.map_subscriptions.delete(id) };
         for (const child of this.children.values()) {
-            child.once(callback, event, false);
+            child.request();
         }
     }
 

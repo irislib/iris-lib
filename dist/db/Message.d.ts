@@ -36,7 +36,7 @@ export declare class Put implements Message {
     static deserialize(obj: any, jsonStr: string, from: Actor): Put;
     static fromObject(obj: any): Put;
     static new(updatedNodes: UpdatedNodes, from: Actor, inResponseTo?: string, recipients?: string[], jsonStr?: string, checksum?: string): Put;
-    static newFromKv(key: string, children: object, from: Actor): Put;
+    static newFromKv(key: string, children: Children, from: Actor): Put;
     constructor(id: string, updatedNodes: UpdatedNodes, from: Actor, inResponseTo?: string, recipients?: string[], jsonStr?: string, checksum?: string);
 }
 export declare class Hi implements Message {

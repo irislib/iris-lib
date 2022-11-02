@@ -54,6 +54,7 @@ export default {
     if (initCalled) { return; }
     initCalled = true;
     let localStorageKey = localStorage.getItem('chatKeyPair');
+    console.log('localStorageKey', localStorageKey);
     if (localStorageKey) {
       this.login(JSON.parse(localStorageKey));
     } else if (options.autologin !== false) {
@@ -227,7 +228,9 @@ export default {
    * @param key
    */
   login(k: any) {
+    console.log('login', k);
     const shouldRefresh = !!key;
+    console.log('shouldRefresh', shouldRefresh, 'key', key);
     key = k;
     localStorage.setItem('chatKeyPair', JSON.stringify(k));
     user().auth(key);
@@ -249,6 +252,7 @@ export default {
     // a lot of this is iris-messenger stuff
     notifications.init();
     local().get('loggedIn').put(true);
+    console.log('local().get(\'loggedIn\').put(true);', local());
     local().get('settings').once().then(settings => {
       if (!settings) {
         local().get('settings').put(DEFAULT_SETTINGS.local);

@@ -50,6 +50,7 @@ export class Get implements Message {
             return this.jsonStr;
         }
 
+        // TODO remove "global/", replace /^user\// with ~
         const obj: any = {
             "#": this.id,
             get: {
@@ -66,7 +67,7 @@ export class Get implements Message {
 
     static deserialize(obj: any, jsonStr: string, from: Actor): Get {
         const id = obj['#'];
-        const nodeId = obj.get['#'];
+        const nodeId = obj.get['#']; // TODO add "global/" prefix, replace /^~/ with "user/"
         const childKey = obj.get['.'];
         return new Get(id, nodeId, from, undefined, childKey, jsonStr);
     }
@@ -161,8 +162,8 @@ export class Put implements Message {
         return new Put(id, updatedNodes, from, inResponseTo, recipients, jsonStr, checksum);
     }
 
-    static newFromKv(key: string, children: object, from:Actor) {
-        const updatedNodes: any = {};
+    static newFromKv(key: string, children: Children, from:Actor) {
+        const updatedNodes: UpdatedNodes = {};
         updatedNodes[key] = children;
         return Put.new(updatedNodes, from);
     }

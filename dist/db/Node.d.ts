@@ -1,9 +1,6 @@
 import { Actor } from './Actor';
 import { Message } from './Message';
 import Router from './Router';
-declare type FunEventListener = {
-    off: Function;
-};
 export declare type NodeData = {
     value: any;
     updatedAt: number;
@@ -27,7 +24,6 @@ export default class Node extends Actor {
     once_subscriptions: Map<number, Function>;
     on_subscriptions: Map<number, Function>;
     map_subscriptions: Map<number, Function>;
-    data: NodeData | undefined;
     counter: number;
     requested: boolean;
     config: Config;
@@ -37,16 +33,15 @@ export default class Node extends Actor {
     getCurrentUser(): any;
     setCurrentUser(key: any): void;
     handle(message: Message): void;
-    private merge;
     get(key: string): Node;
     user(pub: string | undefined): Node;
     auth(key: any): void;
-    doCallbacks: () => void;
+    doCallbacks: (data: NodeData) => void;
     put(value: any): void;
     private addParentNodes;
-    once(callback?: Function | null, event?: FunEventListener, returnIfUndefined?: boolean): Promise<any>;
+    private request;
+    once(callback?: Function | null): Promise<any>;
     on(callback: Function): void;
     map(callback: Function): void;
     opt(opts: any): void;
 }
-export {};

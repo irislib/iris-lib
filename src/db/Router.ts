@@ -1,4 +1,5 @@
 import {Actor} from "./Actor";
+import Memory from "./adapters/Memory";
 import IndexedDB from "./adapters/IndexedDB";
 import Websocket from "./adapters/Websocket";
 import {Put, Get, Message} from "./Message";
@@ -28,6 +29,7 @@ export default class Router extends Actor {
         super('router');
         // default random id
         this.peerId = config.peerId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        this.storageAdapters.add(new Memory(config));
         this.storageAdapters.add(new IndexedDB(config));
         console.log('config', config);
         if (config.peers) {
@@ -55,6 +57,7 @@ export default class Router extends Actor {
     }
 
     handlePut(put: Put) {
+        console.log('router handlePut', put);
         Object.keys(put.updatedNodes).forEach(path => {
             const topic = path.split('/')[1] || '';
             const subscribers = this.subscribersByTopic.get(topic);
@@ -109,11 +112,6 @@ export default class Router extends Actor {
         }
         const subscribers = this.subscribersByTopic.get(topic);
         if (subscribers) {
-            for (const subscriber of subscribers) {
-                if (subscriber !== get.from) {
-                    subscriber.postMessage(get);
-                }
-            }
             if (!subscribers.has(get.from)) {
                 subscribers.add(get.from);
             }

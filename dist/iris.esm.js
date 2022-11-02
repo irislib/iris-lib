@@ -1,5 +1,6 @@
 import Gun from 'gun';
 import 'gun/sea';
+import QuickLRU from 'quick-lru';
 import Dexie from 'dexie';
 import Fuse from 'fuse.js';
 
@@ -1068,6 +1069,7 @@ var Get = /*#__PURE__*/function () {
     if (this.jsonStr) {
       return this.jsonStr;
     }
+    // TODO remove "global/", replace /^user\// with ~
     var obj = {
       "#": this.id,
       get: {
@@ -1082,7 +1084,7 @@ var Get = /*#__PURE__*/function () {
   };
   Get.deserialize = function deserialize(obj, jsonStr, from) {
     var id = obj['#'];
-    var nodeId = obj.get['#'];
+    var nodeId = obj.get['#']; // TODO add "global/" prefix, replace /^~/ with "user/"
     var childKey = obj.get['.'];
     return new Get(id, nodeId, from, undefined, childKey, jsonStr);
   };
@@ -1200,6 +1202,109 @@ var Hi = /*#__PURE__*/function () {
   return Hi;
 }();
 
+//import {NodeData} from "../Node";
+// import * as Comlink from "comlink";
+var Memory = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(Memory, _Actor);
+  function Memory(config) {
+    var _this;
+    if (config === void 0) {
+      config = {};
+    }
+    _this = _Actor.call(this) || this;
+    _this.config = {};
+    _this.store = new QuickLRU({
+      maxSize: 10000
+    });
+    _this.config = config;
+    return _this;
+  }
+  var _proto = Memory.prototype;
+  _proto.handle = function handle(message) {
+    if (message instanceof Put) {
+      console.log('Memory handle Put', message);
+      this.handlePut(message);
+    } else if (message instanceof Get) {
+      console.log('Memory handle Get', message);
+      this.handleGet(message);
+    } else {
+      console.log('Memory got unknown message', message);
+    }
+  };
+  _proto.handleGet = function handleGet(message) {
+    if (!message.from) {
+      console.log('no from in get message');
+      return;
+    }
+    var children = this.store.get(message.nodeId);
+    if (children) {
+      console.log('have', message.nodeId, children);
+      if (message.childKey) {
+        var o = {};
+        o[message.childKey] = children[message.childKey];
+        children = o;
+      }
+      var putMessage = Put.newFromKv(message.nodeId, children, this);
+      putMessage.inResponseTo = message.id;
+      console.log('memory sending', putMessage);
+      message.from && message.from.postMessage(putMessage);
+    } else {
+      console.log('dont have', message.nodeId);
+    }
+  };
+  _proto.mergeAndSave = function mergeAndSave(nodeName, children) {
+    var existing = this.store.get(nodeName);
+    // TODO check updatedAt timestamp
+    if (existing === undefined) {
+      this.store.set(nodeName, children);
+    } else if (!_.isEqual(existing, children)) {
+      this.store.set(nodeName, Object.assign(existing, children));
+    } else {
+      console.log('not updating', nodeName, existing, children);
+    }
+  };
+  _proto.handlePut = /*#__PURE__*/function () {
+    var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(put) {
+      var _i, _Object$entries, _Object$entries$_i, nodeName, children;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _i = 0, _Object$entries = Object.entries(put.updatedNodes);
+            case 1:
+              if (!(_i < _Object$entries.length)) {
+                _context.next = 11;
+                break;
+              }
+              _Object$entries$_i = _Object$entries[_i], nodeName = _Object$entries$_i[0], children = _Object$entries$_i[1];
+              if (children) {
+                _context.next = 7;
+                break;
+              }
+              console.log('deleting', nodeName);
+              this.store["delete"](nodeName);
+              return _context.abrupt("continue", 8);
+            case 7:
+              this.mergeAndSave(nodeName, children);
+            case 8:
+              _i++;
+              _context.next = 1;
+              break;
+            case 11:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+    function handlePut(_x) {
+      return _handlePut.apply(this, arguments);
+    }
+    return handlePut;
+  }();
+  return Memory;
+}(Actor);
+
 // import * as Comlink from "comlink";
 var MyDexie = /*#__PURE__*/function (_Dexie) {
   _inheritsLoose(MyDexie, _Dexie);
@@ -1296,8 +1401,14 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
         _this3.notStored.add(message.nodeId);
         // TODO message implying that the key is not stored
       } else {
-        var putMessage = Put.newFromKv(message.nodeId, value, _this3);
+        // TODO list of children
+        var parentId = message.nodeId.split('/').slice(0, -1).join('/');
+        var childId = message.nodeId.split('/').slice(-1)[0];
+        var children = {};
+        children[childId] = value;
+        var putMessage = Put.newFromKv(parentId, children, _this3);
         putMessage.inResponseTo = message.id;
+        console.log('indexeddb sending', putMessage);
         message.from && message.from.postMessage(putMessage);
       }
     });
@@ -1459,6 +1570,7 @@ var Router = /*#__PURE__*/function (_Actor) {
     _this.msgCounter = 0;
     // default random id
     _this.peerId = config.peerId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    _this.storageAdapters.add(new Memory(config));
     _this.storageAdapters.add(new IndexedDB(config));
     console.log('config', config);
     if (config.peers) {
@@ -1488,6 +1600,7 @@ var Router = /*#__PURE__*/function (_Actor) {
   };
   _proto.handlePut = function handlePut(put) {
     var _this2 = this;
+    console.log('router handlePut', put);
     Object.keys(put.updatedNodes).forEach(function (path) {
       var topic = path.split('/')[1] || '';
       var subscribers = _this2.subscribersByTopic.get(topic);
@@ -1544,12 +1657,6 @@ var Router = /*#__PURE__*/function (_Actor) {
     }
     var subscribers = this.subscribersByTopic.get(topic);
     if (subscribers) {
-      for (var _iterator8 = _createForOfIteratorHelperLoose(subscribers), _step8; !(_step8 = _iterator8()).done;) {
-        var subscriber = _step8.value;
-        if (subscriber !== get.from) {
-          subscriber.postMessage(get);
-        }
-      }
       if (!subscribers.has(get.from)) {
         subscribers.add(get.from);
       }
@@ -1576,20 +1683,21 @@ var Node = /*#__PURE__*/function (_Actor) {
     _this.once_subscriptions = new Map();
     _this.on_subscriptions = new Map();
     _this.map_subscriptions = new Map();
-    _this.data = undefined;
     _this.counter = 0;
     _this.requested = false;
-    _this.doCallbacks = _.throttle(function () {
+    _this.doCallbacks = function (data) {
+      console.log('doCallbacks', _this.id, data, _this.on_subscriptions.size);
       var _loop3 = function _loop3() {
         var _step$value = _step.value,
           id = _step$value[0],
           callback = _step$value[1];
+        console.log(1);
         var event = {
           off: function off() {
             return _this.on_subscriptions["delete"](id);
           }
         };
-        _this.once(callback, event, false);
+        callback(data.value, data.updatedAt, null, event);
       };
       for (var _iterator = _createForOfIteratorHelperLoose(_this.on_subscriptions), _step; !(_step = _iterator()).done;) {
         _loop3();
@@ -1598,7 +1706,7 @@ var Node = /*#__PURE__*/function (_Actor) {
         var _step2$value = _step2.value,
           _id = _step2$value[0],
           callback = _step2$value[1];
-        _this.once(callback, undefined, false);
+        callback(data.value, data.updatedAt, null, {});
         _this.once_subscriptions["delete"](_id);
       }
       if (_this.parent) {
@@ -1612,7 +1720,7 @@ var Node = /*#__PURE__*/function (_Actor) {
               return (_this$parent = _this.parent) == null ? void 0 : _this$parent.on_subscriptions["delete"](id);
             }
           };
-          _this.parent.once(callback, event, false);
+          callback(data.value, data.updatedAt, null, event);
         };
         for (var _iterator3 = _createForOfIteratorHelperLoose(_this.parent.on_subscriptions), _step3; !(_step3 = _iterator3()).done;) {
           _loop();
@@ -1627,13 +1735,13 @@ var Node = /*#__PURE__*/function (_Actor) {
               return (_this$parent2 = _this.parent) == null ? void 0 : _this$parent2.map_subscriptions["delete"](id);
             }
           };
-          _this.once(callback, event, false);
+          callback(data.value, data.updatedAt, null, event);
         };
         for (var _iterator4 = _createForOfIteratorHelperLoose(_this.parent.map_subscriptions), _step4; !(_step4 = _iterator4()).done;) {
           _loop2();
         }
       }
-    }, 40);
+    };
     _this.parent = parent;
     _this.config = config || parent && parent.config || DEFAULT_CONFIG;
     if (parent) {
@@ -1663,8 +1771,7 @@ var Node = /*#__PURE__*/function (_Actor) {
     }
   };
   _proto.handle = function handle(message) {
-    var _this2 = this;
-    if (message instanceof Put) {
+    if (this.parent && message instanceof Put) {
       for (var _i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
         var _Object$entries$_i = _Object$entries[_i],
           key = _Object$entries$_i[0],
@@ -1672,38 +1779,22 @@ var Node = /*#__PURE__*/function (_Actor) {
         if (!children || typeof children !== 'object') {
           continue;
         }
-        var parentKey = "global/" + key.replace(/^~/, 'users/');
-        if (this.parent && parentKey === this.parent.id) {
+        console.log('nodehandle put', this.parent.id, message);
+        if (key === this.parent.id) {
           for (var _i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
             var _Object$entries2$_i = _Object$entries2[_i2],
               childKey = _Object$entries2$_i[0],
-              data = _Object$entries2$_i[1];
-            console.log('handle put', this.id, parentKey, message);
-            if (childKey === '_') {
-              continue;
-            }
-            if (parentKey + "/" + childKey === this.id) {
-              this.merge(data);
-            }
+              childData = _Object$entries2$_i[1];
+            this.parent.get(childKey).doCallbacks({
+              value: childData,
+              updatedAt: Date.now()
+            }); // TODO children should have proper NodeData
           }
-          this.parent && this.parent.handle(message);
         } else {
-          console.log('badly routed put', this.id);
+          console.log('badly routed put', key, this.parent.id);
         }
       }
-      setTimeout(function () {
-        return _this2.doCallbacks();
-      }, 100); // why is this needed?
     }
-  };
-  _proto.merge = function merge(data) {
-    console.log('merge?', this.id, data);
-    if (this.data && this.data.updatedAt > data.updatedAt) {
-      return;
-    }
-    console.log('merge', this.id, data);
-    this.data = data;
-    this.doCallbacks();
   };
   _proto.get = function get(key) {
     var existing = this.children.get(key);
@@ -1723,15 +1814,11 @@ var Node = /*#__PURE__*/function (_Actor) {
   };
   _proto.auth = function auth(key) {
     // TODO get public key from key
-    this.root.currentUser = key;
     this.root.setCurrentUser(key);
     return;
   };
   _proto.put = function put(value) {
-    if (this.data === value) {
-      return; // TODO: when timestamps are added, this should be changed
-    }
-
+    var updatedAt = Date.now();
     if (Array.isArray(value)) {
       throw new Error('put() does not support arrays');
     }
@@ -1739,7 +1826,6 @@ var Node = /*#__PURE__*/function (_Actor) {
       throw new Error('put() does not support functions');
     }
     if (typeof value === 'object' && value !== null) {
-      this.data = undefined;
       // TODO: update the whole path of parent nodes
       for (var key in value) {
         this.get(key).put(value[key]);
@@ -1747,133 +1833,87 @@ var Node = /*#__PURE__*/function (_Actor) {
       return;
     }
     this.children = new Map();
-    this.data = {
+    this.doCallbacks({
       value: value,
-      updatedAt: Date.now()
-    };
-    this.doCallbacks();
+      updatedAt: updatedAt
+    });
     var updatedNodes = {};
-    this.addParentNodes(updatedNodes);
-    this.router.postMessage(Put["new"](updatedNodes, this));
+    this.addParentNodes(updatedNodes, value, updatedAt);
+    var put = Put["new"](updatedNodes, this);
+    console.log('put', put);
+    this.router.postMessage(put);
   };
-  _proto.addParentNodes = function addParentNodes(updatedNodes) {
+  _proto.addParentNodes = function addParentNodes(updatedNodes, value, updatedAt) {
     if (this.parent) {
-      this.parent.data = undefined;
       var childName = this.id.split('/').pop();
-      var parentId = this.parent.id.split('/').slice(1).join('/');
-      if (this.data) {
-        updatedNodes[parentId] = updatedNodes[parentId] || {};
-        updatedNodes[parentId][childName] = this.data;
-      }
-      this.parent.addParentNodes(updatedNodes);
+      var parentId = this.parent.id;
+      updatedNodes[parentId] = updatedNodes[parentId] || {};
+      updatedNodes[parentId][childName] = value;
+      this.parent.addParentNodes(updatedNodes, {
+        '#': this.parent.id
+      }, updatedAt);
     }
   };
+  _proto.request = /*#__PURE__*/function () {
+    var _request = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+      var childKey;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (!this.requested && this.parent) {
+                // TODO router should decide whether to re-request
+                this.requested = true;
+                childKey = this.id.split('/').pop();
+                this.router.postMessage(Get["new"](this.parent.id, this, undefined, childKey));
+              }
+            case 1:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+    function request() {
+      return _request.apply(this, arguments);
+    }
+    return request;
+  }();
   _proto.once = /*#__PURE__*/function () {
-    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(callback, event, returnIfUndefined) {
-      var _this3 = this;
-      var result, id, childKey, _id2, o;
+    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(callback) {
+      var id;
       return _regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
-              if (returnIfUndefined === void 0) {
-                returnIfUndefined = true;
-              }
-              if (!this.requested) {
-                this.requested = true;
-                id = this.id.split('/').slice(1).join('/');
-                id = id.replace(/^users\//, '~');
-                childKey = id.split('/').pop();
-                id = id.split('/').slice(0, -1).join('/');
-                this.router.postMessage(Get["new"](id, this, undefined, childKey));
-              }
-              if (!this.children.size) {
-                _context2.next = 8;
-                break;
-              }
-              // return an object containing all children
-              result = {};
-              _context2.next = 6;
-              return Promise.all(Array.from(this.children.keys()).map( /*#__PURE__*/function () {
-                var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(key) {
-                  return _regeneratorRuntime().wrap(function _callee$(_context) {
-                    while (1) {
-                      switch (_context.prev = _context.next) {
-                        case 0:
-                          _context.next = 2;
-                          return _this3.get(key).once(null, event);
-                        case 2:
-                          result[key] = _context.sent;
-                        case 3:
-                        case "end":
-                          return _context.stop();
-                      }
-                    }
-                  }, _callee);
-                }));
-                return function (_x4) {
-                  return _ref.apply(this, arguments);
-                };
-              }()));
-            case 6:
-              _context2.next = 9;
-              break;
-            case 8:
-              if (this.data !== undefined) {
-                result = this.data && this.data.value;
-              } else if (returnIfUndefined) {
-                _id2 = this.counter++;
-                callback && this.once_subscriptions.set(_id2, callback);
-              }
-            case 9:
-              if (!(result !== undefined || returnIfUndefined)) {
-                _context2.next = 14;
-                break;
-              }
-              if (typeof result === 'string' && result.indexOf('{":"') === 0) {
-                // hacky way to handle signed data
-                o = JSON.parse(result);
-                console.log('once2', o, result);
-                result = o[':'];
-              }
-              console.log('once', this.id, this.data, result);
-              callback && callback(result, this.id.slice(this.id.lastIndexOf('/') + 1), null, event);
-              return _context2.abrupt("return", result);
-            case 14:
+              id = this.counter++;
+              callback && this.once_subscriptions.set(id, callback);
+              this.request();
+            case 3:
             case "end":
               return _context2.stop();
           }
         }
       }, _callee2, this);
     }));
-    function once(_x, _x2, _x3) {
+    function once(_x) {
       return _once.apply(this, arguments);
     }
     return once;
   }();
   _proto.on = function on(callback) {
-    var _this4 = this;
     var id = this.counter++;
     this.on_subscriptions.set(id, callback);
-    var event = {
-      off: function off() {
-        return _this4.on_subscriptions["delete"](id);
-      }
-    };
-    this.once(callback, event, false);
+    //const event = { off: () => this.on_subscriptions.delete(id) };
+    this.request();
   };
   _proto.map = function map(callback) {
-    var _this5 = this;
     var id = this.counter++;
     this.map_subscriptions.set(id, callback);
-    var event = {
-      off: function off() {
-        return _this5.map_subscriptions["delete"](id);
-      }
-    };
+    //const event = { off: () => this.map_subscriptions.delete(id) };
     for (var _iterator5 = _createForOfIteratorHelperLoose(this.children.values()), _step5; !(_step5 = _iterator5()).done;) {
       var child = _step5.value;
-      child.once(callback, event, false);
+      child.request();
     }
   };
   _proto.opt = function opt(opts) {
@@ -5524,6 +5564,7 @@ var session = {
     }
     initCalled = true;
     var localStorageKey = localStorage.getItem('chatKeyPair');
+    console.log('localStorageKey', localStorageKey);
     if (localStorageKey) {
       this.login(JSON.parse(localStorageKey));
     } else if (options.autologin !== false) {
@@ -5716,7 +5757,9 @@ var session = {
    * @param key
    */login: function login(k) {
     var _this4 = this;
+    console.log('login', k);
     var shouldRefresh = !!key;
+    console.log('shouldRefresh', shouldRefresh, 'key', key);
     key = k;
     localStorage.setItem('chatKeyPair', JSON.stringify(k));
     publicState().auth(key);
@@ -5742,6 +5785,7 @@ var session = {
     // a lot of this is iris-messenger stuff
     notifications.init();
     local$1().get('loggedIn').put(true);
+    console.log('local().get(\'loggedIn\').put(true);', local$1());
     local$1().get('settings').once().then(function (settings) {
       if (!settings) {
         local$1().get('settings').put(DEFAULT_SETTINGS.local);

@@ -2,7 +2,7 @@ import {Put, Get, Message} from '../Message'
 import { Actor } from '../Actor';
 import _ from "../../lodash";
 import Dexie from 'dexie';
-import {NodeData} from "../Node";
+import {Children, NodeData} from "../Node";
 // import * as Comlink from "comlink";
 
 class MyDexie extends Dexie {
@@ -97,8 +97,14 @@ export default class IndexedDB extends Actor {
                 this.notStored.add(message.nodeId);
                 // TODO message implying that the key is not stored
             } else {
-                const putMessage = Put.newFromKv(message.nodeId, value, this);
+                // TODO list of children
+                const parentId = message.nodeId.split('/').slice(0, -1).join('/');
+                const childId = message.nodeId.split('/').slice(-1)[0];
+                const children: Children = {};
+                children[childId] = value;
+                const putMessage = Put.newFromKv(parentId, children, this);
                 putMessage.inResponseTo = message.id;
+                console.log('indexeddb sending', putMessage);
                 message.from && message.from.postMessage(putMessage);
             }
         });
