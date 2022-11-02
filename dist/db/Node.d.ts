@@ -29,7 +29,7 @@ export default class Node extends Actor {
     map_subscriptions: Map<number, Function>;
     data: NodeData | undefined;
     counter: number;
-    loaded: boolean;
+    requested: boolean;
     config: Config;
     currentUser: any;
     router: Router;

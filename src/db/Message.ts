@@ -130,7 +130,25 @@ export class Put implements Message {
 
     static deserialize(obj: any, jsonStr: string, from: Actor): Put {
         const id = obj['#'];
-        const updatedNodes = obj.put;
+        const updatedNodes: UpdatedNodes = {};
+        type SerializedChildren = {
+            [key: string]: any;
+        }
+        for (const [nodeId, c] of Object.entries(obj.put)) {
+            const children = c as SerializedChildren;
+            const node: any = {};
+            for (const [childKey, childValue] of Object.entries(children)) {
+                if (childKey === '_') {
+                    continue;
+                }
+                const updatedAt = children['_']['>'][childKey];
+                node[childKey] = {
+                    value: childValue,
+                    updatedAt,
+                };
+            }
+            updatedNodes[nodeId] = node;
+        }
         return new Put(id, updatedNodes, from, undefined, undefined, jsonStr);
     }
 

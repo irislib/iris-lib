@@ -10946,7 +10946,28 @@
 	  };
 	  Put.deserialize = function deserialize(obj, jsonStr, from) {
 	    var id = obj['#'];
-	    var updatedNodes = obj.put;
+	    var updatedNodes = {};
+	    for (var _i3 = 0, _Object$entries3 = Object.entries(obj.put); _i3 < _Object$entries3.length; _i3++) {
+	      var _Object$entries3$_i = _Object$entries3[_i3],
+	        nodeId = _Object$entries3$_i[0],
+	        c = _Object$entries3$_i[1];
+	      var children = c;
+	      var node = {};
+	      for (var _i4 = 0, _Object$entries4 = Object.entries(children); _i4 < _Object$entries4.length; _i4++) {
+	        var _Object$entries4$_i = _Object$entries4[_i4],
+	          childKey = _Object$entries4$_i[0],
+	          childValue = _Object$entries4$_i[1];
+	        if (childKey === '_') {
+	          continue;
+	        }
+	        var updatedAt = children['_']['>'][childKey];
+	        node[childKey] = {
+	          value: childValue,
+	          updatedAt: updatedAt
+	        };
+	      }
+	      updatedNodes[nodeId] = node;
+	    }
 	    return new Put(id, updatedNodes, from, undefined, undefined, jsonStr);
 	  };
 	  Put.fromObject = function fromObject(obj) {
@@ -16230,8 +16251,10 @@
 	  };
 	  _proto.handle = function handle(message) {
 	    if (message instanceof Put) {
+	      console.log('indexeddb handle Put', message);
 	      this.handlePut(message);
 	    } else if (message instanceof Get) {
+	      console.log('indexeddb handle Get', message);
 	      this.handleGet(message);
 	    } else {
 	      console.log('worker got unknown message', message);
@@ -16531,7 +16554,7 @@
 	    _this.map_subscriptions = new Map();
 	    _this.data = undefined;
 	    _this.counter = 0;
-	    _this.loaded = false;
+	    _this.requested = false;
 	    _this.doCallbacks = _.throttle(function () {
 	      var _loop3 = function _loop3() {
 	        var _step$value = _step.value,
@@ -16618,7 +16641,6 @@
 	  _proto.handle = function handle(message) {
 	    var _this2 = this;
 	    if (message instanceof Put) {
-	      console.log(this.id, 'handle put', message);
 	      for (var _i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
 	        var _Object$entries$_i = _Object$entries[_i],
 	          key = _Object$entries$_i[0],
@@ -16626,22 +16648,23 @@
 	        if (!children || typeof children !== 'object') {
 	          continue;
 	        }
-	        var ourKey = "global/" + key.replace(/^~/, 'users/');
-	        console.log('ourKey', ourKey);
-	        console.log('this.id', this.id);
-	        console.log('children', children);
-	        if (this.parent && ourKey === this.parent.id) {
-	          this.loaded = true;
+	        var parentKey = "global/" + key.replace(/^~/, 'users/');
+	        if (this.parent && parentKey === this.parent.id) {
 	          for (var _i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
 	            var _Object$entries2$_i = _Object$entries2[_i2],
 	              childKey = _Object$entries2$_i[0],
 	              data = _Object$entries2$_i[1];
+	            console.log('handle put', this.id, parentKey, message);
 	            if (childKey === '_') {
 	              continue;
 	            }
-	            this.get(childKey).merge(data);
+	            if (parentKey + "/" + childKey === this.id) {
+	              this.merge(data);
+	            }
 	          }
 	          this.parent && this.parent.handle(message);
+	        } else {
+	          console.log('badly routed put', this.id);
 	        }
 	      }
 	      setTimeout(function () {
@@ -16656,6 +16679,7 @@
 	    }
 	    console.log('merge', this.id, data);
 	    this.data = data;
+	    this.doCallbacks();
 	  };
 	  _proto.get = function get(key) {
 	    var existing = this.children.get(key);
@@ -16723,7 +16747,7 @@
 	  _proto.once = /*#__PURE__*/function () {
 	    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(callback, event, returnIfUndefined) {
 	      var _this3 = this;
-	      var result, id, childKey, _id2;
+	      var result, id, childKey, _id2, o;
 	      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
 	        while (1) {
 	          switch (_context2.prev = _context2.next) {
@@ -16731,7 +16755,8 @@
 	              if (returnIfUndefined === void 0) {
 	                returnIfUndefined = true;
 	              }
-	              if (!this.loaded) {
+	              if (!this.requested) {
+	                this.requested = true;
 	                id = this.id.split('/').slice(1).join('/');
 	                id = id.replace(/^users\//, '~');
 	                childKey = id.split('/').pop();
@@ -16778,12 +16803,19 @@
 	              }
 	            case 9:
 	              if (!(result !== undefined || returnIfUndefined)) {
-	                _context2.next = 13;
+	                _context2.next = 14;
 	                break;
 	              }
+	              if (typeof result === 'string' && result.indexOf('{":"') === 0) {
+	                // hacky way to handle signed data
+	                o = JSON.parse(result);
+	                console.log('once2', o, result);
+	                result = o[':'];
+	              }
+	              console.log('once', this.id, this.data, result);
 	              callback && callback(result, this.id.slice(this.id.lastIndexOf('/') + 1), null, event);
 	              return _context2.abrupt("return", result);
-	            case 13:
+	            case 14:
 	            case "end":
 	              return _context2.stop();
 	          }

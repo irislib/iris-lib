@@ -76,8 +76,10 @@ export default class IndexedDB extends Actor {
 
     handle(message: Message) {
         if (message instanceof Put) {
+            console.log('indexeddb handle Put', message);
             this.handlePut(message);
         } else if (message instanceof Get) {
+            console.log('indexeddb handle Get', message);
             this.handleGet(message);
         } else {
             console.log('worker got unknown message', message);

@@ -50,7 +50,7 @@ export default class Node extends Actor {
     map_subscriptions = new Map<number, Function>();
     data: NodeData | undefined = undefined;
     counter = 0;
-    loaded = false;
+    requested = false;
     config: Config;
     currentUser: any;
     router: Router;
@@ -85,24 +85,24 @@ export default class Node extends Actor {
 
     handle(message: Message): void {
         if (message instanceof Put) {
-            console.log(this.id, 'handle put', message);
             for (const [key, children] of Object.entries(message.updatedNodes)) {
                 if (!children || typeof children !== 'object') {
                     continue;
                 }
-                const ourKey = `global/${key.replace(/^~/, 'users/')}`
-                console.log('ourKey', ourKey);
-                console.log('this.id', this.id);
-                console.log('children', children);
-                if (this.parent && ourKey === this.parent.id) {
-                    this.loaded = true;
+                const parentKey = `global/${key.replace(/^~/, 'users/')}`
+                if (this.parent && parentKey === this.parent.id) {
                     for (const [childKey, data] of Object.entries(children)) {
+                        console.log('handle put', this.id, parentKey, message);
                         if (childKey === '_') {
                             continue;
                         }
-                        this.get(childKey).merge(data);
+                        if (`${parentKey}/${childKey}` === this.id) {
+                            this.merge(data);
+                        }
                     }
                     this.parent && this.parent.handle(message);
+                } else {
+                    console.log('badly routed put', this.id);
                 }
             }
             setTimeout(() => this.doCallbacks(), 100); // why is this needed?
@@ -116,6 +116,7 @@ export default class Node extends Actor {
         }
         console.log('merge', this.id, data);
         this.data = data;
+        this.doCallbacks();
     }
 
     get(key: string): Node {
@@ -207,9 +208,10 @@ export default class Node extends Actor {
     }
 
     async once(callback?: Function | null, event?: FunEventListener, returnIfUndefined = true): Promise<any> {
-        // TODO would be much simpler with a mem storage adapter
+        // TODO this is a mess, would be much simpler with a mem storage adapter
         let result: any;
-        if (!this.loaded) {
+        if (!this.requested) {
+            this.requested = true;
             let id = this.id.split('/').slice(1).join('/');
             id = id.replace(/^users\//, '~');
             const childKey = id.split('/').pop();
@@ -229,7 +231,12 @@ export default class Node extends Actor {
             callback && this.once_subscriptions.set(id, callback);
         }
         if (result !== undefined || returnIfUndefined) {
-            log('once', this.id, result);
+            if (typeof result === 'string' && result.indexOf('{":"') === 0) { // hacky way to handle signed data
+                const o = JSON.parse(result);
+                console.log('once2', o, result);
+                result = o[':'];
+            }
+            console.log('once', this.id, this.data, result);
             callback && callback(result, this.id.slice(this.id.lastIndexOf('/') + 1), null, event);
             return result;
         }
