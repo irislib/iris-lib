@@ -1,7 +1,6 @@
 import Gun from 'gun';
 import 'gun/sea';
 import QuickLRU from 'quick-lru';
-import Dexie from 'dexie';
 import Fuse from 'fuse.js';
 
 function _regeneratorRuntime() {
@@ -1266,6 +1265,7 @@ var Memory = /*#__PURE__*/function (_Actor) {
     if (existing === undefined) {
       this.store.set(nodeName, children);
     } else if (!_.isEqual(existing, children)) {
+      console.log('merging', nodeName, existing, children);
       this.store.set(nodeName, Object.assign(existing, children));
     } else {
       console.log('not updating', nodeName, existing, children);
@@ -1311,194 +1311,6 @@ var Memory = /*#__PURE__*/function (_Actor) {
     return handlePut;
   }();
   return Memory;
-}(Actor);
-
-// import * as Comlink from "comlink";
-var MyDexie = /*#__PURE__*/function (_Dexie) {
-  _inheritsLoose(MyDexie, _Dexie);
-  function MyDexie(dbName) {
-    var _this;
-    _this = _Dexie.call(this, dbName) || this;
-    _this.version(1).stores({
-      nodes: ", value, updatedAt"
-    });
-    _this.nodes = _this.table("nodes");
-    return _this;
-  }
-  return MyDexie;
-}(Dexie);
-var IndexedDB = /*#__PURE__*/function (_Actor) {
-  _inheritsLoose(IndexedDB, _Actor);
-  function IndexedDB(config) {
-    var _this2;
-    if (config === void 0) {
-      config = {};
-    }
-    _this2 = _Actor.call(this) || this;
-    _this2.config = {};
-    _this2.notStored = new Set();
-    _this2.putQueue = {};
-    _this2.getQueue = {};
-    _this2.i = 0;
-    _this2.queue = 0;
-    _this2.throttledPut = _.throttle(function () {
-      var keys = Object.keys(_this2.putQueue);
-      var values = keys.map(function (key) {
-        return _this2.putQueue[key];
-      });
-      _this2.db.nodes.bulkPut(values, keys);
-      _this2.putQueue = {};
-    }, 500);
-    _this2.throttledGet = _.throttle(function () {
-      // clone this.getQueue and clear it
-      var queue = _this2.getQueue;
-      var keys = Object.keys(queue);
-      _this2.db.nodes.bulkGet(keys).then(function (values) {
-        for (var i = 0; i < keys.length; i++) {
-          var key = keys[i];
-          var value = values[i];
-          var callbacks = queue[key];
-          // console.log('have', key, value);
-          for (var _iterator = _createForOfIteratorHelperLoose(callbacks), _step; !(_step = _iterator()).done;) {
-            var callback = _step.value;
-            callback(value);
-          }
-        }
-      });
-      _this2.getQueue = {};
-    }, 100);
-    _this2.config = config;
-    var dbName = config.dbName || 'iris';
-    _this2.db = new MyDexie(dbName);
-    _this2.db.open()["catch"](function (err) {
-      console.error(err.stack || err);
-    });
-    return _this2;
-  }
-  var _proto = IndexedDB.prototype;
-  _proto.put = function put(nodeId, value) {
-    // add puts to a queue and dexie bulk write them once per 500ms
-    this.putQueue[nodeId] = value;
-    this.throttledPut();
-  };
-  _proto.get = function get(path, callback) {
-    this.getQueue[path] = this.getQueue[path] || [];
-    this.getQueue[path].push(callback);
-    this.throttledGet();
-  };
-  _proto.handle = function handle(message) {
-    if (message instanceof Put) {
-      console.log('indexeddb handle Put', message);
-      this.handlePut(message);
-    } else if (message instanceof Get) {
-      console.log('indexeddb handle Get', message);
-      this.handleGet(message);
-    } else {
-      console.log('worker got unknown message', message);
-    }
-  };
-  _proto.handleGet = function handleGet(message) {
-    var _this3 = this;
-    if (this.notStored.has(message.nodeId)) {
-      // TODO message implying that the key is not stored
-      return;
-    }
-    this.get(message.nodeId, function (value) {
-      // TODO: this takes a long time to return
-      if (value === undefined) {
-        _this3.notStored.add(message.nodeId);
-        // TODO message implying that the key is not stored
-      } else {
-        // TODO list of children
-        var parentId = message.nodeId.split('/').slice(0, -1).join('/');
-        var childId = message.nodeId.split('/').slice(-1)[0];
-        var children = {};
-        children[childId] = value;
-        var putMessage = Put.newFromKv(parentId, children, _this3);
-        putMessage.inResponseTo = message.id;
-        console.log('indexeddb sending', putMessage);
-        message.from && message.from.postMessage(putMessage);
-      }
-    });
-  };
-  _proto.mergeAndSave = function mergeAndSave(path, newValue) {
-    var _this4 = this;
-    this.get(path, function (existing) {
-      // TODO check updatedAt timestamp
-      if (existing === undefined) {
-        _this4.put(path, newValue);
-      } else if (!_.isEqual(existing, newValue)) {
-        // if existing value is array, merge it
-        if (Array.isArray(existing) && Array.isArray(newValue)) {
-          newValue = _.uniq(existing.concat(newValue));
-        }
-        if (Array.isArray(newValue) && newValue.length === 0) {
-          console.log('no kids', path);
-        }
-        _this4.put(path, newValue);
-      }
-    });
-  };
-  _proto.savePath = function savePath(path, value) {
-    if (value === undefined) {
-      this.db.nodes["delete"](path);
-      this.notStored.add(path);
-    } else {
-      this.notStored["delete"](path);
-      this.mergeAndSave(path, value);
-    }
-  };
-  _proto.handlePut = /*#__PURE__*/function () {
-    var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(put) {
-      var _i, _Object$entries, _Object$entries$_i, nodeName, children, _i2, _Object$entries2, _Object$entries2$_i, childName, newValue, path;
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              _i = 0, _Object$entries = Object.entries(put.updatedNodes);
-            case 1:
-              if (!(_i < _Object$entries.length)) {
-                _context.next = 13;
-                break;
-              }
-              _Object$entries$_i = _Object$entries[_i], nodeName = _Object$entries$_i[0], children = _Object$entries$_i[1];
-              if (children) {
-                _context.next = 6;
-                break;
-              }
-              console.log('deleting', nodeName);
-              return _context.abrupt("continue", 10);
-            case 6:
-              if (!(typeof children !== 'object')) {
-                _context.next = 9;
-                break;
-              }
-              // we receiving bad messages? or is this handled correctly?
-              this.savePath(nodeName, children);
-              return _context.abrupt("continue", 10);
-            case 9:
-              for (_i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
-                _Object$entries2$_i = _Object$entries2[_i2], childName = _Object$entries2$_i[0], newValue = _Object$entries2$_i[1];
-                path = nodeName + "/" + childName;
-                this.savePath(path, newValue);
-              }
-            case 10:
-              _i++;
-              _context.next = 1;
-              break;
-            case 13:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee, this);
-    }));
-    function handlePut(_x) {
-      return _handlePut.apply(this, arguments);
-    }
-    return handlePut;
-  }();
-  return IndexedDB;
 }(Actor);
 
 //@ts-ignore
@@ -1579,7 +1391,7 @@ var Router = /*#__PURE__*/function (_Actor) {
     // default random id
     _this.peerId = config.peerId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     _this.storageAdapters.add(new Memory(config));
-    _this.storageAdapters.add(new IndexedDB(config));
+    //this.storageAdapters.add(new IndexedDB(config));
     console.log('config', config);
     if (config.peers) {
       for (var _iterator = _createForOfIteratorHelperLoose(config.peers), _step; !(_step = _iterator()).done;) {
@@ -1609,37 +1421,43 @@ var Router = /*#__PURE__*/function (_Actor) {
   _proto.handlePut = function handlePut(put) {
     var _this2 = this;
     console.log('router handlePut', put);
+    var sendTo = new Set();
     Object.keys(put.updatedNodes).forEach(function (path) {
-      var topic = path.split('/')[1] || '';
+      // topic is first 3 nodes of path
+      var topic = path.split('/').slice(0, 3).join('/');
       var subscribers = _this2.subscribersByTopic.get(topic);
       // send to storage adapters
       //console.log('put subscribers', subscribers);
       for (var _iterator2 = _createForOfIteratorHelperLoose(_this2.storageAdapters), _step2; !(_step2 = _iterator2()).done;) {
         var storageAdapter = _step2.value;
         if (put.from !== storageAdapter) {
-          storageAdapter.postMessage(put);
+          sendTo.add(storageAdapter);
         }
       }
       for (var _iterator3 = _createForOfIteratorHelperLoose(_this2.serverPeers), _step3; !(_step3 = _iterator3()).done;) {
         var peer = _step3.value;
         if (put.from !== peer) {
-          peer.postMessage(put);
+          sendTo.add(peer);
         }
       }
       if (subscribers) {
         for (var _iterator4 = _createForOfIteratorHelperLoose(subscribers), _step4; !(_step4 = _iterator4()).done;) {
           var subscriber = _step4.value;
           if (subscriber !== put.from) {
-            subscriber.postMessage(put);
+            sendTo.add(subscriber);
           }
         }
       }
     });
+    for (var _iterator5 = _createForOfIteratorHelperLoose(sendTo), _step5; !(_step5 = _iterator5()).done;) {
+      var actor = _step5.value;
+      actor.postMessage(put);
+    }
   };
   _proto.opt = function opt(opts) {
     if (opts.peers) {
-      for (var _iterator5 = _createForOfIteratorHelperLoose(opts.peers), _step5; !(_step5 = _iterator5()).done;) {
-        var peer = _step5.value;
+      for (var _iterator6 = _createForOfIteratorHelperLoose(opts.peers), _step6; !(_step6 = _iterator6()).done;) {
+        var peer = _step6.value;
         if (peer) {
           this.serverPeers.add(new Websocket(peer, this));
         }
@@ -1648,16 +1466,17 @@ var Router = /*#__PURE__*/function (_Actor) {
   };
   _proto.handleGet = function handleGet(get) {
     var topic = get.nodeId.split('/')[1];
-    for (var _iterator6 = _createForOfIteratorHelperLoose(this.storageAdapters), _step6; !(_step6 = _iterator6()).done;) {
-      var storageAdapter = _step6.value;
+    var sendTo = new Set();
+    for (var _iterator7 = _createForOfIteratorHelperLoose(this.storageAdapters), _step7; !(_step7 = _iterator7()).done;) {
+      var storageAdapter = _step7.value;
       if (get.from !== storageAdapter) {
-        storageAdapter.postMessage(get);
+        sendTo.add(storageAdapter);
       }
     }
-    for (var _iterator7 = _createForOfIteratorHelperLoose(this.serverPeers), _step7; !(_step7 = _iterator7()).done;) {
-      var peer = _step7.value;
+    for (var _iterator8 = _createForOfIteratorHelperLoose(this.serverPeers), _step8; !(_step8 = _iterator8()).done;) {
+      var peer = _step8.value;
       if (get.from !== peer) {
-        peer.postMessage(get);
+        sendTo.add(peer);
       }
     }
     if (!this.subscribersByTopic.has(topic)) {
@@ -1668,6 +1487,10 @@ var Router = /*#__PURE__*/function (_Actor) {
       if (!subscribers.has(get.from)) {
         subscribers.add(get.from);
       }
+    }
+    for (var _iterator9 = _createForOfIteratorHelperLoose(sendTo), _step9; !(_step9 = _iterator9()).done;) {
+      var actor = _step9.value;
+      actor.postMessage(get);
     }
   };
   return Router;
@@ -1798,6 +1621,8 @@ var Node = /*#__PURE__*/function (_Actor) {
               updatedAt: Date.now()
             }, childKey); // TODO children should have proper NodeData
           }
+        } else {
+          console.log('badly routed put', key, this.parent.id);
         }
       }
     }

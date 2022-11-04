@@ -1,6 +1,6 @@
 import {Actor} from "./Actor";
 import Memory from "./adapters/Memory";
-import IndexedDB from "./adapters/IndexedDB";
+//import IndexedDB from "./adapters/IndexedDB";
 import Websocket from "./adapters/Websocket";
 import {Put, Get, Message} from "./Message";
 // import * as Comlink from "comlink";
@@ -30,7 +30,7 @@ export default class Router extends Actor {
         // default random id
         this.peerId = config.peerId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         this.storageAdapters.add(new Memory(config));
-        this.storageAdapters.add(new IndexedDB(config));
+        //this.storageAdapters.add(new IndexedDB(config));
         console.log('config', config);
         if (config.peers) {
             for (const peer of config.peers) {
@@ -58,31 +58,36 @@ export default class Router extends Actor {
 
     handlePut(put: Put) {
         console.log('router handlePut', put);
+        const sendTo: Set<Actor> = new Set();
         Object.keys(put.updatedNodes).forEach(path => {
-            const topic = path.split('/')[1] || '';
+            // topic is first 3 nodes of path
+            const topic = path.split('/').slice(0, 3).join('/');
             const subscribers = this.subscribersByTopic.get(topic);
             // send to storage adapters
             //console.log('put subscribers', subscribers);
             for (const storageAdapter of this.storageAdapters) {
                 if (put.from !== storageAdapter) {
-                    storageAdapter.postMessage(put);
+                    sendTo.add(storageAdapter);
                 }
             }
 
             for (const peer of this.serverPeers) {
                 if (put.from !== peer) {
-                    peer.postMessage(put);
+                    sendTo.add(peer);
                 }
             }
 
             if (subscribers) {
                 for (const subscriber of subscribers) {
                     if (subscriber !== put.from) {
-                        subscriber.postMessage(put);
+                        sendTo.add(subscriber);
                     }
                 }
             }
         });
+        for (const actor of sendTo) {
+            actor.postMessage(put);
+        }
     }
 
     opt(opts: any) {
@@ -97,14 +102,15 @@ export default class Router extends Actor {
 
     handleGet(get: Get) {
         const topic = get.nodeId.split('/')[1];
+        const sendTo: Set<Actor> = new Set();
         for (const storageAdapter of this.storageAdapters) {
             if (get.from !== storageAdapter) {
-                storageAdapter.postMessage(get);
+                sendTo.add(storageAdapter);
             }
         }
         for (const peer of this.serverPeers) {
             if (get.from !== peer) {
-                peer.postMessage(get);
+                sendTo.add(peer);
             }
         }
         if (!this.subscribersByTopic.has(topic)) {
@@ -115,6 +121,9 @@ export default class Router extends Actor {
             if (!subscribers.has(get.from)) {
                 subscribers.add(get.from);
             }
+        }
+        for (const actor of sendTo) {
+            actor.postMessage(get);
         }
     }
 }

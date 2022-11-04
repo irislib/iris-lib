@@ -56,6 +56,7 @@ export default class Memory extends Actor {
         if (existing === undefined) {
             this.store.set(nodeName, children);
         } else if (!_.isEqual(existing, children)) {
+            console.log('merging', nodeName, existing, children);
             this.store.set(nodeName, Object.assign(existing, children));
         } else {
             console.log('not updating', nodeName, existing, children);

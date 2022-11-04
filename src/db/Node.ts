@@ -90,7 +90,7 @@ export default class Node extends Actor {
                         this.parent.get(childKey).doCallbacks({value: childData, updatedAt: Date.now()}, childKey); // TODO children should have proper NodeData
                     }
                 } else {
-                    //console.log('badly routed put', key, this.parent.id);
+                    console.log('badly routed put', key, this.parent.id);
                 }
             }
         }
