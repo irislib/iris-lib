@@ -87,10 +87,10 @@ export default class Node extends Actor {
                 console.log('nodehandle put', this.parent.id, message);
                 if (key === this.parent.id) {
                     for (const [childKey, childData] of Object.entries(children)) {
-                        this.parent.get(childKey).doCallbacks({value: childData, updatedAt: Date.now()}); // TODO children should have proper NodeData
+                        this.parent.get(childKey).doCallbacks({value: childData, updatedAt: Date.now()}, childKey); // TODO children should have proper NodeData
                     }
                 } else {
-                    console.log('badly routed put', key, this.parent.id);
+                    //console.log('badly routed put', key, this.parent.id);
                 }
             }
         }
@@ -111,7 +111,7 @@ export default class Node extends Actor {
         if (!pub) {
             throw new Error("no public key!");
         }
-        return this.get('users').get(pub as string);
+        return this.get('user').get(pub as string);
     }
 
     auth(key: any) {
@@ -120,26 +120,26 @@ export default class Node extends Actor {
         return;
     }
 
-    doCallbacks = (data: NodeData) => {
+    doCallbacks = (data: NodeData, key: string) => {
         console.log('doCallbacks', this.id, data, this.on_subscriptions.size);
         for (const [id, callback] of this.on_subscriptions) {
             console.log(1);
             const event = { off: () => this.on_subscriptions.delete(id) };
-            callback(data.value, data.updatedAt, null, event);
+            callback(data.value, key, null, event);
         }
         for (const [id, callback] of this.once_subscriptions) {
-            callback(data.value, data.updatedAt, null, {});
+            callback(data.value, key, null, {});
             this.once_subscriptions.delete(id);
         }
 
         if (this.parent) {
             for (const [id, callback] of this.parent.on_subscriptions) {
                 const event = { off: () => this.parent?.on_subscriptions.delete(id) };
-                callback(data.value, data.updatedAt, null, event);
+                callback(data.value, key, null, event);
             }
             for (const [id, callback] of this.parent.map_subscriptions) {
                 const event = { off: () => this.parent?.map_subscriptions.delete(id) };
-                callback(data.value, data.updatedAt, null, event);
+                callback(data.value, key, null, event);
             }
         }
     };
@@ -160,7 +160,7 @@ export default class Node extends Actor {
             return;
         }
         this.children = new Map();
-        this.doCallbacks({value, updatedAt});
+        this.doCallbacks({value, updatedAt}, this.id.split('/').pop() as string);
         const updatedNodes: UpdatedNodes = {};
         this.addParentNodes(updatedNodes, value, updatedAt);
         const put = Put.new(updatedNodes, this);

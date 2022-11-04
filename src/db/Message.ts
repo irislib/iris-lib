@@ -51,10 +51,12 @@ export class Get implements Message {
         }
 
         // TODO remove "global/", replace /^user\// with ~
+        let nodeId = this.nodeId.replace(/^global\//, '').replace(/^user\//, '~');
         const obj: any = {
             "#": this.id,
             get: {
-                "#": this.nodeId,
+                "#": nodeId,
+                ".": this.childKey
             },
         };
 
@@ -67,7 +69,11 @@ export class Get implements Message {
 
     static deserialize(obj: any, jsonStr: string, from: Actor): Get {
         const id = obj['#'];
-        const nodeId = obj.get['#']; // TODO add "global/" prefix, replace /^~/ with "user/"
+        let nodeId = obj.get['#']; // TODO add "global/" prefix, replace /^~/ with "user/"
+        if (nodeId.startsWith('~')) {
+            nodeId = 'user/' + nodeId.slice(1);
+        }
+        nodeId = 'global/' + nodeId;
         const childKey = obj.get['.'];
         return new Get(id, nodeId, from, undefined, childKey, jsonStr);
     }
@@ -114,7 +120,8 @@ export class Put implements Message {
 
         // iterate over this.updatedNodes
         for (const [nodeId, children] of Object.entries(this.updatedNodes)) {
-            const node: any = obj.put[nodeId] = {};
+            let myNodeId = nodeId.replace(/^global\//, '').replace(/^user\//, '~');
+            const node: any = obj.put[myNodeId] = {};
             for (const [childKey, childValue] of Object.entries(children)) {
                 if (!childValue) {
                     continue;
@@ -148,7 +155,8 @@ export class Put implements Message {
                     updatedAt,
                 };
             }
-            updatedNodes[nodeId] = node;
+            const myNodeId = 'global/' + nodeId.replace(/^~/, 'user/');
+            updatedNodes[myNodeId] = node;
         }
         return new Put(id, updatedNodes, from, undefined, undefined, jsonStr);
     }

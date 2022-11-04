@@ -36,7 +36,7 @@ export default class Node extends Actor {
     get(key: string): Node;
     user(pub: string | undefined): Node;
     auth(key: any): void;
-    doCallbacks: (data: NodeData) => void;
+    doCallbacks: (data: NodeData, key: string) => void;
     put(value: any): void;
     private addParentNodes;
     private request;

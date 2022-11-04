@@ -1076,10 +1076,12 @@ var Get = /*#__PURE__*/function () {
       return this.jsonStr;
     }
     // TODO remove "global/", replace /^user\// with ~
+    var nodeId = this.nodeId.replace(/^global\//, '').replace(/^user\//, '~');
     var obj = {
       "#": this.id,
       get: {
-        "#": this.nodeId
+        "#": nodeId,
+        ".": this.childKey
       }
     };
     if (this.childKey) {
@@ -1091,6 +1093,10 @@ var Get = /*#__PURE__*/function () {
   Get.deserialize = function deserialize(obj, jsonStr, from) {
     var id = obj['#'];
     var nodeId = obj.get['#']; // TODO add "global/" prefix, replace /^~/ with "user/"
+    if (nodeId.startsWith('~')) {
+      nodeId = 'user/' + nodeId.slice(1);
+    }
+    nodeId = 'global/' + nodeId;
     var childKey = obj.get['.'];
     return new Get(id, nodeId, from, undefined, childKey, jsonStr);
   };
@@ -1125,7 +1131,8 @@ var Put = /*#__PURE__*/function () {
       var _Object$entries$_i = _Object$entries[_i],
         nodeId = _Object$entries$_i[0],
         children = _Object$entries$_i[1];
-      var node = obj.put[nodeId] = {};
+      var myNodeId = nodeId.replace(/^global\//, '').replace(/^user\//, '~');
+      var node = obj.put[myNodeId] = {};
       for (var _i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
         var _Object$entries2$_i = _Object$entries2[_i2],
           childKey = _Object$entries2$_i[0],
@@ -1164,7 +1171,8 @@ var Put = /*#__PURE__*/function () {
           updatedAt: updatedAt
         };
       }
-      updatedNodes[nodeId] = node;
+      var myNodeId = 'global/' + nodeId.replace(/^~/, 'user/');
+      updatedNodes[myNodeId] = node;
     }
     return new Put(id, updatedNodes, from, undefined, undefined, jsonStr);
   };
@@ -1691,7 +1699,7 @@ var Node = /*#__PURE__*/function (_Actor) {
     _this.map_subscriptions = new Map();
     _this.counter = 0;
     _this.requested = false;
-    _this.doCallbacks = function (data) {
+    _this.doCallbacks = function (data, key) {
       console.log('doCallbacks', _this.id, data, _this.on_subscriptions.size);
       var _loop3 = function _loop3() {
         var _step$value = _step.value,
@@ -1703,7 +1711,7 @@ var Node = /*#__PURE__*/function (_Actor) {
             return _this.on_subscriptions["delete"](id);
           }
         };
-        callback(data.value, data.updatedAt, null, event);
+        callback(data.value, key, null, event);
       };
       for (var _iterator = _createForOfIteratorHelperLoose(_this.on_subscriptions), _step; !(_step = _iterator()).done;) {
         _loop3();
@@ -1712,7 +1720,7 @@ var Node = /*#__PURE__*/function (_Actor) {
         var _step2$value = _step2.value,
           _id = _step2$value[0],
           callback = _step2$value[1];
-        callback(data.value, data.updatedAt, null, {});
+        callback(data.value, key, null, {});
         _this.once_subscriptions["delete"](_id);
       }
       if (_this.parent) {
@@ -1726,7 +1734,7 @@ var Node = /*#__PURE__*/function (_Actor) {
               return (_this$parent = _this.parent) == null ? void 0 : _this$parent.on_subscriptions["delete"](id);
             }
           };
-          callback(data.value, data.updatedAt, null, event);
+          callback(data.value, key, null, event);
         };
         for (var _iterator3 = _createForOfIteratorHelperLoose(_this.parent.on_subscriptions), _step3; !(_step3 = _iterator3()).done;) {
           _loop();
@@ -1741,7 +1749,7 @@ var Node = /*#__PURE__*/function (_Actor) {
               return (_this$parent2 = _this.parent) == null ? void 0 : _this$parent2.map_subscriptions["delete"](id);
             }
           };
-          callback(data.value, data.updatedAt, null, event);
+          callback(data.value, key, null, event);
         };
         for (var _iterator4 = _createForOfIteratorHelperLoose(_this.parent.map_subscriptions), _step4; !(_step4 = _iterator4()).done;) {
           _loop2();
@@ -1794,10 +1802,8 @@ var Node = /*#__PURE__*/function (_Actor) {
             this.parent.get(childKey).doCallbacks({
               value: childData,
               updatedAt: Date.now()
-            }); // TODO children should have proper NodeData
+            }, childKey); // TODO children should have proper NodeData
           }
-        } else {
-          console.log('badly routed put', key, this.parent.id);
         }
       }
     }
@@ -1816,7 +1822,7 @@ var Node = /*#__PURE__*/function (_Actor) {
     if (!pub) {
       throw new Error("no public key!");
     }
-    return this.get('users').get(pub);
+    return this.get('user').get(pub);
   };
   _proto.auth = function auth(key) {
     // TODO get public key from key
@@ -1842,7 +1848,7 @@ var Node = /*#__PURE__*/function (_Actor) {
     this.doCallbacks({
       value: value,
       updatedAt: updatedAt
-    });
+    }, this.id.split('/').pop());
     var updatedNodes = {};
     this.addParentNodes(updatedNodes, value, updatedAt);
     var put = Put["new"](updatedNodes, this);
