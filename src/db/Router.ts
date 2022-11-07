@@ -1,6 +1,6 @@
 import {Actor} from "./Actor";
 import Memory from "./adapters/Memory";
-//import IndexedDB from "./adapters/IndexedDB";
+import IndexedDB from "./adapters/IndexedDB";
 import Websocket from "./adapters/Websocket";
 import {Put, Get, Message} from "./Message";
 // import * as Comlink from "comlink";
@@ -30,7 +30,7 @@ export default class Router extends Actor {
         // default random id
         this.peerId = config.peerId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         this.storageAdapters.add(new Memory(config));
-        //this.storageAdapters.add(new IndexedDB(config));
+        this.storageAdapters.add(new IndexedDB(config));
         console.log('config', config);
         if (config.peers) {
             for (const peer of config.peers) {

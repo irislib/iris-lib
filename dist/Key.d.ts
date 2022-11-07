@@ -1,4 +1,3 @@
-import 'gun/sea';
 declare class Key {
     static getActiveKey(datadir?: string, keyfile?: string, fs?: any): Promise<any>;
     static getDefault(datadir?: string, keyfile?: string): Promise<any>;
@@ -7,8 +6,15 @@ declare class Key {
     static toString(key: any): string;
     static getId(key: any): any;
     static fromString(str: string): any;
-    static generate(): Promise<import("gun").ISEAPair>;
-    static sign(msg: any, pair: any): Promise<string>;
-    static verify(msg: any, pubKey: any): Promise<any>;
+    static generate(): Promise<{
+        pub: any;
+        priv: any;
+        epub: any;
+        epriv: any;
+    } | undefined>;
+    static sign(_data: any, _pair: any, _cb?: Function, _opt?: {}): Promise<string>;
+    static secret(pub: any, pair: any): Promise<ArrayBuffer>;
+    static encrypt(_data: any, _pair: any, _cb?: Function, _opt?: {}): Promise<string>;
+    static verify(_msg: any, _pubKey: any): boolean;
 }
 export default Key;

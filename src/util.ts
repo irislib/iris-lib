@@ -1,8 +1,6 @@
 // @ts-nocheck
 /* eslint no-useless-escape: "off", camelcase: "off" */
 
-import Gun from 'gun'; // eslint-disable-line no-unused-vars
-import 'gun/sea';
 import _ from './lodash';
 
 // eslint-disable-line no-unused-vars
@@ -1856,16 +1854,14 @@ export default {
     if (!str) {
       return undefined;
     }
-    const hash = await Gun.SEA.work(str, undefined, undefined, {name: `SHA-256`});
-    if (!hash) {
-      throw new Error(`Gun.SEA.work failed for ${str}`);
-    }
-    if (hash.length > 44) {
-      throw new Error(`Gun.SEA.work returned an invalid SHA-256 hash longer than 44 chars: ${hash}. This is probably due to a sea.js bug on Safari.`);
-    }
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    const buffer = await crypto.subtle.digest('SHA-256', data);
+    const hash = this.arrayBufferToBase64(buffer);
     if (format === `hex`) {
       return this.base64ToHex(hash);
     }
+    console.log('hash', hash);
     return hash;
   },
 
@@ -1885,6 +1881,16 @@ export default {
       result += (hex.length === 2 ? hex : `0${ hex}`);
     }
     return result;
+  },
+
+  arrayBufferToBase64( buffer ) {
+    var binary = '';
+    var bytes = new Uint8Array( buffer );
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] );
+    }
+    return window.btoa( binary );
   },
 
   getCaret(el: HTMLInputElement) {

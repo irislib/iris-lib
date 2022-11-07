@@ -1,6 +1,5 @@
 import {Put, Get, Message} from '../Message'
 import { Actor } from '../Actor';
-import _ from "../../lodash";
 import QuickLRU from 'quick-lru';
 import {Children} from "../Node";
 //import {NodeData} from "../Node";
@@ -36,9 +35,11 @@ export default class Memory extends Actor {
         if (children) {
             console.log('have', message.nodeId, children);
             if (message.childKey) {
-                const o: Children = {};
-                o[message.childKey] = children[message.childKey];
-                children = o;
+                if (children[message.childKey]) {
+                    const o: Children = {};
+                    o[message.childKey] = children[message.childKey];
+                    children = o;
+                }
             }
             const putMessage = Put.newFromKv(message.nodeId, children, this);
             putMessage.inResponseTo = message.id;
@@ -49,17 +50,22 @@ export default class Memory extends Actor {
         }
     }
 
-    mergeAndSave(nodeName: string, children: any) {
+    mergeAndSave(nodeName: string, children: Children) {
         const existing = this.store.get(nodeName);
 
         // TODO check updatedAt timestamp
         if (existing === undefined) {
             this.store.set(nodeName, children);
-        } else if (!_.isEqual(existing, children)) {
-            console.log('merging', nodeName, existing, children);
-            this.store.set(nodeName, Object.assign(existing, children));
         } else {
-            console.log('not updating', nodeName, existing, children);
+            for (const [key, value] of Object.entries(children)) {
+                console.log('merging', key, value);
+                if (existing[key] && existing[key].updatedAt >= value.updatedAt) {
+                    continue;
+                }
+                existing[key] = value;
+            }
+            console.log('merging', nodeName, existing, children);
+            this.store.set(nodeName, existing);
         }
     }
 

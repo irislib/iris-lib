@@ -1,5 +1,5 @@
 // @ts-nocheck
-import Gun from 'gun';
+import Key from './Key';
 import notifications from './notifications';
 import Channel from './Channel';
 import util from './util';
@@ -294,7 +294,7 @@ export default {
   loginAsNewUser(options: any = {}) {
     const name = options.name || util.generateName();
     console.log('loginAsNewUser name', name);
-    return Gun.SEA.pair().then(k => {
+    return Key.generate().then(k => {
       this.login(k);
       user().get('profile').put({a:null});
       user().get('profile').get('name').put(name);

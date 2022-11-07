@@ -1,5 +1,6 @@
+// TODO: gun causes unnecessary modules like aws-sdk to be loaded and the tests won't run
 require("fake-indexeddb/auto");
-import iris from '..'; // can we test directly from ../src directory? requires some jest config, but would enable testing without building
+const iris = require('../dist/iris.umd.development.js').default; // can we test directly from ../src directory? requires some jest config, but would enable testing without building
 
 /*
 process.env.PORT = "8767";
@@ -12,13 +13,13 @@ describe('iris', () => {
   describe('global', () => {
     it('first put then on', (done) => {
       iris.global().get('profile').get('name').put('Caleb');
-      iris.global().get('profile').get('name').on((name: any) => {
+      iris.global().get('profile').get('name').on((name) => {
         expect(name).toBe('Caleb');
         done();
       });
     });
     it('first on then put', (done) => {
-      iris.global().get('profile').get('age').on((age: any) => {
+      iris.global().get('profile').get('age').on((age) => {
         expect(age).toBe(42);
         done();
       });
@@ -27,7 +28,7 @@ describe('iris', () => {
     it('map & on same keys and values returned', (done) => {
       iris.global().get('numbers').get('pi').put(3.14);
       iris.global().get('numbers').get('e').put(2.71);
-      let onResult: any;
+      let onResult;
       const map = new Map();
       function checkDone() {
         if (map.size === 3 && onResult && Object.keys(onResult).length === 3) {
@@ -40,11 +41,11 @@ describe('iris', () => {
           done();
         }
       }
-      iris.global().get('numbers').on((numbers: any) => {
+      iris.global().get('numbers').on((numbers) => {
         onResult = numbers;
         checkDone();
       });
-      iris.global().get('numbers').map((value: any, key: string) => {
+      iris.global().get('numbers').map((value, key) => {
         map.set(key, value);
         checkDone();
       });

@@ -1,4 +1,3 @@
-import 'gun/sea';
 /**
 * Private communication channel between two or more participants ([Gun](https://github.com/amark/gun) public keys). Can be used independently of other Iris stuff.
 *
@@ -39,12 +38,12 @@ import 'gun/sea';
 *
 * var gun1 = new Gun('https://gun-us.herokuapp.com/gun');
 * var gun2 = new Gun('https://gun-us.herokuapp.com/gun');
-* var myKey = await iris.Key.getDefault();
+* var myKey = await Key.getDefault();
 * var someoneElse = localStorage.getItem('someoneElsesKey');
 * if (someoneElse) {
 *  someoneElse = JSON.parse(someoneElse);
 * } else {
-*  someoneElse = await iris.Key.generate();
+*  someoneElse = await Key.generate();
 *  localStorage.setItem('someoneElsesKey', JSON.stringify(someoneElse));
 * }
 *
@@ -140,7 +139,7 @@ declare class Channel {
     static getTheirSecretChannelId(pub: any, pair: any): Promise<string | undefined>;
     /**
     * Calls back with Channels that you have initiated or written to.
-    * @param {Object} keypair Gun.SEA keypair that the gun instance is authenticated with
+    * @param {Object} keypair Key keypair that the gun instance is authenticated with
     * @param callback callback function that is called for each public key you have a channel with
     */
     static getChannels(callback: any, listenToChatLinks?: boolean): Promise<void>;

@@ -206,7 +206,7 @@ class SignedMessage {
   }
 
   /**
-  * @param {Object} key Gun.SEA keypair to sign the message with
+  * @param {Object} key keypair to sign the message with
   */
   async sign(key) {
     this.sig = await Key.sign(this.signedData, key);

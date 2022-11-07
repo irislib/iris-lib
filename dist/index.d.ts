@@ -1,4 +1,3 @@
-import 'gun/sea';
 import local from './local';
 import global from './global';
 import publicState from './public';
@@ -93,6 +92,7 @@ declare const _default: {
         capitalize(s: string): string;
         generateName(): string;
         base64ToHex(str: string): string;
+        arrayBufferToBase64(buffer: any): string;
         getCaret(el: HTMLInputElement): any;
         injectCss(): void;
         getUrlParameter(sParam: string, sParams: string): string | true | undefined;
@@ -127,8 +127,6 @@ declare const _default: {
         getWebPushSubscriptions: () => Promise<void>;
         removeSubscription: (hash: any) => void;
     };
-    SEA: import("gun").ISEA;
-    Gun: import("gun").IGun;
     SignedMessage: typeof SignedMessage;
     Channel: typeof Channel;
     Node: typeof Node;

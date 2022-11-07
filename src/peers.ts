@@ -1,8 +1,8 @@
 import session from './session';
 import _ from './lodash';
-import Gun from 'gun';
 import util from './util';
 import publicState from './global';
+import Key from './Key';
 
 const ELECTRON_GUN_URL = 'http://localhost:8767/gun';
 let maxConnectedPeers = 1;
@@ -50,9 +50,9 @@ export default {
     this.known[url] = this.known[url] || _.omit(peer, ['url']);
     if (peer.visibility === 'public') {
       // rolling some crypto operations to obfuscate actual url in case we want to remove it
-      let secret = await Gun.SEA.secret(session.getKey().epub, session.getKey()) || '';
-      let encryptedUrl = await Gun.SEA.encrypt(peer.url, secret);
-      let encryptedUrlHash = await Gun.SEA.work(encryptedUrl, null, null, {name: 'SHA-256'});
+      let secret = await Key.secret(session.getKey().epub, session.getKey()) || '';
+      let encryptedUrl = await Key.encrypt(peer.url, secret);
+      let encryptedUrlHash = await util.getHash(encryptedUrl);
       publicState().user().get('peers').get(encryptedUrlHash).put({url: peer.url, lastSeen: new Date().toISOString()});
     }
     if (peer.enabled !== false) {

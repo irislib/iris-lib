@@ -56,7 +56,7 @@ declare class SignedMessage {
     isNegative(): boolean;
     isNeutral(): boolean;
     /**
-    * @param {Object} key Gun.SEA keypair to sign the message with
+    * @param {Object} key keypair to sign the message with
     */
     sign(key: any): Promise<boolean>;
     /**

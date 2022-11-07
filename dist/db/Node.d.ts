@@ -25,7 +25,6 @@ export default class Node extends Actor {
     on_subscriptions: Map<number, Function>;
     map_subscriptions: Map<number, Function>;
     counter: number;
-    requested: boolean;
     config: Config;
     currentUser: any;
     router: Router;

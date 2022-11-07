@@ -1,8 +1,5 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
-import Gun from 'gun';
-import 'gun/sea';
-
 import session from './session';
 import peers from './peers';
 import util from './util';
@@ -22,7 +19,6 @@ import Node from './db/Node';
 export default {
   local,
   global,
-
   group,
   public: publicState,
   private: privateState,
@@ -32,9 +28,6 @@ export default {
   session,
   util,
   notifications,
-
-  SEA: Gun.SEA,
-  Gun,
   SignedMessage,
   Channel,
   Node,

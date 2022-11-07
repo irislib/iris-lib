@@ -4,9 +4,8 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var Gun = _interopDefault(require('gun'));
-require('gun/sea');
 var QuickLRU = _interopDefault(require('quick-lru'));
+var Dexie = _interopDefault(require('dexie'));
 var Fuse = _interopDefault(require('fuse.js'));
 
 function _regeneratorRuntime() {
@@ -586,7 +585,7 @@ var util = {
   getHash: function getHash(str, format) {
     var _this = this;
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var hash;
+      var encoder, data, buffer, hash;
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -600,30 +599,20 @@ var util = {
               }
               return _context.abrupt("return", undefined);
             case 3:
-              _context.next = 5;
-              return Gun.SEA.work(str, undefined, undefined, {
-                name: "SHA-256"
-              });
-            case 5:
-              hash = _context.sent;
-              if (hash) {
-                _context.next = 8;
-                break;
-              }
-              throw new Error("Gun.SEA.work failed for " + str);
-            case 8:
-              if (!(hash.length > 44)) {
-                _context.next = 10;
-                break;
-              }
-              throw new Error("Gun.SEA.work returned an invalid SHA-256 hash longer than 44 chars: " + hash + ". This is probably due to a sea.js bug on Safari.");
-            case 10:
+              encoder = new TextEncoder();
+              data = encoder.encode(str);
+              _context.next = 7;
+              return crypto.subtle.digest('SHA-256', data);
+            case 7:
+              buffer = _context.sent;
+              hash = _this.arrayBufferToBase64(buffer);
               if (!(format === "hex")) {
-                _context.next = 12;
+                _context.next = 11;
                 break;
               }
               return _context.abrupt("return", _this.base64ToHex(hash));
-            case 12:
+            case 11:
+              console.log('hash', hash);
               return _context.abrupt("return", hash);
             case 13:
             case "end":
@@ -647,6 +636,15 @@ var util = {
       result += hex.length === 2 ? hex : "0" + hex;
     }
     return result;
+  },
+  arrayBufferToBase64: function arrayBufferToBase64(buffer) {
+    var binary = '';
+    var bytes = new Uint8Array(buffer);
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
   },
   getCaret: function getCaret(el) {
     if (el.selectionStart) {
@@ -829,6 +827,405 @@ var util = {
   }
 };
 
+// eslint-disable-line no-unused-vars
+var myKey;
+var Key$1 = /*#__PURE__*/function () {
+  function Key() {}
+  Key.getActiveKey = /*#__PURE__*/function () {
+    var _getActiveKey = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(datadir, keyfile, fs) {
+      var privKeyFile, f, newKey, str, _newKey;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (datadir === void 0) {
+                datadir = ".";
+              }
+              if (keyfile === void 0) {
+                keyfile = "iris.key";
+              }
+              if (!myKey) {
+                _context.next = 4;
+                break;
+              }
+              return _context.abrupt("return", myKey);
+            case 4:
+              if (!fs) {
+                _context.next = 21;
+                break;
+              }
+              privKeyFile = datadir + "/" + keyfile;
+              if (!fs.existsSync(privKeyFile)) {
+                _context.next = 11;
+                break;
+              }
+              f = fs.readFileSync(privKeyFile, "utf8");
+              myKey = Key.fromString(f);
+              _context.next = 17;
+              break;
+            case 11:
+              _context.next = 13;
+              return Key.generate();
+            case 13:
+              newKey = _context.sent;
+              myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
+              fs.writeFileSync(privKeyFile, Key.toString(myKey));
+              fs.chmodSync(privKeyFile, 400);
+            case 17:
+              if (myKey) {
+                _context.next = 19;
+                break;
+              }
+              throw new Error("loading default key failed - check " + datadir + "/" + keyfile);
+            case 19:
+              _context.next = 33;
+              break;
+            case 21:
+              str = window.localStorage.getItem("iris.myKey");
+              if (!str) {
+                _context.next = 26;
+                break;
+              }
+              myKey = Key.fromString(str);
+              _context.next = 31;
+              break;
+            case 26:
+              _context.next = 28;
+              return Key.generate();
+            case 28:
+              _newKey = _context.sent;
+              myKey = myKey || _newKey; // eslint-disable-line require-atomic-updates
+              window.localStorage.setItem("iris.myKey", Key.toString(myKey));
+            case 31:
+              if (myKey) {
+                _context.next = 33;
+                break;
+              }
+              throw new Error("loading default key failed - check localStorage iris.myKey");
+            case 33:
+              return _context.abrupt("return", myKey);
+            case 34:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }));
+    function getActiveKey(_x, _x2, _x3) {
+      return _getActiveKey.apply(this, arguments);
+    }
+    return getActiveKey;
+  }();
+  Key.getDefault = function getDefault(datadir, keyfile) {
+    if (datadir === void 0) {
+      datadir = ".";
+    }
+    if (keyfile === void 0) {
+      keyfile = "iris.key";
+    }
+    return Key.getActiveKey(datadir, keyfile);
+  };
+  Key.getActivePub = /*#__PURE__*/function () {
+    var _getActivePub = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(datadir, keyfile) {
+      var key;
+      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              if (datadir === void 0) {
+                datadir = ".";
+              }
+              if (keyfile === void 0) {
+                keyfile = "iris.key";
+              }
+              _context2.next = 4;
+              return Key.getActiveKey(datadir, keyfile);
+            case 4:
+              key = _context2.sent;
+              return _context2.abrupt("return", key.pub);
+            case 6:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2);
+    }));
+    function getActivePub(_x4, _x5) {
+      return _getActivePub.apply(this, arguments);
+    }
+    return getActivePub;
+  }();
+  Key.setActiveKey = function setActiveKey(key, save, datadir, keyfile, fs) {
+    if (save === void 0) {
+      save = true;
+    }
+    if (datadir === void 0) {
+      datadir = ".";
+    }
+    if (keyfile === void 0) {
+      keyfile = "iris.key";
+    }
+    myKey = key;
+    if (!save) return;
+    if (util.isNode) {
+      var privKeyFile = datadir + "/" + keyfile;
+      fs.writeFileSync(privKeyFile, Key.toString(myKey));
+      fs.chmodSync(privKeyFile, 400);
+    } else {
+      window.localStorage.setItem("iris.myKey", Key.toString(myKey));
+    }
+  };
+  Key.toString = function toString(key) {
+    return JSON.stringify(key);
+  };
+  Key.getId = function getId(key) {
+    if (!(key && key.pub)) {
+      throw new Error("missing param");
+    }
+    return key.pub; // hack until GUN supports lookups by keyID
+    //return util.getHash(key.pub);
+  };
+  Key.fromString = function fromString(str) {
+    return JSON.parse(str);
+  }
+  // copied from Gun.SEA
+  ;
+  Key.generate =
+  /*#__PURE__*/
+  function () {
+    var _generate = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5() {
+      var ecdhSubtle, sa, dh, r;
+      return _regeneratorRuntime().wrap(function _callee5$(_context5) {
+        while (1) {
+          switch (_context5.prev = _context5.next) {
+            case 0:
+              _context5.prev = 0;
+              ecdhSubtle = window.crypto.subtle; // First: ECDSA keys for signing/verifying...
+              _context5.next = 4;
+              return ecdhSubtle.generateKey({
+                name: 'ECDSA',
+                namedCurve: 'P-256'
+              }, true, ['sign', 'verify']).then( /*#__PURE__*/function () {
+                var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(keys) {
+                  var key, pub;
+                  return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+                    while (1) {
+                      switch (_context3.prev = _context3.next) {
+                        case 0:
+                          // privateKey scope doesn't leak out from here!
+                          //const { d: priv } = await shim.subtle.exportKey('jwk', keys.privateKey)
+                          key = {};
+                          _context3.next = 3;
+                          return ecdhSubtle.exportKey('jwk', keys.privateKey);
+                        case 3:
+                          key.priv = _context3.sent.d;
+                          _context3.next = 6;
+                          return ecdhSubtle.exportKey('jwk', keys.publicKey);
+                        case 6:
+                          pub = _context3.sent;
+                          //const pub = Buff.from([ x, y ].join(':')).toString('base64') // old
+                          key.pub = pub.x + '.' + pub.y; // new
+                          // x and y are already base64
+                          // pub is UTF8 but filename/URL safe (https://www.ietf.org/rfc/rfc3986.txt)
+                          // but split on a non-base64 letter.
+                          return _context3.abrupt("return", key);
+                        case 9:
+                        case "end":
+                          return _context3.stop();
+                      }
+                    }
+                  }, _callee3);
+                }));
+                return function (_x6) {
+                  return _ref.apply(this, arguments);
+                };
+              }());
+            case 4:
+              sa = _context5.sent;
+              _context5.prev = 5;
+              _context5.next = 8;
+              return ecdhSubtle.generateKey({
+                name: 'ECDH',
+                namedCurve: 'P-256'
+              }, true, ['deriveKey']).then( /*#__PURE__*/function () {
+                var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(keys) {
+                  var key, pub;
+                  return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+                    while (1) {
+                      switch (_context4.prev = _context4.next) {
+                        case 0:
+                          // privateKey scope doesn't leak out from here!
+                          key = {};
+                          _context4.next = 3;
+                          return ecdhSubtle.exportKey('jwk', keys.privateKey);
+                        case 3:
+                          key.epriv = _context4.sent.d;
+                          _context4.next = 6;
+                          return ecdhSubtle.exportKey('jwk', keys.publicKey);
+                        case 6:
+                          pub = _context4.sent;
+                          //const epub = Buff.from([ ex, ey ].join(':')).toString('base64') // old
+                          key.epub = pub.x + '.' + pub.y; // new
+                          // ex and ey are already base64
+                          // epub is UTF8 but filename/URL safe (https://www.ietf.org/rfc/rfc3986.txt)
+                          // but split on a non-base64 letter.
+                          return _context4.abrupt("return", key);
+                        case 9:
+                        case "end":
+                          return _context4.stop();
+                      }
+                    }
+                  }, _callee4);
+                }));
+                return function (_x7) {
+                  return _ref2.apply(this, arguments);
+                };
+              }());
+            case 8:
+              dh = _context5.sent;
+              _context5.next = 18;
+              break;
+            case 11:
+              _context5.prev = 11;
+              _context5.t0 = _context5["catch"](5);
+              if (!(_context5.t0 == 'Error: ECDH is not a supported algorithm')) {
+                _context5.next = 17;
+                break;
+              }
+              console.log('Ignoring ECDH...');
+              _context5.next = 18;
+              break;
+            case 17:
+              throw _context5.t0;
+            case 18:
+              dh = dh || {};
+              r = {
+                pub: sa.pub,
+                priv: sa.priv,
+                /* pubId, */epub: dh.epub,
+                epriv: dh.epriv
+              };
+              return _context5.abrupt("return", r);
+            case 23:
+              _context5.prev = 23;
+              _context5.t1 = _context5["catch"](0);
+              console.log(_context5.t1);
+              throw _context5.t1;
+            case 28:
+            case "end":
+              return _context5.stop();
+          }
+        }
+      }, _callee5, null, [[0, 23], [5, 11]]);
+    }));
+    function generate() {
+      return _generate.apply(this, arguments);
+    }
+    return generate;
+  }();
+  Key.sign = /*#__PURE__*/function () {
+    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(_data, _pair, _cb, _opt) {
+      return _regeneratorRuntime().wrap(function _callee6$(_context6) {
+        while (1) {
+          switch (_context6.prev = _context6.next) {
+            case 0:
+              return _context6.abrupt("return", '');
+            case 2:
+            case "end":
+              return _context6.stop();
+          }
+        }
+      }, _callee6);
+    }));
+    function sign(_x8, _x9, _x10, _x11) {
+      return _sign.apply(this, arguments);
+    }
+    return sign;
+  }();
+  Key.secret = /*#__PURE__*/function () {
+    var _secret = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(pub, pair) {
+      var x, y, jwk, secret, r;
+      return _regeneratorRuntime().wrap(function _callee7$(_context7) {
+        while (1) {
+          switch (_context7.prev = _context7.next) {
+            case 0:
+              // ecdh secret
+              pub = pub.split('.');
+              x = pub[0], y = pub[1];
+              jwk = {
+                kty: "EC",
+                crv: "P-256",
+                x: x,
+                y: y,
+                ext: true
+              };
+              jwk.key_ops = pair.epriv ? ['sign'] : ['verify'];
+              if (pair.epriv) {
+                jwk.d = pair.epriv;
+              }
+              _context7.prev = 5;
+              _context7.next = 8;
+              return window.crypto.subtle.importKey('jwk', jwk, {
+                name: 'ECDH',
+                namedCurve: 'P-256'
+              }, false, ['deriveKey']).then(function (key) {
+                return window.crypto.subtle.deriveKey({
+                  name: 'ECDH',
+                  "public": key
+                }, pair.priv, {
+                  name: 'AES-GCM',
+                  length: 256
+                }, false, ['encrypt', 'decrypt']);
+              });
+            case 8:
+              secret = _context7.sent;
+              _context7.next = 11;
+              return window.crypto.subtle.exportKey('raw', secret);
+            case 11:
+              r = _context7.sent;
+              return _context7.abrupt("return", r);
+            case 15:
+              _context7.prev = 15;
+              _context7.t0 = _context7["catch"](5);
+              throw _context7.t0;
+            case 18:
+            case "end":
+              return _context7.stop();
+          }
+        }
+      }, _callee7, null, [[5, 15]]);
+    }));
+    function secret(_x12, _x13) {
+      return _secret.apply(this, arguments);
+    }
+    return secret;
+  }();
+  Key.encrypt = /*#__PURE__*/function () {
+    var _encrypt = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee8(_data, _pair, _cb, _opt) {
+      return _regeneratorRuntime().wrap(function _callee8$(_context8) {
+        while (1) {
+          switch (_context8.prev = _context8.next) {
+            case 0:
+              return _context8.abrupt("return", '');
+            case 2:
+            case "end":
+              return _context8.stop();
+          }
+        }
+      }, _callee8);
+    }));
+    function encrypt(_x14, _x15, _x16, _x17) {
+      return _encrypt.apply(this, arguments);
+    }
+    return encrypt;
+  }();
+  Key.verify = function verify(_msg, _pubKey) {
+    //return Gun.SEA.verify(msg.slice(1), pubKey);
+    return true;
+  };
+  return Key;
+}();
+
 var ELECTRON_GUN_URL = 'http://localhost:8767/gun';
 var maxConnectedPeers = 1;
 var DEFAULT_PEERS = {
@@ -873,7 +1270,7 @@ var peers = {
                 break;
               }
               _context.next = 6;
-              return Gun.SEA.secret(session.getKey().epub, session.getKey());
+              return Key$1.secret(session.getKey().epub, session.getKey());
             case 6:
               _context.t0 = _context.sent;
               if (_context.t0) {
@@ -884,13 +1281,11 @@ var peers = {
             case 9:
               secret = _context.t0;
               _context.next = 12;
-              return Gun.SEA.encrypt(peer.url, secret);
+              return Key$1.encrypt(peer.url, secret);
             case 12:
               encryptedUrl = _context.sent;
               _context.next = 15;
-              return Gun.SEA.work(encryptedUrl, null, null, {
-                name: 'SHA-256'
-              });
+              return util.getHash(encryptedUrl);
             case 15:
               encryptedUrlHash = _context.sent;
               global$1().user().get('peers').get(encryptedUrlHash).put({
@@ -1253,9 +1648,11 @@ var Memory = /*#__PURE__*/function (_Actor) {
     if (children) {
       console.log('have', message.nodeId, children);
       if (message.childKey) {
-        var o = {};
-        o[message.childKey] = children[message.childKey];
-        children = o;
+        if (children[message.childKey]) {
+          var o = {};
+          o[message.childKey] = children[message.childKey];
+          children = o;
+        }
       }
       var putMessage = Put.newFromKv(message.nodeId, children, this);
       putMessage.inResponseTo = message.id;
@@ -1270,27 +1667,35 @@ var Memory = /*#__PURE__*/function (_Actor) {
     // TODO check updatedAt timestamp
     if (existing === undefined) {
       this.store.set(nodeName, children);
-    } else if (!_.isEqual(existing, children)) {
-      console.log('merging', nodeName, existing, children);
-      this.store.set(nodeName, Object.assign(existing, children));
     } else {
-      console.log('not updating', nodeName, existing, children);
+      for (var _i = 0, _Object$entries = Object.entries(children); _i < _Object$entries.length; _i++) {
+        var _Object$entries$_i = _Object$entries[_i],
+          key = _Object$entries$_i[0],
+          value = _Object$entries$_i[1];
+        console.log('merging', key, value);
+        if (existing[key] && existing[key].updatedAt >= value.updatedAt) {
+          continue;
+        }
+        existing[key] = value;
+      }
+      console.log('merging', nodeName, existing, children);
+      this.store.set(nodeName, existing);
     }
   };
   _proto.handlePut = /*#__PURE__*/function () {
     var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(put) {
-      var _i, _Object$entries, _Object$entries$_i, nodeName, children;
+      var _i2, _Object$entries2, _Object$entries2$_i, nodeName, children;
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              _i = 0, _Object$entries = Object.entries(put.updatedNodes);
+              _i2 = 0, _Object$entries2 = Object.entries(put.updatedNodes);
             case 1:
-              if (!(_i < _Object$entries.length)) {
+              if (!(_i2 < _Object$entries2.length)) {
                 _context.next = 11;
                 break;
               }
-              _Object$entries$_i = _Object$entries[_i], nodeName = _Object$entries$_i[0], children = _Object$entries$_i[1];
+              _Object$entries2$_i = _Object$entries2[_i2], nodeName = _Object$entries2$_i[0], children = _Object$entries2$_i[1];
               if (children) {
                 _context.next = 7;
                 break;
@@ -1301,7 +1706,7 @@ var Memory = /*#__PURE__*/function (_Actor) {
             case 7:
               this.mergeAndSave(nodeName, children);
             case 8:
-              _i++;
+              _i2++;
               _context.next = 1;
               break;
             case 11:
@@ -1317,6 +1722,182 @@ var Memory = /*#__PURE__*/function (_Actor) {
     return handlePut;
   }();
   return Memory;
+}(Actor);
+
+// import * as Comlink from "comlink";
+var MyDexie = /*#__PURE__*/function (_Dexie) {
+  _inheritsLoose(MyDexie, _Dexie);
+  function MyDexie(dbName) {
+    var _this;
+    _this = _Dexie.call(this, dbName) || this;
+    _this.version(1).stores({
+      nodes: ", value, updatedAt"
+    });
+    _this.nodes = _this.table("nodes");
+    return _this;
+  }
+  return MyDexie;
+}(Dexie);
+var IndexedDB = /*#__PURE__*/function (_Actor) {
+  _inheritsLoose(IndexedDB, _Actor);
+  function IndexedDB(config) {
+    var _this2;
+    if (config === void 0) {
+      config = {};
+    }
+    _this2 = _Actor.call(this) || this;
+    _this2.config = {};
+    _this2.notStored = new Set();
+    _this2.putQueue = {};
+    _this2.getQueue = {};
+    _this2.i = 0;
+    _this2.queue = 0;
+    _this2.throttledPut = _.throttle(function () {
+      var keys = Object.keys(_this2.putQueue);
+      var values = keys.map(function (key) {
+        _this2.notStored["delete"](key);
+        return _this2.putQueue[key];
+      });
+      _this2.db.nodes.bulkPut(values, keys);
+      _this2.putQueue = {};
+    }, 500);
+    _this2.throttledGet = _.throttle(function () {
+      // clone this.getQueue and clear it
+      var queue = _this2.getQueue;
+      var keys = Object.keys(queue);
+      _this2.db.nodes.bulkGet(keys).then(function (values) {
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          var value = values[i];
+          var callbacks = queue[key];
+          // console.log('have', key, value);
+          for (var _iterator = _createForOfIteratorHelperLoose(callbacks), _step; !(_step = _iterator()).done;) {
+            var callback = _step.value;
+            callback(value);
+          }
+        }
+      });
+      _this2.getQueue = {};
+    }, 100);
+    _this2.config = config;
+    var dbName = config.dbName || 'iris';
+    _this2.db = new MyDexie(dbName);
+    _this2.db.open()["catch"](function (err) {
+      console.error(err.stack || err);
+    });
+    return _this2;
+  }
+  var _proto = IndexedDB.prototype;
+  _proto.put = function put(nodeId, value) {
+    // add puts to a queue and dexie bulk write them once per 500ms
+    this.putQueue[nodeId] = value;
+    this.throttledPut();
+  };
+  _proto.get = function get(path, callback) {
+    this.getQueue[path] = this.getQueue[path] || [];
+    this.getQueue[path].push(callback);
+    this.throttledGet();
+  };
+  _proto.handle = function handle(message) {
+    if (message instanceof Put) {
+      console.log('indexeddb handle Put', message);
+      this.handlePut(message);
+    } else if (message instanceof Get) {
+      console.log('indexeddb handle Get', message);
+      this.handleGet(message);
+    } else {
+      console.log('worker got unknown message', message);
+    }
+  };
+  _proto.handleGet = function handleGet(message) {
+    var _this3 = this;
+    console.log('indexeddb handleGet', message);
+    if (this.notStored.has(message.nodeId)) {
+      // TODO message implying that the key is not stored
+      return;
+    }
+    this.get(message.nodeId, function (children) {
+      // TODO: this takes a long time to return
+      if (children === undefined) {
+        _this3.notStored.add(message.nodeId);
+        // TODO message implying that the key is not stored
+      } else {
+        var putMessage = Put.newFromKv(message.nodeId, children, _this3);
+        putMessage.inResponseTo = message.id;
+        console.log('indexeddb sending', putMessage);
+        message.from && message.from.postMessage(putMessage);
+      }
+    });
+  };
+  _proto.mergeAndSave = function mergeAndSave(path, children) {
+    var _this4 = this;
+    this.get(path, function (existing) {
+      // TODO check updatedAt timestamp
+      if (existing === undefined) {
+        _this4.put(path, children);
+      } else {
+        for (var _i = 0, _Object$entries = Object.entries(children); _i < _Object$entries.length; _i++) {
+          var _Object$entries$_i = _Object$entries[_i],
+            key = _Object$entries$_i[0],
+            value = _Object$entries$_i[1];
+          console.log('merging', key, value);
+          if (existing[key] && existing[key].updatedAt >= value.updatedAt) {
+            continue;
+          }
+          existing[key] = value;
+        }
+        _this4.put(path, existing);
+      }
+    });
+  };
+  _proto.savePath = function savePath(path, value) {
+    if (value === undefined) {
+      this.db.nodes["delete"](path);
+      this.notStored.add(path);
+    } else {
+      this.notStored["delete"](path);
+      this.mergeAndSave(path, value);
+    }
+  };
+  _proto.handlePut = /*#__PURE__*/function () {
+    var _handlePut = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(put) {
+      var _i2, _Object$entries2, _Object$entries2$_i, nodeName, children;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _i2 = 0, _Object$entries2 = Object.entries(put.updatedNodes);
+            case 1:
+              if (!(_i2 < _Object$entries2.length)) {
+                _context.next = 10;
+                break;
+              }
+              _Object$entries2$_i = _Object$entries2[_i2], nodeName = _Object$entries2$_i[0], children = _Object$entries2$_i[1];
+              if (children) {
+                _context.next = 6;
+                break;
+              }
+              console.log('deleting', nodeName);
+              return _context.abrupt("continue", 7);
+            case 6:
+              this.mergeAndSave(nodeName, children);
+            case 7:
+              _i2++;
+              _context.next = 1;
+              break;
+            case 10:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+    function handlePut(_x) {
+      return _handlePut.apply(this, arguments);
+    }
+    return handlePut;
+  }();
+  return IndexedDB;
 }(Actor);
 
 //@ts-ignore
@@ -1397,7 +1978,7 @@ var Router = /*#__PURE__*/function (_Actor) {
     // default random id
     _this.peerId = config.peerId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     _this.storageAdapters.add(new Memory(config));
-    //this.storageAdapters.add(new IndexedDB(config));
+    _this.storageAdapters.add(new IndexedDB(config));
     console.log('config', config);
     if (config.peers) {
       for (var _iterator = _createForOfIteratorHelperLoose(config.peers), _step; !(_step = _iterator()).done;) {
@@ -1521,14 +2102,15 @@ var Node = /*#__PURE__*/function (_Actor) {
     _this.on_subscriptions = new Map();
     _this.map_subscriptions = new Map();
     _this.counter = 0;
-    _this.requested = false;
     _this.doCallbacks = function (data, key) {
-      console.log('doCallbacks', _this.id, data, _this.on_subscriptions.size);
-      var _loop3 = function _loop3() {
+      if (typeof data.value === 'string' && data.value.startsWith('{":":"')) {
+        data.value = JSON.parse(data.value)[':'];
+      }
+      console.log('doCallbacks', _this.id, key, data);
+      var _loop2 = function _loop2() {
         var _step$value = _step.value,
           id = _step$value[0],
           callback = _step$value[1];
-        console.log(1);
         var event = {
           off: function off() {
             return _this.on_subscriptions["delete"](id);
@@ -1537,7 +2119,7 @@ var Node = /*#__PURE__*/function (_Actor) {
         callback(data.value, key, null, event);
       };
       for (var _iterator = _createForOfIteratorHelperLoose(_this.on_subscriptions), _step; !(_step = _iterator()).done;) {
-        _loop3();
+        _loop2();
       }
       for (var _iterator2 = _createForOfIteratorHelperLoose(_this.once_subscriptions), _step2; !(_step2 = _iterator2()).done;) {
         var _step2$value = _step2.value,
@@ -1547,36 +2129,24 @@ var Node = /*#__PURE__*/function (_Actor) {
         _this.once_subscriptions["delete"](_id);
       }
       if (_this.parent) {
-        var _loop = function _loop() {
-          var _step3$value = _step3.value,
-            id = _step3$value[0],
-            callback = _step3$value[1];
-          var event = {
-            off: function off() {
-              var _this$parent;
-              return (_this$parent = _this.parent) == null ? void 0 : _this$parent.on_subscriptions["delete"](id);
-            }
+        (function () {
+          var parent = _this.parent;
+          var _loop = function _loop() {
+            var _step3$value = _step3.value,
+              id = _step3$value[0],
+              callback = _step3$value[1];
+            console.log('map_subscriptions', parent.id, id, key, data);
+            var event = {
+              off: function off() {
+                return parent.map_subscriptions["delete"](id);
+              }
+            };
+            callback(data.value, key, null, event);
           };
-          callback(data.value, key, null, event);
-        };
-        for (var _iterator3 = _createForOfIteratorHelperLoose(_this.parent.on_subscriptions), _step3; !(_step3 = _iterator3()).done;) {
-          _loop();
-        }
-        var _loop2 = function _loop2() {
-          var _step4$value = _step4.value,
-            id = _step4$value[0],
-            callback = _step4$value[1];
-          var event = {
-            off: function off() {
-              var _this$parent2;
-              return (_this$parent2 = _this.parent) == null ? void 0 : _this$parent2.map_subscriptions["delete"](id);
-            }
-          };
-          callback(data.value, key, null, event);
-        };
-        for (var _iterator4 = _createForOfIteratorHelperLoose(_this.parent.map_subscriptions), _step4; !(_step4 = _iterator4()).done;) {
-          _loop2();
-        }
+          for (var _iterator3 = _createForOfIteratorHelperLoose(parent.map_subscriptions), _step3; !(_step3 = _iterator3()).done;) {
+            _loop();
+          }
+        })();
       }
     };
     _this.parent = parent;
@@ -1608,7 +2178,7 @@ var Node = /*#__PURE__*/function (_Actor) {
     }
   };
   _proto.handle = function handle(message) {
-    if (this.parent && message instanceof Put) {
+    if (message instanceof Put) {
       for (var _i = 0, _Object$entries = Object.entries(message.updatedNodes); _i < _Object$entries.length; _i++) {
         var _Object$entries$_i = _Object$entries[_i],
           key = _Object$entries$_i[0],
@@ -1616,21 +2186,18 @@ var Node = /*#__PURE__*/function (_Actor) {
         if (!children || typeof children !== 'object') {
           continue;
         }
-        console.log('nodehandle put', this.parent.id, message);
-        if (key === this.parent.id) {
+        if (key === this.id) {
           for (var _i2 = 0, _Object$entries2 = Object.entries(children); _i2 < _Object$entries2.length; _i2++) {
             var _Object$entries2$_i = _Object$entries2[_i2],
               childKey = _Object$entries2$_i[0],
               childData = _Object$entries2$_i[1];
-            this.parent.get(childKey).doCallbacks({
-              value: childData,
-              updatedAt: Date.now()
-            }, childKey); // TODO children should have proper NodeData
+            console.log('put', childKey, childData);
+            this.get(childKey).doCallbacks(childData, childKey); // TODO children should have proper NodeData
           }
-        } else {
-          console.log('badly routed put', key, this.parent.id);
         }
       }
+
+      this.parent && this.parent.handle(message);
     }
   };
   _proto.get = function get(key) {
@@ -1670,13 +2237,10 @@ var Node = /*#__PURE__*/function (_Actor) {
       return;
     }
     this.children = new Map();
-    this.doCallbacks({
-      value: value,
-      updatedAt: updatedAt
-    }, this.id.split('/').pop());
     var updatedNodes = {};
     this.addParentNodes(updatedNodes, value, updatedAt);
     var put = Put["new"](updatedNodes, this);
+    this.handle(put);
     console.log('put', put);
     this.router.postMessage(put);
   };
@@ -1685,53 +2249,38 @@ var Node = /*#__PURE__*/function (_Actor) {
       var childName = this.id.split('/').pop();
       var parentId = this.parent.id;
       updatedNodes[parentId] = updatedNodes[parentId] || {};
-      updatedNodes[parentId][childName] = value;
+      updatedNodes[parentId][childName] = {
+        value: value,
+        updatedAt: updatedAt
+      };
       this.parent.addParentNodes(updatedNodes, {
         '#': this.parent.id
       }, updatedAt);
     }
   };
-  _proto.request = /*#__PURE__*/function () {
-    var _request = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var childKey;
+  _proto.request = function request() {
+    if (this.parent) {
+      // TODO router should decide whether to re-request from peers
+      var childKey = this.id.split('/').pop();
+      this.router.postMessage(Get["new"](this.parent.id, this, undefined, childKey));
+    }
+  };
+  _proto.once = /*#__PURE__*/function () {
+    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(callback) {
+      var id;
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
-            case 0:
-              if (!this.requested && this.parent) {
-                // TODO router should decide whether to re-request
-                this.requested = true;
-                childKey = this.id.split('/').pop();
-                this.router.postMessage(Get["new"](this.parent.id, this, undefined, childKey));
-              }
-            case 1:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee, this);
-    }));
-    function request() {
-      return _request.apply(this, arguments);
-    }
-    return request;
-  }();
-  _proto.once = /*#__PURE__*/function () {
-    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(callback) {
-      var id;
-      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
             case 0:
               id = this.counter++;
               callback && this.once_subscriptions.set(id, callback);
               this.request();
             case 3:
             case "end":
-              return _context2.stop();
+              return _context.stop();
           }
         }
-      }, _callee2, this);
+      }, _callee, this);
     }));
     function once(_x) {
       return _once.apply(this, arguments);
@@ -1747,11 +2296,7 @@ var Node = /*#__PURE__*/function (_Actor) {
   _proto.map = function map(callback) {
     var id = this.counter++;
     this.map_subscriptions.set(id, callback);
-    //const event = { off: () => this.map_subscriptions.delete(id) };
-    for (var _iterator5 = _createForOfIteratorHelperLoose(this.children.values()), _step5; !(_step5 = _iterator5()).done;) {
-      var child = _step5.value;
-      child.request();
-    }
+    this.request();
   };
   _proto.opt = function opt(opts) {
     this.router.opt(opts);
@@ -1941,12 +2486,12 @@ var DEFAULT_PERMISSIONS = {
 *
 * var gun1 = new Gun('https://gun-us.herokuapp.com/gun');
 * var gun2 = new Gun('https://gun-us.herokuapp.com/gun');
-* var myKey = await iris.Key.getDefault();
+* var myKey = await Key.getDefault();
 * var someoneElse = localStorage.getItem('someoneElsesKey');
 * if (someoneElse) {
 *  someoneElse = JSON.parse(someoneElse);
 * } else {
-*  someoneElse = await iris.Key.generate();
+*  someoneElse = await Key.generate();
 *  localStorage.setItem('someoneElsesKey', JSON.stringify(someoneElse));
 * }
 *
@@ -2114,11 +2659,11 @@ var Channel = /*#__PURE__*/function () {
                   switch (_context.prev = _context.next) {
                     case 0:
                       _context.next = 2;
-                      return Gun.SEA.decrypt(encrypted, sharedSecret);
+                      return Key$1.decrypt(encrypted, sharedSecret);
                     case 2:
                       sharedKey = _context.sent;
                       _context.next = 5;
-                      return Gun.SEA.encrypt(session.getKey().pub, sharedSecret);
+                      return Key$1.encrypt(session.getKey().pub, sharedSecret);
                     case 5:
                       encryptedChatRequest = _context.sent;
                       _context.next = 8;
@@ -2171,7 +2716,7 @@ var Channel = /*#__PURE__*/function () {
     });
   };
   _proto.changeMyGroupSecret = function changeMyGroupSecret() {
-    this.myGroupSecret = Gun.SEA.random(32).toString('base64');
+    this.myGroupSecret = Key$1.random(32).toString('base64');
     // TODO: secret should be archived and probably messages should include the encryption key id so past messages don't become unreadable
     this.putDirect("S" + this.uuid, this.myGroupSecret);
   }
@@ -2245,7 +2790,7 @@ var Channel = /*#__PURE__*/function () {
                 break;
               }
               _context4.next = 3;
-              return Gun.SEA.secret(session.getKey().epub, session.getKey());
+              return Key$1.secret(session.getKey().epub, session.getKey());
             case 3:
               mySecret = _context4.sent;
               _context4.next = 6;
@@ -2317,7 +2862,7 @@ var Channel = /*#__PURE__*/function () {
             case 3:
               epub = _context5.sent;
               _context5.next = 6;
-              return Gun.SEA.secret(epub, session.getKey());
+              return Key$1.secret(epub, session.getKey());
             case 6:
               this.secrets[pub] = _context5.sent;
             case 7:
@@ -2350,7 +2895,7 @@ var Channel = /*#__PURE__*/function () {
             case 2:
               epub = _context6.sent;
               _context6.next = 5;
-              return Gun.SEA.secret(epub, pair);
+              return Key$1.secret(epub, pair);
             case 5:
               secret = _context6.sent;
               return _context6.abrupt("return", util.getHash(secret + pub));
@@ -2382,7 +2927,7 @@ var Channel = /*#__PURE__*/function () {
             case 2:
               epub = _context7.sent;
               _context7.next = 5;
-              return Gun.SEA.secret(epub, pair);
+              return Key$1.secret(epub, pair);
             case 5:
               secret = _context7.sent;
               return _context7.abrupt("return", util.getHash(secret + pair.pub));
@@ -2399,7 +2944,7 @@ var Channel = /*#__PURE__*/function () {
     return getTheirSecretChannelId;
   }() /**
       * Calls back with Channels that you have initiated or written to.
-      * @param {Object} keypair Gun.SEA keypair that the gun instance is authenticated with
+      * @param {Object} keypair Key keypair that the gun instance is authenticated with
       * @param callback callback function that is called for each public key you have a channel with
       */;
   Channel.getChannels =
@@ -2416,7 +2961,7 @@ var Channel = /*#__PURE__*/function () {
               }
               keypair = session.getKey();
               _context9.next = 4;
-              return Gun.SEA.secret(keypair.epub, keypair);
+              return Key$1.secret(keypair.epub, keypair);
             case 4:
               mySecret = _context9.sent;
               if (listenToChatLinks) {
@@ -2447,7 +2992,7 @@ var Channel = /*#__PURE__*/function () {
                         case 7:
                           encryptedChatId = _context8.sent;
                           _context8.next = 10;
-                          return Gun.SEA.decrypt(encryptedChatId, mySecret);
+                          return Key$1.decrypt(encryptedChatId, mySecret);
                         case 10:
                           chatId = _context8.sent;
                           if (chatId) {
@@ -2686,7 +3231,7 @@ var Channel = /*#__PURE__*/function () {
             case 11:
               secret = _context14.t0;
               _context14.next = 14;
-              return Gun.SEA.decrypt(data, secret);
+              return Key$1.decrypt(data, secret);
             case 14:
               decrypted = _context14.sent;
               if (!(typeof decrypted !== "object")) {
@@ -2925,12 +3470,12 @@ var Channel = /*#__PURE__*/function () {
                 break;
               }
               _context21.next = 14;
-              return Gun.SEA.secret(session.getKey().epub, session.getKey());
+              return Key$1.secret(session.getKey().epub, session.getKey());
             case 14:
               mySecret = _context21.sent;
               _context21.t0 = global$1().user().get("chats").get(ourSecretChannelId).get("pub");
               _context21.next = 18;
-              return Gun.SEA.encrypt({
+              return Key$1.encrypt({
                 pub: pub
               }, mySecret);
             case 18:
@@ -3033,7 +3578,7 @@ var Channel = /*#__PURE__*/function () {
                 break;
               }
               _context22.next = 15;
-              return Gun.SEA.encrypt(JSON.stringify(msg), this.getMyGroupSecret());
+              return Key$1.encrypt(JSON.stringify(msg), this.getMyGroupSecret());
             case 15:
               encrypted = _context22.sent;
               _context22.next = 18;
@@ -3052,7 +3597,7 @@ var Channel = /*#__PURE__*/function () {
                 _context22.next = 42;
                 break;
               }
-              _context22.t0 = Gun.SEA;
+              _context22.t0 = Key$1;
               _context22.t1 = JSON.stringify(msg);
               _context22.next = 30;
               return this.getSecret(keys[i]);
@@ -3106,12 +3651,12 @@ var Channel = /*#__PURE__*/function () {
               publicState().get("chats").get(mySecretUuid).get('msgs').get('a').put(null);
               this.put("participants", this.participants); // public participants list
               _context23.next = 8;
-              return Gun.SEA.secret(session.getKey().epub, session.getKey());
+              return Key$1.secret(session.getKey().epub, session.getKey());
             case 8:
               mySecret = _context23.sent;
               _context23.t0 = publicState().get("chats").get(mySecretUuid).get("pub");
               _context23.next = 12;
-              return Gun.SEA.encrypt({
+              return Key$1.encrypt({
                 uuid: this.uuid,
                 myGroupSecret: this.getMyGroupSecret(),
                 participants: this.participants // private participants list
@@ -3190,7 +3735,7 @@ var Channel = /*#__PURE__*/function () {
               throw new Error("Sorry, you can't overwrite the msgs field which is used for .send()");
             case 2:
               _context25.next = 4;
-              return Gun.SEA.encrypt(JSON.stringify(value), this.getMyGroupSecret());
+              return Key$1.encrypt(JSON.stringify(value), this.getMyGroupSecret());
             case 4:
               encrypted = _context25.sent;
               _context25.next = 7;
@@ -3230,7 +3775,7 @@ var Channel = /*#__PURE__*/function () {
                 _context26.next = 20;
                 break;
               }
-              _context26.t0 = Gun.SEA;
+              _context26.t0 = Key$1;
               _context26.t1 = JSON.stringify(value);
               _context26.next = 9;
               return this.getSecret(keys[i]);
@@ -3394,7 +3939,7 @@ var Channel = /*#__PURE__*/function () {
                               while (1) {
                                 switch (_context31.prev = _context31.next) {
                                   case 0:
-                                    _context31.t0 = Gun.SEA;
+                                    _context31.t0 = Key$1;
                                     _context31.t1 = data;
                                     _context31.next = 4;
                                     return _this10.getSecret(keys[i]);
@@ -3485,7 +4030,7 @@ var Channel = /*#__PURE__*/function () {
                       switch (_context34.prev = _context34.next) {
                         case 0:
                           _context34.next = 2;
-                          return Gun.SEA.decrypt(data, mySecret);
+                          return Key$1.decrypt(data, mySecret);
                         case 2:
                           decrypted = _context34.sent;
                           if (decrypted) {
@@ -3564,7 +4109,7 @@ var Channel = /*#__PURE__*/function () {
                           }
                           return _context37.abrupt("return");
                         case 2:
-                          _context37.t0 = Gun.SEA;
+                          _context37.t0 = Key$1;
                           _context37.t1 = data;
                           _context37.next = 6;
                           return _this11.getSecret(pub);
@@ -3696,7 +4241,7 @@ var Channel = /*#__PURE__*/function () {
                           }
                           return _context41.abrupt("return");
                         case 3:
-                          _context41.t0 = Gun.SEA;
+                          _context41.t0 = Key$1;
                           _context41.t1 = data;
                           _context41.next = 7;
                           return _this13.getTheirGroupSecret(pub);
@@ -3963,7 +4508,7 @@ var Channel = /*#__PURE__*/function () {
                                 }
                                 channels.push(s);
                                 _context45.next = 8;
-                                return Gun.SEA.decrypt(encPub, link.sharedSecret);
+                                return Key$1.decrypt(encPub, link.sharedSecret);
                               case 8:
                                 pub = _context45.sent;
                                 _this17.addParticipant(pub, undefined, undefined, true);
@@ -4004,24 +4549,24 @@ var Channel = /*#__PURE__*/function () {
                 urlRoot = 'https://iris.to/';
               }
               _context47.next = 3;
-              return Gun.SEA.pair();
+              return Key$1.pair();
             case 3:
               sharedKey = _context47.sent;
               sharedKeyString = JSON.stringify(sharedKey);
               _context47.next = 7;
-              return Gun.SEA.secret(sharedKey.epub, sharedKey);
+              return Key$1.secret(sharedKey.epub, sharedKey);
             case 7:
               sharedSecret = _context47.sent;
               _context47.next = 10;
-              return Gun.SEA.encrypt(sharedKeyString, sharedSecret);
+              return Key$1.encrypt(sharedKeyString, sharedSecret);
             case 10:
               encryptedSharedKey = _context47.sent;
               _context47.next = 13;
-              return Gun.SEA.secret(session.getKey().epub, session.getKey());
+              return Key$1.secret(session.getKey().epub, session.getKey());
             case 13:
               ownerSecret = _context47.sent;
               _context47.next = 16;
-              return Gun.SEA.encrypt(sharedKeyString, ownerSecret);
+              return Key$1.encrypt(sharedKeyString, ownerSecret);
             case 16:
               ownerEncryptedSharedKey = _context47.sent;
               _context47.next = 19;
@@ -4207,7 +4752,7 @@ var Channel = /*#__PURE__*/function () {
     var update = function update() {
       global$1().user().get("activity").put({
         status: activity,
-        time: new Date(Gun.state()).toISOString()
+        time: new Date().toISOString()
       });
     };
     update();
@@ -4232,7 +4777,7 @@ var Channel = /*#__PURE__*/function () {
         return;
       }
       clearTimeout(timeout);
-      var now = new Date(Gun.state());
+      var now = new Date();
       var activityDate = new Date(activity.time);
       var isActive = activityDate > new Date(now.getTime() - 10 * 1000) && activityDate < new Date(now.getTime() + 30 * 1000);
       callback({
@@ -4282,24 +4827,24 @@ var Channel = /*#__PURE__*/function () {
               key = session.getKey(); // We create a new Gun user whose private key is shared with the chat link recipients.
               // Chat link recipients can contact you by writing their public key to the shared key's user space.
               _context48.next = 5;
-              return Gun.SEA.pair();
+              return Key$1.pair();
             case 5:
               sharedKey = _context48.sent;
               sharedKeyString = JSON.stringify(sharedKey);
               _context48.next = 9;
-              return Gun.SEA.secret(sharedKey.epub, sharedKey);
+              return Key$1.secret(sharedKey.epub, sharedKey);
             case 9:
               sharedSecret = _context48.sent;
               _context48.next = 12;
-              return Gun.SEA.encrypt(sharedKeyString, sharedSecret);
+              return Key$1.encrypt(sharedKeyString, sharedSecret);
             case 12:
               encryptedSharedKey = _context48.sent;
               _context48.next = 15;
-              return Gun.SEA.secret(key.epub, key);
+              return Key$1.secret(key.epub, key);
             case 15:
               ownerSecret = _context48.sent;
               _context48.next = 18;
-              return Gun.SEA.encrypt(sharedKeyString, ownerSecret);
+              return Key$1.encrypt(sharedKeyString, ownerSecret);
             case 18:
               ownerEncryptedSharedKey = _context48.sent;
               _context48.next = 21;
@@ -4355,7 +4900,7 @@ var Channel = /*#__PURE__*/function () {
               key = session.getKey();
               user = global$1().user();
               _context51.next = 6;
-              return Gun.SEA.secret(key.epub, key);
+              return Key$1.secret(key.epub, key);
             case 6:
               mySecret = _context51.sent;
               chatLinks = [];
@@ -4379,11 +4924,11 @@ var Channel = /*#__PURE__*/function () {
                           case 2:
                             chatLinks.push(linkId);
                             _context50.next = 5;
-                            return Gun.SEA.decrypt(enc, mySecret);
+                            return Key$1.decrypt(enc, mySecret);
                           case 5:
                             sharedKey = _context50.sent;
                             _context50.next = 8;
-                            return Gun.SEA.secret(sharedKey.epub, sharedKey);
+                            return Key$1.secret(sharedKey.epub, sharedKey);
                           case 8:
                             sharedSecret = _context50.sent;
                             url = Channel.formatChatLink({
@@ -4419,7 +4964,7 @@ var Channel = /*#__PURE__*/function () {
                                           }
                                           channels.push(s);
                                           _context49.next = 7;
-                                          return Gun.SEA.decrypt(encPub, sharedSecret);
+                                          return Key$1.decrypt(encPub, sharedSecret);
                                         case 7:
                                           pub = _context49.sent;
                                           channel = new Channel({
@@ -4522,7 +5067,7 @@ var Channel = /*#__PURE__*/function () {
           switch (_context53.prev = _context53.next) {
             case 0:
               _context53.next = 2;
-              return Gun.SEA.secret(key.epub, key);
+              return Key$1.secret(key.epub, key);
             case 2:
               mySecret = _context53.sent;
               _context53.next = 5;
@@ -4945,11 +5490,11 @@ function _addWebPushSubscription() {
             }
             myKey = session.getKey();
             _context5.next = 4;
-            return Gun.SEA.secret(myKey.epub, myKey);
+            return Key.secret(myKey.epub, myKey);
           case 4:
             mySecret = _context5.sent;
             _context5.next = 7;
-            return Gun.SEA.encrypt(s, mySecret);
+            return Key.encrypt(s, mySecret);
           case 7:
             enc = _context5.sent;
             _context5.next = 10;
@@ -4983,7 +5528,7 @@ function _getWebPushSubscriptions() {
           case 0:
             myKey = session.getKey();
             _context7.next = 3;
-            return Gun.SEA.secret(myKey.epub, myKey);
+            return Key.secret(myKey.epub, myKey);
           case 3:
             mySecret = _context7.sent;
             global$1().user().get('webPushSubscriptions').map( /*#__PURE__*/function () {
@@ -5000,7 +5545,7 @@ function _getWebPushSubscriptions() {
                         return _context6.abrupt("return");
                       case 2:
                         _context6.next = 4;
-                        return Gun.SEA.decrypt(enc, mySecret);
+                        return Key.decrypt(enc, mySecret);
                       case 4:
                         s = _context6.sent;
                         addWebPushSubscription(s, false);
@@ -5110,11 +5655,11 @@ function subscribeToIrisNotifications(onClick) {
             case 6:
               epub = _context2.sent;
               _context2.next = 9;
-              return Gun.SEA.secret(epub, session.getKey());
+              return Key.secret(epub, session.getKey());
             case 9:
               secret = _context2.sent;
               _context2.next = 12;
-              return Gun.SEA.decrypt(encryptedNotification, secret);
+              return Key.decrypt(encryptedNotification, secret);
             case 12:
               notification = _context2.sent;
               if (!(!notification || typeof notification !== 'object')) {
@@ -5196,11 +5741,11 @@ function _sendIrisNotification() {
           case 5:
             epub = _context9.sent;
             _context9.next = 8;
-            return Gun.SEA.secret(epub, session.getKey());
+            return Key.secret(epub, session.getKey());
           case 8:
             secret = _context9.sent;
             _context9.next = 11;
-            return Gun.SEA.encrypt(notification, secret);
+            return Key.encrypt(notification, secret);
           case 11:
             enc = _context9.sent;
             global$1().user().get('notifications').get(recipient).put(enc);
@@ -5251,11 +5796,11 @@ function _sendWebPushNotification() {
                               case 3:
                                 secret = _context10.sent;
                                 _context10.next = 6;
-                                return Gun.SEA.encrypt(notification.title, secret);
+                                return Key.encrypt(notification.title, secret);
                               case 6:
                                 _context10.t0 = _context10.sent;
                                 _context10.next = 9;
-                                return Gun.SEA.encrypt(notification.body, secret);
+                                return Key.encrypt(notification.body, secret);
                               case 9:
                                 _context10.t1 = _context10.sent;
                                 _context10.t2 = {
@@ -5664,7 +6209,7 @@ var session = {
     }
     var name = options.name || util.generateName();
     console.log('loginAsNewUser name', name);
-    return Gun.SEA.pair().then(function (k) {
+    return Key$1.generate().then(function (k) {
       _this5.login(k);
       publicState().get('profile').put({
         a: null
@@ -6074,200 +6619,6 @@ var staticState = {
   }
 };
 
-// eslint-disable-line no-unused-vars
-var myKey;
-var Key = /*#__PURE__*/function () {
-  function Key() {}
-  Key.getActiveKey = /*#__PURE__*/function () {
-    var _getActiveKey = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(datadir, keyfile, fs) {
-      var privKeyFile, f, newKey, str, _newKey;
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              if (datadir === void 0) {
-                datadir = ".";
-              }
-              if (keyfile === void 0) {
-                keyfile = "iris.key";
-              }
-              if (!myKey) {
-                _context.next = 4;
-                break;
-              }
-              return _context.abrupt("return", myKey);
-            case 4:
-              if (!fs) {
-                _context.next = 21;
-                break;
-              }
-              privKeyFile = datadir + "/" + keyfile;
-              if (!fs.existsSync(privKeyFile)) {
-                _context.next = 11;
-                break;
-              }
-              f = fs.readFileSync(privKeyFile, "utf8");
-              myKey = Key.fromString(f);
-              _context.next = 17;
-              break;
-            case 11:
-              _context.next = 13;
-              return Key.generate();
-            case 13:
-              newKey = _context.sent;
-              myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
-              fs.writeFileSync(privKeyFile, Key.toString(myKey));
-              fs.chmodSync(privKeyFile, 400);
-            case 17:
-              if (myKey) {
-                _context.next = 19;
-                break;
-              }
-              throw new Error("loading default key failed - check " + datadir + "/" + keyfile);
-            case 19:
-              _context.next = 33;
-              break;
-            case 21:
-              str = window.localStorage.getItem("iris.myKey");
-              if (!str) {
-                _context.next = 26;
-                break;
-              }
-              myKey = Key.fromString(str);
-              _context.next = 31;
-              break;
-            case 26:
-              _context.next = 28;
-              return Key.generate();
-            case 28:
-              _newKey = _context.sent;
-              myKey = myKey || _newKey; // eslint-disable-line require-atomic-updates
-              window.localStorage.setItem("iris.myKey", Key.toString(myKey));
-            case 31:
-              if (myKey) {
-                _context.next = 33;
-                break;
-              }
-              throw new Error("loading default key failed - check localStorage iris.myKey");
-            case 33:
-              return _context.abrupt("return", myKey);
-            case 34:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    }));
-    function getActiveKey(_x, _x2, _x3) {
-      return _getActiveKey.apply(this, arguments);
-    }
-    return getActiveKey;
-  }();
-  Key.getDefault = function getDefault(datadir, keyfile) {
-    if (datadir === void 0) {
-      datadir = ".";
-    }
-    if (keyfile === void 0) {
-      keyfile = "iris.key";
-    }
-    return Key.getActiveKey(datadir, keyfile);
-  };
-  Key.getActivePub = /*#__PURE__*/function () {
-    var _getActivePub = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(datadir, keyfile) {
-      var key;
-      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              if (datadir === void 0) {
-                datadir = ".";
-              }
-              if (keyfile === void 0) {
-                keyfile = "iris.key";
-              }
-              _context2.next = 4;
-              return Key.getActiveKey(datadir, keyfile);
-            case 4:
-              key = _context2.sent;
-              return _context2.abrupt("return", key.pub);
-            case 6:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2);
-    }));
-    function getActivePub(_x4, _x5) {
-      return _getActivePub.apply(this, arguments);
-    }
-    return getActivePub;
-  }();
-  Key.setActiveKey = function setActiveKey(key, save, datadir, keyfile, fs) {
-    if (save === void 0) {
-      save = true;
-    }
-    if (datadir === void 0) {
-      datadir = ".";
-    }
-    if (keyfile === void 0) {
-      keyfile = "iris.key";
-    }
-    myKey = key;
-    if (!save) return;
-    if (util.isNode) {
-      var privKeyFile = datadir + "/" + keyfile;
-      fs.writeFileSync(privKeyFile, Key.toString(myKey));
-      fs.chmodSync(privKeyFile, 400);
-    } else {
-      window.localStorage.setItem("iris.myKey", Key.toString(myKey));
-    }
-  };
-  Key.toString = function toString(key) {
-    return JSON.stringify(key);
-  };
-  Key.getId = function getId(key) {
-    if (!(key && key.pub)) {
-      throw new Error("missing param");
-    }
-    return key.pub; // hack until GUN supports lookups by keyID
-    //return util.getHash(key.pub);
-  };
-  Key.fromString = function fromString(str) {
-    return JSON.parse(str);
-  };
-  Key.generate = function generate() {
-    return Gun.SEA.pair();
-  };
-  Key.sign = /*#__PURE__*/function () {
-    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(msg, pair) {
-      var sig;
-      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-        while (1) {
-          switch (_context3.prev = _context3.next) {
-            case 0:
-              _context3.next = 2;
-              return Gun.SEA.sign(msg, pair);
-            case 2:
-              sig = _context3.sent;
-              return _context3.abrupt("return", "a" + sig);
-            case 4:
-            case "end":
-              return _context3.stop();
-          }
-        }
-      }, _callee3);
-    }));
-    function sign(_x6, _x7) {
-      return _sign.apply(this, arguments);
-    }
-    return sign;
-  }();
-  Key.verify = function verify(msg, pubKey) {
-    return Gun.SEA.verify(msg.slice(1), pubKey);
-  };
-  return Key;
-}();
-
 var errorMsg = "Invalid  message:";
 var ValidationError = /*#__PURE__*/function (_Error) {
   _inheritsLoose(ValidationError, _Error);
@@ -6531,7 +6882,7 @@ var SignedMessage = /*#__PURE__*/function () {
     return this.signedData.type === "rating" && this.signedData.rating === (this.signedData.maxRating + this.signedData.minRating) / 2;
   }
   /**
-  * @param {Object} key Gun.SEA keypair to sign the message with
+  * @param {Object} key keypair to sign the message with
   */;
   _proto.sign =
   /*#__PURE__*/
@@ -6542,7 +6893,7 @@ var SignedMessage = /*#__PURE__*/function () {
           switch (_context2.prev = _context2.next) {
             case 0:
               _context2.next = 2;
-              return Key.sign(this.signedData, key);
+              return Key$1.sign(this.signedData, key);
             case 2:
               this.sig = _context2.sent;
               this.pubKey = key.pub;
@@ -6578,7 +6929,7 @@ var SignedMessage = /*#__PURE__*/function () {
             case 0:
               if (!signedData.author && signingKey) {
                 signedData.author = {
-                  keyID: Key.getId(signingKey)
+                  keyID: Key$1.getId(signingKey)
                 };
               }
               signedData.time = signedData.time || new Date().toISOString();
@@ -6733,7 +7084,7 @@ var SignedMessage = /*#__PURE__*/function () {
               throw new ValidationError(errorMsg + " SignedMessage has no .sig");
             case 4:
               _context6.next = 6;
-              return Key.verify(this.sig, this.pubKey);
+              return Key$1.verify(this.sig, this.pubKey);
             case 6:
               this.signedData = _context6.sent;
               if (this.signedData) {
@@ -6872,8 +7223,6 @@ var index = {
   session: session,
   util: util,
   notifications: notifications,
-  SEA: Gun.SEA,
-  Gun: Gun,
   SignedMessage: SignedMessage,
   Channel: Channel,
   Node: Node

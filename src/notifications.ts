@@ -1,8 +1,6 @@
 // @ts-nocheck
 
 import _ from './lodash';
-import Gun from 'gun';
-
 import session from './session';
 import util from './util';
 import publicState from './global';
@@ -135,8 +133,8 @@ function removeSubscription(hash) {
 
 async function addWebPushSubscription(s, saveToGun = true) {
   const myKey = session.getKey();
-  const mySecret = await Gun.SEA.secret(myKey.epub, myKey);
-  const enc = await Gun.SEA.encrypt(s, mySecret);
+  const mySecret = await Key.secret(myKey.epub, myKey);
+  const enc = await Key.encrypt(s, mySecret);
   const hash = await util.getHash(JSON.stringify(s));
   console.log('hash', hash);
   if (saveToGun) {
@@ -148,10 +146,10 @@ async function addWebPushSubscription(s, saveToGun = true) {
 
 async function getWebPushSubscriptions() {
   const myKey = session.getKey();
-  const mySecret = await Gun.SEA.secret(myKey.epub, myKey);
+  const mySecret = await Key.secret(myKey.epub, myKey);
   publicState().user().get('webPushSubscriptions').map(async enc => {
     if (!enc) { return; }
-    const s = await Gun.SEA.decrypt(enc, mySecret);
+    const s = await Key.decrypt(enc, mySecret);
     addWebPushSubscription(s, false);
   });
 }
@@ -197,8 +195,8 @@ function subscribeToIrisNotifications(onClick?: Function) {
       if (alreadyHave.has(id)) { return; }
       alreadyHave.add(id);
       const epub = await getEpub(from);
-      const secret = await Gun.SEA.secret(epub, session.getKey());
-      const notification = await Gun.SEA.decrypt(encryptedNotification, secret);
+      const secret = await Key.secret(epub, session.getKey());
+      const notification = await Key.decrypt(encryptedNotification, secret);
       if (!notification || typeof notification !== 'object') { return; }
       setNotificationsShownTime();
       notification.from = from;
@@ -239,8 +237,8 @@ async function sendIrisNotification(recipient, notification) {
   if (!(recipient && notification)) { return; } // TODO: use typescript or sth :D
   if (typeof notification === 'object') { notification.time = new Date().toISOString() }
   const epub = await getEpub(recipient);
-  const secret = await Gun.SEA.secret(epub, session.getKey());
-  const enc = await Gun.SEA.encrypt(notification, secret);
+  const secret = await Key.secret(epub, session.getKey());
+  const enc = await Key.encrypt(notification, secret);
   publicState().user().get('notifications').get(recipient).put(enc);
 }
 
@@ -256,8 +254,8 @@ async function sendWebPushNotification(recipient, notification) {
       const participant = participants[i];
       const secret = await channel.getSecret(participant);
       const payload = {
-        title: await Gun.SEA.encrypt(notification.title, secret),
-        body: await Gun.SEA.encrypt(notification.body, secret),
+        title: await Key.encrypt(notification.title, secret),
+        body: await Key.encrypt(notification.body, secret),
         from:{pub: myKey.pub, epub: myKey.epub}
       };
       channel.webPushSubscriptions[participant].forEach(s => {

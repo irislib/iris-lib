@@ -44,6 +44,7 @@ export default class IndexedDB extends Actor {
     throttledPut = _.throttle(() => {
         const keys = Object.keys(this.putQueue);
         const values = keys.map(key => {
+            this.notStored.delete(key);
             return this.putQueue[key];
         });
         this.db.nodes.bulkPut(values, keys);
@@ -87,22 +88,18 @@ export default class IndexedDB extends Actor {
     }
 
     handleGet(message: Get) {
+        console.log('indexeddb handleGet', message);
         if (this.notStored.has(message.nodeId)) {
             // TODO message implying that the key is not stored
             return;
         }
-        this.get(message.nodeId, (value: any) => {
+        this.get(message.nodeId, (children: any) => {
             // TODO: this takes a long time to return
-            if (value === undefined) {
+            if (children === undefined) {
                 this.notStored.add(message.nodeId);
                 // TODO message implying that the key is not stored
             } else {
-                // TODO list of children
-                const parentId = message.nodeId.split('/').slice(0, -1).join('/');
-                const childId = message.nodeId.split('/').slice(-1)[0];
-                const children: Children = {};
-                children[childId] = value;
-                const putMessage = Put.newFromKv(parentId, children, this);
+                const putMessage = Put.newFromKv(message.nodeId, children, this);
                 putMessage.inResponseTo = message.id;
                 console.log('indexeddb sending', putMessage);
                 message.from && message.from.postMessage(putMessage);
@@ -110,22 +107,20 @@ export default class IndexedDB extends Actor {
         });
     }
 
-    mergeAndSave(path: string, newValue: any) {
+    mergeAndSave(path: string, children: Children) {
         this.get(path, (existing: any) => {
             // TODO check updatedAt timestamp
             if (existing === undefined) {
-                this.put(path, newValue);
-            } else if (!_.isEqual(existing, newValue)) {
-                // if existing value is array, merge it
-                if (Array.isArray(existing) && Array.isArray(newValue)) {
-                    newValue = _.uniq(existing.concat(newValue));
-                }
-                if (Array.isArray(newValue) && newValue.length === 0) {
-                    console.log('no kids', path);
-                }
-                this.put(path, newValue);
+                this.put(path, children);
             } else {
-                //console.log('not updating', path, existing, newValue);
+                for (const [key, value] of Object.entries(children)) {
+                    console.log('merging', key, value);
+                    if (existing[key] && existing[key].updatedAt >= value.updatedAt) {
+                        continue;
+                    }
+                    existing[key] = value;
+                }
+                this.put(path, existing);
             }
         });
     }
@@ -146,14 +141,7 @@ export default class IndexedDB extends Actor {
                 console.log('deleting', nodeName);
                 continue;
             }
-            if (typeof children !== 'object') { // we receiving bad messages? or is this handled correctly?
-                this.savePath(nodeName, children);
-                continue;
-            }
-            for (const [childName, newValue] of Object.entries(children)) {
-                const path = `${nodeName}/${childName}`;
-                this.savePath(path, newValue);
-            }
+            this.mergeAndSave(nodeName, children);
         }
     }
 }

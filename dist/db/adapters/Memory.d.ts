@@ -8,6 +8,6 @@ export default class Memory extends Actor {
     constructor(config?: any);
     handle(message: Message): void;
     handleGet(message: Get): void;
-    mergeAndSave(nodeName: string, children: any): void;
+    mergeAndSave(nodeName: string, children: Children): void;
     handlePut(put: Put): Promise<void>;
 }

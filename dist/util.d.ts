@@ -1,4 +1,3 @@
-import 'gun/sea';
 declare function gunOnceDefined(node: any): Promise<unknown>;
 declare const _default: {
     gunOnceDefined: typeof gunOnceDefined;
@@ -6,6 +5,7 @@ declare const _default: {
     capitalize(s: string): string;
     generateName(): string;
     base64ToHex(str: string): string;
+    arrayBufferToBase64(buffer: any): string;
     getCaret(el: HTMLInputElement): any;
     injectCss(): void;
     getUrlParameter(sParam: string, sParams: string): string | true | undefined;

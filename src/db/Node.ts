@@ -30,12 +30,6 @@ export const DEFAULT_CONFIG: Config = {
     localOnly: true
 }
 
-const debug = false;
-
-function log(...args: any[]) {
-    debug && console.log(...args);
-}
-
 // TODO move memory storage to its own adapter? it would make things simpler here
 export default class Node extends Actor {
     root: Node;
@@ -45,7 +39,6 @@ export default class Node extends Actor {
     on_subscriptions = new Map<number, Function>();
     map_subscriptions = new Map<number, Function>();
     counter = 0;
-    requested = false;
     config: Config;
     currentUser: any;
     router: Router;
@@ -79,20 +72,19 @@ export default class Node extends Actor {
     }
 
     handle(message: Message): void {
-        if (this.parent && message instanceof Put) {
+        if (message instanceof Put) {
             for (const [key, children] of Object.entries(message.updatedNodes)) {
                 if (!children || typeof children !== 'object') {
                     continue;
                 }
-                console.log('nodehandle put', this.parent.id, message);
-                if (key === this.parent.id) {
+                if (key === this.id) {
                     for (const [childKey, childData] of Object.entries(children)) {
-                        this.parent.get(childKey).doCallbacks({value: childData, updatedAt: Date.now()}, childKey); // TODO children should have proper NodeData
+                        console.log('put', childKey, childData);
+                        this.get(childKey).doCallbacks(childData, childKey); // TODO children should have proper NodeData
                     }
-                } else {
-                    console.log('badly routed put', key, this.parent.id);
                 }
             }
+            this.parent && this.parent.handle(message);
         }
     };
 
@@ -121,9 +113,11 @@ export default class Node extends Actor {
     }
 
     doCallbacks = (data: NodeData, key: string) => {
-        console.log('doCallbacks', this.id, data, this.on_subscriptions.size);
+        if (typeof data.value === 'string' && data.value.startsWith('{":":"')) {
+            data.value = JSON.parse(data.value)[':'];
+        }
+        console.log('doCallbacks', this.id, key, data);
         for (const [id, callback] of this.on_subscriptions) {
-            console.log(1);
             const event = { off: () => this.on_subscriptions.delete(id) };
             callback(data.value, key, null, event);
         }
@@ -131,14 +125,11 @@ export default class Node extends Actor {
             callback(data.value, key, null, {});
             this.once_subscriptions.delete(id);
         }
-
         if (this.parent) {
-            for (const [id, callback] of this.parent.on_subscriptions) {
-                const event = { off: () => this.parent?.on_subscriptions.delete(id) };
-                callback(data.value, key, null, event);
-            }
-            for (const [id, callback] of this.parent.map_subscriptions) {
-                const event = { off: () => this.parent?.map_subscriptions.delete(id) };
+            const parent = this.parent;
+            for (const [id, callback] of parent.map_subscriptions) {
+                console.log('map_subscriptions', parent.id, id, key, data);
+                const event = { off: () => parent.map_subscriptions.delete(id) };
                 callback(data.value, key, null, event);
             }
         }
@@ -160,10 +151,10 @@ export default class Node extends Actor {
             return;
         }
         this.children = new Map();
-        this.doCallbacks({value, updatedAt}, this.id.split('/').pop() as string);
         const updatedNodes: UpdatedNodes = {};
         this.addParentNodes(updatedNodes, value, updatedAt);
         const put = Put.new(updatedNodes, this);
+        this.handle(put);
         console.log('put', put);
         this.router.postMessage(put);
     }
@@ -173,14 +164,13 @@ export default class Node extends Actor {
             const childName = this.id.split('/').pop() as string;
             const parentId = this.parent.id;
             updatedNodes[parentId] = updatedNodes[parentId] || {};
-            updatedNodes[parentId][childName] = value;
+            updatedNodes[parentId][childName] = {value, updatedAt};
             this.parent.addParentNodes(updatedNodes, {'#': this.parent.id }, updatedAt);
         }
     }
 
-    private async request() {
-        if (!this.requested && this.parent) { // TODO router should decide whether to re-request
-            this.requested = true;
+    private request() {
+        if (this.parent) { // TODO router should decide whether to re-request from peers
             const childKey = this.id.split('/').pop();
             this.router.postMessage(Get.new(this.parent.id, this, undefined, childKey));
         }
@@ -193,7 +183,6 @@ export default class Node extends Actor {
     }
 
     on(callback: Function): void {
-        log('on', this.id);
         const id = this.counter++;
         this.on_subscriptions.set(id, callback);
         //const event = { off: () => this.on_subscriptions.delete(id) };
@@ -201,13 +190,9 @@ export default class Node extends Actor {
     }
 
     map(callback: Function): void {
-        log('map', this.id);
         const id = this.counter++;
         this.map_subscriptions.set(id, callback);
-        //const event = { off: () => this.map_subscriptions.delete(id) };
-        for (const child of this.children.values()) {
-            child.request();
-        }
+        this.request();
     }
 
     opt(opts: any) {
