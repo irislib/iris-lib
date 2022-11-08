@@ -1,4 +1,3 @@
-import Attribute from './Attribute';
 /**
 * Signed message object. Your friends can index and relay your messages, while others can still verify that they were signed by you.
 *
@@ -15,46 +14,14 @@ import Attribute from './Attribute';
 * Constructor: creates a message from the param obj.signedData that must contain at least the mandatory fields: author, type and time.
 * @param obj
 *
-* @example
-* https://github.com/irislib/iris-lib/blob/master/__tests__/SignedMessage.js
-*
-* Verification message:
-* {
-*   signedData: {
-*     author: {name:'Alice', key:'ABCD1234'},
-*     recipient: {
-*       name: 'Bob',
-*       email: ['bob@example.com', 'bob.saget@example.com'],
-*       bitcoin: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
-*     },
-*     type: 'verification'
-*   },
-*   signer: 'ABCD1234',
-*   signature: '1234ABCD'
-* }
 */
 declare class SignedMessage {
     signedData: any;
     pubKey: any;
     sig: any;
     constructor(obj: any);
-    static _getArray(authorOrRecipient: any): Attribute[];
-    static _getIterable(authorOrRecipient: any): {
-        [Symbol.iterator](): Generator<Attribute, void, unknown>;
-    };
-    getAuthorIterable(): {
-        [Symbol.iterator](): Generator<Attribute, void, unknown>;
-    };
-    getRecipientIterable(): {
-        [Symbol.iterator](): Generator<Attribute, void, unknown>;
-    };
-    getAuthorArray(): Attribute[];
-    getRecipientArray(): Attribute[];
     getSignerKeyID(): any;
     _validate(): boolean;
-    isPositive(): boolean;
-    isNegative(): boolean;
-    isNeutral(): boolean;
     /**
     * @param {Object} key keypair to sign the message with
     */
@@ -66,8 +33,6 @@ declare class SignedMessage {
     * @returns {Promise<SignedMessage>}  message
     */
     static create(signedData: any, signingKey: any): Promise<SignedMessage>;
-    static createVerification(signedData: any, signingKey: any): Promise<SignedMessage>;
-    static createRating(signedData: any, signingKey: any): Promise<SignedMessage>;
     getAuthor(index: any): any;
     getRecipient(index: any): any;
     /**
@@ -93,6 +58,5 @@ declare class SignedMessage {
     */
     static deserialize(s: any): Promise<SignedMessage>;
     static fromString(s: any): Promise<SignedMessage>;
-    static setReaction(gun: any, msg: any, reaction: any): Promise<void>;
 }
 export default SignedMessage;

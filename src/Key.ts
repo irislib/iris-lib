@@ -133,7 +133,7 @@ class Key {
     }
   }
 
-  static async sign(_data: any, _pair: any, _cb?: Function, _opt = {}) {
+  static async sign(data: any, _pair: any, _cb?: Function, _opt = {}) {
   /*
     try {
       if(undefined === data){ throw '`undefined` not allowed.' }
@@ -156,10 +156,12 @@ class Key {
       if(cb){ cb() }
       return;
     }     */
-    return '';
+    return data;
   }
 
-  static async secret(pub: any, pair: any) {
+  static async secret(_pub: any, _pair: any) {
+    return '';
+    /*
     // ecdh secret
 
     pub = pub.split('.');
@@ -176,6 +178,8 @@ class Key {
     } catch(e) {
       throw(e);
     }
+
+     */
   }
 
   static async encrypt(_data: any, _pair: any, _cb?: Function, _opt = {}) {

@@ -12,8 +12,8 @@ declare class Key {
         epub: any;
         epriv: any;
     } | undefined>;
-    static sign(_data: any, _pair: any, _cb?: Function, _opt?: {}): Promise<string>;
-    static secret(pub: any, pair: any): Promise<ArrayBuffer>;
+    static sign(data: any, _pair: any, _cb?: Function, _opt?: {}): Promise<any>;
+    static secret(_pub: any, _pair: any): Promise<string>;
     static encrypt(_data: any, _pair: any, _cb?: Function, _opt?: {}): Promise<string>;
     static verify(_msg: any, _pubKey: any): boolean;
 }

@@ -218,11 +218,6 @@ declare class Channel {
     */
     getTyping(callback: any, timeout?: number): void;
     /**
-    * Add a chat button to page
-    * @param options {label, channelOptions}
-    */
-    static addChatButton(options?: {}): void;
-    /**
     * Get a simple link that points to the channel.
     *
     * Direct channel: both users need to give their simple links. Use createChatLink() to get a two-way link that needs to be given by one user only.
@@ -235,10 +230,6 @@ declare class Channel {
     */
     getChatLinks(opts?: any): Promise<void>;
     createChatLink(urlRoot?: string): Promise<string>;
-    /**
-    * Get a channel box element that you can add to your page
-    */
-    getChatBox(): HTMLElement;
     /**
     * Set the user's online/active status
     * @param {string} activity string: set the activity status every 3 seconds, null/false: stop updating

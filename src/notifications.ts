@@ -7,6 +7,7 @@ import publicState from './global';
 import privateState from './private';
 import local from './local';
 import group from './group';
+import Key from './Key';
 
 const NOTIFICATION_SERVICE_URL = 'https://iris-notifications.herokuapp.com/notify';
 // const notificationSound = new Audio('../../assets/audio/notification.mp3'); // TODO

@@ -6,7 +6,7 @@ import util from './util';
 import Attribute from './Attribute';
 import Key from './Key';
 
-const errorMsg = `Invalid  message:`;
+const errorMsg = `Invalid message:`;
 
 class ValidationError extends Error {}
 
@@ -26,23 +26,6 @@ class ValidationError extends Error {}
 * Constructor: creates a message from the param obj.signedData that must contain at least the mandatory fields: author, type and time.
 * @param obj
 *
-* @example
-* https://github.com/irislib/iris-lib/blob/master/__tests__/SignedMessage.js
-*
-* Verification message:
-* {
-*   signedData: {
-*     author: {name:'Alice', key:'ABCD1234'},
-*     recipient: {
-*       name: 'Bob',
-*       email: ['bob@example.com', 'bob.saget@example.com'],
-*       bitcoin: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
-*     },
-*     type: 'verification'
-*   },
-*   signer: 'ABCD1234',
-*   signature: '1234ABCD'
-* }
 */
 class SignedMessage {
   signedData: any;
@@ -60,60 +43,6 @@ class SignedMessage {
       this.getHash();
     }
     this._validate();
-  }
-
-  static _getArray(authorOrRecipient) {
-    const arr = [];
-    const keys = Object.keys(authorOrRecipient);
-    for (let i = 0;i < keys.length;i++) {
-      const type = keys[i];
-      const value = authorOrRecipient[keys[i]];
-      if (typeof value === `string`) {
-        arr.push(new Attribute(type, value));
-      } else { // array
-        for (let j = 0;j < value.length;j++) {
-          const elementValue = value[j];
-          arr.push(new Attribute(type, elementValue));
-        }
-      }
-    }
-    return arr;
-  }
-
-  static _getIterable(authorOrRecipient) {
-    return {
-      *[Symbol.iterator]() {
-        const keys = Object.keys(authorOrRecipient);
-        for (let i = 0;i < keys.length;i++) {
-          const type = keys[i];
-          const value = authorOrRecipient[keys[i]];
-          if (typeof value === `string`) {
-            yield new Attribute(type, value);
-          } else { // array
-            for (let j = 0;j < value.length;j++) {
-              const elementValue = value[j];
-              yield new Attribute(type, elementValue);
-            }
-          }
-        }
-      }
-    };
-  }
-
-  getAuthorIterable() {
-    return SignedMessage._getIterable(this.signedData.author);
-  }
-
-  getRecipientIterable() {
-    return SignedMessage._getIterable(this.signedData.recipient);
-  }
-
-  getAuthorArray() {
-    return SignedMessage._getArray(this.signedData.author);
-  }
-
-  getRecipientArray() {
-    return this.signedData.recipient ? SignedMessage._getArray(this.signedData.recipient) : [];
   }
 
   getSignerKeyID() {
@@ -177,32 +106,7 @@ class SignedMessage {
 
     if (!Date.parse(d.time || d.timestamp)) {throw new ValidationError(`${errorMsg} Invalid time field`);}
 
-    if (d.type === `rating`) {
-      if (isNaN(d.rating)) {throw new ValidationError(`${errorMsg} Invalid rating`);}
-      if (isNaN(d.maxRating)) {throw new ValidationError(`${errorMsg} Invalid maxRating`);}
-      if (isNaN(d.minRating)) {throw new ValidationError(`${errorMsg} Invalid minRating`);}
-      if (d.rating > d.maxRating) {throw new ValidationError(`${errorMsg} Rating is above maxRating`);}
-      if (d.rating < d.minRating) {throw new ValidationError(`${errorMsg} Rating is below minRating`);}
-      if (typeof d.context !== `string` || !d.context.length) {throw new ValidationError(`${errorMsg} Rating messages must have a context field`);}
-    }
-
-    if (d.type === `verification` || d.type === `unverification`) {
-      if (d.recipient.length < 2) {throw new ValidationError(`${errorMsg} At least 2 recipient attributes are needed for a connection / disconnection. Got: ${d.recipient}`);}
-    }
-
     return true;
-  }
-
-  isPositive() {
-    return this.signedData.type === `rating` && this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
-  }
-
-  isNegative() {
-    return this.signedData.type === `rating` && this.signedData.rating < (this.signedData.maxRating + this.signedData.minRating) / 2;
-  }
-
-  isNeutral() {
-    return this.signedData.type === `rating` && this.signedData.rating === (this.signedData.maxRating + this.signedData.minRating) / 2;
   }
 
   /**
@@ -231,19 +135,6 @@ class SignedMessage {
       await m.sign(signingKey);
     }
     return m;
-  }
-
-  static createVerification(signedData, signingKey) {
-    signedData.type = `verification`;
-    return SignedMessage.create(signedData, signingKey);
-  }
-
-  static createRating(signedData, signingKey) {
-    signedData.type = `rating`;
-    signedData.context = signedData.context || `iris`;
-    signedData.maxRating = signedData.maxRating || 10;
-    signedData.minRating = signedData.minRating || -10;
-    return SignedMessage.create(signedData, signingKey);
   }
 
   getAuthor(index) {
@@ -336,14 +227,6 @@ class SignedMessage {
 
   static async fromString(s) {
     return SignedMessage.fromSig(JSON.parse(s));
-  }
-
-  static async setReaction(gun, msg, reaction) {
-    const hash = await msg.getHash();
-    gun.get(`reactions`).get(hash).put(reaction);
-    gun.get(`reactions`).get(hash).put(reaction);
-    gun.get(`messagesByHash`).get(hash).get(`reactions`).get(this.rootContact.value).put(reaction);
-    gun.get(`messagesByHash`).get(hash).get(`reactions`).get(this.rootContact.value).put(reaction);
   }
 }
 

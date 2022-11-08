@@ -668,16 +668,6 @@ var util = {
     }
     return 0;
   },
-  injectCss: function injectCss() {
-    var elementId = "irisStyle";
-    if (document.getElementById(elementId)) {
-      return;
-    }
-    var sheet = document.createElement("style");
-    sheet.id = elementId;
-    sheet.innerHTML = "\n      .iris-follow-button .hover {\n        display: none;\n      }\n\n      .iris-follow-button.following:hover .hover {\n        display: inline;\n      }\n\n      .iris-follow-button.following:hover .nonhover {\n        display: none;\n      }\n\n      .iris-identicon * {\n        box-sizing: border-box;\n      }\n\n      .iris-identicon {\n        vertical-align: middle;\n        border-radius: 50%;\n        text-align: center;\n        display: inline-block;\n        position: relative;\n        max-width: 100%;\n      }\n\n      .iris-distance {\n        z-index: 2;\n        position: absolute;\n        left:0%;\n        top:2px;\n        width: 100%;\n        text-align: right;\n        color: #fff;\n        text-shadow: 0 0 1px #000;\n        font-size: 75%;\n        line-height: 75%;\n        font-weight: bold;\n      }\n\n      .iris-pie {\n        border-radius: 50%;\n        position: absolute;\n        top: 0;\n        left: 0;\n        box-shadow: 0px 0px 0px 0px #82FF84;\n        padding-bottom: 100%;\n        max-width: 100%;\n        -webkit-transition: all 0.2s ease-in-out;\n        -moz-transition: all 0.2s ease-in-out;\n        transition: all 0.2s ease-in-out;\n      }\n\n      .iris-card {\n        padding: 10px;\n        background-color: #f7f7f7;\n        color: #777;\n        border: 1px solid #ddd;\n        display: flex;\n        flex-direction: row;\n        overflow: hidden;\n      }\n\n      .iris-card a {\n        -webkit-transition: color 150ms;\n        transition: color 150ms;\n        text-decoration: none;\n        color: #337ab7;\n      }\n\n      .iris-card a:hover, .iris-card a:active {\n        text-decoration: underline;\n        color: #23527c;\n      }\n\n      .iris-pos {\n        color: #3c763d;\n      }\n\n      .iris-neg {\n        color: #a94442;\n      }\n\n      .iris-identicon img {\n        position: absolute;\n        top: 0;\n        left: 0;\n        max-width: 100%;\n        border-radius: 50%;\n        border-color: transparent;\n        border-style: solid;\n      }\n\n      .iris-chat-open-button {\n        background-color: #1e1e1e;\n        color: #fff;\n        padding: 15px;\n        cursor: pointer;\n        user-select: none;\n      }\n\n      .iris-chat-open-button svg {\n        width: 1em;\n      }\n\n      .iris-chat-open-button, .iris-chat-box {\n        position: fixed;\n        bottom: 0.5rem;\n        right: 0.5rem;\n        border-radius: 8px;\n        font-family: system-ui;\n        font-size: 15px;\n      }\n\n      .iris-chat-box {\n        background-color: #fff;\n        max-height: 25rem;\n        box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.2);\n        height: calc(100% - 44px);\n        display: flex;\n        flex-direction: column;\n        width: 320px;\n        color: rgb(38, 38, 38);\n      }\n\n      .iris-chat-box.minimized {\n        height: auto;\n      }\n\n      .iris-chat-box.minimized .iris-chat-header {\n        border-radius: 8px;\n        cursor: pointer;\n      }\n\n      .iris-chat-box.minimized .iris-chat-messages, .iris-chat-box.minimized .iris-typing-indicator, .iris-chat-box.minimized .iris-chat-input-wrapper, .iris-chat-box.minimized .iris-chat-minimize, .iris-chat-box.minimized .iris-chat-close {\n        display: none;\n      }\n\n      .iris-chat-header {\n        background-color: #1e1e1e;\n        height: 44px;\n        color: #fff;\n        border-radius: 8px 8px 0 0;\n        text-align: center;\n        display: flex;\n        flex-direction: row;\n        justify-content: center;\n        align-items: center;\n        flex: none;\n        white-space: nowrap;\n        text-overflow: ellipsis;\n        overflow: hidden;\n      }\n\n      .iris-chat-header-text {\n        flex: 1;\n      }\n\n      .iris-online-indicator {\n        color: #bfbfbf;\n        margin-right: 5px;\n        font-size: 12px;\n        user-select: none;\n        flex: none;\n      }\n\n      .iris-online-indicator.yes {\n        color: #80bf5f;\n      }\n\n      .iris-typing-indicator {\n        display: none;\n        background-color: rgba(255, 255, 255, 0.5);\n        font-size: 12px;\n        padding: 2px;\n        color: #777;\n      }\n\n      .iris-typing-indicator.yes {\n        display: block;\n      }\n\n      .iris-chat-messages {\n        flex: 1;\n        padding: 15px;\n        overflow-y: scroll;\n      }\n\n      .iris-chat-input-wrapper {\n        flex: none;\n        padding: 15px;\n        background-color: #efefef;\n        display: flex;\n        flex-direction: row;\n        border-radius: 0 0 8px 8px;\n      }\n\n      .iris-chat-input-wrapper textarea {\n        padding: 15px 8px;\n        border-radius: 4px;\n        border: 1px solid rgba(0,0,0,0);\n        width: auto;\n        font-size: 15px;\n        resize: none;\n        flex: 1;\n      }\n\n      .iris-chat-input-wrapper textarea:focus {\n        outline: none;\n        border: 1px solid #6dd0ed;\n      }\n\n      .iris-chat-input-wrapper button svg {\n        display: inline-block;\n        font-size: inherit;\n        height: 1em;\n        width: 1em;\n        overflow: visible;\n        vertical-align: -0.125em;\n      }\n\n      .iris-chat-input-wrapper button, .iris-chat-input-wrapper button:hover, .iris-chat-input-wrapper button:active, .iris-chat-input-wrapper button:focus {\n        flex: none;\n        color: #999;\n        background-color: transparent;\n        font-size: 30px;\n        padding: 5px;\n        border: 1px solid rgba(0,0,0,0);\n        border-radius: 4px;\n        margin-left: 5px;\n      }\n\n      .iris-chat-input-wrapper button:active, .iris-chat-input-wrapper button:focus {\n        outline: none;\n        border: 1px solid #6dd0ed;\n      }\n\n      .iris-chat-message {\n        display: flex;\n        flex-direction: column;\n        margin-bottom: 2px;\n        overflow-wrap: break-word;\n      }\n\n      .iris-msg-content {\n        background-color: #efefef;\n        padding: 6px 10px;\n        border-radius: 8px;\n        box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);\n        flex: none;\n        max-width: 75%;\n      }\n\n      .emoji {\n        font-size: 1.3em;\n        line-height: 1em;\n      }\n\n      .iris-chat-message .emoji-only {\n        font-size: 3em;\n        text-align: center;\n      }\n\n      .iris-seen {\n        color: rgba(0, 0, 0, 0.45);\n        user-select: none;\n      }\n\n      .iris-seen.yes {\n        color: #4fc3f7;\n      }\n\n      .iris-seen svg {\n        width: 18px;\n      }\n\n      .iris-delivered-checkmark {\n        display: none;\n      }\n\n      .delivered .iris-delivered-checkmark {\n        display: initial;\n      }\n\n      .iris-chat-minimize, .iris-chat-close {\n        user-select: none;\n        cursor: pointer;\n        width: 45px;\n        line-height: 44px;\n      }\n\n      .iris-chat-message.their {\n        align-items: flex-start;\n      }\n\n      .iris-chat-message.their + .iris-chat-message.our .iris-msg-content, .day-separator + .iris-chat-message.our .iris-msg-content {\n        margin-top: 15px;\n        border-radius: 8px 0px 8px 8px;\n      }\n\n      .iris-chat-message.their:first-of-type .iris-msg-content {\n        border-radius: 0px 8px 8px 8px;\n      }\n\n      .iris-chat-message.our:first-of-type .iris-msg-content {\n        border-radius: 8px 0px 8px 8px;\n      }\n\n      .iris-chat-message.our + .iris-chat-message.their .iris-msg-content, .day-separator + .iris-chat-message.their .iris-msg-content {\n        margin-top: 15px;\n        border-radius: 0px 8px 8px 8px;\n      }\n\n      .iris-chat-message.our {\n        align-items: flex-end;\n      }\n\n      .iris-chat-message.our .iris-msg-content {\n        background-color: #c5ecf7;\n      }\n\n      .iris-chat-message .time {\n        text-align: right;\n        font-size: 12px;\n        color: rgba(0, 0, 0, 0.45);\n      }\n\n      .iris-non-string {\n        color: blue;\n      }\n\n      .day-separator {\n        display: inline-block;\n        border-radius: 8px;\n        background-color: rgba(227, 249, 255, 0.91);\n        padding: 6px 10px;\n        margin-top: 15px;\n        margin-left: auto;\n        margin-right: auto;\n        text-transform: uppercase;\n        font-size: 13px;\n        color: rgba(74, 74, 74, 0.88);\n        box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);\n        user-select: none;\n      }\n\n      .day-separator:first-of-type {\n        margin-top: 0;\n      }\n\n      *[contenteditable=\"true\"]:not(:focus) {\n        cursor: pointer;\n      }\n\n      *[contenteditable=\"true\"] {\n        outline: none;\n      }\n\n      [placeholder]:empty:before {\n        content: attr(placeholder);\n        color: #999;\n      }\n\n      [placeholder]:empty:focus {\n        cursor: text;\n      }\n      ";
-    document.head.prepend(sheet);
-  },
   getUrlParameter: function getUrlParameter(sParam, sParams) {
     var sPageURL = sParams || window.location.search.substring(1);
     var sURLVariables = sPageURL.split('&');
@@ -829,7 +819,7 @@ var util = {
 
 // eslint-disable-line no-unused-vars
 var myKey;
-var Key$1 = /*#__PURE__*/function () {
+var Key = /*#__PURE__*/function () {
   function Key() {}
   Key.getActiveKey = /*#__PURE__*/function () {
     var _getActiveKey = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(datadir, keyfile, fs) {
@@ -1124,12 +1114,12 @@ var Key$1 = /*#__PURE__*/function () {
     return generate;
   }();
   Key.sign = /*#__PURE__*/function () {
-    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(_data, _pair, _cb, _opt) {
+    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(data, _pair, _cb, _opt) {
       return _regeneratorRuntime().wrap(function _callee6$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              return _context6.abrupt("return", '');
+              return _context6.abrupt("return", data);
             case 2:
             case "end":
               return _context6.stop();
@@ -1143,57 +1133,18 @@ var Key$1 = /*#__PURE__*/function () {
     return sign;
   }();
   Key.secret = /*#__PURE__*/function () {
-    var _secret = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(pub, pair) {
-      var x, y, jwk, secret, r;
+    var _secret = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(_pub, _pair) {
       return _regeneratorRuntime().wrap(function _callee7$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              // ecdh secret
-              pub = pub.split('.');
-              x = pub[0], y = pub[1];
-              jwk = {
-                kty: "EC",
-                crv: "P-256",
-                x: x,
-                y: y,
-                ext: true
-              };
-              jwk.key_ops = pair.epriv ? ['sign'] : ['verify'];
-              if (pair.epriv) {
-                jwk.d = pair.epriv;
-              }
-              _context7.prev = 5;
-              _context7.next = 8;
-              return window.crypto.subtle.importKey('jwk', jwk, {
-                name: 'ECDH',
-                namedCurve: 'P-256'
-              }, false, ['deriveKey']).then(function (key) {
-                return window.crypto.subtle.deriveKey({
-                  name: 'ECDH',
-                  "public": key
-                }, pair.priv, {
-                  name: 'AES-GCM',
-                  length: 256
-                }, false, ['encrypt', 'decrypt']);
-              });
-            case 8:
-              secret = _context7.sent;
-              _context7.next = 11;
-              return window.crypto.subtle.exportKey('raw', secret);
-            case 11:
-              r = _context7.sent;
-              return _context7.abrupt("return", r);
-            case 15:
-              _context7.prev = 15;
-              _context7.t0 = _context7["catch"](5);
-              throw _context7.t0;
-            case 18:
+              return _context7.abrupt("return", '');
+            case 1:
             case "end":
               return _context7.stop();
           }
         }
-      }, _callee7, null, [[5, 15]]);
+      }, _callee7);
     }));
     function secret(_x12, _x13) {
       return _secret.apply(this, arguments);
@@ -1270,7 +1221,7 @@ var peers = {
                 break;
               }
               _context.next = 6;
-              return Key$1.secret(session.getKey().epub, session.getKey());
+              return Key.secret(session.getKey().epub, session.getKey());
             case 6:
               _context.t0 = _context.sent;
               if (_context.t0) {
@@ -1281,7 +1232,7 @@ var peers = {
             case 9:
               secret = _context.t0;
               _context.next = 12;
-              return Key$1.encrypt(peer.url, secret);
+              return Key.encrypt(peer.url, secret);
             case 12:
               encryptedUrl = _context.sent;
               _context.next = 15;
@@ -2659,11 +2610,11 @@ var Channel = /*#__PURE__*/function () {
                   switch (_context.prev = _context.next) {
                     case 0:
                       _context.next = 2;
-                      return Key$1.decrypt(encrypted, sharedSecret);
+                      return Key.decrypt(encrypted, sharedSecret);
                     case 2:
                       sharedKey = _context.sent;
                       _context.next = 5;
-                      return Key$1.encrypt(session.getKey().pub, sharedSecret);
+                      return Key.encrypt(session.getKey().pub, sharedSecret);
                     case 5:
                       encryptedChatRequest = _context.sent;
                       _context.next = 8;
@@ -2716,7 +2667,7 @@ var Channel = /*#__PURE__*/function () {
     });
   };
   _proto.changeMyGroupSecret = function changeMyGroupSecret() {
-    this.myGroupSecret = Key$1.random(32).toString('base64');
+    this.myGroupSecret = Key.random(32).toString('base64');
     // TODO: secret should be archived and probably messages should include the encryption key id so past messages don't become unreadable
     this.putDirect("S" + this.uuid, this.myGroupSecret);
   }
@@ -2790,7 +2741,7 @@ var Channel = /*#__PURE__*/function () {
                 break;
               }
               _context4.next = 3;
-              return Key$1.secret(session.getKey().epub, session.getKey());
+              return Key.secret(session.getKey().epub, session.getKey());
             case 3:
               mySecret = _context4.sent;
               _context4.next = 6;
@@ -2862,7 +2813,7 @@ var Channel = /*#__PURE__*/function () {
             case 3:
               epub = _context5.sent;
               _context5.next = 6;
-              return Key$1.secret(epub, session.getKey());
+              return Key.secret(epub, session.getKey());
             case 6:
               this.secrets[pub] = _context5.sent;
             case 7:
@@ -2895,7 +2846,7 @@ var Channel = /*#__PURE__*/function () {
             case 2:
               epub = _context6.sent;
               _context6.next = 5;
-              return Key$1.secret(epub, pair);
+              return Key.secret(epub, pair);
             case 5:
               secret = _context6.sent;
               return _context6.abrupt("return", util.getHash(secret + pub));
@@ -2927,7 +2878,7 @@ var Channel = /*#__PURE__*/function () {
             case 2:
               epub = _context7.sent;
               _context7.next = 5;
-              return Key$1.secret(epub, pair);
+              return Key.secret(epub, pair);
             case 5:
               secret = _context7.sent;
               return _context7.abrupt("return", util.getHash(secret + pair.pub));
@@ -2961,7 +2912,7 @@ var Channel = /*#__PURE__*/function () {
               }
               keypair = session.getKey();
               _context9.next = 4;
-              return Key$1.secret(keypair.epub, keypair);
+              return Key.secret(keypair.epub, keypair);
             case 4:
               mySecret = _context9.sent;
               if (listenToChatLinks) {
@@ -2992,7 +2943,7 @@ var Channel = /*#__PURE__*/function () {
                         case 7:
                           encryptedChatId = _context8.sent;
                           _context8.next = 10;
-                          return Key$1.decrypt(encryptedChatId, mySecret);
+                          return Key.decrypt(encryptedChatId, mySecret);
                         case 10:
                           chatId = _context8.sent;
                           if (chatId) {
@@ -3231,7 +3182,7 @@ var Channel = /*#__PURE__*/function () {
             case 11:
               secret = _context14.t0;
               _context14.next = 14;
-              return Key$1.decrypt(data, secret);
+              return Key.decrypt(data, secret);
             case 14:
               decrypted = _context14.sent;
               if (!(typeof decrypted !== "object")) {
@@ -3470,12 +3421,12 @@ var Channel = /*#__PURE__*/function () {
                 break;
               }
               _context21.next = 14;
-              return Key$1.secret(session.getKey().epub, session.getKey());
+              return Key.secret(session.getKey().epub, session.getKey());
             case 14:
               mySecret = _context21.sent;
               _context21.t0 = global$1().user().get("chats").get(ourSecretChannelId).get("pub");
               _context21.next = 18;
-              return Key$1.encrypt({
+              return Key.encrypt({
                 pub: pub
               }, mySecret);
             case 18:
@@ -3578,7 +3529,7 @@ var Channel = /*#__PURE__*/function () {
                 break;
               }
               _context22.next = 15;
-              return Key$1.encrypt(JSON.stringify(msg), this.getMyGroupSecret());
+              return Key.encrypt(JSON.stringify(msg), this.getMyGroupSecret());
             case 15:
               encrypted = _context22.sent;
               _context22.next = 18;
@@ -3597,7 +3548,7 @@ var Channel = /*#__PURE__*/function () {
                 _context22.next = 42;
                 break;
               }
-              _context22.t0 = Key$1;
+              _context22.t0 = Key;
               _context22.t1 = JSON.stringify(msg);
               _context22.next = 30;
               return this.getSecret(keys[i]);
@@ -3651,12 +3602,12 @@ var Channel = /*#__PURE__*/function () {
               publicState().get("chats").get(mySecretUuid).get('msgs').get('a').put(null);
               this.put("participants", this.participants); // public participants list
               _context23.next = 8;
-              return Key$1.secret(session.getKey().epub, session.getKey());
+              return Key.secret(session.getKey().epub, session.getKey());
             case 8:
               mySecret = _context23.sent;
               _context23.t0 = publicState().get("chats").get(mySecretUuid).get("pub");
               _context23.next = 12;
-              return Key$1.encrypt({
+              return Key.encrypt({
                 uuid: this.uuid,
                 myGroupSecret: this.getMyGroupSecret(),
                 participants: this.participants // private participants list
@@ -3735,7 +3686,7 @@ var Channel = /*#__PURE__*/function () {
               throw new Error("Sorry, you can't overwrite the msgs field which is used for .send()");
             case 2:
               _context25.next = 4;
-              return Key$1.encrypt(JSON.stringify(value), this.getMyGroupSecret());
+              return Key.encrypt(JSON.stringify(value), this.getMyGroupSecret());
             case 4:
               encrypted = _context25.sent;
               _context25.next = 7;
@@ -3775,7 +3726,7 @@ var Channel = /*#__PURE__*/function () {
                 _context26.next = 20;
                 break;
               }
-              _context26.t0 = Key$1;
+              _context26.t0 = Key;
               _context26.t1 = JSON.stringify(value);
               _context26.next = 9;
               return this.getSecret(keys[i]);
@@ -3939,7 +3890,7 @@ var Channel = /*#__PURE__*/function () {
                               while (1) {
                                 switch (_context31.prev = _context31.next) {
                                   case 0:
-                                    _context31.t0 = Key$1;
+                                    _context31.t0 = Key;
                                     _context31.t1 = data;
                                     _context31.next = 4;
                                     return _this10.getSecret(keys[i]);
@@ -4030,7 +3981,7 @@ var Channel = /*#__PURE__*/function () {
                       switch (_context34.prev = _context34.next) {
                         case 0:
                           _context34.next = 2;
-                          return Key$1.decrypt(data, mySecret);
+                          return Key.decrypt(data, mySecret);
                         case 2:
                           decrypted = _context34.sent;
                           if (decrypted) {
@@ -4109,7 +4060,7 @@ var Channel = /*#__PURE__*/function () {
                           }
                           return _context37.abrupt("return");
                         case 2:
-                          _context37.t0 = Key$1;
+                          _context37.t0 = Key;
                           _context37.t1 = data;
                           _context37.next = 6;
                           return _this11.getSecret(pub);
@@ -4241,7 +4192,7 @@ var Channel = /*#__PURE__*/function () {
                           }
                           return _context41.abrupt("return");
                         case 3:
-                          _context41.t0 = Key$1;
+                          _context41.t0 = Key;
                           _context41.t1 = data;
                           _context41.next = 7;
                           return _this13.getTheirGroupSecret(pub);
@@ -4383,36 +4334,6 @@ var Channel = /*#__PURE__*/function () {
     });
   }
   /**
-  * Add a chat button to page
-  * @param options {label, channelOptions}
-  */;
-  Channel.addChatButton = function addChatButton(options) {
-    if (options === void 0) {
-      options = {};
-    }
-    options = Object.assign({
-      label: 'Chat'
-    }, options);
-    if (!options.channelOptions) {
-      throw new Error('addChatButton missing options.channelOptions param');
-    }
-    util.injectCss();
-    var channel, box;
-    var btn = util.createElement('div', 'iris-chat-open-button', document.body);
-    btn.setAttribute('id', 'iris-chat-open-button');
-    btn.innerHTML = "<svg style=\"margin-right:7px;margin-bottom: -0.2em\" version=\"1.1\" id=\"Capa_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 510 510\" xml:space=\"preserve\"><path fill=\"currentColor\" d=\"M459,0H51C22.95,0,0,22.95,0,51v459l102-102h357c28.05,0,51-22.95,51-51V51C510,22.95,487.05,0,459,0z M102,178.5h306v51 H102V178.5z M306,306H102v-51h204V306z M408,153H102v-51h306V153z\"></path></svg> " + options.label;
-    btn.addEventListener('click', function () {
-      btn.setAttribute('style', 'display: none');
-      if (!channel) {
-        channel = new Channel(options.channelOptions);
-        box = channel.getChatBox();
-        document.body.appendChild(box);
-      } else {
-        box.setAttribute('style', ''); // show
-      }
-    });
-  }
-  /**
   * Get a simple link that points to the channel.
   *
   * Direct channel: both users need to give their simple links. Use createChatLink() to get a two-way link that needs to be given by one user only.
@@ -4508,7 +4429,7 @@ var Channel = /*#__PURE__*/function () {
                                 }
                                 channels.push(s);
                                 _context45.next = 8;
-                                return Key$1.decrypt(encPub, link.sharedSecret);
+                                return Key.decrypt(encPub, link.sharedSecret);
                               case 8:
                                 pub = _context45.sent;
                                 _this17.addParticipant(pub, undefined, undefined, true);
@@ -4549,24 +4470,24 @@ var Channel = /*#__PURE__*/function () {
                 urlRoot = 'https://iris.to/';
               }
               _context47.next = 3;
-              return Key$1.pair();
+              return Key.pair();
             case 3:
               sharedKey = _context47.sent;
               sharedKeyString = JSON.stringify(sharedKey);
               _context47.next = 7;
-              return Key$1.secret(sharedKey.epub, sharedKey);
+              return Key.secret(sharedKey.epub, sharedKey);
             case 7:
               sharedSecret = _context47.sent;
               _context47.next = 10;
-              return Key$1.encrypt(sharedKeyString, sharedSecret);
+              return Key.encrypt(sharedKeyString, sharedSecret);
             case 10:
               encryptedSharedKey = _context47.sent;
               _context47.next = 13;
-              return Key$1.secret(session.getKey().epub, session.getKey());
+              return Key.secret(session.getKey().epub, session.getKey());
             case 13:
               ownerSecret = _context47.sent;
               _context47.next = 16;
-              return Key$1.encrypt(sharedKeyString, ownerSecret);
+              return Key.encrypt(sharedKeyString, ownerSecret);
             case 16:
               ownerEncryptedSharedKey = _context47.sent;
               _context47.next = 19;
@@ -4606,143 +4527,9 @@ var Channel = /*#__PURE__*/function () {
     }
     return createChatLink;
   }() /**
-      * Get a channel box element that you can add to your page
+      * Set the user's online/active status
+      * @param {string} activity string: set the activity status every 3 seconds, null/false: stop updating
       */;
-  _proto.getChatBox = function getChatBox() {
-    var _this18 = this;
-    util.injectCss();
-    var minimized = false;
-    var chatBox = util.createElement('div', 'iris-chat-box');
-    var header = util.createElement('div', 'iris-chat-header', chatBox);
-    var minimize = util.createElement('span', 'iris-chat-minimize', header);
-    minimize.innerText = '—';
-    minimize.addEventListener('click', function (e) {
-      e.stopPropagation();
-      chatBox.setAttribute('class', 'iris-chat-box minimized');
-      minimized = true;
-    });
-    var headerText = util.createElement('div', 'iris-chat-header-text', header);
-    var onlineIndicator = util.createElement('span', 'iris-online-indicator', headerText);
-    onlineIndicator.innerHTML = '&#x25cf;';
-    var nameEl = util.createElement('span', undefined, headerText);
-    var close = util.createElement('span', 'iris-chat-close', header);
-    close.innerHTML = '&#215;';
-    close.addEventListener('click', function () {
-      chatBox.setAttribute('style', 'display: none');
-      var openChatBtn = document.getElementById('iris-chat-open-button');
-      if (openChatBtn) {
-        openChatBtn.setAttribute('style', ''); // show
-      }
-    });
-
-    header.addEventListener('click', function () {
-      if (minimized) {
-        chatBox.setAttribute('class', 'iris-chat-box');
-        minimized = false;
-      }
-    });
-    var messages = util.createElement('div', 'iris-chat-messages', chatBox);
-    var typingIndicator = util.createElement('div', 'iris-typing-indicator', chatBox);
-    typingIndicator.innerText = 'typing...';
-    this.getTyping(function (isTyping) {
-      typingIndicator.setAttribute('class', "iris-typing-indicator" + (isTyping ? ' yes' : ''));
-    });
-    var inputWrapper = util.createElement('div', 'iris-chat-input-wrapper', chatBox);
-    var textArea = util.createElement('textarea', undefined, inputWrapper);
-    textArea.setAttribute('rows', '1');
-    textArea.setAttribute('placeholder', 'Type a message');
-    if (util.isMobile) {
-      var sendBtn = util.createElement('button', undefined, inputWrapper);
-      sendBtn.innerHTML = "\n        <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 486.736 486.736\" style=\"enable-background:new 0 0 486.736 486.736;\" xml:space=\"preserve\" width=\"100px\" height=\"100px\" fill=\"#000000\" stroke=\"#000000\" stroke-width=\"0\"><path fill=\"currentColor\" d=\"M481.883,61.238l-474.3,171.4c-8.8,3.2-10.3,15-2.6,20.2l70.9,48.4l321.8-169.7l-272.4,203.4v82.4c0,5.6,6.3,9,11,5.9 l60-39.8l59.1,40.3c5.4,3.7,12.8,2.1,16.3-3.5l214.5-353.7C487.983,63.638,485.083,60.038,481.883,61.238z\"></path></svg>\n      ";
-      sendBtn.addEventListener('click', function () {
-        _this18.send(textArea.value);
-        textArea.value = '';
-        _this18.setTyping(false);
-      });
-    }
-    var participants = this.getCurrentParticipants();
-    if (participants.length) {
-      var pub = participants[0];
-      global$1().user(pub).get('profile').get('name').on(function (name) {
-        return nameEl.innerText = name;
-      });
-      Channel.getActivity(global$1(), pub, function (status) {
-        var cls = "iris-online-indicator" + (status.isActive ? ' yes' : '');
-        onlineIndicator.setAttribute('class', cls);
-        var undelivered = messages.querySelectorAll('.iris-chat-message:not(.delivered)');
-        undelivered.forEach(function (msg) {
-          if (msg.getAttribute('data-time') <= status.lastActive) {
-            var c = msg.getAttribute('class');
-            msg.setAttribute('class', c + " delivered");
-          }
-        });
-      });
-    }
-    this.getTheirMsgsLastSeenTime(function (time) {
-      var unseen = messages.querySelectorAll('.iris-seen:not(.yes)');
-      unseen.forEach(function (indicator) {
-        var msgEl = indicator.parentElement.parentElement.parentElement;
-        if (msgEl.getAttribute('data-time') <= time) {
-          var msgClass = msgEl.getAttribute('class');
-          if (msgClass.indexOf('delivered') === -1) {
-            msgEl.setAttribute('class', msgClass + " delivered");
-          }
-          indicator.setAttribute('class', 'iris-seen yes');
-        }
-      });
-    });
-    this.getMessages(function (msg, info) {
-      var msgContent = util.createElement('div', 'iris-msg-content');
-      msgContent.innerText = msg.text;
-      var time = util.createElement('div', 'time', msgContent);
-      time.innerText = util.formatTime(new Date(msg.time));
-      if (info.selfAuthored) {
-        var cls = _this18.theirMsgsLastSeenTime >= msg.time ? 'iris-seen yes' : 'iris-seen';
-        var seenIndicator = util.createElement('span', cls, time);
-        seenIndicator.innerHTML = ' <svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 59 42"><polygon fill="currentColor" points="40.6,12.1 17,35.7 7.4,26.1 4.6,29 17,41.3 43.4,14.9"></polygon><polygon class="iris-delivered-checkmark" fill="currentColor" points="55.6,12.1 32,35.7 29.4,33.1 26.6,36 32,41.3 58.4,14.9"></polygon></svg>';
-      }
-      msgContent.innerHTML = msgContent.innerHTML.replace(/\n/g, '<br>\n');
-      var msgEl = util.createElement('div', (info.selfAuthored ? 'our' : 'their') + " iris-chat-message");
-      msgEl.appendChild(msgContent);
-      msgEl.setAttribute('data-time', msg.time);
-      for (var i = messages.children.length; i >= 0; i--) {
-        if (i === 0) {
-          messages.insertBefore(msgEl, messages.firstChild);
-        } else {
-          var t = messages.children[i - 1].getAttribute('data-time');
-          if (t && t < msg.time) {
-            messages.children[i - 1].insertAdjacentElement('afterend', msgEl);
-            break;
-          }
-        }
-      }
-      messages.scrollTop = messages.scrollHeight;
-    });
-    textArea.addEventListener('keyup', function (event) {
-      //Channel.setActivity(publicState(), true); // TODO
-      _this18.setMyMsgsLastSeenTime(); // TODO
-      if (event.keyCode === 13) {
-        event.preventDefault();
-        var content = textArea.value;
-        var caret = util.getCaret(textArea);
-        if (event.shiftKey) {
-          textArea.value = content.substring(0, caret - 1) + "\n" + content.substring(caret, content.length);
-        } else {
-          textArea.value = content.substring(0, caret - 1) + content.substring(caret, content.length);
-          _this18.send(textArea.value);
-          textArea.value = '';
-          _this18.setTyping(false);
-        }
-      } else {
-        _this18.setTyping(!!textArea.value.length);
-      }
-    });
-    return chatBox;
-  }
-  /**
-  * Set the user's online/active status
-  * @param {string} activity string: set the activity status every 3 seconds, null/false: stop updating
-  */;
   Channel.setActivity = function setActivity(activity) {
     if (global$1().irisActivityStatus === activity) {
       return;
@@ -4827,24 +4614,24 @@ var Channel = /*#__PURE__*/function () {
               key = session.getKey(); // We create a new Gun user whose private key is shared with the chat link recipients.
               // Chat link recipients can contact you by writing their public key to the shared key's user space.
               _context48.next = 5;
-              return Key$1.pair();
+              return Key.pair();
             case 5:
               sharedKey = _context48.sent;
               sharedKeyString = JSON.stringify(sharedKey);
               _context48.next = 9;
-              return Key$1.secret(sharedKey.epub, sharedKey);
+              return Key.secret(sharedKey.epub, sharedKey);
             case 9:
               sharedSecret = _context48.sent;
               _context48.next = 12;
-              return Key$1.encrypt(sharedKeyString, sharedSecret);
+              return Key.encrypt(sharedKeyString, sharedSecret);
             case 12:
               encryptedSharedKey = _context48.sent;
               _context48.next = 15;
-              return Key$1.secret(key.epub, key);
+              return Key.secret(key.epub, key);
             case 15:
               ownerSecret = _context48.sent;
               _context48.next = 18;
-              return Key$1.encrypt(sharedKeyString, ownerSecret);
+              return Key.encrypt(sharedKeyString, ownerSecret);
             case 18:
               ownerEncryptedSharedKey = _context48.sent;
               _context48.next = 21;
@@ -4900,7 +4687,7 @@ var Channel = /*#__PURE__*/function () {
               key = session.getKey();
               user = global$1().user();
               _context51.next = 6;
-              return Key$1.secret(key.epub, key);
+              return Key.secret(key.epub, key);
             case 6:
               mySecret = _context51.sent;
               chatLinks = [];
@@ -4924,11 +4711,11 @@ var Channel = /*#__PURE__*/function () {
                           case 2:
                             chatLinks.push(linkId);
                             _context50.next = 5;
-                            return Key$1.decrypt(enc, mySecret);
+                            return Key.decrypt(enc, mySecret);
                           case 5:
                             sharedKey = _context50.sent;
                             _context50.next = 8;
-                            return Key$1.secret(sharedKey.epub, sharedKey);
+                            return Key.secret(sharedKey.epub, sharedKey);
                           case 8:
                             sharedSecret = _context50.sent;
                             url = Channel.formatChatLink({
@@ -4964,7 +4751,7 @@ var Channel = /*#__PURE__*/function () {
                                           }
                                           channels.push(s);
                                           _context49.next = 7;
-                                          return Key$1.decrypt(encPub, sharedSecret);
+                                          return Key.decrypt(encPub, sharedSecret);
                                         case 7:
                                           pub = _context49.sent;
                                           channel = new Channel({
@@ -5067,7 +4854,7 @@ var Channel = /*#__PURE__*/function () {
           switch (_context53.prev = _context53.next) {
             case 0:
               _context53.next = 2;
-              return Key$1.secret(key.epub, key);
+              return Key.secret(key.epub, key);
             case 2:
               mySecret = _context53.sent;
               _context53.next = 5;
@@ -6209,7 +5996,7 @@ var session = {
     }
     var name = options.name || util.generateName();
     console.log('loginAsNewUser name', name);
-    return Key$1.generate().then(function (k) {
+    return Key.generate().then(function (k) {
       _this5.login(k);
       publicState().get('profile').put({
         a: null
@@ -6619,7 +6406,7 @@ var staticState = {
   }
 };
 
-var errorMsg = "Invalid  message:";
+var errorMsg = "Invalid message:";
 var ValidationError = /*#__PURE__*/function (_Error) {
   _inheritsLoose(ValidationError, _Error);
   function ValidationError() {
@@ -6642,23 +6429,6 @@ var ValidationError = /*#__PURE__*/function (_Error) {
                                           * Constructor: creates a message from the param obj.signedData that must contain at least the mandatory fields: author, type and time.
                                           * @param obj
                                           *
-                                          * @example
-                                          * https://github.com/irislib/iris-lib/blob/master/__tests__/SignedMessage.js
-                                          *
-                                          * Verification message:
-                                          * {
-                                          *   signedData: {
-                                          *     author: {name:'Alice', key:'ABCD1234'},
-                                          *     recipient: {
-                                          *       name: 'Bob',
-                                          *       email: ['bob@example.com', 'bob.saget@example.com'],
-                                          *       bitcoin: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
-                                          *     },
-                                          *     type: 'verification'
-                                          *   },
-                                          *   signer: 'ABCD1234',
-                                          *   signature: '1234ABCD'
-                                          * }
                                           */
 var SignedMessage = /*#__PURE__*/function () {
   function SignedMessage(obj) {
@@ -6673,89 +6443,7 @@ var SignedMessage = /*#__PURE__*/function () {
     }
     this._validate();
   }
-  SignedMessage._getArray = function _getArray(authorOrRecipient) {
-    var arr = [];
-    var keys = Object.keys(authorOrRecipient);
-    for (var i = 0; i < keys.length; i++) {
-      var type = keys[i];
-      var value = authorOrRecipient[keys[i]];
-      if (typeof value === "string") {
-        arr.push(new Attribute(type, value));
-      } else {
-        // array
-        for (var j = 0; j < value.length; j++) {
-          var elementValue = value[j];
-          arr.push(new Attribute(type, elementValue));
-        }
-      }
-    }
-    return arr;
-  };
-  SignedMessage._getIterable = function _getIterable(authorOrRecipient) {
-    var _ref;
-    return _ref = {}, _ref[Symbol.iterator] = /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var keys, i, type, value, j, elementValue;
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              keys = Object.keys(authorOrRecipient);
-              i = 0;
-            case 2:
-              if (!(i < keys.length)) {
-                _context.next = 21;
-                break;
-              }
-              type = keys[i];
-              value = authorOrRecipient[keys[i]];
-              if (!(typeof value === "string")) {
-                _context.next = 10;
-                break;
-              }
-              _context.next = 8;
-              return new Attribute(type, value);
-            case 8:
-              _context.next = 18;
-              break;
-            case 10:
-              j = 0;
-            case 11:
-              if (!(j < value.length)) {
-                _context.next = 18;
-                break;
-              }
-              elementValue = value[j];
-              _context.next = 15;
-              return new Attribute(type, elementValue);
-            case 15:
-              j++;
-              _context.next = 11;
-              break;
-            case 18:
-              i++;
-              _context.next = 2;
-              break;
-            case 21:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    }), _ref;
-  };
   var _proto = SignedMessage.prototype;
-  _proto.getAuthorIterable = function getAuthorIterable() {
-    return SignedMessage._getIterable(this.signedData.author);
-  };
-  _proto.getRecipientIterable = function getRecipientIterable() {
-    return SignedMessage._getIterable(this.signedData.recipient);
-  };
-  _proto.getAuthorArray = function getAuthorArray() {
-    return SignedMessage._getArray(this.signedData.author);
-  };
-  _proto.getRecipientArray = function getRecipientArray() {
-    return this.signedData.recipient ? SignedMessage._getArray(this.signedData.recipient) : [];
-  };
   _proto.getSignerKeyID = function getSignerKeyID() {
     return this.pubKey; // hack until gun supports keyID lookups
     //return util.getHash(this.pubKey);
@@ -6845,41 +6533,7 @@ var SignedMessage = /*#__PURE__*/function () {
     if (!Date.parse(d.time || d.timestamp)) {
       throw new ValidationError(errorMsg + " Invalid time field");
     }
-    if (d.type === "rating") {
-      if (isNaN(d.rating)) {
-        throw new ValidationError(errorMsg + " Invalid rating");
-      }
-      if (isNaN(d.maxRating)) {
-        throw new ValidationError(errorMsg + " Invalid maxRating");
-      }
-      if (isNaN(d.minRating)) {
-        throw new ValidationError(errorMsg + " Invalid minRating");
-      }
-      if (d.rating > d.maxRating) {
-        throw new ValidationError(errorMsg + " Rating is above maxRating");
-      }
-      if (d.rating < d.minRating) {
-        throw new ValidationError(errorMsg + " Rating is below minRating");
-      }
-      if (typeof d.context !== "string" || !d.context.length) {
-        throw new ValidationError(errorMsg + " Rating messages must have a context field");
-      }
-    }
-    if (d.type === "verification" || d.type === "unverification") {
-      if (d.recipient.length < 2) {
-        throw new ValidationError(errorMsg + " At least 2 recipient attributes are needed for a connection / disconnection. Got: " + d.recipient);
-      }
-    }
     return true;
-  };
-  _proto.isPositive = function isPositive() {
-    return this.signedData.type === "rating" && this.signedData.rating > (this.signedData.maxRating + this.signedData.minRating) / 2;
-  };
-  _proto.isNegative = function isNegative() {
-    return this.signedData.type === "rating" && this.signedData.rating < (this.signedData.maxRating + this.signedData.minRating) / 2;
-  };
-  _proto.isNeutral = function isNeutral() {
-    return this.signedData.type === "rating" && this.signedData.rating === (this.signedData.maxRating + this.signedData.minRating) / 2;
   }
   /**
   * @param {Object} key keypair to sign the message with
@@ -6887,26 +6541,26 @@ var SignedMessage = /*#__PURE__*/function () {
   _proto.sign =
   /*#__PURE__*/
   function () {
-    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(key) {
-      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(key) {
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) {
-          switch (_context2.prev = _context2.next) {
+          switch (_context.prev = _context.next) {
             case 0:
-              _context2.next = 2;
-              return Key$1.sign(this.signedData, key);
+              _context.next = 2;
+              return Key.sign(this.signedData, key);
             case 2:
-              this.sig = _context2.sent;
+              this.sig = _context.sent;
               this.pubKey = key.pub;
-              _context2.next = 6;
+              _context.next = 6;
               return this.getHash();
             case 6:
-              return _context2.abrupt("return", true);
+              return _context.abrupt("return", true);
             case 7:
             case "end":
-              return _context2.stop();
+              return _context.stop();
           }
         }
-      }, _callee2, this);
+      }, _callee, this);
     }));
     function sign(_x) {
       return _sign.apply(this, arguments);
@@ -6921,15 +6575,15 @@ var SignedMessage = /*#__PURE__*/function () {
   SignedMessage.create =
   /*#__PURE__*/
   function () {
-    var _create = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(signedData, signingKey) {
+    var _create = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(signedData, signingKey) {
       var m;
-      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) {
-          switch (_context3.prev = _context3.next) {
+          switch (_context2.prev = _context2.next) {
             case 0:
               if (!signedData.author && signingKey) {
                 signedData.author = {
-                  keyID: Key$1.getId(signingKey)
+                  keyID: Key.getId(signingKey)
                 };
               }
               signedData.time = signedData.time || new Date().toISOString();
@@ -6937,36 +6591,25 @@ var SignedMessage = /*#__PURE__*/function () {
                 signedData: signedData
               });
               if (!signingKey) {
-                _context3.next = 6;
+                _context2.next = 6;
                 break;
               }
-              _context3.next = 6;
+              _context2.next = 6;
               return m.sign(signingKey);
             case 6:
-              return _context3.abrupt("return", m);
+              return _context2.abrupt("return", m);
             case 7:
             case "end":
-              return _context3.stop();
+              return _context2.stop();
           }
         }
-      }, _callee3);
+      }, _callee2);
     }));
     function create(_x2, _x3) {
       return _create.apply(this, arguments);
     }
     return create;
   }();
-  SignedMessage.createVerification = function createVerification(signedData, signingKey) {
-    signedData.type = "verification";
-    return SignedMessage.create(signedData, signingKey);
-  };
-  SignedMessage.createRating = function createRating(signedData, signingKey) {
-    signedData.type = "rating";
-    signedData.context = signedData.context || "iris";
-    signedData.maxRating = signedData.maxRating || 10;
-    signedData.minRating = signedData.minRating || -10;
-    return SignedMessage.create(signedData, signingKey);
-  };
   _proto.getAuthor = function getAuthor(index) {
     for (var _iterator = _createForOfIteratorHelperLoose(this.getAuthorIterable()), _step; !(_step = _iterator()).done;) {
       var a = _step.value;
@@ -6992,27 +6635,27 @@ var SignedMessage = /*#__PURE__*/function () {
   _proto.getHash =
   /*#__PURE__*/
   function () {
-    var _getHash = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4() {
-      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+    var _getHash = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
+      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
         while (1) {
-          switch (_context4.prev = _context4.next) {
+          switch (_context3.prev = _context3.next) {
             case 0:
               if (!(this.sig && !this.hash)) {
-                _context4.next = 4;
+                _context3.next = 4;
                 break;
               }
-              _context4.next = 3;
+              _context3.next = 3;
               return util.getHash(this.sig);
             case 3:
-              this.hash = _context4.sent;
+              this.hash = _context3.sent;
             case 4:
-              return _context4.abrupt("return", this.hash);
+              return _context3.abrupt("return", this.hash);
             case 5:
             case "end":
-              return _context4.stop();
+              return _context3.stop();
           }
         }
-      }, _callee4, this);
+      }, _callee3, this);
     }));
     function getHash() {
       return _getHash.apply(this, arguments);
@@ -7023,20 +6666,20 @@ var SignedMessage = /*#__PURE__*/function () {
     return this.getHash();
   };
   SignedMessage.fromSig = /*#__PURE__*/function () {
-    var _fromSig = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5(obj) {
+    var _fromSig = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(obj) {
       var signedData, o;
-      return _regeneratorRuntime().wrap(function _callee5$(_context5) {
+      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
         while (1) {
-          switch (_context5.prev = _context5.next) {
+          switch (_context4.prev = _context4.next) {
             case 0:
               if (obj.sig) {
-                _context5.next = 2;
+                _context4.next = 2;
                 break;
               }
               throw new Error("Missing signature in object:", obj);
             case 2:
               if (obj.pubKey) {
-                _context5.next = 4;
+                _context4.next = 4;
                 break;
               }
               throw new Error("Missing pubKey in object:");
@@ -7048,13 +6691,13 @@ var SignedMessage = /*#__PURE__*/function () {
                 sig: obj.sig,
                 pubKey: obj.pubKey
               };
-              return _context5.abrupt("return", new SignedMessage(o));
+              return _context4.abrupt("return", new SignedMessage(o));
             case 7:
             case "end":
-              return _context5.stop();
+              return _context4.stop();
           }
         }
-      }, _callee5);
+      }, _callee4);
     }));
     function fromSig(_x4) {
       return _fromSig.apply(this, arguments);
@@ -7066,60 +6709,60 @@ var SignedMessage = /*#__PURE__*/function () {
   _proto.verify =
   /*#__PURE__*/
   function () {
-    var _verify = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6() {
-      return _regeneratorRuntime().wrap(function _callee6$(_context6) {
+    var _verify = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5() {
+      return _regeneratorRuntime().wrap(function _callee5$(_context5) {
         while (1) {
-          switch (_context6.prev = _context6.next) {
+          switch (_context5.prev = _context5.next) {
             case 0:
               if (this.pubKey) {
-                _context6.next = 2;
+                _context5.next = 2;
                 break;
               }
               throw new ValidationError(errorMsg + " SignedMessage has no .pubKey");
             case 2:
               if (this.sig) {
-                _context6.next = 4;
+                _context5.next = 4;
                 break;
               }
               throw new ValidationError(errorMsg + " SignedMessage has no .sig");
             case 4:
-              _context6.next = 6;
-              return Key$1.verify(this.sig, this.pubKey);
+              _context5.next = 6;
+              return Key.verify(this.sig, this.pubKey);
             case 6:
-              this.signedData = _context6.sent;
+              this.signedData = _context5.sent;
               if (this.signedData) {
-                _context6.next = 9;
+                _context5.next = 9;
                 break;
               }
               throw new ValidationError(errorMsg + " Invalid signature");
             case 9:
               if (!this.hash) {
-                _context6.next = 18;
+                _context5.next = 18;
                 break;
               }
-              _context6.t0 = this.hash;
-              _context6.next = 13;
+              _context5.t0 = this.hash;
+              _context5.next = 13;
               return util.getHash(this.sig);
             case 13:
-              _context6.t1 = _context6.sent;
-              if (!(_context6.t0 !== _context6.t1)) {
-                _context6.next = 16;
+              _context5.t1 = _context5.sent;
+              if (!(_context5.t0 !== _context5.t1)) {
+                _context5.next = 16;
                 break;
               }
               throw new ValidationError(errorMsg + " Invalid message hash");
             case 16:
-              _context6.next = 19;
+              _context5.next = 19;
               break;
             case 18:
               this.getHash();
             case 19:
-              return _context6.abrupt("return", true);
+              return _context5.abrupt("return", true);
             case 20:
             case "end":
-              return _context6.stop();
+              return _context5.stop();
           }
         }
-      }, _callee6, this);
+      }, _callee5, this);
     }));
     function verify() {
       return _verify.apply(this, arguments);
@@ -7143,18 +6786,18 @@ var SignedMessage = /*#__PURE__*/function () {
   SignedMessage.deserialize =
   /*#__PURE__*/
   function () {
-    var _deserialize = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(s) {
-      return _regeneratorRuntime().wrap(function _callee7$(_context7) {
+    var _deserialize = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(s) {
+      return _regeneratorRuntime().wrap(function _callee6$(_context6) {
         while (1) {
-          switch (_context7.prev = _context7.next) {
+          switch (_context6.prev = _context6.next) {
             case 0:
-              return _context7.abrupt("return", SignedMessage.fromSig(s));
+              return _context6.abrupt("return", SignedMessage.fromSig(s));
             case 1:
             case "end":
-              return _context7.stop();
+              return _context6.stop();
           }
         }
-      }, _callee7);
+      }, _callee6);
     }));
     function deserialize(_x5) {
       return _deserialize.apply(this, arguments);
@@ -7162,50 +6805,23 @@ var SignedMessage = /*#__PURE__*/function () {
     return deserialize;
   }();
   SignedMessage.fromString = /*#__PURE__*/function () {
-    var _fromString = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee8(s) {
-      return _regeneratorRuntime().wrap(function _callee8$(_context8) {
+    var _fromString = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(s) {
+      return _regeneratorRuntime().wrap(function _callee7$(_context7) {
         while (1) {
-          switch (_context8.prev = _context8.next) {
+          switch (_context7.prev = _context7.next) {
             case 0:
-              return _context8.abrupt("return", SignedMessage.fromSig(JSON.parse(s)));
+              return _context7.abrupt("return", SignedMessage.fromSig(JSON.parse(s)));
             case 1:
             case "end":
-              return _context8.stop();
+              return _context7.stop();
           }
         }
-      }, _callee8);
+      }, _callee7);
     }));
     function fromString(_x6) {
       return _fromString.apply(this, arguments);
     }
     return fromString;
-  }();
-  SignedMessage.setReaction = /*#__PURE__*/function () {
-    var _setReaction = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee9(gun, msg, reaction) {
-      var hash;
-      return _regeneratorRuntime().wrap(function _callee9$(_context9) {
-        while (1) {
-          switch (_context9.prev = _context9.next) {
-            case 0:
-              _context9.next = 2;
-              return msg.getHash();
-            case 2:
-              hash = _context9.sent;
-              gun.get("reactions").get(hash).put(reaction);
-              gun.get("reactions").get(hash).put(reaction);
-              gun.get("messagesByHash").get(hash).get("reactions").get(this.rootContact.value).put(reaction);
-              gun.get("messagesByHash").get(hash).get("reactions").get(this.rootContact.value).put(reaction);
-            case 7:
-            case "end":
-              return _context9.stop();
-          }
-        }
-      }, _callee9, this);
-    }));
-    function setReaction(_x7, _x8, _x9) {
-      return _setReaction.apply(this, arguments);
-    }
-    return setReaction;
   }();
   return SignedMessage;
 }();
