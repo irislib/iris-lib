@@ -79,7 +79,6 @@ export default class Node extends Actor {
                 }
                 if (key === this.id) {
                     for (const [childKey, childData] of Object.entries(children)) {
-                        console.log('put', childKey, childData);
                         this.get(childKey).doCallbacks(childData, childKey); // TODO children should have proper NodeData
                     }
                 }
@@ -116,7 +115,6 @@ export default class Node extends Actor {
         if (typeof data.value === 'string' && data.value.startsWith('{":":"')) {
             data.value = JSON.parse(data.value)[':'];
         }
-        console.log('doCallbacks', this.id, key, data);
         for (const [id, callback] of this.on_subscriptions) {
             const event = { off: () => this.on_subscriptions.delete(id) };
             callback(data.value, key, null, event);
@@ -128,7 +126,6 @@ export default class Node extends Actor {
         if (this.parent) {
             const parent = this.parent;
             for (const [id, callback] of parent.map_subscriptions) {
-                console.log('map_subscriptions', parent.id, id, key, data);
                 const event = { off: () => parent.map_subscriptions.delete(id) };
                 callback(data.value, key, null, event);
             }
@@ -155,7 +152,6 @@ export default class Node extends Actor {
         this.addParentNodes(updatedNodes, value, updatedAt);
         const put = Put.new(updatedNodes, this);
         this.handle(put);
-        console.log('put', put);
         this.router.postMessage(put);
     }
 
@@ -192,7 +188,8 @@ export default class Node extends Actor {
     map(callback: Function): void {
         const id = this.counter++;
         this.map_subscriptions.set(id, callback);
-        this.request();
+        // TODO: child key should probably still be included. But how to handle link responses?
+        this.router.postMessage(Get.new(this.id, this, undefined));
     }
 
     opt(opts: any) {

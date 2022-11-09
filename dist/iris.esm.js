@@ -1108,12 +1108,12 @@ var Key = /*#__PURE__*/function () {
     return generate;
   }();
   Key.sign = /*#__PURE__*/function () {
-    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(data, _pair, _cb, _opt) {
+    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(_data, _pair, _cb, _opt) {
       return _regeneratorRuntime().wrap(function _callee6$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              return _context6.abrupt("return", data);
+              return _context6.abrupt("return", "asdf{\"m\":" + JSON.stringify(_data) + ",\"s\":\"asdf\"}");
             case 2:
             case "end":
               return _context6.stop();
@@ -1164,9 +1164,61 @@ var Key = /*#__PURE__*/function () {
     }
     return encrypt;
   }();
+  Key.decrypt = /*#__PURE__*/function () {
+    var _decrypt = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee9(_data, _pair, _cb, _opt) {
+      return _regeneratorRuntime().wrap(function _callee9$(_context9) {
+        while (1) {
+          switch (_context9.prev = _context9.next) {
+            case 0:
+              return _context9.abrupt("return", 'asdf');
+            case 2:
+            case "end":
+              return _context9.stop();
+          }
+        }
+      }, _callee9);
+    }));
+    function decrypt(_x18, _x19, _x20, _x21) {
+      return _decrypt.apply(this, arguments);
+    }
+    return decrypt;
+  }();
   Key.verify = function verify(_msg, _pubKey) {
-    //return Gun.SEA.verify(msg.slice(1), pubKey);
     return true;
+    /*
+         (data, pair, cb, opt) => { try {
+      var json = await S.parse(data);
+      if(false === pair){ // don't verify!
+        var raw = await S.parse(json.m);
+        if(cb){ try{ cb(raw) }catch(e){console.log(e)} }
+        return raw;
+      }
+      opt = opt || {};
+      // SEA.I // verify is free! Requires no user permission.
+      var pub = pair.pub || pair;
+      var key = SEA.opt.slow_leak? await SEA.opt.slow_leak(pub) : await (shim.ossl || shim.subtle).importKey('jwk', S.jwk(pub), {name: 'ECDSA', namedCurve: 'P-256'}, false, ['verify']);
+      var hash = await sha(json.m);
+      var buf, sig, check, tmp; try{
+        buf = shim.Buffer.from(json.s, opt.encode || 'base64'); // NEW DEFAULT!
+        sig = new Uint8Array(buf);
+        check = await (shim.ossl || shim.subtle).verify({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, sig, new Uint8Array(hash));
+        if(!check){ throw "Signature did not match." }
+      }catch(e){
+        if(SEA.opt.fallback){
+          return await SEA.opt.fall_verify(data, pair, cb, opt);
+        }
+      }
+      var r = check? await S.parse(json.m) : u;
+           if(cb){ try{ cb(r) }catch(e){console.log(e)} }
+      return r;
+    } catch(e) {
+      console.log(e); // mismatched owner FOR MARTTI
+      SEA.err = e;
+      if(SEA.throw){ throw e }
+      if(cb){ cb() }
+      return;
+    }}
+          */
   };
   return Key;
 }();
@@ -1575,10 +1627,8 @@ var Memory = /*#__PURE__*/function (_Actor) {
   var _proto = Memory.prototype;
   _proto.handle = function handle(message) {
     if (message instanceof Put) {
-      console.log('Memory handle Put', message);
       this.handlePut(message);
     } else if (message instanceof Get) {
-      console.log('Memory handle Get', message);
       this.handleGet(message);
     } else {
       console.log('Memory got unknown message', message);
@@ -1592,19 +1642,9 @@ var Memory = /*#__PURE__*/function (_Actor) {
     var children = this.store.get(message.nodeId);
     if (children) {
       console.log('have', message.nodeId, children);
-      if (message.childKey) {
-        if (children[message.childKey]) {
-          var o = {};
-          o[message.childKey] = children[message.childKey];
-          children = o;
-        }
-      }
       var putMessage = Put.newFromKv(message.nodeId, children, this);
       putMessage.inResponseTo = message.id;
-      console.log('memory sending', putMessage);
       message.from && message.from.postMessage(putMessage);
-    } else {
-      console.log('dont have', message.nodeId);
     }
   };
   _proto.mergeAndSave = function mergeAndSave(nodeName, children) {
@@ -1617,13 +1657,11 @@ var Memory = /*#__PURE__*/function (_Actor) {
         var _Object$entries$_i = _Object$entries[_i],
           key = _Object$entries$_i[0],
           value = _Object$entries$_i[1];
-        console.log('merging', key, value);
         if (existing[key] && existing[key].updatedAt >= value.updatedAt) {
           continue;
         }
         existing[key] = value;
       }
-      console.log('merging', nodeName, existing, children);
       this.store.set(nodeName, existing);
     }
   };
@@ -1745,10 +1783,8 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
   };
   _proto.handle = function handle(message) {
     if (message instanceof Put) {
-      console.log('indexeddb handle Put', message);
       this.handlePut(message);
     } else if (message instanceof Get) {
-      console.log('indexeddb handle Get', message);
       this.handleGet(message);
     } else {
       console.log('worker got unknown message', message);
@@ -1756,7 +1792,6 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
   };
   _proto.handleGet = function handleGet(message) {
     var _this3 = this;
-    console.log('indexeddb handleGet', message);
     if (this.notStored.has(message.nodeId)) {
       // TODO message implying that the key is not stored
       return;
@@ -1769,7 +1804,6 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
       } else {
         var putMessage = Put.newFromKv(message.nodeId, children, _this3);
         putMessage.inResponseTo = message.id;
-        console.log('indexeddb sending', putMessage);
         message.from && message.from.postMessage(putMessage);
       }
     });
@@ -1785,7 +1819,6 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
           var _Object$entries$_i = _Object$entries[_i],
             key = _Object$entries$_i[0],
             value = _Object$entries$_i[1];
-          console.log('merging', key, value);
           if (existing[key] && existing[key].updatedAt >= value.updatedAt) {
             continue;
           }
@@ -1952,7 +1985,6 @@ var Router = /*#__PURE__*/function (_Actor) {
   };
   _proto.handlePut = function handlePut(put) {
     var _this2 = this;
-    console.log('router handlePut', put);
     var sendTo = new Set();
     Object.keys(put.updatedNodes).forEach(function (path) {
       // topic is first 3 nodes of path
@@ -2051,7 +2083,6 @@ var Node = /*#__PURE__*/function (_Actor) {
       if (typeof data.value === 'string' && data.value.startsWith('{":":"')) {
         data.value = JSON.parse(data.value)[':'];
       }
-      console.log('doCallbacks', _this.id, key, data);
       var _loop2 = function _loop2() {
         var _step$value = _step.value,
           id = _step$value[0],
@@ -2080,7 +2111,6 @@ var Node = /*#__PURE__*/function (_Actor) {
             var _step3$value = _step3.value,
               id = _step3$value[0],
               callback = _step3$value[1];
-            console.log('map_subscriptions', parent.id, id, key, data);
             var event = {
               off: function off() {
                 return parent.map_subscriptions["delete"](id);
@@ -2136,7 +2166,6 @@ var Node = /*#__PURE__*/function (_Actor) {
             var _Object$entries2$_i = _Object$entries2[_i2],
               childKey = _Object$entries2$_i[0],
               childData = _Object$entries2$_i[1];
-            console.log('put', childKey, childData);
             this.get(childKey).doCallbacks(childData, childKey); // TODO children should have proper NodeData
           }
         }
@@ -2186,7 +2215,6 @@ var Node = /*#__PURE__*/function (_Actor) {
     this.addParentNodes(updatedNodes, value, updatedAt);
     var put = Put["new"](updatedNodes, this);
     this.handle(put);
-    console.log('put', put);
     this.router.postMessage(put);
   };
   _proto.addParentNodes = function addParentNodes(updatedNodes, value, updatedAt) {
@@ -2241,7 +2269,8 @@ var Node = /*#__PURE__*/function (_Actor) {
   _proto.map = function map(callback) {
     var id = this.counter++;
     this.map_subscriptions.set(id, callback);
-    this.request();
+    // TODO: child key should probably still be included. But how to handle link responses?
+    this.router.postMessage(Get["new"](this.id, this, undefined));
   };
   _proto.opt = function opt(opts) {
     this.router.opt(opts);

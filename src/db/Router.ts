@@ -57,7 +57,6 @@ export default class Router extends Actor {
     }
 
     handlePut(put: Put) {
-        console.log('router handlePut', put);
         const sendTo: Set<Actor> = new Set();
         Object.keys(put.updatedNodes).forEach(path => {
             // topic is first 3 nodes of path

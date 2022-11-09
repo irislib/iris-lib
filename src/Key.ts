@@ -133,7 +133,7 @@ class Key {
     }
   }
 
-  static async sign(data: any, _pair: any, _cb?: Function, _opt = {}) {
+  static async sign(_data: any, _pair: any, _cb?: Function, _opt = {}) {
   /*
     try {
       if(undefined === data){ throw '`undefined` not allowed.' }
@@ -156,7 +156,7 @@ class Key {
       if(cb){ cb() }
       return;
     }     */
-    return data;
+    return `asdf{"m":${JSON.stringify(_data)},"s":"asdf"}`;
   }
 
   static async secret(_pub: any, _pair: any) {
@@ -218,9 +218,84 @@ class Key {
     return '';
   }
 
+  static async decrypt(_data: any, _pair: any, _cb?: Function, _opt = {}) {
+    return 'asdf';
+    /*
+    try {
+      opt = opt || {};
+      var key = (pair||opt).epriv || pair;
+      if(!key){
+        if(!SEA.I){ throw 'No decryption key.' }
+        pair = await SEA.I(null, {what: data, how: 'decrypt', why: opt.why});
+        key = pair.epriv || pair;
+      }
+      var json = await S.parse(data);
+      var buf, bufiv, bufct; try{
+        buf = shim.Buffer.from(json.s, opt.encode || 'base64');
+        bufiv = shim.Buffer.from(json.iv, opt.encode || 'base64');
+        bufct = shim.Buffer.from(json.ct, opt.encode || 'base64');
+        var ct = await aeskey(key, buf, opt).then((aes) => (shim.subtle).decrypt({  // Keeping aesKey scope as private as possible...
+          name: opt.name || 'AES-GCM', iv: new Uint8Array(bufiv), tagLength: 128
+        }, aes, new Uint8Array(bufct)));
+      }catch(e){
+        if('utf8' === opt.encode){ throw "Could not decrypt" }
+        if(SEA.opt.fallback){
+          opt.encode = 'utf8';
+          return await SEA.decrypt(data, pair, cb, opt);
+        }
+      }
+      var r = await S.parse(new shim.TextDecoder('utf8').decode(ct));
+      if(cb){ try{ cb(r) }catch(e){console.log(e)} }
+      return r;
+    } catch(e) {
+      console.log(e);
+      SEA.err = e;
+      if(SEA.throw){ throw e }
+      if(cb){ cb() }
+      return;
+    }
+    */
+  }
+
   static verify(_msg: any, _pubKey: any) {
-    //return Gun.SEA.verify(msg.slice(1), pubKey);
     return true;
+    /*
+
+    (data, pair, cb, opt) => { try {
+      var json = await S.parse(data);
+      if(false === pair){ // don't verify!
+        var raw = await S.parse(json.m);
+        if(cb){ try{ cb(raw) }catch(e){console.log(e)} }
+        return raw;
+      }
+      opt = opt || {};
+      // SEA.I // verify is free! Requires no user permission.
+      var pub = pair.pub || pair;
+      var key = SEA.opt.slow_leak? await SEA.opt.slow_leak(pub) : await (shim.ossl || shim.subtle).importKey('jwk', S.jwk(pub), {name: 'ECDSA', namedCurve: 'P-256'}, false, ['verify']);
+      var hash = await sha(json.m);
+      var buf, sig, check, tmp; try{
+        buf = shim.Buffer.from(json.s, opt.encode || 'base64'); // NEW DEFAULT!
+        sig = new Uint8Array(buf);
+        check = await (shim.ossl || shim.subtle).verify({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, sig, new Uint8Array(hash));
+        if(!check){ throw "Signature did not match." }
+      }catch(e){
+        if(SEA.opt.fallback){
+          return await SEA.opt.fall_verify(data, pair, cb, opt);
+        }
+      }
+      var r = check? await S.parse(json.m) : u;
+
+      if(cb){ try{ cb(r) }catch(e){console.log(e)} }
+      return r;
+    } catch(e) {
+      console.log(e); // mismatched owner FOR MARTTI
+      SEA.err = e;
+      if(SEA.throw){ throw e }
+      if(cb){ cb() }
+      return;
+    }}
+
+     */
   }
 }
 

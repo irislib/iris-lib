@@ -16,10 +16,8 @@ export default class Memory extends Actor {
 
     handle(message: Message) {
         if (message instanceof Put) {
-            console.log('Memory handle Put', message);
             this.handlePut(message);
         } else if (message instanceof Get) {
-            console.log('Memory handle Get', message);
             this.handleGet(message);
         } else {
             console.log('Memory got unknown message', message);
@@ -34,19 +32,11 @@ export default class Memory extends Actor {
         let children = this.store.get(message.nodeId);
         if (children) {
             console.log('have', message.nodeId, children);
-            if (message.childKey) {
-                if (children[message.childKey]) {
-                    const o: Children = {};
-                    o[message.childKey] = children[message.childKey];
-                    children = o;
-                }
-            }
             const putMessage = Put.newFromKv(message.nodeId, children, this);
             putMessage.inResponseTo = message.id;
-            console.log('memory sending', putMessage);
             message.from && message.from.postMessage(putMessage);
         } else {
-            console.log('dont have', message.nodeId);
+            //console.log('dont have', message.nodeId);
         }
     }
 
@@ -58,13 +48,11 @@ export default class Memory extends Actor {
             this.store.set(nodeName, children);
         } else {
             for (const [key, value] of Object.entries(children)) {
-                console.log('merging', key, value);
                 if (existing[key] && existing[key].updatedAt >= value.updatedAt) {
                     continue;
                 }
                 existing[key] = value;
             }
-            console.log('merging', nodeName, existing, children);
             this.store.set(nodeName, existing);
         }
     }
