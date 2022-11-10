@@ -4,6 +4,7 @@ import QuickLRU from 'quick-lru';
 import {Children} from "../Node";
 //import {NodeData} from "../Node";
 // import * as Comlink from "comlink";
+import _ from '../../lodash';
 
 export default class Memory extends Actor {
     config = {};

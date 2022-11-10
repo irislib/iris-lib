@@ -12,10 +12,11 @@ declare class Key {
         epub: any;
         epriv: any;
     } | undefined>;
-    static sign(_data: any, _pair: any, _cb?: Function, _opt?: {}): Promise<string>;
+    private static keyToJwk;
+    static sign(data: any, pair: any, cb?: Function, opt?: any): Promise<any>;
+    static verify(data: any, pair: any, cb?: Function, opt?: any): Promise<any>;
     static secret(_pub: any, _pair: any): Promise<string>;
     static encrypt(_data: any, _pair: any, _cb?: Function, _opt?: {}): Promise<string>;
     static decrypt(_data: any, _pair: any, _cb?: Function, _opt?: {}): Promise<string>;
-    static verify(_msg: any, _pubKey: any): boolean;
 }
 export default Key;

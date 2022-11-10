@@ -1112,14 +1112,81 @@ var Key = /*#__PURE__*/function () {
     }
     return generate;
   }();
+  Key.keyToJwk = function keyToJwk(key) {
+    if (typeof key === 'string') {
+      key = {
+        pub: key
+      };
+    }
+    var jwk = {
+      kty: 'EC',
+      crv: 'P-256',
+      x: key.pub.split('.')[0],
+      y: key.pub.split('.')[1],
+      ext: true
+    };
+    jwk.key_ops = key.priv ? ['sign'] : ['verify'];
+    if (key.priv) {
+      jwk.d = key.priv;
+    }
+    return jwk;
+  };
   Key.sign = /*#__PURE__*/function () {
-    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(_data, _pair, _cb, _opt) {
+    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(data, pair, cb, opt) {
+      var jwk, hash, sig, r;
       return _regeneratorRuntime().wrap(function _callee6$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              return _context6.abrupt("return", "asdf{\"m\":" + JSON.stringify(_data) + ",\"s\":\"asdf\"}");
-            case 2:
+              if (opt === void 0) {
+                opt = {};
+              }
+              if (!(undefined === data)) {
+                _context6.next = 3;
+                break;
+              }
+              throw '`undefined` not allowed.';
+            case 3:
+              if (typeof data === 'object') {
+                data = JSON.stringify(data);
+              }
+              jwk = Key.keyToJwk(pair);
+              console.log('signing with jwk', jwk);
+              _context6.next = 8;
+              return util.getHash(data);
+            case 8:
+              hash = _context6.sent;
+              _context6.next = 11;
+              return window.crypto.subtle.importKey('jwk', jwk, {
+                name: 'ECDSA',
+                namedCurve: 'P-256'
+              }, false, ['sign']).then(function (key) {
+                return window.crypto.subtle.sign({
+                  name: 'ECDSA',
+                  hash: {
+                    name: 'SHA-256'
+                  }
+                }, key, new Uint8Array(hash));
+              });
+            case 11:
+              sig = _context6.sent;
+              // privateKey scope doesn't leak out from here!
+              r = {
+                m: JSON.stringify(data),
+                s: Buffer.from(sig).toString(opt.encode || 'base64')
+              };
+              if (!opt.raw) {
+                r = 'aSEA' + JSON.stringify(r);
+              }
+              if (cb) {
+                try {
+                  cb(r);
+                } catch (e) {
+                  console.log(e);
+                }
+              }
+              return _context6.abrupt("return", r);
+            case 16:
             case "end":
               return _context6.stop();
           }
@@ -1131,46 +1198,92 @@ var Key = /*#__PURE__*/function () {
     }
     return sign;
   }();
-  Key.secret = /*#__PURE__*/function () {
-    var _secret = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(_pub, _pair) {
+  Key.verify = /*#__PURE__*/function () {
+    var _verify = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(data, pair, cb, opt) {
+      var pub, jwk, key, hash, buf, sig, isValid, r;
       return _regeneratorRuntime().wrap(function _callee7$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              return _context7.abrupt("return", 'asdf');
-            case 1:
+              if (opt === void 0) {
+                opt = {};
+              }
+              _context7.prev = 1;
+              if (typeof data === 'string') {
+                console.log('verifying string', data.slice(4));
+                data = JSON.parse(data.slice(4));
+              }
+              pub = pair.pub || pair;
+              jwk = Key.keyToJwk(pub);
+              _context7.next = 7;
+              return crypto.subtle.importKey('jwk', jwk, {
+                name: 'ECDSA',
+                namedCurve: 'P-256'
+              }, false, ['verify']);
+            case 7:
+              key = _context7.sent;
+              _context7.next = 10;
+              return util.getHash(data.m);
+            case 10:
+              hash = _context7.sent;
+              buf = Buffer.from(data.s, opt.encode || 'base64'); // NEW DEFAULT!
+              sig = new Uint8Array(buf);
+              _context7.next = 15;
+              return crypto.subtle.verify({
+                name: 'ECDSA',
+                hash: {
+                  name: 'SHA-256'
+                }
+              }, key, sig, new Uint8Array(hash));
+            case 15:
+              isValid = _context7.sent;
+              r = isValid ? JSON.parse(data.m) : undefined;
+              if (cb) {
+                try {
+                  cb(r);
+                } catch (e) {
+                  console.log(e);
+                }
+              }
+              return _context7.abrupt("return", r);
+            case 21:
+              _context7.prev = 21;
+              _context7.t0 = _context7["catch"](1);
+              console.log(_context7.t0);
+              return _context7.abrupt("return", undefined);
+            case 25:
             case "end":
               return _context7.stop();
           }
         }
-      }, _callee7);
+      }, _callee7, null, [[1, 21]]);
     }));
-    function secret(_x12, _x13) {
-      return _secret.apply(this, arguments);
+    function verify(_x12, _x13, _x14, _x15) {
+      return _verify.apply(this, arguments);
     }
-    return secret;
+    return verify;
   }();
-  Key.encrypt = /*#__PURE__*/function () {
-    var _encrypt = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee8(_data, _pair, _cb, _opt) {
+  Key.secret = /*#__PURE__*/function () {
+    var _secret = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee8(_pub, _pair) {
       return _regeneratorRuntime().wrap(function _callee8$(_context8) {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
               return _context8.abrupt("return", 'asdf');
-            case 2:
+            case 1:
             case "end":
               return _context8.stop();
           }
         }
       }, _callee8);
     }));
-    function encrypt(_x14, _x15, _x16, _x17) {
-      return _encrypt.apply(this, arguments);
+    function secret(_x16, _x17) {
+      return _secret.apply(this, arguments);
     }
-    return encrypt;
+    return secret;
   }();
-  Key.decrypt = /*#__PURE__*/function () {
-    var _decrypt = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee9(_data, _pair, _cb, _opt) {
+  Key.encrypt = /*#__PURE__*/function () {
+    var _encrypt = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee9(_data, _pair, _cb, _opt) {
       return _regeneratorRuntime().wrap(function _callee9$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
@@ -1183,48 +1296,30 @@ var Key = /*#__PURE__*/function () {
         }
       }, _callee9);
     }));
-    function decrypt(_x18, _x19, _x20, _x21) {
+    function encrypt(_x18, _x19, _x20, _x21) {
+      return _encrypt.apply(this, arguments);
+    }
+    return encrypt;
+  }();
+  Key.decrypt = /*#__PURE__*/function () {
+    var _decrypt = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee10(_data, _pair, _cb, _opt) {
+      return _regeneratorRuntime().wrap(function _callee10$(_context10) {
+        while (1) {
+          switch (_context10.prev = _context10.next) {
+            case 0:
+              return _context10.abrupt("return", 'asdf');
+            case 2:
+            case "end":
+              return _context10.stop();
+          }
+        }
+      }, _callee10);
+    }));
+    function decrypt(_x22, _x23, _x24, _x25) {
       return _decrypt.apply(this, arguments);
     }
     return decrypt;
   }();
-  Key.verify = function verify(_msg, _pubKey) {
-    return true;
-    /*
-         (data, pair, cb, opt) => { try {
-      var json = await S.parse(data);
-      if(false === pair){ // don't verify!
-        var raw = await S.parse(json.m);
-        if(cb){ try{ cb(raw) }catch(e){console.log(e)} }
-        return raw;
-      }
-      opt = opt || {};
-      // SEA.I // verify is free! Requires no user permission.
-      var pub = pair.pub || pair;
-      var key = SEA.opt.slow_leak? await SEA.opt.slow_leak(pub) : await (shim.ossl || shim.subtle).importKey('jwk', S.jwk(pub), {name: 'ECDSA', namedCurve: 'P-256'}, false, ['verify']);
-      var hash = await sha(json.m);
-      var buf, sig, check, tmp; try{
-        buf = shim.Buffer.from(json.s, opt.encode || 'base64'); // NEW DEFAULT!
-        sig = new Uint8Array(buf);
-        check = await (shim.ossl || shim.subtle).verify({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, sig, new Uint8Array(hash));
-        if(!check){ throw "Signature did not match." }
-      }catch(e){
-        if(SEA.opt.fallback){
-          return await SEA.opt.fall_verify(data, pair, cb, opt);
-        }
-      }
-      var r = check? await S.parse(json.m) : u;
-           if(cb){ try{ cb(r) }catch(e){console.log(e)} }
-      return r;
-    } catch(e) {
-      console.log(e); // mismatched owner FOR MARTTI
-      SEA.err = e;
-      if(SEA.throw){ throw e }
-      if(cb){ cb() }
-      return;
-    }}
-          */
-  };
   return Key;
 }();
 
@@ -1617,8 +1712,6 @@ var Hi = /*#__PURE__*/function () {
   return Hi;
 }();
 
-//import {NodeData} from "../Node";
-// import * as Comlink from "comlink";
 var Memory = /*#__PURE__*/function (_Actor) {
   _inheritsLoose(Memory, _Actor);
   function Memory(config) {

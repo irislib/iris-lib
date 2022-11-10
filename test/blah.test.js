@@ -6,6 +6,10 @@ Object.defineProperty(global.self, "crypto", {
   },
 });
 
+const util = require('util');
+global.TextEncoder = util.TextEncoder;
+global.TextDecoder = util.TextDecoder;
+
 // TODO: gun causes unnecessary modules like aws-sdk to be loaded and the tests won't run
 require("fake-indexeddb/auto");
 const iris = require('../dist/iris.umd.development.js').default; // can we test directly from ../src directory? requires some jest config, but would enable testing without building
@@ -23,14 +27,18 @@ describe('iris', () => {
       const key = await iris.Key.generate();
       expect(key).toBeDefined();
     });
+    it('should not verify with a bad signature', async () => {
+      const key = await iris.Key.generate();
+      const signedMsg = 'bad message';
+      const notVerified = await iris.Key.verify(signedMsg, key);
+      expect(notVerified).toBe(undefined);
+    });
     it('should sign and verify', async () => {
       const key = await iris.Key.generate();
       const msg = 'hello';
-      const sig = await iris.Key.sign(msg, key);
-      const notVerified = await iris.Key.verify(msg, 'this is a bad signature', key);
-      const verified = await iris.Key.verify(msg, sig, key);
-      expect(verified).toBe(true);
-      expect(notVerified).toBe(false);
+      const signedMsg = await iris.Key.sign(msg, key);
+      const verified = await iris.Key.verify(signedMsg, key);
+      expect(verified).toBe(msg);
     });
   });
 

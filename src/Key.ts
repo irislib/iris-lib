@@ -133,30 +133,65 @@ class Key {
     }
   }
 
-  static async sign(_data: any, _pair: any, _cb?: Function, _opt = {}) {
-  /*
+  private static keyToJwk(key: any): JsonWebKey {
+    if (typeof key === 'string') {
+      key = { pub: key };
+    }
+    const jwk: JsonWebKey = {
+      kty: 'EC',
+      crv: 'P-256',
+      x: key.pub.split('.')[0],
+      y: key.pub.split('.')[1],
+      ext: true,
+    };
+    jwk.key_ops = key.priv ? ['sign'] : ['verify'];
+    if (key.priv) {
+      jwk.d = key.priv
+    }
+    return jwk;
+  }
+
+  static async sign(data: any, pair: any, cb?: Function, opt: any = {}) {
+    if(undefined === data){ throw '`undefined` not allowed.' }
+    if (typeof data === 'object') {
+      data = JSON.stringify(data);
+    }
+    var jwk = Key.keyToJwk(pair);
+    console.log('signing with jwk', jwk);
+    var hash = await util.getHash(data);
+    var sig = await window.crypto.subtle.importKey('jwk', jwk, {name: 'ECDSA', namedCurve: 'P-256'}, false, ['sign'])
+    .then((key) =>
+      window.crypto.subtle.sign({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, new Uint8Array(hash as any))
+    ) // privateKey scope doesn't leak out from here!
+    var r: any = {m: JSON.stringify(data), s: Buffer.from(sig).toString(opt.encode || 'base64')}
+    if(!opt.raw){ r = 'aSEA' + JSON.stringify(r) }
+
+    if(cb){ try{ cb(r) }catch(e){console.log(e)} }
+    return r;
+  }
+
+  static async verify(data: any, pair: any, cb?: Function, opt: any = {}) {
     try {
-      if(undefined === data){ throw '`undefined` not allowed.' }
-      var json = await JSON.parse(data);
-      var pub = pair.pub;
-      var priv = pair.priv;
-      var jwk = S.jwk(pub, priv);
-      var hash = await sha(json);
-      var sig = await window.crypto.subtle.importKey('jwk', jwk, {name: 'ECDSA', namedCurve: 'P-256'}, false, ['sign'])
-      .then((key) => window.crypto.subtle.sign({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, new Uint8Array(hash))) // privateKey scope doesn't leak out from here!
-      var r = {m: json, s: shim.Buffer.from(sig, 'binary').toString(opt.encode || 'base64')}
-      if(!opt.raw){ r = 'SEA' + await shim.stringify(r) }
+      if (typeof data === 'string') {
+        console.log('verifying string', data.slice(4));
+        data = JSON.parse(data.slice(4));
+      }
+      var pub = pair.pub || pair;
+      var jwk = Key.keyToJwk(pub);
+      var key = await crypto.subtle.importKey('jwk', jwk, {name: 'ECDSA', namedCurve: 'P-256'}, false, ['verify']);
+      var hash: any = await util.getHash(data.m);
+      var buf, sig, isValid;
+      buf = Buffer.from(data.s, opt.encode || 'base64'); // NEW DEFAULT!
+      sig = new Uint8Array(buf);
+      isValid = await crypto.subtle.verify({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, sig, new Uint8Array(hash));
+      var r = isValid? JSON.parse(data.m) : undefined;
 
       if(cb){ try{ cb(r) }catch(e){console.log(e)} }
       return r;
-    } catch(e) {
+    } catch (e) {
       console.log(e);
-      SEA.err = e;
-      if(SEA.throw){ throw e }
-      if(cb){ cb() }
-      return;
-    }     */
-    return `asdf{"m":${JSON.stringify(_data)},"s":"asdf"}`;
+      return undefined;
+    }
   }
 
   static async secret(_pub: any, _pair: any) {
@@ -255,47 +290,6 @@ class Key {
       return;
     }
     */
-  }
-
-  static verify(_msg: any, _pubKey: any) {
-    return true;
-    /*
-
-    (data, pair, cb, opt) => { try {
-      var json = await S.parse(data);
-      if(false === pair){ // don't verify!
-        var raw = await S.parse(json.m);
-        if(cb){ try{ cb(raw) }catch(e){console.log(e)} }
-        return raw;
-      }
-      opt = opt || {};
-      // SEA.I // verify is free! Requires no user permission.
-      var pub = pair.pub || pair;
-      var key = SEA.opt.slow_leak? await SEA.opt.slow_leak(pub) : await (shim.ossl || shim.subtle).importKey('jwk', S.jwk(pub), {name: 'ECDSA', namedCurve: 'P-256'}, false, ['verify']);
-      var hash = await sha(json.m);
-      var buf, sig, check, tmp; try{
-        buf = shim.Buffer.from(json.s, opt.encode || 'base64'); // NEW DEFAULT!
-        sig = new Uint8Array(buf);
-        check = await (shim.ossl || shim.subtle).verify({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, sig, new Uint8Array(hash));
-        if(!check){ throw "Signature did not match." }
-      }catch(e){
-        if(SEA.opt.fallback){
-          return await SEA.opt.fall_verify(data, pair, cb, opt);
-        }
-      }
-      var r = check? await S.parse(json.m) : u;
-
-      if(cb){ try{ cb(r) }catch(e){console.log(e)} }
-      return r;
-    } catch(e) {
-      console.log(e); // mismatched owner FOR MARTTI
-      SEA.err = e;
-      if(SEA.throw){ throw e }
-      if(cb){ cb() }
-      return;
-    }}
-
-     */
   }
 }
 
