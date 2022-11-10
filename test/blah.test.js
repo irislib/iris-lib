@@ -1,3 +1,11 @@
+const crypto = require('crypto');
+
+Object.defineProperty(global.self, "crypto", {
+  value: {
+    subtle: crypto.webcrypto.subtle,
+  },
+});
+
 // TODO: gun causes unnecessary modules like aws-sdk to be loaded and the tests won't run
 require("fake-indexeddb/auto");
 const iris = require('../dist/iris.umd.development.js').default; // can we test directly from ../src directory? requires some jest config, but would enable testing without building
@@ -10,6 +18,22 @@ console.log('Gun', Gun);
  */
 
 describe('iris', () => {
+  describe('key', () => {
+    it('should generate a key', async () => {
+      const key = await iris.Key.generate();
+      expect(key).toBeDefined();
+    });
+    it('should sign and verify', async () => {
+      const key = await iris.Key.generate();
+      const msg = 'hello';
+      const sig = await iris.Key.sign(msg, key);
+      const notVerified = await iris.Key.verify(msg, 'this is a bad signature', key);
+      const verified = await iris.Key.verify(msg, sig, key);
+      expect(verified).toBe(true);
+      expect(notVerified).toBe(false);
+    });
+  });
+
   describe('global', () => {
     it('first put then on', (done) => {
       iris.global().get('profile').get('name').put('Caleb');

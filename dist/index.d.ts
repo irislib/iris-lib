@@ -6,6 +6,7 @@ import privateState from './private';
 import SignedMessage from './SignedMessage';
 import Channel from './Channel';
 import Node from './db/Node';
+import Key from './Key';
 declare const _default: {
     local: typeof local;
     global: typeof global;
@@ -94,7 +95,6 @@ declare const _default: {
         base64ToHex(str: string): string;
         arrayBufferToBase64(buffer: any): string;
         getCaret(el: HTMLInputElement): any;
-        injectCss(): void;
         getUrlParameter(sParam: string, sParams: string): string | true | undefined;
         formatTime(date: Date): any;
         formatDate(date: Date): string;
@@ -130,5 +130,6 @@ declare const _default: {
     SignedMessage: typeof SignedMessage;
     Channel: typeof Channel;
     Node: typeof Node;
+    Key: typeof Key;
 };
 export default _default;

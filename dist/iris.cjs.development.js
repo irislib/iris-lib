@@ -1319,6 +1319,7 @@ var peers = {
     peerFromGun.url = '';
   },
   save: function save() {
+    // TODO store them in iris.local() instead of localStorage
     localStorage.setItem('gunPeers', JSON.stringify(this.known));
   },
   getSaved: function getSaved() {
@@ -1378,7 +1379,6 @@ var peers = {
     var sample = _.sampleSize(Object.keys(_.pickBy(this.known, function (peer, url) {
       return url && !_this2.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
     })), sampleSize);
-    console.log('random sample', sample, 'from', this.known);
     if (sample && connectToLocalElectron) {
       sample.push(ELECTRON_GUN_URL);
     }
@@ -6876,7 +6876,8 @@ var index = {
   notifications: notifications,
   SignedMessage: SignedMessage,
   Channel: Channel,
-  Node: Node
+  Node: Node,
+  Key: Key
 };
 
 exports.default = index;

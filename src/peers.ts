@@ -77,6 +77,7 @@ export default {
   },
 
   save() {
+    // TODO store them in iris.local() instead of localStorage
     localStorage.setItem('gunPeers', JSON.stringify(this.known));
   },
 
@@ -138,7 +139,6 @@ export default {
         })
       ), sampleSize
     );
-    console.log('random sample', sample, 'from', this.known);
     if (sample && connectToLocalElectron) {
       sample.push(ELECTRON_GUN_URL);
     }
