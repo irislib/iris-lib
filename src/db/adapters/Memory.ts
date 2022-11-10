@@ -31,7 +31,7 @@ export default class Memory extends Actor {
         }
         let children = this.store.get(message.nodeId);
         if (children) {
-            console.log('have', message.nodeId, children);
+            //console.log('have', message.nodeId, children);
             const putMessage = Put.newFromKv(message.nodeId, children, this);
             putMessage.inResponseTo = message.id;
             message.from && message.from.postMessage(putMessage);

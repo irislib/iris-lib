@@ -160,7 +160,7 @@ class Key {
   }
 
   static async secret(_pub: any, _pair: any) {
-    return '';
+    return 'asdf';
     /*
     // ecdh secret
 

@@ -1861,7 +1861,6 @@ export default {
     if (format === `hex`) {
       return this.base64ToHex(hash);
     }
-    console.log('hash', hash);
     return hash;
   },
 

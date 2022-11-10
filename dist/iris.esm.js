@@ -606,9 +606,8 @@ var util = {
               }
               return _context.abrupt("return", _this.base64ToHex(hash));
             case 11:
-              console.log('hash', hash);
               return _context.abrupt("return", hash);
-            case 13:
+            case 12:
             case "end":
               return _context.stop();
           }
@@ -1132,7 +1131,7 @@ var Key = /*#__PURE__*/function () {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              return _context7.abrupt("return", '');
+              return _context7.abrupt("return", 'asdf');
             case 1:
             case "end":
               return _context7.stop();
@@ -1228,16 +1227,18 @@ var maxConnectedPeers = 1;
 var DEFAULT_PEERS = {
   'wss://gun-rs.iris.to/gun': {}
 };
-var loc = window.location;
-var host = loc.host;
-var is_localhost_but_not_dev = /*#__PURE__*/host.startsWith('localhost') && host !== 'localhost:8080';
-if (loc.hostname.endsWith('herokuapp.com') || is_localhost_but_not_dev) {
-  Object.keys(DEFAULT_PEERS).forEach(function (url) {
-    return DEFAULT_PEERS[url].enabled = false;
-  });
-  DEFAULT_PEERS[loc.origin + "/gun"] = {
-    enabled: true
-  };
+if (self.window) {
+  var loc = window.location;
+  var host = loc.host;
+  var is_localhost_but_not_dev = /*#__PURE__*/host.startsWith('localhost') && host !== 'localhost:8080';
+  if (loc.hostname.endsWith('herokuapp.com') || is_localhost_but_not_dev) {
+    Object.keys(DEFAULT_PEERS).forEach(function (url) {
+      return DEFAULT_PEERS[url].enabled = false;
+    });
+    DEFAULT_PEERS[loc.origin + "/gun"] = {
+      enabled: true
+    };
+  }
 }
 /**
  * Networking and peer management utilities
@@ -1641,7 +1642,7 @@ var Memory = /*#__PURE__*/function (_Actor) {
     }
     var children = this.store.get(message.nodeId);
     if (children) {
-      console.log('have', message.nodeId, children);
+      //console.log('have', message.nodeId, children);
       var putMessage = Put.newFromKv(message.nodeId, children, this);
       putMessage.inResponseTo = message.id;
       message.from && message.from.postMessage(putMessage);
