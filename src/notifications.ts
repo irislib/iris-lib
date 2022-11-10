@@ -137,7 +137,6 @@ async function addWebPushSubscription(s, saveToGun = true) {
   const mySecret = await Key.secret(myKey.epub, myKey);
   const enc = await Key.encrypt(s, mySecret);
   const hash = await util.getHash(JSON.stringify(s));
-  console.log('hash', hash);
   if (saveToGun) {
     publicState().user().get('webPushSubscriptions').get(hash).put(enc);
   }

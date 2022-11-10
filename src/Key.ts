@@ -215,7 +215,7 @@ class Key {
       return;
     }
     */
-    return '';
+    return 'asdf';
   }
 
   static async decrypt(_data: any, _pair: any, _cb?: Function, _opt = {}) {

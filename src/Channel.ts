@@ -883,7 +883,7 @@ class Channel {
   }
 
   async createChatLink(urlRoot = 'https://iris.to/') {
-    const sharedKey = await Key.pair();
+    const sharedKey = await Key.generate();
     const sharedKeyString = JSON.stringify(sharedKey);
     const sharedSecret = await Key.secret(sharedKey.epub, sharedKey);
     const encryptedSharedKey = await Key.encrypt(sharedKeyString, sharedSecret);
@@ -961,7 +961,7 @@ class Channel {
 
     // We create a new Gun user whose private key is shared with the chat link recipients.
     // Chat link recipients can contact you by writing their public key to the shared key's user space.
-    const sharedKey = await Key.pair();
+    const sharedKey = await Key.generate();
     const sharedKeyString = JSON.stringify(sharedKey);
     const sharedSecret = await Key.secret(sharedKey.epub, sharedKey);
     const encryptedSharedKey = await Key.encrypt(sharedKeyString, sharedSecret);

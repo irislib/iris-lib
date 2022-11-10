@@ -1156,7 +1156,7 @@ var Key = /*#__PURE__*/function () {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
-              return _context8.abrupt("return", '');
+              return _context8.abrupt("return", 'asdf');
             case 2:
             case "end":
               return _context8.stop();
@@ -4503,7 +4503,7 @@ var Channel = /*#__PURE__*/function () {
                 urlRoot = 'https://iris.to/';
               }
               _context47.next = 3;
-              return Key.pair();
+              return Key.generate();
             case 3:
               sharedKey = _context47.sent;
               sharedKeyString = JSON.stringify(sharedKey);
@@ -4647,7 +4647,7 @@ var Channel = /*#__PURE__*/function () {
               key = session.getKey(); // We create a new Gun user whose private key is shared with the chat link recipients.
               // Chat link recipients can contact you by writing their public key to the shared key's user space.
               _context48.next = 5;
-              return Key.pair();
+              return Key.generate();
             case 5:
               sharedKey = _context48.sent;
               sharedKeyString = JSON.stringify(sharedKey);
@@ -5321,13 +5321,12 @@ function _addWebPushSubscription() {
             return util.getHash(JSON.stringify(s));
           case 10:
             hash = _context5.sent;
-            console.log('hash', hash);
             if (saveToGun) {
               global$1().user().get('webPushSubscriptions').get(hash).put(enc);
             }
             webPushSubscriptions[hash] = s;
             addWebPushSubscriptionsToChats();
-          case 15:
+          case 14:
           case "end":
             return _context5.stop();
         }

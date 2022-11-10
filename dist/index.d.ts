@@ -94,7 +94,6 @@ declare const _default: {
         base64ToHex(str: string): string;
         arrayBufferToBase64(buffer: any): string;
         getCaret(el: HTMLInputElement): any;
-        injectCss(): void;
         getUrlParameter(sParam: string, sParams: string): string | true | undefined;
         formatTime(date: Date): any;
         formatDate(date: Date): string;
