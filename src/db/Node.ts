@@ -112,7 +112,7 @@ export default class Node extends Actor {
     }
 
     doCallbacks = (data: NodeData, key: string) => {
-        if (typeof data.value === 'string' && data.value.startsWith('{":":"')) {
+        if (typeof data.value === 'string' && data.value.startsWith('{":":')) {
             data.value = JSON.parse(data.value)[':'];
         }
         for (const [id, callback] of this.on_subscriptions) {

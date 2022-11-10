@@ -102,6 +102,9 @@ export default {
 
   /** */
   connect(url: string) {
+    if (!url) {
+      return;
+    }
     if (this.isMixedContent(url)) { return; }
     if (this.known[url]) {
       this.known[url].enabled = true;

@@ -1337,6 +1337,9 @@ var peers = {
     this.known = this.getSaved();
   },
   /** */connect: function connect(url) {
+    if (!url) {
+      return;
+    }
     if (this.isMixedContent(url)) {
       return;
     }
@@ -2081,7 +2084,7 @@ var Node = /*#__PURE__*/function (_Actor) {
     _this.map_subscriptions = new Map();
     _this.counter = 0;
     _this.doCallbacks = function (data, key) {
-      if (typeof data.value === 'string' && data.value.startsWith('{":":"')) {
+      if (typeof data.value === 'string' && data.value.startsWith('{":":')) {
         data.value = JSON.parse(data.value)[':'];
       }
       var _loop2 = function _loop2() {
