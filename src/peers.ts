@@ -134,7 +134,7 @@ export default {
     const sample = _.sampleSize(
       Object.keys(
         _.pickBy(this.known, (peer: any, url: string) => {
-          return !this.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
+          return url && !this.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
         })
       ), sampleSize
     );

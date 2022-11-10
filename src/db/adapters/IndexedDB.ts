@@ -5,6 +5,7 @@ import Dexie from 'dexie';
 import {Children, NodeData} from "../Node";
 // import * as Comlink from "comlink";
 
+// TODO: add LRU or other eviction policy, clean up least important data when db gets too big
 class MyDexie extends Dexie {
     nodes: Dexie.Table<NodeData, string>;
     constructor(dbName: string) {
@@ -47,7 +48,9 @@ export default class IndexedDB extends Actor {
             this.notStored.delete(key);
             return this.putQueue[key];
         });
-        this.db.nodes.bulkPut(values, keys);
+        this.db.nodes.bulkPut(values, keys).catch((err) => {
+            console.error(err);
+        });
         this.putQueue = {};
     }, 500);
 

@@ -1370,7 +1370,7 @@ var peers = {
     var connectToLocalElectron = util.isElectron && this.known[ELECTRON_GUN_URL] && this.known[ELECTRON_GUN_URL].enabled !== false;
     var sampleSize = connectToLocalElectron ? Math.max(maxConnectedPeers - 1, 1) : maxConnectedPeers;
     var sample = _.sampleSize(Object.keys(_.pickBy(this.known, function (peer, url) {
-      return !_this2.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
+      return url && !_this2.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
     })), sampleSize);
     console.log('random sample', sample, 'from', this.known);
     if (sample && connectToLocalElectron) {
@@ -1712,6 +1712,7 @@ var Memory = /*#__PURE__*/function (_Actor) {
 }(Actor);
 
 // import * as Comlink from "comlink";
+// TODO: add LRU or other eviction policy, clean up least important data when db gets too big
 var MyDexie = /*#__PURE__*/function (_Dexie) {
   _inheritsLoose(MyDexie, _Dexie);
   function MyDexie(dbName) {
@@ -1745,7 +1746,9 @@ var IndexedDB = /*#__PURE__*/function (_Actor) {
         _this2.notStored["delete"](key);
         return _this2.putQueue[key];
       });
-      _this2.db.nodes.bulkPut(values, keys);
+      _this2.db.nodes.bulkPut(values, keys)["catch"](function (err) {
+        console.error(err);
+      });
       _this2.putQueue = {};
     }, 500);
     _this2.throttledGet = _.throttle(function () {
