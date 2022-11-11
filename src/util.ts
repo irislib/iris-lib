@@ -1850,13 +1850,22 @@ const adjectives = [
 
 export default {
   gunOnceDefined,
-  async getHash (str: string, format = `base64`) {
-    if (!str) {
-      return undefined;
+  async getHash (data: any, format = `base64`) {
+    if (data === undefined) {
+      throw new Error('getHash data was undefined');
     }
+    if (typeof data !== 'string') {
+      data = JSON.stringify(data);
+    }
+
     const encoder = new TextEncoder();
-    const data = encoder.encode(str);
+    data = encoder.encode(data);
     const buffer = await crypto.subtle.digest('SHA-256', data);
+
+    if (format === 'buffer') {
+      return buffer;
+    }
+
     const hash = this.arrayBufferToBase64(buffer);
     if (format === `hex`) {
       return this.base64ToHex(hash);

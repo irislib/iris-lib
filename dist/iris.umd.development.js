@@ -578,10 +578,10 @@
   var adjectives = ['average', 'big', 'colossal', 'fat', 'giant', 'gigantic', 'great', 'huge', 'immense', 'large', 'little', 'long', 'mammoth', 'massive', 'miniature', 'petite', 'puny', 'short', 'small', 'tall', 'tiny', 'boiling', 'breezy', 'broken', 'bumpy', 'chilly', 'cold', 'cool', 'creepy', 'crooked', 'cuddly', 'curly', 'damaged', 'damp', 'dirty', 'dry', 'dusty', 'filthy', 'flaky', 'fluffy', 'wet', 'broad', 'chubby', 'crooked', 'curved', 'deep', 'flat', 'high', 'hollow', 'low', 'narrow', 'round', 'shallow', 'skinny', 'square', 'steep', 'straight', 'wide', 'ancient', 'brief', 'early', 'fast', 'late', 'long', 'modern', 'old', 'quick', 'rapid', 'short', 'slow', 'swift', 'young', 'abundant', 'empty', 'few', 'heavy', 'light', 'many', 'numerous', 'Sound', 'cooing', 'deafening', 'faint', 'harsh', 'hissing', 'hushed', 'husky', 'loud', 'melodic', 'moaning', 'mute', 'noisy', 'purring', 'quiet', 'raspy', 'resonant', 'screeching', 'shrill', 'silent', 'soft', 'squealing', 'thundering', 'voiceless', 'whispering', 'bitter', 'delicious', 'fresh', 'juicy', 'ripe', 'rotten', 'salty', 'sour', 'spicy', 'stale', 'sticky', 'strong', 'sweet', 'tasteless', 'tasty', 'thirsty', 'fluttering', 'fuzzy', 'greasy', 'grubby', 'hard', 'hot', 'icy', 'loose', 'melted', 'plastic', 'prickly', 'rainy', 'rough', 'scattered', 'shaggy', 'shaky', 'sharp', 'shivering', 'silky', 'slimy', 'slippery', 'smooth', 'soft', 'solid', 'steady', 'sticky', 'tender', 'tight', 'uneven', 'weak', 'wet', 'wooden', 'afraid', 'angry', 'annoyed', 'anxious', 'arrogant', 'ashamed', 'awful', 'bad', 'bewildered', 'bored', 'combative', 'condemned', 'confused', 'creepy', 'cruel', 'dangerous', 'defeated', 'defiant', 'depressed', 'disgusted', 'disturbed', 'eerie', 'embarrassed', 'envious', 'evil', 'fierce', 'foolish', 'frantic', 'frightened', 'grieving', 'helpless', 'homeless', 'hungry', 'hurt', 'ill', 'jealous', 'lonely', 'mysterious', 'naughty', 'nervous', 'obnoxious', 'outrageous', 'panicky', 'repulsive', 'scary', 'scornful', 'selfish', 'sore', 'tense', 'terrible', 'thoughtless', 'tired', 'troubled', 'upset', 'uptight', 'weary', 'wicked', 'worried', 'agreeable', 'amused', 'brave', 'calm', 'charming', 'cheerful', 'comfortable', 'cooperative', 'courageous', 'delightful', 'determined', 'eager', 'elated', 'enchanting', 'encouraging', 'energetic', 'enthusiastic', 'excited', 'exuberant', 'fair', 'faithful', 'fantastic', 'fine', 'friendly', 'funny', 'gentle', 'glorious', 'good', 'happy', 'healthy', 'helpful', 'hilarious', 'jolly', 'joyous', 'kind', 'lively', 'lovely', 'lucky', 'obedient', 'perfect', 'pleasant', 'proud', 'relieved', 'silly', 'smiling', 'splendid', 'successful', 'thoughtful', 'victorious', 'vivacious', 'witty', 'wonderful', 'zealous', 'zany', 'other', 'good', 'new', 'old', 'great', 'high', 'small', 'different', 'large', 'local', 'social', 'important', 'long', 'young', 'national', 'british', 'right', 'early', 'possible', 'big', 'little', 'political', 'able', 'late', 'general', 'full', 'far', 'low', 'public', 'available', 'bad', 'main', 'sure', 'clear', 'major', 'economic', 'only', 'likely', 'real', 'black', 'particular', 'international', 'special', 'difficult', 'certain', 'open', 'whole', 'white', 'free', 'short', 'easy', 'strong', 'european', 'central', 'similar', 'human', 'common', 'necessary', 'single', 'personal', 'hard', 'private', 'poor', 'financial', 'wide', 'foreign', 'simple', 'recent', 'concerned', 'american', 'various', 'close', 'fine', 'english', 'wrong', 'present', 'royal', 'natural', 'individual', 'nice', 'french', 'nihilist', 'solipsist', 'materialist', 'surrealist', 'heroic', 'awesome', 'hedonist', 'absurd', 'current', 'modern', 'labour', 'legal', 'happy', 'final', 'red', 'normal', 'serious', 'previous', 'total', 'prime', 'significant', 'industrial', 'sorry', 'dead', 'specific', 'appropriate', 'top', 'soviet', 'basic', 'military', 'original', 'successful', 'aware', 'hon', 'popular', 'heavy', 'professional', 'direct', 'dark', 'cold', 'ready', 'green', 'useful', 'effective', 'western', 'traditional', 'scottish', 'german', 'independent', 'deep', 'interesting', 'considerable', 'involved', 'physical', 'hot', 'existing', 'responsible', 'complete', 'medical', 'blue', 'extra', 'past', 'male', 'interested', 'fair', 'essential', 'beautiful', 'civil', 'primary', 'obvious', 'future', 'environmental', 'positive', 'senior', 'nuclear', 'annual', 'relevant', 'huge', 'rich', 'commercial', 'safe', 'regional', 'practical', 'official', 'separate', 'key', 'chief', 'regular', 'due', 'additional', 'active', 'powerful', 'complex', 'standard', 'impossible', 'light', 'warm', 'middle', 'fresh', 'sexual', 'front', 'domestic', 'actual', 'united', 'technical', 'ordinary', 'cheap', 'strange', 'internal', 'excellent', 'quiet', 'soft', 'potential', 'northern', 'religious', 'quick', 'very', 'famous', 'cultural', 'proper', 'broad', 'joint', 'formal', 'limited', 'conservative', 'lovely', 'usual', 'ltd', 'unable', 'rural', 'initial', 'substantial', 'bright', 'average', 'leading', 'reasonable', 'immediate', 'suitable', 'equal', 'detailed', 'working', 'overall', 'female', 'afraid', 'democratic', 'growing', 'sufficient', 'scientific', 'eastern', 'correct', 'inc', 'irish', 'expensive', 'educational', 'mental', 'dangerous', 'critical', 'increased', 'familiar', 'unlikely', 'double', 'perfect', 'slow', 'tiny', 'dry', 'historical', 'thin', 'daily', 'southern', 'increasing', 'wild', 'alone', 'urban', 'empty', 'married', 'narrow', 'liberal', 'supposed', 'upper', 'apparent', 'tall', 'busy', 'bloody', 'prepared', 'russian', 'moral', 'careful', 'clean', 'attractive', 'japanese', 'vital', 'thick', 'alternative', 'fast', 'ancient', 'elderly', 'rare', 'external', 'capable', 'brief', 'wonderful', 'grand', 'typical', 'entire', 'grey', 'constant', 'vast', 'surprised', 'ideal', 'terrible', 'academic', 'funny', 'minor', 'pleased', 'severe', 'ill', 'corporate', 'negative', 'permanent', 'weak', 'brown', 'fundamental', 'odd', 'crucial', 'inner', 'used', 'criminal', 'contemporary', 'sharp', 'sick', 'near', 'roman', 'massive', 'unique', 'secondary', 'parliamentary', 'african', 'unknown', 'subsequent', 'angry', 'alive', 'guilty', 'lucky', 'enormous', 'well', 'yellow', 'unusual', 'net', 'tough', 'dear', 'extensive', 'glad', 'remaining', 'agricultural', 'alright', 'healthy', 'italian', 'principal', 'tired', 'efficient', 'comfortable', 'chinese', 'relative', 'friendly', 'conventional', 'willing', 'sudden', 'proposed', 'voluntary', 'slight', 'valuable', 'dramatic', 'golden', 'temporary', 'federal', 'keen', 'flat', 'silent', 'indian', 'worried', 'pale', 'statutory', 'welsh', 'dependent', 'firm', 'wet', 'competitive', 'armed', 'radical', 'outside', 'acceptable', 'sensitive', 'living', 'pure', 'global', 'emotional', 'sad', 'secret', 'rapid', 'adequate', 'fixed', 'sweet', 'administrative', 'wooden', 'remarkable', 'comprehensive', 'surprising', 'solid', 'rough', 'mere', 'mass', 'brilliant', 'maximum', 'absolute', 'electronic', 'visual', 'electric', 'cool', 'spanish', 'literary', 'continuing', 'supreme', 'chemical', 'genuine', 'exciting', 'written', 'advanced', 'extreme', 'classical', 'fit', 'favourite', 'widespread', 'confident', 'straight', 'proud', 'numerous', 'opposite', 'distinct', 'mad', 'helpful', 'given', 'disabled', 'consistent', 'anxious', 'nervous', 'awful', 'stable', 'constitutional', 'satisfied', 'conscious', 'developing', 'strategic', 'holy', 'smooth', 'dominant', 'remote', 'theoretical', 'outstanding', 'pink', 'pretty', 'clinical', 'minimum', 'honest', 'impressive', 'related', 'residential', 'extraordinary', 'plain', 'visible', 'accurate', 'distant', 'still', 'greek', 'complicated', 'musical', 'precise', 'gentle', 'broken', 'live', 'silly', 'fat', 'tight', 'monetary', 'round', 'psychological', 'violent', 'unemployed', 'inevitable', 'junior', 'sensible', 'grateful', 'pleasant', 'dirty', 'structural', 'welcome', 'deaf', 'above', 'continuous', 'blind', 'overseas', 'mean', 'entitled', 'delighted', 'loose', 'occasional', 'evident', 'desperate', 'fellow', 'universal', 'square', 'steady', 'classic', 'equivalent', 'intellectual', 'victorian', 'level', 'ultimate', 'creative', 'lost', 'medieval', 'clever', 'linguistic', 'convinced', 'judicial', 'raw', 'sophisticated', 'asleep', 'vulnerable', 'illegal', 'outer', 'revolutionary', 'bitter', 'changing', 'australian', 'native', 'imperial', 'strict', 'wise', 'informal', 'flexible', 'collective', 'frequent', 'experimental', 'spiritual', 'intense', 'rational', 'generous', 'inadequate', 'prominent', 'logical', 'bare', 'historic', 'modest', 'dutch', 'acute', 'electrical', 'valid', 'weekly', 'gross', 'automatic', 'loud', 'reliable', 'mutual', 'liable', 'multiple', 'ruling', 'curious', 'sole', 'managing', 'pregnant', 'latin', 'nearby', 'exact', 'underlying', 'identical', 'satisfactory', 'marginal', 'distinctive', 'electoral', 'urgent', 'presidential', 'controversial', 'everyday', 'encouraging', 'organic', 'continued', 'expected', 'statistical', 'desirable', 'innocent', 'improved', 'exclusive', 'marked', 'experienced', 'unexpected', 'superb', 'sheer', 'disappointed', 'frightened', 'gastric', 'romantic', 'naked', 'reluctant', 'magnificent', 'convenient', 'established', 'closed', 'uncertain', 'artificial', 'diplomatic', 'tremendous', 'marine', 'mechanical', 'retail', 'institutional', 'mixed', 'required', 'biological', 'known', 'functional', 'straightforward', 'superior', 'digital', 'spectacular', 'unhappy', 'confused', 'unfair', 'aggressive', 'spare', 'painful', 'abstract', 'asian', 'associated', 'legislative', 'monthly', 'intelligent', 'hungry', 'explicit', 'nasty', 'just', 'faint', 'coloured', 'ridiculous', 'amazing', 'comparable', 'successive', 'realistic', 'back', 'decent', 'decentralized', 'bitcoin', 'cypherpunk', 'unnecessary', 'flying', 'random', 'influential', 'dull', 'genetic', 'neat', 'marvellous', 'crazy', 'damp', 'giant', 'secure', 'bottom', 'skilled', 'subtle', 'elegant', 'brave', 'lesser', 'parallel', 'steep', 'intensive', 'casual', 'tropical', 'lonely', 'partial', 'preliminary', 'concrete', 'alleged', 'assistant', 'vertical', 'upset', 'delicate', 'mild', 'occupational', 'excessive', 'progressive', 'exceptional', 'integrated', 'striking', 'continental', 'okay', 'harsh', 'combined', 'fierce', 'handsome', 'characteristic', 'chronic', 'compulsory', 'interim', 'objective', 'splendid', 'magic', 'systematic', 'obliged', 'payable', 'fun', 'horrible', 'primitive', 'fascinating', 'ideological', 'metropolitan', 'surrounding', 'estimated', 'peaceful', 'premier', 'operational', 'technological', 'kind', 'advisory', 'hostile', 'precious', 'accessible', 'determined', 'excited', 'impressed', 'provincial', 'smart', 'endless', 'isolated', 'drunk', 'geographical', 'like', 'dynamic', 'boring', 'forthcoming', 'unfortunate', 'definite', 'super', 'notable', 'indirect', 'stiff', 'wealthy', 'awkward', 'lively', 'neutral', 'artistic', 'content', 'mature', 'colonial', 'ambitious', 'evil', 'magnetic', 'verbal', 'legitimate', 'sympathetic', 'empirical', 'head', 'shallow', 'vague', 'naval', 'depressed', 'shared', 'added', 'shocked', 'mid', 'worthwhile', 'qualified', 'missing', 'blank', 'absent', 'favourable', 'polish', 'israeli', 'developed', 'profound', 'representative', 'enthusiastic', 'dreadful', 'rigid', 'reduced', 'cruel', 'coastal', 'peculiar', 'swiss', 'crude', 'extended', 'selected', 'eager', 'canadian', 'bold', 'relaxed', 'corresponding', 'running', 'planned', 'applicable', 'immense', 'allied', 'comparative', 'uncomfortable', 'conservation', 'productive', 'beneficial', 'bored', 'charming', 'minimal', 'mobile', 'turkish', 'orange', 'rear', 'passive', 'suspicious', 'overwhelming', 'fatal', 'resulting', 'symbolic', 'registered', 'neighbouring', 'calm', 'irrelevant', 'patient', 'compact', 'profitable', 'rival', 'loyal', 'moderate', 'distinguished', 'interior', 'noble', 'insufficient', 'eligible', 'mysterious', 'varying', 'managerial', 'molecular', 'olympic', 'linear', 'prospective', 'printed', 'parental', 'diverse', 'elaborate', 'furious', 'fiscal', 'burning', 'useless', 'semantic', 'embarrassed', 'inherent', 'philosophical', 'deliberate', 'awake', 'variable', 'promising', 'unpleasant', 'varied', 'sacred', 'selective', 'inclined', 'tender', 'hidden', 'worthy', 'intermediate', 'sound', 'protective', 'fortunate', 'slim', 'defensive', 'divine', 'stuck', 'driving', 'invisible', 'misleading', 'circular', 'mathematical', 'inappropriate', 'liquid', 'persistent', 'solar', 'doubtful', 'manual', 'architectural', 'intact', 'incredible', 'devoted', 'prior', 'tragic', 'respectable', 'optimistic', 'convincing', 'unacceptable', 'decisive', 'competent', 'spatial', 'respective', 'binding', 'relieved', 'nursing', 'toxic', 'select', 'redundant', 'integral', 'then', 'probable', 'amateur', 'fond', 'passing', 'specified', 'territorial', 'horizontal', 'inland', 'cognitive', 'regulatory', 'miserable', 'resident', 'polite', 'scared', 'gothic', 'civilian', 'instant', 'lengthy', 'adverse', 'korean', 'unconscious', 'anonymous', 'aesthetic', 'orthodox', 'static', 'unaware', 'costly', 'fantastic', 'foolish', 'fashionable', 'causal', 'compatible', 'wee', 'implicit', 'dual', 'ok', 'cheerful', 'subjective', 'forward', 'surviving', 'exotic', 'purple', 'cautious', 'visiting', 'aggregate', 'ethical', 'teenage', 'dying', 'disastrous', 'delicious', 'confidential', 'underground', 'thorough', 'grim', 'autonomous', 'atomic', 'frozen', 'colourful', 'injured', 'uniform', 'ashamed', 'glorious', 'wicked', 'coherent', 'rising', 'shy', 'novel', 'balanced', 'delightful', 'arbitrary', 'adjacent', 'worrying', 'weird', 'unchanged', 'rolling', 'evolutionary', 'intimate', 'sporting', 'disciplinary', 'formidable', 'lexical', 'noisy', 'gradual', 'accused', 'homeless', 'supporting', 'coming', 'renewed', 'excess', 'retired', 'rubber', 'chosen', 'outdoor', 'embarrassing', 'preferred', 'bizarre', 'appalling', 'agreed', 'imaginative', 'governing', 'accepted', 'vocational', 'mighty', 'puzzled', 'worldwide', 'organisational', 'sunny', 'eldest', 'eventual', 'spontaneous', 'vivid', 'rude', 'faithful', 'ministerial', 'innovative', 'controlled', 'conceptual', 'unwilling', 'civic', 'meaningful', 'alive', 'brainy', 'breakable', 'busy', 'careful', 'cautious', 'clever', 'concerned', 'crazy', 'curious', 'dead', 'different', 'difficult', 'doubtful', 'easy', 'famous', 'fragile', 'helpful', 'helpless', 'important', 'impossible', 'innocent', 'inquisitive', 'modern', 'open', 'outstanding', 'poor', 'powerful', 'puzzled', 'real', 'rich', 'shy', 'sleepy', 'super', 'tame', 'uninterested', 'wandering', 'wild', 'wrong', 'adorable', 'alert', 'average', 'beautiful', 'blonde', 'bloody', 'blushing', 'bright', 'clean', 'clear', 'cloudy', 'colorful', 'crowded', 'cute', 'dark', 'drab', 'distinct', 'dull', 'elegant', 'fancy', 'filthy', 'glamorous', 'gleaming', 'graceful', 'grotesque', 'homely', 'light', 'misty', 'motionless', 'muddy', 'plain', 'poised', 'quaint', 'shiny', 'smoggy', 'sparkling', 'spotless', 'stormy', 'strange', 'ugly', 'unsightly', 'unusual', 'bad', 'better', 'beautiful', 'big', 'black', 'blue', 'bright', 'clumsy', 'crazy', 'dizzy', 'dull', 'fat', 'frail', 'friendly', 'funny', 'great', 'green', 'gigantic', 'gorgeous', 'grumpy', 'handsome', 'happy', 'horrible', 'itchy', 'jittery', 'jolly', 'kind', 'long', 'lazy', 'magnificent', 'magenta', 'many', 'mighty', 'mushy', 'nasty', 'new', 'nice', 'nosy', 'nutty', 'nutritious', 'odd', 'orange', 'ordinary', 'pretty', 'precious', 'prickly', 'purple', 'quaint', 'quiet', 'quick', 'quickest', 'rainy', 'rare', 'ratty', 'red', 'roasted', 'robust', 'round', 'sad', 'scary', 'scrawny', 'short', 'silly', 'stingy', 'strange', 'striped', 'spotty', 'tart', 'tall', 'tame', 'tan', 'tender', 'testy', 'tricky', 'tough', 'ugly', 'ugliest', 'vast', 'watery', 'wasteful', 'wonderful', 'yellow', 'yummy', 'zany'];
   var util = {
     gunOnceDefined: gunOnceDefined,
-    getHash: function getHash(str, format) {
+    getHash: function getHash(data, format) {
       var _this = this;
       return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-        var encoder, data, buffer, hash;
+        var encoder, buffer, hash;
         return _regeneratorRuntime().wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -589,27 +589,36 @@
                 if (format === void 0) {
                   format = "base64";
                 }
-                if (str) {
+                if (!(data === undefined)) {
                   _context.next = 3;
                   break;
                 }
-                return _context.abrupt("return", undefined);
+                throw new Error('getHash data was undefined');
               case 3:
+                if (typeof data !== 'string') {
+                  data = JSON.stringify(data);
+                }
                 encoder = new TextEncoder();
-                data = encoder.encode(str);
-                _context.next = 7;
+                data = encoder.encode(data);
+                _context.next = 8;
                 return crypto.subtle.digest('SHA-256', data);
-              case 7:
+              case 8:
                 buffer = _context.sent;
-                hash = _this.arrayBufferToBase64(buffer);
-                if (!(format === "hex")) {
+                if (!(format === 'buffer')) {
                   _context.next = 11;
                   break;
                 }
-                return _context.abrupt("return", _this.base64ToHex(hash));
+                return _context.abrupt("return", buffer);
               case 11:
+                hash = _this.arrayBufferToBase64(buffer);
+                if (!(format === "hex")) {
+                  _context.next = 14;
+                  break;
+                }
+                return _context.abrupt("return", _this.base64ToHex(hash));
+              case 14:
                 return _context.abrupt("return", hash);
-              case 12:
+              case 15:
               case "end":
                 return _context.stop();
             }
@@ -1129,7 +1138,7 @@
     };
     Key.sign = /*#__PURE__*/function () {
       var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(data, pair, cb, opt) {
-        var jwk, hash, sig, r;
+        var text, jwk, hash, sig, r;
         return _regeneratorRuntime().wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
@@ -1143,16 +1152,13 @@
                 }
                 throw '`undefined` not allowed.';
               case 3:
-                if (typeof data === 'object') {
-                  data = JSON.stringify(data);
-                }
+                text = JSON.stringify(data);
                 jwk = Key.keyToJwk(pair);
-                console.log('signing with jwk', jwk);
-                _context6.next = 8;
-                return util.getHash(data);
-              case 8:
+                _context6.next = 7;
+                return util.getHash(text, 'buffer');
+              case 7:
                 hash = _context6.sent;
-                _context6.next = 11;
+                _context6.next = 10;
                 return window.crypto.subtle.importKey('jwk', jwk, {
                   name: 'ECDSA',
                   namedCurve: 'P-256'
@@ -1162,13 +1168,13 @@
                     hash: {
                       name: 'SHA-256'
                     }
-                  }, key, new Uint8Array(hash));
+                  }, key, hash);
                 });
-              case 11:
+              case 10:
                 sig = _context6.sent;
                 // privateKey scope doesn't leak out from here!
                 r = {
-                  m: JSON.stringify(data),
+                  m: text,
                   s: Buffer.from(sig).toString(opt.encode || 'base64')
                 };
                 if (!opt.raw) {
@@ -1182,7 +1188,7 @@
                   }
                 }
                 return _context6.abrupt("return", r);
-              case 16:
+              case 15:
               case "end":
                 return _context6.stop();
             }
@@ -1196,7 +1202,7 @@
     }();
     Key.verify = /*#__PURE__*/function () {
       var _verify = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(data, pair, cb, opt) {
-        var pub, jwk, key, hash, buf, sig, isValid, r;
+        var pub, jwk, key, text, hash, buf, sig, isValid, r;
         return _regeneratorRuntime().wrap(function _callee7$(_context7) {
           while (1) {
             switch (_context7.prev = _context7.next) {
@@ -1206,8 +1212,11 @@
                 }
                 _context7.prev = 1;
                 if (typeof data === 'string') {
-                  console.log('verifying string', data.slice(4));
-                  data = JSON.parse(data.slice(4));
+                  if (data.slice(0, 4) === 'aSEA') {
+                    data = JSON.parse(data.slice(4));
+                  } else {
+                    data = JSON.parse(data);
+                  }
                 }
                 pub = pair.pub || pair;
                 jwk = Key.keyToJwk(pub);
@@ -1218,20 +1227,21 @@
                 }, false, ['verify']);
               case 7:
                 key = _context7.sent;
-                _context7.next = 10;
-                return util.getHash(data.m);
-              case 10:
+                text = typeof data.m === 'string' ? data.m : JSON.stringify(data.m);
+                _context7.next = 11;
+                return util.getHash(text, 'buffer');
+              case 11:
                 hash = _context7.sent;
-                buf = Buffer.from(data.s, opt.encode || 'base64'); // NEW DEFAULT!
+                buf = Buffer.from(data.s, opt.encode || 'base64');
                 sig = new Uint8Array(buf);
-                _context7.next = 15;
+                _context7.next = 16;
                 return crypto.subtle.verify({
                   name: 'ECDSA',
                   hash: {
                     name: 'SHA-256'
                   }
-                }, key, sig, new Uint8Array(hash));
-              case 15:
+                }, key, sig, hash);
+              case 16:
                 isValid = _context7.sent;
                 r = isValid ? JSON.parse(data.m) : undefined;
                 if (cb) {
@@ -1242,17 +1252,17 @@
                   }
                 }
                 return _context7.abrupt("return", r);
-              case 21:
-                _context7.prev = 21;
+              case 23:
+                _context7.prev = 23;
                 _context7.t0 = _context7["catch"](1);
                 console.log(_context7.t0);
                 return _context7.abrupt("return", undefined);
-              case 25:
+              case 27:
               case "end":
                 return _context7.stop();
             }
           }
-        }, _callee7, null, [[1, 21]]);
+        }, _callee7, null, [[1, 23]]);
       }));
       function verify(_x12, _x13, _x14, _x15) {
         return _verify.apply(this, arguments);
@@ -1461,6 +1471,9 @@
       this.save();
     },
     isMixedContent: function isMixedContent(url) {
+      if (!url) {
+        return false;
+      }
       return window.location.protocol === 'https:' && url.indexOf('http:') === 0;
     },
     random: function random() {
@@ -1468,11 +1481,12 @@
       var connectToLocalElectron = util.isElectron && this.known[ELECTRON_GUN_URL] && this.known[ELECTRON_GUN_URL].enabled !== false;
       var sampleSize = connectToLocalElectron ? Math.max(maxConnectedPeers - 1, 1) : maxConnectedPeers;
       var sample = _.sampleSize(Object.keys(_.pickBy(this.known, function (peer, url) {
-        return url && !_this2.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
+        return !_this2.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
       })), sampleSize);
       if (sample && connectToLocalElectron) {
         sample.push(ELECTRON_GUN_URL);
       }
+      console.log('sample', sample, JSON.stringify(this.known));
       return sample;
     },
     checkGunPeerCount: function checkGunPeerCount() {
@@ -1530,18 +1544,45 @@
         throw new Error('not implemented');
       }
     };
-    Message.deserialize = function deserialize(str, from) {
-      var obj = JSON.parse(str);
-      if (obj.get) {
-        return Get.deserialize(obj, str, from);
-      } else if (obj.put) {
-        return Put.deserialize(obj, str, from);
-      } else if (obj.dam && obj.dam === "hi") {
-        return Hi.deserialize(obj);
-      } else {
-        throw new Error('unknown message type');
+    Message.deserialize = /*#__PURE__*/function () {
+      var _deserialize = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(str, from) {
+        var obj;
+        return _regeneratorRuntime().wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                obj = JSON.parse(str);
+                if (!obj.get) {
+                  _context.next = 5;
+                  break;
+                }
+                return _context.abrupt("return", Get.deserialize(obj, str, from));
+              case 5:
+                if (!obj.put) {
+                  _context.next = 9;
+                  break;
+                }
+                return _context.abrupt("return", Put.deserialize(obj, str, from));
+              case 9:
+                if (!(obj.dam && obj.dam === "hi")) {
+                  _context.next = 13;
+                  break;
+                }
+                return _context.abrupt("return", Hi.deserialize(obj));
+              case 13:
+                throw new Error('unknown message type');
+              case 14:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee);
+      }));
+      function deserialize(_x, _x2) {
+        return _deserialize.apply(this, arguments);
       }
-    };
+      return deserialize;
+    }();
     var _proto = Message.prototype;
     _proto.serialize = function serialize() {
       throw new Error('not implemented');
@@ -1582,16 +1623,33 @@
       this.jsonStr = JSON.stringify(obj);
       return this.jsonStr;
     };
-    Get.deserialize = function deserialize(obj, jsonStr, from) {
-      var id = obj['#'];
-      var nodeId = obj.get['#']; // TODO add "global/" prefix, replace /^~/ with "user/"
-      if (nodeId.startsWith('~')) {
-        nodeId = 'user/' + nodeId.slice(1);
+    Get.deserialize = /*#__PURE__*/function () {
+      var _deserialize2 = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(obj, jsonStr, from) {
+        var id, nodeId, childKey;
+        return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                id = obj['#'];
+                nodeId = obj.get['#']; // TODO add "global/" prefix, replace /^~/ with "user/"
+                if (nodeId.startsWith('~')) {
+                  nodeId = 'user/' + nodeId.slice(1);
+                }
+                nodeId = 'global/' + nodeId;
+                childKey = obj.get['.'];
+                return _context2.abrupt("return", new Get(id, nodeId, from, undefined, childKey, jsonStr));
+              case 6:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2);
+      }));
+      function deserialize(_x3, _x4, _x5) {
+        return _deserialize2.apply(this, arguments);
       }
-      nodeId = 'global/' + nodeId;
-      var childKey = obj.get['.'];
-      return new Get(id, nodeId, from, undefined, childKey, jsonStr);
-    };
+      return deserialize;
+    }();
     Get.fromObject = function fromObject(obj) {
       return new Get(obj.id, obj.nodeId, obj.from, obj.recipients, obj.childKey, obj.jsonStr, obj.checksum);
     };
@@ -1641,33 +1699,99 @@
       }
       return JSON.stringify(obj);
     };
-    Put.deserialize = function deserialize(obj, jsonStr, from) {
-      var id = obj['#'];
-      var updatedNodes = {};
-      for (var _i3 = 0, _Object$entries3 = Object.entries(obj.put); _i3 < _Object$entries3.length; _i3++) {
-        var _Object$entries3$_i = _Object$entries3[_i3],
-          nodeId = _Object$entries3$_i[0],
-          c = _Object$entries3$_i[1];
-        var children = c;
-        var node = {};
-        for (var _i4 = 0, _Object$entries4 = Object.entries(children); _i4 < _Object$entries4.length; _i4++) {
-          var _Object$entries4$_i = _Object$entries4[_i4],
-            childKey = _Object$entries4$_i[0],
-            childValue = _Object$entries4$_i[1];
-          if (childKey === '_') {
-            continue;
+    Put.deserialize = /*#__PURE__*/function () {
+      var _deserialize3 = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(obj, jsonStr, from) {
+        var id, updatedNodes, _i3, _Object$entries3, _Object$entries3$_i, nodeId, c, children, node, isUserSpace, _i4, _Object$entries4, _Object$entries4$_i, childKey, childValue, user, signatureObj, timestamp, value, signedObj, signature, signedStr, updatedAt, myNodeId;
+        return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                id = obj['#'];
+                updatedNodes = {};
+                _i3 = 0, _Object$entries3 = Object.entries(obj.put);
+              case 3:
+                if (!(_i3 < _Object$entries3.length)) {
+                  _context3.next = 37;
+                  break;
+                }
+                _Object$entries3$_i = _Object$entries3[_i3], nodeId = _Object$entries3$_i[0], c = _Object$entries3$_i[1];
+                children = c;
+                node = {};
+                isUserSpace = nodeId.startsWith('~');
+                _i4 = 0, _Object$entries4 = Object.entries(children);
+              case 9:
+                if (!(_i4 < _Object$entries4.length)) {
+                  _context3.next = 32;
+                  break;
+                }
+                _Object$entries4$_i = _Object$entries4[_i4], childKey = _Object$entries4$_i[0], childValue = _Object$entries4$_i[1];
+                if (!(childKey === '_')) {
+                  _context3.next = 13;
+                  break;
+                }
+                return _context3.abrupt("continue", 29);
+              case 13:
+                if (!isUserSpace) {
+                  _context3.next = 27;
+                  break;
+                }
+                user = nodeId.split('/')[0].slice(1);
+                signatureObj = JSON.parse(childValue);
+                timestamp = children['_']['>'][childKey];
+                value = signatureObj[':'];
+                signedObj = {
+                  "#": nodeId,
+                  ".": childKey,
+                  ":": value,
+                  ">": timestamp
+                };
+                signature = signatureObj['~'];
+                signedStr = JSON.stringify(signedObj);
+                _context3.next = 23;
+                return Key.verify({
+                  s: signature,
+                  m: signedStr
+                }, user);
+              case 23:
+                _context3.t0 = _context3.sent;
+                _context3.t1 = undefined;
+                if (!(_context3.t0 === _context3.t1)) {
+                  _context3.next = 27;
+                  break;
+                }
+                throw new Error("invalid signature in " + nodeId + " of " + signedStr);
+              case 27:
+                // TODO test hash space validity
+                updatedAt = children['_']['>'][childKey];
+                node[childKey] = {
+                  value: childValue,
+                  updatedAt: updatedAt
+                };
+              case 29:
+                _i4++;
+                _context3.next = 9;
+                break;
+              case 32:
+                myNodeId = 'global/' + nodeId.replace(/^~/, 'user/');
+                updatedNodes[myNodeId] = node;
+              case 34:
+                _i3++;
+                _context3.next = 3;
+                break;
+              case 37:
+                return _context3.abrupt("return", new Put(id, updatedNodes, from, undefined, undefined, jsonStr));
+              case 38:
+              case "end":
+                return _context3.stop();
+            }
           }
-          var updatedAt = children['_']['>'][childKey];
-          node[childKey] = {
-            value: childValue,
-            updatedAt: updatedAt
-          };
-        }
-        var myNodeId = 'global/' + nodeId.replace(/^~/, 'user/');
-        updatedNodes[myNodeId] = node;
+        }, _callee3);
+      }));
+      function deserialize(_x6, _x7, _x8) {
+        return _deserialize3.apply(this, arguments);
       }
-      return new Put(id, updatedNodes, from, undefined, undefined, jsonStr);
-    };
+      return deserialize;
+    }();
     Put.fromObject = function fromObject(obj) {
       return new Put(obj.id, obj.updatedNodes, obj.from, obj.inResponseTo, obj.recipients, obj.jsonStr, obj.checksum);
     };
@@ -7446,14 +7570,35 @@
         });
         _this.sendQueue = [];
       };
-      _this.ws.onmessage = function (event) {
-        try {
-          var message = Message.deserialize(event.data, _assertThisInitialized(_this));
-          _this.router.postMessage(message);
-        } catch (e) {
-          console.log('Failed to deserialize message', event.data, e);
-        }
-      };
+      _this.ws.onmessage = /*#__PURE__*/function () {
+        var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(event) {
+          var message;
+          return _regeneratorRuntime().wrap(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  _context.prev = 0;
+                  _context.next = 3;
+                  return Message.deserialize(event.data, _assertThisInitialized(_this));
+                case 3:
+                  message = _context.sent;
+                  _this.router.postMessage(message);
+                  _context.next = 9;
+                  break;
+                case 7:
+                  _context.prev = 7;
+                  _context.t0 = _context["catch"](0);
+                case 9:
+                case "end":
+                  return _context.stop();
+              }
+            }
+          }, _callee, null, [[0, 7]]);
+        }));
+        return function (_x) {
+          return _ref.apply(this, arguments);
+        };
+      }();
       _this.ws.onclose = function () {
         console.log("Disconnected from " + url);
       };

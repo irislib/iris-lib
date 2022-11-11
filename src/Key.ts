@@ -153,17 +153,14 @@ class Key {
 
   static async sign(data: any, pair: any, cb?: Function, opt: any = {}) {
     if(undefined === data){ throw '`undefined` not allowed.' }
-    if (typeof data === 'object') {
-      data = JSON.stringify(data);
-    }
+    const text = JSON.stringify(data);
     var jwk = Key.keyToJwk(pair);
-    console.log('signing with jwk', jwk);
-    var hash = await util.getHash(data);
+    var hash = await util.getHash(text, 'buffer') as Buffer;
     var sig = await window.crypto.subtle.importKey('jwk', jwk, {name: 'ECDSA', namedCurve: 'P-256'}, false, ['sign'])
     .then((key) =>
-      window.crypto.subtle.sign({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, new Uint8Array(hash as any))
+      window.crypto.subtle.sign({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, hash)
     ) // privateKey scope doesn't leak out from here!
-    var r: any = {m: JSON.stringify(data), s: Buffer.from(sig).toString(opt.encode || 'base64')}
+    var r: any = {m: text, s: Buffer.from(sig).toString(opt.encode || 'base64')}
     if(!opt.raw){ r = 'aSEA' + JSON.stringify(r) }
 
     if(cb){ try{ cb(r) }catch(e){console.log(e)} }
@@ -173,18 +170,26 @@ class Key {
   static async verify(data: any, pair: any, cb?: Function, opt: any = {}) {
     try {
       if (typeof data === 'string') {
-        console.log('verifying string', data.slice(4));
-        data = JSON.parse(data.slice(4));
+        if (data.slice(0, 4) === 'aSEA') {
+          data = JSON.parse(data.slice(4));
+        } else {
+          data = JSON.parse(data);
+        }
       }
       var pub = pair.pub || pair;
       var jwk = Key.keyToJwk(pub);
       var key = await crypto.subtle.importKey('jwk', jwk, {name: 'ECDSA', namedCurve: 'P-256'}, false, ['verify']);
-      var hash: any = await util.getHash(data.m);
+
+      var text = (typeof data.m === 'string')? data.m : JSON.stringify(data.m);
+      let hash = await util.getHash(text, 'buffer') as Buffer;
       var buf, sig, isValid;
-      buf = Buffer.from(data.s, opt.encode || 'base64'); // NEW DEFAULT!
+      buf = Buffer.from(data.s, opt.encode || 'base64');
       sig = new Uint8Array(buf);
-      isValid = await crypto.subtle.verify({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, sig, new Uint8Array(hash));
+      isValid = await crypto.subtle.verify({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, sig, hash);
       var r = isValid? JSON.parse(data.m) : undefined;
+      if (r === undefined) {
+        //console.log('invalid', data, pair, hash);
+      }
 
       if(cb){ try{ cb(r) }catch(e){console.log(e)} }
       return r;

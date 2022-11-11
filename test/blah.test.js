@@ -37,6 +37,7 @@ describe('iris', () => {
       const key = await iris.Key.generate();
       const msg = 'hello';
       const signedMsg = await iris.Key.sign(msg, key);
+      console.log('signedMsg', signedMsg);
       const verified = await iris.Key.verify(signedMsg, key);
       expect(verified).toBe(msg);
     });

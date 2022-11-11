@@ -1,7 +1,7 @@
 declare function gunOnceDefined(node: any): Promise<unknown>;
 declare const _default: {
     gunOnceDefined: typeof gunOnceDefined;
-    getHash(str: string, format?: string): Promise<string | undefined>;
+    getHash(data: any, format?: string): Promise<string | ArrayBuffer>;
     capitalize(s: string): string;
     generateName(): string;
     base64ToHex(str: string): string;

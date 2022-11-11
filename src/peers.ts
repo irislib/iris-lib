@@ -126,6 +126,7 @@ export default {
   },
 
   isMixedContent(url: string) {
+    if (!url) { return false; }
     return window.location.protocol === 'https:' && (url.indexOf('http:') === 0);
   },
 
@@ -135,13 +136,14 @@ export default {
     const sample = _.sampleSize(
       Object.keys(
         _.pickBy(this.known, (peer: any, url: string) => {
-          return url && !this.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
+          return !this.isMixedContent(url) && peer.enabled && !(util.isElectron && url === ELECTRON_GUN_URL);
         })
       ), sampleSize
     );
     if (sample && connectToLocalElectron) {
       sample.push(ELECTRON_GUN_URL);
     }
+    console.log('sample', sample, JSON.stringify(this.known));
     return sample;
   },
 

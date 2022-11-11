@@ -1,5 +1,6 @@
 import {Actor} from './Actor';
 import {Children} from "./Node";
+import Key from "../Key";
 
 export class Message {
     // When Messages are sent over BroadcastChannel, class name is lost.
@@ -13,7 +14,7 @@ export class Message {
         }
     }
 
-    static deserialize(str: string, from: Actor): Message {
+    static async deserialize(str: string, from: Actor): Promise<Message> {
         const obj = JSON.parse(str);
         if (obj.get) {
             return Get.deserialize(obj, str, from);
@@ -67,7 +68,7 @@ export class Get implements Message {
         return this.jsonStr;
     }
 
-    static deserialize(obj: any, jsonStr: string, from: Actor): Get {
+    static async deserialize(obj: any, jsonStr: string, from: Actor): Promise<Get> {
         const id = obj['#'];
         let nodeId = obj.get['#']; // TODO add "global/" prefix, replace /^~/ with "user/"
         if (nodeId.startsWith('~')) {
@@ -136,7 +137,7 @@ export class Put implements Message {
         return JSON.stringify(obj);
     }
 
-    static deserialize(obj: any, jsonStr: string, from: Actor): Put {
+    static async deserialize(obj: any, jsonStr: string, from: Actor): Promise<Put> {
         const id = obj['#'];
         const updatedNodes: UpdatedNodes = {};
         type SerializedChildren = {
@@ -145,10 +146,29 @@ export class Put implements Message {
         for (const [nodeId, c] of Object.entries(obj.put)) {
             const children = c as SerializedChildren;
             const node: any = {};
+            const isUserSpace = nodeId.startsWith('~');
             for (const [childKey, childValue] of Object.entries(children)) {
                 if (childKey === '_') {
                     continue;
                 }
+                if (isUserSpace) {
+                    const user = nodeId.split('/')[0].slice(1);
+                    const signatureObj = JSON.parse(childValue);
+                    const timestamp = children['_']['>'][childKey];
+                    const value = signatureObj[':'];
+                    const signedObj = {
+                        "#": nodeId,
+                        ".": childKey,
+                        ":": value,
+                        ">": timestamp
+                    };
+                    const signature = signatureObj['~'];
+                    const signedStr = JSON.stringify(signedObj);
+                    if (await Key.verify({s: signature, m: signedStr}, user) === undefined) {
+                        throw new Error(`invalid signature in ${nodeId} of ${signedStr}`);
+                    }
+                }
+                // TODO test hash space validity
                 const updatedAt = children['_']['>'][childKey];
                 node[childKey] = {
                     value: childValue,

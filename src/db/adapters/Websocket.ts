@@ -18,12 +18,12 @@ export default class Websocket extends Actor {
             this.sendQueue.forEach((message) => this.ws.send(message));
             this.sendQueue = [];
         }
-        this.ws.onmessage = (event) => {
+        this.ws.onmessage = async (event) => {
             try {
-                const message = Message.deserialize(event.data, this);
+                const message = await Message.deserialize(event.data, this);
                 this.router.postMessage(message);
             } catch (e) {
-                console.log('Failed to deserialize message', event.data, e);
+                //console.log('Failed to deserialize message', event.data, e);
             }
         }
         this.ws.onclose = () => {
