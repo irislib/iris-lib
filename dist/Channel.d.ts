@@ -132,11 +132,11 @@ declare class Channel {
     /**
     *
     */
-    static getOurSecretChannelId(pub: any, pair: any): Promise<string | undefined>;
+    static getOurSecretChannelId(pub: any, pair: any): Promise<string | ArrayBuffer>;
     /**
     *
     */
-    static getTheirSecretChannelId(pub: any, pair: any): Promise<string | undefined>;
+    static getTheirSecretChannelId(pub: any, pair: any): Promise<string | ArrayBuffer>;
     /**
     * Calls back with Channels that you have initiated or written to.
     * @param {Object} keypair Key keypair that the gun instance is authenticated with

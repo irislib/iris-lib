@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import local from './local';
 import global from './global';
 import publicState from './public';
@@ -6,7 +7,6 @@ import privateState from './private';
 import SignedMessage from './SignedMessage';
 import Channel from './Channel';
 import Node from './db/Node';
-import Key from './Key';
 declare const _default: {
     local: typeof local;
     global: typeof global;
@@ -15,7 +15,7 @@ declare const _default: {
     private: typeof privateState;
     static: {
         get(hash: string, callback: Function): Promise<unknown>;
-        put(value: any): Promise<string | undefined>;
+        put(value: any): Promise<string | ArrayBuffer>;
     };
     electron: Node | null;
     peers: {
@@ -89,7 +89,7 @@ declare const _default: {
     };
     util: {
         gunOnceDefined: (node: any) => Promise<unknown>;
-        getHash(str: string, format?: string): Promise<string | undefined>;
+        getHash(data: any, format?: string): Promise<string | ArrayBuffer>;
         capitalize(s: string): string;
         generateName(): string;
         base64ToHex(str: string): string;
@@ -130,6 +130,28 @@ declare const _default: {
     SignedMessage: typeof SignedMessage;
     Channel: typeof Channel;
     Node: typeof Node;
-    Key: typeof Key;
+    Key: {
+        getActiveKey(datadir?: string, keyfile?: string, fs?: any): Promise<any>;
+        getDefault(datadir?: string, keyfile?: string): Promise<any>;
+        getActivePub(datadir?: string, keyfile?: string): Promise<any>;
+        setActiveKey(key: any, save: boolean | undefined, datadir: string | undefined, keyfile: string | undefined, fs: any): void;
+        toString(key: any): string;
+        getId(key: any): any;
+        fromString(str: string): any;
+        generate(): Promise<{
+            pub: any;
+            priv: any;
+            epub: any;
+            epriv: any;
+        } | undefined>;
+        keyToJwk(key: any): JsonWebKey;
+        sign(data: any, pair: any, cb?: Function | undefined, opt?: any): Promise<any>;
+        verify(data: any, pair: any, cb?: Function | undefined, opt?: any): Promise<any>;
+        secret(key: any, pair: any): Promise<string | undefined>;
+        aeskey(key: any, salt?: Buffer | undefined): Promise<CryptoKey>;
+        random(len: number): Buffer;
+        encrypt(data: any, pair: any, cb?: Function | undefined, opt?: any): Promise<any>;
+        decrypt(data: any, pair: any, cb?: Function | undefined, opt?: any): Promise<any>;
+    };
 };
 export default _default;

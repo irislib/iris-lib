@@ -821,10 +821,10 @@ var util = {
 
 // eslint-disable-line no-unused-vars
 var myKey;
-var Key = /*#__PURE__*/function () {
-  function Key() {}
-  Key.getActiveKey = /*#__PURE__*/function () {
-    var _getActiveKey = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(datadir, keyfile, fs) {
+var Key = {
+  getActiveKey: function getActiveKey(datadir, keyfile, fs) {
+    var _this = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
       var privKeyFile, f, newKey, str, _newKey;
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) {
@@ -852,16 +852,16 @@ var Key = /*#__PURE__*/function () {
                 break;
               }
               f = fs.readFileSync(privKeyFile, "utf8");
-              myKey = Key.fromString(f);
+              myKey = _this.fromString(f);
               _context.next = 17;
               break;
             case 11:
               _context.next = 13;
-              return Key.generate();
+              return _this.generate();
             case 13:
               newKey = _context.sent;
               myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
-              fs.writeFileSync(privKeyFile, Key.toString(myKey));
+              fs.writeFileSync(privKeyFile, _this.toString(myKey));
               fs.chmodSync(privKeyFile, 400);
             case 17:
               if (myKey) {
@@ -878,16 +878,16 @@ var Key = /*#__PURE__*/function () {
                 _context.next = 26;
                 break;
               }
-              myKey = Key.fromString(str);
+              myKey = _this.fromString(str);
               _context.next = 31;
               break;
             case 26:
               _context.next = 28;
-              return Key.generate();
+              return _this.generate();
             case 28:
               _newKey = _context.sent;
               myKey = myKey || _newKey; // eslint-disable-line require-atomic-updates
-              window.localStorage.setItem("iris.myKey", Key.toString(myKey));
+              window.localStorage.setItem("iris.myKey", _this.toString(myKey));
             case 31:
               if (myKey) {
                 _context.next = 33;
@@ -902,23 +902,20 @@ var Key = /*#__PURE__*/function () {
           }
         }
       }, _callee);
-    }));
-    function getActiveKey(_x, _x2, _x3) {
-      return _getActiveKey.apply(this, arguments);
-    }
-    return getActiveKey;
-  }();
-  Key.getDefault = function getDefault(datadir, keyfile) {
+    }))();
+  },
+  getDefault: function getDefault(datadir, keyfile) {
     if (datadir === void 0) {
       datadir = ".";
     }
     if (keyfile === void 0) {
       keyfile = "iris.key";
     }
-    return Key.getActiveKey(datadir, keyfile);
-  };
-  Key.getActivePub = /*#__PURE__*/function () {
-    var _getActivePub = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(datadir, keyfile) {
+    return this.getActiveKey(datadir, keyfile);
+  },
+  getActivePub: function getActivePub(datadir, keyfile) {
+    var _this2 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
       var key;
       return _regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) {
@@ -931,7 +928,7 @@ var Key = /*#__PURE__*/function () {
                 keyfile = "iris.key";
               }
               _context2.next = 4;
-              return Key.getActiveKey(datadir, keyfile);
+              return _this2.getActiveKey(datadir, keyfile);
             case 4:
               key = _context2.sent;
               return _context2.abrupt("return", key.pub);
@@ -941,13 +938,9 @@ var Key = /*#__PURE__*/function () {
           }
         }
       }, _callee2);
-    }));
-    function getActivePub(_x4, _x5) {
-      return _getActivePub.apply(this, arguments);
-    }
-    return getActivePub;
-  }();
-  Key.setActiveKey = function setActiveKey(key, save, datadir, keyfile, fs) {
+    }))();
+  },
+  setActiveKey: function setActiveKey(key, save, datadir, keyfile, fs) {
     if (save === void 0) {
       save = true;
     }
@@ -961,31 +954,28 @@ var Key = /*#__PURE__*/function () {
     if (!save) return;
     if (util.isNode) {
       var privKeyFile = datadir + "/" + keyfile;
-      fs.writeFileSync(privKeyFile, Key.toString(myKey));
+      fs.writeFileSync(privKeyFile, this.toString(myKey));
       fs.chmodSync(privKeyFile, 400);
     } else {
-      window.localStorage.setItem("iris.myKey", Key.toString(myKey));
+      window.localStorage.setItem("iris.myKey", this.toString(myKey));
     }
-  };
-  Key.toString = function toString(key) {
+  },
+  toString: function toString(key) {
     return JSON.stringify(key);
-  };
-  Key.getId = function getId(key) {
+  },
+  getId: function getId(key) {
     if (!(key && key.pub)) {
       throw new Error("missing param");
     }
     return key.pub; // hack until GUN supports lookups by keyID
     //return util.getHash(key.pub);
-  };
-  Key.fromString = function fromString(str) {
+  },
+  fromString: function fromString(str) {
     return JSON.parse(str);
-  }
+  },
   // copied from Gun.SEA
-  ;
-  Key.generate =
-  /*#__PURE__*/
-  function () {
-    var _generate = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5() {
+  generate: function generate() {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5() {
       var ecdhSubtle, sa, dh, r;
       return _regeneratorRuntime().wrap(function _callee5$(_context5) {
         while (1) {
@@ -1028,7 +1018,7 @@ var Key = /*#__PURE__*/function () {
                     }
                   }, _callee3);
                 }));
-                return function (_x6) {
+                return function (_x) {
                   return _ref.apply(this, arguments);
                 };
               }());
@@ -1069,7 +1059,7 @@ var Key = /*#__PURE__*/function () {
                     }
                   }, _callee4);
                 }));
-                return function (_x7) {
+                return function (_x2) {
                   return _ref2.apply(this, arguments);
                 };
               }());
@@ -1109,13 +1099,9 @@ var Key = /*#__PURE__*/function () {
           }
         }
       }, _callee5, null, [[0, 23], [5, 11]]);
-    }));
-    function generate() {
-      return _generate.apply(this, arguments);
-    }
-    return generate;
-  }();
-  Key.keyToJwk = function keyToJwk(key) {
+    }))();
+  },
+  keyToJwk: function keyToJwk(key) {
     if (typeof key === 'string') {
       key = {
         pub: key
@@ -1133,9 +1119,10 @@ var Key = /*#__PURE__*/function () {
       jwk.d = key.priv;
     }
     return jwk;
-  };
-  Key.sign = /*#__PURE__*/function () {
-    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(data, pair, cb, opt) {
+  },
+  sign: function sign(data, pair, cb, opt) {
+    var _this3 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6() {
       var text, jwk, hash, sig, r;
       return _regeneratorRuntime().wrap(function _callee6$(_context6) {
         while (1) {
@@ -1151,7 +1138,7 @@ var Key = /*#__PURE__*/function () {
               throw '`undefined` not allowed.';
             case 3:
               text = JSON.stringify(data);
-              jwk = Key.keyToJwk(pair);
+              jwk = _this3.keyToJwk(pair);
               _context6.next = 7;
               return util.getHash(text, 'buffer');
             case 7:
@@ -1192,14 +1179,11 @@ var Key = /*#__PURE__*/function () {
           }
         }
       }, _callee6);
-    }));
-    function sign(_x8, _x9, _x10, _x11) {
-      return _sign.apply(this, arguments);
-    }
-    return sign;
-  }();
-  Key.verify = /*#__PURE__*/function () {
-    var _verify = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(data, pair, cb, opt) {
+    }))();
+  },
+  verify: function verify(data, pair, cb, opt) {
+    var _this4 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7() {
       var pub, jwk, key, text, hash, buf, sig, isValid, r;
       return _regeneratorRuntime().wrap(function _callee7$(_context7) {
         while (1) {
@@ -1217,7 +1201,7 @@ var Key = /*#__PURE__*/function () {
                 }
               }
               pub = pair.pub || pair;
-              jwk = Key.keyToJwk(pub);
+              jwk = _this4.keyToJwk(pub);
               _context7.next = 7;
               return crypto.subtle.importKey('jwk', jwk, {
                 name: 'ECDSA',
@@ -1261,71 +1245,256 @@ var Key = /*#__PURE__*/function () {
           }
         }
       }, _callee7, null, [[1, 23]]);
-    }));
-    function verify(_x12, _x13, _x14, _x15) {
-      return _verify.apply(this, arguments);
-    }
-    return verify;
-  }();
-  Key.secret = /*#__PURE__*/function () {
-    var _secret = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee8(_pub, _pair) {
-      return _regeneratorRuntime().wrap(function _callee8$(_context8) {
-        while (1) {
-          switch (_context8.prev = _context8.next) {
-            case 0:
-              return _context8.abrupt("return", 'asdf');
-            case 1:
-            case "end":
-              return _context8.stop();
-          }
-        }
-      }, _callee8);
-    }));
-    function secret(_x16, _x17) {
-      return _secret.apply(this, arguments);
-    }
-    return secret;
-  }();
-  Key.encrypt = /*#__PURE__*/function () {
-    var _encrypt = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee9(_data, _pair, _cb, _opt) {
+    }))();
+  },
+  secret: function secret(key, pair) {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee9() {
+      var keysToEcdhJwk, pub, epub, epriv, pubJwk, props, privJwk;
       return _regeneratorRuntime().wrap(function _callee9$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
-              return _context9.abrupt("return", 'asdf');
-            case 2:
+              keysToEcdhJwk = function keysToEcdhJwk(pub, d) {
+                //var [ x, y ] = shim.Buffer.from(pub, 'base64').toString('utf8').split(':') // old
+                var _pub$split = pub.split('.'),
+                  x = _pub$split[0],
+                  y = _pub$split[1]; // new
+                var jwk = Object.assign(d ? {
+                  d: d
+                } : {}, {
+                  x: x,
+                  y: y,
+                  kty: 'EC',
+                  crv: 'P-256',
+                  ext: true
+                });
+                return jwk;
+              };
+              pub = key.epub || key;
+              epub = pair.epub;
+              epriv = pair.epriv;
+              pubJwk = keysToEcdhJwk(pub);
+              _context9.t0 = Object;
+              _context9.next = 8;
+              return crypto.subtle.importKey('jwk', pubJwk, {
+                name: 'ECDH',
+                namedCurve: 'P-256'
+              }, true, []);
+            case 8:
+              _context9.t1 = _context9.sent;
+              _context9.t2 = {
+                "public": _context9.t1
+              };
+              _context9.t3 = {
+                name: 'ECDH',
+                namedCurve: 'P-256'
+              };
+              props = _context9.t0.assign.call(_context9.t0, _context9.t2, _context9.t3);
+              privJwk = keysToEcdhJwk(epub, epriv);
+              return _context9.abrupt("return", crypto.subtle.importKey('jwk', privJwk, {
+                name: 'ECDH',
+                namedCurve: 'P-256'
+              }, false, ['deriveBits']).then( /*#__PURE__*/function () {
+                var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee8(privKey) {
+                  var derivedBits, rawBits, derivedKey;
+                  return _regeneratorRuntime().wrap(function _callee8$(_context8) {
+                    while (1) {
+                      switch (_context8.prev = _context8.next) {
+                        case 0:
+                          _context8.next = 2;
+                          return crypto.subtle.deriveBits(props, privKey, 256);
+                        case 2:
+                          derivedBits = _context8.sent;
+                          rawBits = new Uint8Array(derivedBits);
+                          _context8.next = 6;
+                          return crypto.subtle.importKey('raw', rawBits, {
+                            name: 'AES-GCM',
+                            length: 256
+                          }, true, ['encrypt', 'decrypt']);
+                        case 6:
+                          derivedKey = _context8.sent;
+                          return _context8.abrupt("return", crypto.subtle.exportKey('jwk', derivedKey).then(function (_ref4) {
+                            var k = _ref4.k;
+                            return k;
+                          }));
+                        case 8:
+                        case "end":
+                          return _context8.stop();
+                      }
+                    }
+                  }, _callee8);
+                }));
+                return function (_x3) {
+                  return _ref3.apply(this, arguments);
+                };
+              }()));
+            case 14:
             case "end":
               return _context9.stop();
           }
         }
       }, _callee9);
-    }));
-    function encrypt(_x18, _x19, _x20, _x21) {
-      return _encrypt.apply(this, arguments);
-    }
-    return encrypt;
-  }();
-  Key.decrypt = /*#__PURE__*/function () {
-    var _decrypt = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee10(_data, _pair, _cb, _opt) {
+    }))();
+  },
+  aeskey: function aeskey(key, salt) {
+    var _this5 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee10() {
+      var combo, hash, keyB64, k, jwkKey;
       return _regeneratorRuntime().wrap(function _callee10$(_context10) {
         while (1) {
           switch (_context10.prev = _context10.next) {
             case 0:
-              return _context10.abrupt("return", 'asdf');
-            case 2:
+              combo = key + (salt || _this5.random(8)).toString('utf8'); // new
+              _context10.next = 3;
+              return crypto.subtle.digest({
+                name: 'SHA-256'
+              }, new TextEncoder().encode(combo));
+            case 3:
+              hash = _context10.sent;
+              hash = Buffer.from(hash, 'binary');
+              keyB64 = hash.toString('base64');
+              k = keyB64.replace(/\+/g, '-').replace(/\//g, '_').replace(/\=/g, '');
+              jwkKey = {
+                kty: 'oct',
+                k: k,
+                ext: false,
+                alg: 'A256GCM'
+              };
+              _context10.next = 10;
+              return crypto.subtle.importKey('jwk', jwkKey, {
+                name: 'AES-GCM'
+              }, false, ['encrypt', 'decrypt']);
+            case 10:
+              return _context10.abrupt("return", _context10.sent);
+            case 11:
             case "end":
               return _context10.stop();
           }
         }
       }, _callee10);
-    }));
-    function decrypt(_x22, _x23, _x24, _x25) {
-      return _decrypt.apply(this, arguments);
-    }
-    return decrypt;
-  }();
-  return Key;
-}();
+    }))();
+  },
+  random: function random(len) {
+    return Buffer.from(crypto.getRandomValues(new Uint8Array(len)));
+  },
+  encrypt: function encrypt(data, pair, cb, opt) {
+    var _this6 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee11() {
+      var key, msg, rand, ct, r;
+      return _regeneratorRuntime().wrap(function _callee11$(_context11) {
+        while (1) {
+          switch (_context11.prev = _context11.next) {
+            case 0:
+              if (opt === void 0) {
+                opt = {};
+              }
+              key = pair.epriv || pair;
+              if (!(undefined === data)) {
+                _context11.next = 4;
+                break;
+              }
+              throw '`undefined` not allowed.';
+            case 4:
+              msg = typeof data == 'string' ? data : JSON.stringify(data);
+              rand = {
+                s: _this6.random(9),
+                iv: _this6.random(15)
+              }; // consider making this 9 and 15 or 18 or 12 to reduce == padding.
+              _context11.next = 8;
+              return _this6.aeskey(key, rand.s).then(function (aes) {
+                return crypto.subtle.encrypt({
+                  name: opt.name || 'AES-GCM',
+                  iv: new Uint8Array(rand.iv)
+                }, aes, new TextEncoder().encode(msg));
+              });
+            case 8:
+              ct = _context11.sent;
+              r = {
+                // @ts-ignore
+                ct: Buffer.from(ct, 'binary').toString(opt.encode || 'base64'),
+                iv: rand.iv.toString(opt.encode || 'base64'),
+                s: rand.s.toString(opt.encode || 'base64')
+              };
+              if (!opt.raw) {
+                r = 'SEA' + JSON.stringify(r);
+              }
+              if (cb) {
+                try {
+                  cb(r);
+                } catch (e) {
+                  console.log(e);
+                }
+              }
+              return _context11.abrupt("return", r);
+            case 13:
+            case "end":
+              return _context11.stop();
+          }
+        }
+      }, _callee11);
+    }))();
+  },
+  decrypt: function decrypt(data, pair, cb, opt) {
+    var _this7 = this;
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee12() {
+      var key, json, buf, bufiv, bufct, ct, text, r;
+      return _regeneratorRuntime().wrap(function _callee12$(_context12) {
+        while (1) {
+          switch (_context12.prev = _context12.next) {
+            case 0:
+              if (opt === void 0) {
+                opt = {};
+              }
+              key = pair.epriv || pair;
+              try {
+                data = JSON.parse(data);
+              } catch (e) {}
+              if (data.indexOf('SEA{') === 0) {
+                json = JSON.parse(data.slice(3));
+              } else {
+                json = JSON.parse(data);
+              }
+              if (!(!json.ct || !json.iv || !json.s)) {
+                _context12.next = 6;
+                break;
+              }
+              throw 'Invalid ciphertext ' + json;
+            case 6:
+              buf = Buffer.from(json.s, opt.encode || 'base64');
+              bufiv = Buffer.from(json.iv, opt.encode || 'base64');
+              bufct = Buffer.from(json.ct, opt.encode || 'base64');
+              _context12.next = 11;
+              return _this7.aeskey(key, buf).then(function (aes) {
+                return crypto.subtle.decrypt({
+                  name: opt.name || 'AES-GCM',
+                  iv: new Uint8Array(bufiv),
+                  tagLength: 128
+                }, aes, new Uint8Array(bufct));
+              });
+            case 11:
+              ct = _context12.sent;
+              text = new TextDecoder('utf8').decode(ct);
+              r = text;
+              try {
+                r = JSON.parse(text);
+              } catch (_e) {}
+              if (cb) {
+                try {
+                  cb(r);
+                } catch (e) {
+                  console.log(e);
+                }
+              }
+              return _context12.abrupt("return", r);
+            case 17:
+            case "end":
+              return _context12.stop();
+          }
+        }
+      }, _callee12);
+    }))();
+  }
+};
 
 var ELECTRON_GUN_URL = 'http://localhost:8767/gun';
 var maxConnectedPeers = 1;
@@ -2388,14 +2557,10 @@ var Node = /*#__PURE__*/function (_Actor) {
   }
   var _proto = Node.prototype;
   _proto.getCurrentUser = function getCurrentUser() {
-    return this.parent ? this.parent.getCurrentUser() : this.currentUser;
+    return this.root.currentUser;
   };
   _proto.setCurrentUser = function setCurrentUser(key) {
-    if (this.parent) {
-      this.parent.setCurrentUser(key);
-    } else {
-      this.currentUser = key;
-    }
+    this.root.currentUser = key;
   };
   _proto.handle = function handle(message) {
     if (message instanceof Put) {
@@ -2440,42 +2605,142 @@ var Node = /*#__PURE__*/function (_Actor) {
     this.root.setCurrentUser(key);
     return;
   };
-  _proto.put = function put(value) {
-    var updatedAt = Date.now();
-    if (Array.isArray(value)) {
-      throw new Error('put() does not support arrays');
+  _proto.put = /*#__PURE__*/function () {
+    var _put = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(value) {
+      var updatedAt, key, updatedNodes, put;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              updatedAt = Date.now();
+              if (!Array.isArray(value)) {
+                _context.next = 3;
+                break;
+              }
+              throw new Error('put() does not support arrays');
+            case 3:
+              if (!(typeof value === 'function')) {
+                _context.next = 5;
+                break;
+              }
+              throw new Error('put() does not support functions');
+            case 5:
+              if (!(typeof value === 'object' && value !== null)) {
+                _context.next = 8;
+                break;
+              }
+              // TODO: update the whole path of parent nodes
+              for (key in value) {
+                this.get(key).put(value[key]);
+              }
+              return _context.abrupt("return");
+            case 8:
+              _context.next = 10;
+              return this.signIfNeeded(value);
+            case 10:
+              value = _context.sent;
+              this.children = new Map();
+              updatedNodes = {};
+              _context.next = 15;
+              return this.addParentNodes(updatedNodes, value, updatedAt);
+            case 15:
+              put = Put["new"](updatedNodes, this);
+              this.handle(put);
+              this.router.postMessage(put);
+            case 18:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+    function put(_x) {
+      return _put.apply(this, arguments);
     }
-    if (typeof value === 'function') {
-      throw new Error('put() does not support functions');
+    return put;
+  }();
+  _proto.signIfNeeded = /*#__PURE__*/function () {
+    var _signIfNeeded = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(value) {
+      var signed;
+      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              if (!(this.id.indexOf('global/user/') === 0)) {
+                _context2.next = 10;
+                break;
+              }
+              if (this.getCurrentUser()) {
+                _context2.next = 3;
+                break;
+              }
+              throw new Error('not authenticated');
+            case 3:
+              if (!(this.id.indexOf('global/user/' + this.getCurrentUser().pub) !== 0)) {
+                _context2.next = 5;
+                break;
+              }
+              throw new Error('not allowed ' + this.id);
+            case 5:
+              _context2.next = 7;
+              return Key.sign(value, this.getCurrentUser(), undefined, {
+                raw: true
+              });
+            case 7:
+              signed = _context2.sent;
+              value = JSON.stringify({
+                ':': signed.m,
+                '~': signed.s
+              });
+              console.log('saving signed value', value);
+            case 10:
+              return _context2.abrupt("return", value);
+            case 11:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2, this);
+    }));
+    function signIfNeeded(_x2) {
+      return _signIfNeeded.apply(this, arguments);
     }
-    if (typeof value === 'object' && value !== null) {
-      // TODO: update the whole path of parent nodes
-      for (var key in value) {
-        this.get(key).put(value[key]);
-      }
-      return;
+    return signIfNeeded;
+  }();
+  _proto.addParentNodes = /*#__PURE__*/function () {
+    var _addParentNodes = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(updatedNodes, value, updatedAt) {
+      var childName, parentId;
+      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              if (!this.parent) {
+                _context3.next = 7;
+                break;
+              }
+              childName = this.id.split('/').pop();
+              parentId = this.parent.id;
+              updatedNodes[parentId] = updatedNodes[parentId] || {};
+              updatedNodes[parentId][childName] = {
+                value: value,
+                updatedAt: updatedAt
+              };
+              _context3.next = 7;
+              return this.parent.addParentNodes(updatedNodes, {
+                '#': this.parent.id
+              }, updatedAt);
+            case 7:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, _callee3, this);
+    }));
+    function addParentNodes(_x3, _x4, _x5) {
+      return _addParentNodes.apply(this, arguments);
     }
-    this.children = new Map();
-    var updatedNodes = {};
-    this.addParentNodes(updatedNodes, value, updatedAt);
-    var put = Put["new"](updatedNodes, this);
-    this.handle(put);
-    this.router.postMessage(put);
-  };
-  _proto.addParentNodes = function addParentNodes(updatedNodes, value, updatedAt) {
-    if (this.parent) {
-      var childName = this.id.split('/').pop();
-      var parentId = this.parent.id;
-      updatedNodes[parentId] = updatedNodes[parentId] || {};
-      updatedNodes[parentId][childName] = {
-        value: value,
-        updatedAt: updatedAt
-      };
-      this.parent.addParentNodes(updatedNodes, {
-        '#': this.parent.id
-      }, updatedAt);
-    }
-  };
+    return addParentNodes;
+  }();
   _proto.request = function request() {
     if (this.parent) {
       // TODO router should decide whether to re-request from peers
@@ -2484,23 +2749,23 @@ var Node = /*#__PURE__*/function (_Actor) {
     }
   };
   _proto.once = /*#__PURE__*/function () {
-    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(callback) {
+    var _once = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(callback) {
       var id;
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
+      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
         while (1) {
-          switch (_context.prev = _context.next) {
+          switch (_context4.prev = _context4.next) {
             case 0:
               id = this.counter++;
               callback && this.once_subscriptions.set(id, callback);
               this.request();
             case 3:
             case "end":
-              return _context.stop();
+              return _context4.stop();
           }
         }
-      }, _callee, this);
+      }, _callee4, this);
     }));
-    function once(_x) {
+    function once(_x6) {
       return _once.apply(this, arguments);
     }
     return once;
@@ -3370,7 +3635,8 @@ var Channel = /*#__PURE__*/function () {
                         case 9:
                           theirSecretChannelId = _context12.sent;
                         case 10:
-                          global$1().user(pub).get("chats").get(theirSecretChannelId).get("msgs").map().once(function (data, key) {
+                          // TODO map().once
+                          global$1().user(pub).get("chats").get(theirSecretChannelId).get("msgs").map(function (data, key) {
                             _this5.messageReceived(callback, data, _this5.uuid || pub, false, key, pub);
                           });
                         case 11:
@@ -3382,7 +3648,8 @@ var Channel = /*#__PURE__*/function () {
                           return _this5.getOurSecretChannelId(pub);
                         case 14:
                           ourSecretChannelId = _context12.sent;
-                          publicState().get("chats").get(ourSecretChannelId).get("msgs").map().once(function (data, key) {
+                          // TODO map().once
+                          publicState().get("chats").get(ourSecretChannelId).get("msgs").map(function (data, key) {
                             _this5.messageReceived(callback, data, pub, true, key, session.getKey().pub);
                           });
                         case 16:
@@ -3404,7 +3671,8 @@ var Channel = /*#__PURE__*/function () {
               return this.getMySecretUuid();
             case 4:
               mySecretUuid = _context13.sent;
-              publicState().get("chats").get(mySecretUuid).get("msgs").map().once(function (data, key) {
+              // TODO map().once
+              publicState().get("chats").get(mySecretUuid).get("msgs").map(function (data, key) {
                 _this5.messageReceived(callback, data, _this5.uuid, true, key, session.getKey().pub);
               });
             case 6:

@@ -3,6 +3,7 @@ const crypto = require('crypto');
 Object.defineProperty(global.self, "crypto", {
   value: {
     subtle: crypto.webcrypto.subtle,
+    getRandomValues: arr => crypto.randomBytes(arr.length),
   },
 });
 
@@ -40,6 +41,25 @@ describe('iris', () => {
       console.log('signedMsg', signedMsg);
       const verified = await iris.Key.verify(signedMsg, key);
       expect(verified).toBe(msg);
+    });
+    it('should encrypt and decrypt', async () => {
+      const msg = 'hello';
+      const secret = 'mySecretPassword';
+      const encrypted = await iris.Key.encrypt(msg, secret);
+      const decrypted = await iris.Key.decrypt(encrypted, secret);
+      expect(encrypted).not.toBe(msg);
+      expect(decrypted).toBe(msg);
+    });
+    it('it should generate a shared secret with ECDH', async () => {
+      const key1 = await iris.Key.generate();
+      const key2 = await iris.Key.generate();
+      const secret1 = await iris.Key.secret(key1.epub, key2);
+      const secret2 = await iris.Key.secret(key2.epub, key1);
+      const secret3 = await iris.Key.secret(key1.epub, key1);
+      const secret4 = await iris.Key.secret(key2.epub, key2);
+      expect(secret1).toBe(secret2);
+      expect(secret1).not.toBe(secret3);
+      expect(secret1).not.toBe(secret4);
     });
   });
 

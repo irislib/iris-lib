@@ -5,8 +5,8 @@ import util from './util';
 
 let myKey: any;
 
-class Key {
-  static async getActiveKey(datadir = `.`, keyfile = `iris.key`, fs?: any) {
+export default {
+  async getActiveKey(datadir = `.`, keyfile = `iris.key`, fs?: any) {
     if (myKey) {
       return myKey;
     }
@@ -14,11 +14,11 @@ class Key {
       const privKeyFile = `${datadir}/${keyfile}`;
       if (fs.existsSync(privKeyFile)) {
         const f = fs.readFileSync(privKeyFile, `utf8`);
-        myKey = Key.fromString(f);
+        myKey = this.fromString(f);
       } else {
-        const newKey = await Key.generate();
+        const newKey = await this.generate();
         myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
-        fs.writeFileSync(privKeyFile, Key.toString(myKey));
+        fs.writeFileSync(privKeyFile, this.toString(myKey));
         fs.chmodSync(privKeyFile, 400);
       }
       if (!myKey) {
@@ -27,58 +27,58 @@ class Key {
     } else {
       const str = window.localStorage.getItem(`iris.myKey`);
       if (str) {
-        myKey = Key.fromString(str);
+        myKey = this.fromString(str);
       } else {
-        const newKey = await Key.generate();
+        const newKey = await this.generate();
         myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
-        window.localStorage.setItem(`iris.myKey`, Key.toString(myKey));
+        window.localStorage.setItem(`iris.myKey`, this.toString(myKey));
       }
       if (!myKey) {
         throw new Error(`loading default key failed - check localStorage iris.myKey`);
       }
     }
     return myKey;
-  }
+  },
 
-  static getDefault(datadir = `.`, keyfile = `iris.key`) {
-    return Key.getActiveKey(datadir, keyfile);
-  }
+  getDefault(datadir = `.`, keyfile = `iris.key`) {
+    return this.getActiveKey(datadir, keyfile);
+  },
 
-  static async getActivePub(datadir = `.`, keyfile = `iris.key`) {
-    const key = await Key.getActiveKey(datadir, keyfile);
+  async getActivePub(datadir = `.`, keyfile = `iris.key`) {
+    const key = await this.getActiveKey(datadir, keyfile);
     return key.pub;
-  }
+  },
 
-  static setActiveKey(key: any, save = true, datadir = `.`, keyfile = `iris.key`, fs: any) {
+  setActiveKey(key: any, save = true, datadir = `.`, keyfile = `iris.key`, fs: any) {
     myKey = key;
     if (!save) return;
     if (util.isNode) {
       const privKeyFile = `${datadir}/${keyfile}`;
-      fs.writeFileSync(privKeyFile, Key.toString(myKey));
+      fs.writeFileSync(privKeyFile, this.toString(myKey));
       fs.chmodSync(privKeyFile, 400);
     } else {
-      window.localStorage.setItem(`iris.myKey`, Key.toString(myKey));
+      window.localStorage.setItem(`iris.myKey`, this.toString(myKey));
     }
-  }
+  },
 
-  static toString(key: any) {
+  toString(key: any) {
     return JSON.stringify(key);
-  }
+  },
 
-  static getId(key: any) {
+  getId(key: any) {
     if (!(key && key.pub)) {
       throw new Error(`missing param`);
     }
     return key.pub; // hack until GUN supports lookups by keyID
     //return util.getHash(key.pub);
-  }
+  },
 
-  static fromString(str: string) {
+  fromString(str: string) {
     return JSON.parse(str);
-  }
+  },
 
   // copied from Gun.SEA
-  static async generate() {
+  async generate() {
     try {
       var ecdhSubtle = window.crypto.subtle;
       // First: ECDSA keys for signing/verifying...
@@ -131,9 +131,9 @@ class Key {
       throw e;
       return;
     }
-  }
+  },
 
-  private static keyToJwk(key: any): JsonWebKey {
+  keyToJwk(key: any): JsonWebKey {
     if (typeof key === 'string') {
       key = { pub: key };
     }
@@ -149,12 +149,12 @@ class Key {
       jwk.d = key.priv
     }
     return jwk;
-  }
+  },
 
-  static async sign(data: any, pair: any, cb?: Function, opt: any = {}) {
+  async sign(data: any, pair: any, cb?: Function, opt: any = {}) {
     if(undefined === data){ throw '`undefined` not allowed.' }
     const text = JSON.stringify(data);
-    var jwk = Key.keyToJwk(pair);
+    var jwk = this.keyToJwk(pair);
     var hash = await util.getHash(text, 'buffer') as Buffer;
     var sig = await window.crypto.subtle.importKey('jwk', jwk, {name: 'ECDSA', namedCurve: 'P-256'}, false, ['sign'])
     .then((key) =>
@@ -165,9 +165,9 @@ class Key {
 
     if(cb){ try{ cb(r) }catch(e){console.log(e)} }
     return r;
-  }
+  },
 
-  static async verify(data: any, pair: any, cb?: Function, opt: any = {}) {
+  async verify(data: any, pair: any, cb?: Function, opt: any = {}) {
     try {
       if (typeof data === 'string') {
         if (data.slice(0, 4) === 'aSEA') {
@@ -177,7 +177,7 @@ class Key {
         }
       }
       var pub = pair.pub || pair;
-      var jwk = Key.keyToJwk(pub);
+      var jwk = this.keyToJwk(pub);
       var key = await crypto.subtle.importKey('jwk', jwk, {name: 'ECDSA', namedCurve: 'P-256'}, false, ['verify']);
 
       var text = (typeof data.m === 'string')? data.m : JSON.stringify(data.m);
@@ -197,105 +197,95 @@ class Key {
       console.log(e);
       return undefined;
     }
-  }
+  },
 
-  static async secret(_pub: any, _pair: any) {
-    return 'asdf';
-    /*
-    // ecdh secret
-
-    pub = pub.split('.');
-    const x = pub[0], y = pub[1];
-    const jwk: any = {kty: "EC", crv: "P-256", x: x, y: y, ext: true};
-    jwk.key_ops = pair.epriv ? ['sign'] : ['verify'];
-    if(pair.epriv){ jwk.d = pair.epriv; }
-
-    try {
-      var secret = await window.crypto.subtle.importKey('jwk', jwk, {name: 'ECDH', namedCurve: 'P-256'}, false, ['deriveKey'])
-        .then((key) => window.crypto.subtle.deriveKey({name: 'ECDH', public: key}, pair.priv, {name: 'AES-GCM', length: 256}, false, ['encrypt', 'decrypt']))
-      var r = await window.crypto.subtle.exportKey('raw', secret);
-      return r;
-    } catch(e) {
-      throw(e);
+  async secret(key: any, pair: any) {
+    var keysToEcdhJwk = (pub: any, d?: any): any => { // d === priv
+      //var [ x, y ] = shim.Buffer.from(pub, 'base64').toString('utf8').split(':') // old
+      var [ x, y ] = pub.split('.') // new
+      const jwk: JsonWebKey = Object.assign(
+        d ? { d } : {},
+        { x: x, y: y, kty: 'EC', crv: 'P-256', ext: true }
+      );
+      return jwk;
     }
 
-     */
-  }
+    var pub = key.epub || key;
+    var epub = pair.epub;
+    var epriv = pair.epriv;
+    var pubJwk = keysToEcdhJwk(pub);
+    var props = Object.assign({
+      public: await crypto.subtle.importKey('jwk', pubJwk, {name: 'ECDH', namedCurve: 'P-256'}, true, [])
+    },{name: 'ECDH', namedCurve: 'P-256'});
+    var privJwk = keysToEcdhJwk(epub, epriv);
+    return crypto.subtle.importKey('jwk', privJwk, {name: 'ECDH', namedCurve: 'P-256'}, false, ['deriveBits'])
+    .then(async (privKey) => {
+      var derivedBits = await crypto.subtle.deriveBits(props, privKey, 256);
+      var rawBits = new Uint8Array(derivedBits);
+      var derivedKey = await crypto.subtle.importKey('raw', rawBits,{ name: 'AES-GCM', length: 256 }, true, [ 'encrypt', 'decrypt' ]);
+      return crypto.subtle.exportKey('jwk', derivedKey).then(({ k }) => k);
+    });
+  },
 
-  static async encrypt(_data: any, _pair: any, _cb?: Function, _opt = {}) {
-    /*
-    try {
-      opt = opt || {};
-      var key = (pair||opt).epriv || pair;
-      if(u === data){ throw '`undefined` not allowed.' }
-      if(!key){
-        if(!SEA.I){ throw 'No encryption key.' }
-        pair = await SEA.I(null, {what: data, how: 'encrypt', why: opt.why});
-        key = pair.epriv || pair;
-      }
-      var msg = (typeof data == 'string')? data : await shim.stringify(data);
-      var rand = {s: shim.random(9), iv: shim.random(15)}; // consider making this 9 and 15 or 18 or 12 to reduce == padding.
-      var ct = await aeskey(key, rand.s, opt).then((aes) => (shim.subtle).encrypt({ // Keeping the AES key scope as private as possible...
-        name: opt.name || 'AES-GCM', iv: new Uint8Array(rand.iv)
-      }, aes, new shim.TextEncoder().encode(msg)));
-      var r = {
-        ct: shim.Buffer.from(ct, 'binary').toString(opt.encode || 'base64'),
-        iv: rand.iv.toString(opt.encode || 'base64'),
-        s: rand.s.toString(opt.encode || 'base64')
-      }
-      if(!opt.raw){ r = 'SEA' + await shim.stringify(r) }
+  async aeskey(key: any, salt?: Buffer) {
+    const combo = key + (salt || this.random(8)).toString('utf8'); // new
+    let hash: any = await crypto.subtle.digest({name: 'SHA-256'}, new TextEncoder().encode(combo));
+    hash = Buffer.from(hash, 'binary');
 
-      if(cb){ try{ cb(r) }catch(e){console.log(e)} }
-      return r;
-    } catch(e) {
-      console.log(e);
-      SEA.err = e;
-      if(SEA.throw){ throw e }
-      if(cb){ cb() }
-      return;
+    const keyB64 = hash.toString('base64');
+    const k = keyB64.replace(/\+/g, '-').replace(/\//g, '_').replace(/\=/g, '');
+
+    const jwkKey = { kty: 'oct', k: k, ext: false, alg: 'A256GCM' };
+    return await crypto.subtle.importKey('jwk', jwkKey, {name:'AES-GCM'}, false, ['encrypt', 'decrypt'])
+  },
+
+  random(len: number) {
+    return Buffer.from(crypto.getRandomValues(new Uint8Array(len)));
+  },
+
+  async encrypt(data: any, pair: any, cb?: Function, opt: any = {}) {
+    var key = pair.epriv || pair;
+    if(undefined === data){ throw '`undefined` not allowed.' }
+    var msg = (typeof data == 'string')? data : JSON.stringify(data);
+    var rand = {s: this.random(9), iv: this.random(15)}; // consider making this 9 and 15 or 18 or 12 to reduce == padding.
+    var ct = await this.aeskey(key, rand.s).then((aes) => crypto.subtle.encrypt({ // Keeping the AES key scope as private as possible...
+      name: opt.name || 'AES-GCM', iv: new Uint8Array(rand.iv)
+    }, aes, new TextEncoder().encode(msg)));
+    var r: any = {
+      // @ts-ignore
+      ct: Buffer.from(ct, 'binary').toString(opt.encode || 'base64'),
+      iv: rand.iv.toString(opt.encode || 'base64'),
+      s: rand.s.toString(opt.encode || 'base64')
     }
-    */
-    return 'asdf';
-  }
+    if(!opt.raw){ r = 'SEA' + JSON.stringify(r) }
 
-  static async decrypt(_data: any, _pair: any, _cb?: Function, _opt = {}) {
-    return 'asdf';
-    /*
-    try {
-      opt = opt || {};
-      var key = (pair||opt).epriv || pair;
-      if(!key){
-        if(!SEA.I){ throw 'No decryption key.' }
-        pair = await SEA.I(null, {what: data, how: 'decrypt', why: opt.why});
-        key = pair.epriv || pair;
-      }
-      var json = await S.parse(data);
-      var buf, bufiv, bufct; try{
-        buf = shim.Buffer.from(json.s, opt.encode || 'base64');
-        bufiv = shim.Buffer.from(json.iv, opt.encode || 'base64');
-        bufct = shim.Buffer.from(json.ct, opt.encode || 'base64');
-        var ct = await aeskey(key, buf, opt).then((aes) => (shim.subtle).decrypt({  // Keeping aesKey scope as private as possible...
-          name: opt.name || 'AES-GCM', iv: new Uint8Array(bufiv), tagLength: 128
-        }, aes, new Uint8Array(bufct)));
-      }catch(e){
-        if('utf8' === opt.encode){ throw "Could not decrypt" }
-        if(SEA.opt.fallback){
-          opt.encode = 'utf8';
-          return await SEA.decrypt(data, pair, cb, opt);
-        }
-      }
-      var r = await S.parse(new shim.TextDecoder('utf8').decode(ct));
-      if(cb){ try{ cb(r) }catch(e){console.log(e)} }
-      return r;
-    } catch(e) {
-      console.log(e);
-      SEA.err = e;
-      if(SEA.throw){ throw e }
-      if(cb){ cb() }
-      return;
+    if(cb){ try{ cb(r) }catch(e){console.log(e)} }
+    return r;
+  },
+
+  async decrypt(data: any, pair: any, cb?: Function, opt: any = {}) {
+    var key = pair.epriv || pair;
+    let json;
+    try { data = JSON.parse(data); } catch (e) {}
+    if (data.indexOf('SEA{') === 0) {
+      json = JSON.parse(data.slice(3));
+    } else {
+      json = JSON.parse(data);
     }
-    */
+    if (!json.ct || !json.iv || !json.s) {
+      throw 'Invalid ciphertext ' + json;
+    }
+    var buf: Buffer, bufiv: Buffer, bufct: Buffer;
+    buf = Buffer.from(json.s, opt.encode || 'base64');
+    bufiv = Buffer.from(json.iv, opt.encode || 'base64');
+    bufct = Buffer.from(json.ct, opt.encode || 'base64');
+    var ct = await this.aeskey(key, buf).then((aes) => crypto.subtle.decrypt({  // Keeping aesKey scope as private as possible...
+      name: opt.name || 'AES-GCM', iv: new Uint8Array(bufiv), tagLength: 128
+    }, aes, new Uint8Array(bufct)));
+    const text = new TextDecoder('utf8').decode(ct);
+    var r = text;
+    try { r = JSON.parse(text); } catch (_e) {}
+    if(cb){ try{ cb(r) }catch(e){console.log(e)} }
+    return r;
   }
 }
-
-export default Key;

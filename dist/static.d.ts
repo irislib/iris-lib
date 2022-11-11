@@ -11,7 +11,7 @@ declare const _default: {
      * @param value
      * @returns {Promise<string>}
      */
-    put(value: any): Promise<string | undefined>;
+    put(value: any): Promise<string | ArrayBuffer>;
 };
 /**
  * Content-addressed storage

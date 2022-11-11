@@ -4,6 +4,7 @@ import {Message, Put, Get, UpdatedNodes} from './Message';
 
 // @ts-ignore
 import Router from './Router';
+import Key from "../Key";
 //import * as Comlink from "comlink";
 
 export type NodeData = {
@@ -60,15 +61,11 @@ export default class Node extends Actor {
     }
 
     getCurrentUser(): any {
-        return this.parent ? this.parent.getCurrentUser() : this.currentUser;
+        return this.root.currentUser;
     }
 
     setCurrentUser(key: any) {
-        if (this.parent) {
-            this.parent.setCurrentUser(key);
-        } else {
-            this.currentUser = key;
-        }
+        this.root.currentUser = key;
     }
 
     handle(message: Message): void {
@@ -132,7 +129,7 @@ export default class Node extends Actor {
         }
     };
 
-    put(value: any): void {
+    async put(value: any): Promise<void> {
         const updatedAt = Date.now();
         if (Array.isArray(value)) {
             throw new Error('put() does not support arrays');
@@ -147,21 +144,38 @@ export default class Node extends Actor {
             }
             return;
         }
+        value = await this.signIfNeeded(value);
         this.children = new Map();
         const updatedNodes: UpdatedNodes = {};
-        this.addParentNodes(updatedNodes, value, updatedAt);
+        await this.addParentNodes(updatedNodes, value, updatedAt);
         const put = Put.new(updatedNodes, this);
         this.handle(put);
         this.router.postMessage(put);
     }
 
-    private addParentNodes(updatedNodes: UpdatedNodes, value: any, updatedAt: number) {
+    private async signIfNeeded(value: any) {
+        if (this.id.indexOf('global/user/') === 0) {
+            if (!this.getCurrentUser()) {
+                throw new Error('not authenticated');
+            }
+            if (this.id.indexOf('global/user/' + this.getCurrentUser().pub) !== 0) {
+                throw new Error('not allowed ' + this.id);
+            }
+            const signed = await Key.sign(value, this.getCurrentUser(), undefined, {raw: true});
+            value = JSON.stringify({':': signed.m, '~': signed.s});
+            console.log('saving signed value', value);
+        }
+        return value;
+    }
+
+    private async addParentNodes(updatedNodes: UpdatedNodes, value: any, updatedAt: number) {
+        // TODO sign
         if (this.parent) {
             const childName = this.id.split('/').pop() as string;
             const parentId = this.parent.id;
             updatedNodes[parentId] = updatedNodes[parentId] || {};
             updatedNodes[parentId][childName] = {value, updatedAt};
-            this.parent.addParentNodes(updatedNodes, {'#': this.parent.id }, updatedAt);
+            await this.parent.addParentNodes(updatedNodes, {'#': this.parent.id }, updatedAt);
         }
     }
 

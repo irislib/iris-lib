@@ -437,18 +437,21 @@ class Channel {
         } else {
           theirSecretChannelId = await this.getTheirSecretChannelId(pub);
         }
-        publicState().user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, this.uuid || pub, false, key, pub);});
+        // TODO map().once
+        publicState().user(pub).get(`chats`).get(theirSecretChannelId).get(`msgs`).map((data, key) => {this.messageReceived(callback, data, this.uuid || pub, false, key, pub);});
       }
       if (!this.uuid) {
         // Subscribe to our messages
         const ourSecretChannelId = await this.getOurSecretChannelId(pub);
-        userState().get(`chats`).get(ourSecretChannelId).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, pub, true, key, session.getKey().pub);});
+        // TODO map().once
+        userState().get(`chats`).get(ourSecretChannelId).get(`msgs`).map((data, key) => {this.messageReceived(callback, data, pub, true, key, session.getKey().pub);});
       }
     });
     if (this.uuid) {
       // Subscribe to our messages
       const mySecretUuid = await this.getMySecretUuid();
-      userState().get(`chats`).get(mySecretUuid).get(`msgs`).map().once((data, key) => {this.messageReceived(callback, data, this.uuid, true, key, session.getKey().pub);});
+      // TODO map().once
+      userState().get(`chats`).get(mySecretUuid).get(`msgs`).map((data, key) => {this.messageReceived(callback, data, this.uuid, true, key, session.getKey().pub);});
     }
   }
 
