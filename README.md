@@ -41,6 +41,8 @@ or include the script in your html:
 
 ## Usage
 
+[API documentation](https://docs.iris.to)
+
 Read/write public profiles:
 ```js
 // Subscribe to your profile name
