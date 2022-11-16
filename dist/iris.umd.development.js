@@ -1439,7 +1439,7 @@
     decrypt: function decrypt(data, pair, cb, opt) {
       var _this7 = this;
       return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee12() {
-        var key, j, buf, bufiv, bufct, ct, text, r;
+        var key, json, buf, bufiv, bufct, ct, text, r;
         return _regeneratorRuntime().wrap(function _callee12$(_context12) {
           while (1) {
             switch (_context12.prev = _context12.next) {
@@ -1452,21 +1452,20 @@
                   data = JSON.parse(data);
                 } catch (e) {}
                 if (data.indexOf('SEA{') === 0) {
-                  j = JSON.parse(data.slice(3));
+                  json = JSON.parse(data.slice(3));
                 } else {
-                  j = JSON.parse(data);
+                  json = JSON.parse(data);
                 }
-                if (!(!j.ct || !j.iv || !j.s)) {
-                  _context12.next = 7;
+                if (!(!json.ct || !json.iv || !json.s)) {
+                  _context12.next = 6;
                   break;
                 }
-                console.log(661, j);
-                throw 'Invalid ciphertext ' + j;
-              case 7:
-                buf = Buffer.from(j.s, opt.encode || 'base64');
-                bufiv = Buffer.from(j.iv, opt.encode || 'base64');
-                bufct = Buffer.from(j.ct, opt.encode || 'base64');
-                _context12.next = 12;
+                throw 'Invalid ciphertext ' + json;
+              case 6:
+                buf = Buffer.from(json.s, opt.encode || 'base64');
+                bufiv = Buffer.from(json.iv, opt.encode || 'base64');
+                bufct = Buffer.from(json.ct, opt.encode || 'base64');
+                _context12.next = 11;
                 return _this7.aeskey(key, buf).then(function (aes) {
                   return crypto.subtle.decrypt({
                     name: opt.name || 'AES-GCM',
@@ -1474,7 +1473,7 @@
                     tagLength: 128
                   }, aes, new Uint8Array(bufct));
                 });
-              case 12:
+              case 11:
                 ct = _context12.sent;
                 text = new TextDecoder('utf8').decode(ct);
                 r = text;
@@ -1489,7 +1488,7 @@
                   }
                 }
                 return _context12.abrupt("return", r);
-              case 18:
+              case 17:
               case "end":
                 return _context12.stop();
             }
