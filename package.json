@@ -16,7 +16,7 @@
     "start": "tsdx watch --name iris",
     "build": "tsdx build --format cjs,esm,umd --name iris",
     "build:docs": "documentation build src/** --shallow -f html -o docs --config documentation.yml",
-    "test": "tsdx test",
+    "test": "yarn build;tsdx test",
     "test:watch": "tsdx test --watch",
     "lint": "tsdx lint",
     "prepare": "tsdx build --name iris",

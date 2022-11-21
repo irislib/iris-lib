@@ -153,7 +153,7 @@ export default {
 
   async sign(data: any, pair: any, cb?: Function, opt: any = {}) {
     if(undefined === data){ throw '`undefined` not allowed.' }
-    const text = JSON.stringify(data);
+    const text = typeof data === 'string' ? data : JSON.stringify(data); // Gun.SEA doesn't preserve data type: "0" -> 0. Should we change this?
     var jwk = this.keyToJwk(pair);
     var hash = await util.getHash(text, 'buffer') as Buffer;
     var sig = await window.crypto.subtle.importKey('jwk', jwk, {name: 'ECDSA', namedCurve: 'P-256'}, false, ['sign'])
@@ -161,7 +161,7 @@ export default {
       window.crypto.subtle.sign({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, hash)
     ) // privateKey scope doesn't leak out from here!
     var r: any = {m: text, s: Buffer.from(sig).toString(opt.encode || 'base64')}
-    if(!opt.raw){ r = 'aSEA' + JSON.stringify(r) }
+    if(!opt.raw){ r = 'aSEA' + JSON.stringify(r) } // "aSEA" was a dumb fix for an earlier bug in Gun.SEA
 
     if(cb){ try{ cb(r) }catch(e){console.log(e)} }
     return r;
@@ -171,22 +171,31 @@ export default {
     try {
       if (typeof data === 'string') {
         if (data.slice(0, 4) === 'aSEA') {
-          data = JSON.parse(data.slice(4));
-        } else {
+          data = data.slice(4)
+        }
+        try {
           data = JSON.parse(data);
+        } catch (e) {
+          // not JSON
         }
       }
       var pub = pair.pub || pair;
       var jwk = this.keyToJwk(pub);
       var key = await crypto.subtle.importKey('jwk', jwk, {name: 'ECDSA', namedCurve: 'P-256'}, false, ['verify']);
 
-      var text = (typeof data.m === 'string')? data.m : JSON.stringify(data.m);
+      let text = data.m;
+      try {
+        text = JSON.parse(text);
+      } catch (e) {
+        // ignore
+      }
+
       let hash = await util.getHash(text, 'buffer') as Buffer;
       var buf, sig, isValid;
       buf = Buffer.from(data.s, opt.encode || 'base64');
       sig = new Uint8Array(buf);
       isValid = await crypto.subtle.verify({name: 'ECDSA', hash: {name: 'SHA-256'}}, key, sig, hash);
-      var r = isValid? JSON.parse(data.m) : undefined;
+      var r = isValid? JSON.parse(text) : undefined;
       if (r === undefined) {
         //console.log('invalid', data, pair, hash);
       }
@@ -246,7 +255,7 @@ export default {
   async encrypt(data: any, pair: any, cb?: Function, opt: any = {}) {
     var key = pair.epriv || pair;
     if(undefined === data){ throw '`undefined` not allowed.' }
-    var msg = (typeof data == 'string')? data : JSON.stringify(data);
+    var msg = (typeof data == 'string')? data : JSON.stringify(data); // Gun.SEA doesn't preserve data type: "0" -> 0. Should we change this?
     var rand = {s: this.random(9), iv: this.random(15)}; // consider making this 9 and 15 or 18 or 12 to reduce == padding.
     var ct = await this.aeskey(key, rand.s).then((aes) => crypto.subtle.encrypt({ // Keeping the AES key scope as private as possible...
       name: opt.name || 'AES-GCM', iv: new Uint8Array(rand.iv)

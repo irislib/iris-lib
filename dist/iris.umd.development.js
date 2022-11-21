@@ -1139,7 +1139,7 @@
                 }
                 throw '`undefined` not allowed.';
               case 3:
-                text = JSON.stringify(data);
+                text = typeof data === 'string' ? data : JSON.stringify(data); // Gun.SEA doesn't preserve data type: "0" -> 0. Should we change this?
                 jwk = _this3.keyToJwk(pair);
                 _context6.next = 7;
                 return util.getHash(text, 'buffer');
@@ -1166,7 +1166,7 @@
                 };
                 if (!opt.raw) {
                   r = 'aSEA' + JSON.stringify(r);
-                }
+                } // "aSEA" was a dumb fix for an earlier bug in Gun.SEA
                 if (cb) {
                   try {
                     cb(r);
@@ -1197,9 +1197,12 @@
                 _context7.prev = 1;
                 if (typeof data === 'string') {
                   if (data.slice(0, 4) === 'aSEA') {
-                    data = JSON.parse(data.slice(4));
-                  } else {
+                    data = data.slice(4);
+                  }
+                  try {
                     data = JSON.parse(data);
+                  } catch (e) {
+                    // not JSON
                   }
                 }
                 pub = pair.pub || pair;
@@ -1211,23 +1214,28 @@
                 }, false, ['verify']);
               case 7:
                 key = _context7.sent;
-                text = typeof data.m === 'string' ? data.m : JSON.stringify(data.m);
-                _context7.next = 11;
+                text = data.m;
+                try {
+                  text = JSON.parse(text);
+                } catch (e) {
+                  // ignore
+                }
+                _context7.next = 12;
                 return util.getHash(text, 'buffer');
-              case 11:
+              case 12:
                 hash = _context7.sent;
                 buf = Buffer.from(data.s, opt.encode || 'base64');
                 sig = new Uint8Array(buf);
-                _context7.next = 16;
+                _context7.next = 17;
                 return crypto.subtle.verify({
                   name: 'ECDSA',
                   hash: {
                     name: 'SHA-256'
                   }
                 }, key, sig, hash);
-              case 16:
+              case 17:
                 isValid = _context7.sent;
-                r = isValid ? JSON.parse(data.m) : undefined;
+                r = isValid ? JSON.parse(text) : undefined;
                 if (cb) {
                   try {
                     cb(r);
@@ -1236,17 +1244,17 @@
                   }
                 }
                 return _context7.abrupt("return", r);
-              case 23:
-                _context7.prev = 23;
+              case 24:
+                _context7.prev = 24;
                 _context7.t0 = _context7["catch"](1);
                 console.log(_context7.t0);
                 return _context7.abrupt("return", undefined);
-              case 27:
+              case 28:
               case "end":
                 return _context7.stop();
             }
           }
-        }, _callee7, null, [[1, 23]]);
+        }, _callee7, null, [[1, 24]]);
       }))();
     },
     secret: function secret(key, pair) {
@@ -1397,7 +1405,7 @@
                 }
                 throw '`undefined` not allowed.';
               case 4:
-                msg = typeof data == 'string' ? data : JSON.stringify(data);
+                msg = typeof data == 'string' ? data : JSON.stringify(data); // Gun.SEA doesn't preserve data type: "0" -> 0. Should we change this?
                 rand = {
                   s: _this6.random(9),
                   iv: _this6.random(15)
