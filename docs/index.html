@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset='utf-8'>
-  <title>iris-lib 0.1.0 | Documentation</title>
+  <title>iris-lib 0.1.7 | Documentation</title>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
   <link href='assets/bass.css' rel='stylesheet'>
   <link href='assets/style.css' rel='stylesheet'>
@@ -14,7 +14,7 @@
       <div id='split-left' class='overflow-auto fs0 height-viewport-100'>
         <div class='py1 px2'>
           <h3 class='mb0 no-anchor'>iris-lib</h3>
-          <div class='mb1'><code>0.1.0</code></div>
+          <div class='mb1'><code>0.1.7</code></div>
           <input
             placeholder='Filter'
             id='filter-input'
@@ -340,6 +340,16 @@
                   
                   
                 </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#derivefrombytes'
+                  class="">
+                  deriveFromBytes
+                  
+                </a>
                 
                 </li>
               
@@ -2919,6 +2929,75 @@
     </div>
   
 </div>
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='derivefrombytes'>
+      deriveFromBytes
+    </h3>
+    
+    
+  </div>
+  
+
+  <p>Derive a key from bytes. For example, sign a login prompt string with metamask and
+pass the signature to this function to derive a key.</p>
+
+    <div class='pre p1 fill-light mt0'>deriveFromBytes(bytes: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array">Uint8Array</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;MyKey></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>bytes</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array">Uint8Array</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a>&#x3C;MyKey></code>
+    
+  
+
+  
+
+  
+
+  
+
+  
 
   
 

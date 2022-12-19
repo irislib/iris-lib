@@ -7,6 +7,7 @@ import privateState from './private';
 import SignedMessage from './SignedMessage';
 import Channel from './Channel';
 import Node from './Node';
+import Key from './Key';
 declare const _default: {
     local: typeof local;
     global: typeof global;
@@ -133,5 +134,6 @@ declare const _default: {
     SignedMessage: typeof SignedMessage;
     Channel: typeof Channel;
     Node: typeof Node;
+    Key: typeof Key;
 };
 export default _default;

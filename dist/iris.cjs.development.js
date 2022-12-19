@@ -13,6 +13,7 @@ require('gun/lib/store');
 require('gun/lib/rindexed');
 var localForage = _interopDefault(require('localforage'));
 var Fuse = _interopDefault(require('fuse.js'));
+var secp = require('@noble/secp256k1');
 
 function _regeneratorRuntime() {
   _regeneratorRuntime = function () {
@@ -4985,6 +4986,362 @@ var electron = util.isElectron ? /*#__PURE__*/new Gun({
   localStorage: false
 }).get('state') : null;
 
+var EC = /*#__PURE__*/require('elliptic').ec;
+var myKey;
+function arrayToBase64Url(array) {
+  return btoa(String.fromCharCode.apply(null, array)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+function arrayToHex(array) {
+  return Array.from(array, function (_byte) {
+    return ('0' + (_byte & 0xff).toString(16)).slice(-2);
+  }).join('');
+}
+function base64UrlToArray(base64Url) {
+  return Uint8Array.from(atob(base64Url.replace(/-/g, '+').replace(/_/g, '/')), function (c) {
+    return c.charCodeAt(0);
+  });
+}
+var hexToUint8Array = function hexToUint8Array(hexString) {
+  var match = hexString.match(/.{1,2}/g);
+  if (!match) {
+    throw new Error('Not a hex string');
+  }
+  return Uint8Array.from(match.map(function (_byte2) {
+    return parseInt(_byte2, 16);
+  }));
+};
+var Key = /*#__PURE__*/function () {
+  function Key() {}
+  /**
+   * Derive a key from bytes. For example, sign a login prompt string with metamask and
+   * pass the signature to this function to derive a key.
+   * @param bytes
+   */Key.deriveFromBytes =
+  /*#__PURE__*/
+  function () {
+    var _deriveFromBytes = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(bytes) {
+      var hash1, hash2, signingKey, encryptionKey, k;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _context.next = 2;
+              return window.crypto.subtle.digest('SHA-256', bytes);
+            case 2:
+              hash1 = _context.sent;
+              _context.next = 5;
+              return window.crypto.subtle.digest('SHA-256', hash1);
+            case 5:
+              hash2 = _context.sent;
+              signingKey = this.irisKeyPairFromHash(hash1);
+              encryptionKey = this.irisKeyPairFromHash(hash2);
+              k = {
+                pub: signingKey.pub,
+                priv: signingKey.priv,
+                epub: encryptionKey.pub,
+                epriv: encryptionKey.priv
+              };
+              _context.next = 11;
+              return Key.addSecp256k1KeyPair(k);
+            case 11:
+              k = _context.sent;
+              return _context.abrupt("return", k);
+            case 13:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, this);
+    }));
+    function deriveFromBytes(_x) {
+      return _deriveFromBytes.apply(this, arguments);
+    }
+    return deriveFromBytes;
+  }();
+  Key.addSecp256k1KeyPair = /*#__PURE__*/function () {
+    var _addSecp256k1KeyPair = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(key) {
+      var hash;
+      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              if (key.secp256k1) {
+                _context2.next = 5;
+                break;
+              }
+              _context2.next = 3;
+              return window.crypto.subtle.digest('SHA-256', base64UrlToArray(key.priv));
+            case 3:
+              hash = _context2.sent;
+              key.secp256k1 = Key.secp256k1KeyPairFromHash(hash);
+            case 5:
+              return _context2.abrupt("return", key);
+            case 6:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2);
+    }));
+    function addSecp256k1KeyPair(_x2) {
+      return _addSecp256k1KeyPair.apply(this, arguments);
+    }
+    return addSecp256k1KeyPair;
+  }();
+  Key.fromSecp256k1 = /*#__PURE__*/function () {
+    var _fromSecp256k = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(priv) {
+      var privArr, hash, k;
+      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              if (secp.utils.isValidPrivateKey(priv)) {
+                _context3.next = 2;
+                break;
+              }
+              throw new Error("invalid secp256k1 private key");
+            case 2:
+              privArr = hexToUint8Array(priv);
+              _context3.next = 5;
+              return window.crypto.subtle.digest('SHA-256', privArr);
+            case 5:
+              hash = _context3.sent;
+              k = this.deriveFromBytes(new Uint8Array(hash));
+              k.secp256k1 = {
+                priv: priv,
+                rpub: arrayToHex(secp.schnorr.getPublicKey(privArr))
+              };
+              return _context3.abrupt("return", k);
+            case 9:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, _callee3, this);
+    }));
+    function fromSecp256k1(_x3) {
+      return _fromSecp256k.apply(this, arguments);
+    }
+    return fromSecp256k1;
+  }();
+  Key.irisKeyPairFromHash = function irisKeyPairFromHash(hash) {
+    var ec = new EC('p256');
+    var keyPair = ec.keyFromPrivate(new Uint8Array(hash));
+    var privKey = keyPair.getPrivate().toArray('be', 32);
+    var x = keyPair.getPublic().getX().toArray('be', 32);
+    var y = keyPair.getPublic().getY().toArray('be', 32);
+    privKey = arrayToBase64Url(privKey);
+    x = arrayToBase64Url(x);
+    y = arrayToBase64Url(y);
+    var kp = {
+      pub: x + "." + y,
+      priv: privKey
+    };
+    return kp;
+  }
+  // secp256k1 is used by nostr among others
+  ;
+  Key.secp256k1KeyPairFromHash = function secp256k1KeyPairFromHash(hash) {
+    var ec = new EC('secp256k1');
+    var keyPair = ec.keyFromPrivate(new Uint8Array(hash));
+    var priv = keyPair.getPrivate().toString(16);
+    var rpub = arrayToHex(secp.schnorr.getPublicKey(priv));
+    var kp = {
+      rpub: rpub,
+      priv: priv
+    };
+    return kp;
+  };
+  Key.getActiveKey = /*#__PURE__*/function () {
+    var _getActiveKey = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(datadir, keyfile, fs) {
+      var privKeyFile, f, newKey, str, _newKey;
+      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+        while (1) {
+          switch (_context4.prev = _context4.next) {
+            case 0:
+              if (datadir === void 0) {
+                datadir = ".";
+              }
+              if (keyfile === void 0) {
+                keyfile = "iris.key";
+              }
+              if (!myKey) {
+                _context4.next = 4;
+                break;
+              }
+              return _context4.abrupt("return", myKey);
+            case 4:
+              if (!fs) {
+                _context4.next = 21;
+                break;
+              }
+              privKeyFile = datadir + "/" + keyfile;
+              if (!fs.existsSync(privKeyFile)) {
+                _context4.next = 11;
+                break;
+              }
+              f = fs.readFileSync(privKeyFile, "utf8");
+              myKey = Key.fromString(f);
+              _context4.next = 17;
+              break;
+            case 11:
+              _context4.next = 13;
+              return Key.generate();
+            case 13:
+              newKey = _context4.sent;
+              myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
+              fs.writeFileSync(privKeyFile, Key.toString(myKey));
+              fs.chmodSync(privKeyFile, 400);
+            case 17:
+              if (myKey) {
+                _context4.next = 19;
+                break;
+              }
+              throw new Error("loading default key failed - check " + datadir + "/" + keyfile);
+            case 19:
+              _context4.next = 33;
+              break;
+            case 21:
+              str = window.localStorage.getItem("iris.myKey");
+              if (!str) {
+                _context4.next = 26;
+                break;
+              }
+              myKey = Key.fromString(str);
+              _context4.next = 31;
+              break;
+            case 26:
+              _context4.next = 28;
+              return Key.generate();
+            case 28:
+              _newKey = _context4.sent;
+              myKey = myKey || _newKey; // eslint-disable-line require-atomic-updates
+              window.localStorage.setItem("iris.myKey", Key.toString(myKey));
+            case 31:
+              if (myKey) {
+                _context4.next = 33;
+                break;
+              }
+              throw new Error("loading default key failed - check localStorage iris.myKey");
+            case 33:
+              return _context4.abrupt("return", this.addSecp256k1KeyPair(myKey));
+            case 34:
+            case "end":
+              return _context4.stop();
+          }
+        }
+      }, _callee4, this);
+    }));
+    function getActiveKey(_x4, _x5, _x6) {
+      return _getActiveKey.apply(this, arguments);
+    }
+    return getActiveKey;
+  }();
+  Key.getDefault = function getDefault(datadir, keyfile) {
+    if (datadir === void 0) {
+      datadir = ".";
+    }
+    if (keyfile === void 0) {
+      keyfile = "iris.key";
+    }
+    return Key.getActiveKey(datadir, keyfile);
+  };
+  Key.getActivePub = /*#__PURE__*/function () {
+    var _getActivePub = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5(datadir, keyfile) {
+      var key;
+      return _regeneratorRuntime().wrap(function _callee5$(_context5) {
+        while (1) {
+          switch (_context5.prev = _context5.next) {
+            case 0:
+              if (datadir === void 0) {
+                datadir = ".";
+              }
+              if (keyfile === void 0) {
+                keyfile = "iris.key";
+              }
+              _context5.next = 4;
+              return Key.getActiveKey(datadir, keyfile);
+            case 4:
+              key = _context5.sent;
+              return _context5.abrupt("return", key.pub);
+            case 6:
+            case "end":
+              return _context5.stop();
+          }
+        }
+      }, _callee5);
+    }));
+    function getActivePub(_x7, _x8) {
+      return _getActivePub.apply(this, arguments);
+    }
+    return getActivePub;
+  }();
+  Key.setActiveKey = function setActiveKey(key, save, datadir, keyfile, fs) {
+    if (save === void 0) {
+      save = true;
+    }
+    if (datadir === void 0) {
+      datadir = ".";
+    }
+    if (keyfile === void 0) {
+      keyfile = "iris.key";
+    }
+    myKey = key;
+    if (!save) return;
+    if (util.isNode) {
+      var privKeyFile = datadir + "/" + keyfile;
+      fs.writeFileSync(privKeyFile, Key.toString(myKey));
+      fs.chmodSync(privKeyFile, 400);
+    } else {
+      window.localStorage.setItem("iris.myKey", Key.toString(myKey));
+    }
+  };
+  Key.toString = function toString(key) {
+    return JSON.stringify(key);
+  };
+  Key.getId = function getId(key) {
+    if (!(key && key.pub)) {
+      throw new Error("missing param");
+    }
+    return key.pub; // hack until GUN supports lookups by keyID
+    //return util.getHash(key.pub);
+  };
+  Key.fromString = function fromString(str) {
+    return JSON.parse(str);
+  };
+  Key.generate = function generate() {
+    return Gun.SEA.pair();
+  };
+  Key.sign = /*#__PURE__*/function () {
+    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(msg, pair) {
+      var sig;
+      return _regeneratorRuntime().wrap(function _callee6$(_context6) {
+        while (1) {
+          switch (_context6.prev = _context6.next) {
+            case 0:
+              _context6.next = 2;
+              return Gun.SEA.sign(msg, pair);
+            case 2:
+              sig = _context6.sent;
+              return _context6.abrupt("return", "a" + sig);
+            case 4:
+            case "end":
+              return _context6.stop();
+          }
+        }
+      }, _callee6);
+    }));
+    function sign(_x9, _x10) {
+      return _sign.apply(this, arguments);
+    }
+    return sign;
+  }();
+  Key.verify = function verify(msg, pubKey) {
+    return Gun.SEA.verify(msg.slice(1), pubKey);
+  };
+  return Key;
+}();
+
 var key;
 var myName;
 var latestChatLink;
@@ -5029,7 +5386,10 @@ var session = {
       return;
     }
     initCalled = true;
-    var localStorageKey = localStorage.getItem('chatKeyPair');
+    var localStorageKey = localStorage.getItem('iris.myKey');
+    if (!localStorageKey) {
+      localStorageKey = localStorage.getItem('chatKeyPair');
+    }
     if (localStorageKey) {
       this.login(JSON.parse(localStorageKey));
     } else if (options.autologin !== false) {
@@ -5223,69 +5583,85 @@ var session = {
    * @param key
    */login: function login(k) {
     var _this4 = this;
-    var shouldRefresh = !!key;
-    key = k;
-    localStorage.setItem('chatKeyPair', JSON.stringify(k));
-    publicState().auth(key);
-    publicState().put({
-      epub: key.epub
-    });
-    publicState().get('likes').put({
-      a: null
-    }); // gun bug?
-    publicState().get('msgs').put({
-      a: null
-    }); // gun bug?
-    publicState().get('replies').put({
-      a: null
-    }); // gun bug?
-    notifications.subscribeToWebPush();
-    notifications.getWebPushSubscriptions();
-    notifications.subscribeToIrisNotifications();
-    Channel.getMyChatLinks(undefined, function (chatLink) {
-      local$1().get('chatLinks').get(chatLink.id).put(chatLink.url);
-      latestChatLink = chatLink.url;
-    });
-    this.setOurOnlineStatus();
-    Channel.getChannels(function (c) {
-      return _this4.addChannel(c);
-    });
-    publicState().get('profile').get('name').on(function (name) {
-      if (name && typeof name === 'string') {
-        myName = name;
-      }
-    });
-    notifications.init();
-    local$1().get('loggedIn').put(true);
-    local$1().get('settings').once().then(function (settings) {
-      if (!settings) {
-        local$1().get('settings').put(DEFAULT_SETTINGS.local);
-      } else if (settings.enableWebtorrent === undefined || settings.autoplayWebtorrent === undefined) {
-        local$1().get('settings').get('enableWebtorrent').put(DEFAULT_SETTINGS.local.enableWebtorrent);
-        local$1().get('settings').get('autoplayWebtorrent').put(DEFAULT_SETTINGS.local.autoplayWebtorrent);
-      }
-    });
-    publicState().get('block').map().on(function (isBlocked, user) {
-      local$1().get('block').get(user).put(isBlocked);
-      if (isBlocked) {
-        delete searchableItems[user];
-      }
-    });
-    this.updateGroups();
-    if (shouldRefresh) {
-      location.reload();
-    }
-    if (electron) {
-      electron.get('settings').on(function (electron) {
-        local$1().get('settings').get('electron').put(electron);
-      });
-      electron.get('user').put(key.pub);
-    }
-    local$1().get('filters').get('group').once().then(function (v) {
-      if (!v) {
-        local$1().get('filters').get('group').put('follows');
-      }
-    });
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+      var shouldRefresh;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              shouldRefresh = !!key;
+              _context.next = 3;
+              return Key.addSecp256k1KeyPair(k);
+            case 3:
+              key = _context.sent;
+              localStorage.setItem('iris.myKey', JSON.stringify(k));
+              publicState().auth(key);
+              publicState().put({
+                epub: key.epub
+              });
+              publicState().get('likes').put({
+                a: null
+              }); // gun bug?
+              publicState().get('msgs').put({
+                a: null
+              }); // gun bug?
+              publicState().get('replies').put({
+                a: null
+              }); // gun bug?
+              notifications.subscribeToWebPush();
+              notifications.getWebPushSubscriptions();
+              notifications.subscribeToIrisNotifications();
+              Channel.getMyChatLinks(undefined, function (chatLink) {
+                local$1().get('chatLinks').get(chatLink.id).put(chatLink.url);
+                latestChatLink = chatLink.url;
+              });
+              _this4.setOurOnlineStatus();
+              Channel.getChannels(function (c) {
+                return _this4.addChannel(c);
+              });
+              publicState().get('profile').get('name').on(function (name) {
+                if (name && typeof name === 'string') {
+                  myName = name;
+                }
+              });
+              notifications.init();
+              local$1().get('loggedIn').put(true);
+              local$1().get('settings').once().then(function (settings) {
+                if (!settings) {
+                  local$1().get('settings').put(DEFAULT_SETTINGS.local);
+                } else if (settings.enableWebtorrent === undefined || settings.autoplayWebtorrent === undefined) {
+                  local$1().get('settings').get('enableWebtorrent').put(DEFAULT_SETTINGS.local.enableWebtorrent);
+                  local$1().get('settings').get('autoplayWebtorrent').put(DEFAULT_SETTINGS.local.autoplayWebtorrent);
+                }
+              });
+              publicState().get('block').map().on(function (isBlocked, user) {
+                local$1().get('block').get(user).put(isBlocked);
+                if (isBlocked) {
+                  delete searchableItems[user];
+                }
+              });
+              _this4.updateGroups();
+              if (shouldRefresh) {
+                location.reload();
+              }
+              if (electron) {
+                electron.get('settings').on(function (electron) {
+                  local$1().get('settings').get('electron').put(electron);
+                });
+                electron.get('user').put(key.pub);
+              }
+              local$1().get('filters').get('group').once().then(function (v) {
+                if (!v) {
+                  local$1().get('filters').get('group').put('follows');
+                }
+              });
+            case 25:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }))();
   },
   /**
    * Create a new user account and log in.
@@ -5324,43 +5700,43 @@ var session = {
    * @returns {Promise<void>}
    */logOut: function logOut() {
     var _this6 = this;
-    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
       var reg, _reg$active, sub, hash;
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
+      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) {
-          switch (_context.prev = _context.next) {
+          switch (_context2.prev = _context2.next) {
             case 0:
               if (electron) {
                 electron.get('user').put(null);
               }
               // TODO: remove subscription from your channels
               if (!navigator.serviceWorker) {
-                _context.next = 16;
+                _context2.next = 16;
                 break;
               }
-              _context.next = 4;
+              _context2.next = 4;
               return navigator.serviceWorker.getRegistration();
             case 4:
-              reg = _context.sent;
+              reg = _context2.sent;
               if (!(reg && reg.pushManager)) {
-                _context.next = 16;
+                _context2.next = 16;
                 break;
               }
               (_reg$active = reg.active) == null ? void 0 : _reg$active.postMessage({
                 key: null
               });
-              _context.next = 9;
+              _context2.next = 9;
               return reg.pushManager.getSubscription();
             case 9:
-              sub = _context.sent;
+              sub = _context2.sent;
               if (!sub) {
-                _context.next = 16;
+                _context2.next = 16;
                 break;
               }
-              _context.next = 13;
+              _context2.next = 13;
               return util.getHash(JSON.stringify(sub));
             case 13:
-              hash = _context.sent;
+              hash = _context2.sent;
               notifications.removeSubscription(hash);
               sub.unsubscribe && sub.unsubscribe();
             case 16:
@@ -5373,10 +5749,10 @@ var session = {
               });
             case 19:
             case "end":
-              return _context.stop();
+              return _context2.stop();
           }
         }
-      }, _callee);
+      }, _callee2);
     }))();
   },
   clearIndexedDB: function clearIndexedDB() {
@@ -5428,23 +5804,23 @@ var session = {
   },
   shareMyPeerUrl: function shareMyPeerUrl(channel) {
     var _this7 = this;
-    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
       var myIp;
-      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
         while (1) {
-          switch (_context2.prev = _context2.next) {
+          switch (_context3.prev = _context3.next) {
             case 0:
-              _context2.next = 2;
+              _context3.next = 2;
               return local$1().get('settings').get('electron').get('publicIp').once();
             case 2:
-              myIp = _context2.sent;
+              myIp = _context3.sent;
               myIp && channel.put && channel.put('my_peer', _this7.myPeerUrl(myIp));
             case 4:
             case "end":
-              return _context2.stop();
+              return _context3.stop();
           }
         }
-      }, _callee2);
+      }, _callee3);
     }))();
   },
   newChannel: function newChannel(pub, chatLink) {
@@ -5709,200 +6085,6 @@ var staticState = {
     }))();
   }
 };
-
-// eslint-disable-line no-unused-vars
-var myKey;
-var Key = /*#__PURE__*/function () {
-  function Key() {}
-  Key.getActiveKey = /*#__PURE__*/function () {
-    var _getActiveKey = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(datadir, keyfile, fs) {
-      var privKeyFile, f, newKey, str, _newKey;
-      return _regeneratorRuntime().wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              if (datadir === void 0) {
-                datadir = ".";
-              }
-              if (keyfile === void 0) {
-                keyfile = "iris.key";
-              }
-              if (!myKey) {
-                _context.next = 4;
-                break;
-              }
-              return _context.abrupt("return", myKey);
-            case 4:
-              if (!fs) {
-                _context.next = 21;
-                break;
-              }
-              privKeyFile = datadir + "/" + keyfile;
-              if (!fs.existsSync(privKeyFile)) {
-                _context.next = 11;
-                break;
-              }
-              f = fs.readFileSync(privKeyFile, "utf8");
-              myKey = Key.fromString(f);
-              _context.next = 17;
-              break;
-            case 11:
-              _context.next = 13;
-              return Key.generate();
-            case 13:
-              newKey = _context.sent;
-              myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
-              fs.writeFileSync(privKeyFile, Key.toString(myKey));
-              fs.chmodSync(privKeyFile, 400);
-            case 17:
-              if (myKey) {
-                _context.next = 19;
-                break;
-              }
-              throw new Error("loading default key failed - check " + datadir + "/" + keyfile);
-            case 19:
-              _context.next = 33;
-              break;
-            case 21:
-              str = window.localStorage.getItem("iris.myKey");
-              if (!str) {
-                _context.next = 26;
-                break;
-              }
-              myKey = Key.fromString(str);
-              _context.next = 31;
-              break;
-            case 26:
-              _context.next = 28;
-              return Key.generate();
-            case 28:
-              _newKey = _context.sent;
-              myKey = myKey || _newKey; // eslint-disable-line require-atomic-updates
-              window.localStorage.setItem("iris.myKey", Key.toString(myKey));
-            case 31:
-              if (myKey) {
-                _context.next = 33;
-                break;
-              }
-              throw new Error("loading default key failed - check localStorage iris.myKey");
-            case 33:
-              return _context.abrupt("return", myKey);
-            case 34:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    }));
-    function getActiveKey(_x, _x2, _x3) {
-      return _getActiveKey.apply(this, arguments);
-    }
-    return getActiveKey;
-  }();
-  Key.getDefault = function getDefault(datadir, keyfile) {
-    if (datadir === void 0) {
-      datadir = ".";
-    }
-    if (keyfile === void 0) {
-      keyfile = "iris.key";
-    }
-    return Key.getActiveKey(datadir, keyfile);
-  };
-  Key.getActivePub = /*#__PURE__*/function () {
-    var _getActivePub = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(datadir, keyfile) {
-      var key;
-      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              if (datadir === void 0) {
-                datadir = ".";
-              }
-              if (keyfile === void 0) {
-                keyfile = "iris.key";
-              }
-              _context2.next = 4;
-              return Key.getActiveKey(datadir, keyfile);
-            case 4:
-              key = _context2.sent;
-              return _context2.abrupt("return", key.pub);
-            case 6:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2);
-    }));
-    function getActivePub(_x4, _x5) {
-      return _getActivePub.apply(this, arguments);
-    }
-    return getActivePub;
-  }();
-  Key.setActiveKey = function setActiveKey(key, save, datadir, keyfile, fs) {
-    if (save === void 0) {
-      save = true;
-    }
-    if (datadir === void 0) {
-      datadir = ".";
-    }
-    if (keyfile === void 0) {
-      keyfile = "iris.key";
-    }
-    myKey = key;
-    if (!save) return;
-    if (util.isNode) {
-      var privKeyFile = datadir + "/" + keyfile;
-      fs.writeFileSync(privKeyFile, Key.toString(myKey));
-      fs.chmodSync(privKeyFile, 400);
-    } else {
-      window.localStorage.setItem("iris.myKey", Key.toString(myKey));
-    }
-  };
-  Key.toString = function toString(key) {
-    return JSON.stringify(key);
-  };
-  Key.getId = function getId(key) {
-    if (!(key && key.pub)) {
-      throw new Error("missing param");
-    }
-    return key.pub; // hack until GUN supports lookups by keyID
-    //return util.getHash(key.pub);
-  };
-  Key.fromString = function fromString(str) {
-    return JSON.parse(str);
-  };
-  Key.generate = function generate() {
-    return Gun.SEA.pair();
-  };
-  Key.sign = /*#__PURE__*/function () {
-    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(msg, pair) {
-      var sig;
-      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-        while (1) {
-          switch (_context3.prev = _context3.next) {
-            case 0:
-              _context3.next = 2;
-              return Gun.SEA.sign(msg, pair);
-            case 2:
-              sig = _context3.sent;
-              return _context3.abrupt("return", "a" + sig);
-            case 4:
-            case "end":
-              return _context3.stop();
-          }
-        }
-      }, _callee3);
-    }));
-    function sign(_x6, _x7) {
-      return _sign.apply(this, arguments);
-    }
-    return sign;
-  }();
-  Key.verify = function verify(msg, pubKey) {
-    return Gun.SEA.verify(msg.slice(1), pubKey);
-  };
-  return Key;
-}();
 
 var errorMsg = "Invalid  message:";
 var ValidationError = /*#__PURE__*/function (_Error) {
@@ -6512,7 +6694,8 @@ var index = {
   Gun: Gun,
   SignedMessage: SignedMessage,
   Channel: Channel,
-  Node: Node
+  Node: Node,
+  Key: Key
 };
 
 exports.default = index;

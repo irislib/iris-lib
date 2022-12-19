@@ -18,6 +18,7 @@ import notifications from './notifications';
 import SignedMessage from './SignedMessage';
 import Channel from './Channel';
 import Node from './Node';
+import Key from './Key';
 
 export default {
   local,
@@ -38,4 +39,5 @@ export default {
   SignedMessage,
   Channel,
   Node,
+  Key,
 };

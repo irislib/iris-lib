@@ -11,6 +11,7 @@ import electron from './electron';
 import user from './public';
 import privateState from './private';
 import blockedUsers from './blockedUsers';
+import Key from './Key';
 
 let key: any;
 let myName: string;
@@ -54,7 +55,10 @@ export default {
   init(options: any = {}) {
     if (initCalled) { return; }
     initCalled = true;
-    let localStorageKey = localStorage.getItem('chatKeyPair');
+    let localStorageKey = localStorage.getItem('iris.myKey');
+    if (!localStorageKey) {
+      localStorageKey = localStorage.getItem('chatKeyPair');
+    }
     if (localStorageKey) {
       this.login(JSON.parse(localStorageKey));
     } else if (options.autologin !== false) {
@@ -228,10 +232,10 @@ export default {
    * Log in with a private key.
    * @param key
    */
-  login(k: any) {
+  async login(k: any) {
     const shouldRefresh = !!key;
-    key = k;
-    localStorage.setItem('chatKeyPair', JSON.stringify(k));
+    key = await Key.addSecp256k1KeyPair(k);
+    localStorage.setItem('iris.myKey', JSON.stringify(k));
     user().auth(key);
     user().put({epub: key.epub});
     user().get('likes').put({a:null}); // gun bug?

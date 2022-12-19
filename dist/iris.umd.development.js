@@ -1,8 +1,8 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('fs'), require('path'), require('aws-sdk'), require('url'), require('events'), require('https'), require('http'), require('net'), require('tls'), require('crypto'), require('stream'), require('zlib'), require('bufferutil'), require('utf-8-validate'), require('dgram'), require('os'), require('child_process')) :
 	typeof define === 'function' && define.amd ? define(['exports', 'fs', 'path', 'aws-sdk', 'url', 'events', 'https', 'http', 'net', 'tls', 'crypto', 'stream', 'zlib', 'bufferutil', 'utf-8-validate', 'dgram', 'os', 'child_process'], factory) :
-	(global = global || self, factory(global.iris = {}, global.fs, global.path$1, global.awsSdk, global.url, global.events, global.https, global.http, global.net, global.tls, global.crypto, global.stream$1, global.zlib, global.bufferutil, global.utf8Validate, global.dgram, global.os, global.child_process));
-}(this, (function (exports, fs, path$1, awsSdk, url, events, https, http, net, tls, crypto, stream$1, zlib, bufferutil, utf8Validate, dgram, os, child_process) { 'use strict';
+	(global = global || self, factory(global.iris = {}, global.fs, global.path$1, global.awsSdk, global.url, global.events, global.https, global.http, global.net, global.tls, global.crypto$1, global.stream$1, global.zlib, global.bufferutil, global.utf8Validate, global.dgram, global.os, global.child_process));
+}(this, (function (exports, fs, path$1, awsSdk, url, events, https, http, net, tls, crypto$1, stream$1, zlib, bufferutil, utf8Validate, dgram, os, child_process) { 'use strict';
 
 	fs = fs && Object.prototype.hasOwnProperty.call(fs, 'default') ? fs['default'] : fs;
 	path$1 = path$1 && Object.prototype.hasOwnProperty.call(path$1, 'default') ? path$1['default'] : path$1;
@@ -13,7 +13,7 @@
 	http = http && Object.prototype.hasOwnProperty.call(http, 'default') ? http['default'] : http;
 	net = net && Object.prototype.hasOwnProperty.call(net, 'default') ? net['default'] : net;
 	tls = tls && Object.prototype.hasOwnProperty.call(tls, 'default') ? tls['default'] : tls;
-	crypto = crypto && Object.prototype.hasOwnProperty.call(crypto, 'default') ? crypto['default'] : crypto;
+	crypto$1 = crypto$1 && Object.prototype.hasOwnProperty.call(crypto$1, 'default') ? crypto$1['default'] : crypto$1;
 	stream$1 = stream$1 && Object.prototype.hasOwnProperty.call(stream$1, 'default') ? stream$1['default'] : stream$1;
 	zlib = zlib && Object.prototype.hasOwnProperty.call(zlib, 'default') ? zlib['default'] : zlib;
 	bufferutil = bufferutil && Object.prototype.hasOwnProperty.call(bufferutil, 'default') ? bufferutil['default'] : bufferutil;
@@ -817,6 +817,7 @@
 			
 			(Gun.window||{}).console = (Gun.window||{}).console || {log: function(){}};
 			(C = console).only = function(i, s){ return (C.only.i && i === C.only.i && C.only.i++) && (C.log.apply(C, arguments) || s) };
+			Gun.log.once("welcome", "Hello wonderful person! :) Thanks for using GUN, please ask for help on http://chat.gun.eco if anything takes you longer than 5min to figure out!");
 		})(USE, './root');
 	USE(function(module){
 			var Gun = USE('./root');
@@ -5096,7 +5097,7 @@
 	  return err;
 	}
 
-	const { randomFillSync } = crypto;
+	const { randomFillSync } = crypto$1;
 
 
 	const { EMPTY_BUFFER: EMPTY_BUFFER$1 } = constants;
@@ -5905,7 +5906,7 @@
 
 	var extension = { format, parse };
 
-	const { randomBytes, createHash } = crypto;
+	const { randomBytes, createHash } = crypto$1;
 	const { URL } = url;
 
 
@@ -7270,7 +7271,7 @@
 
 	var stream = createWebSocketStream;
 
-	const { createHash: createHash$1 } = crypto;
+	const { createHash: createHash$1 } = crypto$1;
 
 
 
@@ -19460,6 +19461,1363 @@
 	  localStorage: false
 	}).get('state') : null;
 
+	var _nodeResolve_empty = {};
+
+	var nodeCrypto = {
+		__proto__: null,
+		'default': _nodeResolve_empty
+	};
+
+	/*! noble-secp256k1 - MIT License (c) 2019 Paul Miller (paulmillr.com) */
+	const _0n = BigInt(0);
+	const _1n = BigInt(1);
+	const _2n = BigInt(2);
+	const _3n = BigInt(3);
+	const _8n = BigInt(8);
+	const CURVE = Object.freeze({
+	    a: _0n,
+	    b: BigInt(7),
+	    P: BigInt('0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f'),
+	    n: BigInt('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'),
+	    h: _1n,
+	    Gx: BigInt('55066263022277343669578718895168534326250603453777594175500187360389116729240'),
+	    Gy: BigInt('32670510020758816978083085130507043184471273380659243275938904335757337482424'),
+	    beta: BigInt('0x7ae96a2b657c07106e64479eac3434e99cf0497512f58995c1396c28719501ee'),
+	});
+	function weistrass(x) {
+	    const { a, b } = CURVE;
+	    const x2 = mod(x * x);
+	    const x3 = mod(x2 * x);
+	    return mod(x3 + a * x + b);
+	}
+	const USE_ENDOMORPHISM = CURVE.a === _0n;
+	class ShaError extends Error {
+	    constructor(message) {
+	        super(message);
+	    }
+	}
+	class JacobianPoint {
+	    constructor(x, y, z) {
+	        this.x = x;
+	        this.y = y;
+	        this.z = z;
+	    }
+	    static fromAffine(p) {
+	        if (!(p instanceof Point)) {
+	            throw new TypeError('JacobianPoint#fromAffine: expected Point');
+	        }
+	        return new JacobianPoint(p.x, p.y, _1n);
+	    }
+	    static toAffineBatch(points) {
+	        const toInv = invertBatch(points.map((p) => p.z));
+	        return points.map((p, i) => p.toAffine(toInv[i]));
+	    }
+	    static normalizeZ(points) {
+	        return JacobianPoint.toAffineBatch(points).map(JacobianPoint.fromAffine);
+	    }
+	    equals(other) {
+	        if (!(other instanceof JacobianPoint))
+	            throw new TypeError('JacobianPoint expected');
+	        const { x: X1, y: Y1, z: Z1 } = this;
+	        const { x: X2, y: Y2, z: Z2 } = other;
+	        const Z1Z1 = mod(Z1 * Z1);
+	        const Z2Z2 = mod(Z2 * Z2);
+	        const U1 = mod(X1 * Z2Z2);
+	        const U2 = mod(X2 * Z1Z1);
+	        const S1 = mod(mod(Y1 * Z2) * Z2Z2);
+	        const S2 = mod(mod(Y2 * Z1) * Z1Z1);
+	        return U1 === U2 && S1 === S2;
+	    }
+	    negate() {
+	        return new JacobianPoint(this.x, mod(-this.y), this.z);
+	    }
+	    double() {
+	        const { x: X1, y: Y1, z: Z1 } = this;
+	        const A = mod(X1 * X1);
+	        const B = mod(Y1 * Y1);
+	        const C = mod(B * B);
+	        const x1b = X1 + B;
+	        const D = mod(_2n * (mod(x1b * x1b) - A - C));
+	        const E = mod(_3n * A);
+	        const F = mod(E * E);
+	        const X3 = mod(F - _2n * D);
+	        const Y3 = mod(E * (D - X3) - _8n * C);
+	        const Z3 = mod(_2n * Y1 * Z1);
+	        return new JacobianPoint(X3, Y3, Z3);
+	    }
+	    add(other) {
+	        if (!(other instanceof JacobianPoint))
+	            throw new TypeError('JacobianPoint expected');
+	        const { x: X1, y: Y1, z: Z1 } = this;
+	        const { x: X2, y: Y2, z: Z2 } = other;
+	        if (X2 === _0n || Y2 === _0n)
+	            return this;
+	        if (X1 === _0n || Y1 === _0n)
+	            return other;
+	        const Z1Z1 = mod(Z1 * Z1);
+	        const Z2Z2 = mod(Z2 * Z2);
+	        const U1 = mod(X1 * Z2Z2);
+	        const U2 = mod(X2 * Z1Z1);
+	        const S1 = mod(mod(Y1 * Z2) * Z2Z2);
+	        const S2 = mod(mod(Y2 * Z1) * Z1Z1);
+	        const H = mod(U2 - U1);
+	        const r = mod(S2 - S1);
+	        if (H === _0n) {
+	            if (r === _0n) {
+	                return this.double();
+	            }
+	            else {
+	                return JacobianPoint.ZERO;
+	            }
+	        }
+	        const HH = mod(H * H);
+	        const HHH = mod(H * HH);
+	        const V = mod(U1 * HH);
+	        const X3 = mod(r * r - HHH - _2n * V);
+	        const Y3 = mod(r * (V - X3) - S1 * HHH);
+	        const Z3 = mod(Z1 * Z2 * H);
+	        return new JacobianPoint(X3, Y3, Z3);
+	    }
+	    subtract(other) {
+	        return this.add(other.negate());
+	    }
+	    multiplyUnsafe(scalar) {
+	        const P0 = JacobianPoint.ZERO;
+	        if (typeof scalar === 'bigint' && scalar === _0n)
+	            return P0;
+	        let n = normalizeScalar(scalar);
+	        if (n === _1n)
+	            return this;
+	        if (!USE_ENDOMORPHISM) {
+	            let p = P0;
+	            let d = this;
+	            while (n > _0n) {
+	                if (n & _1n)
+	                    p = p.add(d);
+	                d = d.double();
+	                n >>= _1n;
+	            }
+	            return p;
+	        }
+	        let { k1neg, k1, k2neg, k2 } = splitScalarEndo(n);
+	        let k1p = P0;
+	        let k2p = P0;
+	        let d = this;
+	        while (k1 > _0n || k2 > _0n) {
+	            if (k1 & _1n)
+	                k1p = k1p.add(d);
+	            if (k2 & _1n)
+	                k2p = k2p.add(d);
+	            d = d.double();
+	            k1 >>= _1n;
+	            k2 >>= _1n;
+	        }
+	        if (k1neg)
+	            k1p = k1p.negate();
+	        if (k2neg)
+	            k2p = k2p.negate();
+	        k2p = new JacobianPoint(mod(k2p.x * CURVE.beta), k2p.y, k2p.z);
+	        return k1p.add(k2p);
+	    }
+	    precomputeWindow(W) {
+	        const windows = USE_ENDOMORPHISM ? 128 / W + 1 : 256 / W + 1;
+	        const points = [];
+	        let p = this;
+	        let base = p;
+	        for (let window = 0; window < windows; window++) {
+	            base = p;
+	            points.push(base);
+	            for (let i = 1; i < 2 ** (W - 1); i++) {
+	                base = base.add(p);
+	                points.push(base);
+	            }
+	            p = base.double();
+	        }
+	        return points;
+	    }
+	    wNAF(n, affinePoint) {
+	        if (!affinePoint && this.equals(JacobianPoint.BASE))
+	            affinePoint = Point.BASE;
+	        const W = (affinePoint && affinePoint._WINDOW_SIZE) || 1;
+	        if (256 % W) {
+	            throw new Error('Point#wNAF: Invalid precomputation window, must be power of 2');
+	        }
+	        let precomputes = affinePoint && pointPrecomputes.get(affinePoint);
+	        if (!precomputes) {
+	            precomputes = this.precomputeWindow(W);
+	            if (affinePoint && W !== 1) {
+	                precomputes = JacobianPoint.normalizeZ(precomputes);
+	                pointPrecomputes.set(affinePoint, precomputes);
+	            }
+	        }
+	        let p = JacobianPoint.ZERO;
+	        let f = JacobianPoint.ZERO;
+	        const windows = 1 + (USE_ENDOMORPHISM ? 128 / W : 256 / W);
+	        const windowSize = 2 ** (W - 1);
+	        const mask = BigInt(2 ** W - 1);
+	        const maxNumber = 2 ** W;
+	        const shiftBy = BigInt(W);
+	        for (let window = 0; window < windows; window++) {
+	            const offset = window * windowSize;
+	            let wbits = Number(n & mask);
+	            n >>= shiftBy;
+	            if (wbits > windowSize) {
+	                wbits -= maxNumber;
+	                n += _1n;
+	            }
+	            if (wbits === 0) {
+	                let pr = precomputes[offset];
+	                if (window % 2)
+	                    pr = pr.negate();
+	                f = f.add(pr);
+	            }
+	            else {
+	                let cached = precomputes[offset + Math.abs(wbits) - 1];
+	                if (wbits < 0)
+	                    cached = cached.negate();
+	                p = p.add(cached);
+	            }
+	        }
+	        return { p, f };
+	    }
+	    multiply(scalar, affinePoint) {
+	        let n = normalizeScalar(scalar);
+	        let point;
+	        let fake;
+	        if (USE_ENDOMORPHISM) {
+	            const { k1neg, k1, k2neg, k2 } = splitScalarEndo(n);
+	            let { p: k1p, f: f1p } = this.wNAF(k1, affinePoint);
+	            let { p: k2p, f: f2p } = this.wNAF(k2, affinePoint);
+	            if (k1neg)
+	                k1p = k1p.negate();
+	            if (k2neg)
+	                k2p = k2p.negate();
+	            k2p = new JacobianPoint(mod(k2p.x * CURVE.beta), k2p.y, k2p.z);
+	            point = k1p.add(k2p);
+	            fake = f1p.add(f2p);
+	        }
+	        else {
+	            const { p, f } = this.wNAF(n, affinePoint);
+	            point = p;
+	            fake = f;
+	        }
+	        return JacobianPoint.normalizeZ([point, fake])[0];
+	    }
+	    toAffine(invZ = invert(this.z)) {
+	        const { x, y, z } = this;
+	        const iz1 = invZ;
+	        const iz2 = mod(iz1 * iz1);
+	        const iz3 = mod(iz2 * iz1);
+	        const ax = mod(x * iz2);
+	        const ay = mod(y * iz3);
+	        const zz = mod(z * iz1);
+	        if (zz !== _1n)
+	            throw new Error('invZ was invalid');
+	        return new Point(ax, ay);
+	    }
+	}
+	JacobianPoint.BASE = new JacobianPoint(CURVE.Gx, CURVE.Gy, _1n);
+	JacobianPoint.ZERO = new JacobianPoint(_0n, _1n, _0n);
+	const pointPrecomputes = new WeakMap();
+	class Point {
+	    constructor(x, y) {
+	        this.x = x;
+	        this.y = y;
+	    }
+	    _setWindowSize(windowSize) {
+	        this._WINDOW_SIZE = windowSize;
+	        pointPrecomputes.delete(this);
+	    }
+	    hasEvenY() {
+	        return this.y % _2n === _0n;
+	    }
+	    static fromCompressedHex(bytes) {
+	        const isShort = bytes.length === 32;
+	        const x = bytesToNumber(isShort ? bytes : bytes.subarray(1));
+	        if (!isValidFieldElement(x))
+	            throw new Error('Point is not on curve');
+	        const y2 = weistrass(x);
+	        let y = sqrtMod(y2);
+	        const isYOdd = (y & _1n) === _1n;
+	        if (isShort) {
+	            if (isYOdd)
+	                y = mod(-y);
+	        }
+	        else {
+	            const isFirstByteOdd = (bytes[0] & 1) === 1;
+	            if (isFirstByteOdd !== isYOdd)
+	                y = mod(-y);
+	        }
+	        const point = new Point(x, y);
+	        point.assertValidity();
+	        return point;
+	    }
+	    static fromUncompressedHex(bytes) {
+	        const x = bytesToNumber(bytes.subarray(1, 33));
+	        const y = bytesToNumber(bytes.subarray(33, 65));
+	        const point = new Point(x, y);
+	        point.assertValidity();
+	        return point;
+	    }
+	    static fromHex(hex) {
+	        const bytes = ensureBytes(hex);
+	        const len = bytes.length;
+	        const header = bytes[0];
+	        if (len === 32 || (len === 33 && (header === 0x02 || header === 0x03))) {
+	            return this.fromCompressedHex(bytes);
+	        }
+	        if (len === 65 && header === 0x04)
+	            return this.fromUncompressedHex(bytes);
+	        throw new Error(`Point.fromHex: received invalid point. Expected 32-33 compressed bytes or 65 uncompressed bytes, not ${len}`);
+	    }
+	    static fromPrivateKey(privateKey) {
+	        return Point.BASE.multiply(normalizePrivateKey(privateKey));
+	    }
+	    static fromSignature(msgHash, signature, recovery) {
+	        msgHash = ensureBytes(msgHash);
+	        const h = truncateHash(msgHash);
+	        const { r, s } = normalizeSignature(signature);
+	        if (recovery !== 0 && recovery !== 1) {
+	            throw new Error('Cannot recover signature: invalid recovery bit');
+	        }
+	        const prefix = recovery & 1 ? '03' : '02';
+	        const R = Point.fromHex(prefix + numTo32bStr(r));
+	        const { n } = CURVE;
+	        const rinv = invert(r, n);
+	        const u1 = mod(-h * rinv, n);
+	        const u2 = mod(s * rinv, n);
+	        const Q = Point.BASE.multiplyAndAddUnsafe(R, u1, u2);
+	        if (!Q)
+	            throw new Error('Cannot recover signature: point at infinify');
+	        Q.assertValidity();
+	        return Q;
+	    }
+	    toRawBytes(isCompressed = false) {
+	        return hexToBytes(this.toHex(isCompressed));
+	    }
+	    toHex(isCompressed = false) {
+	        const x = numTo32bStr(this.x);
+	        if (isCompressed) {
+	            const prefix = this.hasEvenY() ? '02' : '03';
+	            return `${prefix}${x}`;
+	        }
+	        else {
+	            return `04${x}${numTo32bStr(this.y)}`;
+	        }
+	    }
+	    toHexX() {
+	        return this.toHex(true).slice(2);
+	    }
+	    toRawX() {
+	        return this.toRawBytes(true).slice(1);
+	    }
+	    assertValidity() {
+	        const msg = 'Point is not on elliptic curve';
+	        const { x, y } = this;
+	        if (!isValidFieldElement(x) || !isValidFieldElement(y))
+	            throw new Error(msg);
+	        const left = mod(y * y);
+	        const right = weistrass(x);
+	        if (mod(left - right) !== _0n)
+	            throw new Error(msg);
+	    }
+	    equals(other) {
+	        return this.x === other.x && this.y === other.y;
+	    }
+	    negate() {
+	        return new Point(this.x, mod(-this.y));
+	    }
+	    double() {
+	        return JacobianPoint.fromAffine(this).double().toAffine();
+	    }
+	    add(other) {
+	        return JacobianPoint.fromAffine(this).add(JacobianPoint.fromAffine(other)).toAffine();
+	    }
+	    subtract(other) {
+	        return this.add(other.negate());
+	    }
+	    multiply(scalar) {
+	        return JacobianPoint.fromAffine(this).multiply(scalar, this).toAffine();
+	    }
+	    multiplyAndAddUnsafe(Q, a, b) {
+	        const P = JacobianPoint.fromAffine(this);
+	        const aP = a === _0n || a === _1n || this !== Point.BASE ? P.multiplyUnsafe(a) : P.multiply(a);
+	        const bQ = JacobianPoint.fromAffine(Q).multiplyUnsafe(b);
+	        const sum = aP.add(bQ);
+	        return sum.equals(JacobianPoint.ZERO) ? undefined : sum.toAffine();
+	    }
+	}
+	Point.BASE = new Point(CURVE.Gx, CURVE.Gy);
+	Point.ZERO = new Point(_0n, _0n);
+	function sliceDER(s) {
+	    return Number.parseInt(s[0], 16) >= 8 ? '00' + s : s;
+	}
+	function parseDERInt(data) {
+	    if (data.length < 2 || data[0] !== 0x02) {
+	        throw new Error(`Invalid signature integer tag: ${bytesToHex(data)}`);
+	    }
+	    const len = data[1];
+	    const res = data.subarray(2, len + 2);
+	    if (!len || res.length !== len) {
+	        throw new Error(`Invalid signature integer: wrong length`);
+	    }
+	    if (res[0] === 0x00 && res[1] <= 0x7f) {
+	        throw new Error('Invalid signature integer: trailing length');
+	    }
+	    return { data: bytesToNumber(res), left: data.subarray(len + 2) };
+	}
+	function parseDERSignature(data) {
+	    if (data.length < 2 || data[0] != 0x30) {
+	        throw new Error(`Invalid signature tag: ${bytesToHex(data)}`);
+	    }
+	    if (data[1] !== data.length - 2) {
+	        throw new Error('Invalid signature: incorrect length');
+	    }
+	    const { data: r, left: sBytes } = parseDERInt(data.subarray(2));
+	    const { data: s, left: rBytesLeft } = parseDERInt(sBytes);
+	    if (rBytesLeft.length) {
+	        throw new Error(`Invalid signature: left bytes after parsing: ${bytesToHex(rBytesLeft)}`);
+	    }
+	    return { r, s };
+	}
+	class Signature {
+	    constructor(r, s) {
+	        this.r = r;
+	        this.s = s;
+	        this.assertValidity();
+	    }
+	    static fromCompact(hex) {
+	        const arr = hex instanceof Uint8Array;
+	        const name = 'Signature.fromCompact';
+	        if (typeof hex !== 'string' && !arr)
+	            throw new TypeError(`${name}: Expected string or Uint8Array`);
+	        const str = arr ? bytesToHex(hex) : hex;
+	        if (str.length !== 128)
+	            throw new Error(`${name}: Expected 64-byte hex`);
+	        return new Signature(hexToNumber(str.slice(0, 64)), hexToNumber(str.slice(64, 128)));
+	    }
+	    static fromDER(hex) {
+	        const arr = hex instanceof Uint8Array;
+	        if (typeof hex !== 'string' && !arr)
+	            throw new TypeError(`Signature.fromDER: Expected string or Uint8Array`);
+	        const { r, s } = parseDERSignature(arr ? hex : hexToBytes(hex));
+	        return new Signature(r, s);
+	    }
+	    static fromHex(hex) {
+	        return this.fromDER(hex);
+	    }
+	    assertValidity() {
+	        const { r, s } = this;
+	        if (!isWithinCurveOrder(r))
+	            throw new Error('Invalid Signature: r must be 0 < r < n');
+	        if (!isWithinCurveOrder(s))
+	            throw new Error('Invalid Signature: s must be 0 < s < n');
+	    }
+	    hasHighS() {
+	        const HALF = CURVE.n >> _1n;
+	        return this.s > HALF;
+	    }
+	    normalizeS() {
+	        return this.hasHighS() ? new Signature(this.r, CURVE.n - this.s) : this;
+	    }
+	    toDERRawBytes(isCompressed = false) {
+	        return hexToBytes(this.toDERHex(isCompressed));
+	    }
+	    toDERHex(isCompressed = false) {
+	        const sHex = sliceDER(numberToHexUnpadded(this.s));
+	        if (isCompressed)
+	            return sHex;
+	        const rHex = sliceDER(numberToHexUnpadded(this.r));
+	        const rLen = numberToHexUnpadded(rHex.length / 2);
+	        const sLen = numberToHexUnpadded(sHex.length / 2);
+	        const length = numberToHexUnpadded(rHex.length / 2 + sHex.length / 2 + 4);
+	        return `30${length}02${rLen}${rHex}02${sLen}${sHex}`;
+	    }
+	    toRawBytes() {
+	        return this.toDERRawBytes();
+	    }
+	    toHex() {
+	        return this.toDERHex();
+	    }
+	    toCompactRawBytes() {
+	        return hexToBytes(this.toCompactHex());
+	    }
+	    toCompactHex() {
+	        return numTo32bStr(this.r) + numTo32bStr(this.s);
+	    }
+	}
+	function concatBytes(...arrays) {
+	    if (!arrays.every((b) => b instanceof Uint8Array))
+	        throw new Error('Uint8Array list expected');
+	    if (arrays.length === 1)
+	        return arrays[0];
+	    const length = arrays.reduce((a, arr) => a + arr.length, 0);
+	    const result = new Uint8Array(length);
+	    for (let i = 0, pad = 0; i < arrays.length; i++) {
+	        const arr = arrays[i];
+	        result.set(arr, pad);
+	        pad += arr.length;
+	    }
+	    return result;
+	}
+	const hexes = Array.from({ length: 256 }, (v, i) => i.toString(16).padStart(2, '0'));
+	function bytesToHex(uint8a) {
+	    if (!(uint8a instanceof Uint8Array))
+	        throw new Error('Expected Uint8Array');
+	    let hex = '';
+	    for (let i = 0; i < uint8a.length; i++) {
+	        hex += hexes[uint8a[i]];
+	    }
+	    return hex;
+	}
+	const POW_2_256 = BigInt('0x10000000000000000000000000000000000000000000000000000000000000000');
+	function numTo32bStr(num) {
+	    if (typeof num !== 'bigint')
+	        throw new Error('Expected bigint');
+	    if (!(_0n <= num && num < POW_2_256))
+	        throw new Error('Expected number < 2^256');
+	    return num.toString(16).padStart(64, '0');
+	}
+	function numTo32b(num) {
+	    const b = hexToBytes(numTo32bStr(num));
+	    if (b.length !== 32)
+	        throw new Error('Error: expected 32 bytes');
+	    return b;
+	}
+	function numberToHexUnpadded(num) {
+	    const hex = num.toString(16);
+	    return hex.length & 1 ? `0${hex}` : hex;
+	}
+	function hexToNumber(hex) {
+	    if (typeof hex !== 'string') {
+	        throw new TypeError('hexToNumber: expected string, got ' + typeof hex);
+	    }
+	    return BigInt(`0x${hex}`);
+	}
+	function hexToBytes(hex) {
+	    if (typeof hex !== 'string') {
+	        throw new TypeError('hexToBytes: expected string, got ' + typeof hex);
+	    }
+	    if (hex.length % 2)
+	        throw new Error('hexToBytes: received invalid unpadded hex' + hex.length);
+	    const array = new Uint8Array(hex.length / 2);
+	    for (let i = 0; i < array.length; i++) {
+	        const j = i * 2;
+	        const hexByte = hex.slice(j, j + 2);
+	        const byte = Number.parseInt(hexByte, 16);
+	        if (Number.isNaN(byte) || byte < 0)
+	            throw new Error('Invalid byte sequence');
+	        array[i] = byte;
+	    }
+	    return array;
+	}
+	function bytesToNumber(bytes) {
+	    return hexToNumber(bytesToHex(bytes));
+	}
+	function ensureBytes(hex) {
+	    return hex instanceof Uint8Array ? Uint8Array.from(hex) : hexToBytes(hex);
+	}
+	function normalizeScalar(num) {
+	    if (typeof num === 'number' && Number.isSafeInteger(num) && num > 0)
+	        return BigInt(num);
+	    if (typeof num === 'bigint' && isWithinCurveOrder(num))
+	        return num;
+	    throw new TypeError('Expected valid private scalar: 0 < scalar < curve.n');
+	}
+	function mod(a, b = CURVE.P) {
+	    const result = a % b;
+	    return result >= _0n ? result : b + result;
+	}
+	function pow2(x, power) {
+	    const { P } = CURVE;
+	    let res = x;
+	    while (power-- > _0n) {
+	        res *= res;
+	        res %= P;
+	    }
+	    return res;
+	}
+	function sqrtMod(x) {
+	    const { P } = CURVE;
+	    const _6n = BigInt(6);
+	    const _11n = BigInt(11);
+	    const _22n = BigInt(22);
+	    const _23n = BigInt(23);
+	    const _44n = BigInt(44);
+	    const _88n = BigInt(88);
+	    const b2 = (x * x * x) % P;
+	    const b3 = (b2 * b2 * x) % P;
+	    const b6 = (pow2(b3, _3n) * b3) % P;
+	    const b9 = (pow2(b6, _3n) * b3) % P;
+	    const b11 = (pow2(b9, _2n) * b2) % P;
+	    const b22 = (pow2(b11, _11n) * b11) % P;
+	    const b44 = (pow2(b22, _22n) * b22) % P;
+	    const b88 = (pow2(b44, _44n) * b44) % P;
+	    const b176 = (pow2(b88, _88n) * b88) % P;
+	    const b220 = (pow2(b176, _44n) * b44) % P;
+	    const b223 = (pow2(b220, _3n) * b3) % P;
+	    const t1 = (pow2(b223, _23n) * b22) % P;
+	    const t2 = (pow2(t1, _6n) * b2) % P;
+	    return pow2(t2, _2n);
+	}
+	function invert(number, modulo = CURVE.P) {
+	    if (number === _0n || modulo <= _0n) {
+	        throw new Error(`invert: expected positive integers, got n=${number} mod=${modulo}`);
+	    }
+	    let a = mod(number, modulo);
+	    let b = modulo;
+	    let x = _0n, y = _1n, u = _1n, v = _0n;
+	    while (a !== _0n) {
+	        const q = b / a;
+	        const r = b % a;
+	        const m = x - u * q;
+	        const n = y - v * q;
+	        b = a, a = r, x = u, y = v, u = m, v = n;
+	    }
+	    const gcd = b;
+	    if (gcd !== _1n)
+	        throw new Error('invert: does not exist');
+	    return mod(x, modulo);
+	}
+	function invertBatch(nums, p = CURVE.P) {
+	    const scratch = new Array(nums.length);
+	    const lastMultiplied = nums.reduce((acc, num, i) => {
+	        if (num === _0n)
+	            return acc;
+	        scratch[i] = acc;
+	        return mod(acc * num, p);
+	    }, _1n);
+	    const inverted = invert(lastMultiplied, p);
+	    nums.reduceRight((acc, num, i) => {
+	        if (num === _0n)
+	            return acc;
+	        scratch[i] = mod(acc * scratch[i], p);
+	        return mod(acc * num, p);
+	    }, inverted);
+	    return scratch;
+	}
+	const divNearest = (a, b) => (a + b / _2n) / b;
+	const ENDO = {
+	    a1: BigInt('0x3086d221a7d46bcde86c90e49284eb15'),
+	    b1: -_1n * BigInt('0xe4437ed6010e88286f547fa90abfe4c3'),
+	    a2: BigInt('0x114ca50f7a8e2f3f657c1108d9d44cfd8'),
+	    b2: BigInt('0x3086d221a7d46bcde86c90e49284eb15'),
+	    POW_2_128: BigInt('0x100000000000000000000000000000000'),
+	};
+	function splitScalarEndo(k) {
+	    const { n } = CURVE;
+	    const { a1, b1, a2, b2, POW_2_128 } = ENDO;
+	    const c1 = divNearest(b2 * k, n);
+	    const c2 = divNearest(-b1 * k, n);
+	    let k1 = mod(k - c1 * a1 - c2 * a2, n);
+	    let k2 = mod(-c1 * b1 - c2 * b2, n);
+	    const k1neg = k1 > POW_2_128;
+	    const k2neg = k2 > POW_2_128;
+	    if (k1neg)
+	        k1 = n - k1;
+	    if (k2neg)
+	        k2 = n - k2;
+	    if (k1 > POW_2_128 || k2 > POW_2_128) {
+	        throw new Error('splitScalarEndo: Endomorphism failed, k=' + k);
+	    }
+	    return { k1neg, k1, k2neg, k2 };
+	}
+	function truncateHash(hash) {
+	    const { n } = CURVE;
+	    const byteLength = hash.length;
+	    const delta = byteLength * 8 - 256;
+	    let h = bytesToNumber(hash);
+	    if (delta > 0)
+	        h = h >> BigInt(delta);
+	    if (h >= n)
+	        h -= n;
+	    return h;
+	}
+	let _sha256Sync;
+	let _hmacSha256Sync;
+	function isWithinCurveOrder(num) {
+	    return _0n < num && num < CURVE.n;
+	}
+	function isValidFieldElement(num) {
+	    return _0n < num && num < CURVE.P;
+	}
+	function normalizePrivateKey(key) {
+	    let num;
+	    if (typeof key === 'bigint') {
+	        num = key;
+	    }
+	    else if (typeof key === 'number' && Number.isSafeInteger(key) && key > 0) {
+	        num = BigInt(key);
+	    }
+	    else if (typeof key === 'string') {
+	        if (key.length !== 64)
+	            throw new Error('Expected 32 bytes of private key');
+	        num = hexToNumber(key);
+	    }
+	    else if (key instanceof Uint8Array) {
+	        if (key.length !== 32)
+	            throw new Error('Expected 32 bytes of private key');
+	        num = bytesToNumber(key);
+	    }
+	    else {
+	        throw new TypeError('Expected valid private key');
+	    }
+	    if (!isWithinCurveOrder(num))
+	        throw new Error('Expected private key: 0 < key < n');
+	    return num;
+	}
+	function normalizePublicKey(publicKey) {
+	    if (publicKey instanceof Point) {
+	        publicKey.assertValidity();
+	        return publicKey;
+	    }
+	    else {
+	        return Point.fromHex(publicKey);
+	    }
+	}
+	function normalizeSignature(signature) {
+	    if (signature instanceof Signature) {
+	        signature.assertValidity();
+	        return signature;
+	    }
+	    try {
+	        return Signature.fromDER(signature);
+	    }
+	    catch (error) {
+	        return Signature.fromCompact(signature);
+	    }
+	}
+	function schnorrChallengeFinalize(ch) {
+	    return mod(bytesToNumber(ch), CURVE.n);
+	}
+	class SchnorrSignature {
+	    constructor(r, s) {
+	        this.r = r;
+	        this.s = s;
+	        this.assertValidity();
+	    }
+	    static fromHex(hex) {
+	        const bytes = ensureBytes(hex);
+	        if (bytes.length !== 64)
+	            throw new TypeError(`SchnorrSignature.fromHex: expected 64 bytes, not ${bytes.length}`);
+	        const r = bytesToNumber(bytes.subarray(0, 32));
+	        const s = bytesToNumber(bytes.subarray(32, 64));
+	        return new SchnorrSignature(r, s);
+	    }
+	    assertValidity() {
+	        const { r, s } = this;
+	        if (!isValidFieldElement(r) || !isWithinCurveOrder(s))
+	            throw new Error('Invalid signature');
+	    }
+	    toHex() {
+	        return numTo32bStr(this.r) + numTo32bStr(this.s);
+	    }
+	    toRawBytes() {
+	        return hexToBytes(this.toHex());
+	    }
+	}
+	function schnorrGetPublicKey(privateKey) {
+	    return Point.fromPrivateKey(privateKey).toRawX();
+	}
+	class InternalSchnorrSignature {
+	    constructor(message, privateKey, auxRand = utils.randomBytes()) {
+	        if (message == null)
+	            throw new TypeError(`sign: Expected valid message, not "${message}"`);
+	        this.m = ensureBytes(message);
+	        const { x, scalar } = this.getScalar(normalizePrivateKey(privateKey));
+	        this.px = x;
+	        this.d = scalar;
+	        this.rand = ensureBytes(auxRand);
+	        if (this.rand.length !== 32)
+	            throw new TypeError('sign: Expected 32 bytes of aux randomness');
+	    }
+	    getScalar(priv) {
+	        const point = Point.fromPrivateKey(priv);
+	        const scalar = point.hasEvenY() ? priv : CURVE.n - priv;
+	        return { point, scalar, x: point.toRawX() };
+	    }
+	    initNonce(d, t0h) {
+	        return numTo32b(d ^ bytesToNumber(t0h));
+	    }
+	    finalizeNonce(k0h) {
+	        const k0 = mod(bytesToNumber(k0h), CURVE.n);
+	        if (k0 === _0n)
+	            throw new Error('sign: Creation of signature failed. k is zero');
+	        const { point: R, x: rx, scalar: k } = this.getScalar(k0);
+	        return { R, rx, k };
+	    }
+	    finalizeSig(R, k, e, d) {
+	        return new SchnorrSignature(R.x, mod(k + e * d, CURVE.n)).toRawBytes();
+	    }
+	    error() {
+	        throw new Error('sign: Invalid signature produced');
+	    }
+	    async calc() {
+	        const { m, d, px, rand } = this;
+	        const tag = utils.taggedHash;
+	        const t = this.initNonce(d, await tag(TAGS.aux, rand));
+	        const { R, rx, k } = this.finalizeNonce(await tag(TAGS.nonce, t, px, m));
+	        const e = schnorrChallengeFinalize(await tag(TAGS.challenge, rx, px, m));
+	        const sig = this.finalizeSig(R, k, e, d);
+	        if (!(await schnorrVerify(sig, m, px)))
+	            this.error();
+	        return sig;
+	    }
+	    calcSync() {
+	        const { m, d, px, rand } = this;
+	        const tag = utils.taggedHashSync;
+	        const t = this.initNonce(d, tag(TAGS.aux, rand));
+	        const { R, rx, k } = this.finalizeNonce(tag(TAGS.nonce, t, px, m));
+	        const e = schnorrChallengeFinalize(tag(TAGS.challenge, rx, px, m));
+	        const sig = this.finalizeSig(R, k, e, d);
+	        if (!schnorrVerifySync(sig, m, px))
+	            this.error();
+	        return sig;
+	    }
+	}
+	async function schnorrSign(msg, privKey, auxRand) {
+	    return new InternalSchnorrSignature(msg, privKey, auxRand).calc();
+	}
+	function schnorrSignSync(msg, privKey, auxRand) {
+	    return new InternalSchnorrSignature(msg, privKey, auxRand).calcSync();
+	}
+	function initSchnorrVerify(signature, message, publicKey) {
+	    const raw = signature instanceof SchnorrSignature;
+	    const sig = raw ? signature : SchnorrSignature.fromHex(signature);
+	    if (raw)
+	        sig.assertValidity();
+	    return {
+	        ...sig,
+	        m: ensureBytes(message),
+	        P: normalizePublicKey(publicKey),
+	    };
+	}
+	function finalizeSchnorrVerify(r, P, s, e) {
+	    const R = Point.BASE.multiplyAndAddUnsafe(P, normalizePrivateKey(s), mod(-e, CURVE.n));
+	    if (!R || !R.hasEvenY() || R.x !== r)
+	        return false;
+	    return true;
+	}
+	async function schnorrVerify(signature, message, publicKey) {
+	    try {
+	        const { r, s, m, P } = initSchnorrVerify(signature, message, publicKey);
+	        const e = schnorrChallengeFinalize(await utils.taggedHash(TAGS.challenge, numTo32b(r), P.toRawX(), m));
+	        return finalizeSchnorrVerify(r, P, s, e);
+	    }
+	    catch (error) {
+	        return false;
+	    }
+	}
+	function schnorrVerifySync(signature, message, publicKey) {
+	    try {
+	        const { r, s, m, P } = initSchnorrVerify(signature, message, publicKey);
+	        const e = schnorrChallengeFinalize(utils.taggedHashSync(TAGS.challenge, numTo32b(r), P.toRawX(), m));
+	        return finalizeSchnorrVerify(r, P, s, e);
+	    }
+	    catch (error) {
+	        if (error instanceof ShaError)
+	            throw error;
+	        return false;
+	    }
+	}
+	const schnorr = {
+	    Signature: SchnorrSignature,
+	    getPublicKey: schnorrGetPublicKey,
+	    sign: schnorrSign,
+	    verify: schnorrVerify,
+	    signSync: schnorrSignSync,
+	    verifySync: schnorrVerifySync,
+	};
+	Point.BASE._setWindowSize(8);
+	const crypto = {
+	    node: nodeCrypto,
+	    web: typeof self === 'object' && 'crypto' in self ? self.crypto : undefined,
+	};
+	const TAGS = {
+	    challenge: 'BIP0340/challenge',
+	    aux: 'BIP0340/aux',
+	    nonce: 'BIP0340/nonce',
+	};
+	const TAGGED_HASH_PREFIXES = {};
+	const utils = {
+	    bytesToHex,
+	    hexToBytes,
+	    concatBytes,
+	    mod,
+	    invert,
+	    isValidPrivateKey(privateKey) {
+	        try {
+	            normalizePrivateKey(privateKey);
+	            return true;
+	        }
+	        catch (error) {
+	            return false;
+	        }
+	    },
+	    _bigintTo32Bytes: numTo32b,
+	    _normalizePrivateKey: normalizePrivateKey,
+	    hashToPrivateKey: (hash) => {
+	        hash = ensureBytes(hash);
+	        if (hash.length < 40 || hash.length > 1024)
+	            throw new Error('Expected 40-1024 bytes of private key as per FIPS 186');
+	        const num = mod(bytesToNumber(hash), CURVE.n - _1n) + _1n;
+	        return numTo32b(num);
+	    },
+	    randomBytes: (bytesLength = 32) => {
+	        if (crypto.web) {
+	            return crypto.web.getRandomValues(new Uint8Array(bytesLength));
+	        }
+	        else if (crypto.node) {
+	            const { randomBytes } = crypto.node;
+	            return Uint8Array.from(randomBytes(bytesLength));
+	        }
+	        else {
+	            throw new Error("The environment doesn't have randomBytes function");
+	        }
+	    },
+	    randomPrivateKey: () => {
+	        return utils.hashToPrivateKey(utils.randomBytes(40));
+	    },
+	    sha256: async (...messages) => {
+	        if (crypto.web) {
+	            const buffer = await crypto.web.subtle.digest('SHA-256', concatBytes(...messages));
+	            return new Uint8Array(buffer);
+	        }
+	        else if (crypto.node) {
+	            const { createHash } = crypto.node;
+	            const hash = createHash('sha256');
+	            messages.forEach((m) => hash.update(m));
+	            return Uint8Array.from(hash.digest());
+	        }
+	        else {
+	            throw new Error("The environment doesn't have sha256 function");
+	        }
+	    },
+	    hmacSha256: async (key, ...messages) => {
+	        if (crypto.web) {
+	            const ckey = await crypto.web.subtle.importKey('raw', key, { name: 'HMAC', hash: { name: 'SHA-256' } }, false, ['sign']);
+	            const message = concatBytes(...messages);
+	            const buffer = await crypto.web.subtle.sign('HMAC', ckey, message);
+	            return new Uint8Array(buffer);
+	        }
+	        else if (crypto.node) {
+	            const { createHmac } = crypto.node;
+	            const hash = createHmac('sha256', key);
+	            messages.forEach((m) => hash.update(m));
+	            return Uint8Array.from(hash.digest());
+	        }
+	        else {
+	            throw new Error("The environment doesn't have hmac-sha256 function");
+	        }
+	    },
+	    sha256Sync: undefined,
+	    hmacSha256Sync: undefined,
+	    taggedHash: async (tag, ...messages) => {
+	        let tagP = TAGGED_HASH_PREFIXES[tag];
+	        if (tagP === undefined) {
+	            const tagH = await utils.sha256(Uint8Array.from(tag, (c) => c.charCodeAt(0)));
+	            tagP = concatBytes(tagH, tagH);
+	            TAGGED_HASH_PREFIXES[tag] = tagP;
+	        }
+	        return utils.sha256(tagP, ...messages);
+	    },
+	    taggedHashSync: (tag, ...messages) => {
+	        if (typeof _sha256Sync !== 'function')
+	            throw new ShaError('sha256Sync is undefined, you need to set it');
+	        let tagP = TAGGED_HASH_PREFIXES[tag];
+	        if (tagP === undefined) {
+	            const tagH = _sha256Sync(Uint8Array.from(tag, (c) => c.charCodeAt(0)));
+	            tagP = concatBytes(tagH, tagH);
+	            TAGGED_HASH_PREFIXES[tag] = tagP;
+	        }
+	        return _sha256Sync(tagP, ...messages);
+	    },
+	    precompute(windowSize = 8, point = Point.BASE) {
+	        const cached = point === Point.BASE ? point : new Point(point.x, point.y);
+	        cached._setWindowSize(windowSize);
+	        cached.multiply(_3n);
+	        return cached;
+	    },
+	};
+	Object.defineProperties(utils, {
+	    sha256Sync: {
+	        configurable: false,
+	        get() {
+	            return _sha256Sync;
+	        },
+	        set(val) {
+	            if (!_sha256Sync)
+	                _sha256Sync = val;
+	        },
+	    },
+	    hmacSha256Sync: {
+	        configurable: false,
+	        get() {
+	            return _hmacSha256Sync;
+	        },
+	        set(val) {
+	            if (!_hmacSha256Sync)
+	                _hmacSha256Sync = val;
+	        },
+	    },
+	});
+
+	var EC = /*#__PURE__*/require('elliptic').ec;
+	var myKey;
+	function arrayToBase64Url(array) {
+	  return btoa(String.fromCharCode.apply(null, array)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+	}
+	function arrayToHex(array) {
+	  return Array.from(array, function (_byte) {
+	    return ('0' + (_byte & 0xff).toString(16)).slice(-2);
+	  }).join('');
+	}
+	function base64UrlToArray(base64Url) {
+	  return Uint8Array.from(atob(base64Url.replace(/-/g, '+').replace(/_/g, '/')), function (c) {
+	    return c.charCodeAt(0);
+	  });
+	}
+	var hexToUint8Array = function hexToUint8Array(hexString) {
+	  var match = hexString.match(/.{1,2}/g);
+	  if (!match) {
+	    throw new Error('Not a hex string');
+	  }
+	  return Uint8Array.from(match.map(function (_byte2) {
+	    return parseInt(_byte2, 16);
+	  }));
+	};
+	var Key = /*#__PURE__*/function () {
+	  function Key() {}
+	  /**
+	   * Derive a key from bytes. For example, sign a login prompt string with metamask and
+	   * pass the signature to this function to derive a key.
+	   * @param bytes
+	   */Key.deriveFromBytes =
+	  /*#__PURE__*/
+	  function () {
+	    var _deriveFromBytes = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(bytes) {
+	      var hash1, hash2, signingKey, encryptionKey, k;
+	      return _regeneratorRuntime().wrap(function _callee$(_context) {
+	        while (1) {
+	          switch (_context.prev = _context.next) {
+	            case 0:
+	              _context.next = 2;
+	              return window.crypto.subtle.digest('SHA-256', bytes);
+	            case 2:
+	              hash1 = _context.sent;
+	              _context.next = 5;
+	              return window.crypto.subtle.digest('SHA-256', hash1);
+	            case 5:
+	              hash2 = _context.sent;
+	              signingKey = this.irisKeyPairFromHash(hash1);
+	              encryptionKey = this.irisKeyPairFromHash(hash2);
+	              k = {
+	                pub: signingKey.pub,
+	                priv: signingKey.priv,
+	                epub: encryptionKey.pub,
+	                epriv: encryptionKey.priv
+	              };
+	              _context.next = 11;
+	              return Key.addSecp256k1KeyPair(k);
+	            case 11:
+	              k = _context.sent;
+	              return _context.abrupt("return", k);
+	            case 13:
+	            case "end":
+	              return _context.stop();
+	          }
+	        }
+	      }, _callee, this);
+	    }));
+	    function deriveFromBytes(_x) {
+	      return _deriveFromBytes.apply(this, arguments);
+	    }
+	    return deriveFromBytes;
+	  }();
+	  Key.addSecp256k1KeyPair = /*#__PURE__*/function () {
+	    var _addSecp256k1KeyPair = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(key) {
+	      var hash;
+	      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+	        while (1) {
+	          switch (_context2.prev = _context2.next) {
+	            case 0:
+	              if (key.secp256k1) {
+	                _context2.next = 5;
+	                break;
+	              }
+	              _context2.next = 3;
+	              return window.crypto.subtle.digest('SHA-256', base64UrlToArray(key.priv));
+	            case 3:
+	              hash = _context2.sent;
+	              key.secp256k1 = Key.secp256k1KeyPairFromHash(hash);
+	            case 5:
+	              return _context2.abrupt("return", key);
+	            case 6:
+	            case "end":
+	              return _context2.stop();
+	          }
+	        }
+	      }, _callee2);
+	    }));
+	    function addSecp256k1KeyPair(_x2) {
+	      return _addSecp256k1KeyPair.apply(this, arguments);
+	    }
+	    return addSecp256k1KeyPair;
+	  }();
+	  Key.fromSecp256k1 = /*#__PURE__*/function () {
+	    var _fromSecp256k = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(priv) {
+	      var privArr, hash, k;
+	      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+	        while (1) {
+	          switch (_context3.prev = _context3.next) {
+	            case 0:
+	              if (utils.isValidPrivateKey(priv)) {
+	                _context3.next = 2;
+	                break;
+	              }
+	              throw new Error("invalid secp256k1 private key");
+	            case 2:
+	              privArr = hexToUint8Array(priv);
+	              _context3.next = 5;
+	              return window.crypto.subtle.digest('SHA-256', privArr);
+	            case 5:
+	              hash = _context3.sent;
+	              k = this.deriveFromBytes(new Uint8Array(hash));
+	              k.secp256k1 = {
+	                priv: priv,
+	                rpub: arrayToHex(schnorr.getPublicKey(privArr))
+	              };
+	              return _context3.abrupt("return", k);
+	            case 9:
+	            case "end":
+	              return _context3.stop();
+	          }
+	        }
+	      }, _callee3, this);
+	    }));
+	    function fromSecp256k1(_x3) {
+	      return _fromSecp256k.apply(this, arguments);
+	    }
+	    return fromSecp256k1;
+	  }();
+	  Key.irisKeyPairFromHash = function irisKeyPairFromHash(hash) {
+	    var ec = new EC('p256');
+	    var keyPair = ec.keyFromPrivate(new Uint8Array(hash));
+	    var privKey = keyPair.getPrivate().toArray('be', 32);
+	    var x = keyPair.getPublic().getX().toArray('be', 32);
+	    var y = keyPair.getPublic().getY().toArray('be', 32);
+	    privKey = arrayToBase64Url(privKey);
+	    x = arrayToBase64Url(x);
+	    y = arrayToBase64Url(y);
+	    var kp = {
+	      pub: x + "." + y,
+	      priv: privKey
+	    };
+	    return kp;
+	  }
+	  // secp256k1 is used by nostr among others
+	  ;
+	  Key.secp256k1KeyPairFromHash = function secp256k1KeyPairFromHash(hash) {
+	    var ec = new EC('secp256k1');
+	    var keyPair = ec.keyFromPrivate(new Uint8Array(hash));
+	    var priv = keyPair.getPrivate().toString(16);
+	    var rpub = arrayToHex(schnorr.getPublicKey(priv));
+	    var kp = {
+	      rpub: rpub,
+	      priv: priv
+	    };
+	    return kp;
+	  };
+	  Key.getActiveKey = /*#__PURE__*/function () {
+	    var _getActiveKey = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(datadir, keyfile, fs) {
+	      var privKeyFile, f, newKey, str, _newKey;
+	      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+	        while (1) {
+	          switch (_context4.prev = _context4.next) {
+	            case 0:
+	              if (datadir === void 0) {
+	                datadir = ".";
+	              }
+	              if (keyfile === void 0) {
+	                keyfile = "iris.key";
+	              }
+	              if (!myKey) {
+	                _context4.next = 4;
+	                break;
+	              }
+	              return _context4.abrupt("return", myKey);
+	            case 4:
+	              if (!fs) {
+	                _context4.next = 21;
+	                break;
+	              }
+	              privKeyFile = datadir + "/" + keyfile;
+	              if (!fs.existsSync(privKeyFile)) {
+	                _context4.next = 11;
+	                break;
+	              }
+	              f = fs.readFileSync(privKeyFile, "utf8");
+	              myKey = Key.fromString(f);
+	              _context4.next = 17;
+	              break;
+	            case 11:
+	              _context4.next = 13;
+	              return Key.generate();
+	            case 13:
+	              newKey = _context4.sent;
+	              myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
+	              fs.writeFileSync(privKeyFile, Key.toString(myKey));
+	              fs.chmodSync(privKeyFile, 400);
+	            case 17:
+	              if (myKey) {
+	                _context4.next = 19;
+	                break;
+	              }
+	              throw new Error("loading default key failed - check " + datadir + "/" + keyfile);
+	            case 19:
+	              _context4.next = 33;
+	              break;
+	            case 21:
+	              str = window.localStorage.getItem("iris.myKey");
+	              if (!str) {
+	                _context4.next = 26;
+	                break;
+	              }
+	              myKey = Key.fromString(str);
+	              _context4.next = 31;
+	              break;
+	            case 26:
+	              _context4.next = 28;
+	              return Key.generate();
+	            case 28:
+	              _newKey = _context4.sent;
+	              myKey = myKey || _newKey; // eslint-disable-line require-atomic-updates
+	              window.localStorage.setItem("iris.myKey", Key.toString(myKey));
+	            case 31:
+	              if (myKey) {
+	                _context4.next = 33;
+	                break;
+	              }
+	              throw new Error("loading default key failed - check localStorage iris.myKey");
+	            case 33:
+	              return _context4.abrupt("return", this.addSecp256k1KeyPair(myKey));
+	            case 34:
+	            case "end":
+	              return _context4.stop();
+	          }
+	        }
+	      }, _callee4, this);
+	    }));
+	    function getActiveKey(_x4, _x5, _x6) {
+	      return _getActiveKey.apply(this, arguments);
+	    }
+	    return getActiveKey;
+	  }();
+	  Key.getDefault = function getDefault(datadir, keyfile) {
+	    if (datadir === void 0) {
+	      datadir = ".";
+	    }
+	    if (keyfile === void 0) {
+	      keyfile = "iris.key";
+	    }
+	    return Key.getActiveKey(datadir, keyfile);
+	  };
+	  Key.getActivePub = /*#__PURE__*/function () {
+	    var _getActivePub = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee5(datadir, keyfile) {
+	      var key;
+	      return _regeneratorRuntime().wrap(function _callee5$(_context5) {
+	        while (1) {
+	          switch (_context5.prev = _context5.next) {
+	            case 0:
+	              if (datadir === void 0) {
+	                datadir = ".";
+	              }
+	              if (keyfile === void 0) {
+	                keyfile = "iris.key";
+	              }
+	              _context5.next = 4;
+	              return Key.getActiveKey(datadir, keyfile);
+	            case 4:
+	              key = _context5.sent;
+	              return _context5.abrupt("return", key.pub);
+	            case 6:
+	            case "end":
+	              return _context5.stop();
+	          }
+	        }
+	      }, _callee5);
+	    }));
+	    function getActivePub(_x7, _x8) {
+	      return _getActivePub.apply(this, arguments);
+	    }
+	    return getActivePub;
+	  }();
+	  Key.setActiveKey = function setActiveKey(key, save, datadir, keyfile, fs) {
+	    if (save === void 0) {
+	      save = true;
+	    }
+	    if (datadir === void 0) {
+	      datadir = ".";
+	    }
+	    if (keyfile === void 0) {
+	      keyfile = "iris.key";
+	    }
+	    myKey = key;
+	    if (!save) return;
+	    if (util.isNode) {
+	      var privKeyFile = datadir + "/" + keyfile;
+	      fs.writeFileSync(privKeyFile, Key.toString(myKey));
+	      fs.chmodSync(privKeyFile, 400);
+	    } else {
+	      window.localStorage.setItem("iris.myKey", Key.toString(myKey));
+	    }
+	  };
+	  Key.toString = function toString(key) {
+	    return JSON.stringify(key);
+	  };
+	  Key.getId = function getId(key) {
+	    if (!(key && key.pub)) {
+	      throw new Error("missing param");
+	    }
+	    return key.pub; // hack until GUN supports lookups by keyID
+	    //return util.getHash(key.pub);
+	  };
+	  Key.fromString = function fromString(str) {
+	    return JSON.parse(str);
+	  };
+	  Key.generate = function generate() {
+	    return gun$1.SEA.pair();
+	  };
+	  Key.sign = /*#__PURE__*/function () {
+	    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(msg, pair) {
+	      var sig;
+	      return _regeneratorRuntime().wrap(function _callee6$(_context6) {
+	        while (1) {
+	          switch (_context6.prev = _context6.next) {
+	            case 0:
+	              _context6.next = 2;
+	              return gun$1.SEA.sign(msg, pair);
+	            case 2:
+	              sig = _context6.sent;
+	              return _context6.abrupt("return", "a" + sig);
+	            case 4:
+	            case "end":
+	              return _context6.stop();
+	          }
+	        }
+	      }, _callee6);
+	    }));
+	    function sign(_x9, _x10) {
+	      return _sign.apply(this, arguments);
+	    }
+	    return sign;
+	  }();
+	  Key.verify = function verify(msg, pubKey) {
+	    return gun$1.SEA.verify(msg.slice(1), pubKey);
+	  };
+	  return Key;
+	}();
+
 	var key;
 	var myName;
 	var latestChatLink;
@@ -19504,7 +20862,10 @@
 	      return;
 	    }
 	    initCalled = true;
-	    var localStorageKey = localStorage.getItem('chatKeyPair');
+	    var localStorageKey = localStorage.getItem('iris.myKey');
+	    if (!localStorageKey) {
+	      localStorageKey = localStorage.getItem('chatKeyPair');
+	    }
 	    if (localStorageKey) {
 	      this.login(JSON.parse(localStorageKey));
 	    } else if (options.autologin !== false) {
@@ -19698,69 +21059,85 @@
 	   * @param key
 	   */login: function login(k) {
 	    var _this4 = this;
-	    var shouldRefresh = !!key;
-	    key = k;
-	    localStorage.setItem('chatKeyPair', JSON.stringify(k));
-	    publicState().auth(key);
-	    publicState().put({
-	      epub: key.epub
-	    });
-	    publicState().get('likes').put({
-	      a: null
-	    }); // gun bug?
-	    publicState().get('msgs').put({
-	      a: null
-	    }); // gun bug?
-	    publicState().get('replies').put({
-	      a: null
-	    }); // gun bug?
-	    notifications.subscribeToWebPush();
-	    notifications.getWebPushSubscriptions();
-	    notifications.subscribeToIrisNotifications();
-	    Channel.getMyChatLinks(undefined, function (chatLink) {
-	      local$1().get('chatLinks').get(chatLink.id).put(chatLink.url);
-	      latestChatLink = chatLink.url;
-	    });
-	    this.setOurOnlineStatus();
-	    Channel.getChannels(function (c) {
-	      return _this4.addChannel(c);
-	    });
-	    publicState().get('profile').get('name').on(function (name) {
-	      if (name && typeof name === 'string') {
-	        myName = name;
-	      }
-	    });
-	    notifications.init();
-	    local$1().get('loggedIn').put(true);
-	    local$1().get('settings').once().then(function (settings) {
-	      if (!settings) {
-	        local$1().get('settings').put(DEFAULT_SETTINGS.local);
-	      } else if (settings.enableWebtorrent === undefined || settings.autoplayWebtorrent === undefined) {
-	        local$1().get('settings').get('enableWebtorrent').put(DEFAULT_SETTINGS.local.enableWebtorrent);
-	        local$1().get('settings').get('autoplayWebtorrent').put(DEFAULT_SETTINGS.local.autoplayWebtorrent);
-	      }
-	    });
-	    publicState().get('block').map().on(function (isBlocked, user) {
-	      local$1().get('block').get(user).put(isBlocked);
-	      if (isBlocked) {
-	        delete searchableItems[user];
-	      }
-	    });
-	    this.updateGroups();
-	    if (shouldRefresh) {
-	      location.reload();
-	    }
-	    if (electron) {
-	      electron.get('settings').on(function (electron) {
-	        local$1().get('settings').get('electron').put(electron);
-	      });
-	      electron.get('user').put(key.pub);
-	    }
-	    local$1().get('filters').get('group').once().then(function (v) {
-	      if (!v) {
-	        local$1().get('filters').get('group').put('follows');
-	      }
-	    });
+	    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+	      var shouldRefresh;
+	      return _regeneratorRuntime().wrap(function _callee$(_context) {
+	        while (1) {
+	          switch (_context.prev = _context.next) {
+	            case 0:
+	              shouldRefresh = !!key;
+	              _context.next = 3;
+	              return Key.addSecp256k1KeyPair(k);
+	            case 3:
+	              key = _context.sent;
+	              localStorage.setItem('iris.myKey', JSON.stringify(k));
+	              publicState().auth(key);
+	              publicState().put({
+	                epub: key.epub
+	              });
+	              publicState().get('likes').put({
+	                a: null
+	              }); // gun bug?
+	              publicState().get('msgs').put({
+	                a: null
+	              }); // gun bug?
+	              publicState().get('replies').put({
+	                a: null
+	              }); // gun bug?
+	              notifications.subscribeToWebPush();
+	              notifications.getWebPushSubscriptions();
+	              notifications.subscribeToIrisNotifications();
+	              Channel.getMyChatLinks(undefined, function (chatLink) {
+	                local$1().get('chatLinks').get(chatLink.id).put(chatLink.url);
+	                latestChatLink = chatLink.url;
+	              });
+	              _this4.setOurOnlineStatus();
+	              Channel.getChannels(function (c) {
+	                return _this4.addChannel(c);
+	              });
+	              publicState().get('profile').get('name').on(function (name) {
+	                if (name && typeof name === 'string') {
+	                  myName = name;
+	                }
+	              });
+	              notifications.init();
+	              local$1().get('loggedIn').put(true);
+	              local$1().get('settings').once().then(function (settings) {
+	                if (!settings) {
+	                  local$1().get('settings').put(DEFAULT_SETTINGS.local);
+	                } else if (settings.enableWebtorrent === undefined || settings.autoplayWebtorrent === undefined) {
+	                  local$1().get('settings').get('enableWebtorrent').put(DEFAULT_SETTINGS.local.enableWebtorrent);
+	                  local$1().get('settings').get('autoplayWebtorrent').put(DEFAULT_SETTINGS.local.autoplayWebtorrent);
+	                }
+	              });
+	              publicState().get('block').map().on(function (isBlocked, user) {
+	                local$1().get('block').get(user).put(isBlocked);
+	                if (isBlocked) {
+	                  delete searchableItems[user];
+	                }
+	              });
+	              _this4.updateGroups();
+	              if (shouldRefresh) {
+	                location.reload();
+	              }
+	              if (electron) {
+	                electron.get('settings').on(function (electron) {
+	                  local$1().get('settings').get('electron').put(electron);
+	                });
+	                electron.get('user').put(key.pub);
+	              }
+	              local$1().get('filters').get('group').once().then(function (v) {
+	                if (!v) {
+	                  local$1().get('filters').get('group').put('follows');
+	                }
+	              });
+	            case 25:
+	            case "end":
+	              return _context.stop();
+	          }
+	        }
+	      }, _callee);
+	    }))();
 	  },
 	  /**
 	   * Create a new user account and log in.
@@ -19799,43 +21176,43 @@
 	   * @returns {Promise<void>}
 	   */logOut: function logOut() {
 	    var _this6 = this;
-	    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+	    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
 	      var reg, _reg$active, sub, hash;
-	      return _regeneratorRuntime().wrap(function _callee$(_context) {
+	      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
 	        while (1) {
-	          switch (_context.prev = _context.next) {
+	          switch (_context2.prev = _context2.next) {
 	            case 0:
 	              if (electron) {
 	                electron.get('user').put(null);
 	              }
 	              // TODO: remove subscription from your channels
 	              if (!navigator.serviceWorker) {
-	                _context.next = 16;
+	                _context2.next = 16;
 	                break;
 	              }
-	              _context.next = 4;
+	              _context2.next = 4;
 	              return navigator.serviceWorker.getRegistration();
 	            case 4:
-	              reg = _context.sent;
+	              reg = _context2.sent;
 	              if (!(reg && reg.pushManager)) {
-	                _context.next = 16;
+	                _context2.next = 16;
 	                break;
 	              }
 	              (_reg$active = reg.active) == null ? void 0 : _reg$active.postMessage({
 	                key: null
 	              });
-	              _context.next = 9;
+	              _context2.next = 9;
 	              return reg.pushManager.getSubscription();
 	            case 9:
-	              sub = _context.sent;
+	              sub = _context2.sent;
 	              if (!sub) {
-	                _context.next = 16;
+	                _context2.next = 16;
 	                break;
 	              }
-	              _context.next = 13;
+	              _context2.next = 13;
 	              return util.getHash(JSON.stringify(sub));
 	            case 13:
-	              hash = _context.sent;
+	              hash = _context2.sent;
 	              notifications.removeSubscription(hash);
 	              sub.unsubscribe && sub.unsubscribe();
 	            case 16:
@@ -19848,10 +21225,10 @@
 	              });
 	            case 19:
 	            case "end":
-	              return _context.stop();
+	              return _context2.stop();
 	          }
 	        }
-	      }, _callee);
+	      }, _callee2);
 	    }))();
 	  },
 	  clearIndexedDB: function clearIndexedDB() {
@@ -19903,23 +21280,23 @@
 	  },
 	  shareMyPeerUrl: function shareMyPeerUrl(channel) {
 	    var _this7 = this;
-	    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
+	    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
 	      var myIp;
-	      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+	      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
 	        while (1) {
-	          switch (_context2.prev = _context2.next) {
+	          switch (_context3.prev = _context3.next) {
 	            case 0:
-	              _context2.next = 2;
+	              _context3.next = 2;
 	              return local$1().get('settings').get('electron').get('publicIp').once();
 	            case 2:
-	              myIp = _context2.sent;
+	              myIp = _context3.sent;
 	              myIp && channel.put && channel.put('my_peer', _this7.myPeerUrl(myIp));
 	            case 4:
 	            case "end":
-	              return _context2.stop();
+	              return _context3.stop();
 	          }
 	        }
-	      }, _callee2);
+	      }, _callee3);
 	    }))();
 	  },
 	  newChannel: function newChannel(pub, chatLink) {
@@ -20184,200 +21561,6 @@
 	    }))();
 	  }
 	};
-
-	// eslint-disable-line no-unused-vars
-	var myKey;
-	var Key = /*#__PURE__*/function () {
-	  function Key() {}
-	  Key.getActiveKey = /*#__PURE__*/function () {
-	    var _getActiveKey = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(datadir, keyfile, fs) {
-	      var privKeyFile, f, newKey, str, _newKey;
-	      return _regeneratorRuntime().wrap(function _callee$(_context) {
-	        while (1) {
-	          switch (_context.prev = _context.next) {
-	            case 0:
-	              if (datadir === void 0) {
-	                datadir = ".";
-	              }
-	              if (keyfile === void 0) {
-	                keyfile = "iris.key";
-	              }
-	              if (!myKey) {
-	                _context.next = 4;
-	                break;
-	              }
-	              return _context.abrupt("return", myKey);
-	            case 4:
-	              if (!fs) {
-	                _context.next = 21;
-	                break;
-	              }
-	              privKeyFile = datadir + "/" + keyfile;
-	              if (!fs.existsSync(privKeyFile)) {
-	                _context.next = 11;
-	                break;
-	              }
-	              f = fs.readFileSync(privKeyFile, "utf8");
-	              myKey = Key.fromString(f);
-	              _context.next = 17;
-	              break;
-	            case 11:
-	              _context.next = 13;
-	              return Key.generate();
-	            case 13:
-	              newKey = _context.sent;
-	              myKey = myKey || newKey; // eslint-disable-line require-atomic-updates
-	              fs.writeFileSync(privKeyFile, Key.toString(myKey));
-	              fs.chmodSync(privKeyFile, 400);
-	            case 17:
-	              if (myKey) {
-	                _context.next = 19;
-	                break;
-	              }
-	              throw new Error("loading default key failed - check " + datadir + "/" + keyfile);
-	            case 19:
-	              _context.next = 33;
-	              break;
-	            case 21:
-	              str = window.localStorage.getItem("iris.myKey");
-	              if (!str) {
-	                _context.next = 26;
-	                break;
-	              }
-	              myKey = Key.fromString(str);
-	              _context.next = 31;
-	              break;
-	            case 26:
-	              _context.next = 28;
-	              return Key.generate();
-	            case 28:
-	              _newKey = _context.sent;
-	              myKey = myKey || _newKey; // eslint-disable-line require-atomic-updates
-	              window.localStorage.setItem("iris.myKey", Key.toString(myKey));
-	            case 31:
-	              if (myKey) {
-	                _context.next = 33;
-	                break;
-	              }
-	              throw new Error("loading default key failed - check localStorage iris.myKey");
-	            case 33:
-	              return _context.abrupt("return", myKey);
-	            case 34:
-	            case "end":
-	              return _context.stop();
-	          }
-	        }
-	      }, _callee);
-	    }));
-	    function getActiveKey(_x, _x2, _x3) {
-	      return _getActiveKey.apply(this, arguments);
-	    }
-	    return getActiveKey;
-	  }();
-	  Key.getDefault = function getDefault(datadir, keyfile) {
-	    if (datadir === void 0) {
-	      datadir = ".";
-	    }
-	    if (keyfile === void 0) {
-	      keyfile = "iris.key";
-	    }
-	    return Key.getActiveKey(datadir, keyfile);
-	  };
-	  Key.getActivePub = /*#__PURE__*/function () {
-	    var _getActivePub = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(datadir, keyfile) {
-	      var key;
-	      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-	        while (1) {
-	          switch (_context2.prev = _context2.next) {
-	            case 0:
-	              if (datadir === void 0) {
-	                datadir = ".";
-	              }
-	              if (keyfile === void 0) {
-	                keyfile = "iris.key";
-	              }
-	              _context2.next = 4;
-	              return Key.getActiveKey(datadir, keyfile);
-	            case 4:
-	              key = _context2.sent;
-	              return _context2.abrupt("return", key.pub);
-	            case 6:
-	            case "end":
-	              return _context2.stop();
-	          }
-	        }
-	      }, _callee2);
-	    }));
-	    function getActivePub(_x4, _x5) {
-	      return _getActivePub.apply(this, arguments);
-	    }
-	    return getActivePub;
-	  }();
-	  Key.setActiveKey = function setActiveKey(key, save, datadir, keyfile, fs) {
-	    if (save === void 0) {
-	      save = true;
-	    }
-	    if (datadir === void 0) {
-	      datadir = ".";
-	    }
-	    if (keyfile === void 0) {
-	      keyfile = "iris.key";
-	    }
-	    myKey = key;
-	    if (!save) return;
-	    if (util.isNode) {
-	      var privKeyFile = datadir + "/" + keyfile;
-	      fs.writeFileSync(privKeyFile, Key.toString(myKey));
-	      fs.chmodSync(privKeyFile, 400);
-	    } else {
-	      window.localStorage.setItem("iris.myKey", Key.toString(myKey));
-	    }
-	  };
-	  Key.toString = function toString(key) {
-	    return JSON.stringify(key);
-	  };
-	  Key.getId = function getId(key) {
-	    if (!(key && key.pub)) {
-	      throw new Error("missing param");
-	    }
-	    return key.pub; // hack until GUN supports lookups by keyID
-	    //return util.getHash(key.pub);
-	  };
-	  Key.fromString = function fromString(str) {
-	    return JSON.parse(str);
-	  };
-	  Key.generate = function generate() {
-	    return gun$1.SEA.pair();
-	  };
-	  Key.sign = /*#__PURE__*/function () {
-	    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(msg, pair) {
-	      var sig;
-	      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-	        while (1) {
-	          switch (_context3.prev = _context3.next) {
-	            case 0:
-	              _context3.next = 2;
-	              return gun$1.SEA.sign(msg, pair);
-	            case 2:
-	              sig = _context3.sent;
-	              return _context3.abrupt("return", "a" + sig);
-	            case 4:
-	            case "end":
-	              return _context3.stop();
-	          }
-	        }
-	      }, _callee3);
-	    }));
-	    function sign(_x6, _x7) {
-	      return _sign.apply(this, arguments);
-	    }
-	    return sign;
-	  }();
-	  Key.verify = function verify(msg, pubKey) {
-	    return gun$1.SEA.verify(msg.slice(1), pubKey);
-	  };
-	  return Key;
-	}();
 
 	var errorMsg = "Invalid  message:";
 	var ValidationError = /*#__PURE__*/function (_Error) {
@@ -20987,7 +22170,8 @@
 	  Gun: gun$1,
 	  SignedMessage: SignedMessage,
 	  Channel: Channel,
-	  Node: Node
+	  Node: Node,
+	  Key: Key
 	};
 
 	exports.default = index;

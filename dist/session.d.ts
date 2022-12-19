@@ -37,7 +37,7 @@ declare const _default: {
      * Log in with a private key.
      * @param key
      */
-    login(k: any): void;
+    login(k: any): Promise<void>;
     /**
      * Create a new user account and log in.
      * @param options {Object} - Options for the new account.
