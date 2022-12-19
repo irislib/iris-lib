@@ -5106,13 +5106,16 @@ var Key = /*#__PURE__*/function () {
               return window.crypto.subtle.digest('SHA-256', privArr);
             case 5:
               hash = _context3.sent;
-              k = this.deriveFromBytes(new Uint8Array(hash));
+              _context3.next = 8;
+              return this.deriveFromBytes(new Uint8Array(hash));
+            case 8:
+              k = _context3.sent;
               k.secp256k1 = {
                 priv: priv,
                 rpub: arrayToHex(secp.schnorr.getPublicKey(privArr))
               };
               return _context3.abrupt("return", k);
-            case 9:
+            case 11:
             case "end":
               return _context3.stop();
           }

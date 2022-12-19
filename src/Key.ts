@@ -78,7 +78,7 @@ class Key {
     }
     const privArr = hexToUint8Array(priv);
     const hash = await window.crypto.subtle.digest('SHA-256', privArr);
-    const k: any = this.deriveFromBytes(new Uint8Array(hash));
+    const k: any = await this.deriveFromBytes(new Uint8Array(hash));
     k.secp256k1 = { priv, rpub: arrayToHex(secp.schnorr.getPublicKey(privArr)) };
     return k;
   }
