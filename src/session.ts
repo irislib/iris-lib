@@ -296,8 +296,8 @@ export default {
   loginAsNewUser(options: any = {}) {
     const name = options.name || util.generateName();
     console.log('loginAsNewUser name', name);
-    return Gun.SEA.pair().then(k => {
-      this.login(k);
+    return Gun.SEA.pair().then(async k => {
+      await this.login(k);
       user().get('profile').put({a:null});
       user().get('profile').get('name').put(name);
       local().get('filters').put({a:null});

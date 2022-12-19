@@ -5674,69 +5674,86 @@ var session = {
     }
     var name = options.name || util.generateName();
     console.log('loginAsNewUser name', name);
-    return Gun.SEA.pair().then(function (k) {
-      _this5.login(k);
-      publicState().get('profile').put({
-        a: null
-      });
-      publicState().get('profile').get('name').put(name);
-      local$1().get('filters').put({
-        a: null
-      });
-      local$1().get('filters').get('group').put('follows');
-      Channel.createChatLink().then(function (l) {
-        return latestChatLink = l;
-      });
-      setTimeout(function () {
-        if (options.autofollow !== false) {
-          console.log('autofollowing', DEFAULT_FOLLOW);
-          publicState().get('follow').get(DEFAULT_FOLLOW).put(true);
-        }
-      }, 1000); // maybe wait for login return instead
-    });
+    return Gun.SEA.pair().then( /*#__PURE__*/function () {
+      var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(k) {
+        return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _context2.next = 2;
+                return _this5.login(k);
+              case 2:
+                publicState().get('profile').put({
+                  a: null
+                });
+                publicState().get('profile').get('name').put(name);
+                local$1().get('filters').put({
+                  a: null
+                });
+                local$1().get('filters').get('group').put('follows');
+                Channel.createChatLink().then(function (l) {
+                  return latestChatLink = l;
+                });
+                setTimeout(function () {
+                  if (options.autofollow !== false) {
+                    console.log('autofollowing', DEFAULT_FOLLOW);
+                    publicState().get('follow').get(DEFAULT_FOLLOW).put(true);
+                  }
+                }, 1000); // maybe wait for login return instead
+              case 8:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2);
+      }));
+      return function (_x) {
+        return _ref.apply(this, arguments);
+      };
+    }());
   },
   /**
    * Log out the current user.
    * @returns {Promise<void>}
    */logOut: function logOut() {
     var _this6 = this;
-    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
       var reg, _reg$active, sub, hash;
-      return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
         while (1) {
-          switch (_context2.prev = _context2.next) {
+          switch (_context3.prev = _context3.next) {
             case 0:
               if (electron) {
                 electron.get('user').put(null);
               }
               // TODO: remove subscription from your channels
               if (!navigator.serviceWorker) {
-                _context2.next = 16;
+                _context3.next = 16;
                 break;
               }
-              _context2.next = 4;
+              _context3.next = 4;
               return navigator.serviceWorker.getRegistration();
             case 4:
-              reg = _context2.sent;
+              reg = _context3.sent;
               if (!(reg && reg.pushManager)) {
-                _context2.next = 16;
+                _context3.next = 16;
                 break;
               }
               (_reg$active = reg.active) == null ? void 0 : _reg$active.postMessage({
                 key: null
               });
-              _context2.next = 9;
+              _context3.next = 9;
               return reg.pushManager.getSubscription();
             case 9:
-              sub = _context2.sent;
+              sub = _context3.sent;
               if (!sub) {
-                _context2.next = 16;
+                _context3.next = 16;
                 break;
               }
-              _context2.next = 13;
+              _context3.next = 13;
               return util.getHash(JSON.stringify(sub));
             case 13:
-              hash = _context2.sent;
+              hash = _context3.sent;
               notifications.removeSubscription(hash);
               sub.unsubscribe && sub.unsubscribe();
             case 16:
@@ -5749,10 +5766,10 @@ var session = {
               });
             case 19:
             case "end":
-              return _context2.stop();
+              return _context3.stop();
           }
         }
-      }, _callee2);
+      }, _callee3);
     }))();
   },
   clearIndexedDB: function clearIndexedDB() {
@@ -5804,23 +5821,23 @@ var session = {
   },
   shareMyPeerUrl: function shareMyPeerUrl(channel) {
     var _this7 = this;
-    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
+    return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4() {
       var myIp;
-      return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+      return _regeneratorRuntime().wrap(function _callee4$(_context4) {
         while (1) {
-          switch (_context3.prev = _context3.next) {
+          switch (_context4.prev = _context4.next) {
             case 0:
-              _context3.next = 2;
+              _context4.next = 2;
               return local$1().get('settings').get('electron').get('publicIp').once();
             case 2:
-              myIp = _context3.sent;
+              myIp = _context4.sent;
               myIp && channel.put && channel.put('my_peer', _this7.myPeerUrl(myIp));
             case 4:
             case "end":
-              return _context3.stop();
+              return _context4.stop();
           }
         }
-      }, _callee3);
+      }, _callee4);
     }))();
   },
   newChannel: function newChannel(pub, chatLink) {
@@ -5929,9 +5946,9 @@ var session = {
         });
         chat.inviteLinks = {};
         chat.getChatLinks({
-          callback: function callback(_ref) {
-            var url = _ref.url,
-              id = _ref.id;
+          callback: function callback(_ref2) {
+            var url = _ref2.url,
+              id = _ref2.id;
             console.log('got chat link', id, url);
             chat.inviteLinks[id] = url; // TODO use State
             local$1().get('inviteLinksChanged').put(true);
