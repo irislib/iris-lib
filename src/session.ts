@@ -97,11 +97,6 @@ export default {
       local().get('contacts').get(k).put({followDistance: searchableItems[k].followDistance,followerCount: searchableItems[k].followers.size});
   }, 1000, {leading:true}),
 
-  addToSearchIndex(key: string, item: any) {
-    searchableItems[key] = item;
-    this.updateSearchIndex();
-  },
-
   addFollow(callback: Function, k: string, followDistance: number, follower?: string) {
     if (searchableItems[k]) {
       if (searchableItems[k].followDistance > followDistance) {
@@ -123,6 +118,11 @@ export default {
     this.updateSearchIndex();
     this.updateNoFollows();
     this.updateNoFollowers();
+  },
+
+  addToSearchIndex(key: string, item: any) {
+    searchableItems[key] = item;
+    this.updateSearchIndex();
   },
 
   removeFollow(k: string, followDistance: number, follower: string) {

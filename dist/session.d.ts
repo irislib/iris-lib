@@ -25,8 +25,8 @@ declare const _default: {
     taskQueue: any[];
     updateSearchIndex: () => void;
     saveSearchResult: () => void;
-    addToSearchIndex(key: string, item: any): void;
     addFollow(callback: Function, k: string, followDistance: number, follower?: string | undefined): void;
+    addToSearchIndex(key: string, item: any): void;
     removeFollow(k: string, followDistance: number, follower: string): void;
     getExtendedFollows(callback: Function, k?: any, maxDepth?: number, currentDepth?: number): any;
     updateNoFollows: () => void;

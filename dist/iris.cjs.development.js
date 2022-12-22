@@ -5438,10 +5438,6 @@ var session = {
   }, 1000, {
     leading: true
   }),
-  addToSearchIndex: function addToSearchIndex(key, item) {
-    searchableItems[key] = item;
-    this.updateSearchIndex();
-  },
   addFollow: function addFollow(callback, k, followDistance, follower) {
     if (searchableItems[k]) {
       var _searchableItems$k$fo;
@@ -5468,6 +5464,10 @@ var session = {
     this.updateSearchIndex();
     this.updateNoFollows();
     this.updateNoFollowers();
+  },
+  addToSearchIndex: function addToSearchIndex(key, item) {
+    searchableItems[key] = item;
+    this.updateSearchIndex();
   },
   removeFollow: function removeFollow(k, followDistance, follower) {
     if (followDistance === 1) {

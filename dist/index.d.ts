@@ -65,6 +65,7 @@ declare const _default: {
         updateSearchIndex: () => void;
         saveSearchResult: () => void;
         addFollow(callback: Function, k: string, followDistance: number, follower?: string | undefined): void;
+        addToSearchIndex(key: string, item: any): void;
         removeFollow(k: string, followDistance: number, follower: string): void;
         getExtendedFollows(callback: Function, k?: any, maxDepth?: number, currentDepth?: number): any;
         updateNoFollows: () => void;
@@ -72,7 +73,7 @@ declare const _default: {
         getSearchIndex(): any;
         setOurOnlineStatus(): void;
         updateGroups(): void;
-        login(k: any): void;
+        login(k: any): Promise<void>;
         loginAsNewUser(options?: any): Promise<void>;
         logOut(): Promise<void>;
         clearIndexedDB(): Promise<unknown>;
