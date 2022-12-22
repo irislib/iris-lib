@@ -5432,12 +5432,17 @@ var session = {
   }, 1000, {
     leading: true
   }),
+  addToSearchIndex: function addToSearchIndex(key, item) {
+    searchableItems[key] = item;
+    this.updateSearchIndex();
+  },
   addFollow: function addFollow(callback, k, followDistance, follower) {
     if (searchableItems[k]) {
+      var _searchableItems$k$fo;
       if (searchableItems[k].followDistance > followDistance) {
         searchableItems[k].followDistance = followDistance;
       }
-      follower && searchableItems[k].followers.add(follower);
+      follower && ((_searchableItems$k$fo = searchableItems[k].followers) == null ? void 0 : _searchableItems$k$fo.add(follower));
     } else {
       searchableItems[k] = {
         key: k,
@@ -5468,7 +5473,7 @@ var session = {
         this.updateNoFollowers();
       }
     }
-    console.log('removeFollow', k, followDistance, follower);
+    //console.log('removeFollow', k, followDistance, follower);
     if (searchableItems[k] && searchableItems[k].followers.size === 0) {
       delete searchableItems[k];
       local$1().get('contacts').get(k).put(false);

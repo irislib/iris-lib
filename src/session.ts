@@ -97,12 +97,17 @@ export default {
       local().get('contacts').get(k).put({followDistance: searchableItems[k].followDistance,followerCount: searchableItems[k].followers.size});
   }, 1000, {leading:true}),
 
+  addToSearchIndex(key: string, item: any) {
+    searchableItems[key] = item;
+    this.updateSearchIndex();
+  },
+
   addFollow(callback: Function, k: string, followDistance: number, follower?: string) {
     if (searchableItems[k]) {
       if (searchableItems[k].followDistance > followDistance) {
         searchableItems[k].followDistance = followDistance;
       }
-      follower && searchableItems[k].followers.add(follower);
+      follower && searchableItems[k].followers?.add(follower);
     } else {
       searchableItems[k] = {key: k, followDistance, followers: new Set(follower && [follower])};
       this.taskQueue.push(() => {
@@ -130,7 +135,7 @@ export default {
         this.updateNoFollowers();
       }
     }
-    console.log('removeFollow', k, followDistance, follower);
+    //console.log('removeFollow', k, followDistance, follower);
     if (searchableItems[k] && searchableItems[k].followers.size === 0) {
       delete searchableItems[k];
       local().get('contacts').get(k).put(false);
