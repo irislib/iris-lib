@@ -186,6 +186,20 @@ class Key {
     return Gun.SEA.pair();
   }
 
+  static async schnorrSign(msg: string, priv: string): Promise<string> {
+    const msgArr = hexToUint8Array(msg);
+    const privArr = hexToUint8Array(priv);
+    const sig = await secp.schnorr.sign(msgArr, privArr);
+    return arrayToHex(sig);
+  }
+
+  static schnorrVerify(sig: string, msg: string, pub: string): Promise<boolean> {
+    const sigArr = hexToUint8Array(sig);
+    const msgArr = hexToUint8Array(msg);
+    const pubArr = hexToUint8Array(pub);
+    return secp.schnorr.verify(sigArr, msgArr, pubArr);
+  }
+
   static async sign(msg: any, pair: any) {
     const sig = await Gun.SEA.sign(msg, pair);
     return `a${sig}`;

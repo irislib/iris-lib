@@ -5309,26 +5309,58 @@ var Key = /*#__PURE__*/function () {
   Key.generate = function generate() {
     return Gun.SEA.pair();
   };
-  Key.sign = /*#__PURE__*/function () {
-    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(msg, pair) {
-      var sig;
+  Key.schnorrSign = /*#__PURE__*/function () {
+    var _schnorrSign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee6(msg, priv) {
+      var msgArr, privArr, sig;
       return _regeneratorRuntime().wrap(function _callee6$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              _context6.next = 2;
-              return Gun.SEA.sign(msg, pair);
-            case 2:
-              sig = _context6.sent;
-              return _context6.abrupt("return", "a" + sig);
+              msgArr = hexToUint8Array(msg);
+              privArr = hexToUint8Array(priv);
+              _context6.next = 4;
+              return schnorr.sign(msgArr, privArr);
             case 4:
+              sig = _context6.sent;
+              return _context6.abrupt("return", arrayToHex(sig));
+            case 6:
             case "end":
               return _context6.stop();
           }
         }
       }, _callee6);
     }));
-    function sign(_x9, _x10) {
+    function schnorrSign(_x9, _x10) {
+      return _schnorrSign.apply(this, arguments);
+    }
+    return schnorrSign;
+  }();
+  Key.schnorrVerify = function schnorrVerify(sig, msg, pub) {
+    var sigArr = hexToUint8Array(sig);
+    var msgArr = hexToUint8Array(msg);
+    var pubArr = hexToUint8Array(pub);
+    return schnorr.verify(sigArr, msgArr, pubArr);
+  };
+  Key.sign = /*#__PURE__*/function () {
+    var _sign = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee7(msg, pair) {
+      var sig;
+      return _regeneratorRuntime().wrap(function _callee7$(_context7) {
+        while (1) {
+          switch (_context7.prev = _context7.next) {
+            case 0:
+              _context7.next = 2;
+              return Gun.SEA.sign(msg, pair);
+            case 2:
+              sig = _context7.sent;
+              return _context7.abrupt("return", "a" + sig);
+            case 4:
+            case "end":
+              return _context7.stop();
+          }
+        }
+      }, _callee7);
+    }));
+    function sign(_x11, _x12) {
       return _sign.apply(this, arguments);
     }
     return sign;
@@ -5586,7 +5618,7 @@ var session = {
    */login: function login(k) {
     var _this4 = this;
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var shouldRefresh;
+      var shouldRefresh, sig, proof1;
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -5596,7 +5628,7 @@ var session = {
               return Key.addSecp256k1KeyPair(k);
             case 3:
               key = _context.sent;
-              localStorage.setItem('iris.myKey', JSON.stringify(k));
+              localStorage.setItem('iris.myKey', JSON.stringify(key));
               publicState().auth(key);
               publicState().put({
                 epub: key.epub
@@ -5610,6 +5642,18 @@ var session = {
               publicState().get('replies').put({
                 a: null
               }); // gun bug?
+              _context.next = 12;
+              return Key.schnorrSign(key.pub, key.secp256k1.priv);
+            case 12:
+              sig = _context.sent;
+              proof1 = JSON.stringify({
+                pub: key.pub,
+                rpub: key.secp256k1.rpub,
+                sig: sig
+              });
+              publicState().get('profile').get('nostr').put(proof1);
+              // const proof2 = await Key.sign(key.secp256k1.rpub, key);
+              // TODO save signed iris pub to nostr metadata
               notifications.subscribeToWebPush();
               notifications.getWebPushSubscriptions();
               notifications.subscribeToIrisNotifications();
@@ -5657,7 +5701,7 @@ var session = {
                   local$1().get('filters').get('group').put('follows');
                 }
               });
-            case 25:
+            case 30:
             case "end":
               return _context.stop();
           }

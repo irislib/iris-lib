@@ -240,12 +240,19 @@ export default {
   async login(k: any) {
     const shouldRefresh = !!key;
     key = await Key.addSecp256k1KeyPair(k);
-    localStorage.setItem('iris.myKey', JSON.stringify(k));
+    localStorage.setItem('iris.myKey', JSON.stringify(key));
     user().auth(key);
     user().put({epub: key.epub});
     user().get('likes').put({a:null}); // gun bug?
     user().get('msgs').put({a:null}); // gun bug?
     user().get('replies').put({a:null}); // gun bug?
+
+    const sig = await Key.schnorrSign(key.pub, key.secp256k1.priv);
+    const proof1 = JSON.stringify({pub: key.pub, rpub: key.secp256k1.rpub, sig});
+    user().get('profile').get('nostr').put(proof1);
+    // const proof2 = await Key.sign(key.secp256k1.rpub, key);
+    // TODO save signed iris pub to nostr metadata
+
     notifications.subscribeToWebPush();
     notifications.getWebPushSubscriptions();
     notifications.subscribeToIrisNotifications();

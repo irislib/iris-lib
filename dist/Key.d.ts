@@ -31,6 +31,8 @@ declare class Key {
     static getId(key: any): any;
     static fromString(str: string): any;
     static generate(): Promise<import("gun").ISEAPair>;
+    static schnorrSign(msg: string, priv: string): Promise<string>;
+    static schnorrVerify(sig: string, msg: string, pub: string): Promise<boolean>;
     static sign(msg: any, pair: any): Promise<string>;
     static verify(msg: any, pubKey: any): Promise<any>;
 }
