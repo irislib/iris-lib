@@ -60,7 +60,7 @@ export default {
       localStorageKey = localStorage.getItem('chatKeyPair');
     }
     if (localStorageKey) {
-      this.login(JSON.parse(localStorageKey));
+      this.login(JSON.parse(localStorageKey), options);
     } else if (options.autologin !== false) {
       this.loginAsNewUser(options);
     } else {
@@ -237,7 +237,7 @@ export default {
    * Log in with a private key.
    * @param key
    */
-  async login(k: any) {
+  async login(k: any, opts = {}) {
     const shouldRefresh = !!key;
     key = await Key.addSecp256k1KeyPair(k);
     localStorage.setItem('iris.myKey', JSON.stringify(key));
@@ -248,25 +248,25 @@ export default {
     user().get('replies').put({a:null}); // gun bug?
 
     const sig = await Key.schnorrSign(key.pub, key.secp256k1.priv);
-    const proof1 = JSON.stringify({pub: key.pub, rpub: key.secp256k1.rpub, sig});
-    user().get('profile').get('nostr').put(proof1);
-    // const proof2 = await Key.sign(key.secp256k1.rpub, key);
-    // TODO save signed iris pub to nostr metadata
+    const proof = JSON.stringify({pub: key.pub, rpub: key.secp256k1.rpub, sig});
+    user().get('profile').get('nostr').put(proof);
 
     notifications.subscribeToWebPush();
     notifications.getWebPushSubscriptions();
     notifications.subscribeToIrisNotifications();
-    Channel.getMyChatLinks( undefined, (chatLink: any) => {
-      local().get('chatLinks').get(chatLink.id).put(chatLink.url);
-      latestChatLink = chatLink.url;
-    });
-    this.setOurOnlineStatus();
-    Channel.getChannels( (c: Channel) => this.addChannel(c));
+    if (opts.initChannels) {
+      Channel.getMyChatLinks( undefined, (chatLink: any) => {
+        local().get('chatLinks').get(chatLink.id).put(chatLink.url);
+        latestChatLink = chatLink.url;
+      });
+      Channel.getChannels( (c: Channel) => this.addChannel(c));
+    }
     user().get('profile').get('name').on((name: any) => {
       if (name && typeof name === 'string') {
         myName = name;
       }
     });
+    this.setOurOnlineStatus();
     notifications.init();
     local().get('loggedIn').put(true);
     local().get('settings').once().then(settings => {
@@ -309,7 +309,7 @@ export default {
     const name = options.name || util.generateName();
     console.log('loginAsNewUser name', name);
     return Gun.SEA.pair().then(async k => {
-      await this.login(k);
+      await this.login(k, options);
       user().get('profile').put({a:null});
       user().get('profile').get('name').put(name);
       local().get('filters').put({a:null});

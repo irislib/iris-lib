@@ -5426,7 +5426,7 @@ var session = {
       localStorageKey = localStorage.getItem('chatKeyPair');
     }
     if (localStorageKey) {
-      this.login(JSON.parse(localStorageKey));
+      this.login(JSON.parse(localStorageKey), options);
     } else if (options.autologin !== false) {
       this.loginAsNewUser(options);
     } else {
@@ -5621,18 +5621,21 @@ var session = {
   /**
    * Log in with a private key.
    * @param key
-   */login: function login(k) {
+   */login: function login(k, opts) {
     var _this4 = this;
     return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
-      var shouldRefresh, sig, proof1;
+      var shouldRefresh, sig, proof;
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
+              if (opts === void 0) {
+                opts = {};
+              }
               shouldRefresh = !!key;
-              _context.next = 3;
+              _context.next = 4;
               return Key.addSecp256k1KeyPair(k);
-            case 3:
+            case 4:
               key = _context.sent;
               localStorage.setItem('iris.myKey', JSON.stringify(key));
               publicState().auth(key);
@@ -5648,34 +5651,34 @@ var session = {
               publicState().get('replies').put({
                 a: null
               }); // gun bug?
-              _context.next = 12;
+              _context.next = 13;
               return Key.schnorrSign(key.pub, key.secp256k1.priv);
-            case 12:
+            case 13:
               sig = _context.sent;
-              proof1 = JSON.stringify({
+              proof = JSON.stringify({
                 pub: key.pub,
                 rpub: key.secp256k1.rpub,
                 sig: sig
               });
-              publicState().get('profile').get('nostr').put(proof1);
-              // const proof2 = await Key.sign(key.secp256k1.rpub, key);
-              // TODO save signed iris pub to nostr metadata
+              publicState().get('profile').get('nostr').put(proof);
               notifications.subscribeToWebPush();
               notifications.getWebPushSubscriptions();
               notifications.subscribeToIrisNotifications();
-              Channel.getMyChatLinks(undefined, function (chatLink) {
-                local$1().get('chatLinks').get(chatLink.id).put(chatLink.url);
-                latestChatLink = chatLink.url;
-              });
-              _this4.setOurOnlineStatus();
-              Channel.getChannels(function (c) {
-                return _this4.addChannel(c);
-              });
+              if (opts.initChannels) {
+                Channel.getMyChatLinks(undefined, function (chatLink) {
+                  local$1().get('chatLinks').get(chatLink.id).put(chatLink.url);
+                  latestChatLink = chatLink.url;
+                });
+                Channel.getChannels(function (c) {
+                  return _this4.addChannel(c);
+                });
+              }
               publicState().get('profile').get('name').on(function (name) {
                 if (name && typeof name === 'string') {
                   myName = name;
                 }
               });
+              _this4.setOurOnlineStatus();
               notifications.init();
               local$1().get('loggedIn').put(true);
               local$1().get('settings').once().then(function (settings) {
@@ -5733,7 +5736,7 @@ var session = {
             switch (_context2.prev = _context2.next) {
               case 0:
                 _context2.next = 2;
-                return _this5.login(k);
+                return _this5.login(k, options);
               case 2:
                 publicState().get('profile').put({
                   a: null
