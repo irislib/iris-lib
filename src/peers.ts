@@ -19,8 +19,7 @@ type Peers = {
 }
 
 const DEFAULT_PEERS: Peers = {
-  'https://gun-rs.iris.to/gun': {},
-  'https://gun-us.herokuapp.com/gun': {},
+  'https://gun-rs.iris.to/gun': {}
 };
 
 const loc = window.location;

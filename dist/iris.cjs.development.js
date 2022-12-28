@@ -825,8 +825,7 @@ var util = {
 var ELECTRON_GUN_URL = 'http://localhost:8767/gun';
 var maxConnectedPeers = 2;
 var DEFAULT_PEERS = {
-  'https://gun-rs.iris.to/gun': {},
-  'https://gun-us.herokuapp.com/gun': {}
+  'https://gun-rs.iris.to/gun': {}
 };
 var loc = window.location;
 var host = loc.host;
@@ -5633,10 +5632,12 @@ var session = {
                 opts = {};
               }
               shouldRefresh = !!key;
-              _context.next = 4;
+              console.log('login', k, shouldRefresh);
+              _context.next = 5;
               return Key.addSecp256k1KeyPair(k);
-            case 4:
+            case 5:
               key = _context.sent;
+              console.log('login', key);
               localStorage.setItem('iris.myKey', JSON.stringify(key));
               publicState().auth(key);
               publicState().put({
@@ -5651,9 +5652,13 @@ var session = {
               publicState().get('replies').put({
                 a: null
               }); // gun bug?
-              _context.next = 13;
+              if (!key.secp256k1.priv) {
+                _context.next = 19;
+                break;
+              }
+              _context.next = 16;
               return Key.schnorrSign(key.pub, key.secp256k1.priv);
-            case 13:
+            case 16:
               sig = _context.sent;
               proof = JSON.stringify({
                 pub: key.pub,
@@ -5661,6 +5666,7 @@ var session = {
                 sig: sig
               });
               publicState().get('profile').get('nostr').put(proof);
+            case 19:
               notifications.subscribeToWebPush();
               notifications.getWebPushSubscriptions();
               notifications.subscribeToIrisNotifications();
@@ -5710,7 +5716,7 @@ var session = {
                   local$1().get('filters').get('group').put('follows');
                 }
               });
-            case 30:
+            case 33:
             case "end":
               return _context.stop();
           }
