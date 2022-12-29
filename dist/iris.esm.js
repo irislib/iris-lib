@@ -5626,12 +5626,10 @@ var session = {
                 opts = {};
               }
               shouldRefresh = !!key;
-              console.log('login', k, shouldRefresh);
-              _context.next = 5;
+              _context.next = 4;
               return Key.addSecp256k1KeyPair(k);
-            case 5:
+            case 4:
               key = _context.sent;
-              console.log('login', key);
               localStorage.setItem('iris.myKey', JSON.stringify(key));
               publicState().auth(key);
               publicState().put({
@@ -5647,12 +5645,12 @@ var session = {
                 a: null
               }); // gun bug?
               if (!key.secp256k1.priv) {
-                _context.next = 19;
+                _context.next = 17;
                 break;
               }
-              _context.next = 16;
+              _context.next = 14;
               return Key.schnorrSign(key.pub, key.secp256k1.priv);
-            case 16:
+            case 14:
               sig = _context.sent;
               proof = JSON.stringify({
                 pub: key.pub,
@@ -5660,7 +5658,7 @@ var session = {
                 sig: sig
               });
               publicState().get('profile').get('nostr').put(proof);
-            case 19:
+            case 17:
               notifications.subscribeToWebPush();
               notifications.getWebPushSubscriptions();
               notifications.subscribeToIrisNotifications();
@@ -5710,7 +5708,7 @@ var session = {
                   local$1().get('filters').get('group').put('follows');
                 }
               });
-            case 33:
+            case 31:
             case "end":
               return _context.stop();
           }

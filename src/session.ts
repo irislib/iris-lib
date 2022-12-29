@@ -239,9 +239,7 @@ export default {
    */
   async login(k: any, opts = {}) {
     const shouldRefresh = !!key;
-    console.log('login', k, shouldRefresh);
     key = await Key.addSecp256k1KeyPair(k);
-    console.log('login', key);
     localStorage.setItem('iris.myKey', JSON.stringify(key));
     user().auth(key);
     user().put({epub: key.epub});
