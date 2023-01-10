@@ -73,7 +73,7 @@ declare const _default: {
         getSearchIndex(): any;
         setOurOnlineStatus(): void;
         updateGroups(): void;
-        login(k: any): Promise<void>;
+        login(k: any, opts?: {}): Promise<void>;
         loginAsNewUser(options?: any): Promise<void>;
         logOut(): Promise<void>;
         clearIndexedDB(): Promise<unknown>;
@@ -95,6 +95,8 @@ declare const _default: {
         getHash(str: string, format?: string): Promise<string | undefined>;
         capitalize(s: string): string;
         generateName(): string;
+        animals: string[];
+        adjectives: string[];
         base64ToHex(str: string): string;
         getCaret(el: HTMLInputElement): any;
         injectCss(): void;
