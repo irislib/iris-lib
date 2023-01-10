@@ -10431,6 +10431,8 @@
 	  generateName: function generateName() {
 	    return this.capitalize(_.sample(adjectives)) + " " + this.capitalize(_.sample(animals));
 	  },
+	  animals: animals,
+	  adjectives: adjectives,
 	  base64ToHex: function base64ToHex(str) {
 	    var raw = atob(str);
 	    var result = '';

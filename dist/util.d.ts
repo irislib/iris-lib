@@ -7,6 +7,8 @@ declare const _default: {
     getHash(str: string, format?: string): Promise<string | undefined>;
     capitalize(s: string): string;
     generateName(): string;
+    animals: string[];
+    adjectives: string[];
     base64ToHex(str: string): string;
     getCaret(el: HTMLInputElement): any;
     injectCss(): void;

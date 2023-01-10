@@ -1893,6 +1893,10 @@ export default {
     return `${this.capitalize(_.sample(adjectives)!)} ${this.capitalize(_.sample(animals)!)}`;
   },
 
+  animals,
+
+  adjectives,
+
   base64ToHex(str: string) {
     const raw = atob(str);
     let result = '';
