@@ -7,7 +7,7 @@ import 'gun/lib/store';
 import 'gun/lib/rindexed';
 import localForage from 'localforage';
 import Fuse from 'fuse.js';
-import { schnorr, utils } from '@noble/secp256k1';
+import { utils, schnorr } from '@noble/secp256k1';
 
 function _regeneratorRuntime() {
   _regeneratorRuntime = function () {
@@ -5140,13 +5140,16 @@ var Key = /*#__PURE__*/function () {
   // secp256k1 is used by nostr among others
   ;
   Key.secp256k1KeyPairFromHash = function secp256k1KeyPairFromHash(hash) {
-    var ec = new EC('secp256k1');
-    var keyPair = ec.keyFromPrivate(new Uint8Array(hash));
-    var priv = keyPair.getPrivate().toString(16);
-    var rpub = arrayToHex(schnorr.getPublicKey(priv));
+    var p = new Uint8Array(hash);
+    // double p to get a 64 byte array. hacky.
+    var priv = new Uint8Array(64);
+    priv.set(p);
+    priv.set(p, 32);
+    priv = utils.hashToPrivateKey(priv);
+    var rpub = schnorr.getPublicKey(priv);
     var kp = {
-      rpub: rpub,
-      priv: priv
+      rpub: arrayToHex(rpub),
+      priv: arrayToHex(priv)
     };
     return kp;
   };

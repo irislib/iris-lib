@@ -101,13 +101,15 @@ class Key {
 
   // secp256k1 is used by nostr among others
   static secp256k1KeyPairFromHash(hash: any) {
-    const ec = new EC('secp256k1');
-    const keyPair = ec.keyFromPrivate(new Uint8Array(hash));
+    const p = new Uint8Array(hash);
+    // double p to get a 64 byte array. hacky.
+    let priv = new Uint8Array(64);
+    priv.set(p);
+    priv.set(p, 32);
+    priv = secp.utils.hashToPrivateKey(priv);
+    const rpub = secp.schnorr.getPublicKey(priv);
 
-    const priv = keyPair.getPrivate().toString(16);
-    const rpub = arrayToHex(secp.schnorr.getPublicKey(priv));
-
-    const kp = { rpub, priv };
+    const kp = { rpub: arrayToHex(rpub), priv: arrayToHex(priv) };
     return kp;
   }
 

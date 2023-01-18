@@ -21,7 +21,7 @@ declare class Key {
     };
     static secp256k1KeyPairFromHash(hash: any): {
         rpub: string;
-        priv: any;
+        priv: string;
     };
     static getActiveKey(datadir?: string, keyfile?: string, fs?: any): Promise<MyKey>;
     static getDefault(datadir?: string, keyfile?: string): Promise<MyKey>;
