@@ -5393,7 +5393,7 @@ var DEFAULT_SETTINGS = {
     minimizeOnClose: true
   },
   local: {
-    enableWebtorrent: !util.isMobile,
+    enableWebtorrent: true,
     enablePublicPeerDiscovery: true,
     autoplayWebtorrent: true,
     maxConnectedPeers: util.isElectron ? 2 : 1
