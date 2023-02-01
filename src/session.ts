@@ -87,7 +87,7 @@ export default {
   taskQueue: [] as any[],
 
   updateSearchIndex: _.throttle(() => {
-    const options = {keys: ['name'], includeScore: true, includeMatches: true, threshold: 0.3};
+    const options = {keys: ['name', 'display_name'], includeScore: true, includeMatches: true, threshold: 0.3};
     const values = Object.values(_.omit(searchableItems, Object.keys(blockedUsers())));
     searchIndex = new Fuse(values, options);
     local().get('searchIndexUpdated').put(true);

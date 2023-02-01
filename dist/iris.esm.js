@@ -5449,7 +5449,7 @@ var session = {
   taskQueue: [],
   updateSearchIndex: /*#__PURE__*/_.throttle(function () {
     var options = {
-      keys: ['name'],
+      keys: ['name', 'display_name'],
       includeScore: true,
       includeMatches: true,
       threshold: 0.3
