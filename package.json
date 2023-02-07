@@ -58,9 +58,8 @@
   },
   "dependencies": {
     "@noble/secp256k1": "^1.7.0",
-    "elliptic": "^6.5.4",
     "fuse.js": "^6.6.2",
-    "gun": "https://github.com/mmalmi/gun",
-    "localforage": "^1.10.0"
+    "localforage": "^1.10.0",
+    "nostr-tools": "^1.2.1"
   }
 }

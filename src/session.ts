@@ -1,17 +1,11 @@
 // @ts-nocheck
-import Gun from 'gun';
-import notifications from './notifications';
-import Channel from './Channel';
 import util from './util';
-import _ from './lodash';
 import Fuse from "fuse.js";
 import localforage from 'localforage';
 import local from './local';
-import electron from './electron';
 import user from './public';
 import privateState from './private';
-import blockedUsers from './blockedUsers';
-import Key from './Key';
+import Key from './key';
 
 let key: any;
 let myName: string;
@@ -86,14 +80,14 @@ export default {
 
   taskQueue: [] as any[],
 
-  updateSearchIndex: _.throttle(() => {
+  updateSearchIndex: util.throttle(() => {
     const options = {keys: ['name', 'display_name'], includeScore: true, includeMatches: true, threshold: 0.3};
     const values = Object.values(_.omit(searchableItems, Object.keys(blockedUsers())));
     searchIndex = new Fuse(values, options);
     local().get('searchIndexUpdated').put(true);
   }, 2000, {leading:true}),
 
-  saveSearchResult: _.throttle(k => {
+  saveSearchResult: util.throttle(k => {
       local().get('contacts').get(k).put({followDistance: searchableItems[k].followDistance,followerCount: searchableItems[k].followers.size});
   }, 1000, {leading:true}),
 
@@ -166,7 +160,7 @@ export default {
     return searchableItems;
   },
 
-  updateNoFollows: _.throttle(() => {
+  updateNoFollows: util.throttle(() => {
     const v = Object.keys(searchableItems).length <= 1;
     if (v !== noFollows) {
       noFollows = v;
@@ -174,7 +168,7 @@ export default {
     }
   }, 1000, {leading:true}),
 
-  updateNoFollowers: _.throttle(() => {
+  updateNoFollowers: util.throttle(() => {
     const v = !(searchableItems[key.pub] && (searchableItems[key.pub].followers.size > 0));
     if (v !== noFollowers) {
       noFollowers = v;
@@ -189,7 +183,7 @@ export default {
   setOurOnlineStatus() {
     const activeRoute = window.location.hash;
     Channel.setActivity(ourActivity = 'active');
-    const setActive = _.debounce(() => {
+    const setActive = util.debounce(() => {
       const chatId = activeRoute && activeRoute.replace('#/profile/','').replace('#/chat/','');
       const chat = privateState(chatId);
       if (chat && !ourActivity) {
