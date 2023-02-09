@@ -9,11 +9,16 @@ const subscribe = (filters: Filter[], cb: (event: Event) => void) => {
   return '';
 }
 
+const publish = async (event: Partial<Event>) => {
+  await relaypool.publish(event);
+  return event as Event;
+}
+
 /**
  * Get a private space where only you and the specified user (public key) can read and write.
  * @param pub The public key of the user. If not specified, it's a private space for the current user.
  * @returns {Path} The user space.
  */
 export default function(authors = [session.getPubKey()]) {
-  return new Path(relaypool.publish, subscribe, relaypool.unsubscribe, { authors }, key.encrypt, key.decrypt);
+  return new Path(publish, subscribe, relaypool.unsubscribe, { authors }, key.encrypt, key.decrypt);
 }

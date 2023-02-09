@@ -47,7 +47,7 @@ export function getEventPath(event: Event): string | undefined {
 }
 
 export function getFilterPath(filter: Filter): string | undefined {
-  return filter['#d']?.[0]
+  return filter['#d']?.[0] as string | undefined
 }
 
 // We can later add other storages like IndexedDB or localStorage

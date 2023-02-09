@@ -1,11 +1,11 @@
 import session from './session';
-import { nip04, signEvent } from 'nostr-tools';
+import { nip04, signEvent, Event } from 'nostr-tools';
 
 export default {
   decryptedMessages: new Map<string, string>(),
   windowNostrQueue: [],
   isProcessingQueue: false,
-  encrypt: async function (data: string, pub?: string) {
+  encrypt: async function (data: string, pub?: string): Promise<string> {
     const k = session.getKey().secp256k1;
     pub = pub || k.rpub;
     if (k.priv) {
@@ -18,7 +18,7 @@ export default {
       return Promise.reject('no private key');
     }
   },
-  decrypt: async function (data: string, pub?: string) {
+  decrypt: async function (data: string, pub?: string): Promise<string> {
     const k = session.getKey().secp256k1;
     pub = pub || k.rpub;
     if (k.priv) {

@@ -1,17 +1,17 @@
-import iris from 'iris-lib';
-import { debounce, throttle } from 'lodash';
+import session from './session';
+import util from './util';
+import { Path } from './path';
 
 import {
   Event,
   Filter,
   getEventHash,
   nip04,
-  Path,
   Relay,
   relayInit,
   signEvent,
   Sub,
-} from './lib/nostr-tools';
+} from 'nostr-tools';
 const bech32 = require('bech32-buffer'); /* eslint-disable-line @typescript-eslint/no-var-requires */
 import { sha256 } from '@noble/hashes/sha256';
 import localForage from 'localforage';
@@ -42,7 +42,7 @@ const getRelayStatus = (relay: Relay) => {
   }
 };
 
-const saveLocalStorageEvents = debounce((_this: any) => {
+const saveLocalStorageEvents = util.debounce((_this: any) => {
   const latestMsgs = _this.latestNotesByFollows.eventIds.slice(0, 500).map((eventId: any) => {
     return _this.eventsById.get(eventId);
   });
@@ -70,9 +70,9 @@ const saveLocalStorageEvents = debounce((_this: any) => {
   // TODO save own block and flag events
 }, 5000);
 
-const saveLocalStorageProfilesAndFollows = debounce((_this) => {
+const saveLocalStorageProfilesAndFollows = util.debounce((_this) => {
   const profileEvents = Array.from(_this.profileEventByUser.values());
-  const myPub = iris.session.getKey().secp256k1.rpub;
+  const myPub = session.getKey().secp256k1.rpub;
   const followEvents = Array.from(_this.followEventByUser.values()).filter((e: Event) => {
     return e.pubkey === myPub || _this.followedByUser.get(myPub)?.has(e.pubkey);
   });
@@ -178,7 +178,7 @@ const relaypool = {
       return;
     }
     try {
-      const myPub = iris.session.getKey().secp256k1.rpub;
+      const myPub = session.getKey().secp256k1.rpub;
       const msg = this.eventsById.get(id);
       const theirPub =
         msg.pubkey === myPub ? msg.tags.find((tag: any) => tag[0] === 'p')[1] : msg.pubkey;
@@ -198,7 +198,7 @@ const relaypool = {
   },
   setFollowed: function (followedUser: string, follow = true) {
     followedUser = this.toNostrHexAddress(followedUser);
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
 
     if (follow) {
       this.addFollower(followedUser, myPub);
@@ -221,7 +221,7 @@ const relaypool = {
 
   setBlocked: function (blockedUser: string, block = true) {
     blockedUser = this.toNostrHexAddress(blockedUser);
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
 
     if (block) {
       this.blockedUsers.add(blockedUser);
@@ -314,7 +314,7 @@ const relaypool = {
     if (!this.followedByUser.has(follower)) {
       this.followedByUser.set(follower, new Set<string>());
     }
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
 
     // if new follow, move all their posts to followedByUser
     if (follower === myPub && !this.followedByUser.get(myPub).has(followedUser)) {
@@ -423,7 +423,7 @@ const relaypool = {
       }
       event.content = event.content || '';
       event.created_at = event.created_at || Math.floor(Date.now() / 1000);
-      event.pubkey = iris.session.getKey().secp256k1.rpub;
+      event.pubkey = session.getKey().secp256k1.rpub;
       event.id = getEventHash(event as Event);
       event.sig = await this.sign(event);
     }
@@ -450,7 +450,7 @@ const relaypool = {
   },
   followedByFriendsCount: function (address: string) {
     let count = 0;
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
     for (const follower of this.followersByUser.get(address) ?? []) {
       if (this.followedByUser.get(myPub)?.has(follower)) {
         count++; // should we stop at 10?
@@ -501,7 +501,7 @@ const relaypool = {
       }
     }
   },
-  subscribeToRepliesAndLikes: debounce((_this) => {
+  subscribeToRepliesAndLikes: util.debounce((_this) => {
     console.log('subscribeToRepliesAndLikes', _this.subscribedRepliesAndLikes);
     _this.sendSubToRelays(
       [{ kinds: [1, 6, 7], '#e': Array.from(_this.subscribedRepliesAndLikes.values()) }],
@@ -511,9 +511,9 @@ const relaypool = {
   }, 500),
   // TODO we shouldn't bang the history queries all the time. only ask a users history once per relay.
   // then we can increase the limit
-  subscribeToAuthors: debounce((_this) => {
+  subscribeToAuthors: util.debounce((_this) => {
     const now = Math.floor(Date.now() / 1000);
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
     const followedUsers = Array.from(_this.followedByUser.get(myPub) ?? []);
     followedUsers.push(myPub);
     const otherSubscribedUsers = Array.from(_this.subscribedUsers).filter(
@@ -545,7 +545,7 @@ const relaypool = {
       );
     }, 1000);
   }, 1000),
-  subscribeToPosts: throttle(
+  subscribeToPosts: util.throttle(
     (_this) => {
       if (_this.subscribedPosts.size === 0) return;
       console.log('subscribe to', _this.subscribedPosts.size, 'posts');
@@ -554,7 +554,7 @@ const relaypool = {
     3000,
     { leading: false },
   ),
-  subscribeToKeywords: debounce((_this) => {
+  subscribeToKeywords: util.debounce((_this) => {
     if (_this.subscribedKeywords.size === 0) return;
     console.log(
       'subscribe to keywords',
@@ -578,7 +578,7 @@ const relaypool = {
     go();
   }, 100),
   encrypt: async function (data: string, pub?: string) {
-    const k = iris.session.getKey().secp256k1;
+    const k = session.getKey().secp256k1;
     pub = pub || k.rpub;
     if (k.priv) {
       return nip04.encrypt(k.priv, pub, data);
@@ -591,7 +591,7 @@ const relaypool = {
     }
   },
   decrypt: async function (data, pub?: string) {
-    const k = iris.session.getKey().secp256k1;
+    const k = session.getKey().secp256k1;
     pub = pub || k.rpub;
     if (k.priv) {
       return nip04.decrypt(k.priv, pub, data);
@@ -604,7 +604,7 @@ const relaypool = {
     }
   },
   sign: async function (event: Event) {
-    const priv = iris.session.getKey().secp256k1.priv;
+    const priv = session.getKey().secp256k1.priv;
     if (priv) {
       return signEvent(event, priv);
     } else if (window.nostr) {
@@ -793,7 +793,7 @@ const relaypool = {
     this.postsAndRepliesByUser.get(event.pubkey)?.add(event);
 
     this.latestNotesByEveryone.add(event);
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
     if (event.pubkey === myPub || this.followedByUser.get(myPub)?.has(event.pubkey)) {
       const changed = this.latestNotesByFollows.add(event);
       if (changed && this.localStorageLoaded) {
@@ -884,7 +884,7 @@ const relaypool = {
       this.likesByUser.set(event.pubkey, new SortedLimitedEventSet(MAX_MSGS_BY_USER));
     }
     this.likesByUser.get(event.pubkey).add({ id, created_at: event.created_at });
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
     if (event.pubkey === myPub || this.followedByUser.get(myPub)?.has(event.pubkey)) {
       //this.getMessageById(id);
     }
@@ -895,7 +895,7 @@ const relaypool = {
       return;
     }
     this.followEventByUser.set(event.pubkey, event);
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
 
     if (event.pubkey === myPub || this.followedByUser.get(myPub)?.has(event.pubkey)) {
       this.localStorageLoaded && saveLocalStorageProfilesAndFollows(this);
@@ -955,7 +955,7 @@ const relaypool = {
     for (const url of this.relays.keys()) {
       relaysObj[url] = { read: true, write: true };
     }
-    const existing = this.followEventByUser.get(iris.session.getKey().secp256k1.rpub);
+    const existing = this.followEventByUser.get(session.getKey().secp256k1.rpub);
     const content = JSON.stringify(relaysObj);
 
     const event = {
@@ -970,7 +970,7 @@ const relaypool = {
       return;
     }
     this.myBlockEvent = event;
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
     if (event.pubkey === myPub) {
       try {
         const content = await this.decrypt(event.content);
@@ -985,7 +985,7 @@ const relaypool = {
     if (this.myFlagEvent?.created_at > event.created_at) {
       return;
     }
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
     if (event.pubkey === myPub) {
       try {
         const flaggedUsers = JSON.parse(event.content);
@@ -1006,7 +1006,7 @@ const relaypool = {
       delete profile['nip05valid']; // not robust
       this.profiles.set(event.pubkey, profile);
       const key = this.toNostrBech32Address(event.pubkey, 'npub');
-      iris.session.addToSearchIndex(key, {
+      session.addToSearchIndex(key, {
         key,
         name: profile.name,
         display_name: profile.display_name,
@@ -1025,7 +1025,7 @@ const relaypool = {
   },
   handleDelete(event: Event) {
     const id = event.tags.find((tag) => tag[0] === 'e')?.[1];
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
     if (id) {
       const deletedEvent = this.eventsById.get(id);
       // only we or the author can delete
@@ -1037,7 +1037,7 @@ const relaypool = {
       }
     }
   },
-  updateUnseenNotificationCount: debounce((_this) => {
+  updateUnseenNotificationCount: util.debounce((_this) => {
     if (!_this.notificationsSeenTime) {
       return;
     }
@@ -1055,7 +1055,7 @@ const relaypool = {
   }, 1000),
   maybeAddNotification(event: Event) {
     // if we're mentioned in tags, add to notifications
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
     // TODO: if it's a like, only add if the last p tag is us
     if (event.pubkey !== myPub && event.tags.some((tag) => tag[0] === 'p' && tag[1] === myPub)) {
       if (event.kind === 3) {
@@ -1071,7 +1071,7 @@ const relaypool = {
     }
   },
   handleDirectMessage(event: Event) {
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
     let user = event.pubkey;
     if (event.pubkey === myPub) {
       user = event.tags.find((tag) => tag[0] === 'p')?.[1] || user;
@@ -1088,7 +1088,7 @@ const relaypool = {
     this.directMessagesByUser.get(user)?.add(event);
   },
   handleKeyValue(event: Event) {
-    if (event.pubkey !== iris.session.getKey().secp256k1.rpub) {
+    if (event.pubkey !== session.getKey().secp256k1.rpub) {
       return;
     }
     const key = event.tags.find((tag) => tag[0] === 'd')?.[1];
@@ -1272,7 +1272,7 @@ const relaypool = {
   },
   async logOut() {
     await localForage.clear();
-    iris.session.logOut();
+    session.logOut();
   },
   loadSettings() {
     iris
@@ -1298,7 +1298,7 @@ const relaypool = {
     });
   },
   onLoggedIn() {
-    const key = iris.session.getKey();
+    const key = session.getKey();
     const subscribe = (filters: Filter[], callback: (event: Event) => void): string => {
       const filter = filters[0];
       const key = filter['#d']?.[0];
@@ -1311,7 +1311,7 @@ const relaypool = {
       this.subscribe(filters, callback);
       return '0';
     };
-    const myPub = iris.session.getKey().secp256k1.rpub;
+    const myPub = session.getKey().secp256k1.rpub;
 
     const myPublish = async (event: Partial<Event>): Promise<boolean> => {
       try {
@@ -1440,7 +1440,7 @@ const relaypool = {
       cb?.(this.blockedUsers);
     };
     callback();
-    const myPub = iris.session.getKey()?.secp256k1.rpub;
+    const myPub = session.getKey()?.secp256k1.rpub;
     this.subscribe([{ kinds: [16462], authors: [myPub] }], callback);
   },
   getFlaggedUsers(cb?: (flagged: Set<string>) => void) {
@@ -1448,7 +1448,7 @@ const relaypool = {
       cb?.(this.flaggedUsers);
     };
     callback();
-    const myPub = iris.session.getKey()?.secp256k1.rpub;
+    const myPub = session.getKey()?.secp256k1.rpub;
     this.subscribe([{ kinds: [16463], authors: [myPub] }], callback);
   },
   getFollowedByUser: function (user: string, cb?: (followedUsers: Set<string>) => void) {
@@ -1483,7 +1483,7 @@ const relaypool = {
       cb?.(this.notifications.eventIds);
     };
     callback();
-    this.subscribe([{ '#p': [iris.session.getKey().secp256k1.rpub] }], callback);
+    this.subscribe([{ '#p': [session.getKey().secp256k1.rpub] }], callback);
   },
 
   getSomeRelayUrl() {
@@ -1594,7 +1594,7 @@ const relaypool = {
       cb?.(this.directMessagesByUser.get(address)?.eventIds);
     };
     this.directMessagesByUser.has(address) && callback();
-    const myPub = iris.session.getKey()?.secp256k1.rpub;
+    const myPub = session.getKey()?.secp256k1.rpub;
     this.subscribe([{ kinds: [4], '#p': [address, myPub] }], callback);
   },
 
