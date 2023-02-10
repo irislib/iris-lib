@@ -1,6 +1,7 @@
 import session from './session';
 import util from './util';
 import { Path } from './path';
+import publicState from './public';
 
 import {
   Event,
@@ -1307,42 +1308,15 @@ const relaypool = {
   },
   onLoggedIn() {
     const key = session.getKey();
-    const subscribe = (filters: Filter[], callback: (event: Event) => void): string => {
-      const filter = filters[0] as any;
-      const key = filter['#d']?.[0];
-      if (key) {
-        const event = this.keyValueEvents.get(key);
-        if (event) {
-          callback(event);
-        }
-      }
-      this.subscribe(filters, callback);
-      return '0';
-    };
-    const myPub = session.getKey().secp256k1.rpub;
 
-    this.private = new Path(
-      (e) => this.publish(e),
-      subscribe,
-      (...args) => this.unsubscribe(...args),
-      { authors: [myPub] },
-      (...args) => this.encrypt(...args),
-      (...args) => this.decrypt(...args),
-    );
-    this.public = new Path(
-      (e) => this.publish(e),
-      subscribe,
-      (...args) => this.unsubscribe(...args),
-      { authors: [myPub] },
-    );
-    this.public.get('notifications/lastOpened', (time) => {
+    publicState().get('notifications/lastOpened', (time) => {
       if (time !== this.notificationsSeenTime) {
         this.notificationsSeenTime = time;
         localForage.setItem('notificationsSeenTime', time);
         this.updateUnseenNotificationCount();
       }
     });
-    this.public.get('settings/colorScheme', (colorScheme) => {
+    publicState().get('settings/colorScheme', (colorScheme) => {
       if (colorScheme === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
         return;
