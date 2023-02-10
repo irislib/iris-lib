@@ -46,7 +46,7 @@ export function getEventPath(event: Event): string | undefined {
   return event.tags.find(([t]) => t === 'd')?.[1]
 }
 
-export function getFilterPath(filter: Filter): string | undefined {
+export function getFilterPath(filter: any): string | undefined { // changed to "any" to prevent "#d" does not exist error
   return filter['#d']?.[0] as string | undefined
 }
 

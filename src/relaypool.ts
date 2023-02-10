@@ -17,6 +17,7 @@ import { sha256 } from '@noble/hashes/sha256';
 import localForage from 'localforage';
 
 import SortedLimitedEventSet from './SortedLimitedEventSet';
+import local from "./local";
 
 const startTime = Date.now() / 1000;
 
@@ -54,7 +55,7 @@ const saveLocalStorageEvents = util.debounce((_this: any) => {
   const notifications = _this.notifications.eventIds.map((eventId: any) => {
     return _this.eventsById.get(eventId);
   });
-  const dms = [];
+  const dms: any = [];
   for (const set of _this.directMessagesByUser.values()) {
     set.eventIds.forEach((eventId: any) => {
       dms.push(_this.eventsById.get(eventId));
@@ -70,10 +71,10 @@ const saveLocalStorageEvents = util.debounce((_this: any) => {
   // TODO save own block and flag events
 }, 5000);
 
-const saveLocalStorageProfilesAndFollows = util.debounce((_this) => {
+const saveLocalStorageProfilesAndFollows = util.debounce((_this: any) => {
   const profileEvents = Array.from(_this.profileEventByUser.values());
   const myPub = session.getKey().secp256k1.rpub;
-  const followEvents = Array.from(_this.followEventByUser.values()).filter((e: Event) => {
+  const followEvents = Array.from(_this.followEventByUser.values()).filter((e: any) => {
     return e.pubkey === myPub || _this.followedByUser.get(myPub)?.has(e.pubkey);
   });
   console.log('saving', profileEvents.length + followEvents.length, 'events to local storage');
@@ -159,11 +160,16 @@ const relaypool = {
   boostsByMessageId: new Map<string, Set<string>>(),
   handledMsgsPerSecond: 0,
   decryptedMessages: new Map<string, string>(),
-  windowNostrQueue: [],
+  windowNostrQueue: [] as any[],
   isProcessingQueue: false,
   notificationsSeenTime: 0,
   futureEventIds: new SortedLimitedEventSet(100, false),
-  futureEventTimeout: 0,
+  futureEventTimeout: undefined as any,
+  blockEventByUser: new Map<string, Event>(),
+  reportEventByUser: new Map<string, Event>(),
+  private: undefined as Path | undefined,
+  public: undefined as Path | undefined,
+
 
   arrayToHex(array: any) {
     return Array.from(array, (byte: any) => {
@@ -171,7 +177,7 @@ const relaypool = {
     }).join('');
   },
 
-  async decryptMessage(id, cb: (decrypted: string) => void) {
+  async decryptMessage(id: string, cb: (decrypted: string) => void) {
     const existing = this.decryptedMessages.get(id);
     if (existing) {
       cb(existing);
@@ -180,8 +186,12 @@ const relaypool = {
     try {
       const myPub = session.getKey().secp256k1.rpub;
       const msg = this.eventsById.get(id);
+      if (!msg) {
+        cb('');
+        return;
+      }
       const theirPub =
-        msg.pubkey === myPub ? msg.tags.find((tag: any) => tag[0] === 'p')[1] : msg.pubkey;
+        msg.pubkey === myPub ? msg.tags.find((tag: any) => tag[0] === 'p')?.[1] : msg.pubkey;
       if (!(msg && theirPub)) {
         return;
       }
@@ -197,7 +207,7 @@ const relaypool = {
     }
   },
   setFollowed: function (followedUser: string, follow = true) {
-    followedUser = this.toNostrHexAddress(followedUser);
+    followedUser = this.toNostrHexAddress(followedUser) as string;
     const myPub = session.getKey().secp256k1.rpub;
 
     if (follow) {
@@ -211,7 +221,7 @@ const relaypool = {
     const event = {
       kind: 3,
       content: existing?.content || '',
-      tags: Array.from(this.followedByUser.get(myPub)).map((address: string) => {
+      tags: Array.from(this.followedByUser.get(myPub) ?? []).map((address: string) => {
         return ['p', address];
       }),
     };
@@ -220,7 +230,7 @@ const relaypool = {
   },
 
   setBlocked: function (blockedUser: string, block = true) {
-    blockedUser = this.toNostrHexAddress(blockedUser);
+    blockedUser = this.toNostrHexAddress(blockedUser) as string;
     const myPub = session.getKey().secp256k1.rpub;
 
     if (block) {
@@ -290,7 +300,7 @@ const relaypool = {
     if (this.relays.has(url)) return;
     const relay = relayInit(url, (id) => this.eventsById.has(id));
     relay.on('connect', () => this.resubscribe(relay));
-    relay.on('notice', (notice) => {
+    relay.on('notice', (notice: string) => {
       console.log('notice from ', relay.url, notice);
     });
     this.relays.set(url, relay);
@@ -317,7 +327,7 @@ const relaypool = {
     const myPub = session.getKey().secp256k1.rpub;
 
     // if new follow, move all their posts to followedByUser
-    if (follower === myPub && !this.followedByUser.get(myPub).has(followedUser)) {
+    if (follower === myPub && !this.followedByUser.get(myPub)?.has(followedUser)) {
       const posts = this.postsByUser.get(followedUser);
       if (posts) {
         posts.eventIds.forEach((eventId) => {
@@ -332,13 +342,13 @@ const relaypool = {
     }
     if (followedUser === myPub) {
       if (this.followersByUser.get(followedUser)?.size === 1) {
-        iris.local().get('hasNostrFollowers').put(true);
+        local().set('hasNostrFollowers', true);
       }
     }
     if (this.followedByUser.get(myPub)?.has(follower)) {
       if (!this.subscribedUsers.has(followedUser)) {
         this.subscribedUsers.add(followedUser); // subscribe to events from 2nd degree follows
-        this.subscribeToAuthors(this);
+        this.subscribeToAuthors();
       }
     }
   },
@@ -377,7 +387,7 @@ const relaypool = {
         }
       });
     }
-    saveLocalStorageEvents(this);
+    saveLocalStorageEvents();
   },
   // TODO subscription methods for followersByUser and followedByUser. and maybe messagesByTime. and replies
   followerCount: function (address: string) {
@@ -416,7 +426,7 @@ const relaypool = {
     }
     return null;
   },
-  publish: async function (event: Partial<Event>) {
+  publish: async function (event: Partial<Event>): Promise<Event> {
     if (!event.sig) {
       if (!event.tags) {
         event.tags = [];
@@ -425,19 +435,18 @@ const relaypool = {
       event.created_at = event.created_at || Math.floor(Date.now() / 1000);
       event.pubkey = session.getKey().secp256k1.rpub;
       event.id = getEventHash(event as Event);
-      event.sig = await this.sign(event);
+      event.sig = await this.sign(event as Event);
     }
     if (!(event.id && event.sig)) {
       console.error('Invalid event', event);
       throw new Error('Invalid event');
     }
     // also publish at most 10 events referred to in tags
-    const referredEvents = event.tags
-      .filter((tag) => tag[0] === 'e')
+    const referredEvents = event.tags?.filter((tag) => tag[0] === 'e')
       .reverse()
-      .slice(0, 10);
+      .slice(0, 10) ?? [];
     for (const relay of this.relays.values()) {
-      relay.publish(event);
+      relay.publish(event as Event);
       for (const ref of referredEvents) {
         const referredEvent = this.eventsById.get(ref[1]);
         if (referredEvent) {
@@ -445,8 +454,8 @@ const relaypool = {
         }
       }
     }
-    this.handleEvent(event);
-    return event.id;
+    this.handleEvent(event as Event);
+    return event as Event;
   },
   followedByFriendsCount: function (address: string) {
     let count = 0;
@@ -458,7 +467,7 @@ const relaypool = {
     }
     return count;
   },
-  sendSubToRelays: function (filters: Filter[], id: string, once = false, unsubscribeTimeout = 0) {
+  sendSubToRelays: function (filters: any[], id: string, once = false, unsubscribeTimeout = 0) {
     // if subs with same id already exists, remove them
     if (id) {
       const subs = this.subscriptionsByName.get(id);
@@ -485,7 +494,7 @@ const relaypool = {
       const subId = this.getSubscriptionIdForName(id);
       const sub = relay.sub(filters, { id: subId });
       // TODO update relay lastSeen
-      sub.on('event', (event) => this.handleEvent(event));
+      sub.on('event', (event: Event) => this.handleEvent(event));
       if (once) {
         sub.on('eose', () => sub.unsub());
       }
@@ -501,7 +510,7 @@ const relaypool = {
       }
     }
   },
-  subscribeToRepliesAndLikes: util.debounce((_this) => {
+  subscribeToRepliesAndLikes: util.debounce((_this: any) => {
     console.log('subscribeToRepliesAndLikes', _this.subscribedRepliesAndLikes);
     _this.sendSubToRelays(
       [{ kinds: [1, 6, 7], '#e': Array.from(_this.subscribedRepliesAndLikes.values()) }],
@@ -511,7 +520,7 @@ const relaypool = {
   }, 500),
   // TODO we shouldn't bang the history queries all the time. only ask a users history once per relay.
   // then we can increase the limit
-  subscribeToAuthors: util.debounce((_this) => {
+  subscribeToAuthors: util.debounce((_this: any) => {
     const now = Math.floor(Date.now() / 1000);
     const myPub = session.getKey().secp256k1.rpub;
     const followedUsers = Array.from(_this.followedByUser.get(myPub) ?? []);
@@ -546,15 +555,14 @@ const relaypool = {
     }, 1000);
   }, 1000),
   subscribeToPosts: util.throttle(
-    (_this) => {
+    (_this: any) => {
       if (_this.subscribedPosts.size === 0) return;
       console.log('subscribe to', _this.subscribedPosts.size, 'posts');
       _this.sendSubToRelays([{ ids: Array.from(_this.subscribedPosts) }], 'posts');
     },
     3000,
-    { leading: false },
   ),
-  subscribeToKeywords: util.debounce((_this) => {
+  subscribeToKeywords: util.debounce((_this: any) => {
     if (_this.subscribedKeywords.size === 0) return;
     console.log(
       'subscribe to keywords',
@@ -577,10 +585,10 @@ const relaypool = {
     };
     go();
   }, 100),
-  encrypt: async function (data: string, pub?: string) {
+  encrypt: async function (data: string, pub?: string): Promise<string> {
     const k = session.getKey().secp256k1;
     pub = pub || k.rpub;
-    if (k.priv) {
+    if (pub && k.priv) {
       return nip04.encrypt(k.priv, pub, data);
     } else if (window.nostr) {
       return new Promise((resolve) => {
@@ -590,10 +598,10 @@ const relaypool = {
       return Promise.reject('no private key');
     }
   },
-  decrypt: async function (data, pub?: string) {
+  decrypt: async function (data: any, pub?: string): Promise<any> {
     const k = session.getKey().secp256k1;
     pub = pub || k.rpub;
-    if (k.priv) {
+    if (pub && k.priv) {
       return nip04.decrypt(k.priv, pub, data);
     } else if (window.nostr) {
       return new Promise((resolve) => {
@@ -603,7 +611,7 @@ const relaypool = {
       return Promise.reject('no private key');
     }
   },
-  sign: async function (event: Event) {
+  sign: async function (event: Event): Promise<string> {
     const priv = session.getKey().secp256k1.priv;
     if (priv) {
       return signEvent(event, priv);
@@ -635,13 +643,13 @@ const relaypool = {
     } else if (op === 'encrypt') {
       fn = this.handlePromise(window.nostr.nip04.encrypt(pub, data), callback);
     } else if (op === 'sign') {
-      fn = this.handlePromise(window.nostr.signEvent(data), (signed) => callback(signed.sig));
+      fn = this.handlePromise(window.nostr.signEvent(data), (signed: any) => callback(signed.sig));
     }
     await fn;
     this.windowNostrQueue.shift();
     this.processWindowNostrQueue();
   },
-  handlePromise(promise, callback) {
+  handlePromise(promise: Promise<any>, callback: (data: any) => void) {
     return promise
       .then((result) => {
         callback(result);
@@ -661,7 +669,7 @@ const relaypool = {
     this.subscriptionsByName.delete(id);
     this.subscribedFiltersByName.delete(id);
   },
-  subscribe: function (filters: Filter[], cb?: (event: Event) => void) {
+  subscribe: function (filters: any[], cb?: (event: Event) => void) {
     cb &&
       this.subscriptions.set(subscriptionId++, {
         filters,
@@ -672,7 +680,7 @@ const relaypool = {
     let hasNewIds = false;
     let hasNewReplyAndLikeSubs = false;
     let hasNewKeywords = false;
-    for (const filter of filters) {
+    for (const filter of filters as any) {
       if (filter.authors) {
         for (const author of filter.authors) {
           if (!author) continue;
@@ -691,7 +699,8 @@ const relaypool = {
         for (const id of filter.ids) {
           if (!this.subscribedPosts.has(id)) {
             hasNewIds = true;
-            this.subscribedPosts.add(this.toNostrHexAddress(id));
+            const hex = this.toNostrHexAddress(id);
+            hex && this.subscribedPosts.add(hex);
           }
         }
       }
@@ -718,10 +727,10 @@ const relaypool = {
         }
       }
     }
-    hasNewReplyAndLikeSubs && this.subscribeToRepliesAndLikes(this);
-    hasNewAuthors && this.subscribeToAuthors(this); // TODO subscribe to old stuff from new authors, don't resubscribe to all
-    hasNewIds && this.subscribeToPosts(this);
-    hasNewKeywords && this.subscribeToKeywords(this);
+    hasNewReplyAndLikeSubs && this.subscribeToRepliesAndLikes();
+    hasNewAuthors && this.subscribeToAuthors(); // TODO subscribe to old stuff from new authors, don't resubscribe to all
+    hasNewIds && this.subscribeToPosts();
+    hasNewKeywords && this.subscribeToKeywords();
   },
   getConnectedRelayCount: function () {
     let count = 0;
@@ -778,7 +787,7 @@ const relaypool = {
     }
 
     for (const relay of this.relays.values()) {
-      relay.on('notice', (notice) => {
+      relay.on('notice', (notice: string) => {
         console.log('notice from ', relay.url, notice);
       });
     }
@@ -786,7 +795,7 @@ const relaypool = {
     setInterval(go, 1000);
   },
   handleNote(event: Event) {
-    this.eventsById.set(event.id, event);
+    this.eventsById.set(event.id as string, event);
     if (!this.postsAndRepliesByUser.has(event.pubkey)) {
       this.postsAndRepliesByUser.set(event.pubkey, new SortedLimitedEventSet(MAX_MSGS_BY_USER));
     }
@@ -797,7 +806,7 @@ const relaypool = {
     if (event.pubkey === myPub || this.followedByUser.get(myPub)?.has(event.pubkey)) {
       const changed = this.latestNotesByFollows.add(event);
       if (changed && this.localStorageLoaded) {
-        saveLocalStorageEvents(this);
+        saveLocalStorageEvents();
       }
     }
 
@@ -810,7 +819,7 @@ const relaypool = {
       if (!this.directRepliesByMessageId.has(replyingTo)) {
         this.directRepliesByMessageId.set(replyingTo, new Set<string>());
       }
-      this.directRepliesByMessageId.get(replyingTo)?.add(event.id);
+      this.directRepliesByMessageId.get(replyingTo)?.add(event.id as string);
 
       const repliedMsgs = event.tags
         .filter((tag) => tag[0] === 'e')
@@ -827,7 +836,7 @@ const relaypool = {
         if (!this.threadRepliesByMessageId.has(id)) {
           this.threadRepliesByMessageId.set(id, new Set<string>());
         }
-        this.threadRepliesByMessageId.get(id)?.add(event.id);
+        this.threadRepliesByMessageId.get(id)?.add(event.id as string);
       }
     } else {
       if (!this.postsByUser.has(event.pubkey)) {
@@ -878,12 +887,20 @@ const relaypool = {
     if (!this.likesByMessageId.has(id)) {
       this.likesByMessageId.set(id, new Set());
     }
-    this.likesByMessageId.get(id).add(event.pubkey);
+    this.likesByMessageId.get(id)?.add(event.pubkey);
 
     if (!this.likesByUser.has(event.pubkey)) {
       this.likesByUser.set(event.pubkey, new SortedLimitedEventSet(MAX_MSGS_BY_USER));
     }
-    this.likesByUser.get(event.pubkey).add({ id, created_at: event.created_at });
+    // this is not optimal: we should instead handle likes differently in MessageFeed
+    this.likesByUser.get(event.pubkey)?.add({
+      id,
+      created_at: event.created_at,
+      kind: 1,
+      tags: [],
+      pubkey: event.pubkey,
+      content: ''
+    });
     const myPub = session.getKey().secp256k1.rpub;
     if (event.pubkey === myPub || this.followedByUser.get(myPub)?.has(event.pubkey)) {
       //this.getMessageById(id);
@@ -898,7 +915,7 @@ const relaypool = {
     const myPub = session.getKey().secp256k1.rpub;
 
     if (event.pubkey === myPub || this.followedByUser.get(myPub)?.has(event.pubkey)) {
-      this.localStorageLoaded && saveLocalStorageProfilesAndFollows(this);
+      this.localStorageLoaded && saveLocalStorageProfilesAndFollows();
     }
 
     if (event.tags) {
@@ -909,14 +926,14 @@ const relaypool = {
       }
     }
     if (this.followedByUser.has(event.pubkey)) {
-      for (const previouslyFollowed of this.followedByUser.get(event.pubkey)) {
+      for (const previouslyFollowed of this.followedByUser.get(event.pubkey) ?? []) {
         if (!event.tags || !event.tags.find((t) => t[0] === 'p' && t[1] === previouslyFollowed)) {
           this.removeFollower(previouslyFollowed, event.pubkey);
         }
       }
     }
     if (event.pubkey === myPub && event.tags.length) {
-      iris.local().get('noFollows').put(false);
+      local().set('noFollows', false);
     }
     if (event.pubkey === myPub && event.content?.length) {
       try {
@@ -966,11 +983,12 @@ const relaypool = {
     this.publish(event);
   },
   async handleBlockList(event: Event) {
-    if (this.myBlockEvent?.created_at > event.created_at) {
+    const myPub = session.getKey().secp256k1.rpub;
+    const existing = this.blockEventByUser.get(myPub);
+    if (existing && existing.created_at > event.created_at) {
       return;
     }
-    this.myBlockEvent = event;
-    const myPub = session.getKey().secp256k1.rpub;
+    this.blockEventByUser.set(myPub, event);
     if (event.pubkey === myPub) {
       try {
         const content = await this.decrypt(event.content);
@@ -982,10 +1000,11 @@ const relaypool = {
     }
   },
   handleFlagList(event: Event) {
-    if (this.myFlagEvent?.created_at > event.created_at) {
+    const myPub = session.getKey().secp256k1.rpub;
+    const existing = this.reportEventByUser.get(myPub);
+    if (existing && existing.created_at > event.created_at) {
       return;
     }
-    const myPub = session.getKey().secp256k1.rpub;
     if (event.pubkey === myPub) {
       try {
         const flaggedUsers = JSON.parse(event.content);
@@ -995,7 +1014,7 @@ const relaypool = {
       }
     }
   },
-  handleMetadata(event: Event) {
+  handleMetadata(event: Event): boolean {
     try {
       const existing = this.profiles.get(event.pubkey);
       if (existing?.created_at >= event.created_at) {
@@ -1016,11 +1035,13 @@ const relaypool = {
       const existingEvent = this.profileEventByUser.get(event.pubkey);
       if (!existingEvent || existingEvent.created_at < event.created_at) {
         this.profileEventByUser.set(event.pubkey, event);
-        this.localStorageLoaded && saveLocalStorageProfilesAndFollows(this);
+        this.localStorageLoaded && saveLocalStorageProfilesAndFollows();
       }
+      return true;
       //}
     } catch (e) {
       console.log('error parsing nostr profile', e, event);
+      return false;
     }
   },
   handleDelete(event: Event) {
@@ -1037,7 +1058,7 @@ const relaypool = {
       }
     }
   },
-  updateUnseenNotificationCount: util.debounce((_this) => {
+  updateUnseenNotificationCount: util.debounce((_this: any) => {
     if (!_this.notificationsSeenTime) {
       return;
     }
@@ -1051,7 +1072,7 @@ const relaypool = {
       }
     }
     console.log('notificationsSeenTime', _this.notificationsSeenTime, 'count', count);
-    iris.local().get('unseenNotificationCount').put(count);
+    local().set('unseenNotificationCount', count);
   }, 1000),
   maybeAddNotification(event: Event) {
     // if we're mentioned in tags, add to notifications
@@ -1065,9 +1086,9 @@ const relaypool = {
           return;
         }
       }
-      this.eventsById.set(event.id, event);
+      this.eventsById.set(event.id as string, event);
       this.notifications.add(event);
-      this.updateUnseenNotificationCount(this);
+      this.updateUnseenNotificationCount();
     }
   },
   handleDirectMessage(event: Event) {
@@ -1081,7 +1102,7 @@ const relaypool = {
         return;
       }
     }
-    this.eventsById.set(event.id, event);
+    this.eventsById.set(event.id as string, event);
     if (!this.directMessagesByUser.has(user)) {
       this.directMessagesByUser.set(user, new SortedLimitedEventSet(500));
     }
@@ -1094,7 +1115,7 @@ const relaypool = {
     const key = event.tags.find((tag) => tag[0] === 'd')?.[1];
     if (key) {
       const existing = this.keyValueEvents.get(key);
-      if (existing?.created_at >= event.created_at) {
+      if (existing && existing.created_at>= event.created_at) {
         return;
       }
       this.keyValueEvents.set(key, event);
@@ -1110,24 +1131,25 @@ const relaypool = {
   },
   handleEvent(event: Event, force = false) {
     if (!event) return;
-    if (this.eventsById.has(event.id) && !force) {
+    const id = event.id as string;
+    if (this.eventsById.has(id as string) && !force) {
       return;
     }
-    if (!this.knownUsers.has(event.pubkey) && !this.subscribedPosts.has(event.id)) {
+    if (!this.knownUsers.has(event.pubkey) && !this.subscribedPosts.has(id)) {
       return;
     }
     if (this.blockedUsers.has(event.pubkey)) {
       return;
     }
-    if (this.deletedEvents.has(event.id)) {
+    if (this.deletedEvents.has(id as string)) {
       return;
     }
     if (event.created_at > Date.now() / 1000) {
       this.futureEventIds.add(event);
-      if (this.futureEventIds.has(event.id)) {
-        this.eventsById.set(event.id, event); // TODO should limit stored future events
+      if (this.futureEventIds.has(id as string)) {
+        this.eventsById.set(event.id as string, event); // TODO should limit stored future events
       }
-      if (this.futureEventIds.first() === event.id) {
+      if (this.futureEventIds.first() === id) {
         this.handleNextFutureEvent();
       }
       return;
@@ -1135,7 +1157,7 @@ const relaypool = {
 
     this.handledMsgsPerSecond++;
 
-    this.subscribedPosts.delete(event.id);
+    this.subscribedPosts.delete(id);
 
     switch (event.kind) {
       case 0:
@@ -1158,7 +1180,7 @@ const relaypool = {
         this.handleDelete(event);
         break;
       case 3:
-        if (this.followEventByUser.get(event.pubkey)?.created_at >= event.created_at) {
+        if (this.followEventByUser.get(event.pubkey)?.created_at ?? -Infinity >= event.created_at) {
           return;
         }
         this.maybeAddNotification(event);
@@ -1207,13 +1229,13 @@ const relaypool = {
       return;
     }
     clearTimeout(this.futureEventTimeout);
-    const nextEventId = this.futureEventIds.first();
+    const nextEventId = this.futureEventIds.first() as string;
     const nextEvent = this.eventsById.get(nextEventId);
     if (!nextEvent) {
       return;
     }
     this.futureEventTimeout = setTimeout(() => {
-      this.futureEventIds.delete(nextEvent.id);
+      this.futureEventIds.delete(nextEventId);
       this.handleEvent(nextEvent, true);
       this.handleNextFutureEvent();
     }, (nextEvent.created_at - Date.now() / 1000) * 1000);
@@ -1227,8 +1249,8 @@ const relaypool = {
     }
     return false;
   },
-  matchFilter(event: Event, filter: Filter) {
-    if (filter.ids && !filter.ids.includes(event.id)) {
+  matchFilter(event: Event, filter: any) {
+    if (filter.ids && !filter.ids.includes(event.id as string)) {
       return false;
     }
     if (filter.kinds && !filter.kinds.includes(event.kind)) {
@@ -1250,7 +1272,7 @@ const relaypool = {
       const tag = event.tags.find((tag) => tag[0] === 'd');
       if (tag) {
         const existing = this.keyValueEvents.get(tag[1]);
-        if (existing?.created_at > event.created_at) {
+        if (existing && existing.created_at > event.created_at) {
           return false;
         }
       }
@@ -1275,32 +1297,18 @@ const relaypool = {
     session.logOut();
   },
   loadSettings() {
-    iris
-      .local()
-      .get('maxRelays')
-      .on((maxRelays) => {
-        this.maxRelays = maxRelays;
-        localForage.setItem('maxRelays', maxRelays);
-      });
-    // fug. iris.local() doesn't callback properly the first time it's loaded from local storage
     localForage.getItem('notificationsSeenTime').then((val) => {
       if (val && !this.notificationsSeenTime) {
-        this.notificationsSeenTime = val;
-        this.updateUnseenNotificationCount(this);
+        this.notificationsSeenTime = val as number;
+        this.updateUnseenNotificationCount();
         console.log('notificationsSeenTime', this.notificationsSeenTime);
-      }
-    });
-    localForage.getItem('maxRelays').then((val) => {
-      if (val !== null) {
-        iris.local().get('maxRelays').put(val);
-        this.maxRelays = val;
       }
     });
   },
   onLoggedIn() {
     const key = session.getKey();
     const subscribe = (filters: Filter[], callback: (event: Event) => void): string => {
-      const filter = filters[0];
+      const filter = filters[0] as any;
       const key = filter['#d']?.[0];
       if (key) {
         const event = this.keyValueEvents.get(key);
@@ -1313,18 +1321,8 @@ const relaypool = {
     };
     const myPub = session.getKey().secp256k1.rpub;
 
-    const myPublish = async (event: Partial<Event>): Promise<boolean> => {
-      try {
-        const id = this.publish(event);
-        return !!id;
-      } catch (e) {
-        console.error(e);
-        return false;
-      }
-    }
-
     this.private = new Path(
-      myPublish,
+      (e) => this.publish(e),
       subscribe,
       (...args) => this.unsubscribe(...args),
       { authors: [myPub] },
@@ -1332,7 +1330,7 @@ const relaypool = {
       (...args) => this.decrypt(...args),
     );
     this.public = new Path(
-      myPublish,
+      (e) => this.publish(e),
       subscribe,
       (...args) => this.unsubscribe(...args),
       { authors: [myPub] },
@@ -1341,7 +1339,7 @@ const relaypool = {
       if (time !== this.notificationsSeenTime) {
         this.notificationsSeenTime = time;
         localForage.setItem('notificationsSeenTime', time);
-        this.updateUnseenNotificationCount(this);
+        this.updateUnseenNotificationCount();
       }
     });
     this.public.get('settings/colorScheme', (colorScheme) => {
@@ -1362,9 +1360,9 @@ const relaypool = {
     this.loadLocalStorageEvents();
     this.getProfile(key.secp256k1.rpub, undefined);
     for (const suggestion of this.SUGGESTED_FOLLOWS) {
-      const hex = this.toNostrHexAddress(suggestion);
+      const hex = this.toNostrHexAddress(suggestion) as string;
       this.knownUsers.add(hex);
-      this.getProfile(this.toNostrHexAddress(hex), undefined);
+      this.getProfile(hex, undefined);
     }
     this.sendSubToRelays([{ kinds: [0, 1, 3, 6, 7], limit: 200 }], 'new'); // everything new
     setTimeout(() => {
@@ -1378,10 +1376,7 @@ const relaypool = {
   },
   init: function () {
     this.loadSettings();
-    iris
-      .local()
-      .get('loggedIn')
-      .on(() => this.onLoggedIn());
+    local().get('loggedIn', loggedIn => loggedIn && this.onLoggedIn());
     let lastResubscribed = Date.now();
     document.addEventListener('visibilitychange', () => {
       // when PWA returns to foreground after 5 min dormancy, resubscribe stuff
@@ -1511,12 +1506,12 @@ const relaypool = {
     this.subscribe([{ kinds: [1, 3, 5, 7] }], callback);
   },
   getMessagesByKeyword(keyword: string, cb: (messageIds: string[]) => void) {
-    const callback = (event) => {
+    const callback = (event: Event) => {
       if (!this.latestNotesByKeywords.has(keyword)) {
         this.latestNotesByKeywords.set(keyword, new SortedLimitedEventSet(MAX_MSGS_BY_KEYWORD));
       }
       this.latestNotesByKeywords.get(keyword)?.add(event);
-      cb(this.latestNotesByKeywords.get(keyword)?.eventIds);
+      cb(this.latestNotesByKeywords.get(keyword)?.eventIds ?? []);
     };
     // find among cached events
     const filter = { kinds: [1], keywords: [keyword] };
@@ -1529,14 +1524,14 @@ const relaypool = {
       }
     }
     this.latestNotesByKeywords.has(keyword) &&
-      cb(this.latestNotesByKeywords.get(keyword)?.eventIds);
+      cb(this.latestNotesByKeywords.get(keyword)?.eventIds ?? []);
     this.subscribe([filter], callback);
   },
   getPostsAndRepliesByUser(address: string, cb?: (messageIds: string[]) => void) {
     // TODO subscribe on view profile and unsub on leave profile
     this.knownUsers.add(address);
     const callback = () => {
-      cb?.(this.postsAndRepliesByUser.get(address)?.eventIds);
+      cb?.(this.postsAndRepliesByUser.get(address)?.eventIds ?? []);
     };
     this.postsAndRepliesByUser.has(address) && callback();
     this.subscribe([{ kinds: [1, 5, 7], authors: [address] }], callback);
@@ -1544,7 +1539,7 @@ const relaypool = {
   getPostsByUser(address: string, cb?: (messageIds: string[]) => void) {
     this.knownUsers.add(address);
     const callback = () => {
-      cb?.(this.postsByUser.get(address)?.eventIds);
+      cb?.(this.postsByUser.get(address)?.eventIds ?? []);
     };
     this.postsByUser.has(address) && callback();
     this.subscribe([{ kinds: [1, 5, 7], authors: [address] }], callback);
@@ -1552,12 +1547,12 @@ const relaypool = {
   getLikesByUser(address: string, cb?: (messageIds: string[]) => void) {
     this.knownUsers.add(address);
     const callback = () => {
-      cb?.(this.likesByUser.get(address)?.eventIds);
+      cb?.(this.likesByUser.get(address)?.eventIds ?? []);
     };
     this.likesByUser.has(address) && callback();
     this.subscribe([{ kinds: [7, 5], authors: [address] }], callback);
   },
-  getProfile(address, cb?: (profile: any, address: string) => void, verifyNip05 = false) {
+  getProfile(address: string, cb?: (profile: any, address: string) => void, verifyNip05 = false) {
     this.knownUsers.add(address);
     const callback = () => {
       cb?.(this.profiles.get(address), address);
@@ -1591,7 +1586,7 @@ const relaypool = {
   getDirectMessagesByUser(address: string, cb?: (messageIds: string[]) => void) {
     this.knownUsers.add(address);
     const callback = () => {
-      cb?.(this.directMessagesByUser.get(address)?.eventIds);
+      cb?.(this.directMessagesByUser.get(address)?.eventIds ?? []);
     };
     this.directMessagesByUser.has(address) && callback();
     const myPub = session.getKey()?.secp256k1.rpub;
