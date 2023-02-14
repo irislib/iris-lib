@@ -179,19 +179,9 @@ export default {
    */
   async login(k: any, opts = {}) {
     const shouldRefresh = !!key;
+    // TODO accept old format iris/gun keys, migrate to new format
     key = await Key.addSecp256k1KeyPair(k);
     localStorage.setItem('iris.myKey', JSON.stringify(key));
-    user().auth(key);
-    user().put({epub: key.epub});
-    user().get('likes').put({a:null}); // gun bug?
-    user().get('msgs').put({a:null}); // gun bug?
-    user().get('replies').put({a:null}); // gun bug?
-
-    if (key.secp256k1.priv) {
-      const sig = await Key.schnorrSign(key.pub, key.secp256k1.priv);
-      const proof = JSON.stringify({pub: key.pub, rpub: key.secp256k1.rpub, sig});
-      user().get('profile').get('nostr').put(proof);
-    }
 
     notifications.subscribeToWebPush();
     notifications.getWebPushSubscriptions();

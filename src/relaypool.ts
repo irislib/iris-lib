@@ -109,11 +109,11 @@ const DEFAULT_RELAYS = [
 const SEARCH_RELAYS = ['wss://relay.nostr.band'];
 
 const defaultRelays = new Map<string, Relay>(
-  DEFAULT_RELAYS.map((url) => [url, relayInit(url, (id) => eventsById.has(id))]),
+  DEFAULT_RELAYS.map((url) => [url, relayInit(url)]),
 );
 
 const searchRelays = new Map<string, Relay>(
-  SEARCH_RELAYS.map((url) => [url, relayInit(url, (id) => eventsById.has(id))]),
+  SEARCH_RELAYS.map((url) => [url, relayInit(url)]),
 );
 
 type Subscription = {
@@ -290,7 +290,7 @@ const relaypool = {
   resubscribe(relay: Relay) {
     for (const [name, filters] of this.subscribedFiltersByName.entries()) {
       const id = this.getSubscriptionIdForName(name);
-      const sub = relay.sub(filters, { id });
+      const sub = relay.sub(filters, { id, alreadyHaveEvent: (id) => eventsById.has(id) });
       if (!this.subscriptionsByName.has(name)) {
         this.subscriptionsByName.set(name, new Set());
       }
@@ -299,7 +299,7 @@ const relaypool = {
   },
   addRelay(url: string) {
     if (this.relays.has(url)) return;
-    const relay = relayInit(url, (id) => this.eventsById.has(id));
+    const relay = relayInit(url);
     relay.on('connect', () => this.resubscribe(relay));
     relay.on('notice', (notice: string) => {
       console.log('notice from ', relay.url, notice);
@@ -493,7 +493,7 @@ const relaypool = {
 
     for (const relay of (id == 'keywords' ? this.searchRelays : this.relays).values()) {
       const subId = this.getSubscriptionIdForName(id);
-      const sub = relay.sub(filters, { id: subId });
+      const sub = relay.sub(filters, { id: subId, alreadyHaveEvent: (id) => eventsById.has(id) });
       // TODO update relay lastSeen
       sub.on('event', (event: Event) => this.handleEvent(event));
       if (once) {
