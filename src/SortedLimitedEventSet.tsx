@@ -49,7 +49,7 @@ export default class SortedLimitedEventSet {
     // Sort the events in descending order by created_at
     this.eventIdSet.add(event.id);
     this.events.sort((a, b) =>
-      this.descending ? b.created_at - a.created_at : a.created_at - b.created_at,
+      this.descending ? b.created_at - a.created_at : a.created_at - b.created_at
     );
     return true;
   }
