@@ -4,12 +4,9 @@ import Fuse from "fuse.js";
 import localforage from 'localforage';
 import local from './local';
 import user from './public';
-import privateState from './private';
 import Key from './key';
 
 let key: any;
-let onlineTimeout: any;
-let ourActivity: any;
 let noFollows: boolean;
 let noFollowers: boolean;
 let searchIndex: any;
@@ -50,6 +47,7 @@ export default {
     if (!localStorageKey) {
       localStorageKey = localStorage.getItem('chatKeyPair');
     }
+    console.log('localStorageKey', localStorageKey);
     if (localStorageKey) {
       this.login(JSON.parse(localStorageKey), options);
     } else if (options.autologin !== false) {
@@ -138,56 +136,20 @@ export default {
     return searchIndex;
   },
 
-  setOurOnlineStatus() {
-    const activeRoute = window.location.hash;
-    Channel.setActivity(ourActivity = 'active');
-    const setActive = util.debounce(() => {
-      const chatId = activeRoute && activeRoute.replace('#/profile/','').replace('#/chat/','');
-      const chat = privateState(chatId);
-      if (chat && !ourActivity) {
-        chat.setMyMsgsLastSeenTime();
-      }
-      Channel.setActivity(ourActivity = 'active');
-      clearTimeout(onlineTimeout);
-      onlineTimeout = setTimeout(() => Channel.setActivity(ourActivity = 'online'), 30000);
-    }, 1000);
-    document.addEventListener("touchmove", setActive);
-    document.addEventListener("mousemove", setActive);
-    document.addEventListener("keypress", setActive);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === 'visible') {
-        Channel.setActivity(ourActivity = 'active');
-        const chatId = location.pathname.slice(1).replace('chat/','');
-        const chat = activeRoute && privateState(chatId);
-        if (chat) {
-          chat.setMyMsgsLastSeenTime();
-          notifications.changeChatUnseenCount(chatId, 0);
-        }
-      } else {
-        Channel.setActivity(ourActivity = 'online');
-      }
-    });
-    setActive();
-    window.addEventListener("beforeunload", () => {
-      Channel.setActivity(ourActivity = null);
-    });
-  },
-
   /**
    * Log in with a private key.
    * @param key
    */
   async login(k: any, opts = {}) {
+    console.log('login', k, key);
     const shouldRefresh = !!key;
     // TODO accept old format iris/gun keys, migrate to new format
-    key = await Key.addSecp256k1KeyPair(k);
-    localStorage.setItem('iris.myKey', JSON.stringify(key));
+    if (k.secp256k1) {
+      key = k.secp256k1;
+    } else {
+      key = k;
+    }
 
-    notifications.subscribeToWebPush();
-    notifications.getWebPushSubscriptions();
-    notifications.subscribeToIrisNotifications();
-
-    notifications.init();
     local().set('loggedIn', true);
     /*
     local().get('settings').once().then(settings => {
@@ -218,9 +180,8 @@ export default {
   loginAsNewUser(options: any = {}) {
     const name = options.name || util.generateName();
     console.log('loginAsNewUser name', name);
-    return Gun.SEA.pair().then(async k => {
-      await this.login(k, options);
-    });
+    key = Key.generatePair();
+    this.login(key, options);
   },
 
   /**
@@ -228,19 +189,6 @@ export default {
    * @returns {Promise<void>}
    */
   async logOut() {
-    // TODO: remove subscription from your channels
-    if (navigator.serviceWorker) {
-      const reg = await navigator.serviceWorker.getRegistration();
-      if (reg && reg.pushManager) {
-        reg.active?.postMessage({key: null});
-        const sub = await reg.pushManager.getSubscription();
-        if (sub) {
-          const hash = await util.getHash(JSON.stringify(sub));
-          notifications.removeSubscription(hash);
-          sub.unsubscribe && sub.unsubscribe();
-        }
-      }
-    }
     this.clearIndexedDB();
     localStorage.clear(); // TODO clear only iris data
     localforage.clear().then(() => {

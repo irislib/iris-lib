@@ -1,10 +1,15 @@
 import session from './session';
-import { nip04, signEvent, Event } from 'nostr-tools';
+import { nip04, signEvent, Event, generatePrivateKey, getPublicKey } from 'nostr-tools';
 
 export default {
   decryptedMessages: new Map<string, string>(),
   windowNostrQueue: [] as any[],
   isProcessingQueue: false,
+  generatePair() {
+    const priv = generatePrivateKey();
+    const rpub = getPublicKey(priv);
+    return { priv, rpub };
+  },
   encrypt: async function (data: string, pub?: string): Promise<string> {
     const k = session.getKey().secp256k1;
     pub = pub || k.rpub;
